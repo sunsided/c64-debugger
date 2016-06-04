@@ -15,7 +15,7 @@ C64 Debugger embeds VICE v2.4 C64 emulation engine created by The VICE Team.
 
 So, you would like to step into this entertainment coding mystery of C64
 Debugger source code? Beware that it is not going to be that easy as you
-think! Binaries
+think!
 
 First of all I wrote this code just for entertainment. That means what it
 means, most of code has been developed around 4:30am, on Saturday night
