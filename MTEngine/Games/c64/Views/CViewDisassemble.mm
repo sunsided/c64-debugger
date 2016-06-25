@@ -10,6 +10,8 @@
 #include "CGuiEditBoxText.h"
 #include "C64Tools.h"
 #include "CSlrString.h"
+#include "CSlrKeyboardShortcuts.h"
+#include "C64KeyboardShortcuts.h"
 
 #define byte unsigned char
 
@@ -82,6 +84,10 @@ CViewDisassemble::CViewDisassemble(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 	
 	// error in code line during assembly?
 	this->isErrorCode = false;
+	
+	// keyboard shortcut zones for this view
+	shortcutZones.push_back(KBZONE_DISASSEMBLE);
+	shortcutZones.push_back(KBZONE_MEMORY);
 }
 
 CViewDisassemble::~CViewDisassemble()
@@ -1865,19 +1871,47 @@ bool CViewDisassemble::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 		keyCode = MTKEY_PAGE_UP;
 	}
 	
-	if (keyCode == '`')
+	CSlrKeyboardShortcut *keyboardShortcut = viewC64->keyboardShortcuts->FindShortcut(shortcutZones, keyCode, isShift, isAlt, isControl);
+	
+	if (keyboardShortcut == viewC64->keyboardShortcuts->kbsToggleBreakpoint)
 	{
 		TogglePCBreakpoint(cursorAddress);
+		viewC64->viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
 		return true;
 	}
 	
-	if (isControl && keyCode == MTKEY_F10)
+	if (keyboardShortcut == viewC64->keyboardShortcuts->kbsStepOverJsr)
 	{
 		StepOverJsr();
+		viewC64->viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
 		return true;
 	}
 	
-	if (keyCode == 'g' && isControl)
+	if (keyboardShortcut == viewC64->keyboardShortcuts->kbsMakeJmp)
+	{
+		viewC64->debugInterface->MakeJmpNoReset(this->dataAdapter, this->cursorAddress);
+		
+		viewC64->viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		return true;
+	}
+
+	if (keyboardShortcut == viewC64->keyboardShortcuts->kbsToggleTrackPC)
+	{
+		if (isTrackingPC == false)
+		{
+			isTrackingPC = true;
+		}
+		else
+		{
+			cursorAddress = currentPC;
+			isTrackingPC = false;
+		}
+
+		viewC64->viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		return true;
+	}
+	
+	if (keyboardShortcut == viewC64->keyboardShortcuts->kbsGoToAddress)
 	{
 		isEnteringGoto = true;
 		StartEditingAtCursorPosition(EDIT_CURSOR_POS_ADDR, true);
@@ -1886,13 +1920,6 @@ bool CViewDisassemble::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 		return true;
 	}
 	
-	if (keyCode == 'j' && isControl)
-	{
-		viewC64->debugInterface->MakeJmpNoReset(this->dataAdapter, this->cursorAddress);
-		
-		viewC64->viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
-		return true;
-	}
 
 	if (keyCode == MTKEY_ARROW_DOWN)
 	{
@@ -1945,19 +1972,6 @@ bool CViewDisassemble::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 		cursorAddress++;
 		if (cursorAddress > dataAdapter->AdapterGetDataLength()-1)
 			cursorAddress = dataAdapter->AdapterGetDataLength()-1;
-		return true;
-	}
-	else if (keyCode == MTKEY_SPACEBAR)
-	{
-		if (isTrackingPC == false)
-		{
-			isTrackingPC = true;
-		}
-		else
-		{
-			cursorAddress = currentPC;
-			isTrackingPC = false;
-		}
 		return true;
 	}
 	else if (keyCode == MTKEY_ENTER)
@@ -2062,12 +2076,6 @@ bool CViewDisassemble::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isContr
 		|| editCursorPos == EDIT_CURSOR_POS_HEX3)
 		return true;
 	
-	// TODO: fix this somehow
-	if (keyCode == 'g')
-		return true;
-	if (keyCode == 'j')
-		return true;
-	
 	return CGuiView::KeyUp(keyCode, isShift, isAlt, isControl);
 }
 
@@ -2110,26 +2118,23 @@ void CViewDisassemble::ScrollUp()
 
 bool CViewDisassemble::DoScrollWheel(float deltaX, float deltaY)
 {
-	//	LOGD("CViewDataDump::DoScrollWheel: %f %f", deltaX, deltaY);
-	if (hasFocus)
+	//LOGD("CViewDisassemble::DoScrollWheel: %f %f", deltaX, deltaY);
+	int dy = fabs(round(deltaY));
+	
+	bool scrollUp = (deltaY > 0);
+	
+	for (int i = 0; i < dy; i++)
 	{
-		int dy = fabs(round(deltaY));
-		
-		bool scrollUp = (deltaY > 0);
-		
-		for (int i = 0; i < dy; i++)
+		if (scrollUp)
 		{
-			if (scrollUp)
-			{
-				ScrollUp();
-			}
-			else
-			{
-				ScrollDown();
-			}
+			ScrollUp();
 		}
-		return true;
+		else
+		{
+			ScrollDown();
+		}
 	}
+	return true;
 	
 	return false;
 }

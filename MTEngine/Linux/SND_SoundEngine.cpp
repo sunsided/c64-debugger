@@ -5,6 +5,7 @@
 #include "SND_Main.h"
 #include "RES_ResourceManager.h"
 #include "SYS_Threading.h"
+#include "CSlrString.h"
 #include <math.h>
 
 CSoundEngine *gSoundEngine = NULL;
@@ -27,6 +28,12 @@ CSoundEngine::CSoundEngine()
 	LOGF(DBGLVL_XMPLAYER, "CSoundEngine init");
 
 	mutex = new CSlrMutex();
+
+	deviceOutIndex = Pa_GetDefaultOutputDevice();
+	if (deviceOutIndex == paNoDevice)
+	{
+		SYS_FatalExit("No default audio output device detected, bad luck!");
+	}
 
 	recordedData = NULL;
 	isAudioSessionInitialized = false;
@@ -155,6 +162,90 @@ void CSoundEngine::ResetAudioUnit(bool isRecordingOn)
 	//UnlockMutex();
 }
 
+std::list<CSlrString *> *CSoundEngine::EnumerateAvailableOutputDevices()
+{
+        LOGD("CSoundEngine::EnumerateAvailableOutputDevices");
+        std::list<CSlrString *> *audioOutDevices = new std::list<CSlrString *>();
+
+        PaStreamParameters outputParameters;
+        outputParameters.channelCount = 2;                     // stereo output
+        outputParameters.sampleFormat = paInt16;
+        outputParameters.hostApiSpecificStreamInfo = NULL;
+
+        int numDevices;
+        numDevices = Pa_GetDeviceCount();
+
+        const PaDeviceInfo *deviceInfo;
+        for(int i = 0; i < numDevices; i++)
+        {
+                deviceInfo = Pa_GetDeviceInfo( i );
+                LOGD("... device #%d: '%s'", i, deviceInfo->name);
+                outputParameters.device = i;
+                outputParameters.suggestedLatency = deviceInfo->defaultLowOutputLatency;
+
+                PaError err;
+                err = Pa_IsFormatSupported( NULL, &outputParameters, SOUND_SAMPLE_RATE );
+                if( err == paFormatIsSupported )
+                {
+                        audioOutDevices->push_back(new CSlrString(deviceInfo->name));
+                }
+        }
+
+        return audioOutDevices;
+}
+
+void CSoundEngine::SetOutputAudioDevice(CSlrString *deviceName)
+{
+        LOGD("CSoundEngine::SetOutputAudioDevice");
+        char *strDeviceName = deviceName->GetStdASCII();
+
+        bool playing = isPlaybackOn;
+        bool recording = isRecordingOn;
+        int recordFreq = recordingFrequency;
+
+        StopAudioUnit();
+
+        PaStreamParameters outputParameters;
+        outputParameters.channelCount = 2;                     // stereo output
+        outputParameters.sampleFormat = paInt16;
+        outputParameters.hostApiSpecificStreamInfo = NULL;
+
+        int numDevices;
+        numDevices = Pa_GetDeviceCount();
+
+        bool deviceFound = false;
+
+        const PaDeviceInfo *deviceInfo;
+        for(int i = 0; i < numDevices; i++)
+        {
+                deviceInfo = Pa_GetDeviceInfo( i );
+                LOGD("... device #%d: '%s'", i, deviceInfo->name);
+                outputParameters.device = i;
+                outputParameters.suggestedLatency = deviceInfo->defaultLowOutputLatency;
+
+                PaError err;
+                err = Pa_IsFormatSupported( NULL, &outputParameters, SOUND_SAMPLE_RATE );
+                if( err == paFormatIsSupported )
+                {
+                        if (!strcmp(deviceInfo->name, strDeviceName))
+                        {
+                                deviceFound = true;
+                                deviceOutIndex = i;
+                        }
+                }
+        }
+
+        if (!deviceFound)
+        {
+                LOGError("selected device '%s' not found, falling back to default", strDeviceName);
+                deviceOutIndex = Pa_GetDefaultOutputDevice();
+        }
+
+        StartAudioUnit(playing, recording, recordFreq);
+
+}
+
+
 bool CSoundEngine::StartAudioUnit(bool isPlayback, bool isRecording, int recordingFrequency)
 {
 	// TODO: check recording in http://code.google.com/p/soundflower/
@@ -177,18 +268,26 @@ bool CSoundEngine::StartAudioUnit(bool isPlayback, bool isRecording, int recordi
 
 	if (isPlayback)
 	{
-		LOGA("opening output stream");
-		outputParameters.device = Pa_GetDefaultOutputDevice(); // default output device
-		LOGTODO("TODO: check paNoDevice");
-		if (outputParameters.device == paNoDevice)
+		LOGA("opening output stream, deviceOutIndex=%d", deviceOutIndex);
+		
+		int numDevices = Pa_GetDeviceCount();
+		if (deviceOutIndex >= numDevices)
 		{
-			SYS_FatalExit("No output device");
+			deviceOutIndex = Pa_GetDefaultOutputDevice(); // default output device
+			if (deviceOutIndex == paNoDevice)
+			{
+				SYS_FatalExit("No default audio output device... bad luck!");
+			}
 		}
+		
+		outputParameters.device = deviceOutIndex;
+		
 		outputParameters.channelCount = 2;                     // stereo output
 		outputParameters.sampleFormat = paInt16;
-		outputParameters.suggestedLatency = Pa_GetDeviceInfo( outputParameters.device )->defaultLowOutputLatency;
+		outputParameters.suggestedLatency = 
+			Pa_GetDeviceInfo( outputParameters.device )->defaultLowOutputLatency;
 		outputParameters.hostApiSpecificStreamInfo = NULL;
-
+		
 		LOGA("Pa_OpenStream");
 		err = Pa_OpenStream(
 							&streamOutput,
@@ -204,7 +303,7 @@ bool CSoundEngine::StartAudioUnit(bool isPlayback, bool isRecording, int recordi
 		{
 			SYS_FatalExit("Opening output stream failed");
 		}
-
+		
 		LOGA("Pa_StartStream");
 		err = Pa_StartStream( streamOutput );
         if( err != paNoError )
@@ -212,7 +311,12 @@ bool CSoundEngine::StartAudioUnit(bool isPlayback, bool isRecording, int recordi
 			SYS_FatalExit("Starting output stream failed");
 		}
 
-		LOGA("output stream opened");
+		// copy device output name
+		const PaDeviceInfo *deviceInfo;
+		deviceInfo = Pa_GetDeviceInfo( deviceOutIndex );
+		strncpy(deviceOutName, deviceInfo->name, 512);
+		
+		LOGM("Audio output stream opened, device=%s", deviceOutName);
 	}
 
 	if (isRecording)
@@ -264,7 +368,9 @@ bool CSoundEngine::StartAudioUnit(bool isPlayback, bool isRecording, int recordi
 	this->isPlaybackOn = isPlayback;
 
 	LOGA("starting AudioUnit done");
+	return true;
 }
+
 
 void CSoundEngine::StopAudioUnit()
 {

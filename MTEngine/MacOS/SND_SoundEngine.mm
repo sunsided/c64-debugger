@@ -1,9 +1,3 @@
-// http://atastypixel.com/blog/using-remoteio-audio-unit/
-// http://idimp.googlecode.com/
-// http://developer.apple.com/iphone/library/documentation/audio/conceptual/AudioSessionProgrammingGuide/Cookbook/Cookbook.html
-
-// TODO: add JACKiOS support: http://www.crudebyte.com/jack-ios/sdk/doc/getting_started.html
-
 #include "SYS_Defs.h"
 #include "SND_SoundEngine.h"
 #include "CSlrMusicFileOgg.h"
@@ -11,10 +5,16 @@
 #include "CSlrFile.h"
 #include "RES_ResourceManager.h"
 #include "SYS_Threading.h"
+#include "SYS_CFileSystem.h"
+#include "CSlrString.h"
 
-class CSlrMusicFileOgg;
+//#define WRITE_AUDIO_OUT_TO_FILE
 
 CSoundEngine *gSoundEngine = NULL;
+
+#if defined(WRITE_AUDIO_OUT_TO_FILE)
+FILE *fpMainAudioOutWriter;
+#endif
 
 
 void SYS_InitSoundEngine()
@@ -29,14 +29,30 @@ void SYS_InitSoundEngine()
 	gSoundEngine = new CSoundEngine();	
 }
 
-CSoundEngine::CSoundEngine()// :
-//	mIsRunning(false),
-//	mIsInitialized(false),
-//	mCurrentPacket(0)
+CSoundEngine::CSoundEngine()
 {
 	LOGA("CSoundEngine init");
 	
 	audioEngineMutex = new CSlrMutex();
+	
+#if defined(WRITE_AUDIO_OUT_TO_FILE)
+	char fpath[1024];
+	sprintf(fpath, "%s/MTEngine-AudioOut.raw", gCPathToDocuments);
+	
+	fpMainAudioOutWriter = fopen(fpath, "wb");
+	if (!fpMainAudioOutWriter)
+	{
+		SYS_FatalExit("CSoundEngine: opening MTEngine-AudioOut.raw for write failed");
+	}
+	
+	LOGM("CSoundEngine: storing audio out to file %s", fpath);
+#endif
+	
+	deviceOutIndex = Pa_GetDefaultOutputDevice();
+	if (deviceOutIndex == paNoDevice)
+	{
+		SYS_FatalExit("No default audio output device detected, bad luck!");
+	}
 	
 	recordedData = NULL;
 	isAudioSessionInitialized = false;
@@ -55,7 +71,6 @@ CSoundEngine::CSoundEngine()// :
 
 CSoundEngine::~CSoundEngine()
 {
-	pthread_mutex_destroy(&xmPlayerMutex);
 }
 
 static int getOneSampleSin()
@@ -212,6 +227,10 @@ static int playCallback( const void *inputBuffer, void *outputBuffer,
 
 	gSoundEngine->UnlockMutex("playCallback");
 
+#if defined(WRITE_AUDIO_OUT_TO_FILE)
+	fwrite(outBuffer, numSamples, 4, fpMainAudioOutWriter);
+#endif
+	
 	//LOGA("SND_PlaybackCallback done");
 
 	return paContinue;
@@ -240,6 +259,98 @@ void CSoundEngine::ResetAudioUnit(bool isRecordingOn)
 	//UnlockMutex();
 }
 
+std::list<CSlrString *> *CSoundEngine::EnumerateAvailableOutputDevices()
+{
+	LOGD("CSoundEngine::EnumerateAvailableOutputDevices");
+	std::list<CSlrString *> *audioOutDevices = new std::list<CSlrString *>();
+	
+	PaStreamParameters outputParameters;
+	outputParameters.channelCount = 2;                     // stereo output
+	outputParameters.sampleFormat = paInt16;
+	outputParameters.hostApiSpecificStreamInfo = NULL;
+	
+	int numDevices;
+	numDevices = Pa_GetDeviceCount();
+	
+	const PaDeviceInfo *deviceInfo;
+	for(int i = 0; i < numDevices; i++)
+	{
+		deviceInfo = Pa_GetDeviceInfo( i );
+		
+		LOGD("... device #%d: '%s', out chans=%d", i, deviceInfo->name, deviceInfo->maxOutputChannels);
+		outputParameters.device = i;
+		outputParameters.suggestedLatency = deviceInfo->defaultLowOutputLatency;
+		
+		PaError err;
+		err = Pa_IsFormatSupported( NULL, &outputParameters, SOUND_SAMPLE_RATE );
+		if( err == paFormatIsSupported )
+		{
+			LOGD("... OK");
+			audioOutDevices->push_back(new CSlrString(deviceInfo->name));
+		}
+	}
+	
+	LOGD("CSoundEngine::EnumerateAvailableOutputDevices finished");
+
+	return audioOutDevices;
+}
+
+void CSoundEngine::SetOutputAudioDevice(CSlrString *deviceName)
+{
+	LOGD("CSoundEngine::SetOutputAudioDevice");
+	char *strDeviceName = deviceName->GetStdASCII();
+	
+	LOGD("... device name='%s'", strDeviceName);
+	
+	bool playing = isPlaybackOn;
+	bool recording = isRecordingOn;
+	int recordFreq = recordingFrequency;
+	
+	StopAudioUnit();
+	
+	PaStreamParameters outputParameters;
+	outputParameters.channelCount = 2;                     // stereo output
+	outputParameters.sampleFormat = paInt16;
+	outputParameters.hostApiSpecificStreamInfo = NULL;
+	
+	int numDevices;
+	numDevices = Pa_GetDeviceCount();
+	
+	bool deviceFound = false;
+	
+	const PaDeviceInfo *deviceInfo;
+	for(int i = 0; i < numDevices; i++)
+	{
+		deviceInfo = Pa_GetDeviceInfo( i );
+		LOGD("... device #%d: '%s'", i, deviceInfo->name);
+		outputParameters.device = i;
+		outputParameters.suggestedLatency = deviceInfo->defaultLowOutputLatency;
+		
+		PaError err;
+		err = Pa_IsFormatSupported( NULL, &outputParameters, SOUND_SAMPLE_RATE );
+		if( err == paFormatIsSupported )
+		{
+			if (!strcmp(deviceInfo->name, strDeviceName))
+			{
+				deviceFound = true;
+				deviceOutIndex = i;
+			}
+		}
+	}
+	
+	if (!deviceFound)
+	{
+		LOGError("selected device '%s' not found, falling back to default", strDeviceName);
+		deviceOutIndex = Pa_GetDefaultOutputDevice();
+	}
+	
+	StartAudioUnit(playing, recording, recordFreq);
+	
+	delete [] strDeviceName;
+	
+	LOGD("CSoundEngine::SetOutputAudioDevice: finished");
+}
+
 void CSoundEngine::StartAudioUnit(bool isPlayback, bool isRecording, int recordingFrequency)
 {	
 	// TODO: check recording in http://code.google.com/p/soundflower/
@@ -254,7 +365,7 @@ void CSoundEngine::StartAudioUnit(bool isPlayback, bool isRecording, int recordi
 	
 	if (isPlaybackOn || isRecordingOn)
 	{
-		SYS_FatalExit("TODO: already init");
+		SYS_FatalExit("Audio is already playing, you need to stop audio streams first");
 	}
 	
 	PaStreamParameters  inputParameters, outputParameters;
@@ -262,13 +373,20 @@ void CSoundEngine::StartAudioUnit(bool isPlayback, bool isRecording, int recordi
 	
 	if (isPlayback)
 	{
-		LOGA("opening output stream");
-		outputParameters.device = Pa_GetDefaultOutputDevice(); // default output device
-		LOGTODO("TODO: check paNoDevice");
-		if (outputParameters.device == paNoDevice) 
+		LOGA("opening output stream, deviceOutIndex=%d", deviceOutIndex);
+		
+		int numDevices = Pa_GetDeviceCount();
+		if (deviceOutIndex >= numDevices)
 		{
-			SYS_FatalExit("No output device");
+			deviceOutIndex = Pa_GetDefaultOutputDevice(); // default output device
+			if (deviceOutIndex == paNoDevice)
+			{
+				SYS_FatalExit("No default audio output device... bad luck!");
+			}
 		}
+		
+		outputParameters.device = deviceOutIndex;
+		
 		outputParameters.channelCount = 2;                     // stereo output
 		outputParameters.sampleFormat = paInt16;
 		outputParameters.suggestedLatency = 
@@ -298,7 +416,12 @@ void CSoundEngine::StartAudioUnit(bool isPlayback, bool isRecording, int recordi
 			SYS_FatalExit("Starting output stream failed");
 		}
 
-		LOGA("output stream opened");
+		// copy device output name
+		const PaDeviceInfo *deviceInfo;
+		deviceInfo = Pa_GetDeviceInfo( deviceOutIndex );
+		strncpy(deviceOutName, deviceInfo->name, 512);
+		
+		LOGM("Audio output stream opened, device=%s", deviceOutName);
 	}
 	
 	if (isRecording)
@@ -476,134 +599,6 @@ void CSoundEngine::UnlockMutex(char *_whoLocked)
 
 void CAudioRecordingCallback::RecordingCallback(byte *buffer, UInt32 numBytes)
 {
-}
-
-//void CSoundEngine::AllocMP3(NSString *fileName)
-//{
-//	/*
-//	NSString *path = [[NSBundle mainBundle] pathForResource:@"mjus-v1" ofType:@"mp3"];
-//	NSData *musicData = [[NSData alloc] initWithContentsOfFile:path];
-//	NSError* error = nil;
-//	avAudioPlayer = [[AVAudioPlayer alloc] initWithData:musicData error:&error];
-//	if (error)
-//	{
-//		NSLog(@"Error with initWithData: %@", [error localizedDescription]);
-//	}*/
-//
-//	
-//	NSError* error = nil;
-//	avAudioPlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:[NSURL fileURLWithPath: [[NSBundle mainBundle] pathForResource: fileName ofType: @"mp3"]] error:&error];
-//	if (error)
-//	{
-//		NSLog(@"Error with initWithData: %@", [error localizedDescription]);
-//	}
-//	
-//	avAudioPlayer.numberOfLoops = -1;		
-//	[avAudioPlayer prepareToPlay];	
-//}
-//
-//void CSoundEngine::PlayMP3()
-//{
-//	if (avAudioPlayer == nil)
-//		return;
-//	
-//	// when you want to play the file	
-//    [avAudioPlayer play];
-//
-//}
-//
-//void CSoundEngine::StopMP3()
-//{
-//	LOGD("CSoundEngine::StopMP3");
-//	if (avAudioPlayer == nil)
-//		return;
-//	
-//    [avAudioPlayer stop];
-//}
-
-OggVorbis_File *CSoundEngine::LoadOGG(char *fileName)
-{
-	pthread_mutex_lock(&gSoundEngine->oggPlayerMutex);	
-
-	OggVorbis_File *retOggFile;
-	retOggFile = (OggVorbis_File *)malloc(sizeof(OggVorbis_File));
-	
-	char resNameNoPath[2048];
-	int i = strlen(fileName)-1;
-	for (  ; i >= 0; i--)
-	{
-		if (fileName[i] == '/')
-			break;
-	}
-	
-	int j = 0;
-	while(true)
-	{
-		if (fileName[i] == '.')
-		{
-			resNameNoPath[j] = '\0';
-			break;			
-		}
-		resNameNoPath[j] = fileName[i];
-		if (fileName[i] == '\0')
-			break;
-		j++;
-		i++;
-	}
-	
-	NSString *nsFileName = [NSString stringWithCString:resNameNoPath encoding:NSASCIIStringEncoding];
-	NSString *path = [[NSBundle mainBundle] pathForResource:nsFileName ofType:@"ogg"];
-	
-	FILE *fp = fopen([path fileSystemRepresentation], "rb");
-	if(ov_open(fp, retOggFile, NULL, 0) < 0) 
-	{
-		SYS_FatalExit("PlayOGG: input does not appear to be an Ogg bitstream");
-	}
-	
-	pthread_mutex_unlock(&gSoundEngine->oggPlayerMutex);	
-	
-	return retOggFile;
-}
-
-void CSoundEngine::PlayOGG(char *fileName)
-{
-	pthread_mutex_lock(&gSoundEngine->oggPlayerMutex);	
-	
-	oggFile = (OggVorbis_File *)malloc(sizeof(OggVorbis_File));
-	
-	char resNameNoPath[2048];
-	int i = strlen(fileName)-1;
-	for (  ; i >= 0; i--)
-	{
-		if (fileName[i] == '/')
-			break;
-	}
-	
-	int j = 0;
-	while(true)
-	{
-		if (fileName[i] == '.')
-		{
-			resNameNoPath[j] = '\0';
-			break;			
-		}
-		resNameNoPath[j] = fileName[i];
-		if (fileName[i] == '\0')
-			break;
-		j++;
-		i++;
-	}
-	
-	NSString *nsFileName = [NSString stringWithCString:resNameNoPath encoding:NSASCIIStringEncoding];
-	NSString *path = [[NSBundle mainBundle] pathForResource:nsFileName ofType:@"ogg"];
-	
-	FILE *fp = fopen([path fileSystemRepresentation], "rb");
-	if(ov_open(fp, oggFile, NULL, 0) < 0) 
-	{
-		SYS_FatalExit("PlayOGG: input does not appear to be an Ogg bitstream");
-	}
-	
-	pthread_mutex_unlock(&gSoundEngine->oggPlayerMutex);	
 }
 
 NSString *OSStatusToStr(OSStatus st)

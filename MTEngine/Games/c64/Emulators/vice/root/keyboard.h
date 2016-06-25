@@ -43,6 +43,13 @@
 
 struct snapshot_s;
 
+// c64d
+void c64d_keyboard_keymap_clear();
+extern void keyboard_parse_set_pos_row(signed long sym, int row, int col,
+								int shift);
+extern int keyboard_parse_set_neg_row(signed long sym, int row, int col);
+
+
 extern void keyboard_init(void);
 extern void keyboard_shutdown(void);
 extern void keyboard_set_keyarr(int row, int col, int value);
@@ -97,8 +104,26 @@ extern int kbd_resources_init(void);
 extern int pet_kbd_cmdline_options_init(void);
 extern int pet_kbd_resources_init(void);
 
-void keyboard_parse_set_pos_row(signed long sym, int row, int col,
-								int shift);
+extern int keyboard_key_pressed_matrix(int row, int column, int shift);
+extern int keyboard_key_released_matrix(int row, int column, int shift);
+
+
+enum shift_type {
+	NO_SHIFT = 0,             /* Key is not shifted. */
+	VIRTUAL_SHIFT = (1 << 0), /* The key needs a shift on the real machine. */
+	LEFT_SHIFT = (1 << 1),    /* Key is left shift. */
+	RIGHT_SHIFT = (1 << 2),   /* Key is right shift. */
+	ALLOW_SHIFT = (1 << 3),   /* Allow key to be shifted. */
+	DESHIFT_SHIFT = (1 << 4), /* Although SHIFT might be pressed, do not
+							   press shift on the real machine. */
+	ALLOW_OTHER = (1 << 5),   /* Allow another key code to be assigned if
+							   SHIFT is pressed. */
+	SHIFT_LOCK = (1 << 6),    /* Key is shift lock. */
+	
+	ALT_MAP  = (1 << 8)       /* Key is used for an alternative keyboard
+							   mapping */
+};
+
 
 #endif
 

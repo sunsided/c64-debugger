@@ -6,6 +6,7 @@
 #include "CGuiEditBoxText.h"
 #include "CSlrTextParser.h"
 #include "C64Opcodes.h"
+#include <list>
 
 class CSlrDataAdapter;
 class CSlrFont;
@@ -14,6 +15,7 @@ class CSlrMutex;
 class CSlrString;
 class C64AddrBreakpoint;
 class CViewMemoryMap;
+class CSlrKeyboardShortcut;
 
 enum AssembleToken : uint8
 {
@@ -151,6 +153,8 @@ public:
 	addrPosition_t *addrPositions;
 	void CreateAddrPositions();
 	int addrPositionCounter;
+	
+	std::list<u32> shortcutZones;
 };
 
 

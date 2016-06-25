@@ -40,10 +40,16 @@ public:
 	//volatile
 	bool isExecuteArgument;
 	
+	bool isRead;
+	bool isWrite;
+	
 	void MarkCellRead();
 	void MarkCellWrite(uint8 value);
 	void MarkCellExecuteCode(uint8 opcode);
 	void MarkCellExecuteArgument();
+	
+	void ClearExecuteMarkers();
+	void ClearReadWriteMarkers();
 };
 
 class CViewMemoryMap : public CGuiView
@@ -121,6 +127,7 @@ public:
 	
 	bool IsExecuteCodeAddress(int address);
 	void ClearExecuteMarkers();
+	void ClearReadWriteMarkers();
 	
 	void UpdateTexturePosition(float newStartX, float newStartY, float newEndX, float newEndY);
 	

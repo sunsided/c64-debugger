@@ -80,8 +80,8 @@ public:
 	void SelectNext();
 	void SelectPrev();
 	
-	CSlrMutex *mutex;
-
+	void ClearItems();
+	
 	CGuiViewMenuCallback *callback;
 };
 

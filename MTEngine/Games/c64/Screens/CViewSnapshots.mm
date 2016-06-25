@@ -61,43 +61,43 @@ CViewSnapshots::CViewSnapshots(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 										 NULL, tr, tg, tb);
 	viewMenu->AddMenuItem(menuItemBack);
 
-	kbsSaveSnapshot = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_SAVE_SNAPSHOT, 's', false, false, true);
+	kbsSaveSnapshot = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Save snapshot", 's', false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsSaveSnapshot);
 	menuItemSaveSnapshot = new CViewC64MenuItem(fontHeight, new CSlrString("Save Snapshot"), kbsSaveSnapshot, tr, tg, tb);
 	viewMenu->AddMenuItem(menuItemSaveSnapshot);
 	
-	kbsLoadSnapshot = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_LOAD_SNAPSHOT, 'd', false, false, true);
+	kbsLoadSnapshot = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Load snapshot", 'd', false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsLoadSnapshot);
 	menuItemLoadSnapshot = new CViewC64MenuItem(fontHeight*2, new CSlrString("Load Snapshot"), kbsLoadSnapshot, tr, tg, tb);
 	viewMenu->AddMenuItem(menuItemLoadSnapshot);
 
 
 	// ctrl+shift+1,2,3... store snapshot
-	kbsStoreSnapshot1 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_STORE_SNAPSHOT1, '1', true, false, true);
+	kbsStoreSnapshot1 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Store snapshot #1", '1', true, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsStoreSnapshot1);
-	kbsStoreSnapshot2 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_STORE_SNAPSHOT2, '2', true, false, true);
+	kbsStoreSnapshot2 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Store snapshot #2", '2', true, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsStoreSnapshot2);
-	kbsStoreSnapshot3 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_STORE_SNAPSHOT3, '3', true, false, true);
+	kbsStoreSnapshot3 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Store snapshot #3", '3', true, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsStoreSnapshot3);
-	kbsStoreSnapshot4 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_STORE_SNAPSHOT4, '4', true, false, true);
+	kbsStoreSnapshot4 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Store snapshot #4", '4', true, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsStoreSnapshot4);
-	kbsStoreSnapshot5 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_STORE_SNAPSHOT5, '5', true, false, true);
+	kbsStoreSnapshot5 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Store snapshot #5", '5', true, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsStoreSnapshot5);
-	kbsStoreSnapshot6 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_STORE_SNAPSHOT6, '6', true, false, true);
+	kbsStoreSnapshot6 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Store snapshot #6", '6', true, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsStoreSnapshot6);
 
 	// ctrl+1,2,3,... restore snapshot
-	kbsRestoreSnapshot1 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_RESTORE_SNAPSHOT1, '1', false, false, true);
+	kbsRestoreSnapshot1 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Restore snapshot #1", '1', false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsRestoreSnapshot1);
-	kbsRestoreSnapshot2 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_RESTORE_SNAPSHOT2, '2', false, false, true);
+	kbsRestoreSnapshot2 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Restore snapshot #2", '2', false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsRestoreSnapshot2);
-	kbsRestoreSnapshot3 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_RESTORE_SNAPSHOT3, '3', false, false, true);
+	kbsRestoreSnapshot3 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Restore snapshot #3", '3', false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsRestoreSnapshot3);
-	kbsRestoreSnapshot4 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_RESTORE_SNAPSHOT4, '4', false, false, true);
+	kbsRestoreSnapshot4 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Restore snapshot #4", '4', false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsRestoreSnapshot4);
-	kbsRestoreSnapshot5 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_RESTORE_SNAPSHOT5, '5', false, false, true);
+	kbsRestoreSnapshot5 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Restore snapshot #5", '5', false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsRestoreSnapshot5);
-	kbsRestoreSnapshot6 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_RESTORE_SNAPSHOT6, '6', false, false, true);
+	kbsRestoreSnapshot6 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Restore snapshot #6", '6', false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsRestoreSnapshot6);
 
 	//
@@ -116,75 +116,76 @@ CViewSnapshots::~CViewSnapshots()
 
 bool CViewSnapshots::ProcessKeyboardShortcut(CSlrKeyboardShortcut *shortcut)
 {
-	if (shortcut->function == KBFUN_SNAPSHOT_MENU)
-	{
-		SwitchSnapshotsScreen();
-		return true;
-	}
-	else if (shortcut->function == KBFUN_SAVE_SNAPSHOT)
+//	if (shortcut == KBFUN_SNAPSHOT_MENU)
+//	{
+//		SwitchSnapshotsScreen();
+//		return true;
+//	}
+//	else
+	if (shortcut == kbsSaveSnapshot)
 	{
 		OpenDialogSaveSnapshot();
 	}
-	else if (shortcut->function == KBFUN_LOAD_SNAPSHOT)
+	else if (shortcut == kbsLoadSnapshot)
 	{
 		OpenDialogLoadSnapshot();
 	}
-	else if (shortcut->function == KBFUN_STORE_SNAPSHOT1)
+	else if (shortcut == kbsStoreSnapshot1)
 	{
 		QuickStoreFullSnapshot(0);
 		return true;
 	}
-	else if (shortcut->function == KBFUN_RESTORE_SNAPSHOT1)
+	else if (shortcut == kbsRestoreSnapshot1)
 	{
 		QuickRestoreFullSnapshot(0);
 		return true;
 	}
-	else if (shortcut->function == KBFUN_STORE_SNAPSHOT2)
+	else if (shortcut == kbsStoreSnapshot2)
 	{
 		QuickStoreFullSnapshot(1);
 		return true;
 	}
-	else if (shortcut->function == KBFUN_RESTORE_SNAPSHOT2)
+	else if (shortcut == kbsRestoreSnapshot2)
 	{
 		QuickRestoreFullSnapshot(1);
 		return true;
 	}
-	else if (shortcut->function == KBFUN_STORE_SNAPSHOT3)
+	else if (shortcut == kbsStoreSnapshot3)
 	{
 		QuickStoreFullSnapshot(2);
 		return true;
 	}
-	else if (shortcut->function == KBFUN_RESTORE_SNAPSHOT3)
+	else if (shortcut == kbsRestoreSnapshot3)
 	{
 		QuickRestoreFullSnapshot(2);
 		return true;
 	}
-	else if (shortcut->function == KBFUN_STORE_SNAPSHOT4)
+	else if (shortcut == kbsStoreSnapshot4)
 	{
 		QuickStoreFullSnapshot(3);
 		return true;
 	}
-	else if (shortcut->function == KBFUN_RESTORE_SNAPSHOT4)
+	else if (shortcut == kbsRestoreSnapshot4)
 	{
 		QuickRestoreFullSnapshot(3);
 		return true;
 	}
-	else if (shortcut->function == KBFUN_STORE_SNAPSHOT5)
+	else if (shortcut == kbsStoreSnapshot5)
 	{
 		QuickStoreFullSnapshot(4);
 		return true;
 	}
-	else if (shortcut->function == KBFUN_RESTORE_SNAPSHOT5)
+	else if (shortcut == kbsRestoreSnapshot5)
 	{
 		QuickRestoreFullSnapshot(4);
 		return true;
 	}
-	else if (shortcut->function == KBFUN_STORE_SNAPSHOT6)
+	else if (shortcut == kbsStoreSnapshot6)
 	{
 		QuickStoreFullSnapshot(5);
 		return true;
 	}
-	else if (shortcut->function == KBFUN_RESTORE_SNAPSHOT6)
+	else if (shortcut == kbsRestoreSnapshot6)
 	{
 		QuickRestoreFullSnapshot(5);
 		return true;
@@ -209,7 +210,7 @@ void CViewSnapshots::QuickStoreFullSnapshot(int snapshotId)
 //	else
 	{
 		char *fname = SYS_GetCharBuf();
-		sprintf(fname, "/snapshot-%d", snapshotId);
+		sprintf(fname, "/snapshot-%d.snap", snapshotId);
 		CSlrString *path = new CSlrString();
 		path->Concatenate(gUTFPathToSettings);
 		path->Concatenate(fname);
@@ -254,7 +255,8 @@ void CViewSnapshots::QuickRestoreFullSnapshot(int snapshotId)
 //	else
 	{
 		char *fname = SYS_GetCharBuf();
-		sprintf(fname, "/snapshot-%d", snapshotId);
+		sprintf(fname, "/snapshot-%d.snap", snapshotId);
+		
 		CSlrString *path = new CSlrString();
 		path->Concatenate(gUTFPathToSettings);
 		path->Concatenate(fname);

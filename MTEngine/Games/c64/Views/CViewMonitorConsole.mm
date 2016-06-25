@@ -10,6 +10,8 @@
 #include "CViewDisassemble.h"
 #include "CViewMemoryMap.h"
 
+#define C64DEBUGGER_MONITOR_HISTORY_FILE_VERSION	1
+
 #define C64MONITOR_DEVICE_C64			1
 #define C64MONITOR_DEVICE_DISK1541_8	2
 
@@ -36,6 +38,8 @@ CViewMonitorConsole::CViewMonitorConsole(GLfloat posX, GLfloat posY, GLfloat pos
 	char *buf = SYS_GetCharBuf();
 	sprintf(buf, "C64 Debugger v%s monitor", C64DEBUGGER_VERSION_STRING);
 	this->viewConsole->PrintLine(buf);
+	
+	RestoreMonitorHistory();
 }
 
 void CViewMonitorConsole::SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, float fontScale, int numLines)
@@ -157,7 +161,8 @@ void CViewMonitorConsole::GuiViewConsoleExecuteCommand(char *commandText)
 	delete strCommandText; strCommandText = NULL;
 	
 	this->viewConsole->ResetCommandLine();
-	C64DebuggerStoreSettings();
+	
+	StoreMonitorHistory();
 
 	this->viewConsole->mutex->Unlock();
 }
@@ -896,5 +901,58 @@ bool CViewMonitorConsole::DoMemoryDumpFromFile(int addrStart, CSlrString *filePa
 	delete fileName;
 	
 	return true;
+}
+
+void CViewMonitorConsole::StoreMonitorHistory()
+{
+	CByteBuffer *byteBuffer = new CByteBuffer();
+	byteBuffer->PutU16(C64DEBUGGER_MONITOR_HISTORY_FILE_VERSION);
+	
+	byteBuffer->PutByte(viewC64->viewMonitorConsole->viewConsole->commandLineHistory.size());
+	for (std::list<char *>::iterator it = viewC64->viewMonitorConsole->viewConsole->commandLineHistory.begin();
+		 it != viewC64->viewMonitorConsole->viewConsole->commandLineHistory.end(); it++)
+	{
+		byteBuffer->PutString(*it);
+	}
+	
+	CSlrString *fileName = new CSlrString("/monitor.dat");
+	byteBuffer->storeToSettings(fileName);
+	delete fileName;
+	
+	delete byteBuffer;
+}
+
+void CViewMonitorConsole::RestoreMonitorHistory()
+{
+	CByteBuffer *byteBuffer = new CByteBuffer();
+	
+	CSlrString *fileName = new CSlrString("/monitor.dat");
+	byteBuffer->loadFromSettings(fileName);
+	delete fileName;
+	
+	if (byteBuffer->length == 0)
+	{
+		LOGD("... no monitor settings found");
+		delete byteBuffer;
+		return;
+	}
+	
+	u16 version = byteBuffer->GetU16();
+	if (version != C64DEBUGGER_MONITOR_HISTORY_FILE_VERSION)
+	{
+		LOGError("C64DebuggerReadSettings: incompatible version %04x", version);
+		delete byteBuffer;
+		return;
+	}
+	
+	int historySize = byteBuffer->GetByte();
+	for (int i = 0; i < historySize; i++)
+	{
+		char *cmd = byteBuffer->GetString();
+		viewConsole->commandLineHistory.push_back(cmd);
+	}
+	viewConsole->commandLineHistoryIt = viewConsole->commandLineHistory.end();
+	
+	delete byteBuffer;
 }
 

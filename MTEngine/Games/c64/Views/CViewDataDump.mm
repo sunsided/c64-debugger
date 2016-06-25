@@ -15,6 +15,7 @@
 #include "CViewDisassemble.h"
 #include "C64DebugInterface.h"
 #include "C64SettingsStorage.h"
+#include "C64KeyboardShortcuts.h"
 #include <math.h>
 
 CViewDataDump::CViewDataDump(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
@@ -583,30 +584,26 @@ bool CViewDataDump::DoTap(GLfloat x, GLfloat y)
 bool CViewDataDump::DoScrollWheel(float deltaX, float deltaY)
 {
 //	LOGD("CViewDataDump::DoScrollWheel: %f %f", deltaX, deltaY);
-	if (hasFocus)
+	guiMain->LockMutex();
+	
+	int dy = fabs(round(deltaY));
+	
+	bool scrollUp = (deltaY > 0);
+	
+	for (int i = 0; i < dy; i++)
 	{
-		guiMain->LockMutex();
-		
-		int dy = fabs(round(deltaY));
-		
-		bool scrollUp = (deltaY > 0);
-		
-		for (int i = 0; i < dy; i++)
+		if (scrollUp)
 		{
-			if (scrollUp)
-			{
-				ScrollDataUp();
-			}
-			else
-			{
-				ScrollDataDown();
-			}
+			ScrollDataUp();
 		}
-		
-		guiMain->UnlockMutex();
-		return true;
+		else
+		{
+			ScrollDataDown();
+		}
 	}
 	
+	guiMain->UnlockMutex();
+	return true;
 	return false;
 }
 
@@ -721,26 +718,21 @@ bool CViewDataDump::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContro
 		return false;
 	}
 	
-//	if (keyCode == 'k') //&& isControl)
-//	{
-//		viewC64->viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
-//		renderDataWithColors = !renderDataWithColors;
-//		return true;
-//	}
-
-	
 	if (isEditingValue || isEditingValueAddr)
 	{
 		editHex->KeyDown(keyCode);
 		return true;
 	}
 	
-	if (keyCode == MTKEY_SPACEBAR)
+	CSlrKeyboardShortcut *keyboardShortcut = viewC64->keyboardShortcuts->FindShortcut(KBZONE_DISASSEMBLE, keyCode, isShift, isAlt, isControl);
+	if (keyboardShortcut == viewC64->keyboardShortcuts->kbsToggleTrackPC)
 	{
 		return viewDisassemble->KeyDown(keyCode, isShift, isAlt, isControl);
 	}
 	
-	if (keyCode == 'g' && isControl)
+	keyboardShortcut = viewC64->keyboardShortcuts->FindShortcut(KBZONE_MEMORY, keyCode, isShift, isAlt, isControl);
+	
+	if (keyboardShortcut == viewC64->keyboardShortcuts->kbsGoToAddress)
 	{
 		int adr = dataShowStart + dataShowSize/2;
 		editHex->SetValue(adr, 4);
@@ -915,13 +907,6 @@ bool CViewDataDump::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 	if (keyCode == MTKEY_ARROW_DOWN || keyCode == MTKEY_ARROW_UP || keyCode == MTKEY_ARROW_LEFT || keyCode == MTKEY_ARROW_RIGHT || keyCode == MTKEY_ENTER)
 		return true;
 	
-	// TODO: fix this somehow
-	if (keyCode == 'g')
-		return true;
-	
-	if (keyCode == 'k')
-		return true;
-
 	return false;
 }
 

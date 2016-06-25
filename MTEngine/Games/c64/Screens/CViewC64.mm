@@ -1,102 +1,6 @@
-//
-// REFACTOR c64d_... function names in VICE!
-
-
-// BUGS:
-
-// ............. * IKONA * ............ !!!!!!!
-
-
-// BUG: SID model & C64 model is not set on startup
-
-// TODO: NTSC 
-
-
-
-
-// BUG: w main settings w opcji ladowanie d64 po zaladowaniu snapshota bedzie zla wartosc
-// BUG: loading snapshot na 8580 moze rozwalic przester: ^^^^^ zrobic analogicznie - ustawic na 6581, a pozniej pociagnac ze snapshota i uaktualnic menu setting
-// BUG: widzialem wlaczony kursor edycji memory dump w lewym gornym rogu ekranu (oops?). confirmed by Isildur
-
-// BUG: 1541 memory map click does not set current value in memory dump
-
-
-// MONTEZUMA AND THE SID AT THE END
-
-// eagle ten 4tyy
-
-
-
-// IDEAS:
-
-// watch... podglad wybranych komorek pamieci
-
-//> Powiększanie okna z oddziaływaniem na RAM/ROM - popatrz ICU
-
-
-// shift+f11 jump to next raster line
-
-// scrolling monitor console
-
-// store gfx video with snapshots
-
-// store execute markers with snapshots
-
-// fakt, może widok IO by się też przydał dodatkowo
-
-// *PARTIAL* optimize %2.2x %4.4x to uint8toChar(...
-
-
-
-
-
-
-
-//
-// *DONE* mark execute
-// *DONE* disassemble with execute
-// *DONE*UpdateDisassemble, update Tap on breakpoint
-// *DONE?* memory dump mark execute
-// *OK* dump memory to file
-// *DONE* Step over JSR: create temporary breakpoint in next line and stop there when comes back from JSR? or better: observe stack?
-// *DONE* monitor, simple functions: f, l, s
-// *DONE* store and restore settings (in settings menu too)
-// *DONE* > - nie jest zapamiętywany zawsze ostatnio mapowany cart
-//> *DONE* zapamiętywanie directories:
-//> *DONE* Jeżeli mapuję carta z jakiegoś katalogu, potem mapuję dyskietkę z innego katalogu, potem chcę mapować carta to jestem w katalogu gdzie mapowałem dyskietkę
-// *DONE*Quick store & restore snapshots
-// *DONE* BUG: when changing SID engine mute nie jest odswiezany - kanaly sie resetuja (po zmianie engine trzeba ustawic voiceMask)
-// *DONE*drive led in states
-// *DONE*zoom in memory map
-
-
-
-
-
-
-//> - dzieją się rzeczy dziwne :) po fullscreenie zniknął mi na dole bar windowsa :) sid zaczął grać ... dziwnie ...
-
-
-//> - definitywnie nie masz dobrej obsługi trybu ultimax mode - tak się startuje AR - przesłaniany jest kernel bankiem 0 (pierwsze 8 KB epromu) i startuje się z wektora reset ($FFFC) będącego na pozycji $1ffc w epromie...
-//>
-
-
-
-//> - po fullscreenie zaczął mi się wieszać AR po mapowaniu carta
-//>
-
-// zamiast przepisywać i deassemblować całą kolumnę kodu - można pokazywać tylko kolorową belkę gdzie jest procek, a dopiero "przerzucać" stronę jak procek przeleci dalej - wtedy przestanie skakać cała kolumna (może w ten sposób?)
-
-
-
-//> Domyślne deassemblowanie wartości na stosie - może i zacna właściwość, ale może lepiej wtedy kiedy się chce to deassemblować bo z reguły są tam adresy powrotu. Podczas gdy obserwuję wykonujący się kod pod $0210 - u góry widzę skaczącą deassemblację stosu...
-
-//ale fakt faktem, markowanie że dana komórka była execute i nienadpisana pomoże w disassemblacji kiedy próbuję wyliczyć gdzie jest początek kodu (przykład, wstaw w z $0FFF wartość $FF, a w $1000 wartość $78 tj. SEI i przeskroluj w dół - teraz się rozjedzie, a tak by mogło pomóc).
-
-
-
-
-//http://www.mikesenese.com/DOIT/2011/03/twelve-awesome-commodore-64-hacks-and-projects-and-a-gallery-of-classic-c64-game-discs/
+extern "C"{
+#include "c64mem.h"
+}
 
 #include "CViewC64.h"
 #include "CViewC64Screen.h"
@@ -121,6 +25,8 @@
 #include "CViewBreakpoints.h"
 #include "CViewMainMenu.h"
 #include "CViewSettingsMenu.h"
+#include "CViewC64KeyMap.h"
+#include "CViewKeyboardShortcuts.h"
 #include "CViewMonitorConsole.h"
 #include "CViewSnapshots.h"
 #include "CViewAbout.h"
@@ -129,43 +35,11 @@
 #include "CSlrString.h"
 #include "C64Tools.h"
 #include "C64Symbols.h"
+#include "C64KeyMap.h"
 #include "C64DebugInterfaceVice.h"
 #include "C64CommandLine.h"
+#include "SND_SoundEngine.h"
 
-//http://www.studiostyle.sk/dmagic/gallery/gfxmodes.htm
-
-
-
-
-
-//czarny ekran
-//napis sei
-//
-//leci kod z kernela c64
-//
-//out -> na prawo przewija
-//
-//c64 sie bootuje wpisujemy load
-//
-//
-//===
-//
-//w trakce pokaz debuggera
-//
-//===
-//
-//
-
-
-
-
-
-
-
-//http://unusedino.de/ec64/technical/aay/c64/
-//http://www.ffd2.com/fridge/docs/c64-diss.html
-
-//https://www.c64-wiki.com/index.php/Extended_color_mode
 
 CViewC64 *viewC64;
 
@@ -187,18 +61,34 @@ CViewC64::CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 	//C64_SCREEN_LAYOUT_C64_1541_DEBUGGER
 
 
+	C64DebuggerParseCommandLine1();
+
 	// restore pre-launch settings (paths to D64, PRG, CRT)
 	C64DebuggerRestoreSettings(C64DEBUGGER_BLOCK_PRELAUNCH);
 	
 	
-	C64DebuggerParseCommandLine1();
+	LOGM("sound engine startup");
+	gSoundEngine->StartAudioUnit(true, false, 0);
 
+
+	mappedC64Memory = NULL;
+	mappedC64MemoryDescriptor = NULL;
 	
-	keyboardShortcuts = new CSlrKeyboardShortcuts();
+	keyboardShortcuts = new C64KeyboardShortcuts();
 
 	// load breakpoints and symbols
 	this->symbols = new C64Symbols();
 	
+	// init default key map
+	if (c64SettingsSkipConfig == false)
+	{
+		C64KeyMapLoadFromSettings();
+	}
+	else
+	{
+		C64KeyMapCreateDefault();
+	}
+
 	// init the Commodore 64 object
 	this->InitViceC64();
 	
@@ -207,7 +97,6 @@ CViewC64::CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 
 	this->InitViews();
 	this->InitLayouts();
-	
 	
 	// loop of views for TAB & shift+TAB
 	traversalOfViews.push_back(viewC64Screen);
@@ -224,17 +113,23 @@ CViewC64::CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 	guiMain->AddGuiElement(this);
 
 	// other views
+	viewC64MainMenu = new CViewMainMenu(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT);
+	guiMain->AddGuiElement(viewC64MainMenu);
+	
+	viewC64SettingsMenu = new CViewSettingsMenu(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT);
+	guiMain->AddGuiElement(viewC64SettingsMenu);
+	
 	viewC64Breakpoints = new CViewBreakpoints(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	guiMain->AddGuiElement(viewC64Breakpoints);
 	
 	viewC64Snapshots = new CViewSnapshots(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	guiMain->AddGuiElement(viewC64Snapshots);
 
-	viewC64MainMenu = new CViewMainMenu(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT);
-	guiMain->AddGuiElement(viewC64MainMenu);
-	
-	viewC64SettingsMenu = new CViewSettingsMenu(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT);
-	guiMain->AddGuiElement(viewC64SettingsMenu);
+	viewC64KeyMap = new CViewC64KeyMap(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT);
+	guiMain->AddGuiElement(viewC64KeyMap);
+
+	viewKeyboardShortcuts = new CViewKeyboardShortcuts(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT);
+	guiMain->AddGuiElement(viewKeyboardShortcuts);
 
 	viewAbout = new CViewAbout(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	guiMain->AddGuiElement(viewAbout);
@@ -271,9 +166,18 @@ CViewC64::CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 	// attach disks, cartridges etc
 	C64DebuggerPerformStartupTasks();
 
+	if (c64SettingsSkipConfig == false)
+	{
+		viewKeyboardShortcuts->RestoreKeyboardShortcuts();
+	}
 	
+	viewKeyboardShortcuts->UpdateQuitShortcut();
+
+
 	guiMain->SetView(this);
 	
+//	guiMain->SetView(viewKeyboardShortcuts);
+//	guiMain->SetView(viewC64KeyMap);
 //	guiMain->SetView(viewAbout);
 //	guiMain->SetView(viewC64SettingsMenu);
 //	guiMain->SetView(viewC64MainMenu);
@@ -291,10 +195,24 @@ void CViewC64::InitViceC64()
 {
 	LOGM("CViewC64::InitViceC64");
 	
-	bool patchKernalFastBoot = false;
+	if (c64SettingsPathToC64MemoryMapFile)
+	{
+		// Create debug interface and init Vice
+		char *asciiPath = c64SettingsPathToC64MemoryMapFile->GetStdASCII();
+
+		this->MapC64MemoryToFile(asciiPath);
+
+		LOGD(".. mapped C64 memory to file '%s'", asciiPath);
+		
+		delete [] asciiPath;
+		
+	}
+	else
+	{
+		this->mappedC64Memory = (uint8 *)malloc(C64_RAM_SIZE);
+	}
 	
-	// Create debug interface and init Vice
-	this->debugInterface = new C64DebugInterfaceVice(this, patchKernalFastBoot);
+	this->debugInterface = new C64DebugInterfaceVice(this, this->mappedC64Memory, c64SettingsFastBootKernalPatch);
 	
 	LOGM("CViewC64::InitViceC64: done");
 
@@ -302,6 +220,10 @@ void CViewC64::InitViceC64()
 
 void CViewC64::InitViews()
 {
+	// make first outside
+	mouseCursorX = -SCREEN_WIDTH;
+	mouseCursorY = -SCREEN_HEIGHT;
+	
 	// create views
 	viewC64Screen = new CViewC64Screen(0, 0, posZ, sizeX, sizeY, debugInterface);
 	this->AddGuiElement(viewC64Screen);
@@ -615,7 +537,7 @@ void CViewC64::InitLayouts()
 	screenPositions[m]->drive1541DataDumpVisible = false;
 	
 	screenPositions[m]->emulationStateVisible = true;
-	screenPositions[m]->emulationStateX = 406.0f;
+	screenPositions[m]->emulationStateX = 371.0f;
 	screenPositions[m]->emulationStateY = 350.0f;
 	
 	//
@@ -898,7 +820,6 @@ void CViewC64::Render()
 	}
 	
 	
-	
 	//////////
 	
 	/// CPU
@@ -1079,123 +1000,135 @@ bool CViewC64::ProcessGlobalKeyboardShortcut(u32 keyCode, bool isShift, bool isA
 		if (viewC64Snapshots->ProcessKeyboardShortcut(shortcut))
 			return true;
 		
-		if (shortcut->function == KBFUN_SETTINGS_SCREEN)
+		if (shortcut == viewC64MainMenu->kbsMainMenuScreen)
 		{
-			viewC64MainMenu->SwitchSettingsScreen();
+			viewC64MainMenu->SwitchMainMenuScreen();
 		}
-		else if (shortcut->function == KBFUN_SCREEN_LAYOUT1)
+		else if (shortcut == viewC64MainMenu->kbsScreenLayout1)
 		{
 			SwitchToScreenLayout(C64_SCREEN_LAYOUT_C64_ONLY);
 			C64DebuggerStoreSettings();
 		}
-		else if (shortcut->function == KBFUN_SCREEN_LAYOUT2)
+		else if (shortcut == viewC64MainMenu->kbsScreenLayout2)
 		{
 			SwitchToScreenLayout(C64_SCREEN_LAYOUT_C64_DATA_DUMP);
 			C64DebuggerStoreSettings();
 		}
-		else if (shortcut->function == KBFUN_SCREEN_LAYOUT3)
+		else if (shortcut == viewC64MainMenu->kbsScreenLayout3)
 		{
 			SwitchToScreenLayout(C64_SCREEN_LAYOUT_C64_DEBUGGER);
 			C64DebuggerStoreSettings();
 		}
-		else if (shortcut->function == KBFUN_SCREEN_LAYOUT4)
+		else if (shortcut == viewC64MainMenu->kbsScreenLayout4)
 		{
 			SwitchToScreenLayout(C64_SCREEN_LAYOUT_C64_1541_MEMORY_MAP);
 			C64DebuggerStoreSettings();
 		}
-		else if (shortcut->function == KBFUN_SCREEN_LAYOUT5)
+		else if (shortcut == viewC64MainMenu->kbsScreenLayout5)
 		{
 			SwitchToScreenLayout(C64_SCREEN_LAYOUT_SHOW_STATES);
 			C64DebuggerStoreSettings();
 		}
-		else if (shortcut->function == KBFUN_SCREEN_LAYOUT6)
+		else if (shortcut == viewC64MainMenu->kbsScreenLayout6)
 		{
 			SwitchToScreenLayout(C64_SCREEN_LAYOUT_C64_MEMORY_MAP);
 			C64DebuggerStoreSettings();
 		}
-		else if (shortcut->function == KBFUN_SCREEN_LAYOUT7)
+		else if (shortcut == viewC64MainMenu->kbsScreenLayout7)
 		{
 			SwitchToScreenLayout(C64_SCREEN_LAYOUT_C64_1541_DEBUGGER);
 			C64DebuggerStoreSettings();
 		}
-		else if (shortcut->function == KBFUN_SCREEN_LAYOUT8)
+		else if (shortcut == viewC64MainMenu->kbsScreenLayout8)
 		{
 			SwitchToScreenLayout(C64_SCREEN_LAYOUT_MONITOR_CONSOLE);
 			C64DebuggerStoreSettings();
 		}
-		else if (shortcut->function == KBFUN_INSERT_D64)
+		else if (shortcut == viewC64MainMenu->kbsInsertD64)
 		{
 			viewC64MainMenu->OpenDialogInsertD64();
 		}
-		else if (shortcut->function == KBFUN_INSERT_CARTRIDGE)
+		else if (shortcut == viewC64MainMenu->kbsInsertCartridge)
 		{
 			viewC64MainMenu->OpenDialogInsertCartridge();
 		}
-		else if (shortcut->function == KBFUN_LOAD_PRG)
+		else if (shortcut == viewC64MainMenu->kbsLoadPRG)
 		{
 			viewC64MainMenu->OpenDialogLoadPRG();
 		}
-		else if (shortcut->function == KBFUN_RELOAD_AND_RESTART)
+		else if (shortcut == viewC64MainMenu->kbsReloadAndRestart)
 		{
 			viewC64MainMenu->ReloadAndRestartPRG();
 		}
-		else if (shortcut->function == KBFUN_LIMIT_SPEED)
+		else if (shortcut == viewC64SettingsMenu->kbsDumpC64Memory)
+		{
+			viewC64SettingsMenu->OpenDialogDumpC64Memory();
+		}
+		else if (shortcut == viewC64SettingsMenu->kbsDumpDrive1541Memory)
+		{
+			viewC64SettingsMenu->OpenDialogDumpDrive1541Memory();
+		}
+		else if (shortcut == viewC64SettingsMenu->kbsIsWarpSpeed)
 		{
 			SwitchIsWarpSpeed();
 		}
-		else if (shortcut->function == KBFUN_SOFT_RESET)
+		else if (shortcut == viewC64MainMenu->kbsSoftReset)
 		{
 			debugInterface->Reset();
 		}
-		else if (shortcut->function == KBFUN_HARD_RESET)
+		else if (shortcut == viewC64MainMenu->kbsHardReset)
 		{
 			debugInterface->HardReset();
 			viewC64MemoryMap->ClearExecuteMarkers();
 			viewC64->viewDrive1541MemoryMap->ClearExecuteMarkers();
 		}
-		else if (shortcut->function == KBFUN_BREAKPOINTS)
+		else if (shortcut == viewC64MainMenu->kbsBreakpoints)
 		{
 			viewC64Breakpoints->SwitchBreakpointsScreen();
 		}
-		else if (shortcut->function == KBFUN_USE_KEYBOARD_AS_JOYSTICK)
+		else if (shortcut == viewC64SettingsMenu->kbsUseKeboardAsJoystick)
 		{
 			SwitchUseKeyboardAsJoystick();
 		}
-		else if (shortcut->function == KBFUN_STEP_OVER_INSTRUCTION)
+		else if (shortcut == viewC64MainMenu->kbsStepOverInstruction)
 		{
 			StepOverInstruction();
 		}
-		else if (shortcut->function == KBFUN_STEP_ONE_CYCLE)
+		else if (shortcut == viewC64MainMenu->kbsStepOneCycle)
 		{
 			StepOneCycle();
 		}
-		else if (shortcut->function == KBFUN_RUN_CONTINUE_EMULATION)
+		else if (shortcut == viewC64MainMenu->kbsRunContinueEmulation)
 		{
 			RunContinueEmulation();
 		}
-		else if (shortcut->function == KBFUN_IS_DATA_DIRECTLY_FROM_RAM)
+		else if (shortcut == viewC64MainMenu->kbsIsDataDirectlyFromRam)
 		{
 			SwitchIsDataDirectlyFromRam();
 		}
-		else if (shortcut->function == KBFUN_IS_MULTICOLOR_DATA)
+		else if (shortcut == viewC64MainMenu->kbsToggleMulticolorImageDump)
 		{
 			SwitchIsMulticolorDataDump();
 		}
-		else if (shortcut->function == KBFUN_IS_SHOW_RASTER_BEAM)
+		else if (shortcut == viewC64MainMenu->kbsShowRasterBeam)
 		{
 			SwitchIsShowRasterBeam();
 		}
-		else if (shortcut->function == KBFUN_MOVE_FOCUS_TO_NEXT_VIEW)
+		else if (shortcut == viewC64MainMenu->kbsMoveFocusToNextView)
 		{
 			MoveFocusToNextView();
 		}
-		else if (shortcut->function == KBFUN_MOVE_FOCUS_TO_PREV_VIEW)
+		else if (shortcut == viewC64MainMenu->kbsMoveFocusToPreviousView)
 		{
 			MoveFocusToPrevView();
 		}
-		else if (shortcut->function == KBFUN_CARTRIDGE_FREEZE_BUTTON)
+		else if (shortcut == viewC64SettingsMenu->kbsCartridgeFreezeButton)
 		{
 			debugInterface->CartridgeFreezeButtonPressed();
+		}
+		else if (shortcut == viewC64SettingsMenu->kbsClearMemoryMarkers)
+		{
+			viewC64SettingsMenu->ClearMemoryMarkers();
 		}
 		
 		return true;
@@ -1407,22 +1340,28 @@ bool CViewC64::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 //	
 //	if (keyCode == MTKEY_F8 && isShift)
 //	{
-//		debugInterface->SetC64ModelType(4);
+////		debugInterface->SetC64ModelType(4);
+//		
+//		MapC64MemoryToFile ("/Users/mars/memorymap");
+//		guiMain->ShowMessage("mapped");
 //		return true;
 //	}
 
-	
 	if (viewC64->ProcessGlobalKeyboardShortcut(keyCode, isShift, isAlt, isControl))
 	{
 		// workaround:
 		// send key up for shift/alt/ctrl when key shortcut is detected
 		viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
 		
+		keyDownCodes.push_back(keyCode);
+		
 		return true;
 	}
 	
 	// TODO: this is a temporary workaround for step over jsr
-	if (isControl && keyCode == MTKEY_F10)
+	CSlrKeyboardShortcut *shortcut = this->keyboardShortcuts->FindShortcut(KBZONE_DISASSEMBLE, keyCode, isShift, isAlt, isControl);
+
+	if (shortcut == keyboardShortcuts->kbsStepOverJsr)
 	{
 		if (focusView != viewDrive1541Disassemble && viewC64Disassemble->visible)
 		{
@@ -1440,6 +1379,7 @@ bool CViewC64::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 	{
 		if (focusView->KeyDown(keyCode, isShift, isAlt, isControl))
 		{
+			keyDownCodes.push_back(keyCode);
 			return true;
 		}
 	}
@@ -1451,7 +1391,7 @@ bool CViewC64::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 
 bool CViewC64::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
-	LOGI("CViewC64::KeyUp, keyCode=%d", keyCode);
+	LOGD("CViewC64::KeyUp, keyCode=%d isShift=%d isAlt=%d isControl=%d", keyCode, isShift, isAlt, isControl);
 
 	// check if shortcut
 	std::list<u32> zones;
@@ -1464,6 +1404,16 @@ bool CViewC64::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 	{
 		if (focusView->KeyUp(keyCode, isShift, isAlt, isControl))
 		{
+			keyDownCodes.remove(keyCode);
+			return true;
+		}
+	}
+
+	for (std::list<u32>::iterator it = keyDownCodes.begin(); it != keyDownCodes.end(); it++)
+	{
+		if (keyCode == *it)
+		{
+			keyDownCodes.remove(keyCode);
 			return true;
 		}
 	}
@@ -1514,6 +1464,54 @@ bool CViewC64::DoTap(GLfloat x, GLfloat y)
 	
 	//return CGuiView::DoTap(x, y);
 }
+
+// scroll only where cursor is
+bool CViewC64::DoNotTouchedMove(GLfloat x, GLfloat y)
+{
+//	LOGG("CViewC64::DoNotTouchedMove, mouseCursor=%f %f", mouseCursorX, mouseCursorY);
+
+	mouseCursorX = x;
+	mouseCursorY = y;
+	return CGuiView::DoNotTouchedMove(x, y);
+}
+
+bool CViewC64::DoScrollWheel(float deltaX, float deltaY)
+{
+//	LOGG("CViewC64::DoScrollWheel, mouseCursor=%f %f", mouseCursorX, mouseCursorY);
+
+	// first scroll if mouse cursor is on element
+	for (std::map<float, CGuiElement *, compareZdownwards>::iterator enumGuiElems = guiElementsDownwards.begin();
+		 enumGuiElems != guiElementsDownwards.end(); enumGuiElems++)
+	{
+		CGuiElement *guiElement = (*enumGuiElems).second;
+		if (!guiElement->visible)
+			continue;
+
+		if (guiElement->IsInside(mouseCursorX, mouseCursorY))
+		{
+			guiElement->DoScrollWheel(deltaX, deltaY);
+			return true;
+		}
+	}
+	
+	// if not then by focus
+	for (std::map<float, CGuiElement *, compareZdownwards>::iterator enumGuiElems = guiElementsDownwards.begin();
+		 enumGuiElems != guiElementsDownwards.end(); enumGuiElems++)
+	{
+		CGuiElement *guiElement = (*enumGuiElems).second;
+		if (!guiElement->visible)
+			continue;
+	
+		if (guiElement->hasFocus == false)
+			continue;
+		
+		if (guiElement->DoScrollWheel(deltaX, deltaY))
+			return true;
+	}
+	
+	return false;
+}
+
 
 bool CViewC64::DoFinishTap(GLfloat x, GLfloat y)
 {
@@ -1621,6 +1619,19 @@ void CViewC64::CreateFonts()
 //	u64 t2 = SYS_GetCurrentTimeInMillis();
 //	LOGD("time=%u", t2-t1);
 	
+}
+
+///
+void CViewC64::MapC64MemoryToFile(char *filePath)
+{
+	mappedC64Memory = SYS_MapMemoryToFile(C64_RAM_SIZE, filePath, (void**)&mappedC64MemoryDescriptor);
+}
+
+void CViewC64::UnMapC64MemoryFromFile()
+{
+	SYS_UnMapMemoryFromFile(mappedC64Memory, C64_RAM_SIZE, (void**)&mappedC64MemoryDescriptor);
+	mappedC64Memory = NULL;
+	mappedC64MemoryDescriptor = NULL;
 }
 
 C64ScreenLayout::C64ScreenLayout()

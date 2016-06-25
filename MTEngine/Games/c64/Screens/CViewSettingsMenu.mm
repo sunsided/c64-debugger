@@ -12,15 +12,22 @@
 #include "C64KeyboardShortcuts.h"
 #include "CViewBreakpoints.h"
 #include "CViewSnapshots.h"
+#include "CViewC64KeyMap.h"
+#include "CViewKeyboardShortcuts.h"
 #include "C64DebugInterface.h"
 #include "MTH_Random.h"
 
 #include "CViewMemoryMap.h"
 
 #include "CGuiMain.h"
+#include "SND_SoundEngine.h"
 
-#define VIEWC64SETTINGS_DUMP_C64		1
-#define VIEWC64SETTINGS_DUMP_DRIVE1541	2
+
+#define VIEWC64SETTINGS_DUMP_C64_MEMORY					1
+#define VIEWC64SETTINGS_DUMP_C64_MEMORY_MARKERS			2
+#define VIEWC64SETTINGS_DUMP_DRIVE1541_MEMORY			3
+#define VIEWC64SETTINGS_DUMP_DRIVE1541_MEMORY_MARKERS	4
+#define VIEWC64SETTINGS_MAP_C64_MEMORY_TO_FILE			5
 
 CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
@@ -29,83 +36,53 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 
 	font = viewC64->fontCBMShifted;
 	fontScale = 2.7;
-	fontHeight = font->GetCharHeight('@', fontScale) + 2;
+	fontHeight = font->GetCharHeight('@', fontScale) + 3;
 
 	strHeader = new CSlrString("Settings");
 
 	memoryExtensions.push_back(new CSlrString("bin"));
+	csvExtensions.push_back(new CSlrString("csv"));
 
 	/// colors
 	tr = 0.64; //163/255;
 	tg = 0.59; //151/255;
 	tb = 1.0; //255/255;
-	
+
+	float sb = 20;
+
 	/// menu
-	viewMenu = new CGuiViewMenu(35, 53, -1, sizeX-70, sizeY-74, this);
+	viewMenu = new CGuiViewMenu(35, 51, -1, sizeX-70, sizeY-51-sb, this);
 
 	//
 	menuItemBack  = new CViewC64MenuItem(fontHeight*2.0f, new CSlrString("<< BACK"),
 										 NULL, tr, tg, tb);
 	viewMenu->AddMenuItem(menuItemBack);
-
+	
 	//
 	std::vector<CSlrString *> *options = NULL;
 	
 	menuItemDetachEverything = new CViewC64MenuItem(fontHeight*2, new CSlrString("Detach everything"),
-												   NULL, tr, tg, tb);
+													NULL, tr, tg, tb);
 	viewMenu->AddMenuItem(menuItemDetachEverything);
-
-	kbsDumpC64Memory = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_LIMIT_SPEED, 'u', false, false, true);
-	viewC64->keyboardShortcuts->AddShortcut(kbsDumpC64Memory);
-
-	/*
-	menuItemDumpC64Memory = new CViewC64MenuItem(fontHeight, new CSlrString("Dump C64 memory"),
-													kbsDumpC64Memory, tr, tg, tb);
-	viewMenu->AddMenuItem(menuItemDumpC64Memory);
-	 */
-
-	kbsDumpDrive1541Memory = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_LIMIT_SPEED, 'u', true, false, true);
-	viewC64->keyboardShortcuts->AddShortcut(kbsDumpDrive1541Memory);
-	
-	/*
-	menuItemDumpDrive1541Memory = new CViewC64MenuItem(fontHeight*2, new CSlrString("Dump Disk 1541 memory"),
-													kbsDumpDrive1541Memory, tr, tg, tb);
-	viewMenu->AddMenuItem(menuItemDumpDrive1541Memory);
-	 */
-	
-	///
-	kbsIsWarpSpeed = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_LIMIT_SPEED, 'p', false, false, true);
-	viewC64->keyboardShortcuts->AddShortcut(kbsIsWarpSpeed);
-	options = new std::vector<CSlrString *>();
-	options->push_back(new CSlrString("Off"));
-	options->push_back(new CSlrString("On"));
-	menuItemIsWarpSpeed = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("Warp Speed: "), kbsIsWarpSpeed, tr, tg, tb, options, font, fontScale);
-	viewMenu->AddMenuItem(menuItemIsWarpSpeed);
-	
-	///
-	
-	kbsUseKeboardAsJoystick = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_USE_KEYBOARD_AS_JOYSTICK, 'y', false, false, true);
-	viewC64->keyboardShortcuts->AddShortcut(kbsUseKeboardAsJoystick);
-	menuItemUseKeyboardAsJoystick = new CViewC64MenuItemOption(fontHeight, new CSlrString("Use keyboard as joystick: "),
-															   kbsUseKeboardAsJoystick, tr, tg, tb, options, font, fontScale);
-	viewMenu->AddMenuItem(menuItemUseKeyboardAsJoystick);
-	///
-	
-	options = new std::vector<CSlrString *>();
-	options->push_back(new CSlrString("both"));
-	options->push_back(new CSlrString("1"));
-	options->push_back(new CSlrString("2"));
-	menuItemJoystickPort = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("Joystick port: "),
-															   NULL, tr, tg, tb, options, font, fontScale);
-	viewMenu->AddMenuItem(menuItemJoystickPort);
-
-
 	//
+	
+
 	options = new std::vector<CSlrString *>();
 	viewC64->debugInterface->GetC64ModelTypes(options);
-	menuItemC64Model = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("Machine model: "),
+	menuItemC64Model = new CViewC64MenuItemOption(fontHeight, new CSlrString("Machine model: "),
 												  NULL, tr, tg, tb, options, font, fontScale);
 	viewMenu->AddMenuItem(menuItemC64Model);
+
+	options = new std::vector<CSlrString *>();
+	options->push_back(new CSlrString("10"));
+	options->push_back(new CSlrString("20"));
+	options->push_back(new CSlrString("50"));
+	options->push_back(new CSlrString("100"));
+	options->push_back(new CSlrString("200"));
+	menuItemMaximumSpeed = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("Maximum speed: "),
+												  NULL, tr, tg, tb, options, font, fontScale);
+	menuItemMaximumSpeed->SetSelectedOption(3, false);
+	viewMenu->AddMenuItem(menuItemMaximumSpeed);
 
 	//
 	options = new std::vector<CSlrString *>();
@@ -113,6 +90,11 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 	menuItemSIDModel = new CViewC64MenuItemOption(fontHeight, new CSlrString("SID model: "),
 												  NULL, tr, tg, tb, options, font, fontScale);
 	viewMenu->AddMenuItem(menuItemSIDModel);
+	
+	//
+	menuItemAudioOutDevice = new CViewC64MenuItemOption(fontHeight, new CSlrString("Audio Out device: "),
+														NULL, tr, tg, tb, NULL, font, fontScale);
+	viewMenu->AddMenuItem(menuItemAudioOutDevice);
 	
 	//
 	options = new std::vector<CSlrString *>();
@@ -123,7 +105,6 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 														NULL, tr, tg, tb, options, font, fontScale);
 	menuItemSIDModel->SetSelectedOption(c64SettingsMuteSIDOnPause, false);
 	viewMenu->AddMenuItem(menuItemMuteSIDOnPause);
-	
 	
 	//
 	options = new std::vector<CSlrString *>();
@@ -164,13 +145,14 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 #if defined(MACOS)
 	float fh = fontHeight;
 #else
-	float fh = fontHeight*2.0f;
+	float fh = fontHeight*2;
 #endif
 	
 	menuItemMemoryMapRefreshRate = new CViewC64MenuItemOption(fh, new CSlrString("Memory map refresh rate: "),
 														 NULL, tr, tg, tb, options, font, fontScale);
+	menuItemMemoryMapRefreshRate->SetSelectedOption(1, false);
 	viewMenu->AddMenuItem(menuItemMemoryMapRefreshRate);
-
+	
 	//
 #if defined(MACOS)
 	options = new std::vector<CSlrString *>();
@@ -183,17 +165,172 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 	viewMenu->AddMenuItem(menuItemMultiTouchMemoryMap);
 #endif
 
+	//
+	// memory mapping can be initialised only on startup
+	menuItemMapC64MemoryToFile = new CViewC64MenuItem(fontHeight*3, NULL,
+													  NULL, tr, tg, tb);
+	viewMenu->AddMenuItem(menuItemMapC64MemoryToFile);
+	
+	UpdateMapC64MemoryToFileLabels();
+	
+	///
+	kbsDumpC64Memory = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Dump C64 memory", 'u', false, false, true);
+	viewC64->keyboardShortcuts->AddShortcut(kbsDumpC64Memory);
+	
+	menuItemDumpC64Memory = new CViewC64MenuItem(fontHeight, new CSlrString("Dump C64 memory"),
+													kbsDumpC64Memory, tr, tg, tb);
+	viewMenu->AddMenuItem(menuItemDumpC64Memory);
+	
+	menuItemDumpC64MemoryMarkers = new CViewC64MenuItem(fontHeight, new CSlrString("Dump C64 memory markers"),
+														NULL, tr, tg, tb);
+	viewMenu->AddMenuItem(menuItemDumpC64MemoryMarkers);
+	
+	kbsDumpDrive1541Memory = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Dump Drive 1541 memory", 'u', true, false, true);
+	viewC64->keyboardShortcuts->AddShortcut(kbsDumpDrive1541Memory);
+	
+	menuItemDumpDrive1541Memory = new CViewC64MenuItem(fontHeight, new CSlrString("Dump Disk 1541 memory"),
+													   kbsDumpDrive1541Memory, tr, tg, tb);
+	viewMenu->AddMenuItem(menuItemDumpDrive1541Memory);
+	
+	menuItemDumpDrive1541MemoryMarkers = new CViewC64MenuItem(fontHeight*2, new CSlrString("Dump Disk 1541 memory markers"),
+															  NULL, tr, tg, tb);
+	viewMenu->AddMenuItem(menuItemDumpDrive1541MemoryMarkers);
+
+	//
+
+	kbsClearMemoryMarkers = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Clear Memory markers", MTKEY_BACKSPACE, false, false, true);
+	viewC64->keyboardShortcuts->AddShortcut(kbsClearMemoryMarkers);
+	menuItemClearMemoryMarkers = new CViewC64MenuItem(fontHeight*2, new CSlrString("Clear Memory markers"),
+															  kbsClearMemoryMarkers, tr, tg, tb);
+	viewMenu->AddMenuItem(menuItemClearMemoryMarkers);
+
 	
 	//
-	kbsCartridgeFreezeButton = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_CARTRIDGE_FREEZE_BUTTON, 'f', false, false, true);
+	
+	kbsUseKeboardAsJoystick = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Use keyboard as joystick", 'y', false, false, true);
+	viewC64->keyboardShortcuts->AddShortcut(kbsUseKeboardAsJoystick);
+	menuItemUseKeyboardAsJoystick = new CViewC64MenuItemOption(fontHeight, new CSlrString("Use keyboard as joystick: "),
+															   kbsUseKeboardAsJoystick, tr, tg, tb, options, font, fontScale);
+	viewMenu->AddMenuItem(menuItemUseKeyboardAsJoystick);
+	///
+	
+	options = new std::vector<CSlrString *>();
+	options->push_back(new CSlrString("both"));
+	options->push_back(new CSlrString("1"));
+	options->push_back(new CSlrString("2"));
+	menuItemJoystickPort = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("Joystick port: "),
+													  NULL, tr, tg, tb, options, font, fontScale);
+	viewMenu->AddMenuItem(menuItemJoystickPort);
+	
+	
+	//
+	menuItemSetC64KeyboardMapping = new CViewC64MenuItem(fontHeight, new CSlrString("Set C64 keyboard mapping"),
+													NULL, tr, tg, tb);
+	viewMenu->AddMenuItem(menuItemSetC64KeyboardMapping);
+
+	menuItemSetKeyboardShortcuts = new CViewC64MenuItem(fontHeight*2, new CSlrString("Set keyboard shortcuts"),
+														 NULL, tr, tg, tb);
+	viewMenu->AddMenuItem(menuItemSetKeyboardShortcuts);
+
+
+	//
+
+	kbsIsWarpSpeed = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Warp speed", 'p', false, false, true);
+	viewC64->keyboardShortcuts->AddShortcut(kbsIsWarpSpeed);
+	options = new std::vector<CSlrString *>();
+	options->push_back(new CSlrString("Off"));
+	options->push_back(new CSlrString("On"));
+	menuItemIsWarpSpeed = new CViewC64MenuItemOption(fontHeight, new CSlrString("Warp Speed: "), kbsIsWarpSpeed, tr, tg, tb, options, font, fontScale);
+	viewMenu->AddMenuItem(menuItemIsWarpSpeed);
+	
+	//
+	kbsCartridgeFreezeButton = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Cartridge freeze", 'f', false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsCartridgeFreezeButton);
 	menuItemCartridgeFreeze = new CViewC64MenuItem(fontHeight, new CSlrString("Cartridge freeze"),
 												   kbsCartridgeFreezeButton, tr, tg, tb);
 	viewMenu->AddMenuItem(menuItemCartridgeFreeze);
 	
+	///
+	options = new std::vector<CSlrString *>();
+	options->push_back(new CSlrString("No"));
+	options->push_back(new CSlrString("Yes"));
+	
+	menuItemFastBootKernalPatch = new CViewC64MenuItemOption(fontHeight*2.0f, new CSlrString("Fast boot kernal patch: "),
+															 NULL, tr, tg, tb, options, font, fontScale);
+	menuItemFastBootKernalPatch->SetSelectedOption(c64SettingsFastBootKernalPatch, false);
+	viewMenu->AddMenuItem(menuItemFastBootKernalPatch);
+	
 
+	menuItemClearSettings = new CViewC64MenuItem(fontHeight*0.75f, new CSlrString("Clear settings to factory defaults"),
+															 NULL, tr, tg, tb);
+	viewMenu->AddMenuItem(menuItemClearSettings);
 
+}
 
+void CViewSettingsMenu::UpdateMapC64MemoryToFileLabels()
+{
+	guiMain->LockMutex();
+
+	if (c64SettingsPathToC64MemoryMapFile == NULL)
+	{
+		menuItemMapC64MemoryToFile->SetString(new CSlrString("Map C64 memory to a file"));
+		if (menuItemMapC64MemoryToFile->str2 != NULL)
+			delete menuItemMapC64MemoryToFile->str2;
+		menuItemMapC64MemoryToFile->str2 = NULL;
+	}
+	else
+	{
+		menuItemMapC64MemoryToFile->SetString(new CSlrString("Unmap C64 memory from file"));
+		
+		char *asciiPath = c64SettingsPathToC64MemoryMapFile->GetStdASCII();
+		
+		// display file name in menu
+		char *fname = SYS_GetFileNameFromFullPath(asciiPath);
+		
+		if (menuItemMapC64MemoryToFile->str2 != NULL)
+			delete menuItemMapC64MemoryToFile->str2;
+		
+		menuItemMapC64MemoryToFile->str2 = new CSlrString(fname);
+		delete fname;
+	}
+	guiMain->UnlockMutex();
+}
+
+void CViewSettingsMenu::UpdateAudioOutDevices()
+{
+	guiMain->LockMutex();
+	
+	std::list<CSlrString *> *audioDevicesList = NULL;
+	audioDevicesList = gSoundEngine->EnumerateAvailableOutputDevices();
+	
+	std::vector<CSlrString *> *audioDevices = new std::vector<CSlrString *>();
+	for (std::list<CSlrString *>::iterator it = audioDevicesList->begin(); it != audioDevicesList->end(); it++)
+	{
+		CSlrString *str = *it;
+		audioDevices->push_back(str);
+	}
+	delete audioDevicesList;
+	
+	menuItemAudioOutDevice->SetOptions(audioDevices);
+	
+	LOGD("CViewSettingsMenu::UpdateAudioOutDevices: selected AudioOut device=%s", gSoundEngine->deviceOutName);
+
+	CSlrString *deviceOutNameStr = new CSlrString(gSoundEngine->deviceOutName);
+	
+	int i = 0;
+	for (std::vector<CSlrString *>::iterator it = audioDevices->begin(); it != audioDevices->end(); it++)
+	{
+		CSlrString *str = *it;
+		if (deviceOutNameStr->CompareWith(str))
+		{
+			menuItemAudioOutDevice->SetSelectedOption(i, false);
+			break;
+		}
+		
+		i++;
+	}
+	
+	guiMain->UnlockMutex();
 }
 
 CViewSettingsMenu::~CViewSettingsMenu()
@@ -238,6 +375,18 @@ void CViewSettingsMenu::MenuCallbackItemChanged(CGuiViewMenuItem *menuItem)
 	{
 		bool v = menuItemMuteSIDOnPause->selectedOption == 0 ? false : true;
 		C64DebuggerSetSetting("MuteSIDOnPause", &(v));
+	}
+	else if (menuItem == menuItemFastBootKernalPatch)
+	{
+		bool v = menuItemFastBootKernalPatch->selectedOption == 0 ? false : true;
+		C64DebuggerSetSetting("FastBootPatch", &(v));
+		
+		guiMain->ShowMessage("Please restart debugger to apply ROM changes");
+	}
+	else if (menuItem == menuItemAudioOutDevice)
+	{
+		CSlrString *deviceName = (*menuItemAudioOutDevice->options)[menuItemAudioOutDevice->selectedOption];
+		C64DebuggerSetSetting("AudioOutDevice", deviceName);
 	}
 	else if (menuItem == menuItemC64Model)
 	{
@@ -292,7 +441,37 @@ void CViewSettingsMenu::MenuCallbackItemChanged(CGuiViewMenuItem *menuItem)
 			int v = 20;
 			C64DebuggerSetSetting("MemMapRefresh", &v);
 		}
-
+	}
+	else if (menuItem == menuItemMaximumSpeed)
+	{
+		int sel = menuItemMaximumSpeed->selectedOption;
+		
+		if (sel == 0)
+		{
+			int v = 10;
+			C64DebuggerSetSetting("EmulationMaximumSpeed", &v);
+		}
+		else if (sel == 1)
+		{
+			int v = 20;
+			C64DebuggerSetSetting("EmulationMaximumSpeed", &v);
+		}
+		else if (sel == 2)
+		{
+			int v = 50;
+			C64DebuggerSetSetting("EmulationMaximumSpeed", &v);
+		}
+		else if (sel == 3)
+		{
+			int v = 100;
+			C64DebuggerSetSetting("EmulationMaximumSpeed", &v);
+		}
+		else if (sel == 4)
+		{
+			int v = 200;
+			C64DebuggerSetSetting("EmulationMaximumSpeed", &v);
+		}
+		
 	}
 	
 	C64DebuggerStoreSettings();
@@ -306,8 +485,7 @@ void CViewSettingsMenu::MenuCallbackItemEntered(CGuiViewMenuItem *menuItem)
 		viewC64->debugInterface->DetachCartridge();
 		viewC64->debugInterface->DetachDriveDisk();
 		
-		viewMenu->mutex->Lock();
-
+		guiMain->LockMutex();
 		
 		if (viewC64->viewC64MainMenu->menuItemInsertD64->str2 != NULL)
 			delete viewC64->viewC64MainMenu->menuItemInsertD64->str2;
@@ -331,7 +509,7 @@ void CViewSettingsMenu::MenuCallbackItemEntered(CGuiViewMenuItem *menuItem)
 		c64SettingsPathPRG = NULL;
 		
 		
-		viewMenu->mutex->Unlock();
+		guiMain->UnlockMutex();
 		
 		C64DebuggerStoreSettings();
 
@@ -341,21 +519,85 @@ void CViewSettingsMenu::MenuCallbackItemEntered(CGuiViewMenuItem *menuItem)
 	{
 		OpenDialogDumpC64Memory();
 	}
+	else if (menuItem == menuItemDumpC64MemoryMarkers)
+	{
+		OpenDialogDumpC64MemoryMarkers();
+	}
 	else if (menuItem == menuItemDumpDrive1541Memory)
 	{
 		OpenDialogDumpDrive1541Memory();
+	}
+	else if (menuItem == menuItemDumpDrive1541MemoryMarkers)
+	{
+		OpenDialogDumpDrive1541MemoryMarkers();
+	}
+	else if (menuItem == menuItemMapC64MemoryToFile)
+	{
+		if (c64SettingsPathToC64MemoryMapFile == NULL)
+		{
+			OpenDialogMapC64MemoryToFile();
+		}
+		else
+		{
+			guiMain->LockMutex();
+			delete c64SettingsPathToC64MemoryMapFile;
+			c64SettingsPathToC64MemoryMapFile = NULL;
+			guiMain->UnlockMutex();
+			
+			C64DebuggerStoreSettings();
+			
+			UpdateMapC64MemoryToFileLabels();
+			guiMain->ShowMessage("Please restart debugger to unmap file");
+		}
+	}
+	else if (menuItem == menuItemSetC64KeyboardMapping)
+	{
+		guiMain->SetView(viewC64->viewC64KeyMap);
+	}
+	else if (menuItem == menuItemSetKeyboardShortcuts)
+	{
+		guiMain->SetView(viewC64->viewKeyboardShortcuts);
+	}
+	else if (menuItem == menuItemClearMemoryMarkers)
+	{
+		ClearMemoryMarkers();
+	}
+	else if (menuItem == menuItemClearSettings)
+	{
+		CByteBuffer *byteBuffer = new CByteBuffer();
+		byteBuffer->PutU16(0xFFFF);
+		CSlrString *fileName = new CSlrString("/settings.dat");
+		byteBuffer->storeToSettings(fileName);
+		
+		fileName->Set("/shortcuts.dat");
+		byteBuffer->storeToSettings(fileName);
+		
+		fileName->Set("/keymap.dat");
+		byteBuffer->storeToSettings(fileName);
+		
+		delete fileName;
+		delete byteBuffer;
+		
+		guiMain->ShowMessage("Settings cleared, please restart C64 debugger");
+		return;
 	}
 	else if (menuItem == menuItemBack)
 	{
 		guiMain->SetView(viewC64->viewC64MainMenu);
 	}
-	
+}
 
+void CViewSettingsMenu::ClearMemoryMarkers()
+{
+	viewC64->viewC64MemoryMap->ClearExecuteMarkers();
+	viewC64->viewDrive1541MemoryMap->ClearExecuteMarkers();
+	
+	guiMain->ShowMessage("Memory markers cleared");
 }
 
 void CViewSettingsMenu::OpenDialogDumpC64Memory()
 {
-	openDialogFunction = VIEWC64SETTINGS_DUMP_C64;
+	openDialogFunction = VIEWC64SETTINGS_DUMP_C64_MEMORY;
 	
 	CSlrString *defaultFileName = new CSlrString("c64memory");
 	
@@ -365,9 +607,21 @@ void CViewSettingsMenu::OpenDialogDumpC64Memory()
 	delete defaultFileName;
 }
 
+void CViewSettingsMenu::OpenDialogDumpC64MemoryMarkers()
+{
+	openDialogFunction = VIEWC64SETTINGS_DUMP_C64_MEMORY_MARKERS;
+	
+	CSlrString *defaultFileName = new CSlrString("c64markers");
+	
+	CSlrString *windowTitle = new CSlrString("Dump C64 memory markers");
+	SYS_DialogSaveFile(this, &csvExtensions, defaultFileName, c64SettingsDefaultMemoryDumpFolder, windowTitle);
+	delete windowTitle;
+	delete defaultFileName;
+}
+
 void CViewSettingsMenu::OpenDialogDumpDrive1541Memory()
 {
-	openDialogFunction = VIEWC64SETTINGS_DUMP_DRIVE1541;
+	openDialogFunction = VIEWC64SETTINGS_DUMP_DRIVE1541_MEMORY;
 	
 	CSlrString *defaultFileName = new CSlrString("1541memory");
 	
@@ -377,16 +631,56 @@ void CViewSettingsMenu::OpenDialogDumpDrive1541Memory()
 	delete defaultFileName;
 }
 
+void CViewSettingsMenu::OpenDialogDumpDrive1541MemoryMarkers()
+{
+	openDialogFunction = VIEWC64SETTINGS_DUMP_DRIVE1541_MEMORY_MARKERS;
+	
+	CSlrString *defaultFileName = new CSlrString("1541markers");
+	
+	CSlrString *windowTitle = new CSlrString("Dump Disk 1541 memory markers");
+	SYS_DialogSaveFile(this, &csvExtensions, defaultFileName, c64SettingsDefaultMemoryDumpFolder, windowTitle);
+	delete windowTitle;
+	delete defaultFileName;
+}
+
+
+void CViewSettingsMenu::OpenDialogMapC64MemoryToFile()
+{
+	openDialogFunction = VIEWC64SETTINGS_MAP_C64_MEMORY_TO_FILE;
+	
+	CSlrString *defaultFileName = new CSlrString("c64memory");
+	
+	CSlrString *windowTitle = new CSlrString("Map C64 memory to file");
+	SYS_DialogSaveFile(this, &memoryExtensions, defaultFileName, c64SettingsDefaultMemoryDumpFolder, windowTitle);
+	delete windowTitle;
+	delete defaultFileName;
+}
+
 void CViewSettingsMenu::SystemDialogFileSaveSelected(CSlrString *path)
 {
-	if (openDialogFunction == VIEWC64SETTINGS_DUMP_C64)
+	if (openDialogFunction == VIEWC64SETTINGS_DUMP_C64_MEMORY)
 	{
 		DumpC64Memory(path);
 		C64DebuggerStoreSettings();
 	}
-	else if (openDialogFunction == VIEWC64SETTINGS_DUMP_DRIVE1541)
+	else if (openDialogFunction == VIEWC64SETTINGS_DUMP_C64_MEMORY_MARKERS)
+	{
+		DumpC64MemoryMarkers(path);
+		C64DebuggerStoreSettings();
+	}
+	else if (openDialogFunction == VIEWC64SETTINGS_DUMP_DRIVE1541_MEMORY)
 	{
 		DumpDisk1541Memory(path);
+		C64DebuggerStoreSettings();
+	}
+	else if (openDialogFunction == VIEWC64SETTINGS_DUMP_DRIVE1541_MEMORY_MARKERS)
+	{
+		DumpDisk1541MemoryMarkers(path);
+		C64DebuggerStoreSettings();
+	}
+	else if (openDialogFunction == VIEWC64SETTINGS_MAP_C64_MEMORY_TO_FILE)
+	{
+		MapC64MemoryToFile(path);
 		C64DebuggerStoreSettings();
 	}
 	
@@ -400,7 +694,7 @@ void CViewSettingsMenu::SystemDialogFileSaveCancelled()
 
 void CViewSettingsMenu::DumpC64Memory(CSlrString *path)
 {
-	path->DebugPrint("CViewSnapshots::DumpC64Memory, path=");
+	path->DebugPrint("CViewSettingsMenu::DumpC64Memory, path=");
 	
 	if (c64SettingsDefaultMemoryDumpFolder != NULL)
 		delete c64SettingsDefaultMemoryDumpFolder;
@@ -420,25 +714,28 @@ void CViewSettingsMenu::DumpC64Memory(CSlrString *path)
 //		viewC64->debugInterface->GetWholeMemoryMapC64(memoryBuffer);
 //	}
 
+	memoryBuffer[0x0000] = viewC64->debugInterface->GetByteFromRamC64(0x0000);
+	memoryBuffer[0x0001] = viewC64->debugInterface->GetByteFromRamC64(0x0001);
+
 	FILE *fp = fopen(asciiPath, "wb");
 	if (fp == NULL)
 	{
 		guiMain->ShowMessage("Saving memory dump failed");
+		return;
 	}
 	
 	fwrite(memoryBuffer, 0x10000, 1, fp);
 	fclose(fp);
 	
-	delete memoryBuffer;
-	
-	delete asciiPath;
+	delete [] memoryBuffer;
+	delete [] asciiPath;
 	
 	guiMain->ShowMessage("C64 memory dumped");
 }
 
 void CViewSettingsMenu::DumpDisk1541Memory(CSlrString *path)
 {
-	path->DebugPrint("CViewSnapshots::DumpDisk1541Memory, path=");
+	path->DebugPrint("CViewSettingsMenu::DumpDisk1541Memory, path=");
 	
 	char *asciiPath = path->GetStdASCII();
 
@@ -454,10 +751,14 @@ void CViewSettingsMenu::DumpDisk1541Memory(CSlrString *path)
 //		viewC64->debugInterface->GetWholeMemoryMap1541(memoryBuffer);
 //	}
 	
+	memoryBuffer[0x0000] = viewC64->debugInterface->GetByteFromRam1541(0x0000);
+	memoryBuffer[0x0001] = viewC64->debugInterface->GetByteFromRam1541(0x0001);
+	
 	FILE *fp = fopen(asciiPath, "wb");
 	if (fp == NULL)
 	{
 		guiMain->ShowMessage("Saving memory dump failed");
+		return;
 	}
 	
 //	fwrite(memoryBuffer, 0x10000, 1, fp);
@@ -465,9 +766,158 @@ void CViewSettingsMenu::DumpDisk1541Memory(CSlrString *path)
 	
 	fclose(fp);
 
-	delete asciiPath;
+	delete [] memoryBuffer;
+	delete [] asciiPath;
 	
-	guiMain->ShowMessage("Disk 1541 memory dumped");
+	guiMain->ShowMessage("Drive 1541 memory dumped");
+}
+
+
+void CViewSettingsMenu::DumpC64MemoryMarkers(CSlrString *path)
+{
+	path->DebugPrint("CViewSettingsMenu::DumpC64MemoryMarkers, path=");
+	
+	if (c64SettingsDefaultMemoryDumpFolder != NULL)
+		delete c64SettingsDefaultMemoryDumpFolder;
+	c64SettingsDefaultMemoryDumpFolder = path->GetFilePathWithoutFileNameComponentFromPath();
+	
+	char *asciiPath = path->GetStdASCII();
+	
+	FILE *fp = fopen(asciiPath, "wb");
+	delete [] asciiPath;
+
+	if (fp == NULL)
+	{
+		guiMain->ShowMessage("Saving memory markers failed");
+		return;
+	}
+	
+	viewC64->debugInterface->LockMutex();
+	
+	// local copy of memory
+	uint8 *memoryBuffer = new uint8[0x10000];
+	
+	if (viewC64->viewC64MemoryMap->isDataDirectlyFromRAM)
+	{
+		viewC64->debugInterface->GetWholeMemoryMapFromRamC64(memoryBuffer);
+	}
+	else
+	{
+		viewC64->debugInterface->GetWholeMemoryMapC64(memoryBuffer);
+	}
+
+	memoryBuffer[0x0000] = viewC64->debugInterface->GetByteFromRamC64(0x0000);
+	memoryBuffer[0x0001] = viewC64->debugInterface->GetByteFromRamC64(0x0001);
+
+	fprintf(fp, "Address,Value,Read,Write,Execute,Argument\n");
+	
+	for (int i = 0; i < 0x10000; i++)
+	{
+		CViewMemoryMapCell *cell = viewC64->viewC64MemoryMap->memoryCells[i];
+		
+		fprintf(fp, "%04x,%02x,%s,%s,%s,%s\n", i, memoryBuffer[i],
+				cell->isRead ? "read" : "",
+				cell->isWrite ? "write" : "",
+				cell->isExecuteCode ? "execute" : "",
+				cell->isExecuteArgument ? "argument" : "");
+	}
+	
+	fclose(fp);
+
+	delete [] memoryBuffer;
+
+	viewC64->debugInterface->UnlockMutex();
+
+	guiMain->ShowMessage("C64 memory markers saved");
+}
+
+void CViewSettingsMenu::DumpDisk1541MemoryMarkers(CSlrString *path)
+{
+	path->DebugPrint("CViewSettingsMenu::DumpDisk1541MemoryMarkers, path=");
+	
+	if (c64SettingsDefaultMemoryDumpFolder != NULL)
+		delete c64SettingsDefaultMemoryDumpFolder;
+	c64SettingsDefaultMemoryDumpFolder = path->GetFilePathWithoutFileNameComponentFromPath();
+	
+	char *asciiPath = path->GetStdASCII();
+	
+	FILE *fp = fopen(asciiPath, "wb");
+	delete [] asciiPath;
+	
+	if (fp == NULL)
+	{
+		guiMain->ShowMessage("Saving memory markers failed");
+		return;
+	}
+	
+	viewC64->debugInterface->LockMutex();
+	
+	// local copy of memory
+	uint8 *memoryBuffer = new uint8[0x10000];
+	
+	if (viewC64->viewDrive1541MemoryMap->isDataDirectlyFromRAM)
+	{
+		for (int addr = 0; addr < 0x10000; addr++)
+		{
+			memoryBuffer[addr] = viewC64->debugInterface->GetByteFromRam1541(addr);
+		}
+	}
+	else
+	{
+		for (int addr = 0; addr < 0x10000; addr++)
+		{
+			memoryBuffer[addr] = viewC64->debugInterface->GetByte1541(addr);
+		}
+	}
+	
+	memoryBuffer[0x0000] = viewC64->debugInterface->GetByteFromRam1541(0x0000);
+	memoryBuffer[0x0001] = viewC64->debugInterface->GetByteFromRam1541(0x0001);
+	
+	fprintf(fp, "Address,Value,Read,Write,Execute,Argument\n");
+	
+	for (int i = 0; i < 0x10000; i++)
+	{
+		CViewMemoryMapCell *cell = viewC64->viewDrive1541MemoryMap->memoryCells[i];
+		
+		fprintf(fp, "%04x,%02x,%s,%s,%s,%s\n", i, memoryBuffer[i],
+				cell->isRead ? "read" : "",
+				cell->isWrite ? "write" : "",
+				cell->isExecuteCode ? "execute" : "",
+				cell->isExecuteArgument ? "argument" : "");
+	}
+	
+	fclose(fp);
+	
+	delete [] memoryBuffer;
+	
+	viewC64->debugInterface->UnlockMutex();
+	
+	guiMain->ShowMessage("Drive 1541 memory markers saved");
+}
+
+
+
+
+void CViewSettingsMenu::MapC64MemoryToFile(CSlrString *path)
+{
+	path->DebugPrint("CViewSettingsMenu::MapC64MemoryToFile, path=");
+	
+	if (c64SettingsPathToC64MemoryMapFile != path)
+	{
+		if (c64SettingsPathToC64MemoryMapFile != NULL)
+			delete c64SettingsPathToC64MemoryMapFile;
+		c64SettingsPathToC64MemoryMapFile = new CSlrString(path);
+	}
+	
+	if (c64SettingsDefaultMemoryDumpFolder != NULL)
+		delete c64SettingsDefaultMemoryDumpFolder;
+	c64SettingsDefaultMemoryDumpFolder = path->GetFilePathWithoutFileNameComponentFromPath();
+	
+	c64SettingsDefaultMemoryDumpFolder->DebugPrint("c64SettingsDefaultMemoryDumpFolder=");
+	
+	UpdateMapC64MemoryToFileLabels();
+	
+	guiMain->ShowMessage("Please restart debugger to map memory");
 }
 
 
@@ -618,7 +1068,7 @@ void CViewSettingsMenu::FinishTouches()
 	return CGuiView::FinishTouches();
 }
 
-void CViewSettingsMenu::SwitchSettingsScreen()
+void CViewSettingsMenu::SwitchMainMenuScreen()
 {
 	if (guiMain->currentView == this)
 	{
@@ -648,7 +1098,7 @@ bool CViewSettingsMenu::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCo
 
 	if (keyCode == MTKEY_ESC)
 	{
-		SwitchSettingsScreen();
+		SwitchMainMenuScreen();
 		return true;
 	}
 
@@ -672,6 +1122,8 @@ bool CViewSettingsMenu::KeyPressed(u32 keyCode, bool isShift, bool isAlt, bool i
 void CViewSettingsMenu::ActivateView()
 {
 	LOGG("CViewSettingsMenu::ActivateView()");
+	
+	UpdateAudioOutDevices();
 }
 
 void CViewSettingsMenu::DeactivateView()

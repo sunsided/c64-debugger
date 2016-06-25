@@ -298,10 +298,14 @@ void CViewC64Screen::FinishTouches()
 
 bool CViewC64Screen::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
-	u32 bareKey = SYS_GetBareKey(keyCode, isShift, isAlt, isControl);
+	LOGD(".......... CViewC64Screen::KeyDown: keyCode=%d", keyCode);
+//	u32 bareKey = SYS_GetBareKey(keyCode, isShift, isAlt, isControl);
 	
 	debugInterface->LockIoMutex();
-	debugInterface->KeyboardDown(bareKey);
+
+	keyCode = SYS_KeyCodeConvertSpecial(keyCode, isShift, isAlt, isControl);
+
+	debugInterface->KeyboardDown(keyCode); //bareKey);
 	debugInterface->UnlockIoMutex();
 	return true;
 	
@@ -310,13 +314,19 @@ bool CViewC64Screen::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContr
 
 bool CViewC64Screen::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
-	u32 bareKey = SYS_GetBareKey(keyCode, isShift, isAlt, isControl);
+	LOGD(".......... CViewC64Screen::KeyUp: keyCode=%d", keyCode);
+//	u32 bareKey = SYS_GetBareKey(keyCode, isShift, isAlt, isControl);
 	
 	debugInterface->LockIoMutex();
-	debugInterface->KeyboardUp(bareKey);
-	debugInterface->UnlockIoMutex();
+	
+	keyCode = SYS_KeyCodeConvertSpecial(keyCode, isShift, isAlt, isControl);
 
-	return CGuiView::KeyUp(keyCode, isShift, isAlt, isControl);
+	debugInterface->KeyboardUp(keyCode); //bareKey);
+	debugInterface->UnlockIoMutex();
+	
+	return true;
+
+//	return CGuiView::KeyUp(keyCode, isShift, isAlt, isControl);
 }
 
 bool CViewC64Screen::KeyPressed(u32 keyCode, bool isShift, bool isAlt, bool isControl)

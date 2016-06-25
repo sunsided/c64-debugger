@@ -381,7 +381,7 @@ void c64d_peek_whole_map_drive_internal(drive_context_t *drv, uint8 *memoryBuffe
 	}
 
 	bufPtr = memoryBuffer + 0x1c00;
-	for (addr = 0x1800; addr < 0x2000; addr++)
+	for (addr = 0x1c00; addr < 0x2000; addr++)
 	{
 		*bufPtr++ = c64d_via2d_peek(drv, addr);
 	}

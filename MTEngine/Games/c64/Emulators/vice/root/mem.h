@@ -40,7 +40,7 @@ typedef store_func_t *store_func_ptr_t;
 extern read_func_ptr_t *_mem_read_tab_ptr;
 extern store_func_ptr_t *_mem_write_tab_ptr;
 
-extern BYTE mem_ram[];
+extern BYTE *mem_ram;
 extern BYTE *mem_page_zero;
 extern BYTE *mem_page_one;
 extern BYTE *mem_color_ram_cpu;

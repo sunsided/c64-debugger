@@ -22,6 +22,8 @@ extern "C" {
 #include "drive.h"
 #include "c64mem.h"
 #include "c64model.h"
+#include "ui.h"
+#include "resources.h"
 #include "ViceWrapper.h"
 }
 
@@ -35,6 +37,7 @@ extern "C" {
 #include "SYS_KeyCodes.h"
 #include "SND_SoundEngine.h"
 #include "C64Tools.h"
+#include "C64KeyMap.h"
 
 extern "C" {
 	void vsync_suspend_speed_eval(void);
@@ -46,7 +49,7 @@ extern "C" {
 	
 	void c64d_set_debug_mode(int newMode);
 	void c64d_patch_kernal_fast_boot();
-	
+	void c64d_init_memory(uint8 *c64memory);
 }
 
 void c64d_update_c64_model();
@@ -55,7 +58,7 @@ void ViceWrapperInit(C64DebugInterfaceVice *debugInterface);
 
 C64DebugInterfaceVice *debugInterfaceVice = NULL;
 
-C64DebugInterfaceVice::C64DebugInterfaceVice(CViewC64 *viewC64, bool patchKernalFastBoot)
+C64DebugInterfaceVice::C64DebugInterfaceVice(CViewC64 *viewC64, uint8 *c64memory, bool patchKernalFastBoot)
 : C64DebugInterface(viewC64)
 {
 	LOGM("C64DebugInterfaceVice: VICE %s init", VERSION);
@@ -77,6 +80,18 @@ C64DebugInterfaceVice::C64DebugInterfaceVice(CViewC64 *viewC64, bool patchKernal
 	screenHeight = 272;
 	machineType = C64_MACHINE_PAL;
 
+	// init C64 memory, will be attached to a memmaped file if needed
+	if (c64memory == NULL)
+	{
+		this->c64memory = (uint8 *)malloc(C64_RAM_SIZE);
+	}
+	else
+	{
+		this->c64memory = c64memory;
+	}
+
+	c64d_init_memory(this->c64memory);
+	
 	int ret = vice_main_program(sysArgc, sysArgv);
 	if (ret != 0)
 	{
@@ -88,110 +103,10 @@ C64DebugInterfaceVice::C64DebugInterfaceVice(CViewC64 *viewC64, bool patchKernal
 	this->dataAdapterDrive1541 = new C64DiskDataAdapterVice(this);
 	this->dataAdapterDrive1541DirectRam = new C64DiskDirectRamDataAdapterVice(this);
 	
-	/*
-	 C64 keyboard matrix:
-	 
-	 Bit   7   6   5   4   3   2   1   0
-	 0    CUD  F5  F3  F1  F7 CLR RET DEL
-	 1    SHL  E   S   Z   4   A   W   3
-	 2     X   T   F   C   6   D   R   5
-	 3     V   U   H   B   8   G   Y   7
-	 4     N   O   K   M   0   J   I   9
-	 5     ,   @   :   .   -   L   P   +
-	 6     /   ^   =  SHR HOM  ;   *   £
-	 7    R/S  Q   C= SPC  2  CTL  <-  1
-	 */
+
+	C64KeyMap *keyMap = C64KeyMapGetDefault();
+	InitKeyMap(keyMap);
 	
-	// MATRIX (row, column)
-	
-	// http://classiccmp.org/dunfield/c64/h/front.jpg
-
-//	keyboard_parse_set_pos_row('a', int row, int col, int shift);
-
-	keyboard_parse_set_pos_row(MTKEY_F5, 0, 6, false);
-	keyboard_parse_set_pos_row(MTKEY_F3, 0, 5, false);
-	keyboard_parse_set_pos_row(MTKEY_F1, 0, 4, false);
-	keyboard_parse_set_pos_row(MTKEY_F7, 0, 3, false);
-	keyboard_parse_set_pos_row(MTKEY_ENTER, 0, 1, false);
-	keyboard_parse_set_pos_row(MTKEY_BACKSPACE, 0, 0, false);
-	keyboard_parse_set_pos_row(MTKEY_LSHIFT, 1, 7, false);
-	keyboard_parse_set_pos_row('e', 1, 6, false);
-	keyboard_parse_set_pos_row('s', 1, 5, false);
-	keyboard_parse_set_pos_row('z', 1, 4, false);
-	keyboard_parse_set_pos_row('4', 1, 3, false);
-	keyboard_parse_set_pos_row('a', 1, 2, false);
-	keyboard_parse_set_pos_row('w', 1, 1, false);
-	keyboard_parse_set_pos_row('3', 1, 0, false);
-	keyboard_parse_set_pos_row('x', 2, 7, false);
-	keyboard_parse_set_pos_row('t', 2, 6, false);
-	keyboard_parse_set_pos_row('f', 2, 5, false);
-	keyboard_parse_set_pos_row('c', 2, 4, false);
-	keyboard_parse_set_pos_row('6', 2, 3, false);
-	keyboard_parse_set_pos_row('d', 2, 2, false);
-	keyboard_parse_set_pos_row('r', 2, 1, false);
-	keyboard_parse_set_pos_row('5', 2, 0, false);
-	keyboard_parse_set_pos_row('v', 3, 7, false);
-	keyboard_parse_set_pos_row('u', 3, 6, false);
-	keyboard_parse_set_pos_row('h', 3, 5, false);
-	keyboard_parse_set_pos_row('b', 3, 4, false);
-	keyboard_parse_set_pos_row('8', 3, 3, false);
-	keyboard_parse_set_pos_row('g', 3, 2, false);
-	keyboard_parse_set_pos_row('y', 3, 1, false);
-	keyboard_parse_set_pos_row('n', 4, 7, false);
-	keyboard_parse_set_pos_row('o', 4, 6, false);
-	keyboard_parse_set_pos_row('k', 4, 5, false);
-	keyboard_parse_set_pos_row('m', 4, 4, false);
-	keyboard_parse_set_pos_row('0', 4, 3, false);
-	keyboard_parse_set_pos_row('j', 4, 2, false);
-	keyboard_parse_set_pos_row('i', 4, 1, false);
-	keyboard_parse_set_pos_row('9', 4, 0, false);
-	keyboard_parse_set_pos_row(',', 5, 7, false);
-	keyboard_parse_set_pos_row('[', 5, 6, false);
-	keyboard_parse_set_pos_row(';', 5, 5, false);
-	keyboard_parse_set_pos_row('.', 5, 4, false);
-	keyboard_parse_set_pos_row('-', 5, 3, false);
-	keyboard_parse_set_pos_row('l', 5, 2, false);
-	keyboard_parse_set_pos_row('p', 5, 1, false);
-	keyboard_parse_set_pos_row('=', 5, 0, false);
-	keyboard_parse_set_pos_row('/', 6, 7, false);
-//	keyboard_parse_set_pos_row('^', 6, 6, false);
-//	keyboard_parse_set_pos_row('', 6, 5, false);
-	keyboard_parse_set_pos_row(MTKEY_RSHIFT, 6, 4, false);
-//	keyboard_parse_set_pos_row('', 6, 3, false);
-	keyboard_parse_set_pos_row('\'', 6, 2, false);
-	keyboard_parse_set_pos_row(']', 6, 1, false);
-//	keyboard_parse_set_pos_row('', 6, 0, false);
-
-	keyboard_parse_set_pos_row('`', 7, 7, false);
-	keyboard_parse_set_pos_row('q', 7, 6, false);
-//	keyboard_parse_set_pos_row('', 7, 5, false);
-	keyboard_parse_set_pos_row(' ', 7, 4, false);
-	keyboard_parse_set_pos_row('2', 7, 3, false);
-	keyboard_parse_set_pos_row(MTKEY_LCONTROL, 7, 2, false);
-	keyboard_parse_set_pos_row(MTKEY_LALT, 7, 5, false);
-	keyboard_parse_set_pos_row(MTKEY_ESC, 7, 1, false);
-	keyboard_parse_set_pos_row('1', 7, 0, false);
-
-	keyboard_parse_set_pos_row(MTKEY_ARROW_UP, 0, 7, 1);
-	keyboard_parse_set_pos_row(MTKEY_ARROW_DOWN, 0, 7, 0);
-	keyboard_parse_set_pos_row(MTKEY_ARROW_LEFT, 0, 2, 1);
-	keyboard_parse_set_pos_row(MTKEY_ARROW_RIGHT, 0, 2, 0);
-
-
-	
-	/*
-	 C64 keyboard matrix:
-	 
-	 Bit   7   6   5   4   3   2   1   0
-	 0    CUD  F5  F3  F1  F7 CLR RET DEL
-	 1    SHL  E   S   Z   4   A   W   3
-	 2     X   T   F   C   6   D   R   5
-	 3     V   U   H   B   8   G   Y   7
-	 4     N   O   K   M   0   J   I   9
-	 5     ,   @   :   .   -   L   P   +
-	 6     /   ^   =  SHR HOM  ;   *   £
-	 7    R/S  Q   C= SPC  2  CTL  <-  1
-	 */
 
 	isJoystickEnabled = false;
 	joystickPort = 0x03;
@@ -221,6 +136,30 @@ void C64DebugInterfaceVice::RunEmulationThread()
 	LOGM("C64DebugInterfaceVice::RunEmulationThread: finished");
 }
 
+void C64DebugInterfaceVice::InitKeyMap(C64KeyMap *keyMap)
+{
+	LOGD("C64DebugInterfaceVice::InitKeyMap");
+	c64d_keyboard_keymap_clear();
+	
+	for (std::map<u32, C64KeyCode *>::iterator it = keyMap->keyCodes.begin();
+		 it != keyMap->keyCodes.end(); it++)
+	{
+		C64KeyCode *key = it->second;
+		
+		if (key->matrixRow < 0)
+		{
+			// restore, caps lock, ...
+			keyboard_parse_set_neg_row(key->keyCode, key->matrixRow, key->matrixCol);
+		}
+		else
+		{
+			
+			//LOGD("... %04x %3d %3d %d", key->keyCode, key->matrixRow, key->matrixCol, key->shift);
+			keyboard_parse_set_pos_row(key->keyCode, key->matrixRow, key->matrixCol, key->shift);
+		}
+	}
+}
+
 uint8 *C64DebugInterfaceVice::GetCharRom()
 {
 	return mem_chargen_rom;
@@ -244,8 +183,15 @@ CImageData *C64DebugInterfaceVice::GetC64ScreenImageData()
 void C64DebugInterfaceVice::Reset()
 {
 	vsync_suspend_speed_eval();
+	
 	machine_trigger_reset(MACHINE_RESET_MODE_SOFT);
 	c64d_update_c64_model();
+
+	if (c64d_is_cpu_in_jam_state == 1)
+	{
+		this->SetDebugMode(C64_DEBUG_RUNNING);
+		c64d_is_cpu_in_jam_state = 0;
+	}
 }
 
 void C64DebugInterfaceVice::HardReset()
@@ -253,6 +199,12 @@ void C64DebugInterfaceVice::HardReset()
 	vsync_suspend_speed_eval();
 	machine_trigger_reset(MACHINE_RESET_MODE_HARD);
 	c64d_update_c64_model();
+
+	if (c64d_is_cpu_in_jam_state == 1)
+	{
+		this->SetDebugMode(C64_DEBUG_RUNNING);
+		c64d_is_cpu_in_jam_state = 0;
+	}
 }
 
 extern "C" {
@@ -318,26 +270,7 @@ void C64DebugInterfaceVice::KeyboardDown(uint32 mtKeyCode)
 		}
 	}
 	
-	// workaround for shifted, TODO: check how vice maps this
-	if (mtKeyCode == MTKEY_ARROW_UP
-		|| mtKeyCode == MTKEY_ARROW_LEFT)
-	{
-		keyboard_key_pressed((unsigned long)MTKEY_LSHIFT);
-		keyboard_key_pressed((unsigned long)mtKeyCode);
-	}
-	else if (mtKeyCode == MTKEY_F2
-			 || mtKeyCode == MTKEY_F4
-			 || mtKeyCode == MTKEY_F6
-			 || mtKeyCode == MTKEY_F8)
-		
-	{
-		keyboard_key_pressed((unsigned long)MTKEY_LSHIFT);
-		keyboard_key_pressed((unsigned long)mtKeyCode-1);
-	}
-	else
-	{
-		keyboard_key_pressed((unsigned long)mtKeyCode);
-	}
+	keyboard_key_pressed((unsigned long)mtKeyCode);
 }
 
 void C64DebugInterfaceVice::KeyboardUp(uint32 mtKeyCode)
@@ -386,26 +319,7 @@ void C64DebugInterfaceVice::KeyboardUp(uint32 mtKeyCode)
 		}
 	}
 
-	// workaround for shifted, TODO: check how vice maps this
-	if (mtKeyCode == MTKEY_ARROW_UP
-		|| mtKeyCode == MTKEY_ARROW_LEFT)
-	{
-		keyboard_key_released((unsigned long)MTKEY_LSHIFT);
-		keyboard_key_released((unsigned long)mtKeyCode);
-	}
-	else if (mtKeyCode == MTKEY_F2
-		|| mtKeyCode == MTKEY_F4
-		|| mtKeyCode == MTKEY_F6
-		|| mtKeyCode == MTKEY_F8)
-		
-	{
-		keyboard_key_released((unsigned long)MTKEY_LSHIFT);
-		keyboard_key_released((unsigned long)mtKeyCode-1);
-	}
-	else
-	{
-		keyboard_key_released((unsigned long)mtKeyCode);
-	}
+	keyboard_key_released((unsigned long)mtKeyCode);
 }
 
 int C64DebugInterfaceVice::GetC64CpuPC()
@@ -692,6 +606,12 @@ int C64DebugInterfaceVice::GetC64ModelType()
 	return c64model_get();
 }
 
+void C64DebugInterfaceVice::SetEmulationMaximumSpeed(int maximumSpeed)
+{
+	resources_set_int("Speed", maximumSpeed);
+}
+
+///
 ///
 
 extern "C" {
@@ -991,7 +911,7 @@ extern "C" {
 
 void C64DebugInterfaceVice::RenderStateVIC(float posX, float posY, float posZ, bool isVertical, CSlrFont *fontBytes, float fontSize,
 										   std::vector<CImageData *> *spritesImageData,
-										   std::vector<CSlrImage *> *spritesImages)
+										   std::vector<CSlrImage *> *spritesImages, bool renderDataWithColors)
 {
 	static const char *mode_name[] =
 	{
@@ -1331,7 +1251,15 @@ void C64DebugInterfaceVice::RenderStateVIC(float posX, float posY, float posZ, b
 			}
 			if (isColor == false)
 			{
-				ConvertSpriteDataToImage(spriteData, imageData);
+				if (renderDataWithColors)
+				{
+					uint8 spriteColor = vicii.regs[0x27+zi];
+					ConvertSpriteDataToImage(spriteData, imageData, cD021, spriteColor, this);
+				}
+				else
+				{
+					ConvertSpriteDataToImage(spriteData, imageData);					
+				}
 			}
 			else
 			{
@@ -1876,4 +1804,118 @@ void C64DebugInterfaceVice::RenderStateDrive1541(float posX, float posY, float p
 	
 }
 
-
+/// default keymap
+void ViceKeyMapInitDefault()
+{
+	/*
+	 C64 keyboard matrix:
+	 
+	 Bit   7   6   5   4   3   2   1   0
+	 0    CUD  F5  F3  F1  F7 CLR RET DEL
+	 1    SHL  E   S   Z   4   A   W   3
+	 2     X   T   F   C   6   D   R   5
+	 3     V   U   H   B   8   G   Y   7
+	 4     N   O   K   M   0   J   I   9
+	 5     ,   @   :   .   -   L   P   +
+	 6     /   ^   =  SHR HOM  ;   *   £
+	 7    R/S  Q   C= SPC  2  CTL  <-  1
+	 */
+	
+	// MATRIX (row, column)
+	
+	// http://classiccmp.org/dunfield/c64/h/front.jpg
+	
+	//	keyboard_parse_set_pos_row('a', int row, int col, int shift);
+	
+	keyboard_parse_set_pos_row(MTKEY_F5, 0, 6, NO_SHIFT);
+	keyboard_parse_set_pos_row(MTKEY_F6, 0, 6, LEFT_SHIFT);
+	keyboard_parse_set_pos_row(MTKEY_F3, 0, 5, NO_SHIFT);
+	keyboard_parse_set_pos_row(MTKEY_F4, 0, 5, LEFT_SHIFT);
+	keyboard_parse_set_pos_row(MTKEY_F1, 0, 4, NO_SHIFT);
+	keyboard_parse_set_pos_row(MTKEY_F2, 0, 4, LEFT_SHIFT);
+	keyboard_parse_set_pos_row(MTKEY_F7, 0, 3, NO_SHIFT);
+	keyboard_parse_set_pos_row(MTKEY_F8, 0, 3, LEFT_SHIFT);
+	
+	keyboard_parse_set_pos_row(MTKEY_ENTER, 0, 1, NO_SHIFT);
+	keyboard_parse_set_pos_row(MTKEY_BACKSPACE, 0, 0, NO_SHIFT);
+	keyboard_parse_set_pos_row(MTKEY_LSHIFT, 1, 7, NO_SHIFT);
+	keyboard_parse_set_pos_row('e', 1, 6, NO_SHIFT);
+	keyboard_parse_set_pos_row('s', 1, 5, NO_SHIFT);
+	keyboard_parse_set_pos_row('z', 1, 4, NO_SHIFT);
+	keyboard_parse_set_pos_row('4', 1, 3, NO_SHIFT);
+	keyboard_parse_set_pos_row('a', 1, 2, NO_SHIFT);
+	keyboard_parse_set_pos_row('w', 1, 1, NO_SHIFT);
+	keyboard_parse_set_pos_row('3', 1, 0, NO_SHIFT);
+	keyboard_parse_set_pos_row('x', 2, 7, NO_SHIFT);
+	keyboard_parse_set_pos_row('t', 2, 6, NO_SHIFT);
+	keyboard_parse_set_pos_row('f', 2, 5, NO_SHIFT);
+	keyboard_parse_set_pos_row('c', 2, 4, NO_SHIFT);
+	keyboard_parse_set_pos_row('6', 2, 3, NO_SHIFT);
+	keyboard_parse_set_pos_row('d', 2, 2, NO_SHIFT);
+	keyboard_parse_set_pos_row('r', 2, 1, NO_SHIFT);
+	keyboard_parse_set_pos_row('5', 2, 0, NO_SHIFT);
+	keyboard_parse_set_pos_row('v', 3, 7, NO_SHIFT);
+	keyboard_parse_set_pos_row('u', 3, 6, NO_SHIFT);
+	keyboard_parse_set_pos_row('h', 3, 5, NO_SHIFT);
+	keyboard_parse_set_pos_row('b', 3, 4, NO_SHIFT);
+	keyboard_parse_set_pos_row('8', 3, 3, NO_SHIFT);
+	keyboard_parse_set_pos_row('g', 3, 2, NO_SHIFT);
+	keyboard_parse_set_pos_row('y', 3, 1, NO_SHIFT);
+	keyboard_parse_set_pos_row('7', 3, 0, NO_SHIFT);
+	keyboard_parse_set_pos_row('n', 4, 7, NO_SHIFT);
+	keyboard_parse_set_pos_row('o', 4, 6, NO_SHIFT);
+	keyboard_parse_set_pos_row('k', 4, 5, NO_SHIFT);
+	keyboard_parse_set_pos_row('m', 4, 4, NO_SHIFT);
+	keyboard_parse_set_pos_row('0', 4, 3, NO_SHIFT);
+	keyboard_parse_set_pos_row('j', 4, 2, NO_SHIFT);
+	keyboard_parse_set_pos_row('i', 4, 1, NO_SHIFT);
+	keyboard_parse_set_pos_row('9', 4, 0, NO_SHIFT);
+	keyboard_parse_set_pos_row(',', 5, 7, NO_SHIFT);
+	keyboard_parse_set_pos_row('[', 5, 6, NO_SHIFT);
+	keyboard_parse_set_pos_row(';', 5, 5, NO_SHIFT);
+	keyboard_parse_set_pos_row('.', 5, 4, NO_SHIFT);
+	keyboard_parse_set_pos_row('-', 5, 3, NO_SHIFT);
+	keyboard_parse_set_pos_row('l', 5, 2, NO_SHIFT);
+	keyboard_parse_set_pos_row('p', 5, 1, NO_SHIFT);
+	keyboard_parse_set_pos_row('=', 5, 0, NO_SHIFT);
+	keyboard_parse_set_pos_row('/', 6, 7, NO_SHIFT);
+	//	keyboard_parse_set_pos_row('^', 6, 6, NO_SHIFT);
+	//	keyboard_parse_set_pos_row('@', 6, 5, DESHIFT_SHIFT);
+	keyboard_parse_set_pos_row(MTKEY_RSHIFT, 6, 4, NO_SHIFT);
+	//	keyboard_parse_set_pos_row('', 6, 3, NO_SHIFT);
+	keyboard_parse_set_pos_row('\'', 6, 2, NO_SHIFT);
+	keyboard_parse_set_pos_row(']', 6, 1, NO_SHIFT);
+	//	keyboard_parse_set_pos_row('', 6, 0, NO_SHIFT);
+	
+	keyboard_parse_set_pos_row('`', 7, 7, NO_SHIFT);
+	keyboard_parse_set_pos_row('q', 7, 6, NO_SHIFT);
+	//	keyboard_parse_set_pos_row('', 7, 5, NO_SHIFT);
+	keyboard_parse_set_pos_row(' ', 7, 4, NO_SHIFT);
+	keyboard_parse_set_pos_row('2', 7, 3, NO_SHIFT);
+	keyboard_parse_set_pos_row('@', 7, 3, LEFT_SHIFT);
+	keyboard_parse_set_pos_row(MTKEY_LCONTROL, 7, 2, NO_SHIFT);
+	keyboard_parse_set_pos_row(MTKEY_LALT, 7, 5, NO_SHIFT);
+	keyboard_parse_set_pos_row(MTKEY_ESC, 7, 1, NO_SHIFT);
+	keyboard_parse_set_pos_row('1', 7, 0, NO_SHIFT);
+	
+	keyboard_parse_set_pos_row(MTKEY_ARROW_UP, 0, 7, LEFT_SHIFT);
+	keyboard_parse_set_pos_row(MTKEY_ARROW_DOWN, 0, 7, NO_SHIFT);
+	keyboard_parse_set_pos_row(MTKEY_ARROW_LEFT, 0, 2, LEFT_SHIFT);
+	keyboard_parse_set_pos_row(MTKEY_ARROW_RIGHT, 0, 2, NO_SHIFT);
+	
+	
+	
+	/*
+	 C64 keyboard matrix:
+	 
+	 Bit   7   6   5   4   3   2   1   0
+	 0    CUD  F5  F3  F1  F7 CLR RET DEL
+	 1    SHL  E   S   Z   4   A   W   3
+	 2     X   T   F   C   6   D   R   5
+	 3     V   U   H   B   8   G   Y   7
+	 4     N   O   K   M   0   J   I   9
+	 5     ,   @   :   .   -   L   P   +
+	 6     /   ^   =  SHR HOM  ;   *   £
+	 7    R/S  Q   C= SPC  2  CTL  <-  1
+	 */
+}

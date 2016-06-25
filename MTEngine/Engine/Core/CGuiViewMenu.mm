@@ -14,13 +14,29 @@ CGuiViewMenu::CGuiViewMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat siz
 	
 	this->callback = callback;
 	
-	mutex = new CSlrMutex();
-	
 	firstVisibleItem = menuItems.begin();
 }
 
 CGuiViewMenu::~CGuiViewMenu()
 {
+}
+
+void CGuiViewMenu::ClearItems()
+{
+	guiMain->LockMutex();
+
+	while (!menuItems.empty())
+	{
+		CGuiViewMenuItem *menuItem = menuItems.back();
+		menuItems.pop_back();
+		
+		delete menuItem;
+	}
+
+	firstVisibleItem = menuItems.begin();
+	selectedItem = menuItems.end();
+
+	guiMain->UnlockMutex();
 }
 
 void CGuiViewMenu::InitSelection()
@@ -31,7 +47,7 @@ void CGuiViewMenu::InitSelection()
 
 void CGuiViewMenu::AddMenuItem(CGuiViewMenuItem *menuItem)
 {
-	mutex->Lock();
+	guiMain->LockMutex();
 	this->menuItems.push_back(menuItem);
 	menuItem->menu = this;
 	
@@ -39,12 +55,12 @@ void CGuiViewMenu::AddMenuItem(CGuiViewMenuItem *menuItem)
 	{
 		InitSelection();
 	}
-	mutex->Unlock();
+	guiMain->UnlockMutex();
 }
 
 void CGuiViewMenu::ClearSelection()
 {
-	mutex->Lock();
+	guiMain->LockMutex();
 	for (std::list<CGuiViewMenuItem *>::iterator it = menuItems.begin(); it != menuItems.end(); it++)
 	{
 		CGuiViewMenuItem *m = *it;
@@ -54,12 +70,12 @@ void CGuiViewMenu::ClearSelection()
 	
 	selectedItem = menuItems.end();
 	
-	mutex->Unlock();
+	guiMain->UnlockMutex();
 }
 
 void CGuiViewMenu::SelectMenuItem(CGuiViewMenuItem *menuItemToSelect)
 {
-	mutex->Lock();
+	guiMain->LockMutex();
 	for (std::list<CGuiViewMenuItem *>::iterator it = menuItems.begin(); it != menuItems.end(); it++)
 	{
 		CGuiViewMenuItem *m = *it;
@@ -76,15 +92,15 @@ void CGuiViewMenu::SelectMenuItem(CGuiViewMenuItem *menuItemToSelect)
 			m->isSelected = false;
 		}
 	}	
-	mutex->Unlock();
+	guiMain->UnlockMutex();
 }
 
 void CGuiViewMenu::SelectPrev()
 {
-	mutex->Lock();
+	guiMain->LockMutex();
 	if (selectedItem == menuItems.begin())
 	{
-		mutex->Unlock();
+		guiMain->UnlockMutex();
 		return;
 	}
 	
@@ -135,19 +151,19 @@ void CGuiViewMenu::SelectPrev()
 	}
 
 	
-	mutex->Unlock();
+	guiMain->UnlockMutex();
 }
 
 void CGuiViewMenu::SelectNext()
 {
-	mutex->Lock();
+	guiMain->LockMutex();
 	
 	std::list<CGuiViewMenuItem *>::iterator it = selectedItem;
 	it++;
 	
 	if (it == menuItems.end())
 	{
-		mutex->Unlock();
+		guiMain->UnlockMutex();
 		return;
 	}
 	
@@ -194,7 +210,7 @@ void CGuiViewMenu::SelectNext()
 		firstVisibleItem++;
 	}
 	
-	mutex->Unlock();
+	guiMain->UnlockMutex();
 }
 
 
@@ -208,11 +224,23 @@ void CGuiViewMenu::Render()
 	float px = posX;
 	float py = posY;
 	
-	mutex->Lock();
+	guiMain->LockMutex();
 	
-	for (std::list<CGuiViewMenuItem *>::iterator it = firstVisibleItem; it != menuItems.end(); it++)
+	std::list<CGuiViewMenuItem *>::iterator it = firstVisibleItem;
+	
+//	if (firstVisibleItem != this->menuItems.begin())
+//	{
+//		guiMain->fntConsole->BlitText("(more)", px, py-8.0f, posZ, 6, 0.75f);
+//	}
+	
+	
+//	BlitFilledRectangle(posX, posY, posZ, sizeX, sizeY, 1, 0, 0, 1);
+	SetClipping(posX, posY, sizeX, sizeY);
+	
+	CGuiViewMenuItem *m;
+	for ( ; it != menuItems.end(); it++)
 	{
-		CGuiViewMenuItem *m = *it;
+		m = *it;
 		
 		float npy = py + m->height;
 		
@@ -224,7 +252,19 @@ void CGuiViewMenu::Render()
 		py = npy;
 	}
 	
-	mutex->Unlock();
+	if (it != this->menuItems.end())
+	{
+		m->RenderItem(px, py, posZ);
+		ResetClipping();
+		
+		guiMain->fntConsole->BlitText("(...)", px, posEndY+2, posZ, 6, 0.75f);
+	}
+	else
+	{
+		ResetClipping();
+	}
+	
+	guiMain->UnlockMutex();
 	
 	//BlitRectangle(posX, posY, -1, sizeX, sizeY, 1, 0, 0, 1);
 }
@@ -298,16 +338,23 @@ void CGuiViewMenu::FinishTouches()
 
 bool CGuiViewMenu::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
-	this->mutex->Lock();
+	guiMain->LockMutex();
+	
+	if (menuItems.empty())
+	{
+		guiMain->UnlockMutex();
+		return true;
+	}
+	
 	CGuiViewMenuItem *m = *selectedItem;
 	
 	if (m->KeyDown(keyCode))
 	{
-		this->mutex->Unlock();
+		guiMain->UnlockMutex();
 		return true;
 	}
 	
-	this->mutex->Unlock();
+	guiMain->UnlockMutex();
 	
 	if (keyCode == MTKEY_ARROW_DOWN)
 	{
@@ -321,10 +368,10 @@ bool CGuiViewMenu::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl
 	}
 	else if (keyCode == MTKEY_ENTER)
 	{
-		this->mutex->Lock();
+		guiMain->LockMutex();
 		CGuiViewMenuItem *m = *selectedItem;
 		this->callback->MenuCallbackItemEntered(m);
-		this->mutex->Unlock();
+		guiMain->UnlockMutex();
 		return true;
 	}
 		

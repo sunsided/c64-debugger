@@ -5,6 +5,7 @@
 #include "CViewC64.h"
 #include "C64DebugInterface.h"
 #include "CViewMonitorConsole.h"
+#include "SND_SoundEngine.h"
 
 #define C64DEBUGGER_SETTINGS_FILE_VERSION 0x0001
 
@@ -14,6 +15,7 @@
 #define C64DEBUGGER_SETTING_U8		2
 #define C64DEBUGGER_SETTING_BOOL	3
 #define C64DEBUGGER_SETTING_CUSTOM	4
+#define C64DEBUGGER_SETTING_U16		5
 
 /// blocks
 #define C64DEBUGGER_BLOCK_EOF			0
@@ -36,6 +38,8 @@ bool c64SettingsMemoryMapInvertControl = false;
 uint8 c64SettingsMemoryMapRefreshRate = 2;
 
 uint8 c64SettingsC64Model = 0;
+int c64SettingsEmulationMaximumSpeed = 100;
+bool c64SettingsFastBootKernalPatch = false;
 
 uint8 c64SettingsSIDEngineModel = 0;
 bool c64SettingsMuteSIDOnPause = false;
@@ -56,6 +60,11 @@ CSlrString *c64SettingsDefaultSnapshotsFolder = NULL;
 
 CSlrString *c64SettingsDefaultMemoryDumpFolder = NULL;
 
+CSlrString *c64SettingsPathToC64MemoryMapFile = NULL;
+
+CSlrString *c64SettingsAudioOutDevice = NULL;
+
+
 int c64SettingsJmpOnStartupAddr = -1;
 
 int c64SettingsDoubleClickMS = 600;
@@ -71,6 +80,13 @@ void storeSettingU8(CByteBuffer *byteBuffer, char *name, u8 value)
 	byteBuffer->PutU8(C64DEBUGGER_SETTING_U8);
 	byteBuffer->PutString(name);
 	byteBuffer->PutU8(value);
+}
+
+void storeSettingU16(CByteBuffer *byteBuffer, char *name, u8 value)
+{
+	byteBuffer->PutU8(C64DEBUGGER_SETTING_U16);
+	byteBuffer->PutString(name);
+	byteBuffer->PutU16(value);
 }
 
 void storeSettingBool(CByteBuffer *byteBuffer, char *name, bool value)
@@ -93,6 +109,20 @@ void storeSettingCustom(CByteBuffer *byteBuffer, char *name)
 	byteBuffer->PutString(name);
 }
 
+void C64DebuggerClearSettings()
+{
+	CByteBuffer *byteBuffer = new CByteBuffer();
+	byteBuffer->PutU16(C64DEBUGGER_SETTINGS_FILE_VERSION);
+
+	storeSettingBlock(byteBuffer, C64DEBUGGER_BLOCK_EOF);
+	
+	CSlrString *fileName = new CSlrString("/settings.dat");
+	byteBuffer->storeToSettings(fileName);
+	delete fileName;
+	
+	delete byteBuffer;
+}
+
 void C64DebuggerStoreSettings()
 {
 	CByteBuffer *byteBuffer = new CByteBuffer();
@@ -108,6 +138,12 @@ void C64DebuggerStoreSettings()
 	storeSettingString(byteBuffer, "PathD64", c64SettingsPathD64);
 	storeSettingString(byteBuffer, "PathPRG", c64SettingsPathPRG);
 	storeSettingString(byteBuffer, "PathCRT", c64SettingsPathCartridge);
+	
+	storeSettingString(byteBuffer, "PathMemMapFile", c64SettingsPathToC64MemoryMapFile);
+
+	storeSettingString(byteBuffer, "AudioOutDevice", c64SettingsAudioOutDevice);
+	
+	storeSettingBool(byteBuffer, "FastBootPatch", c64SettingsFastBootKernalPatch);
 	
 	storeSettingU8(byteBuffer, "ScreenLayoutId", c64SettingsDefaultScreenLayoutId);
 	
@@ -125,20 +161,7 @@ void C64DebuggerStoreSettings()
 	storeSettingBool(byteBuffer, "MemMapInvert", c64SettingsMemoryMapInvertControl);
 	storeSettingU8(byteBuffer, "MemMapRefresh", c64SettingsMemoryMapRefreshRate);
 
-	//
-	storeSettingCustom(byteBuffer, "MonitorHistory");
-	CByteBuffer *byteBufferCustom = new CByteBuffer();
-	byteBufferCustom->PutByte(viewC64->viewMonitorConsole->viewConsole->commandLineHistory.size());
-	for (std::list<char *>::iterator it = viewC64->viewMonitorConsole->viewConsole->commandLineHistory.begin();
-		 it != viewC64->viewMonitorConsole->viewConsole->commandLineHistory.end(); it++)
-	{
-		byteBufferCustom->PutString(*it);
-	}
-	byteBuffer->putByteBuffer(byteBufferCustom);
-
-	delete byteBufferCustom;
-	
-	//
+	storeSettingU16(byteBuffer, "EmulationMaximumSpeed", c64SettingsEmulationMaximumSpeed);
 	
 	storeSettingBlock(byteBuffer, C64DEBUGGER_BLOCK_EOF);
 
@@ -156,7 +179,7 @@ void C64DebuggerRestoreSettings(uint8 settingsBlockType)
 	if (c64SettingsSkipConfig)
 	{
 		LOGD("... skipping loading config and clearing settings");
-		C64DebuggerStoreSettings();
+		C64DebuggerClearSettings();
 		return;
 	}
 	
@@ -208,6 +231,11 @@ void C64DebuggerRestoreSettings(uint8 settingsBlockType)
 			valueInt = byteBuffer->GetU8();
 			value = &valueInt;
 		}
+		else if (dataType == C64DEBUGGER_SETTING_U16)
+		{
+			valueInt = byteBuffer->GetU16();
+			value = &valueInt;
+		}
 		else if (dataType == C64DEBUGGER_SETTING_BOOL)
 		{
 			valueBool = byteBuffer->GetBool();
@@ -246,17 +274,18 @@ void C64DebuggerRestoreSettings(uint8 settingsBlockType)
 
 void C64DebuggerReadSettingCustom(char *name, CByteBuffer *byteBuffer)
 {
-	if (!strcmp(name, "MonitorHistory"))
-	{
-		int historySize = byteBuffer->GetByte();
-		for (int i = 0; i < historySize; i++)
-		{
-			char *cmd = byteBuffer->GetString();
-			viewC64->viewMonitorConsole->viewConsole->commandLineHistory.push_back(cmd);
-		}
-		viewC64->viewMonitorConsole->viewConsole->commandLineHistoryIt = viewC64->viewMonitorConsole->viewConsole->commandLineHistory.end();
-	}
+//	if (!strcmp(name, "MonitorHistory"))
+//	{
+//		int historySize = byteBuffer->GetByte();
+//		for (int i = 0; i < historySize; i++)
+//		{
+//			char *cmd = byteBuffer->GetString();
+//			viewC64->viewMonitorConsole->viewConsole->commandLineHistory.push_back(cmd);
+//		}
+//		viewC64->viewMonitorConsole->viewConsole->commandLineHistoryIt = viewC64->viewMonitorConsole->viewConsole->commandLineHistory.end();
+//	}
 }
+
 
 void C64DebuggerSetSetting(char *name, void *value)
 {
@@ -334,6 +363,18 @@ void C64DebuggerSetSetting(char *name, void *value)
 			viewC64->viewC64MainMenu->InsertCartridge(c64SettingsPathCartridge);
 		}
 	}
+	else if (!strcmp(name, "PathMemMapFile"))
+	{
+		if (c64SettingsPathToC64MemoryMapFile != NULL)
+			delete c64SettingsPathToC64MemoryMapFile;
+		
+		c64SettingsPathToC64MemoryMapFile = new CSlrString((CSlrString*)value);
+	}
+	else if (!strcmp(name, "FastBootPatch"))
+	{
+		bool v = *((bool*)value);
+		c64SettingsFastBootKernalPatch = v;
+	}
 	else if (!strcmp(name, "ScreenLayoutId"))
 	{
 		int v = *((int*)value);
@@ -386,6 +427,15 @@ void C64DebuggerSetSetting(char *name, void *value)
 			viewC64->viewC64SettingsMenu->menuItemMuteSIDOnPause->SetSelectedOption(0, false);
 			c64SettingsMuteSIDOnPause = false;
 		}
+	}
+	else if (!strcmp(name, "AudioOutDevice"))
+	{
+		if (c64SettingsAudioOutDevice != NULL)
+			delete c64SettingsAudioOutDevice;
+		
+		c64SettingsAudioOutDevice = new CSlrString((CSlrString*)value);
+		
+		gSoundEngine->SetOutputAudioDevice(c64SettingsAudioOutDevice);
 	}
 	else if (!strcmp(name, "C64Model"))
 	{
@@ -456,7 +506,35 @@ void C64DebuggerSetSetting(char *name, void *value)
 
 		c64SettingsMemoryMapRefreshRate = v;
 	}
-
+	else if (!strcmp(name, "EmulationMaximumSpeed"))
+	{
+		int v = *((int*)value);
+		if (v == 10)
+		{
+			viewC64->viewC64SettingsMenu->menuItemMaximumSpeed->SetSelectedOption(0, false);
+		}
+		else if (v == 20)
+		{
+			viewC64->viewC64SettingsMenu->menuItemMaximumSpeed->SetSelectedOption(1, false);
+		}
+		else if (v == 50)
+		{
+			viewC64->viewC64SettingsMenu->menuItemMaximumSpeed->SetSelectedOption(2, false);
+		}
+		else if (v == 100)
+		{
+			viewC64->viewC64SettingsMenu->menuItemMaximumSpeed->SetSelectedOption(3, false);
+		}
+		else if (v == 200)
+		{
+			viewC64->viewC64SettingsMenu->menuItemMaximumSpeed->SetSelectedOption(4, false);
+		}
+		
+		c64SettingsEmulationMaximumSpeed = v;
+		
+		viewC64->debugInterface->SetEmulationMaximumSpeed(v);
+	}
+	
 }
 
 

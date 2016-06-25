@@ -103,7 +103,7 @@ static void keyboard_latch_matrix(CLOCK offset)
     }
 }
 
-static int keyboard_set_latch_keyarr(int row, int col, int value)
+int keyboard_set_latch_keyarr(int row, int col, int value)
 {
     if (row < 0 || col < 0) {
         return -1;
@@ -221,22 +221,6 @@ void keyboard_register_clear(void)
 
 #ifdef COMMON_KBD
 
-enum shift_type {
-    NO_SHIFT = 0,             /* Key is not shifted. */
-    VIRTUAL_SHIFT = (1 << 0), /* The key needs a shift on the real machine. */
-    LEFT_SHIFT = (1 << 1),    /* Key is left shift. */
-    RIGHT_SHIFT = (1 << 2),   /* Key is right shift. */
-    ALLOW_SHIFT = (1 << 3),   /* Allow key to be shifted. */
-    DESHIFT_SHIFT = (1 << 4), /* Although SHIFT might be pressed, do not
-                                 press shift on the real machine. */
-    ALLOW_OTHER = (1 << 5),   /* Allow another key code to be assigned if
-                                 SHIFT is pressed. */
-    SHIFT_LOCK = (1 << 6),    /* Key is shift lock. */
-
-    ALT_MAP  = (1 << 8)       /* Key is used for an alternative keyboard
-                                 mapping */
-};
-
 struct keyboard_conv_s {
     signed long sym;
     int row;
@@ -286,6 +270,29 @@ static int shiftl = KEY_NONE;
 
 /*-----------------------------------------------------------------------*/
 
+void c64d_keyboard_init()
+{
+	
+	/*
+	 C64 keyboard matrix:
+	 
+	 Bit   7   6   5   4   3   2   1   0
+	 0    CUD  F5  F3  F1  F7 CLR RET DEL
+	 1    SHL  E   S   Z   4   A   W   3
+	 2     X   T   F   C   6   D   R   5
+	 3     V   U   H   B   8   G   Y   7
+	 4     N   O   K   M   0   J   I   9
+	 5     ,   @   :   .   -   L   P   +
+	 6     /   ^   =  SHR HOM  ;   *   £
+	 7    R/S  Q   C= SPC  2  CTL  <-  1
+	 */
+	kbd_lshiftrow = 1;
+	kbd_lshiftcol = 7;
+	kbd_rshiftrow = 6;
+	kbd_rshiftcol = 4;
+}
+
+
 static int left_shift_down, right_shift_down, virtual_shift_down;
 static int key_latch_row, key_latch_column;
 
@@ -309,7 +316,7 @@ static void keyboard_key_shift(void)
     }
 }
 
-static int keyboard_key_pressed_matrix(int row, int column, int shift)
+int keyboard_key_pressed_matrix(int row, int column, int shift)
 {
     if (row >= 0) {
         key_latch_row = row;
@@ -478,7 +485,22 @@ void keyboard_key_pressed(signed long key)
     }
 }
 
-static int keyboard_key_released_matrix(int row, int column, int shift)
+void c64d_keyboard_key_down_latch()
+{
+	{
+		if (network_connected()) {
+			CLOCK keyboard_delay = KEYBOARD_RAND();
+			network_event_record(EVENT_KEYBOARD_DELAY,
+								 (void *)&keyboard_delay, sizeof(keyboard_delay));
+			network_event_record(EVENT_KEYBOARD_MATRIX,
+								 (void *)latch_keyarr, sizeof(latch_keyarr));
+		} else {
+			alarm_set(keyboard_alarm, maincpu_clk + KEYBOARD_RAND());
+		}
+	}
+}
+
+int keyboard_key_released_matrix(int row, int column, int shift)
 {
     int skip_release = 0;
 
@@ -594,6 +616,19 @@ void keyboard_key_released(signed long key)
             alarm_set(keyboard_alarm, maincpu_clk + KEYBOARD_RAND());
         }
     }
+}
+
+void c64d_keyboard_key_up_latch()
+{
+		if (network_connected()) {
+			CLOCK keyboard_delay = KEYBOARD_RAND();
+			network_event_record(EVENT_KEYBOARD_DELAY,
+								 (void *)&keyboard_delay, sizeof(keyboard_delay));
+			network_event_record(EVENT_KEYBOARD_MATRIX,
+								 (void *)latch_keyarr, sizeof(latch_keyarr));
+		} else {
+			alarm_set(keyboard_alarm, maincpu_clk + KEYBOARD_RAND());
+		}
 }
 
 static void keyboard_key_clear_internal(void)
@@ -838,7 +873,7 @@ void keyboard_parse_set_pos_row(signed long sym, int row, int col,
     }
 }
 
-static int keyboard_parse_set_neg_row(signed long sym, int row, int col)
+int keyboard_parse_set_neg_row(signed long sym, int row, int col)
 {
     if (row == -3 && col == 0) {
         key_ctrl_restore1 = sym;
@@ -948,6 +983,15 @@ static int keyboard_parse_keymap(const char *filename)
     lib_free(complete_path);
 
     return 0;
+}
+
+void c64d_keyboard_keymap_clear()
+{
+	if (keyconvmap != NULL) {
+		keyboard_keyconvmap_free();
+	}
+	
+	keyboard_keyconvmap_alloc();
 }
 
 static int keyboard_keymap_load(const char *filename)
@@ -1175,6 +1219,8 @@ void keyboard_init(void)
     load_keymap_ok = 1;
     keyboard_set_keymap_index(machine_keymap_index, NULL);
 #endif
+	
+	c64d_keyboard_init();
 }
 
 void keyboard_shutdown(void)

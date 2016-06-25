@@ -24,6 +24,8 @@ extern bool c64SettingsMemoryMapInvertControl;
 extern uint8 c64SettingsMemoryMapRefreshRate;
 
 extern uint8 c64SettingsC64Model;
+extern int c64SettingsEmulationMaximumSpeed;
+extern bool c64SettingsFastBootKernalPatch;
 
 extern uint8 c64SettingsSIDEngineModel;
 extern bool c64SettingsMuteSIDOnPause;
@@ -41,6 +43,9 @@ extern CSlrString *c64SettingsDefaultCartridgeFolder;
 extern CSlrString *c64SettingsPathSnapshot;
 extern CSlrString *c64SettingsDefaultSnapshotsFolder;
 extern CSlrString *c64SettingsDefaultMemoryDumpFolder;
+extern CSlrString *c64SettingsPathToC64MemoryMapFile;
+
+extern CSlrString *c64SettingsAudioOutDevice;
 
 extern int c64SettingsJmpOnStartupAddr;
 
@@ -49,7 +54,7 @@ extern int c64SettingsDoubleClickMS;
 void C64DebuggerSetSettingInt(char *settingName, int param);
 void C64DebuggerSetSettingString(char *settingName, CSlrString *param);
 
-
+void C64DebuggerClearSettings();
 void C64DebuggerStoreSettings();
 void C64DebuggerRestoreSettings(uint8 settingsBlockType);
 

@@ -421,17 +421,19 @@ int ui_extend_image_dialog(void)
 
 void c64d_set_debug_mode(int newMode);
 
+int c64d_is_cpu_in_jam_state = 0;
+
 ui_jam_action_t ui_jam_dialog(const char *format, ...)
 {
  //   int retval;
+	
+	c64d_is_cpu_in_jam_state = 1;
 
 	c64d_show_message("CPU JAM has occured");
 	
 	c64d_set_debug_mode(C64_DEBUG_PAUSED);
 	
 	return UI_JAM_NONE;
-
-
 }
 
 /* Update all menu entries.  */

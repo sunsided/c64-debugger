@@ -183,6 +183,7 @@ void CSlrMutex::Lock()
 //#endif
 	
 	pthread_mutex_lock(&mutex);
+//	isLocked = true;
 }
 
 void CSlrMutex::Unlock()
@@ -193,6 +194,8 @@ void CSlrMutex::Unlock()
 //	LeaveCriticalSection((CRITICAL_SECTION *)mutex);
 //#endif
 	
+	
 	pthread_mutex_unlock(&mutex);
+//	isLocked = false;
 }
 

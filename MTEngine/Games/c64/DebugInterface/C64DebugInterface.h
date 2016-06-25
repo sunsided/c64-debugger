@@ -13,6 +13,7 @@ class CSlrString;
 class CImageData;
 class CSlrImage;
 class CSlrFont;
+class C64KeyMap;
 
 // abstract class
 class C64DebugInterface
@@ -26,6 +27,8 @@ public:
 	
 	virtual CSlrString *GetEmulatorVersionString();
 	virtual void RunEmulationThread();
+	
+	virtual void InitKeyMap(C64KeyMap *keyMap);
 	
 	virtual uint8 *GetCharRom();
 	
@@ -131,6 +134,8 @@ public:
 	virtual void GetC64ModelTypes(std::vector<CSlrString *> *modelTypes);
 	virtual void SetC64ModelType(int modelType);
 	
+	virtual void SetEmulationMaximumSpeed(int maximumSpeed);
+	
 	// memory access
 	virtual void SetByteC64(uint16 addr, uint8 val);
 	virtual void SetByteToRamC64(uint16 addr, uint8 val);
@@ -199,7 +204,7 @@ public:
 	virtual void UiInsertD64(CSlrString *path);
 
 	// state rendering
-	virtual void RenderStateVIC(float posX, float posY, float posZ, bool isVertical, CSlrFont *fontBytes, float fontSize, std::vector<CImageData *> *spritesImageData, std::vector<CSlrImage *> *spritesImages);
+	virtual void RenderStateVIC(float posX, float posY, float posZ, bool isVertical, CSlrFont *fontBytes, float fontSize, std::vector<CImageData *> *spritesImageData, std::vector<CSlrImage *> *spritesImages, bool renderDataWithColors);
 	virtual void RenderStateDrive1541(float posX, float posY, float posZ, CSlrFont *fontBytes, float fontSize,
 									  bool renderVia1, bool renderVia2, bool renderDriveLed, bool isVertical);
 	virtual void RenderStateCIA(float px, float py, float posZ, CSlrFont *fontBytes, float fontSize, int ciaId);

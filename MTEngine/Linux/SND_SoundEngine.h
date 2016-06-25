@@ -23,6 +23,7 @@
 void SYS_InitSoundEngine();
 
 class CSlrMutex;
+class CSlrString;
 
 class CAudioRecordingCallback
 {
@@ -35,6 +36,13 @@ class CSoundEngine
 public:
 	CSoundEngine();
 	~CSoundEngine();
+
+	std::list<CSlrString *> *EnumerateAvailableOutputDevices();
+	void SetOutputAudioDevice(CSlrString *deviceName);
+
+	char deviceOutName[512];
+	int deviceOutIndex;
+
 
 	bool StartAudioUnit(bool isPlayback, bool isRecording, int recordingFrequency);
 	void StopAudioUnit();

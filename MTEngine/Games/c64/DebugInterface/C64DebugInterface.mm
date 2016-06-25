@@ -58,6 +58,11 @@ CSlrString *C64DebugInterface::GetEmulatorVersionString()
 	return NULL;
 }
 
+void C64DebugInterface::InitKeyMap(C64KeyMap *keyMap)
+{
+	SYS_FatalExit("C64DebugInterface::InitKeyMap");
+}
+
 uint8 *C64DebugInterface::GetCharRom()
 {
 	SYS_FatalExit("C64DebugInterface::GetCharRom");
@@ -318,6 +323,11 @@ void C64DebugInterface::SetC64ModelType(int modelType)
 	SYS_FatalExit("C64DebugInterface::SetC64ModelType");
 }
 
+void C64DebugInterface::SetEmulationMaximumSpeed(int maximumSpeed)
+{
+	SYS_FatalExit("C64DebugInterface::SetEmulationMaximumSpeed");
+}
+
 void C64DebugInterface::SetSettingUseKeyboardForJoystick(bool isJoystickOn)
 {
 	SYS_FatalExit("C64DebugInterface::SetSettingUseKeyboardForJoystick");
@@ -522,7 +532,7 @@ void C64DebugInterface::UiInsertD64(CSlrString *path)
 
 //
 
-void C64DebugInterface::RenderStateVIC(float posX, float posY, float posZ, bool isVertical, CSlrFont *fontBytes, float fontSize, std::vector<CImageData *> *spritesImageData, std::vector<CSlrImage *> *spritesImages)
+void C64DebugInterface::RenderStateVIC(float posX, float posY, float posZ, bool isVertical, CSlrFont *fontBytes, float fontSize, std::vector<CImageData *> *spritesImageData, std::vector<CSlrImage *> *spritesImages, bool renderDataWithColors)
 {
 	SYS_FatalExit("C64DebugInterface::RenderStateVIC");
 }

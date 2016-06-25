@@ -3,7 +3,7 @@
  *  MobiTracker
  *
  *  Created by Marcin Skoczylas on 09-11-19.
- *  Copyright 2009. All rights reserved.
+ *  Copyright 2009 __MyCompanyName__. All rights reserved.
  *
  */
 
@@ -15,6 +15,8 @@
 //#include "SYS_CFileSystem.h"
 #include <pthread.h>
 
+// set keycode that will quit application
+void SYS_SetQuitKey(int keyCode, bool isShift, bool isAlt, bool isControl);
 
 //extern const char hexTable;
 void Byte2Hex1digitR(byte value, char *bufOut);

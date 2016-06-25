@@ -382,6 +382,24 @@ u32 mapKey(int c)
 	return 0;
 }
 
+int quitKeyCode = -1;
+bool quitIsShift = false;
+bool quitIsAlt = false;
+bool quitIsControl = false;
+
+void SYS_SetQuitKey(int keyCode, bool isShift, bool isAlt, bool isControl)
+{
+	quitKeyCode = keyCode;
+	quitIsShift = isShift;
+	quitIsAlt = isAlt;
+	quitIsControl = isControl;
+}
+
+void SYS_DoFastQuit()
+{
+	
+}
+
 - (void) keyDown:(NSEvent *)event
 {
 	LOGI("GLViewController: keyDown event");
@@ -460,22 +478,30 @@ u32 mapKey(int c)
 	if (key != 0)
 	{
 		guiMain->KeyDown(key, isShift, isAlt, isControl);
-	}
-	else
-	{
-		unichar c = [[event charactersIgnoringModifiers] characterAtIndex:0];
-
-#if defined(MACOS)
-		if (isControl && c == 'w')
+		
+		if (key == quitKeyCode && isShift == quitIsShift && isAlt == quitIsAlt && isControl == quitIsControl)
 		{
-			LOGM("Ctrl+W pressed. QUIT.");
+			LOGM("QUIT.");
 			gSoundEngine->StopAudioUnit();
 			[self stopAnimation];
 			//exit(0);
 			//_Exit(0);
 			_exit(0);
 		}
-#endif
+	}
+	else
+	{
+		unichar c = [[event charactersIgnoringModifiers] characterAtIndex:0];
+
+		if (c == quitKeyCode && isShift == quitIsShift && isAlt == quitIsAlt && isControl == quitIsControl)
+		{
+			LOGM("QUIT.");
+			gSoundEngine->StopAudioUnit();
+			[self stopAnimation];
+			//exit(0);
+			//_Exit(0);
+			_exit(0);
+		}
 
 		guiMain->KeyDown(c, isShift, isAlt, isControl);
 	}

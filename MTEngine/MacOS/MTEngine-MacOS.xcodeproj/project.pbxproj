@@ -663,6 +663,8 @@
 		414539D81CB3DC1B00020916 /* C64DataAdaptersVice.mm in Sources */ = {isa = PBXBuildFile; fileRef = 414539D51CB3DC1B00020916 /* C64DataAdaptersVice.mm */; };
 		414539D91CB3DC1B00020916 /* C64DebugInterfaceVice.mm in Sources */ = {isa = PBXBuildFile; fileRef = 414539D71CB3DC1B00020916 /* C64DebugInterfaceVice.mm */; };
 		414539DD1CB3F2B400020916 /* ViceLogWrapper.mm in Sources */ = {isa = PBXBuildFile; fileRef = 414539DC1CB3F2B400020916 /* ViceLogWrapper.mm */; };
+		41474DCF1D08607300F1B83F /* C64KeyMap.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41474DCE1D08607300F1B83F /* C64KeyMap.mm */; };
+		41474DD21D08B15900F1B83F /* CViewC64KeyMap.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41474DD01D08B15900F1B83F /* CViewC64KeyMap.mm */; };
 		415206621C985A3000EBA9E5 /* C64FileDataAdapter.mm in Sources */ = {isa = PBXBuildFile; fileRef = 415206611C985A3000EBA9E5 /* C64FileDataAdapter.mm */; };
 		4152D6E01C96F73300EBA9E5 /* C64DebugInterface.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D6DB1C96F73300EBA9E5 /* C64DebugInterface.mm */; };
 		4152D6E21C96F73300EBA9E5 /* C64DebugData.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D6DF1C96F73300EBA9E5 /* C64DebugData.mm */; };
@@ -785,6 +787,8 @@
 		41CF59051920E77600F43331 /* IMG_Scale.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41CF59001920E77600F43331 /* IMG_Scale.mm */; };
 		41CF59061920E77600F43331 /* resampler.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41CF59031920E77600F43331 /* resampler.mm */; };
 		41CF97961CA40FD90078DD59 /* Scene.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41CF97941CA40FD90078DD59 /* Scene.mm */; };
+		41DDCABF1D0EF01000C03F39 /* C64KeyboardShortcuts.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41DDCABE1D0EF01000C03F39 /* C64KeyboardShortcuts.mm */; };
+		41DDCAC21D0F19C500C03F39 /* CViewKeyboardShortcuts.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41DDCAC01D0F19C500C03F39 /* CViewKeyboardShortcuts.mm */; };
 		41E0AC3B18AC2F740065DCAD /* internalJSONNode.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41E0AC1318AC2F740065DCAD /* internalJSONNode.mm */; };
 		41E0AC3C18AC2F740065DCAD /* JSONAllocator.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41E0AC1618AC2F740065DCAD /* JSONAllocator.mm */; };
 		41E0AC3D18AC2F740065DCAD /* JSONChildren.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41E0AC1818AC2F740065DCAD /* JSONChildren.mm */; };
@@ -2174,6 +2178,10 @@
 		414539DB1CB3F2B400020916 /* ViceLogWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ViceLogWrapper.h; sourceTree = "<group>"; };
 		414539DC1CB3F2B400020916 /* ViceLogWrapper.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ViceLogWrapper.mm; sourceTree = "<group>"; };
 		414539DE1CB3FF1D00020916 /* SYS_Types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SYS_Types.h; sourceTree = "<group>"; };
+		41474DCD1D08607300F1B83F /* C64KeyMap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64KeyMap.h; path = ../Games/c64/Tools/C64KeyMap.h; sourceTree = "<group>"; };
+		41474DCE1D08607300F1B83F /* C64KeyMap.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64KeyMap.mm; path = ../Games/c64/Tools/C64KeyMap.mm; sourceTree = "<group>"; };
+		41474DD01D08B15900F1B83F /* CViewC64KeyMap.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewC64KeyMap.mm; path = ../Games/c64/Screens/CViewC64KeyMap.mm; sourceTree = "<group>"; };
+		41474DD11D08B15900F1B83F /* CViewC64KeyMap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewC64KeyMap.h; path = ../Games/c64/Screens/CViewC64KeyMap.h; sourceTree = "<group>"; };
 		415206601C985A3000EBA9E5 /* C64FileDataAdapter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64FileDataAdapter.h; path = ../Games/c64/Tools/C64FileDataAdapter.h; sourceTree = "<group>"; };
 		415206611C985A3000EBA9E5 /* C64FileDataAdapter.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64FileDataAdapter.mm; path = ../Games/c64/Tools/C64FileDataAdapter.mm; sourceTree = "<group>"; };
 		4152D6DA1C96F73300EBA9E5 /* C64DebugInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64DebugInterface.h; path = ../Games/c64/DebugInterface/C64DebugInterface.h; sourceTree = "<group>"; };
@@ -2378,6 +2386,9 @@
 		41CF59031920E77600F43331 /* resampler.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = resampler.mm; sourceTree = "<group>"; };
 		41CF97941CA40FD90078DD59 /* Scene.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = Scene.mm; sourceTree = "<group>"; };
 		41CF97951CA40FD90078DD59 /* Scene.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Scene.h; sourceTree = "<group>"; };
+		41DDCABE1D0EF01000C03F39 /* C64KeyboardShortcuts.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64KeyboardShortcuts.mm; path = ../Games/c64/Tools/C64KeyboardShortcuts.mm; sourceTree = "<group>"; };
+		41DDCAC01D0F19C500C03F39 /* CViewKeyboardShortcuts.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewKeyboardShortcuts.mm; path = ../Games/c64/Screens/CViewKeyboardShortcuts.mm; sourceTree = "<group>"; };
+		41DDCAC11D0F19C500C03F39 /* CViewKeyboardShortcuts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewKeyboardShortcuts.h; path = ../Games/c64/Screens/CViewKeyboardShortcuts.h; sourceTree = "<group>"; };
 		41E0AC1318AC2F740065DCAD /* internalJSONNode.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = internalJSONNode.mm; sourceTree = "<group>"; };
 		41E0AC1418AC2F740065DCAD /* internalJSONNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = internalJSONNode.h; sourceTree = "<group>"; };
 		41E0AC1518AC2F740065DCAD /* JSON_Base64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSON_Base64.h; sourceTree = "<group>"; };
@@ -3030,6 +3041,10 @@
 		4114BB1B1C84B88200E5F0A1 /* Screens */ = {
 			isa = PBXGroup;
 			children = (
+				41DDCAC01D0F19C500C03F39 /* CViewKeyboardShortcuts.mm */,
+				41DDCAC11D0F19C500C03F39 /* CViewKeyboardShortcuts.h */,
+				41474DD01D08B15900F1B83F /* CViewC64KeyMap.mm */,
+				41474DD11D08B15900F1B83F /* CViewC64KeyMap.h */,
 				41FC3CB81CFEC44F00D598A2 /* CViewAbout.mm */,
 				41FC3CB91CFEC44F00D598A2 /* CViewAbout.h */,
 				41EC74FB1CDB22CA00D0E99F /* CViewMainMenu.mm */,
@@ -4509,6 +4524,8 @@
 		41646C051C8DAAF2006BBE25 /* Tools */ = {
 			isa = PBXGroup;
 			children = (
+				41474DCD1D08607300F1B83F /* C64KeyMap.h */,
+				41474DCE1D08607300F1B83F /* C64KeyMap.mm */,
 				41EC74FE1CE1E51F00D0E99F /* C64SettingsStorage.mm */,
 				41EC74FF1CE1E51F00D0E99F /* C64SettingsStorage.h */,
 				416AF77D1CC7D52100E56DDC /* C64Opcodes.h */,
@@ -4517,6 +4534,7 @@
 				4152D6EF1C970F0800EBA9E5 /* C64Tools.mm */,
 				4152D6F01C970F0800EBA9E5 /* C64Tools.h */,
 				4152D6F11C970F0800EBA9E5 /* C64KeyboardShortcuts.h */,
+				41DDCABE1D0EF01000C03F39 /* C64KeyboardShortcuts.mm */,
 				4152D6F21C970F0800EBA9E5 /* C64CommandLine.mm */,
 				4152D6F51C970F0800EBA9E5 /* C64CommandLine.h */,
 				4152D6F31C970F0800EBA9E5 /* C64Symbols.mm */,
@@ -5154,6 +5172,7 @@
 				4145362F1CB2D1A300020916 /* c64cartmem.c in Sources */,
 				414539A91CB2E94F00020916 /* embedded.c in Sources */,
 				414536471CB2D1A300020916 /* c64iec.c in Sources */,
+				41474DD21D08B15900F1B83F /* CViewC64KeyMap.mm in Sources */,
 				414535E41CB2D1A300020916 /* uimsgbox.c in Sources */,
 				41E0AC4618AC2F740065DCAD /* JSONWorker.mm in Sources */,
 				41925DA21B1DD82F00B33B7F /* jidctflt.c in Sources */,
@@ -5613,6 +5632,7 @@
 				41925DB11B1DD82F00B33B7F /* transupp.c in Sources */,
 				39042978186892A800B570B1 /* CMusicChannel.mm in Sources */,
 				414539C51CB2E94F00020916 /* rawnet.c in Sources */,
+				41474DCF1D08607300F1B83F /* C64KeyMap.mm in Sources */,
 				414538331CB2D96600020916 /* residfp-convolve-sse.cc in Sources */,
 				414539C21CB2E94F00020916 /* palette.c in Sources */,
 				39042A6F186892A800B570B1 /* MTH_MTRand.mm in Sources */,
@@ -5719,10 +5739,12 @@
 				39042AFC186892A800B570B1 /* deflate.c in Sources */,
 				414535E21CB2D1A300020916 /* uimenu.c in Sources */,
 				4145360F1CB2D1A300020916 /* kcs.c in Sources */,
+				41DDCABF1D0EF01000C03F39 /* C64KeyboardShortcuts.mm in Sources */,
 				414536821CB2D1A300020916 /* profdos.c in Sources */,
 				414536951CB2D1A300020916 /* ieee.c in Sources */,
 				39042A39186892A800B570B1 /* CGuiViewSelectFile.mm in Sources */,
 				414536201CB2D1A300020916 /* ross.c in Sources */,
+				41DDCAC21D0F19C500C03F39 /* CViewKeyboardShortcuts.mm in Sources */,
 				41925D8C1B1DD82F00B33B7F /* jctrans.c in Sources */,
 				414539B81CB2E94F00020916 /* libm_math.c in Sources */,
 				390429E5186892A800B570B1 /* CSlrString.mm in Sources */,
@@ -5787,7 +5809,7 @@
 				ARCHS = "$(ARCHS_STANDARD)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "Developer ID Application";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer: Marcin Skoczylas (6N2SK67R3R)";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "";
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;

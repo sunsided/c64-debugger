@@ -27,6 +27,19 @@
 
 #define DEFAULT_WINDOW_CAPTION "C64 Debugger v" C64DEBUGGER_VERSION_STRING " (" __DATE__ " " __TIME__ ")"
 
+int quitKeyCode = -1;
+bool quitIsAlt = false;
+bool quitIsControl = false;
+bool quitIsShift = false;
+
+void SYS_SetQuitKey(int keyCode, bool isShift, bool isAlt, bool isControl)
+{
+	quitKeyCode = keyCode;
+	quitIsShift = isShift;
+	quitIsAlt = isAlt;
+	quitIsControl = isControl;
+}
+
 int mapKey(bool isAlt, bool isControl, bool isShift, int key);
 
 Display *dpy;
@@ -249,17 +262,26 @@ int main(int argc, char *argv[])
 					bool isAlt = ((xev.xkey.state & Mod1Mask) != 0) || ((xev.xkey.state & Mod5Mask) != 0);
 					bool isShift = (xev.xkey.state & ShiftMask) != 0;
 
-					altPressed = isAlt;
-
-					int key2 = mapKey(isAlt, isControl, isShift, key);
-
-					if (xev.type == KeyPress)
+					// check quit
+					if (key == quitKeyCode && isControl == quitIsControl && isAlt == quitIsAlt && isShift == quitIsShift)
 					{
-						guiMain->KeyDown(key2, isShift, isAlt, isControl);
+						LOGM("QUIT");
+						quit = true;
 					}
-					else if (xev.type == KeyRelease)
+					else
 					{
-						guiMain->KeyUp(key2, isShift, isAlt, isControl);
+						altPressed = isAlt;
+
+						int key2 = mapKey(isAlt, isControl, isShift, key);
+
+						if (xev.type == KeyPress)
+						{
+							guiMain->KeyDown(key2, isShift, isAlt, isControl);
+						}
+						else if (xev.type == KeyRelease)
+						{
+							guiMain->KeyUp(key2, isShift, isAlt, isControl);
+						}
 					}
 				}
 			}
@@ -288,13 +310,23 @@ int main(int argc, char *argv[])
 
 int mapKey(bool isAlt, bool isControl, bool isShift, int key)
 {
-//	LOGI("mapKey=%4.4x '%c' alt=%s control=%s shift=%s", key, key, (isAlt ? "Y" : "N"), (isControl ? "Y" : "N"), (isShift ? "Y" : "N"));
+	LOGI("mapKey=%x '%c' alt=%s control=%s shift=%s", key, key, (isAlt ? "Y" : "N"), (isControl ? "Y" : "N"), (isShift ? "Y" : "N"));
 	if (key == XK_BackSpace)
 		return MTKEY_BACKSPACE;
+	else if (key == XK_Delete)
+		return MTKEY_DELETE;
+	else if (key == XK_Insert)
+		return MTKEY_INSERT;
+	else if (key == XK_Home)
+		return MTKEY_HOME;
+	else if (key == XK_End)
+		return MTKEY_END;
 	else if (key == XK_Escape)
 		return MTKEY_ESC;
 	else if (key == XK_Return)
 		return MTKEY_ENTER;
+	else if (key == XK_Tab)
+		return MTKEY_TAB;
 	else if (key == XK_Left)
 		return MTKEY_ARROW_LEFT;
 	else if (key == XK_Right)
@@ -315,6 +347,53 @@ int mapKey(bool isAlt, bool isControl, bool isShift, int key)
 		return MTKEY_LALT;
 	else if (key == XK_Alt_R || key == XK_ISO_Level3_Shift)
 		return MTKEY_RALT;
+	else if (key == XK_Num_Lock)
+		return MTKEY_NUM_LOCK;
+	else if (key == XK_Caps_Lock)
+		return MTKEY_CAPS_LOCK;
+	else if (key == XK_Num_Lock)
+		return MTKEY_NUM_LOCK;
+
+	else if (key == XK_Num_Lock)
+		return MTKEY_NUM_LOCK;
+
+	else if (key == XK_KP_Equal)
+		return MTKEY_NUM_EQUAL;
+	else if (key == XK_KP_Divide)
+		return MTKEY_NUM_DIVIDE;
+	else if (key == XK_KP_Multiply)
+		return MTKEY_NUM_MULTIPLY;
+	else if (key == XK_KP_Home)
+		return MTKEY_NUM_7;
+	else if (key == XK_KP_Up)
+		return MTKEY_NUM_8;
+	else if (key == XK_KP_Prior)
+		return MTKEY_NUM_9;
+	else if (key == XK_KP_Left)
+		return MTKEY_NUM_4;
+	else if (key == XK_KP_Begin)
+		return MTKEY_NUM_5;
+	else if (key == XK_KP_Right)
+		return MTKEY_NUM_6;
+	else if (key == XK_KP_End)
+		return MTKEY_NUM_1;
+	else if (key == XK_KP_Down)
+		return MTKEY_NUM_2;
+	else if (key == XK_KP_Next)
+		return MTKEY_NUM_3;
+	else if (key == XK_KP_Insert)
+		return MTKEY_NUM_0;
+	else if (key == XK_KP_Delete)
+		return MTKEY_NUM_DOT;
+	else if (key == XK_KP_Enter)
+		return MTKEY_NUM_ENTER;
+	else if (key == XK_KP_Multiply)
+		return MTKEY_NUM_MULTIPLY;
+	else if (key == XK_KP_Subtract)
+		return MTKEY_NUM_MINUS;
+	else if (key == XK_KP_Add)
+		return MTKEY_NUM_PLUS;
+
 	else if (key == XK_Page_Up)
 		return MTKEY_PAGE_UP;
 	else if (key == XK_Page_Down)
@@ -343,8 +422,18 @@ int mapKey(bool isAlt, bool isControl, bool isShift, int key)
 		return MTKEY_F11;
 	else if (key == XK_F12)
 		return MTKEY_F12;
-	else if (key == XK_Tab)
-		return MTKEY_TAB;
+	else if (key == XK_F13 || key == 0x1008ff81)
+		return MTKEY_F13;
+	else if (key == XK_Super_L)
+		return MTKEY_LSUPER;
+	else if (key == XK_Super_R)
+		return MTKEY_RSUPER;
+	else if (key == 0x1008ff45)
+		return MTKEY_F14;
+	else if (key == 0x1008ff46)
+		return MTKEY_F15;
+	else if (key == 0x1008ff47)
+		return MTKEY_F16;
 
 	if (isShift)
 	{

@@ -42,8 +42,9 @@ void CViewEmulationState::Render()
 	float py = posY;
 	
 	char buf[128];
-	sprintf (buf, "Emulation speed: %6.2f  FPS: %4.1f", debugInterface->emulationSpeed, debugInterface->emulationFrameRate);
-	
+	sprintf (buf, "%s Emulation speed: %6.2f  FPS: %4.1f",
+			 (debugInterface->GetSettingIsWarpSpeed() ? "(Warp)" : "      "),
+			 debugInterface->emulationSpeed, debugInterface->emulationFrameRate);
 	fontBytes->BlitText(buf, px, py, posZ, fontSize);
 }
 

@@ -119,8 +119,13 @@ void CViewAbout::Render()
 	font->BlitTextColor("Copyright C 1993-1996 Jouko Valta", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
 	font->BlitTextColor("Copyright C 1993-1994 Jarkko Sonninen", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
 	font->BlitTextColor("", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+
+	fontScale = 0.8f;
+	font->BlitTextColor("The ROM files embedded in the source code are Copyright C by Commodore Business Machines.", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+
 	
-	fontScale = 1.0f;
+	
+	fontScale = 0.8f;
 	fontHeight = font->GetCharHeight('@', fontScale) + 1;
 
 	font->BlitTextColor("This program is free software; you can redistribute it and/or", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;

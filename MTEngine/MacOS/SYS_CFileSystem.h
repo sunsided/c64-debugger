@@ -174,5 +174,7 @@ void SYS_DialogSaveFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 
 bool SYS_FileDirExists(CSlrString *path);
 
+uint8 *SYS_MapMemoryToFile(int memorySize, char *filePath, void **fileDescriptor);
+void SYS_UnMapMemoryFromFile(uint8 *memoryMap, int memorySize, void **fileDescriptor);
 
 #endif //__SYS_CFILESYSTEM_H__

@@ -6,6 +6,7 @@
 #include "DBG_Log.h"
 #include <pthread.h>
 #include "SYS_Threading.h"
+#include "CSlrString.h"
 
 #include "ivorbiscodec.h"
 #include "ivorbisfile.h"
@@ -37,6 +38,12 @@ public:
 	CSoundEngine();
 	~CSoundEngine(); 
 	
+	std::list<CSlrString *> *EnumerateAvailableOutputDevices();
+	void SetOutputAudioDevice(CSlrString *deviceName);
+
+	char deviceOutName[512];
+	int deviceOutIndex;
+
 	bool StartAudioUnit(bool isPlayback, bool isRecording, int recordingFrequency);
 	void StopAudioUnit();
 	void ResetAudioUnit(bool isRecordingOn);

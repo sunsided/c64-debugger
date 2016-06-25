@@ -64,6 +64,9 @@ public:
 	virtual void SystemDialogFileOpenSelected(CSlrString *path);
 	virtual void SystemDialogFileOpenCancelled();
 
+	//
+	void StoreMonitorHistory();
+	void RestoreMonitorHistory();
 	
 };
 

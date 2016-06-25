@@ -144,12 +144,14 @@ double GetTickCountF()
 
 void SYS_LockRenderMutex()
 {
-	pthread_mutex_lock(&gRenderMutex);
+	guiMain->LockMutex();
+//	pthread_mutex_lock(&gRenderMutex);
 }
 
 void SYS_UnlockRenderMutex()
 {
-	pthread_mutex_unlock(&gRenderMutex);
+	guiMain->UnlockMutex();
+//	pthread_mutex_unlock(&gRenderMutex);
 }
 
 long SYS_RandomSeed()

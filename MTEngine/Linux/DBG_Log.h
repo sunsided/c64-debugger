@@ -14,7 +14,7 @@
 #include <stdarg.h>
 #include <string>
 
-//#define GLOBAL_DEBUG_OFF
+#define GLOBAL_DEBUG_OFF
 //#undef GLOBAL_DEBUG_OFF
 
 #define byte unsigned char

@@ -3,14 +3,16 @@
  *  MobiTracker
  *
  *  Created by Marcin Skoczylas on 09-11-20.
- *  Copyright 2009. All rights reserved.
+ *  Copyright 2009 __MyCompanyName__. All rights reserved.
  *
  */
 
 #include "SYS_CFileSystem.h"
 #include "SYS_DocsVsRes.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <dirent.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -19,9 +21,9 @@
 #include "CSlrString.h"
 #include "SYS_Funct.h"
 
-#include <stdio.h>
 #include <gtk/gtk.h>
 #include <pwd.h>
+#include <sys/mman.h>
 
 
 CFileSystem *gFileSystem;
@@ -1095,3 +1097,53 @@ bool SYS_FileDirExists(CSlrString *path)
 	delete [] cPath;
 }
 
+uint8 *SYS_MapMemoryToFile(int memorySize, char *filePath, void **fileDescriptor)
+{
+        int *fileHandle = (int*)malloc(sizeof(int));
+        fileDescriptor = (void**)(&fileHandle);
+
+        *fileHandle = open(filePath, O_RDWR | O_CREAT | O_TRUNC, (mode_t)0600);
+
+        if(*fileHandle == -1)
+        {
+                LOGError("SYS_MapMemoryToFile: error opening file for writing, path=%s", filePath);
+                return NULL;
+        }
+
+        if(lseek(*fileHandle, memorySize - 1, SEEK_SET) == -1)
+        {
+                LOGError("SYS_MapMemoryToFile: error in seeking the file, path=%s", filePath);
+                return NULL;
+        }
+
+        if(write(*fileHandle, "", 1) != 1)
+        {
+                LOGError("SYS_MapMemoryToFile: error in writing the file, path=%s", filePath);
+                return NULL;
+        }
+
+        uint8 *memoryMap = (uint8*)mmap(0, memorySize, PROT_READ | PROT_WRITE, MAP_SHARED, *fileHandle, 0);
+
+        if (memoryMap == MAP_FAILED)
+        {
+                close(*fileHandle);
+
+                LOGError("SYS_MapMemoryToFile: error mmaping the file, path=%s", filePath);
+                return NULL;
+        }
+
+        return memoryMap;
+}
+
+void SYS_UnMapMemoryFromFile(uint8 *memoryMap, int memorySize, void **fileDescriptor)
+{
+        if (munmap(memoryMap, memorySize) == -1)
+        {
+                LOGError("SYS_UnMapMemoryFromFile: error unmapping the file");
+                return;
+        }
+
+        int *fileHandle = (int*)*fileDescriptor;
+
+        close(*fileHandle);
+}

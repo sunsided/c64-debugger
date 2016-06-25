@@ -49,7 +49,7 @@ bool logThisLevel(unsigned int level)
 //	return false;
 
 	if (level == DBGLVL_MAIN) return true;
-	if (level == DBGLVL_DEBUG) return false;
+	if (level == DBGLVL_DEBUG) return true;
 	if (level == DBGLVL_DEBUG2) return false;
 	if (level == DBGLVL_RES) return false;
 	if (level == DBGLVL_GUI) return false; //	true	false

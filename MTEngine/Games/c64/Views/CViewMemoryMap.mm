@@ -13,6 +13,7 @@
 #include "CViewDisassemble.h"
 #include "C64DebugInterface.h"
 #include "C64SettingsStorage.h"
+#include "C64KeyboardShortcuts.h"
 #include "C64Opcodes.h"
 #include "CGuiMain.h"
 
@@ -260,6 +261,7 @@ void C64DebuggerSetMemoryMapMarkersStyle(uint8 memoryMapMarkersStyle)
 void CViewMemoryMapCell::MarkCellRead()
 {
 	markCellRead(this);
+	isRead = true;
 }
 
 void CViewMemoryMapCell::MarkCellWrite(uint8 value)
@@ -268,6 +270,7 @@ void CViewMemoryMapCell::MarkCellWrite(uint8 value)
 	
 	isExecuteCode = false;
 	isExecuteArgument = false;
+	isWrite = true;
 	markCellWrite(this);
 }
 
@@ -315,14 +318,6 @@ CViewMemoryMap::CViewMemoryMap(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	// images
 	CImageData *imageData = new CImageData(imageWidth, imageHeight, IMG_TYPE_RGBA);
 	imageData->AllocImage(false, true);
-	
-	for (int x = 0; x < imageWidth; x++)
-	{
-		for (int y = 0; y < imageHeight; y++)
-		{
-			imageData->SetPixelResultRGBA(x, y, 0, 0, 0, 0); //x % 255, y % 255, 0, 255);
-		}
-	}
 	
 	imageMemoryMap = new CSlrImage(true, false);
 	imageMemoryMap->LoadImage(imageData, RESOURCE_PRIORITY_STATIC, false);
@@ -542,9 +537,6 @@ void CViewMemoryMap::UpdateWholeMap()
 			vy += 1;
 		}
 	}
-	
-
-
 }
 
 void CViewMemoryMap::CellRead(uint16 addr)
@@ -627,25 +619,20 @@ void CViewMemoryMap::CellsAnimationLogic()
 				alphaSpeed = runDataAlphaSpeed;
 			}
 			
-			bool updatePixel = false;
 			if (cell->sr > 0.0f)
 			{
-				updatePixel = true;
 				cell->sr -= colorSpeed; if (cell->sr < 0.0f) cell->sr = 0.0f;
 			}
 			if (cell->sg > 0.0f)
 			{
-				updatePixel = true;
 				cell->sg -= colorSpeed; if (cell->sg < 0.0f) cell->sg = 0.0f;
 			}
 			if (cell->sb > 0.0f)
 			{
-				updatePixel = true;
 				cell->sb -= colorSpeed; if (cell->sb < 0.0f) cell->sb = 0.0f;
 			}
 			if (cell->sa > 0.0f)
 			{
-				updatePixel = true;
 				cell->sa -= alphaSpeed; if (cell->sa < 0.0f) cell->sa = 0.0f;
 			}
 			
@@ -709,25 +696,20 @@ void CViewMemoryMap::DriveROMCellsAnimationLogic()
 			alphaSpeed = runDataAlphaSpeed;
 		}
 		
-		bool updatePixel = false;
 		if (cell->sr > 0.0f)
 		{
-			updatePixel = true;
 			cell->sr -= colorSpeed; if (cell->sr < 0.0f) cell->sr = 0.0f;
 		}
 		if (cell->sg > 0.0f)
 		{
-			updatePixel = true;
 			cell->sg -= colorSpeed; if (cell->sg < 0.0f) cell->sg = 0.0f;
 		}
 		if (cell->sb > 0.0f)
 		{
-			updatePixel = true;
 			cell->sb -= colorSpeed; if (cell->sb < 0.0f) cell->sb = 0.0f;
 		}
 		if (cell->sa > 0.0f)
 		{
-			updatePixel = true;
 			cell->sa -= alphaSpeed; if (cell->sa < 0.0f) cell->sa = 0.0f;
 		}
 	}
@@ -1149,7 +1131,7 @@ void CViewMemoryMap::Render()
 			imageMemoryMap->SetLoadImageData(imageDataMemoryMap);
 			imageMemoryMap->BindImage();
 			imageMemoryMap->loadImageData = NULL;
-			nextScreenUpdateFrame = frameCounter+ c64SettingsMemoryMapRefreshRate;
+			nextScreenUpdateFrame = frameCounter + c64SettingsMemoryMapRefreshRate;
 		}
 	}
 	else
@@ -1408,7 +1390,8 @@ bool CViewMemoryMap::DoTap(GLfloat x, GLfloat y)
 
 bool CViewMemoryMap::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
-	if (keyCode == MTKEY_SPACEBAR)
+	CSlrKeyboardShortcut *keyboardShortcut = viewC64->keyboardShortcuts->FindShortcut(KBZONE_DISASSEMBLE, keyCode, isShift, isAlt, isControl);
+	if (keyboardShortcut == viewC64->keyboardShortcuts->kbsToggleTrackPC)
 	{
 		if (viewDataDump != NULL)
 		{
@@ -1440,11 +1423,41 @@ void CViewMemoryMap::ClearExecuteMarkers()
 {
 	for (int i = 0; i < ramSize; i++)
 	{
-		memoryCells[i]->isExecuteCode = false;
-		memoryCells[i]->isExecuteArgument = false;
+		memoryCells[i]->ClearExecuteMarkers();
 	}
 }
 
+void CViewMemoryMap::ClearReadWriteMarkers()
+{
+	for (int i = 0; i < ramSize; i++)
+	{
+		memoryCells[i]->ClearReadWriteMarkers();
+	}
+}
+
+void CViewMemoryMapCell::ClearExecuteMarkers()
+{
+	isExecuteCode = false;
+	isExecuteArgument = false;
+	isRead = false;
+	isWrite = false;
+
+	sr = 0.0f; vr = 0.0f; rr = 0.0f;
+	sg = 0.0f; vg = 0.0f; rg = 0.0f;
+	sb = 0.0f; vb = 0.0f; rb = 0.0f;
+	sa = 0.0f; va = 0.0f; ra = 0.0f;
+}
+
+void CViewMemoryMapCell::ClearReadWriteMarkers()
+{
+	isRead = false;
+	isWrite = false;
+
+	sr = 0.0f; vr = 0.0f; rr = 0.0f;
+	sg = 0.0f; vg = 0.0f; rg = 0.0f;
+	sb = 0.0f; vb = 0.0f; rb = 0.0f;
+	sa = 0.0f; va = 0.0f; ra = 0.0f;
+}
 
 
 CViewMemoryMapCell::CViewMemoryMapCell()
@@ -1456,6 +1469,9 @@ CViewMemoryMapCell::CViewMemoryMapCell()
 	
 	isExecuteCode = false;
 	isExecuteArgument = false;
+	
+	isRead = false;
+	isWrite = false;
 }
 
 CViewMemoryMap::~CViewMemoryMap()

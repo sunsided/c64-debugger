@@ -11,6 +11,7 @@ extern "C" {
 #include "SYS_KeyCodes.h"
 #include "CViewC64.h"
 #include "CViewMemoryMap.h"
+#include "CViewDataDump.h"
 #include "C64Tools.h"
 #include "CViewC64Screen.h"
 #include "CViewDataDump.h"
@@ -77,7 +78,8 @@ void CViewC64StateVIC::Render()
 //	if (debugInterface->GetSettingIsWarpSpeed() == true)
 //		return;
 
-	viewC64->debugInterface->RenderStateVIC(posX, posY, posZ, isVertical, fontBytes, fontSize, spritesImageData, spritesImages);
+	viewC64->debugInterface->RenderStateVIC(posX, posY, posZ, isVertical, fontBytes, fontSize, spritesImageData, spritesImages,
+											viewC64->viewC64MemoryDataDump->renderDataWithColors);
 }
 
 bool CViewC64StateVIC::DoTap(GLfloat x, GLfloat y)

@@ -68,8 +68,10 @@ public:
 	virtual void MenuCallbackItemEntered(CGuiViewMenuItem *menuItem);
 	virtual void MenuCallbackItemChanged(CGuiViewMenuItem *menuItem);
 
-	
-	CSlrKeyboardShortcut *kbsSettingsScreen;
+
+	CSlrKeyboardShortcut *kbsQuitApplication;
+
+	CSlrKeyboardShortcut *kbsMainMenuScreen;
 
 	CSlrKeyboardShortcut *kbsScreenLayout1;
 	CSlrKeyboardShortcut *kbsScreenLayout2;
@@ -137,7 +139,7 @@ public:
 //	virtual void SystemDialogFileSaveSelected(CSlrString *path);
 //	virtual void SystemDialogFileSaveCancelled();
 	
-	void SwitchSettingsScreen();
+	void SwitchMainMenuScreen();
 	
 };
 
@@ -165,6 +167,8 @@ class CViewC64MenuItemOption : public CViewC64MenuItem
 public:
 	CViewC64MenuItemOption(float height, CSlrString *str, CSlrKeyboardShortcut *shortcut, float r, float g, float b,
 						   std::vector<CSlrString *> *options, CSlrFont *font, float fontScale);
+	
+	void SetOptions(std::vector<CSlrString *> *options);
 	
 	std::vector<CSlrString *> *options;
 	

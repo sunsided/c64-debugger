@@ -13,6 +13,7 @@
 #include "CViewSnapshots.h"
 #include "CViewAbout.h"
 #include "C64DebugInterface.h"
+#include "CViewMemoryMap.h"
 
 #include "C64SettingsStorage.h"
 
@@ -57,76 +58,83 @@ CViewMainMenu::CViewMainMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 	/// menu
 	viewMenu = new CGuiViewMenu(35, 76, -1, sizeX-70, sizeY-76, this);
 
-	std::vector<CSlrString *> *options = NULL;
+#if defined(MACOS)
+	kbsQuitApplication = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Quit application", 'w', false, false, true);
+#elif defined(LINUX)
+	kbsQuitApplication = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Quit application", MTKEY_F4, false, true, false);
+#elif defined(WIN32)
+	kbsQuitApplication = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Quit application", MTKEY_F4, false, true, false);
+#endif
 	
+	viewC64->keyboardShortcuts->AddShortcut(kbsQuitApplication);
 	
-	kbsSettingsScreen = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_SETTINGS_SCREEN, MTKEY_F9, false, false, false);
-	viewC64->keyboardShortcuts->AddShortcut(kbsSettingsScreen);
+	kbsMainMenuScreen = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Main menu screen", MTKEY_F9, false, false, false);
+	viewC64->keyboardShortcuts->AddShortcut(kbsMainMenuScreen);
 	
 	//
 	
-	kbsScreenLayout1 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_SCREEN_LAYOUT1, MTKEY_F1, false, false, true);
+	kbsScreenLayout1 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Layout #1", MTKEY_F1, false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsScreenLayout1);
 
-	kbsScreenLayout2 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_SCREEN_LAYOUT2, MTKEY_F2, false, false, true);
+	kbsScreenLayout2 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Layout #2", MTKEY_F2, false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsScreenLayout2);
 
-	kbsScreenLayout3 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_SCREEN_LAYOUT3, MTKEY_F3, false, false, true);
+	kbsScreenLayout3 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Layout #3", MTKEY_F3, false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsScreenLayout3);
 
-	kbsScreenLayout4 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_SCREEN_LAYOUT4, MTKEY_F4, false, false, true);
+	kbsScreenLayout4 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Layout #4", MTKEY_F4, false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsScreenLayout4);
 
-	kbsScreenLayout5 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_SCREEN_LAYOUT5, MTKEY_F5, false, false, true);
+	kbsScreenLayout5 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Layout #5", MTKEY_F5, false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsScreenLayout5);
 
-	kbsScreenLayout6 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_SCREEN_LAYOUT6, MTKEY_F6, false, false, true);
+	kbsScreenLayout6 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Layout #6", MTKEY_F6, false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsScreenLayout6);
 
-	kbsScreenLayout7 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_SCREEN_LAYOUT7, MTKEY_F7, false, false, true);
+	kbsScreenLayout7 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Layout #7", MTKEY_F7, false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsScreenLayout7);
 
-	kbsScreenLayout8 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_SCREEN_LAYOUT8, MTKEY_F8, false, false, true);
+	kbsScreenLayout8 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Layout #8", MTKEY_F8, false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsScreenLayout8);
 
 	//
 	
-	kbsInsertD64 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_INSERT_D64, '8', false, false, true);
+	kbsInsertD64 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Insert Device #8", '8', false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsInsertD64);
 	menuItemInsertD64 = new CViewC64MenuItem(fontHeight*2.5, new CSlrString("1541 Device 8..."), kbsInsertD64, tr, tg, tb);
 	viewMenu->AddMenuItem(menuItemInsertD64);
 	
-	kbsLoadPRG = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_LOAD_PRG, 'o', false, false, true);
+	kbsLoadPRG = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Load PRG", 'o', false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsLoadPRG);
 	menuItemLoadPRG = new CViewC64MenuItem(fontHeight*2.5, new CSlrString("Load PRG..."), kbsLoadPRG, tr, tg, tb);
 	viewMenu->AddMenuItem(menuItemLoadPRG);
 
-	kbsReloadAndRestart = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_RELOAD_AND_RESTART, 'l', false, false, true);
+	kbsReloadAndRestart = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Reload & Start PRG", 'l', false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsReloadAndRestart);
 	menuItemReloadAndRestart = new CViewC64MenuItem(fontHeight, new CSlrString("Reload PRG & Start"), kbsReloadAndRestart, tr, tg, tb);
 	viewMenu->AddMenuItem(menuItemReloadAndRestart);
 	
-	kbsSoftReset = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_SOFT_RESET, 'r', false, false, true);
+	kbsSoftReset = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Soft Reset", 'r', false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsSoftReset);
 	menuItemSoftReset = new CViewC64MenuItem(fontHeight, new CSlrString("Soft Reset"), kbsSoftReset, tr, tg, tb);
 	viewMenu->AddMenuItem(menuItemSoftReset);
 
-	kbsHardReset = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_HARD_RESET, 'r', true, false, true);
+	kbsHardReset = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Hard Reset", 'r', true, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsHardReset);
 	menuItemHardReset = new CViewC64MenuItem(fontHeight*2, new CSlrString("Hard Reset"), kbsHardReset, tr, tg, tb);
 	viewMenu->AddMenuItem(menuItemHardReset);
 
-	kbsInsertCartridge = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_INSERT_CARTRIDGE, '0', false, false, true);
+	kbsInsertCartridge = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Insert Cartridge", '0', false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsInsertCartridge);
 	menuItemInsertCartridge = new CViewC64MenuItem(fontHeight*3, new CSlrString("Insert cartridge..."), kbsInsertCartridge, tr, tg, tb);
 	viewMenu->AddMenuItem(menuItemInsertCartridge);
 	
-	kbsSnapshots = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_SNAPSHOT_MENU, 's', true, false, true);
+	kbsSnapshots = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Snapshots screen", 's', true, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsSnapshots);
 	menuItemSnapshots = new CViewC64MenuItem(fontHeight*1.7, new CSlrString("Snapshots..."), kbsSnapshots, tr, tg, tb);
 	viewMenu->AddMenuItem(menuItemSnapshots);
 	
-	kbsBreakpoints = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_BREAKPOINTS, 'b', false, false, true);
+	kbsBreakpoints = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Breakpoints screen", 'b', false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsBreakpoints);
 	menuItemBreakpoints = new CViewC64MenuItem(fontHeight*1.7, new CSlrString("Breakpoints..."), kbsBreakpoints, tr, tg, tb);
 	viewMenu->AddMenuItem(menuItemBreakpoints);
@@ -142,32 +150,31 @@ CViewMainMenu::CViewMainMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 
 	
 	
-	kbsStepOverInstruction = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_STEP_OVER_INSTRUCTION, MTKEY_F10, false, false, false);
+	kbsStepOverInstruction = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Step over instruction", MTKEY_F10, false, false, false);
 	viewC64->keyboardShortcuts->AddShortcut(kbsStepOverInstruction);
 	
-	kbsStepOneCycle = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_STEP_ONE_CYCLE, MTKEY_F10, true, false, false);
+	kbsStepOneCycle = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Step one cycle", MTKEY_F10, true, false, false);
 	viewC64->keyboardShortcuts->AddShortcut(kbsStepOneCycle);
 
-	kbsRunContinueEmulation = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_RUN_CONTINUE_EMULATION, MTKEY_F11, false, false, false);
+	kbsRunContinueEmulation = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Run/Continue code", MTKEY_F11, false, false, false);
 	viewC64->keyboardShortcuts->AddShortcut(kbsRunContinueEmulation);
 
-	kbsIsDataDirectlyFromRam = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_IS_DATA_DIRECTLY_FROM_RAM, 'm', false, false, true);
+	kbsIsDataDirectlyFromRam = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Show data from RAM", 'm', false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsIsDataDirectlyFromRam);
 
-	kbsToggleMulticolorImageDump = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_IS_MULTICOLOR_DATA, 'k', false, false, true);
+	kbsToggleMulticolorImageDump = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Show multicolor data", 'k', false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsToggleMulticolorImageDump);
 
-	kbsShowRasterBeam = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_IS_SHOW_RASTER_BEAM, 'e', false, false, true);
+	kbsShowRasterBeam = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Show Raster Beam", 'e', false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsShowRasterBeam);
 
 	//
-	kbsMoveFocusToNextView = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_MOVE_FOCUS_TO_NEXT_VIEW, MTKEY_TAB, false, false, false);
+	kbsMoveFocusToNextView = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Move focus to next view", MTKEY_TAB, false, false, false);
 	viewC64->keyboardShortcuts->AddShortcut(kbsMoveFocusToNextView);
 
-	kbsMoveFocusToPreviousView = new CSlrKeyboardShortcut(KBZONE_GLOBAL, KBFUN_MOVE_FOCUS_TO_PREV_VIEW, MTKEY_TAB, true, false, false);
+	kbsMoveFocusToPreviousView = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Move focus to previous view", MTKEY_TAB, true, false, false);
 	viewC64->keyboardShortcuts->AddShortcut(kbsMoveFocusToPreviousView);
 	
-
 	
 	viewMenu->SelectMenuItem(menuItemInsertD64);
 	
@@ -216,7 +223,7 @@ void CViewMainMenu::MenuCallbackItemEntered(CGuiViewMenuItem *menuItem)
 	}
 	else if (menuItem == menuItemSettings)
 	{
-		viewC64->viewC64SettingsMenu->SwitchSettingsScreen();
+		viewC64->viewC64SettingsMenu->SwitchMainMenuScreen();
 	}
 	else if (menuItem == menuItemAbout)
 	{
@@ -237,6 +244,7 @@ void CViewMainMenu::OpenDialogInsertD64()
 	openDialogFunction = VIEWC64SETTINGS_OPEN_D64;
 
 	CSlrString *windowTitle = new CSlrString("Open D64 disk image");
+	windowTitle->DebugPrint("windowTitle=");
 	SYS_DialogOpenFile(this, &diskExtensions, c64SettingsDefaultD64Folder, windowTitle);
 	delete windowTitle;
 }
@@ -311,15 +319,15 @@ void CViewMainMenu::InsertD64(CSlrString *path)
 	
 	// display file name in menu
 	char *fname = SYS_GetFileNameFromFullPath(asciiPath);
-	
-	viewMenu->mutex->Lock();
+
+	guiMain->LockMutex();
 	if (menuItemInsertD64->str2 != NULL)
 		delete menuItemInsertD64->str2;
 	
 	menuItemInsertD64->str2 = new CSlrString(fname);
 	delete fname;
-	
-	viewMenu->mutex->Unlock();
+
+	guiMain->UnlockMutex();
 
 	LOGM("Inserted new d64: %s", asciiPath);
 	delete asciiPath;
@@ -349,15 +357,15 @@ void CViewMainMenu::InsertCartridge(CSlrString *path)
 	
 	// display file name in menu
 	char *fname = SYS_GetFileNameFromFullPath(asciiPath);
-	
-	viewMenu->mutex->Lock();
+
+	guiMain->LockMutex();
 	if (menuItemInsertCartridge->str2 != NULL)
 		delete menuItemInsertCartridge->str2;
 	
 	menuItemInsertCartridge->str2 = new CSlrString(fname);
 	delete fname;
-	
-	viewMenu->mutex->Unlock();
+
+	guiMain->UnlockMutex();
 	
 	LOGM("Attached new cartridge: %s", asciiPath);
 	delete asciiPath;
@@ -379,8 +387,6 @@ bool CViewMainMenu::LoadPRG(CSlrString *path, bool autoStart)
 	c64SettingsDefaultPRGFolder = path->GetFilePathWithoutFileNameComponentFromPath();
 	
 	c64SettingsDefaultPRGFolder->DebugPrint("c64SettingsDefaultPRGFolder=");
-
-	viewC64->debugInterface->LockMutex();
 	
 	// TODO: make CSlrFileFromOS support UTF paths
 	char *asciiPath = c64SettingsPathPRG->GetStdASCII();
@@ -389,11 +395,12 @@ bool CViewMainMenu::LoadPRG(CSlrString *path, bool autoStart)
 	if (!file->Exists())
 	{
 		delete file;
-		viewC64->debugInterface->UnlockMutex();
 		guiMain->ShowMessage("Error loading PRG file");
 		return false;
 	}
-	
+
+	viewC64->debugInterface->LockMutex();
+
 	CByteBuffer *byteBuffer = new CByteBuffer(file, false);
 	
 	u16 b1 = byteBuffer->GetByte();
@@ -415,15 +422,15 @@ bool CViewMainMenu::LoadPRG(CSlrString *path, bool autoStart)
 	
 	// display file name in menu
 	char *fname = SYS_GetFileNameFromFullPath(asciiPath);
-	
-	viewMenu->mutex->Lock();
+
+	guiMain->LockMutex();
 	if (menuItemLoadPRG->str2 != NULL)
 		delete menuItemLoadPRG->str2;
 	
 	menuItemLoadPRG->str2 = new CSlrString(fname);
 	delete fname;
-	
-	viewMenu->mutex->Unlock();
+
+	guiMain->UnlockMutex();
 
 	if (autoStart == true)
 	{
@@ -435,6 +442,9 @@ bool CViewMainMenu::LoadPRG(CSlrString *path, bool autoStart)
 			{
 				char *buf = SYS_GetCharBuf();
 				int i = 0;
+				
+				u16 endAddr = addr;
+				
 				u16 addr = 0x0806;
 				
 				bool isOK = true;
@@ -461,7 +471,38 @@ bool CViewMainMenu::LoadPRG(CSlrString *path, bool autoStart)
 				if (isOK)
 				{
 					int startAddr = atoi(buf);
+					
+					// some decrunchers need correct basic pointers
+					
+					// set beginning of BASIC area
+					viewC64->debugInterface->SetByteC64(0x002B, 0x01);
+					viewC64->debugInterface->SetByteC64(0x002C, 0x08);
+					
+					// set beginning of variable/arrays area
+					viewC64->debugInterface->SetByteC64(0x002D, endAddr & 0x00FF);
+					viewC64->debugInterface->SetByteC64(0x002F, endAddr & 0x00FF);
+					viewC64->debugInterface->SetByteC64(0x0031, endAddr & 0x00FF);
+					viewC64->debugInterface->SetByteC64(0x00AE, endAddr & 0x00FF);
+					
+					viewC64->debugInterface->SetByteC64(0x002E, (endAddr >> 8) & 0x00FF);
+					viewC64->debugInterface->SetByteC64(0x0030, (endAddr >> 8) & 0x00FF);
+					viewC64->debugInterface->SetByteC64(0x0032, (endAddr >> 8) & 0x00FF);
+					viewC64->debugInterface->SetByteC64(0x00AF, (endAddr >> 8) & 0x00FF);
+
+					// set end of BASIC area
+					viewC64->debugInterface->SetByteC64(0x0033, 0x00);
+					viewC64->debugInterface->SetByteC64(0x0037, 0x00);
+
+					viewC64->debugInterface->SetByteC64(0x0034, 0xA0);
+					viewC64->debugInterface->SetByteC64(0x0038, 0xA0);
+					
+					// stop cursor flash
+					viewC64->debugInterface->SetByteC64(0x00CC, 0x01);
+					
 					LOGD("... JMP '%s' (%d)", buf, startAddr);
+					
+					viewC64->viewC64MemoryMap->ClearReadWriteMarkers();
+					viewC64->viewDrive1541MemoryMap->ClearReadWriteMarkers();
 					
 					viewC64->debugInterface->MakeJsrC64(startAddr);
 					guiMain->SetView(viewC64);
@@ -657,7 +698,7 @@ void CViewMainMenu::FinishTouches()
 	return CGuiView::FinishTouches();
 }
 
-void CViewMainMenu::SwitchSettingsScreen()
+void CViewMainMenu::SwitchMainMenuScreen()
 {
 	if (guiMain->currentView == this)
 	{
@@ -673,7 +714,7 @@ bool CViewMainMenu::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContro
 {
 	if (keyCode == MTKEY_BACKSPACE)
 	{
-		SwitchSettingsScreen();
+		SwitchMainMenuScreen();
 		return true;
 	}
 	
@@ -687,7 +728,7 @@ bool CViewMainMenu::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContro
 
 	if (keyCode == MTKEY_ESC)
 	{
-		SwitchSettingsScreen();
+		SwitchMainMenuScreen();
 		return true;
 	}
 
@@ -774,7 +815,7 @@ void CViewC64MenuItem::RenderItem(float px, float py, float pz)
 	viewC64->viewC64MainMenu->font->BlitTextColor(str, px, py, pz,
 												  viewC64->viewC64MainMenu->fontScale, r, g, b, 1);
 
-	if (shortcut != NULL)
+	if (shortcut != NULL && shortcut->str != NULL)
 	{
 		viewC64->viewC64MainMenu->font->BlitTextColor(shortcut->str, px + 510, py, pz,
 													  viewC64->viewC64MainMenu->fontScale, 0.5, 0.5, 0.5, 1, FONT_ALIGN_RIGHT);
@@ -803,6 +844,24 @@ CViewC64MenuItemOption::CViewC64MenuItemOption(float height, CSlrString *str, CS
 	this->SetString(str);
 }
 
+void CViewC64MenuItemOption::SetOptions(std::vector<CSlrString *> *options)
+{
+	if (this->options != NULL)
+	{
+		while (!this->options->empty())
+		{
+			CSlrString *opt = this->options->back();
+			this->options->pop_back();
+			delete opt;
+		}
+		delete this->options;
+	}
+	
+	this->options = options;
+	
+	UpdateDisplayString();
+}
+
 void CViewC64MenuItemOption::SetString(CSlrString *str)
 {
 	if (this->textStr != NULL)
@@ -810,18 +869,19 @@ void CViewC64MenuItemOption::SetString(CSlrString *str)
 	
 	this->textStr = str;
 	
-	CSlrString *newStr = new CSlrString(this->textStr);
-	newStr->Concatenate((*this->options)[selectedOption]);
-
-	CViewC64MenuItem::SetString(newStr);
+	UpdateDisplayString();
+	
 }
 
 void CViewC64MenuItemOption::UpdateDisplayString()
 {
-	CSlrString *newStr = new CSlrString(this->textStr);
-	newStr->Concatenate((*this->options)[selectedOption]);
-	
-	CViewC64MenuItem::SetString(newStr);
+	if (this->options != NULL)
+	{
+		CSlrString *newStr = new CSlrString(this->textStr);
+		newStr->Concatenate((*this->options)[selectedOption]);
+		
+		CViewC64MenuItem::SetString(newStr);
+	}
 }
 
 void CViewC64MenuItemOption::SwitchToPrev()

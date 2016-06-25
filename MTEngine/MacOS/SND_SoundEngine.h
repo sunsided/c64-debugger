@@ -3,7 +3,7 @@
  *  MobiTracker
  *
  *  Created by Marcin Skoczylas on 09-11-19.
- *  Copyright 2009. All rights reserved.
+ *  Copyright 2009 __MyCompanyName__. All rights reserved.
  *
  */
 
@@ -22,14 +22,6 @@
 
 #include "ivorbiscodec.h"
 #include "ivorbisfile.h"
-
-#ifdef INCLUDE_C64
-#include "CSIDPlayer_LastNinja2.h"
-#include "CSIDPlayer_Cybernoid.h"
-#include "CSIDPlayer_CybernoidII.h"
-//#include "PlayerLibSidplay.h"
-#endif
-
 
 #include "CAudioChannel.h"
 
@@ -53,6 +45,7 @@ void SYS_InitSoundEngine();
 void SYS_CheckOSStatus(OSStatus *status);
 
 class CSlrMutex;
+class CSlrString;
 
 class CAudioRecordingCallback
 {
@@ -65,6 +58,12 @@ class CSoundEngine
 public:
 	CSoundEngine();
 	~CSoundEngine();
+	
+	std::list<CSlrString *> *EnumerateAvailableOutputDevices();
+	void SetOutputAudioDevice(CSlrString *deviceName);
+	
+	char deviceOutName[512];
+	int deviceOutIndex;
 	
 	void StartAudioUnit(bool isPlayback, bool isRecording, int recordingFrequency);
 	void StopAudioUnit();
@@ -92,19 +91,7 @@ public:
 	
 	volatile bool isMuted;
 	
-	
 	bool removeDC;
-	
-	// MP3 PLAYER
-//	AVAudioPlayer *avAudioPlayer;
-//	void AllocMP3(NSString *fileName);
-//	void PlayMP3();
-//	void StopMP3();
-	
-	// OGG PLAYER
-	void PlayOGG(char *fileName);
-	OggVorbis_File *LoadOGG(char *fileName);
-	OggVorbis_File *oggFile;
 	
 	// sound channels
 	void PlaySound(char *fileName);
@@ -113,9 +100,6 @@ public:
 	char *whoLocked;
 	void LockMutex(char *_whoLocked);
 	void UnlockMutex(char *_whoLocked);
-	
-	pthread_mutex_t xmPlayerMutex;
-	pthread_mutex_t oggPlayerMutex;
 	
 	CSlrMutex *audioEngineMutex;
 };

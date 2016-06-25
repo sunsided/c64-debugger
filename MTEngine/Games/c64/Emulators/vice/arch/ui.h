@@ -87,4 +87,6 @@ extern void ui_common_init(void);
 extern void ui_common_shutdown(void);
 extern void ui_sdl_quit(void);
 
+extern int c64d_is_cpu_in_jam_state;
+
 #endif

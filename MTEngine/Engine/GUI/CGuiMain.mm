@@ -25,6 +25,7 @@
 #include "CGuiViewBaseResourceManager.h"
 #include "CGuiViewLoadingScreen.h"
 #include "CGuiViewResourceManager.h"
+#include "SYS_KeyCodes.h"
 
 #if defined(START_C64DEBUGGER)
 #include "CViewC64.h"
@@ -179,11 +180,16 @@ void CGuiMain::Startup()
 //	sfntDefault = fntConsole;
 //#endif
 
-	LOGM("sound engine startup");
-#ifndef DO_NOT_USE_AUDIO_QUEUE
-	gSoundEngine->StartAudioUnit(true, false, 0);
-#endif
+	
+	//
+	// sound engine init moved to CViewC64 to enable selection of output device via command line & settings
+	//
+//	LOGM("sound engine startup");
+//#ifndef DO_NOT_USE_AUDIO_QUEUE
+//	gSoundEngine->StartAudioUnit(true, false, 0);
+//#endif
 
+	
 	LOGM("init multi touch");
 	for (u32 i = 0; i < MAX_MULTI_TOUCHES; i++)
 	{
@@ -1529,10 +1535,10 @@ void CGuiMain::ShowMessage(char *showMessage, GLfloat showMessageColorR,
 {
 	LOGM("CGuiMain::ShowMessage");
 
-	guiMain->LockRenderMutex();
+	guiMain->LockMutex();
 	this->ShowMessageAsync(showMessage, showMessageColorR, showMessageColorG,
 			showMessageColorB);
-	guiMain->UnlockRenderMutex();
+	guiMain->UnlockMutex();
 }
 
 void CGuiMain::ShowMessageAsync(char *showMessage, GLfloat showMessageColorR,
@@ -1760,7 +1766,7 @@ void CGuiMain::StartResourceManager()
 void CGuiMain::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
 	LOGI("CGuiMain::KeyDown: keyCode=%d (0x%2.2x = %c) isShift=%s isAlt=%s isControl=%s", keyCode, keyCode, keyCode, STRBOOL(isShift), STRBOOL(isAlt), STRBOOL(isControl));
-
+	
 	this->repeatTime = 0;
 	isKeyDown = true;
 
@@ -1918,25 +1924,25 @@ void CGuiMain::RemoveAllViews()
 
 void CGuiMain::LockRenderMutex()
 {
-//	LOGD("CGuiMain::LockRenderMutex: threadId=%x", (u64)pthread_self());
+	//LOGD("CGuiMain::LockRenderMutex: threadId=%x isLocked=%d", (u64)pthread_self(), renderMutex->isLocked);
 	renderMutex->Lock();
 }
 
 void CGuiMain::UnlockRenderMutex()
 {
-//	LOGD("CGuiMain::UnlockRenderMutex: threadId=%x", (u64)pthread_self());
+	//LOGD("CGuiMain::UnlockRenderMutex: threadId=%x", (u64)pthread_self());
 	renderMutex->Unlock();
 }
 
 void CGuiMain::LockMutex()
 {
-	//	LOGD("CGuiMain::LockMutex");
+//		LOGD("CGuiMain::LockMutex");
 	this->LockRenderMutex();
 }
 
 void CGuiMain::UnlockMutex()
 {
-	//	LOGD("CGuiMain::UnlockMutex");
+//		LOGD("CGuiMain::UnlockMutex");
 	this->UnlockRenderMutex();
 }
 

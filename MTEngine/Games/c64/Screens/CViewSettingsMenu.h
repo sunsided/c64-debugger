@@ -62,8 +62,6 @@ public:
 	CSlrString *strHeader2;
 	CSlrString *strHeader3;
 	
-
-	
 	CGuiViewMenu *viewMenu;
 	virtual void MenuCallbackItemEntered(CGuiViewMenuItem *menuItem);
 	virtual void MenuCallbackItemChanged(CGuiViewMenuItem *menuItem);
@@ -75,6 +73,9 @@ public:
 	CViewC64MenuItemOption *menuItemUseKeyboardAsJoystick;
 	CViewC64MenuItemOption *menuItemJoystickPort;
 	
+	CViewC64MenuItem *menuItemSetC64KeyboardMapping;
+	CViewC64MenuItem *menuItemSetKeyboardShortcuts;
+
 	CSlrKeyboardShortcut *kbsCartridgeFreezeButton;
 	CViewC64MenuItem *menuItemCartridgeFreeze;
 
@@ -84,6 +85,15 @@ public:
 	CViewC64MenuItem *menuItemDumpC64Memory;
 	CSlrKeyboardShortcut *kbsDumpDrive1541Memory;
 	CViewC64MenuItem *menuItemDumpDrive1541Memory;
+	CViewC64MenuItem *menuItemDumpC64MemoryMarkers;
+	CViewC64MenuItem *menuItemDumpDrive1541MemoryMarkers;
+
+	CSlrKeyboardShortcut *kbsClearMemoryMarkers;
+	CViewC64MenuItem *menuItemClearMemoryMarkers;
+	void ClearMemoryMarkers();
+
+	CViewC64MenuItem *menuItemMapC64MemoryToFile;
+	void UpdateMapC64MemoryToFileLabels();
 
 	CViewC64MenuItemOption *menuItemMemoryCellsColorStyle;
 	CViewC64MenuItemOption *menuItemMemoryMarkersColorStyle;
@@ -93,23 +103,37 @@ public:
 
 	CViewC64MenuItemOption *menuItemSIDModel;
 	CViewC64MenuItemOption *menuItemMuteSIDOnPause;
-
+	CViewC64MenuItemOption *menuItemAudioOutDevice;
+	void UpdateAudioOutDevices();
+	
 	CViewC64MenuItemOption *menuItemC64Model;
+	CViewC64MenuItemOption *menuItemFastBootKernalPatch;
 
+	CViewC64MenuItemOption *menuItemMaximumSpeed;
+
+	CViewC64MenuItem *menuItemClearSettings;
+	
 	CViewC64MenuItem *menuItemBack;
 
-	void SwitchSettingsScreen();
+	void SwitchMainMenuScreen();
 	
 	std::list<CSlrString *> memoryExtensions;
+	std::list<CSlrString *> csvExtensions;
 	
 	virtual void SystemDialogFileSaveSelected(CSlrString *path);
 	virtual void SystemDialogFileSaveCancelled();
 
 	void OpenDialogDumpC64Memory();
+	void OpenDialogDumpC64MemoryMarkers();
 	void OpenDialogDumpDrive1541Memory();
+	void OpenDialogDumpDrive1541MemoryMarkers();
+	void OpenDialogMapC64MemoryToFile();
 	
 	void DumpC64Memory(CSlrString *path);
+	void DumpC64MemoryMarkers(CSlrString *path);
 	void DumpDisk1541Memory(CSlrString *path);
+	void DumpDisk1541MemoryMarkers(CSlrString *path);
+	void MapC64MemoryToFile(CSlrString *path);
 	
 	byte openDialogFunction;
 	

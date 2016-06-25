@@ -309,7 +309,37 @@ void CGuiButton::RenderUTFButton(GLfloat posX, GLfloat posY)
 		}
 	}
 
-	rimg->Render(posX, posY, posZ, sizeX, sizeY);
+	if (rimg != NULL)
+	{
+		rimg->Render(posX, posY, posZ, sizeX, sizeY);
+	}
+	else
+	{
+		if (this->enabled)
+		{
+				BlitFilledRectangle(posX, posY, posZ, this->sizeX, this->sizeY,
+									guiMain->theme->buttonEnabledColor2R, guiMain->theme->buttonEnabledColor2G, guiMain->theme->buttonEnabledColor2B,
+									guiMain->theme->buttonEnabledColor2A);
+				
+				BlitFilledRectangle(posX + guiMain->theme->buttonShadeDistance, posY + guiMain->theme->buttonShadeDistance, posZ,
+									this->sizeX - guiMain->theme->buttonShadeDistance2, this->sizeY - guiMain->theme->buttonShadeDistance2,
+									guiMain->theme->buttonEnabledColorR, guiMain->theme->buttonEnabledColorG, guiMain->theme->buttonEnabledColorB,
+									guiMain->theme->buttonEnabledColorA);
+		}
+		else
+		{
+			BlitFilledRectangle(posX, posY, posZ, this->sizeX, this->sizeY,
+								guiMain->theme->buttonDisabledColor2R, guiMain->theme->buttonDisabledColor2G, guiMain->theme->buttonDisabledColor2B,
+								guiMain->theme->buttonDisabledColor2A);
+			
+			BlitFilledRectangle(posX + guiMain->theme->buttonShadeDistance, posY + guiMain->theme->buttonShadeDistance, posZ,
+								this->sizeX - guiMain->theme->buttonShadeDistance2, this->sizeY - guiMain->theme->buttonShadeDistance2,
+								guiMain->theme->buttonDisabledColorR, guiMain->theme->buttonDisabledColorG, guiMain->theme->buttonDisabledColorB,
+								guiMain->theme->buttonDisabledColorA);
+		}
+		
+	}
+	
 	
 	if (this->enabled)
 	{
@@ -326,6 +356,8 @@ void CGuiButton::RenderUTFButton(GLfloat posX, GLfloat posY)
 								  textAlignment);
 	}
 }
+
+
 
 void CGuiButton::Render(GLfloat posX, GLfloat posY)
 {

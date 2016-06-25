@@ -3,7 +3,7 @@
  *  MobiTracker
  *
  *  Created by Marcin Skoczylas on 09-11-20.
- *  Copyright 2009. All rights reserved.
+ *  Copyright 2009 __MyCompanyName__. All rights reserved.
  *
  */
 
@@ -162,5 +162,9 @@ void SYS_DialogOpenFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 void SYS_DialogSaveFile(CSystemFileDialogCallback *callback, std::list<CSlrString *> *extensions, CSlrString *defaultFileName, CSlrString *defaultFolder, CSlrString *windowTitle);
 
 bool SYS_FileDirExists(CSlrString *path);
+
+uint8 *SYS_MapMemoryToFile(int memorySize, char *filePath, void **fileDescriptor);
+void SYS_UnMapMemoryFromFile(uint8 *memoryMap, int memorySize, void **fileDescriptor);
+
 
 #endif //__SYS_CFILESYSTEM_H__

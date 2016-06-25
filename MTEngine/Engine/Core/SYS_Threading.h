@@ -14,6 +14,9 @@ public:
 	
 	pthread_mutex_t mutex;
 
+	// for debug
+//	volatile bool isLocked;
+	
 	void Lock();
 	void Unlock();
 };

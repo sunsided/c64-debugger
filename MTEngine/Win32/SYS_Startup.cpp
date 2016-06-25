@@ -27,6 +27,19 @@
 
 //#define LOG_SYSCALLS
 
+int quitKeyCode = -1;
+bool quitIsShift = false;
+bool quitIsAlt = false;
+bool quitIsControl = false;
+
+void SYS_SetQuitKey(int keyCode, bool isShift, bool isAlt, bool isControl)
+{
+	quitKeyCode = keyCode;
+	quitIsShift = isShift;
+	quitIsAlt = isAlt;
+	quitIsControl = isControl;
+}
+
 void SYS_ToggleFullScreen();
 void SYS_SetFullScreen(bool fullscreen);
 u32 windowPosX, windowPosY;
@@ -620,6 +633,12 @@ u32 mapKey(WPARAM wParamIn, LPARAM lParamIn, bool isShift, bool isAlt, bool isCo
 		return ']';
 	if (wParam == 0xDE)
 		return '\'';
+	if (wParam == 0x14)
+		return MTKEY_CAPS_LOCK;
+	if (wParam == 0x2C)
+		return MTKEY_PRINT_SCREEN;
+	if (wParam == 0x12)
+		return MTKEY_PAUSE_BREAK;
 	if (wParam == 0x25)
 		return MTKEY_ARROW_LEFT;
 	if (wParam == 0x27)
@@ -628,6 +647,10 @@ u32 mapKey(WPARAM wParamIn, LPARAM lParamIn, bool isShift, bool isAlt, bool isCo
 		return MTKEY_ARROW_UP;
 	if (wParam == 0x28)
 		return MTKEY_ARROW_DOWN;
+	if (wParam == 0x2D)
+		return MTKEY_INSERT;
+	if (wParam == 0x2E)
+		return MTKEY_DELETE;
 	if (wParam == 0x70)
 		return MTKEY_F1;
 	if (wParam == 0x71)
@@ -652,6 +675,48 @@ u32 mapKey(WPARAM wParamIn, LPARAM lParamIn, bool isShift, bool isAlt, bool isCo
 		return MTKEY_F11;
 	if (wParam == 0x7B)
 		return MTKEY_F12;
+	if (wParam == 0x90)
+		return MTKEY_NUM_LOCK;
+	if (wParam == 0x6F)
+		return MTKEY_NUM_DIVIDE;
+	if (wParam == 0x6A)
+		return MTKEY_NUM_MULTIPLY;
+	if (wParam == 0x6D)
+		return MTKEY_NUM_MINUS;
+	if (wParam == 0x6D)
+		return MTKEY_NUM_MINUS;
+	if (wParam == 0x6B)
+		return MTKEY_NUM_PLUS;
+	if (wParam == 0x6E)
+		return MTKEY_NUM_DOT;
+	if (wParam == 0x60)
+		return MTKEY_NUM_0;
+	if (wParam == 0x61)
+		return MTKEY_NUM_1;
+	if (wParam == 0x62)
+		return MTKEY_NUM_2;
+	if (wParam == 0x63)
+		return MTKEY_NUM_3;
+	if (wParam == 0x64)
+		return MTKEY_NUM_4;
+	if (wParam == 0x65)
+		return MTKEY_NUM_5;
+	if (wParam == 0x66)
+		return MTKEY_NUM_6;
+	if (wParam == 0x67)
+		return MTKEY_NUM_7;
+	if (wParam == 0x68)
+		return MTKEY_NUM_8;
+	if (wParam == 0x69)
+		return MTKEY_NUM_9;
+	if (wParam == 0x21)
+		return MTKEY_PAGE_UP;
+	if (wParam == 0x22)
+		return MTKEY_PAGE_DOWN;
+	if (wParam == 0x24)
+		return MTKEY_HOME;
+	if (wParam == 0x23)
+		return MTKEY_END;
 	if (wParam == 0xBF)
 		return '/';
 	if (wParam == 0xDC)
@@ -729,6 +794,11 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 			}
 
 			u32 key = mapKey(wParam, lParam, isShift, isAlt, isControl);
+
+			if (key == quitKeyCode && isShift == quitIsShift && isAlt == quitIsAlt && isControl == quitIsControl)
+			{
+				_exit(0);
+			}
 
 			LOGD("============ key=%d isShift=%s isAlt=%s isControl=%s", key, STRBOOL(isShift), STRBOOL(isAlt), STRBOOL(isControl));
 			guiMain->KeyDown(key, isShift, isAlt, isControl);

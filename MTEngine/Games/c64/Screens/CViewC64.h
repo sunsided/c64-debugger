@@ -1,7 +1,7 @@
 #ifndef _GUI_C64_
 #define _GUI_C64_
 
-#define C64DEBUGGER_VERSION_STRING	"0.5"
+#define C64DEBUGGER_VERSION_STRING	"0.52"
 
 #include "CGuiView.h"
 #include "CGuiButton.h"
@@ -14,6 +14,7 @@
 #include <vector>
 #include <map>
 
+class C64KeyboardShortcuts;
 class CSlrFontProportional;
 class CSlrKeyboardShortcut;
 class CSlrKeyboardShortcuts;
@@ -36,6 +37,8 @@ class CViewEmulationState;
 class CViewMonitorConsole;
 class CViewMainMenu;
 class CViewSettingsMenu;
+class CViewC64KeyMap;
+class CViewKeyboardShortcuts;
 class CViewSnapshots;
 class CViewAbout;
 
@@ -174,6 +177,9 @@ public:
 	virtual bool KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl);
 	virtual bool KeyPressed(u32 keyCode, bool isShift, bool isAlt, bool isControl);	// repeats
 	
+	virtual bool DoScrollWheel(float deltaX, float deltaY);
+	virtual bool DoNotTouchedMove(GLfloat x, GLfloat y);
+
 	virtual void ActivateView();
 	virtual void DeactivateView();
 
@@ -187,6 +193,8 @@ public:
 
 	CViewMainMenu *viewC64MainMenu;
 	CViewSettingsMenu *viewC64SettingsMenu;
+	CViewC64KeyMap *viewC64KeyMap;
+	CViewKeyboardShortcuts *viewKeyboardShortcuts;
 	CViewBreakpoints *viewC64Breakpoints;
 	CViewSnapshots *viewC64Snapshots;
 	CViewAbout *viewAbout;
@@ -230,7 +238,7 @@ public:
 	//
 	void AddDebugCode();
 
-	CSlrKeyboardShortcuts *keyboardShortcuts;
+	C64KeyboardShortcuts *keyboardShortcuts;
 	bool ProcessGlobalKeyboardShortcut(u32 keyCode, bool isShift, bool isAlt, bool isControl);
 	
 	void SwitchIsWarpSpeed();
@@ -274,6 +282,17 @@ public:
 
 	//
 	bool isEmulationThreadRunning;
+	
+	void MapC64MemoryToFile(char *filePath);
+	void UnMapC64MemoryFromFile();
+	uint8 *mappedC64Memory;
+	void *mappedC64MemoryDescriptor;
+	
+	//
+	std::list<u32> keyDownCodes;
+	
+	// mouse cursor for scrolling where cursor is
+	float mouseCursorX, mouseCursorY;
 };
 
 extern CViewC64 *viewC64;

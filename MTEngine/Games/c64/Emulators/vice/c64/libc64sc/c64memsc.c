@@ -81,7 +81,8 @@ int machine_class = VICE_MACHINE_C64SC;
 #define NUM_VBANKS      4
 
 /* The C64 memory.  */
-BYTE mem_ram[C64_RAM_SIZE];
+//BYTE mem_ram[C64_RAM_SIZE];
+BYTE *mem_ram;
 
 #ifdef USE_EMBEDDED
 #include "c64chargen.h"
@@ -529,10 +530,16 @@ void mem_read_base_set(unsigned int base, unsigned int index, BYTE *mem_ptr)
     mem_read_base_tab[base][index] = mem_ptr;
 }
 
+void c64d_init_memory(uint8 *c64memory)
+{
+	// C64Debugger: set mem_ram by wrapper so we can have memory mapped file
+	mem_ram = c64memory;
+}
+
 void mem_initialize_memory(void)
 {
     int i, j;
-
+	
     mem_chargen_rom_ptr = mem_chargen_rom;
     mem_color_ram_cpu = mem_color_ram;
     mem_color_ram_vicii = mem_color_ram;

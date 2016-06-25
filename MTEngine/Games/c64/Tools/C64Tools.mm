@@ -9,9 +9,9 @@
 void AddCBMScreenCharacters(CSlrFontProportional *font);
 void AddASCIICharacters(CSlrFontProportional *font);
 
-void ConvertCharacterDataToImage(byte *characterData, CImageData *imageData)
+void ConvertCharacterDataToImage(u8 *characterData, CImageData *imageData)
 {
-	byte *chd = characterData;
+	u8 *chd = characterData;
 	
 	int gap = 4;
 
@@ -65,19 +65,19 @@ void ConvertCharacterDataToImage(byte *characterData, CImageData *imageData)
 	}
 }
 
-void ConvertColorCharacterDataToImage(byte *characterData, CImageData *imageData, byte colorD021, byte colorD022, byte colorD023, byte colorD800, C64DebugInterface*debugInterface)
+void ConvertColorCharacterDataToImage(u8 *characterData, CImageData *imageData, u8 colorD021, u8 colorD022, u8 colorD023, u8 colorD800, C64DebugInterface*debugInterface)
 {
-	byte cD021r, cD021g, cD021b;
-	byte cD022r, cD022g, cD022b;
-	byte cD023r, cD023g, cD023b;
-	byte cD800r, cD800g, cD800b;
+	u8 cD021r, cD021g, cD021b;
+	u8 cD022r, cD022g, cD022b;
+	u8 cD023r, cD023g, cD023b;
+	u8 cD800r, cD800g, cD800b;
 	
 	debugInterface->GetCBMColor(colorD021, &cD021r, &cD021g, &cD021b);
 	debugInterface->GetCBMColor(colorD022, &cD022r, &cD022g, &cD022b);
 	debugInterface->GetCBMColor(colorD023, &cD023r, &cD023g, &cD023b);
 	debugInterface->GetCBMColor(colorD800, &cD800r, &cD800g, &cD800b);
 
-	byte *chd = characterData;
+	u8 *chd = characterData;
 	
 	int gap = 4;
 	
@@ -89,7 +89,7 @@ void ConvertColorCharacterDataToImage(byte *characterData, CImageData *imageData
 	// copy pixels around character for better linear scaling
 	for (int y = -1; y < 9; y++)
 	{
-		byte v;
+		u8 v;
 		
 		// 00000011
 		v = (*chd & 0x03);
@@ -176,15 +176,31 @@ void ConvertColorCharacterDataToImage(byte *characterData, CImageData *imageData
 	}
 }
 
-void ConvertSpriteDataToImage(byte *spriteData, CImageData *imageData)
+void ConvertSpriteDataToImage(u8 *spriteData, CImageData *imageData)
 {
-	byte *chd = spriteData;
+	ConvertSpriteDataToImage(spriteData, imageData, 0, 0, 0, 255, 255, 255);
+}
+
+void ConvertSpriteDataToImage(u8 *spriteData, CImageData *imageData, u8 colorD021, u8 colorD027, C64DebugInterface *debugInterface)
+{
+	u8 cD021r, cD021g, cD021b;
+	u8 cD027r, cD027g, cD027b;
+	
+	debugInterface->GetCBMColor(colorD021, &cD021r, &cD021g, &cD021b);
+	debugInterface->GetCBMColor(colorD027, &cD027r, &cD027g, &cD027b);
+
+	ConvertSpriteDataToImage(spriteData, imageData, cD021r, cD021g, cD021b, cD027r, cD027g, cD027b);
+}
+
+void ConvertSpriteDataToImage(u8 *spriteData, CImageData *imageData, u8 bkgColorR, u8 bkgColorG, u8 bkgColorB, u8 spriteColorR, u8 spriteColorG, u8 spriteColorB)
+{
+	u8 *chd = spriteData;
 	
 	int gap = 4;
 	
 	int chy = 0 + gap;
 	
-	imageData->EraseContent(0,0,0,255);
+	imageData->EraseContent(bkgColorR, bkgColorG, bkgColorB,255);
 	
 	// copy pixels around character for better linear scaling
 	for (int y = 0; y < 21; y++)
@@ -194,35 +210,35 @@ void ConvertSpriteDataToImage(byte *spriteData, CImageData *imageData)
 		{
 			if ((*chd & 0x01) == 0x01)
 			{
-				imageData->SetPixelResultRGBA(chx + 7, chy + y, 255, 255, 255, 255);
+				imageData->SetPixelResultRGBA(chx + 7, chy + y, spriteColorR, spriteColorG, spriteColorB, 255);
 			}
 			if ((*chd & 0x02) == 0x02)
 			{
-				imageData->SetPixelResultRGBA(chx + 6, chy + y, 255, 255, 255, 255);
+				imageData->SetPixelResultRGBA(chx + 6, chy + y, spriteColorR, spriteColorG, spriteColorB, 255);
 			}
 			if ((*chd & 0x04) == 0x04)
 			{
-				imageData->SetPixelResultRGBA(chx + 5, chy + y, 255, 255, 255, 255);
+				imageData->SetPixelResultRGBA(chx + 5, chy + y, spriteColorR, spriteColorG, spriteColorB, 255);
 			}
 			if ((*chd & 0x08) == 0x08)
 			{
-				imageData->SetPixelResultRGBA(chx + 4, chy + y, 255, 255, 255, 255);
+				imageData->SetPixelResultRGBA(chx + 4, chy + y, spriteColorR, spriteColorG, spriteColorB, 255);
 			}
 			if ((*chd & 0x10) == 0x10)
 			{
-				imageData->SetPixelResultRGBA(chx + 3, chy + y, 255, 255, 255, 255);
+				imageData->SetPixelResultRGBA(chx + 3, chy + y, spriteColorR, spriteColorG, spriteColorB, 255);
 			}
 			if ((*chd & 0x20) == 0x20)
 			{
-				imageData->SetPixelResultRGBA(chx + 2, chy + y, 255, 255, 255, 255);
+				imageData->SetPixelResultRGBA(chx + 2, chy + y, spriteColorR, spriteColorG, spriteColorB, 255);
 			}
 			if ((*chd & 0x40) == 0x40)
 			{
-				imageData->SetPixelResultRGBA(chx + 1, chy + y, 255, 255, 255, 255);
+				imageData->SetPixelResultRGBA(chx + 1, chy + y, spriteColorR, spriteColorG, spriteColorB, 255);
 			}
 			if ((*chd & 0x80) == 0x80)
 			{
-				imageData->SetPixelResultRGBA(chx + 0, chy + y, 255, 255, 255, 255);
+				imageData->SetPixelResultRGBA(chx + 0, chy + y, spriteColorR, spriteColorG, spriteColorB, 255);
 			}
 
 //			if (x == -1 || x == 4)
@@ -242,12 +258,12 @@ void ConvertSpriteDataToImage(byte *spriteData, CImageData *imageData)
 }
 
 
-void ConvertColorSpriteDataToImage(byte *spriteData, CImageData *imageData, byte colorD021, byte colorD025, byte colorD026, byte colorD027, C64DebugInterface *debugInterface)
+void ConvertColorSpriteDataToImage(u8 *spriteData, CImageData *imageData, u8 colorD021, u8 colorD025, u8 colorD026, u8 colorD027, C64DebugInterface *debugInterface)
 {
-	byte cD021r, cD021g, cD021b;
-	byte cD025r, cD025g, cD025b;
-	byte cD026r, cD026g, cD026b;
-	byte cD027r, cD027g, cD027b;
+	u8 cD021r, cD021g, cD021b;
+	u8 cD025r, cD025g, cD025b;
+	u8 cD026r, cD026g, cD026b;
+	u8 cD027r, cD027g, cD027b;
 	
 	debugInterface->GetCBMColor(colorD021, &cD021r, &cD021g, &cD021b);
 	debugInterface->GetCBMColor(colorD025, &cD025r, &cD025g, &cD025b);
@@ -255,7 +271,7 @@ void ConvertColorSpriteDataToImage(byte *spriteData, CImageData *imageData, byte
 	debugInterface->GetCBMColor(colorD027, &cD027r, &cD027g, &cD027b);
 	
 	
-	byte *chd = spriteData;
+	u8 *chd = spriteData;
 	
 	int gap = 4;
 	
@@ -269,7 +285,7 @@ void ConvertColorSpriteDataToImage(byte *spriteData, CImageData *imageData, byte
 		int chx = 0 + gap;
 		for (int x = 0; x < 3; x++)
 		{
-			byte v;
+			u8 v;
 			
 			// 00000011
 			v = (*chd & 0x03);
@@ -375,7 +391,7 @@ void ConvertColorSpriteDataToImage(byte *spriteData, CImageData *imageData, byte
 
 
 
-CSlrFontProportional *ProcessCBMFonts(byte *charsetData, bool useScreenCodes)
+CSlrFontProportional *ProcessCBMFonts(u8 *charsetData, bool useScreenCodes)
 {
 	LOGD("--- process fonts ---");
 	
@@ -392,7 +408,7 @@ CSlrFontProportional *ProcessCBMFonts(byte *charsetData, bool useScreenCodes)
 	int c = 0;
 	for (int charId = 0; charId < 256; charId++)
 	{
-		byte *chd = charsetData + 8*charId;
+		u8 *chd = charsetData + 8*charId;
 		
 		// copy pixels around character for better linear scaling 
 		for (int y = -1; y < 9; y++)
@@ -488,9 +504,9 @@ CSlrFontProportional *ProcessCBMFonts(byte *charsetData, bool useScreenCodes)
 	font->texAdvX = (float) font->texDividerX/font->width;
 	font->texAdvY = (float) font->texDividerY/font->height;
 	
-//	CByteBuffer *byteBuffer = new CByteBuffer();
-//	font->StoreFontDataToByteBuffer(byteBuffer);
-//	byteBuffer->storeToDocuments("c64chars-set1.fnt");
+//	Cu8Buffer *u8Buffer = new Cu8Buffer();
+//	font->StoreFontDataTou8Buffer(u8Buffer);
+//	u8Buffer->storeToDocuments("c64chars-set1.fnt");
 	
 	return font;
 }
@@ -584,6 +600,10 @@ void AddASCIICharacters(CSlrFontProportional *font)
 			else if (val == 0x1B)
 			{
 				AddASCIICharacter(font, fx, fy, '[');
+			}
+			else if (val == 0x1C)
+			{
+				AddASCIICharacter(font, fx, fy, 0x1C);
 			}
 			else if (val == 0x1D)
 			{
@@ -729,7 +749,7 @@ void InvertCBMText(char *text)
 	int len = strlen(text);
 	for (int i = 0; i < len; i++)
 	{
-		byte c = text[i];
+		u8 c = text[i];
 		c += CBMSHIFTEDFONT_INVERT;
 		text[i] = c;
 	}
@@ -740,13 +760,13 @@ void ClearInvertCBMText(char *text)
 	int len = strlen(text);
 	for (int i = 0; i < len; i++)
 	{
-		byte c = text[i];
+		u8 c = text[i];
 		c = c & 0x7F;
 		text[i] = c;
 	}
 }
 
-void GetCBMColor(byte colorNum, float *r, float *g, float *b)
+void GetCBMColor(u8 colorNum, float *r, float *g, float *b)
 {
 	switch (colorNum)
 	{
@@ -804,22 +824,22 @@ void GetCBMColor(byte colorNum, float *r, float *g, float *b)
 
 /*
  // create ASCII font from CBM characters
- CByteBuffer *byteBuffer = new CByteBuffer(false, "/c64/char", DEPLOY_FILE_TYPE_DATA, false);
- uint8 *charData = byteBuffer->data + 0x0800;
+ Cu8Buffer *u8Buffer = new Cu8Buffer(false, "/c64/char", DEPLOY_FILE_TYPE_DATA, false);
+ uint8 *charData = u8Buffer->data + 0x0800;
  CSlrFontProportional *newFont = ProcessCBMFonts(charData, false);
- delete byteBuffer;
+ delete u8Buffer;
  
- byteBuffer = new CByteBuffer();
- newFont->StoreFontAndTexture(newFont->texturePageImageData, byteBuffer);
+ u8Buffer = new Cu8Buffer();
+ newFont->StoreFontAndTexture(newFont->texturePageImageData, u8Buffer);
  
- byteBuffer->storeToDocuments("/c64/c64shifted.fnt");
+ u8Buffer->storeToDocuments("/c64/c64shifted.fnt");
  
  ////
- //		charData = byteBuffer->data; // + 0x0800;
+ //		charData = u8Buffer->data; // + 0x0800;
  //		fontCBM1 = ProcessCBMFonts(charData, true);
- //		byteBuffer = new CByteBuffer();
- //		font->StoreFontAndTexture(font->texturePageImageData, byteBuffer);
- //		byteBuffer->storeToDocuments("/c64/cbm1.fnt");
+ //		u8Buffer = new Cu8Buffer();
+ //		font->StoreFontAndTexture(font->texturePageImageData, u8Buffer);
+ //		u8Buffer->storeToDocuments("/c64/cbm1.fnt");
 
  
  */

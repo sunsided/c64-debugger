@@ -3,7 +3,7 @@
  *  MobiTracker
  *
  *  Created by Marcin Skoczylas on 09-11-20.
- *  Copyright 2009. All rights reserved.
+ *  Copyright 2009 __MyCompanyName__. All rights reserved.
  *
  */
 
@@ -989,7 +989,7 @@ void SYS_DialogOpenFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 						CSlrString *windowTitle)
 {
 	NSMutableArray *extensionsArray = nil;
-
+	
 	if (extensions != NULL && !extensions->empty())
 	{
 		extensionsArray = [[NSMutableArray alloc] init];
@@ -1004,6 +1004,19 @@ void SYS_DialogOpenFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 		NSLog(@"%@", extensionsArray);
 	}
 
+	NSString *wtitle = nil;
+	if (windowTitle != NULL)
+	{
+		wtitle = FUN_ConvertCSlrStringToNSString(windowTitle);
+	}
+	
+	NSString *dfolder = nil;
+	
+	if (defaultFolder != NULL)
+	{
+		dfolder = FUN_ConvertCSlrStringToNSString(defaultFolder);
+	}
+	
 	dispatch_async(dispatch_get_main_queue(), ^{
 		NSOpenPanel *panel = [[NSOpenPanel openPanel] retain];
 		
@@ -1011,25 +1024,15 @@ void SYS_DialogOpenFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 		[panel setCanChooseFiles:YES];
 		[panel setCanChooseDirectories:NO];
 		[panel setAllowsMultipleSelection:NO];
-		//[panel setMessage:@"Please select file to load"];
 		
 		if (extensionsArray != nil)
 			[panel setAllowedFileTypes:extensionsArray];
 		
-		NSString *wtitle = nil;
-		NSString *dfolder = nil;
-		
-		if (windowTitle != NULL)
-		{
-			wtitle = FUN_ConvertCSlrStringToNSString(windowTitle);
+		if (wtitle != nil)
 			[panel setTitle:wtitle];
-		}
-
-		if (defaultFolder != NULL)
-		{
-			dfolder = FUN_ConvertCSlrStringToNSString(defaultFolder);
+		
+		if (dfolder != nil)
 			[panel setDirectoryURL:[NSURL URLWithString:dfolder]];
-		}
 		
 		[panel beginWithCompletionHandler:^(NSInteger result)
 		{
@@ -1080,7 +1083,27 @@ void SYS_DialogSaveFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 	}
 	
 	NSLog(@"%@", extensionsArray);
+
+	NSString *fname = nil;
+	NSString *wtitle = nil;
+	NSString *dfolder = nil;
 	
+	if (defaultFileName != NULL)
+	{
+		fname = FUN_ConvertCSlrStringToNSString(defaultFileName);
+	}
+	if (windowTitle != NULL)
+	{
+		wtitle = FUN_ConvertCSlrStringToNSString(windowTitle);
+	}
+	
+	if (defaultFolder != NULL)
+	{
+		dfolder = FUN_ConvertCSlrStringToNSString(defaultFolder);
+	}
+	
+
+
 	dispatch_async(dispatch_get_main_queue(), ^{
 		NSSavePanel *panel = [[NSSavePanel savePanel] retain];
 		
@@ -1090,24 +1113,17 @@ void SYS_DialogSaveFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 		[panel setCanCreateDirectories:YES];
 		[panel setAllowedFileTypes:extensionsArray];
 
-		NSString *fname = nil;
-		NSString *wtitle = nil;
-		NSString *dfolder = nil;
-
-		if (defaultFileName != NULL)
+		if (fname != nil)
 		{
-			fname = FUN_ConvertCSlrStringToNSString(defaultFileName);
 			[panel setNameFieldStringValue:fname];
 		}
-		if (windowTitle != NULL)
+		if (wtitle != nil)
 		{
-			wtitle = FUN_ConvertCSlrStringToNSString(windowTitle);
 			[panel setTitle:wtitle];
 		}
 		
-		if (defaultFolder != NULL)
+		if (dfolder != nil)
 		{
-			dfolder = FUN_ConvertCSlrStringToNSString(defaultFolder);
 			[panel setDirectoryURL:[NSURL URLWithString:dfolder]];
 		}
 
@@ -1173,5 +1189,56 @@ bool SYS_FileDirExists(CSlrString *path)
 		return false;
 	
 	delete [] cPath;
+}
+
+uint8 *SYS_MapMemoryToFile(int memorySize, char *filePath, void **fileDescriptor)
+{
+	int *fileHandle = (int*)malloc(sizeof(int));
+	fileDescriptor = (void**)(&fileHandle);
+	
+	*fileHandle = open(filePath, O_RDWR | O_CREAT | O_TRUNC, (mode_t)0600);
+	
+	if(*fileHandle == -1)
+	{
+		LOGError("SYS_MapMemoryToFile: error opening file for writing, path=%s", filePath);
+		return NULL;
+	}
+	
+	if(lseek(*fileHandle, memorySize - 1, SEEK_SET) == -1)
+	{
+		LOGError("SYS_MapMemoryToFile: error in seeking the file, path=%s", filePath);
+		return NULL;
+	}
+	
+	if(write(*fileHandle, "", 1) != 1)
+	{
+		LOGError("SYS_MapMemoryToFile: error in writing the file, path=%s", filePath);
+		return NULL;
+	}
+	
+	uint8 *memoryMap = (uint8*)mmap(0, memorySize, PROT_READ | PROT_WRITE, MAP_SHARED, *fileHandle, 0);
+	
+	if (memoryMap == MAP_FAILED)
+	{
+		close(*fileHandle);
+		
+		LOGError("SYS_MapMemoryToFile: error mmaping the file, path=%s", filePath);
+		return NULL;
+	}
+
+	return memoryMap;
+}
+
+void SYS_UnMapMemoryFromFile(uint8 *memoryMap, int memorySize, void **fileDescriptor)
+{
+	if (munmap(memoryMap, memorySize) == -1)
+	{
+		LOGError("SYS_UnMapMemoryFromFile: error unmapping the file");
+		return;
+	}
+	
+	int *fileHandle = (int*)*fileDescriptor;
+	
+	close(*fileHandle);
 }
 

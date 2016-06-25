@@ -995,8 +995,15 @@ void SetClipping(GLint x, GLint y, GLsizei sizeX, GLsizei sizeY)
 	glScissor((SCREEN_HEIGHT-y-sizeY), (SCREEN_WIDTH-x-sizeX), sizeY, sizeX);
 #else
 	//	LOGD("SetClipping: x=%f y=%f sizeX=%f sizeY=%f SCREEN_WIDTH=%d SCREEN_HEIGHT=%d", x ,y, sizeX, sizeY, SCREEN_WIDTH, SCREEN_HEIGHT);
-	glScissor(x * SCREEN_SCALE + VIEW_START_X, (SCREEN_HEIGHT - y - sizeY) * SCREEN_SCALE + VIEW_START_Y, sizeX * SCREEN_SCALE, sizeY * SCREEN_SCALE);
 	
+	
+	float nx = (float)x * SCREEN_SCALE + VIEW_START_X;
+	float ny = (SCREEN_HEIGHT - ((float)y) - ((float)sizeY)) * SCREEN_SCALE + VIEW_START_Y;
+	float sx = (float)sizeX * SCREEN_SCALE;
+	float sy = (float)sizeY * SCREEN_SCALE;
+	
+	glScissor((GLint)nx, (GLint)ny, (GLsizei)sx, (GLsizei)sy);
+
 	//glScissor(x * SCREEN_SCALE, (SCREEN_HEIGHT - y - sizeY) * SCREEN_SCALE, sizeX * SCREEN_SCALE, sizeY * SCREEN_SCALE);
 #endif
 

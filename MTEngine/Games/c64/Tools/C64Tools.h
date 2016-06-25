@@ -17,12 +17,15 @@ void ClearInvertCBMText(CSlrString *text);
 void InvertCBMText(char *text);
 void ClearInvertCBMText(char *text);
 
-void ConvertCharacterDataToImage(byte *characterData, CImageData *imageData);
-void ConvertColorCharacterDataToImage(byte *characterData, CImageData *imageData, byte colorD021, byte colorD022, byte colorD023, byte colorD800, C64DebugInterface *debugInterface);
+void ConvertCharacterDataToImage(u8 *characterData, CImageData *imageData);
+void ConvertColorCharacterDataToImage(u8 *characterData, CImageData *imageData, u8 colorD021, u8 colorD022, u8 colorD023, u8 colorD800, C64DebugInterface *debugInterface);
 
-void ConvertSpriteDataToImage(byte *spriteData, CImageData *imageData);
-void ConvertColorSpriteDataToImage(byte *spriteData, CImageData *imageData, byte colorD021, byte colorD025, byte colorD026, byte colorD027, C64DebugInterface *debugInterface);
+void ConvertSpriteDataToImage(u8 *spriteData, CImageData *imageData);
+void ConvertSpriteDataToImage(u8 *spriteData, CImageData *imageData, u8 colorD021, u8 colorD027, C64DebugInterface *debugInterface);
+void ConvertSpriteDataToImage(u8 *spriteData, CImageData *imageData, u8 bkgColorR, u8 bkgColorG, u8 bkgColorB, u8 spriteColorR, u8 spriteColorG, u8 spriteColorB);
 
-void GetCBMColor(byte colorNum, float *r, float *g, float *b);
+void ConvertColorSpriteDataToImage(u8 *spriteData, CImageData *imageData, u8 colorD021, u8 colorD025, u8 colorD026, u8 colorD027, C64DebugInterface *debugInterface);
+
+void GetCBMColor(u8 colorNum, float *r, float *g, float *b);
 
 #endif

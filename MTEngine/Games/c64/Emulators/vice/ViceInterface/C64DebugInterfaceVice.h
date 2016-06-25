@@ -11,9 +11,11 @@ class CViceAudioChannel;
 class C64DebugInterfaceVice : public C64DebugInterface
 {
 public:
-	C64DebugInterfaceVice(CViewC64 *viewC64, bool patchKernalFastBoot);
+	C64DebugInterfaceVice(CViewC64 *viewC64, uint8 *c64memory, bool patchKernalFastBoot);
 	~C64DebugInterfaceVice();
 	
+	virtual void InitKeyMap(C64KeyMap *keyMap);
+
 	CImageData *screen;
 	
 	CViceAudioChannel *viceAudioChannel;
@@ -65,6 +67,7 @@ public:
 
 	virtual void GetC64ModelTypes(std::vector<CSlrString *> *modelTypes);
 	virtual void SetC64ModelType(int modelType);
+	virtual void SetEmulationMaximumSpeed(int maximumSpeed);
 
 	bool isJoystickEnabled;
 	uint8 joystickPort;
@@ -116,7 +119,7 @@ public:
 	virtual void GetC64CartridgeState(C64StateCartridge *cartridgeState);
 
 	// render states
-	virtual void RenderStateVIC(float posX, float posY, float posZ, bool isVertical, CSlrFont *fontBytes, float fontSize, std::vector<CImageData *> *spritesImageData, std::vector<CSlrImage *> *spritesImages);
+	virtual void RenderStateVIC(float posX, float posY, float posZ, bool isVertical, CSlrFont *fontBytes, float fontSize, std::vector<CImageData *> *spritesImageData, std::vector<CSlrImage *> *spritesImages, bool renderDataWithColors);
 	void PrintVicInterrupts(uint8 flags, char *buf);
 	virtual void RenderStateDrive1541(float posX, float posY, float posZ, CSlrFont *fontBytes, float fontSize,
 									  bool renderVia1, bool renderVia2, bool renderDriveLed, bool isVertical);
@@ -128,9 +131,13 @@ public:
 	virtual void SetSIDMuteChannels(bool mute1, bool mute2, bool mute3, bool muteExt);
 	virtual void SetSIDReceiveChannelsData(bool isReceiving);
 
+	// memory
+	uint8 *c64memory;
 };
 
 extern C64DebugInterfaceVice *debugInterfaceVice;
+
+void ViceKeyMapInitDefault();
 
 #endif
 
