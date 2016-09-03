@@ -36,6 +36,15 @@ struct addrPosition_t
 	int addr;
 };
 
+class CDisassembleCodeLabel
+{
+public:
+	u16 address;
+	char *labelText;
+	
+	float px;
+};
+
 class CViewDisassemble : public CGuiView, CGuiEditHexCallback, CGuiEditBoxTextCallback
 {
 public:
@@ -70,15 +79,17 @@ public:
 	void CalcDisassembleStart(int startAddress, int *newStart, int *renderLinesBefore);
 	void RenderDisassemble(int startAddress, int endAddress);
 
-	void CalcDisassembleStartNotExecuteAware(int startAddress, int *newStart, int *renderLinesBefore);
-	void RenderDisassembleNotExecuteAware(int startAddress, int endAddress);
-
 	int RenderDisassembleLine(float px, float py, int addr, uint8 op, uint8 lo, uint8 hi);
 	void RenderHexLine(float px, float py, int addr);
 	
 	int UpdateDisassembleOpcodeLine(float py, int addr, uint8 op, uint8 lo, uint8 hi);
 	void UpdateDisassembleHexLine(float py, int addr);
 	void UpdateDisassemble(int startAddress, int endAddress);
+
+	void CalcDisassembleStartNotExecuteAware(int startAddress, int *newStart, int *renderLinesBefore);
+	void RenderDisassembleNotExecuteAware(int startAddress, int endAddress);
+	void UpdateDisassembleNotExecuteAware(int startAddress, int endAddress);
+	bool DoTapNotExecuteAware(GLfloat x, GLfloat y);
 	
 	void TogglePCBreakpoint(int addr);
 	
@@ -109,10 +120,12 @@ public:
 	int endRenderAddr;
 	int renderSkipLines;
 	
-	void SetViewParameters(float posX, float posY, float posZ, float sizeX, float sizeY, CSlrFont *font, float fontSize, int numberOfLines, bool showHexCodes);
+	void SetViewParameters(float posX, float posY, float posZ, float sizeX, float sizeY, CSlrFont *font, float fontSize, int numberOfLines,
+						   bool showHexCodes, bool showLabels);
 	void SetCurrentPC(int pc);
 	
 	bool showHexCodes;
+	bool showLabels;
 	
 	bool isTrackingPC;
 	int cursorAddress;
@@ -155,6 +168,10 @@ public:
 	int addrPositionCounter;
 	
 	std::list<u32> shortcutZones;
+	
+	std::map<u16, CDisassembleCodeLabel *> codeLabels;
+	void AddCodeLabel(u16 address, char *text);
+
 };
 
 

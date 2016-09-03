@@ -119,7 +119,7 @@ public:
 	virtual void GetC64CartridgeState(C64StateCartridge *cartridgeState);
 
 	// render states
-	virtual void RenderStateVIC(float posX, float posY, float posZ, bool isVertical, CSlrFont *fontBytes, float fontSize, std::vector<CImageData *> *spritesImageData, std::vector<CSlrImage *> *spritesImages, bool renderDataWithColors);
+	virtual void RenderStateVIC(float posX, float posY, float posZ, bool isVertical, bool showSprites, CSlrFont *fontBytes, float fontSize, std::vector<CImageData *> *spritesImageData, std::vector<CSlrImage *> *spritesImages, bool renderDataWithColors);
 	void PrintVicInterrupts(uint8 flags, char *buf);
 	virtual void RenderStateDrive1541(float posX, float posY, float posZ, CSlrFont *fontBytes, float fontSize,
 									  bool renderVia1, bool renderVia2, bool renderDriveLed, bool isVertical);

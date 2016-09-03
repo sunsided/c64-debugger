@@ -801,6 +801,12 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 			}
 
 			LOGD("============ key=%d isShift=%s isAlt=%s isControl=%s", key, STRBOOL(isShift), STRBOOL(isAlt), STRBOOL(isControl));
+
+			if (isShift && key >= 0x61 && key <= 0x7A)
+			{
+				key -= 0x20;
+			}
+
 			guiMain->KeyDown(key, isShift, isAlt, isControl);
 			keys[wParam] = TRUE;					// If So, Mark It As TRUE
 			return 0;								// Jump Back
@@ -814,8 +820,33 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 				keyUpEaten = false;
 				return 0;
 			}
-			u32 key = mapKey(wParam, lParam, false, false, false);
-			guiMain->KeyUp(key, false, false, false);
+
+			bool isShift = true;
+			bool isAlt = true; //isAltDown;
+			bool isControl = true;
+			if (!GetAsyncKeyState(VK_MENU))
+			{
+				isAlt = false;
+			}
+			if (!GetAsyncKeyState(VK_CONTROL))
+			{
+				isControl = false;
+			}
+
+			if (!GetAsyncKeyState(VK_SHIFT))
+			{
+				isShift = false;
+			}
+
+
+			u32 key = mapKey(wParam, lParam, isShift, isAlt, isControl);
+
+			if (isShift && key >= 0x61 && key <= 0x7A)
+			{
+				key -= 0x20;
+			}
+
+			guiMain->KeyUp(key, isShift, isAlt, isControl);
 			keys[wParam] = FALSE;					// If So, Mark It As FALSE
 			return 0;								// Jump Back
 		}
@@ -880,6 +911,16 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 				keyUpEaten = false;
 				return 0;
 			}
+
+			// another win32 workaround
+			if (wParam == 0x12)
+			{
+				if (GetAsyncKeyState(VK_MENU))
+				{
+					return 0;
+				}
+			}
+
 			u32 key = mapKey(wParam, lParam, false, false, false);
 			guiMain->KeyUp(key, false, false, false);
 			keys[wParam] = FALSE;					// If So, Mark It As FALSE

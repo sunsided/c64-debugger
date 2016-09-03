@@ -32,6 +32,8 @@ extern bool c64SettingsMuteSIDOnPause;
 
 extern uint8 c64SettingsJoystickPort;
 
+extern bool c64SettingsRenderDisassembleExecuteAware;
+
 // startup
 extern int c64SettingsWaitOnStartup;
 extern CSlrString *c64SettingsPathD64;
@@ -48,6 +50,8 @@ extern CSlrString *c64SettingsPathToC64MemoryMapFile;
 extern CSlrString *c64SettingsAudioOutDevice;
 
 extern int c64SettingsJmpOnStartupAddr;
+extern bool c64SettingsAutoJmp;
+
 
 extern int c64SettingsDoubleClickMS;
 

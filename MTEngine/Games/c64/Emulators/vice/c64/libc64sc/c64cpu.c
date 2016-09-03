@@ -473,6 +473,11 @@ void c64d_mem_write_c64(unsigned int addr, unsigned char value)
 	c64d_mem_store(addr, value);
 }
 
+void c64d_mem_write_c64_no_mark(unsigned int addr, unsigned char value)
+{
+	(*_mem_write_tab_ptr[(addr) >> 8])((WORD)(addr), (BYTE)(value));
+}
+
 #ifndef STORE
 #define STORE(addr, value) \
 c64d_mem_store((WORD)(addr), (BYTE)(value));

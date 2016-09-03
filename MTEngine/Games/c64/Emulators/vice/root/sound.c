@@ -1419,6 +1419,10 @@ double sound_flush(int isPaused)
             if (remspace > snddata.fragsize)
                 dir = 1;
             lasttime = t;
+			
+/// **** WRITE AUDIO TO DISK
+//			return 0;
+			
             return dir;
         }
     }
@@ -1431,7 +1435,10 @@ double sound_flush(int isPaused)
         int remspace =
             snddata.playdev->bufferspace() - snddata.bufptr;
         /* Return delay in seconds. */
-		
+
+/// **** WRITE AUDIO TO DISK
+//		return 0;
+
         return (double)remspace/sample_rate;
     }
 #endif

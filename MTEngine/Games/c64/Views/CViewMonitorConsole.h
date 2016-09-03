@@ -42,10 +42,14 @@ public:
 	void CommandTransfer();
 	void CommandHunt();
 	void CommandMemorySave();
+	void CommandMemorySavePRG();
+	void CommandMemorySaveDump();
 	void CommandMemoryLoad();
 	void CommandGoJMP();
+	
+	bool memoryDumpAsPRG;
 
-	bool DoMemoryDumpToFile(int addrStart, int addrEnd, CSlrString *filePath);
+	bool DoMemoryDumpToFile(int addrStart, int addrEnd, bool isPRG, CSlrString *filePath);
 	bool DoMemoryDumpFromFile(int addrStart, CSlrString *filePath);
 
 	uint8 device;
@@ -57,6 +61,7 @@ public:
 	int addrStart, addrEnd;
 	
 	std::list<CSlrString *> memoryExtensions;
+	std::list<CSlrString *> prgExtensions;
 	
 	virtual void SystemDialogFileSaveSelected(CSlrString *path);
 	virtual void SystemDialogFileSaveCancelled();

@@ -34,6 +34,7 @@ public:
 	u32 GetLength();
 	u16 GetChar(u32 pos);
 	void SetChar(u32 pos, u16 chr);
+	void RemoveCharAt(u32 pos);
 
 	void Clear();
 	

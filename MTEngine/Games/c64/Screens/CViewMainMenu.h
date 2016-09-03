@@ -81,6 +81,7 @@ public:
 	CSlrKeyboardShortcut *kbsScreenLayout6;
 	CSlrKeyboardShortcut *kbsScreenLayout7;
 	CSlrKeyboardShortcut *kbsScreenLayout8;
+	CSlrKeyboardShortcut *kbsScreenLayout9;
 	
 	CSlrKeyboardShortcut *kbsInsertD64;
 	CViewC64MenuItem *menuItemInsertD64;

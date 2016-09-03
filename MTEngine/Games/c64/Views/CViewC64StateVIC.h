@@ -41,6 +41,7 @@ public:
 	std::vector<CSlrImage *> *spritesImages;
 
 	bool isVertical;
+	bool showSprites;
 	
 	virtual void SetFocus(bool focus);
 

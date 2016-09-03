@@ -108,8 +108,15 @@ public:
 	
 	CViewC64MenuItemOption *menuItemC64Model;
 	CViewC64MenuItemOption *menuItemFastBootKernalPatch;
+	CViewC64MenuItemOption *menuItemDisassembleExecuteAware;
 
+	
 	CViewC64MenuItemOption *menuItemMaximumSpeed;
+	CSlrKeyboardShortcut *kbsSwitchNextMaximumSpeed;
+	CSlrKeyboardShortcut *kbsSwitchPrevMaximumSpeed;
+	void SwitchNextMaximumSpeed();
+	void SwitchPrevMaximumSpeed();
+	void SetEmulationMaximumSpeed(int maximumSpeed);
 
 	CViewC64MenuItem *menuItemClearSettings;
 	

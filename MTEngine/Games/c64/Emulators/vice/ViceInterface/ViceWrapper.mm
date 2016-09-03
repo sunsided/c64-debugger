@@ -13,6 +13,7 @@ extern "C" {
 #include "CViceAudioChannel.h"
 #include "VID_Main.h"
 #include "SND_Main.h"
+#include "SYS_Main.h"
 #include "SYS_Types.h"
 #include "SYS_CommandLine.h"
 #include "CGuiMain.h"
@@ -98,42 +99,42 @@ void c64d_mark_c64_cell_write(uint16 addr, uint8 value)
 			
 			if (memoryBreakpoint->breakpointType == C64_MEMORY_BREAKPOINT_EQUAL)
 			{
-				if (memoryBreakpoint->value == value)
+				if (value == memoryBreakpoint->value)
 				{
 					debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
 				}
 			}
 			else if (memoryBreakpoint->breakpointType == C64_MEMORY_BREAKPOINT_NOT_EQUAL)
 			{
-				if (memoryBreakpoint->value != value)
+				if (value != memoryBreakpoint->value)
 				{
 					debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
 				}
 			}
 			else if (memoryBreakpoint->breakpointType == C64_MEMORY_BREAKPOINT_LESS)
 			{
-				if (memoryBreakpoint->value < value)
+				if (value < memoryBreakpoint->value)
 				{
 					debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
 				}
 			}
 			else if (memoryBreakpoint->breakpointType == C64_MEMORY_BREAKPOINT_LESS_OR_EQUAL)
 			{
-				if (memoryBreakpoint->value <= value)
+				if (value <= memoryBreakpoint->value)
 				{
 					debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
 				}
 			}
 			else if (memoryBreakpoint->breakpointType == C64_MEMORY_BREAKPOINT_GREATER)
 			{
-				if (memoryBreakpoint->value > value)
+				if (value > memoryBreakpoint->value)
 				{
 					debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
 				}
 			}
 			else if (memoryBreakpoint->breakpointType == C64_MEMORY_BREAKPOINT_GREATER_OR_EQUAL)
 			{
-				if (memoryBreakpoint->value >= value)
+				if (value >= memoryBreakpoint->value)
 				{
 					debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
 				}
@@ -172,42 +173,42 @@ void c64d_mark_disk_cell_write(uint16 addr, uint8 value)
 			
 			if (memoryBreakpoint->breakpointType == C64_MEMORY_BREAKPOINT_EQUAL)
 			{
-				if (memoryBreakpoint->value == value)
+				if (value == memoryBreakpoint->value)
 				{
 					debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
 				}
 			}
 			else if (memoryBreakpoint->breakpointType == C64_MEMORY_BREAKPOINT_NOT_EQUAL)
 			{
-				if (memoryBreakpoint->value != value)
+				if (value != memoryBreakpoint->value)
 				{
 					debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
 				}
 			}
 			else if (memoryBreakpoint->breakpointType == C64_MEMORY_BREAKPOINT_LESS)
 			{
-				if (memoryBreakpoint->value < value)
+				if (value < memoryBreakpoint->value)
 				{
 					debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
 				}
 			}
 			else if (memoryBreakpoint->breakpointType == C64_MEMORY_BREAKPOINT_LESS_OR_EQUAL)
 			{
-				if (memoryBreakpoint->value <= value)
+				if (value <= memoryBreakpoint->value)
 				{
 					debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
 				}
 			}
 			else if (memoryBreakpoint->breakpointType == C64_MEMORY_BREAKPOINT_GREATER)
 			{
-				if (memoryBreakpoint->value > value)
+				if (value > memoryBreakpoint->value)
 				{
 					debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
 				}
 			}
 			else if (memoryBreakpoint->breakpointType == C64_MEMORY_BREAKPOINT_GREATER_OR_EQUAL)
 			{
-				if (memoryBreakpoint->value >= value)
+				if (value >= memoryBreakpoint->value)
 				{
 					debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
 				}
@@ -330,12 +331,17 @@ void c64d_refresh_screen()
 // this is called when debug is paused to refresh only part of screen
 void c64d_refresh_previous_lines()
 {
-	//LOGD("c64d_refresh_previous_lines");
+//	LOGD("c64d_refresh_previous_lines");
 	debugInterfaceVice->LockRenderScreenMutex();
 	
 	int rasterY = vicii.raster_line - 16;
+	
+	rasterY--;
+	
 	// draw previous completed raster lines
 	uint8 *screenBuffer = vicii.raster.canvas->draw_buffer->draw_buffer;
+	
+//	LOGD("..... rasterY=%x", rasterY);
 	
 	for (int x = 0; x < 384; x++)
 	{
@@ -356,25 +362,44 @@ void c64d_refresh_previous_lines()
 
 void c64d_refresh_dbuf()
 {
-	//LOGD("c64d_refresh_dbuf");
+//	return;
+//	LOGD("c64d_refresh_dbuf");
 	int rasterY = vicii.raster_line - 16;
 
 	if (rasterY < 0 || rasterY > debugInterfaceVice->GetC64ScreenSizeY())
 	{
 		return;
 	}
+
+	if (vicii.raster_cycle > 61)
+		return;
+	
+	if (vicii.raster_cycle == 0 && vicii.dbuf_offset == 504)
+		return;
 	
 	debugInterfaceVice->LockRenderScreenMutex();
 	
-	for (int l = 0; l < vicii.dbuf_offset + 8; l++)
+//	LOGD(".... rasterY=%x vicii.dbuf_offset + 8=%d", rasterY, (vicii.dbuf_offset + 8));
+//	LOGD(".... rasterX=%x raster_cycle=%d", vicii.raster_cycle*8, vicii.raster_cycle);
+
+	
+	int maxX = 0;
+	
+	for (int l = 0; l < vicii.dbuf_offset; l++)	//+8
 	{
 		int x = l - 104;
-		if (x < 0 || x > 384)
+		if (x < 0 || x > 383)
 			continue;
+		
+		if (maxX < x)
+			maxX = x;
 		
 		byte v = vicii.dbuf[l];
 		debugInterfaceVice->screen->SetPixelResultRGBA(x, rasterY, c64d_palette_red[v], c64d_palette_green[v], c64d_palette_blue[v], 255);
 	}
+	
+//	LOGD("........ maxX=%d", maxX);
+
 	
 	debugInterfaceVice->UnlockRenderScreenMutex();
 }
@@ -395,8 +420,16 @@ int c64d_is_debug_on_drive1541()
 	return 0;
 }
 
+extern "C" {
+	BYTE c64d_peek_c64(WORD addr);
+	void c64d_mem_write_c64_no_mark(unsigned int addr, unsigned char value);
+	void c64d_get_vic_simple_state(struct C64StateVIC *simpleStateVic);
+};
+
 void c64d_c64_check_pc_breakpoint(uint16 pc)
 {
+	uint8 val;
+
 	if ((int)pc == debugInterfaceVice->temporaryC64BreakpointPC)
 	{
 		debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
@@ -408,7 +441,43 @@ void c64d_c64_check_pc_breakpoint(uint16 pc)
 		std::map<uint16, C64AddrBreakpoint *>::iterator it = debugInterfaceVice->breakpointsC64PC.find(pc);
 		if (it != debugInterfaceVice->breakpointsC64PC.end())
 		{
-			debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
+			C64AddrBreakpoint *addrBreakpoint = it->second;
+			
+			if (IS_SET(addrBreakpoint->actions, C64_ADDR_BREAKPOINT_ACTION_SET_BACKGROUND))
+			{
+				// VIC can't modify two registers at once
+				
+				C64StateVIC vicState;
+				c64d_get_vic_simple_state(&vicState);
+
+				// outside screen (in borders)?
+				if (vicState.rasterY < 0x32 || vicState.rasterY > 0xFA
+					|| vicState.rasterX < 0x88 || vicState.rasterX > 0x1C7)
+				{
+					c64d_mem_write_c64_no_mark(0xD021, addrBreakpoint->data);
+					
+					// this will be the real write in this VIC cycle:
+					c64d_mem_write_c64_no_mark(0xD020, addrBreakpoint->data);
+				}
+				else
+				{
+					c64d_mem_write_c64_no_mark(0xD020, addrBreakpoint->data);
+					
+					// this will be the real write in this VIC cycle:
+					c64d_mem_write_c64_no_mark(0xD021, addrBreakpoint->data);
+				}
+				
+				// alternatively
+				// val = c64d_peek_c64(0xD021) + 1;
+				// if (val == 0x10)
+				//		val = 0x00;
+				
+			}
+
+			if (IS_SET(addrBreakpoint->actions, C64_ADDR_BREAKPOINT_ACTION_STOP))
+			{
+				debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
+			}
 		}
 		debugInterfaceVice->UnlockMutex();
 	}

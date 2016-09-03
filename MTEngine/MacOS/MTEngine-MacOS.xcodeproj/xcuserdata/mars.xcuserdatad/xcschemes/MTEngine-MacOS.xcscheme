@@ -62,47 +62,27 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-layout"
+            argument = "-breakpoints"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "2"
+            argument = "/Users/mars/Desktop/breaks.txt"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-clearsettings"
+            argument = "-vicesymbols"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-cartridge"
+            argument = "/Users/mars/develop/MTEngine/tools/_other/c64/KickAss/source.vs"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "/Users/mars/develop/MTEngine/_RUNTIME_/Documents/c64/disks/CRT/c.crt"
+            argument = "-prg"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-wait"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "0"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-snapshot"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "/Users/mars/develop/MTEngine/_RUNTIME_/Documents/c64/disks/glasnost.snap"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-d64"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "/Users/mars/develop/MTEngine/_RUNTIME_/Documents/c64/disks/commando.d64"
+            argument = "/Users/mars/develop/MTEngine/tools/_other/c64/KickAss/Examples/MusicIrq/MusicIrq.prg"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
@@ -114,11 +94,47 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-prg"
+            argument = "-wait"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "/Users/mars/develop/MTEngine/tools/_other/c64/KickAss/Examples/MusicIrq/MusicIrq.prg"
+            argument = "0"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-d64"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "/Users/mars/develop/MTEngine/_RUNTIME_/Documents/c64/disks/commando.d64"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-layout"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "2"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-cartridge"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "/Users/mars/develop/MTEngine/_RUNTIME_/Documents/c64/disks/CRT/c.crt"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-snapshot"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "/Users/mars/develop/MTEngine/_RUNTIME_/Documents/c64/disks/glasnost.snap"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-clearsettings"
             isEnabled = "NO">
          </CommandLineArgument>
       </CommandLineArguments>

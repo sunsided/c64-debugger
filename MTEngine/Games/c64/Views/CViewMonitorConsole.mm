@@ -34,6 +34,7 @@ CViewMonitorConsole::CViewMonitorConsole(GLfloat posX, GLfloat posY, GLfloat pos
 	this->dataAdapter = viewC64->viewC64MemoryDataDump->dataAdapter;
 	
 	memoryExtensions.push_back(new CSlrString("bin"));
+	prgExtensions.push_back(new CSlrString("prg"));
 
 	char *buf = SYS_GetCharBuf();
 	sprintf(buf, "C64 Debugger v%s monitor", C64DEBUGGER_VERSION_STRING);
@@ -133,6 +134,10 @@ void CViewMonitorConsole::GuiViewConsoleExecuteCommand(char *commandText)
 		{
 			CommandMemorySave();
 		}
+		else if (token->CompareWith("SPRG") || token->CompareWith("sprg"))
+		{
+			CommandMemorySavePRG();
+		}
 		else if (token->CompareWith("L") || token->CompareWith("l"))
 		{
 			CommandMemoryLoad();
@@ -223,9 +228,12 @@ void CViewMonitorConsole::CommandHelp()
 	this->viewConsole->PrintLine("    load memory");
 	this->viewConsole->PrintLine("S <from address> <to address> [file name]");
 	this->viewConsole->PrintLine("    save memory");
+//	this->viewConsole->PrintLine("SPRG <from address> <to address> [file name]");
+//	this->viewConsole->PrintLine("    save memory as PRG file");
 	this->viewConsole->PrintLine("G <address>");
 	this->viewConsole->PrintLine("    jmp to address");
-	
+
+
 }
 
 void CViewMonitorConsole::CommandGoJMP()
@@ -680,7 +688,49 @@ void CViewMonitorConsole::CommandMemorySave()
 		return;
 	}
 	
+	memoryDumpAsPRG = false;
+	CommandMemorySaveDump();
+}
+
+void CViewMonitorConsole::CommandMemorySavePRG()
+{
+	if (GetTokenValueHex(&addrStart) == false)
+	{
+		this->viewConsole->PrintLine("Usage: SPRG <from addres> <to address> [file name]");
+		return;
+	}
 	
+	if (addrStart < 0x0000 || addrStart > 0xFFFF)
+	{
+		this->viewConsole->PrintLine("Bad 'from' address value.");
+		return;
+	}
+	
+	//
+	if (GetTokenValueHex(&addrEnd) == false)
+	{
+		this->viewConsole->PrintLine("Missing 'to' address value.");
+		return;
+	}
+	
+	if (addrEnd < 0x0000 || addrEnd > 0xFFFF)
+	{
+		this->viewConsole->PrintLine("Bad 'to' address value.");
+		return;
+	}
+	
+	if (addrEnd <= addrStart)
+	{
+		this->viewConsole->PrintLine("Usage: SPRG <from addres> <to address> [file name]");
+		return;
+	}
+	
+	memoryDumpAsPRG = true;
+	CommandMemorySaveDump();
+}
+
+void CViewMonitorConsole::CommandMemorySaveDump()
+{
 	CSlrString *fileName = NULL;
 	if (GetToken(&fileName) == false)
 	{
@@ -688,7 +738,16 @@ void CViewMonitorConsole::CommandMemorySave()
 		CSlrString *defaultFileName = new CSlrString("c64memory");
 		
 		CSlrString *windowTitle = new CSlrString("Dump C64 memory");
-		SYS_DialogSaveFile(this, &memoryExtensions, defaultFileName, c64SettingsDefaultMemoryDumpFolder, windowTitle);
+		
+		if (memoryDumpAsPRG == false)
+		{
+			SYS_DialogSaveFile(this, &memoryExtensions, defaultFileName, c64SettingsDefaultMemoryDumpFolder, windowTitle);
+		}
+		else
+		{
+			SYS_DialogSaveFile(this, &prgExtensions, defaultFileName, c64SettingsDefaultMemoryDumpFolder, windowTitle);
+		}
+		
 		delete windowTitle;
 		delete defaultFileName;
 	}
@@ -705,7 +764,7 @@ void CViewMonitorConsole::CommandMemorySave()
 		}
 		filePath->Concatenate(fileName);
 		
-		if (DoMemoryDumpToFile(addrStart, addrEnd, filePath) == false)
+		if (DoMemoryDumpToFile(addrStart, addrEnd, memoryDumpAsPRG, filePath) == false)
 		{
 			this->viewConsole->PrintLine("Save memory dump failed.");
 		}
@@ -714,7 +773,7 @@ void CViewMonitorConsole::CommandMemorySave()
 
 void CViewMonitorConsole::SystemDialogFileSaveSelected(CSlrString *path)
 {
-	if (DoMemoryDumpToFile(addrStart, addrEnd, path) == false)
+	if (DoMemoryDumpToFile(addrStart, addrEnd, memoryDumpAsPRG, path) == false)
 	{
 		this->viewConsole->PrintLine("Save memory dump failed.");
 	}
@@ -727,7 +786,7 @@ void CViewMonitorConsole::SystemDialogFileSaveCancelled()
 }
 
 
-bool CViewMonitorConsole::DoMemoryDumpToFile(int addrStart, int addrEnd, CSlrString *filePath)
+bool CViewMonitorConsole::DoMemoryDumpToFile(int addrStart, int addrEnd, bool isPRG, CSlrString *filePath)
 {
 	filePath->DebugPrint("DoMemoryDumpToFile: ");
 	
@@ -736,6 +795,11 @@ bool CViewMonitorConsole::DoMemoryDumpToFile(int addrStart, int addrEnd, CSlrStr
 	c64SettingsDefaultMemoryDumpFolder = filePath->GetFilePathWithoutFileNameComponentFromPath();
 	C64DebuggerStoreSettings();
 	
+	// Correct addrEnd:
+	// VICE monitor saves memory to file from addrStart to *addrEnd inclusive*
+	addrEnd += 1;
+
+	// get file path
 	char *cFilePath = filePath->GetStdASCII();
 	
 	FILE *fp;
@@ -754,6 +818,17 @@ bool CViewMonitorConsole::DoMemoryDumpToFile(int addrStart, int addrEnd, CSlrStr
 	
 	uint8 *writeBuffer = new uint8[len];
 	memcpy(writeBuffer, memoryBuffer + addrStart, len);
+	
+	if (isPRG)
+	{
+		// write header
+		uint8 buf[2];
+		buf[0] = addrStart & 0x00FF;
+		buf[1] = (addrStart >> 8) & 0x00FF;
+		
+		fwrite(buf, 1, 2, fp);
+	}
+	
 	
 	int lenWritten = fwrite(writeBuffer, 1, len, fp);
 	fclose(fp);

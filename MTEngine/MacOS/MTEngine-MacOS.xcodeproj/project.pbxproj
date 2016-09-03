@@ -691,6 +691,7 @@
 		415B4B2719848A0700B13FFF /* CSlrImageContainer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 415B4B2519848A0700B13FFF /* CSlrImageContainer.mm */; };
 		4160B20C1CEB16AB00EAD217 /* CGuiViewConsole.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4160B20A1CEB16AB00EAD217 /* CGuiViewConsole.mm */; };
 		4160B20F1CEB1FC400EAD217 /* CViewMonitorConsole.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4160B20D1CEB1FC400EAD217 /* CViewMonitorConsole.mm */; };
+		4163764C1D49FD210091B563 /* TODO.txt in Resources */ = {isa = PBXBuildFile; fileRef = 4163764B1D49FD210091B563 /* TODO.txt */; };
 		41646C0E1C8DE93E006BBE25 /* SYS_CommandLine.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41646C0C1C8DE93E006BBE25 /* SYS_CommandLine.mm */; };
 		416AF7801CC8D68700E56DDC /* CSlrTextParser.mm in Sources */ = {isa = PBXBuildFile; fileRef = 416AF77F1CC8D68700E56DDC /* CSlrTextParser.mm */; };
 		4179EF9519893A5100CCD344 /* CContinuousParamSinHalf.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4179EF9319893A5100CCD344 /* CContinuousParamSinHalf.mm */; };
@@ -2235,6 +2236,7 @@
 		4160B20B1CEB16AB00EAD217 /* CGuiViewConsole.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CGuiViewConsole.h; sourceTree = "<group>"; };
 		4160B20D1CEB1FC400EAD217 /* CViewMonitorConsole.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewMonitorConsole.mm; path = ../Games/c64/Views/CViewMonitorConsole.mm; sourceTree = "<group>"; };
 		4160B20E1CEB1FC400EAD217 /* CViewMonitorConsole.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewMonitorConsole.h; path = ../Games/c64/Views/CViewMonitorConsole.h; sourceTree = "<group>"; };
+		4163764B1D49FD210091B563 /* TODO.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = TODO.txt; path = ../Games/c64/TODO.txt; sourceTree = "<group>"; };
 		41646C0C1C8DE93E006BBE25 /* SYS_CommandLine.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SYS_CommandLine.mm; sourceTree = "<group>"; };
 		41646C0D1C8DE93E006BBE25 /* SYS_CommandLine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SYS_CommandLine.h; sourceTree = "<group>"; };
 		416AF77D1CC7D52100E56DDC /* C64Opcodes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64Opcodes.h; path = ../Games/c64/Tools/C64Opcodes.h; sourceTree = "<group>"; };
@@ -2552,6 +2554,7 @@
 		390424891868928B00B570B1 /* Games */ = {
 			isa = PBXGroup;
 			children = (
+				4163764B1D49FD210091B563 /* TODO.txt */,
 				4152D7201C970FA900EBA9E5 /* CViewC64.mm */,
 				4152D7211C970FA900EBA9E5 /* CViewC64.h */,
 				41646C051C8DAAF2006BBE25 /* Tools */,
@@ -4964,6 +4967,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4163764C1D49FD210091B563 /* TODO.txt in Resources */,
 				8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */,
 				4192C6071B05177400D328EF /* Images.xcassets in Resources */,
 				AFBD7716113895850015E685 /* MainMenu.xib in Resources */,

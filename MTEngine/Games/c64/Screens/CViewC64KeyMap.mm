@@ -1088,8 +1088,16 @@ bool CViewC64KeyMap::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContr
 {
 	if (isAssigningKey)
 	{
+#if !defined(WIN32)
 		if (keyCode == MTKEY_LALT || keyCode == MTKEY_RALT || keyCode == MTKEY_LCONTROL || keyCode == MTKEY_RCONTROL
 			|| keyCode == MTKEY_LSHIFT || keyCode == MTKEY_RSHIFT)
+#else
+
+		// windows fucked up stuff
+		if (keyCode == MTKEY_RALT || keyCode == MTKEY_LCONTROL || keyCode == MTKEY_RCONTROL
+			|| keyCode == MTKEY_LSHIFT || keyCode == MTKEY_RSHIFT)
+#endif
+
 		{
 			return true;
 		}

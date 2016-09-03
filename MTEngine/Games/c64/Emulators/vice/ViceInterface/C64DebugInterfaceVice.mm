@@ -184,6 +184,8 @@ void C64DebugInterfaceVice::Reset()
 {
 	vsync_suspend_speed_eval();
 	
+	keyboard_clear_keymatrix();
+
 	machine_trigger_reset(MACHINE_RESET_MODE_SOFT);
 	c64d_update_c64_model();
 
@@ -197,6 +199,9 @@ void C64DebugInterfaceVice::Reset()
 void C64DebugInterfaceVice::HardReset()
 {
 	vsync_suspend_speed_eval();
+	
+	keyboard_clear_keymatrix();
+
 	machine_trigger_reset(MACHINE_RESET_MODE_HARD);
 	c64d_update_c64_model();
 
@@ -609,6 +614,15 @@ int C64DebugInterfaceVice::GetC64ModelType()
 void C64DebugInterfaceVice::SetEmulationMaximumSpeed(int maximumSpeed)
 {
 	resources_set_int("Speed", maximumSpeed);
+	
+	if (maximumSpeed < 20)
+	{
+		resources_set_int("Sound", 0);
+	}
+	else
+	{
+		resources_set_int("Sound", 1);
+	}
 }
 
 ///
@@ -889,6 +903,7 @@ void C64DebugInterfaceVice::DetachCartridge()
 
 void C64DebugInterfaceVice::CartridgeFreezeButtonPressed()
 {
+	keyboard_clear_keymatrix();
 	cartridge_trigger_freeze();
 }
 
@@ -909,7 +924,7 @@ extern "C" {
 
 // TODO: change all %02x %04x into sprintfHexCode8WithoutZeroEnding(bufPtr, ...);
 
-void C64DebugInterfaceVice::RenderStateVIC(float posX, float posY, float posZ, bool isVertical, CSlrFont *fontBytes, float fontSize,
+void C64DebugInterfaceVice::RenderStateVIC(float posX, float posY, float posZ, bool isVertical, bool showSprites, CSlrFont *fontBytes, float fontSize,
 										   std::vector<CImageData *> *spritesImageData,
 										   std::vector<CSlrImage *> *spritesImages, bool renderDataWithColors)
 {
@@ -976,8 +991,18 @@ void C64DebugInterfaceVice::RenderStateVIC(float posX, float posY, float posZ, b
 
 	sprintf(buf, "Border            : %dx%d", 39 + ((vicii.regs[0x16] >> 3) & 1), 24 + ((vicii.regs[0x11] >> 3) & 1));
 	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-	py += fontSize * 0.5f;
 
+	if (showSprites == true)
+	{
+		py += fontSize * 0.5f;
+	}
+	else
+	{
+		py = posY;
+		px = posX + fontSize * 29.0f;
+	}
+	
+	
 	sprintf(buf, "Display mode      : %s", mode_name[video_mode]);
 	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 //	sprintf(buf, "Mode: %s (ECM/BMM/MCM=%d/%d/%d)", mode_name[video_mode], m_ecm, m_bmm, m_mcm);
@@ -1053,232 +1078,235 @@ void C64DebugInterfaceVice::RenderStateVIC(float posX, float posY, float posZ, b
 	
 	py += fontSize * 0.5f;
 
-	 
-	/// sprites
-	int numPasses = 1;
-	int step = 8;
-
-	if (isVertical)
-	{
-		numPasses = 2;
-		step = 4;
-	}
 	
+	if (showSprites)
+	{
+		/// sprites
+		int numPasses = 1;
+		int step = 8;
+		
+		if (isVertical)
+		{
+			numPasses = 2;
+			step = 4;
+		}
+		
 	 // get VIC sprite colors
-	uint8 cD021 = vicii.regs[0x21];
-	uint8 cD025 = vicii.regs[0x25];
-	uint8 cD026 = vicii.regs[0x26];
-	
-	for (int passNum = 0; passNum < numPasses; passNum++)
-	{
-		int startId = passNum * step;
-		int endId = (passNum+1) * step;
-	 
-		sprintf(buf, "         ");
-		for (int z = startId; z < endId; z++)
+		uint8 cD021 = vicii.regs[0x21];
+		uint8 cD025 = vicii.regs[0x25];
+		uint8 cD026 = vicii.regs[0x26];
+		
+		for (int passNum = 0; passNum < numPasses; passNum++)
 		{
-			sprintf(buf2, "#%d    ", z);
-			strcat(buf, buf2);
-		}
-	 
-		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-	 
-		sprintf(buf, "Enabled: ");
-		bits = vicii.regs[0x15];
-		for (i = startId; i < endId; i++)
-		{
-			sprintf(buf2, "%s", (bits & 1) ? "Yes   " : "No    ");
-			bits >>= 1;
+			int startId = passNum * step;
+			int endId = (passNum+1) * step;
 			
-			strcat(buf, buf2);
-		}
-		
-		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-		
-		/////////////"         "
-		sprintf(buf, "DMA/dis: ");
-		bits = vicii.sprite_dma;
-		bits2 = vicii.sprite_display_bits;
-		for (i = startId; i < endId; i++)
-		{
-			sprintf(buf2, "%c/%c   ", (bits & 1) ? 'D' : ' ', (bits2 & 1) ? 'd' : ' ');
-			bits >>= 1;
-			bits2 >>= 1;
-			strcat(buf, buf2);
-		}
-		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-		
-		/////////////"         "
-		sprintf(buf, "Pointer: ");
-		for (i = startId; i < endId; i++)
-		{
-			sprintf(buf2, "%02x    ", vicii.sprite[i].pointer);
-			strcat(buf, buf2);
-		}
-		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-		
-
-		/////////////"         "
-		sprintf(buf, "MC:      ");
-		for (i = startId; i < endId; i++)
-		{
-			sprintf(buf2, "%02x    ", vicii.sprite[i].mc);
-			strcat(buf, buf2);
-		}
-		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-		
-		/////////////"         "
-		if (isVertical == false)
-		{
-			sprintf(buf, "MCBASE:  ");
+			sprintf(buf, "         ");
+			for (int z = startId; z < endId; z++)
+			{
+				sprintf(buf2, "#%d    ", z);
+				strcat(buf, buf2);
+			}
+			
+			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
+			
+			sprintf(buf, "Enabled: ");
+			bits = vicii.regs[0x15];
 			for (i = startId; i < endId; i++)
 			{
-				sprintf(buf2, "%02x    ", vicii.sprite[i].mcbase);
+				sprintf(buf2, "%s", (bits & 1) ? "Yes   " : "No    ");
+				bits >>= 1;
+				
+				strcat(buf, buf2);
+			}
+			
+			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
+			
+			/////////////"         "
+			sprintf(buf, "DMA/dis: ");
+			bits = vicii.sprite_dma;
+			bits2 = vicii.sprite_display_bits;
+			for (i = startId; i < endId; i++)
+			{
+				sprintf(buf2, "%c/%c   ", (bits & 1) ? 'D' : ' ', (bits2 & 1) ? 'd' : ' ');
+				bits >>= 1;
+				bits2 >>= 1;
 				strcat(buf, buf2);
 			}
 			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-		}
-
-		/////////////"         "
-		sprintf(buf, "X-Pos:   ");
-		for (i = startId; i < endId; i++)
-		{
-			sprintf(buf2, "%-4d  ", vicii.sprite[i].x);
-			strcat(buf, buf2);
-		}
-		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-		
-		
-		/////////////"         "
-		sprintf(buf, "Y-Pos:   ");
-		for (i = startId; i < endId; i++)
-		{
-			sprintf(buf2, "%-4d  ", vicii.regs[1 + (i << 1)]);
-			strcat(buf, buf2);
-		}
-		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-
-		/////////////"         "
-		sprintf(buf, "X-Exp:   ");
-		bits = vicii.regs[0x1d];
-		for (i = startId; i < endId; i++)
-		{
-			sprintf(buf2, "%s", (bits & 1) ? "Yes   " : "No    ");
-			strcat(buf, buf2);
-		}
-		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-
-		/////////////"         "
-		sprintf(buf, "Y-Exp:   ");
-		bits = vicii.regs[0x17];
-		for (i = startId; i < endId; i++)
-		{
-			sprintf(buf2, "%s", (bits & 1) ? (vicii.sprite[i].exp_flop ? "YES*  " : "Yes   ") : "No    ");
-			strcat(buf, buf2);
-		}
-		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-
-		sprintf(buf, "Mode   : ");
-		bits = vicii.regs[0x1c];
-		for (i = startId; i < endId; i++)
-		{
-			sprintf(buf2, "%s", (bits & 1) ? "Multi " : "Std.  ");
-			strcat(buf, buf2);
-			bits >>= 1;
-		}
-		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-
-		sprintf(buf, "Prio.  : ");
-		bits = vicii.regs[0x1b];
-		for (int z = startId; z < endId; z++)
-		{
-			sprintf(buf2, "%s", (bits & 1) ? "Back  " : "Fore  ");
-			strcat(buf, buf2);
-			bits >>= 1;
-		}
-		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-		
-		sprintf(buf, "Data   : ");
-		for (int z = startId; z < endId; z++)
-		{
-			int addr = v_bank + vicii.sprite[z].pointer * 64;
-			sprintf(buf2, "%04x  ", addr);
-			strcat(buf, buf2);
-		}
-		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-		
-		py += fontSize * 0.25f;
-		
-		
-		//
-		// draw sprites
-		//
-		px += 9*fontSize;
-	 
-		const float spriteSizeX = 6*fontSize;
-		const float spriteSizeY = (21.0f * spriteSizeX) / 24.0f;
-		
-		// sprites are rendered upside down
-		const float spriteTexStartX = 4.0/32.0;
-		const float spriteTexStartY = (32.0-4.0)/32.0;
-		const float spriteTexEndX = (4.0+24.0)/32.0;
-		const float spriteTexEndY = (32.0-(4.0+21.0))/32.0;
-		
-		//
-	 
-		for (int zi = startId; zi < endId; zi++)
-		{
-			CSlrImage *image = (*spritesImages)[zi];
-			CImageData *imageData = (*spritesImageData)[zi];
-
-			int addr = v_bank + vicii.sprite[zi].pointer * 64;
-		 
-			//LOGD("sprite#=%d dataAddr=%04x", zi, addr);
-			uint8 spriteData[63];
 			
-			for (int i = 0; i < 63; i++)
+			/////////////"         "
+			sprintf(buf, "Pointer: ");
+			for (i = startId; i < endId; i++)
 			{
-				uint8 v;
-				this->dataAdapterC64DirectRam->AdapterReadByte(addr, &v);
-				spriteData[i] = v;
-				addr++;
+				sprintf(buf2, "%02x    ", vicii.sprite[i].pointer);
+				strcat(buf, buf2);
 			}
+			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 			
-			bool isColor = false;
-			if (vicii.regs[0x1c] & (1<<zi))
+			
+			/////////////"         "
+			sprintf(buf, "MC:      ");
+			for (i = startId; i < endId; i++)
 			{
-				isColor = true;
+				sprintf(buf2, "%02x    ", vicii.sprite[i].mc);
+				strcat(buf, buf2);
 			}
-			if (isColor == false)
+			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
+			
+			/////////////"         "
+			if (isVertical == false)
 			{
-				if (renderDataWithColors)
+				sprintf(buf, "MCBASE:  ");
+				for (i = startId; i < endId; i++)
 				{
-					uint8 spriteColor = vicii.regs[0x27+zi];
-					ConvertSpriteDataToImage(spriteData, imageData, cD021, spriteColor, this);
+					sprintf(buf2, "%02x    ", vicii.sprite[i].mcbase);
+					strcat(buf, buf2);
+				}
+				fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
+			}
+			
+			/////////////"         "
+			sprintf(buf, "X-Pos:   ");
+			for (i = startId; i < endId; i++)
+			{
+				sprintf(buf2, "%-4d  ", vicii.sprite[i].x);
+				strcat(buf, buf2);
+			}
+			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
+			
+			
+			/////////////"         "
+			sprintf(buf, "Y-Pos:   ");
+			for (i = startId; i < endId; i++)
+			{
+				sprintf(buf2, "%-4d  ", vicii.regs[1 + (i << 1)]);
+				strcat(buf, buf2);
+			}
+			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
+			
+			/////////////"         "
+			sprintf(buf, "X-Exp:   ");
+			bits = vicii.regs[0x1d];
+			for (i = startId; i < endId; i++)
+			{
+				sprintf(buf2, "%s", (bits & 1) ? "Yes   " : "No    ");
+				strcat(buf, buf2);
+			}
+			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
+			
+			/////////////"         "
+			sprintf(buf, "Y-Exp:   ");
+			bits = vicii.regs[0x17];
+			for (i = startId; i < endId; i++)
+			{
+				sprintf(buf2, "%s", (bits & 1) ? (vicii.sprite[i].exp_flop ? "YES*  " : "Yes   ") : "No    ");
+				strcat(buf, buf2);
+			}
+			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
+			
+			sprintf(buf, "Mode   : ");
+			bits = vicii.regs[0x1c];
+			for (i = startId; i < endId; i++)
+			{
+				sprintf(buf2, "%s", (bits & 1) ? "Multi " : "Std.  ");
+				strcat(buf, buf2);
+				bits >>= 1;
+			}
+			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
+			
+			sprintf(buf, "Prio.  : ");
+			bits = vicii.regs[0x1b];
+			for (int z = startId; z < endId; z++)
+			{
+				sprintf(buf2, "%s", (bits & 1) ? "Back  " : "Fore  ");
+				strcat(buf, buf2);
+				bits >>= 1;
+			}
+			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
+			
+			sprintf(buf, "Data   : ");
+			for (int z = startId; z < endId; z++)
+			{
+				int addr = v_bank + vicii.sprite[z].pointer * 64;
+				sprintf(buf2, "%04x  ", addr);
+				strcat(buf, buf2);
+			}
+			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
+			
+			py += fontSize * 0.25f;
+			
+			
+			//
+			// draw sprites
+			//
+			px += 9*fontSize;
+			
+			const float spriteSizeX = 6*fontSize;
+			const float spriteSizeY = (21.0f * spriteSizeX) / 24.0f;
+			
+			// sprites are rendered upside down
+			const float spriteTexStartX = 4.0/32.0;
+			const float spriteTexStartY = (32.0-4.0)/32.0;
+			const float spriteTexEndX = (4.0+24.0)/32.0;
+			const float spriteTexEndY = (32.0-(4.0+21.0))/32.0;
+			
+			//
+			
+			for (int zi = startId; zi < endId; zi++)
+			{
+				CSlrImage *image = (*spritesImages)[zi];
+				CImageData *imageData = (*spritesImageData)[zi];
+				
+				int addr = v_bank + vicii.sprite[zi].pointer * 64;
+				
+				//LOGD("sprite#=%d dataAddr=%04x", zi, addr);
+				uint8 spriteData[63];
+				
+				for (int i = 0; i < 63; i++)
+				{
+					uint8 v;
+					this->dataAdapterC64DirectRam->AdapterReadByte(addr, &v);
+					spriteData[i] = v;
+					addr++;
+				}
+				
+				bool isColor = false;
+				if (vicii.regs[0x1c] & (1<<zi))
+				{
+					isColor = true;
+				}
+				if (isColor == false)
+				{
+					if (renderDataWithColors)
+					{
+						uint8 spriteColor = vicii.regs[0x27+zi];
+						ConvertSpriteDataToImage(spriteData, imageData, cD021, spriteColor, this);
+					}
+					else
+					{
+						ConvertSpriteDataToImage(spriteData, imageData);
+					}
 				}
 				else
 				{
-					ConvertSpriteDataToImage(spriteData, imageData);					
+					uint8 spriteColor = vicii.regs[0x27+zi];
+					ConvertColorSpriteDataToImage(spriteData, imageData, cD021, cD025, cD026, spriteColor, this);
 				}
+				
+				// re-bind image
+				image->ReplaceImageData(imageData);
+				
+				// render image
+				//BlitRectangle(px, py, posZ, 32, 32, 0.5, 0.5, 1.0f, 1.0f);
+				
+				Blit(image, px, py, posZ, spriteSizeX, spriteSizeY, spriteTexStartX, spriteTexStartY, spriteTexEndX, spriteTexEndY);
+				px += spriteSizeX;
 			}
-			else
-			{
-				uint8 spriteColor = vicii.regs[0x27+zi];
-				ConvertColorSpriteDataToImage(spriteData, imageData, cD021, cD025, cD026, spriteColor, this);
-			}
-		 
-			// re-bind image
-			image->ReplaceImageData(imageData);
-		 
-			// render image
-			//BlitRectangle(px, py, posZ, 32, 32, 0.5, 0.5, 1.0f, 1.0f);
 			
-			Blit(image, px, py, posZ, spriteSizeX, spriteSizeY, spriteTexStartX, spriteTexStartY, spriteTexEndX, spriteTexEndY);
-			px += spriteSizeX;
+			px = posX;
+			py += 5.5f*fontSize;
 		}
-	 
-		px = posX;
-		py += 5.5f*fontSize;
 	}
 }
 

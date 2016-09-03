@@ -59,7 +59,7 @@ CViewMainMenu::CViewMainMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 	viewMenu = new CGuiViewMenu(35, 76, -1, sizeX-70, sizeY-76, this);
 
 #if defined(MACOS)
-	kbsQuitApplication = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Quit application", 'w', false, false, true);
+	kbsQuitApplication = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Quit application", 'q', false, false, true);
 #elif defined(LINUX)
 	kbsQuitApplication = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Quit application", MTKEY_F4, false, true, false);
 #elif defined(WIN32)
@@ -96,6 +96,9 @@ CViewMainMenu::CViewMainMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 
 	kbsScreenLayout8 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Layout #8", MTKEY_F8, false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsScreenLayout8);
+
+	kbsScreenLayout9 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Layout #9", MTKEY_F2, true, false, true);
+	viewC64->keyboardShortcuts->AddShortcut(kbsScreenLayout9);
 
 	//
 	

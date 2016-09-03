@@ -78,7 +78,7 @@ void CViewC64StateVIC::Render()
 //	if (debugInterface->GetSettingIsWarpSpeed() == true)
 //		return;
 
-	viewC64->debugInterface->RenderStateVIC(posX, posY, posZ, isVertical, fontBytes, fontSize, spritesImageData, spritesImages,
+	viewC64->debugInterface->RenderStateVIC(posX, posY, posZ, isVertical, showSprites, fontBytes, fontSize, spritesImageData, spritesImages,
 											viewC64->viewC64MemoryDataDump->renderDataWithColors);
 }
 

@@ -532,7 +532,7 @@ void C64DebugInterface::UiInsertD64(CSlrString *path)
 
 //
 
-void C64DebugInterface::RenderStateVIC(float posX, float posY, float posZ, bool isVertical, CSlrFont *fontBytes, float fontSize, std::vector<CImageData *> *spritesImageData, std::vector<CSlrImage *> *spritesImages, bool renderDataWithColors)
+void C64DebugInterface::RenderStateVIC(float posX, float posY, float posZ, bool isVertical, bool showSprites, CSlrFont *fontBytes, float fontSize, std::vector<CImageData *> *spritesImageData, std::vector<CSlrImage *> *spritesImages, bool renderDataWithColors)
 {
 	SYS_FatalExit("C64DebugInterface::RenderStateVIC");
 }

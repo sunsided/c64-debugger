@@ -58,7 +58,7 @@ public:
 	std::map<uint16, C64MemoryBreakpoint *> breakpointsC64Memory;
 	bool breakOnC64Raster;
 	std::map<uint16, C64AddrBreakpoint *> breakpointsC64Raster;
-
+	
 	// 1541 disk drive
 	bool debugOnDrive1541;
 	bool breakOnDrive1541IrqVIA1;
@@ -204,7 +204,7 @@ public:
 	virtual void UiInsertD64(CSlrString *path);
 
 	// state rendering
-	virtual void RenderStateVIC(float posX, float posY, float posZ, bool isVertical, CSlrFont *fontBytes, float fontSize, std::vector<CImageData *> *spritesImageData, std::vector<CSlrImage *> *spritesImages, bool renderDataWithColors);
+	virtual void RenderStateVIC(float posX, float posY, float posZ, bool isVertical, bool showSprites, CSlrFont *fontBytes, float fontSize, std::vector<CImageData *> *spritesImageData, std::vector<CSlrImage *> *spritesImages, bool renderDataWithColors);
 	virtual void RenderStateDrive1541(float posX, float posY, float posZ, CSlrFont *fontBytes, float fontSize,
 									  bool renderVia1, bool renderVia2, bool renderDriveLed, bool isVertical);
 	virtual void RenderStateCIA(float px, float py, float posZ, CSlrFont *fontBytes, float fontSize, int ciaId);

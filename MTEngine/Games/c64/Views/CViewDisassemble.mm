@@ -12,6 +12,7 @@
 #include "CSlrString.h"
 #include "CSlrKeyboardShortcuts.h"
 #include "C64KeyboardShortcuts.h"
+#include "C64SettingsStorage.h"
 
 #define byte unsigned char
 
@@ -59,6 +60,8 @@ CViewDisassemble::CViewDisassemble(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 	this->debugInterface = debugInterface;
 	
 	this->showHexCodes = false;
+	this->showLabels = false;
+	
 	this->isTrackingPC = true;
 	this->currentPC = -1;
 	this->numberOfLinesBack = 31;
@@ -88,10 +91,43 @@ CViewDisassemble::CViewDisassemble(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 	// keyboard shortcut zones for this view
 	shortcutZones.push_back(KBZONE_DISASSEMBLE);
 	shortcutZones.push_back(KBZONE_MEMORY);
+
+	/// debug
+
+	// render execute-aware version of disassemble?
+	//c64SettingsRenderDisassembleExecuteAware = true;
+	
+//	this->AddCodeLabel(0xE5D1, "labE5D1x:");
+//	this->AddCodeLabel(0xE5D3, "labE5D3x:");
+//	this->AddCodeLabel(0xFD6E, "labFD6Ex:");
+//	this->AddCodeLabel(0x1000, "lab1000x:");
 }
 
 CViewDisassemble::~CViewDisassemble()
 {
+}
+
+void CViewDisassemble::AddCodeLabel(u16 address, char *text)
+{
+	// check if exists
+	std::map<u16, CDisassembleCodeLabel *>::iterator it = codeLabels.find(address);
+	
+	if (it != codeLabels.end())
+	{
+		CDisassembleCodeLabel *label = it->second;
+		codeLabels.erase(it);
+		delete label;
+	}
+	
+	CDisassembleCodeLabel *label = new CDisassembleCodeLabel();
+	
+	label->address = address;
+	label->labelText = text;
+	
+	int l = strlen(text)+1;
+	label->px = this->posX + fontSize5*3.0f - l*fontSize;
+	
+	codeLabels[address] = label;
 }
 
 void CViewDisassemble::ScrollToAddress(int addr)
@@ -226,7 +262,8 @@ void CViewDisassemble::EditBoxTextFinished(CGuiEditBoxText *editBox, char *text)
 
 
 void CViewDisassemble::SetViewParameters(float posX, float posY, float posZ, float sizeX, float sizeY,
-											CSlrFont *font, float fontSize, int numberOfLines, bool showHexCodes)
+										 CSlrFont *font, float fontSize, int numberOfLines,
+										 bool showHexCodes, bool showLabels)
 {
 	CGuiView::SetPosition(posX, posY, posZ, sizeX, sizeY);
 	
@@ -242,6 +279,19 @@ void CViewDisassemble::SetViewParameters(float posX, float posY, float posZ, flo
 	
 	this->markerSizeX = sizeX; //fontSize * 15.3f;
 	this->showHexCodes = showHexCodes;
+	this->showLabels = showLabels;
+	
+	if (showLabels)
+	{
+		// update labels positions
+		for (std::map<u16, CDisassembleCodeLabel *>::iterator it = codeLabels.begin(); it != codeLabels.end(); it++)
+		{
+			CDisassembleCodeLabel *label = it->second;
+			
+			int l = strlen(label->labelText)+1;
+			label->px = this->posX + fontSize5*4.0f - l*fontSize;
+		}
+	}
 }
 
 void CViewDisassemble::SetCurrentPC(int pc)
@@ -828,6 +878,27 @@ int CViewDisassemble::RenderDisassembleLine(float px, float py, int addr, uint8 
 		cr = colorNotExecuteR; cg = colorNotExecuteG; cb = colorNotExecuteB; ca = colorNotExecuteA;
 	}
 	
+	length = opcodes[op].addressingLength;
+
+	if (showLabels)
+	{
+		px += fontSize5*4.0f;
+
+		for (int i = 0; i < length; i++)
+		{
+			std::map<u16, CDisassembleCodeLabel *>::iterator it = codeLabels.find(addr + i);
+			
+			if (it != codeLabels.end())
+			{
+				CDisassembleCodeLabel *label = it->second;
+				// found a label
+				fontDisassemble->BlitTextColor(label->labelText, label->px, py, -1, fontSize, cr, cg, cb, ca);
+				
+				break;
+			}
+		}
+	}
+	
 	// addr
 	if (editCursorPos != EDIT_CURSOR_POS_ADDR)
 	{
@@ -866,7 +937,6 @@ int CViewDisassemble::RenderDisassembleLine(float px, float py, int addr, uint8 
 			float rx = px;
 			int cp = editCursorPos-EDIT_CURSOR_POS_HEX1;
 			
-			length = opcodes[op].addressingLength;
 			for (int i = 0; i < length; i++)
 			{
 				if (cp == i)
@@ -884,8 +954,6 @@ int CViewDisassemble::RenderDisassembleLine(float px, float py, int addr, uint8 
 		}
 		else
 		{
-			length = opcodes[op].addressingLength;
-			
 			strcpy(buf1, "         ");
 			
 			switch (length)
@@ -1063,18 +1131,21 @@ int CViewDisassemble::RenderDisassembleLine(float px, float py, int addr, uint8 
 	}
 
 	int numBytesPerOp = opcodes[op].addressingLength;
-	
-	int newAddress = addr + numBytesPerOp;
-	if (newAddress == renderStartAddress)
+
+	if (c64SettingsRenderDisassembleExecuteAware)
 	{
-		previousOpAddr = addr;
-//		LOGD("(M) previousOpAddr=%04x", previousOpAddr);
-	}
-	
-	if (addr == renderStartAddress)
-	{
-		nextOpAddr = addr+numBytesPerOp;
-//		LOGD("(M) nextOpAddr=%04x", nextOpAddr);
+		int newAddress = addr + numBytesPerOp;
+		if (newAddress == renderStartAddress)
+		{
+			previousOpAddr = addr;
+			//		LOGD("(M) previousOpAddr=%04x", previousOpAddr);
+		}
+		
+		if (addr == renderStartAddress)
+		{
+			nextOpAddr = addr+numBytesPerOp;
+			//		LOGD("(M) nextOpAddr=%04x", nextOpAddr);
+		}
 	}
 	
 	return numBytesPerOp;
@@ -1117,6 +1188,21 @@ void CViewDisassemble::RenderHexLine(float px, float py, int addr)
 	{
 		cr = colorNotExecuteR; cg = colorNotExecuteG; cb = colorNotExecuteB; ca = colorNotExecuteA;
 	}
+	
+	
+	if (showLabels)
+	{
+		px += fontSize5*4.0f;
+		
+		std::map<u16, CDisassembleCodeLabel *>::iterator it = codeLabels.find(addr);
+		
+		if (it != codeLabels.end())
+		{
+			CDisassembleCodeLabel *label = it->second;
+			// found a label
+			fontDisassemble->BlitTextColor(label->labelText, label->px, py, -1, fontSize, cr, cg, cb, ca);
+		}
+	}
 
 	// addr
 	if (editCursorPos != EDIT_CURSOR_POS_ADDR)
@@ -1153,13 +1239,20 @@ void CViewDisassemble::RenderHexLine(float px, float py, int addr)
 		}
 		
 		px += fontSize9;
-		
 		px += fontSize;
 	}
 	
 	if (editCursorPos != EDIT_CURSOR_POS_MNEMONIC)
 	{
-		fontDisassemble->BlitTextColor("???", px, py, -1, fontSize, cr, cg, cb, ca);
+		if (showHexCodes)
+		{
+			fontDisassemble->BlitTextColor("???", px, py, -1, fontSize, cr, cg, cb, ca);
+		}
+		else
+		{
+			sprintfHexCode8(buf1, op);			
+			fontDisassemble->BlitTextColor(buf1, px, py, -1, fontSize, cr, cg, cb, ca);
+		}
 	}
 	else
 	{
@@ -1168,7 +1261,16 @@ void CViewDisassemble::RenderHexLine(float px, float py, int addr)
 			if (editBoxText->textBuffer[0] == 0x00)
 			{
 				fontDisassemble->BlitTextColor(strCodeLine, px, py, -1, fontSize, colorExecuteR, colorExecuteG, colorExecuteB, colorExecuteA);
-				fontDisassemble->BlitTextColor("???", px, py, -1, fontSize, cr, cg, cb, ca);
+				
+				if (showHexCodes)
+				{
+					fontDisassemble->BlitTextColor("???", px, py, -1, fontSize, cr, cg, cb, ca);
+				}
+				else
+				{
+					sprintfHexCode8(buf1, op);
+					fontDisassemble->BlitTextColor(buf1, px, py, -1, fontSize, cr, cg, cb, ca);
+				}
 			}
 			else
 			{
@@ -1177,7 +1279,15 @@ void CViewDisassemble::RenderHexLine(float px, float py, int addr)
 		}
 		else
 		{
-			fontDisassemble->BlitTextColor("???", px, py, -1, fontSize, cr, cg, cb, ca);
+			if (showHexCodes)
+			{
+				fontDisassemble->BlitTextColor("???", px, py, -1, fontSize, cr, cg, cb, ca);
+			}
+			else
+			{
+				sprintfHexCode8(buf1, op);
+				fontDisassemble->BlitTextColor(buf1, px, py, -1, fontSize, cr, cg, cb, ca);
+			}
 		}
 	}
 
@@ -1187,19 +1297,21 @@ void CViewDisassemble::RenderHexLine(float px, float py, int addr)
 							markerSizeX, fontSize, cr, cg, cb, 0.3f);
 	}
 	
-	int newAddress = addr + 1;
-	if (newAddress == renderStartAddress)
+	if (c64SettingsRenderDisassembleExecuteAware)
 	{
-		previousOpAddr = addr;
-//		LOGD("(H) previousOpAddr=%04x", previousOpAddr);
+		int newAddress = addr + 1;
+		if (newAddress == renderStartAddress)
+		{
+			previousOpAddr = addr;
+			//		LOGD("(H) previousOpAddr=%04x", previousOpAddr);
+		}
+		
+		if (addr == renderStartAddress)
+		{
+			nextOpAddr = addr+1;
+			//		LOGD("(H) nextOpAddr=%04x", nextOpAddr);
+		}
 	}
-	
-	if (addr == renderStartAddress)
-	{
-		nextOpAddr = addr+1;
-//		LOGD("(H) nextOpAddr=%04x", nextOpAddr);
-	}
-
 }
 
 ///////////
@@ -1254,6 +1366,12 @@ void CViewDisassemble::UpdateDisassembleHexLine(float py, int addr)
 
 void CViewDisassemble::UpdateDisassemble(int startAddress, int endAddress)
 {
+	if (c64SettingsRenderDisassembleExecuteAware == false)
+	{
+		UpdateDisassembleNotExecuteAware(startAddress, endAddress);
+		return;
+	}
+	
 	guiMain->LockMutex();
 	
 	addrPositionCounter = 0;
@@ -1713,8 +1831,14 @@ void CViewDisassemble::Render()
 		this->cursorAddress = this->currentPC;
 	}
 	
-//	this->RenderDisassembleNotExecuteAware(this->cursorAddress, this->cursorAddress + 0x0100);
-	this->RenderDisassemble(this->cursorAddress, this->cursorAddress + 0x0100);
+	if (c64SettingsRenderDisassembleExecuteAware)
+	{
+		this->RenderDisassemble(this->cursorAddress, this->cursorAddress + 0x0100);
+	}
+	else
+	{
+		this->RenderDisassembleNotExecuteAware(this->cursorAddress, this->cursorAddress + 0x0100);
+	}
 	
 	this->renderBreakpointsMutex->Unlock();
 }
@@ -1751,6 +1875,8 @@ void CViewDisassemble::TogglePCBreakpoint(int addr)
 		renderBreakpoints[addr] = addr;
 
 		C64AddrBreakpoint *breakpoint = new C64AddrBreakpoint(addr);
+		breakpoint->actions = C64_ADDR_BREAKPOINT_ACTION_STOP;
+		
 		debugInterface->AddAddrBreakpoint(breakpointsMap, breakpoint);
 	}
 	
@@ -1765,13 +1891,24 @@ bool CViewDisassemble::DoTap(GLfloat x, GLfloat y)
 	
 	//if (hasFocus == false)
 	{
-		if (!(x >= posX && x <= (posX+fontSize * 4)))
+		float numChars = 4.0f;
+		if (showLabels == true)
+		{
+			numChars = 24.0f;
+		}
+
+		if (!(x >= posX && x <= (posX+fontSize * numChars)))
 		{
 			return false;
 		}
 	}
 
 	UpdateDisassemble(this->cursorAddress, this->cursorAddress + 0x0100);
+	
+	if (c64SettingsRenderDisassembleExecuteAware == false)
+	{
+		return DoTapNotExecuteAware(x, y);
+	}
 	
 	for (int i = 0; i < addrPositionCounter; i++)
 	{
@@ -2790,4 +2927,132 @@ void CViewDisassemble::RenderDisassembleNotExecuteAware(int startAddress, int en
 	
 }
 
+void CViewDisassemble::UpdateDisassembleNotExecuteAware(int startAddress, int endAddress)
+{
+	bool done = false;
+	short i;
+	uint8 op[3];
+	uint16 adr;
+	
+	float px = posX;
+	float py = posY;
+	
+	//	if (!range_args(31))  // 32 bytes unless end address specified
+	//		return;
+	
+	int renderAddress = startAddress;
+	int renderLinesBefore;
+	
+	CalcDisassembleStartNotExecuteAware(startAddress, &renderAddress, &renderLinesBefore);
+	
+	//LOGD("startAddress=%4.4x renderAddress=%4.4x  renderLinesBefore=%d", startAddress, renderAddress, renderLinesBefore);
+	
+	int numSkipLines = renderLinesBefore - numberOfLinesBack;
+	
+	if (renderLinesBefore <= 10)
+	{
+		py += (float)(numberOfLinesBack - renderLinesBefore) * fontSize;
+	}
+	
+	//LOGD("numSkipLines=%d", numSkipLines);
+	
+	do
+	{
+		//LOGD("renderAddress=%4.4x l=%4.4x", renderAddress, dataAdapter->AdapterGetDataLength());
+		if (renderAddress >= dataAdapter->AdapterGetDataLength())
+			break;
+		
+		adr = renderAddress;
+		
+		for (i=0; i<3; i++, adr++)
+		{
+			if (adr == endAddress)
+			{
+				done = true;
+			}
+			
+			byte v;
+			dataAdapter->AdapterReadByte(adr, &v);
+			op[i] = v;
+		}
+		
+		if (numSkipLines > 0)
+		{
+			numSkipLines--;
+			
+			renderAddress += opcodes[op[0]].addressingLength;
+		}
+		else
+		{
+			// bug: workaround
+			if (py >= posY-2.0f && py <= posY+2.0f)
+			{
+				renderStartAddress = renderAddress;
+				//LOGD("renderStartAddress=%4.4x", renderStartAddress);
+			}
+			int numBytesPerOp = opcodes[op[0]].addressingLength;
+			
+			int newAddress = renderAddress + numBytesPerOp;
+			if (newAddress == startAddress)
+			{
+				previousOpAddr = renderAddress;
+			}
+			
+			if (renderAddress == startAddress)
+			{
+				nextOpAddr = renderAddress+numBytesPerOp;
+			}
+			
+			renderAddress += numBytesPerOp;
+			
+			py += fontSize;
+			
+			if (py > posEndY)
+				break;
+			
+		}
+	}
+	while (!done);
+	
+}
 
+bool CViewDisassemble::DoTapNotExecuteAware(GLfloat x, GLfloat y)
+{
+	LOGG("CViewC64Disassemble::DoTapNotExecuteAware:  x=%f y=%f", x, y);
+	
+	float py = posY;
+	
+	u16 renderAddress = renderStartAddress;
+	uint8 op[3];
+	uint16 adr;
+	
+	while(true)
+	{
+		adr = renderAddress;
+		
+		//LOGD("y=%f py=%f renderAddress=%4.4x", y, py, renderAddress);
+		
+		if (y >= py && y <= (py + fontSize))
+		{
+			TogglePCBreakpoint(renderAddress);
+			break;
+		}
+		
+		
+		for (int i=0; i<3; i++, adr++)
+		{
+			dataAdapter->AdapterReadByte(adr, &(op[i]));
+		}
+		
+		renderAddress += opcodes[op[0]].addressingLength;
+		
+		py += fontSize;
+		
+		if (py > SCREEN_HEIGHT)
+			break;
+	}
+	
+	return true;
+	
+	return CGuiView::DoTap(x, y);
+}

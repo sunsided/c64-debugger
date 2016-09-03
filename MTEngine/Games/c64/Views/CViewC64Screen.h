@@ -79,9 +79,34 @@ public:
 	float rasterCrossSizeY4;
 	float rasterCrossSizeX6;
 	float rasterCrossSizeY6;
-
 	
 	void RenderRaster(int rasterX, int rasterY);
+	
+	bool showMarkers;
+	
+	void SetZoomedScreenPos(float zoomedScreenPosX, float zoomedScreenPosY, float zoomedScreenSizeX, float zoomedScreenSizeY);
+	void SetZoomedScreenLevel(float zoomedScreenLevel);
+	void CalcZoomedScreenTextureFromRaster(int rasterX, int rasterY);
+	void RenderZoomedScreen(int rasterX, int rasterY);
+	
+	bool showZoomedScreen;
+	float zoomedScreenPosX;
+	float zoomedScreenPosY;
+	float zoomedScreenSizeX;
+	float zoomedScreenSizeY;
+	float zoomedScreenCenterX;
+	float zoomedScreenCenterY;
+	float zoomedScreenLevel;
+	
+	float zoomedScreenImageStartX;
+	float zoomedScreenImageStartY;
+	float zoomedScreenImageSizeX;
+	float zoomedScreenImageSizeY;
+
+	float zoomedScreenRasterScaleFactorX;
+	float zoomedScreenRasterScaleFactorY;
+	float zoomedScreenRasterOffsetX;
+	float zoomedScreenRasterOffsetY;
 	
 };
 

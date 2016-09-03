@@ -31,6 +31,8 @@ bool c64SettingsSkipConfig = false;
 
 uint8 c64SettingsJoystickPort = 0;
 
+bool c64SettingsRenderDisassembleExecuteAware = true;
+
 uint8 c64SettingsMemoryValuesStyle = MEMORY_MAP_VALUES_STYLE_RGB;
 uint8 c64SettingsMemoryMarkersStyle = MEMORY_MAP_MARKER_STYLE_DEFAULT;
 bool c64SettingsUseMultiTouchInMemoryMap = false;
@@ -68,6 +70,8 @@ CSlrString *c64SettingsAudioOutDevice = NULL;
 int c64SettingsJmpOnStartupAddr = -1;
 
 int c64SettingsDoubleClickMS = 600;
+
+bool c64SettingsAutoJmp = false;
 
 void storeSettingBlock(CByteBuffer *byteBuffer, u8 value)
 {
@@ -146,6 +150,8 @@ void C64DebuggerStoreSettings()
 	storeSettingBool(byteBuffer, "FastBootPatch", c64SettingsFastBootKernalPatch);
 	
 	storeSettingU8(byteBuffer, "ScreenLayoutId", c64SettingsDefaultScreenLayoutId);
+	
+	storeSettingBool(byteBuffer, "DisassembleExecuteAware", c64SettingsRenderDisassembleExecuteAware);
 	
 	storeSettingBlock(byteBuffer, C64DEBUGGER_BLOCK_POSTLAUNCH);
 	storeSettingU8(byteBuffer, "JoystickPort", c64SettingsJoystickPort);
@@ -374,6 +380,11 @@ void C64DebuggerSetSetting(char *name, void *value)
 	{
 		bool v = *((bool*)value);
 		c64SettingsFastBootKernalPatch = v;
+	}
+	else if (!strcmp(name, "DisassembleExecuteAware"))
+	{
+		bool v = *((bool*)value);
+		c64SettingsRenderDisassembleExecuteAware = v;
 	}
 	else if (!strcmp(name, "ScreenLayoutId"))
 	{

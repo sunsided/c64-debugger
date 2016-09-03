@@ -190,6 +190,8 @@ const u32 specialKeycodesForConvert[NUM_SPECIAL_KEYCODES_FOR_CONVERT] =
 
 u32 SYS_KeyCodeConvertSpecial(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
+	LOGD("SYS_KeyCodeConvertSpecial: %x %d %d %d", keyCode, isShift, isAlt, isControl);
+
 	if (isShift || isAlt || isControl)
 	{
 		for (int i = 0; i < NUM_SPECIAL_KEYCODES_FOR_CONVERT; i++)
@@ -214,6 +216,13 @@ u32 SYS_KeyCodeConvertSpecial(u32 keyCode, bool isShift, bool isAlt, bool isCont
 		}
 	}
 	
+#if defined(WIN32)
+	if (isShift && keyCode == MTKEY_LALT)
+	{
+		keyCode |= MTKEY_SPECIAL_SHIFT;
+	}
+#endif
+
 	return keyCode;
 }
 

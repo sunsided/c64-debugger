@@ -1201,10 +1201,10 @@ void c64d_peek_whole_map_c64(BYTE *memoryBuffer)
 	char_in = (pport.data_read & 3) && ~(pport.data_read & 4);
 	io_in = (pport.data_read & 3) && (pport.data_read & 4);
 	
-	bufPtr = memoryBuffer;
+	bufPtr = memoryBuffer + 2;
 	
 	// 00
-	for (addr = 0x0000; addr < 0x1000; addr++)
+	for (addr = 0x0002; addr < 0x1000; addr++)
 	{
 		*bufPtr++ = mem_ram[addr];
 	}
@@ -1435,6 +1435,9 @@ BYTE c64d_mem_ram_read_c64(WORD addr)
 void c64d_copy_whole_mem_ram_c64(BYTE *destBuf)
 {
 	memcpy(destBuf, mem_ram, 0x010000);
+	
+	destBuf[0x0000] = pport.dir_read;
+	destBuf[0x0001] = (pport.data_read & (0xff - (((!pport.data_set_bit6) << 6) + ((!pport.data_set_bit7) << 7))));
 }
 
 void c64d_patch_kernal_fast_boot()

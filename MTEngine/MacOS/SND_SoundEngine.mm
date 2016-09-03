@@ -8,7 +8,9 @@
 #include "SYS_CFileSystem.h"
 #include "CSlrString.h"
 
-//#define WRITE_AUDIO_OUT_TO_FILE
+/// **** WRITE AUDIO TO DISK
+
+#define WRITE_AUDIO_OUT_TO_FILE
 
 CSoundEngine *gSoundEngine = NULL;
 

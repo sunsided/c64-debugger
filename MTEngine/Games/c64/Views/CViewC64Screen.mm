@@ -38,7 +38,20 @@ CViewC64Screen::CViewC64Screen(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	screenTexEndX = (float)debugInterface->GetC64ScreenSizeX() / 512.0f;
 	screenTexEndY = 1.0f - (float)debugInterface->GetC64ScreenSizeY() / 512.0f;
 
+	// zoomed screen
+	this->zoomedScreenLevel = 1.5f;
+	this->showZoomedScreen = false;
+	
+	this->showMarkers = false;
+	
 	this->SetPosition(posX, posY, posZ, sizeX, sizeY);
+	
+//	/// debug
+//	int rasterNum = 0x003A;
+//	C64AddrBreakpoint *addrBreakpoint = new C64AddrBreakpoint(rasterNum);
+//	debugInterface->breakpointsC64Raster[rasterNum] = addrBreakpoint;
+//	
+//	debugInterface->breakOnC64Raster = true;
 
 }
 
@@ -109,8 +122,107 @@ void CViewC64Screen::Render()
 		 sizeX,
 		 sizeY,
 		 0.0f, 1.0f, screenTexEndX, screenTexEndY);
+	
+	if (showMarkers)
+	{
+		// raster screen in hex:
+		// startx = 68 (88) endx = 1e8 (1c8)
+		// starty = 10 (32) endy = 120 ( fa)
 
+		float cys = posY + (float)0x0010 * rasterScaleFactorY  + rasterCrossOffsetY;
+		float cye = posY + (float)0x0120 * rasterScaleFactorY  + rasterCrossOffsetY;
+
+		float cxs = posX + (float)0x0068 * rasterScaleFactorX  + rasterCrossOffsetX;
+		float cxe = posX + (float)0x01E8 * rasterScaleFactorX  + rasterCrossOffsetX;
+
+		
+		// vertical lines
+		for (float rasterX = 103.5f; rasterX < 0x01e8; rasterX += 0x08)
+		{
+			float cx = posX + (float)rasterX * rasterScaleFactorX  + rasterCrossOffsetX;
+			
+			BlitLine(cx, cys, cx, cye, -1, 1.0f, 0.0f, 0.0f, 0.3f);
+		}
+		
+		// horizontal lines
+		for (float rasterY = 18.5f; rasterY < 0x0120; rasterY += 0x08)
+		{
+			float cy = posY + (float)rasterY * rasterScaleFactorY  + rasterCrossOffsetY;
+			
+			BlitLine(cxs, cy, cxe, cy, -1, 1.0f, 0.0f, 0.0f, 0.3f);
+		}
+		
+		
+//		float cx = posX + (float)rasterX * rasterScaleFactorX  + rasterCrossOffsetX;
+//		float cy = posY + (float)rasterY * rasterScaleFactorY  + rasterCrossOffsetY;
+	}
 }
+
+void CViewC64Screen::SetZoomedScreenPos(float zoomedScreenPosX, float zoomedScreenPosY, float zoomedScreenSizeX, float zoomedScreenSizeY)
+{
+	this->zoomedScreenPosX = zoomedScreenPosX;
+	this->zoomedScreenPosY = zoomedScreenPosY;
+	this->zoomedScreenSizeX = zoomedScreenSizeX;
+	this->zoomedScreenSizeY = zoomedScreenSizeY;
+	
+	this->zoomedScreenCenterX = zoomedScreenPosX + zoomedScreenSizeX/2.0f;
+	this->zoomedScreenCenterY = zoomedScreenPosY + zoomedScreenSizeY/2.0f;
+
+	this->SetZoomedScreenLevel(this->zoomedScreenLevel);
+	
+}
+
+void CViewC64Screen::SetZoomedScreenLevel(float zoomedScreenLevel)
+{
+	this->zoomedScreenLevel = zoomedScreenLevel;
+	
+	zoomedScreenImageSizeX = (float)debugInterface->GetC64ScreenSizeX() * zoomedScreenLevel;
+	zoomedScreenImageSizeY = (float)debugInterface->GetC64ScreenSizeY() * zoomedScreenLevel;
+
+	zoomedScreenRasterScaleFactorX = zoomedScreenImageSizeX / (float)384; //debugInterface->GetC64ScreenSizeX();
+	zoomedScreenRasterScaleFactorY = zoomedScreenImageSizeY / (float)272; //debugInterface->GetC64ScreenSizeY();
+	zoomedScreenRasterOffsetX =  -103.787 * zoomedScreenRasterScaleFactorX;
+	zoomedScreenRasterOffsetY = -15.500 * zoomedScreenRasterScaleFactorY;
+	
+}
+
+void CViewC64Screen::CalcZoomedScreenTextureFromRaster(int rasterX, int rasterY)
+{
+	float ttrx = (float)rasterX * zoomedScreenRasterScaleFactorX + zoomedScreenRasterOffsetX;
+	float ttry = (float)rasterY * zoomedScreenRasterScaleFactorY + zoomedScreenRasterOffsetY;
+
+	zoomedScreenImageStartX = zoomedScreenCenterX - ttrx;
+	zoomedScreenImageStartY = zoomedScreenCenterY - ttry;
+}
+
+
+void CViewC64Screen::RenderZoomedScreen(int rasterX, int rasterY)
+{
+	CalcZoomedScreenTextureFromRaster(rasterX, rasterY);
+	
+	SetClipping(zoomedScreenPosX, zoomedScreenPosY, zoomedScreenSizeX, zoomedScreenSizeY);
+	
+	//LOGD("x=%6.2f %6.2f  y=%6.2f y=%6.2f", zoomedScreenImageStartX, zoomedScreenImageStartY, zoomedScreenImageSizeX, zoomedScreenImageSizeY);
+	
+	Blit(imageScreen,
+		 zoomedScreenImageStartX,
+		 zoomedScreenImageStartY, -1,
+		 zoomedScreenImageSizeX,
+		 zoomedScreenImageSizeY,
+		 0.0f, 1.0f, screenTexEndX, screenTexEndY);
+	
+	// clipping
+	BlitRectangle(zoomedScreenPosX, zoomedScreenPosY, -1, zoomedScreenSizeX, zoomedScreenSizeY, 0.0f, 1.0f, 1.0f, 1.0f);
+	
+	
+	float rs = 1.0f;
+	float rs2 = rs*2.0f;
+	BlitFilledRectangle(zoomedScreenCenterX - rs, zoomedScreenPosY, -1, rs2, zoomedScreenSizeY, 1.0f, 0.0f, 0.0f, 0.3f);
+	BlitFilledRectangle(zoomedScreenPosX, zoomedScreenCenterY, -1, zoomedScreenSizeX, rs2, 1.0f, 0.0f, 0.0f, 0.3f);
+	
+	ResetClipping();
+}
+
 
 void CViewC64Screen::SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY)
 {
@@ -164,20 +276,19 @@ void CViewC64Screen::UpdateRasterCrossFactors()
 
 void CViewC64Screen::RenderRaster(int rasterX, int rasterY)
 {
-	static int min = 999999;
-	static int max = 0;
-
-	if (rasterX > max)
-	{
-		max = rasterX;
-	}
-	
-	if (rasterX < min)
-	{
-		min = rasterX;
-	}
-	
-//	LOGD("min=%d max=%d   sfx=%3.2f sfy=%3.2f", min, max, rasterScaleFactorX, rasterScaleFactorY);
+//	static int min = 999999;
+//	static int max = 0;
+//
+//	if (rasterX > max)
+//	{
+//		max = rasterX;
+//	}
+//	
+//	if (rasterX < min)
+//	{
+//		min = rasterX;
+//	}
+	//	LOGD("min=%d max=%d   sfx=%3.2f sfy=%3.2f", min, max, rasterScaleFactorX, rasterScaleFactorY);
 	
 	
 	float cx = posX + (float)rasterX * rasterScaleFactorX  + rasterCrossOffsetX;

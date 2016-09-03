@@ -17,8 +17,9 @@ void c64ShowCommandLineHelp()
 	printLine("\n");
 	printLine("-help  show this help\n");
 	printLine("\n");
-	printLine("-layout <id> start with layout id <1-8>\n");
+	printLine("-layout <id> start with layout id <1-%d>\n", C64_SCREEN_LAYOUT_MAX);
 	printLine("-breakpoints <file>  load breakpoints from file\n");
+	printLine("-vicesymbols <file>  load Vice symbols (code labels)");
 	printLine("\n");
 	printLine("-wait <ms>   wait before performing tasks\n");
 	printLine("-prg <file>  load PRG file into memory\n");
@@ -26,6 +27,7 @@ void c64ShowCommandLineHelp()
 	printLine("-crt <file>  attach cartridge\n");
 	printLine("-jmp <addr>  jmp to address\n");
 	printLine("             for example jmp x1000, jmp $1000 or jmp 4096\n");
+	printLine("-autojmp     automatically jmp to address if basic SYS is detected\n");
 	printLine("-snapshot <file>  load snapshot from file\n");
 	printLine("\n");
 	printLine("-clearsettings    clear all config settings");
@@ -121,7 +123,7 @@ void c64PerformStartupTasksThreaded()
 			//			delete file;
 			//		}
 			
-			viewC64->viewC64MainMenu->LoadPRG(c64SettingsPathPRG, false);
+			viewC64->viewC64MainMenu->LoadPRG(c64SettingsPathPRG, c64SettingsAutoJmp);
 		}
 		
 		if (c64SettingsJmpOnStartupAddr > 0 && c64SettingsJmpOnStartupAddr < 0x10000)
@@ -164,6 +166,15 @@ void C64DebuggerParseCommandLine2()
 		{
 			char *fname = c64ParseCommandLineGetArgument();
 			viewC64->symbols->ParseBreakpoints(fname, viewC64->debugInterface);
+		}
+		else if (!strcmp(cmd, "vicesymbols") || !strcmp(cmd, "vs"))
+		{
+			char *fname = c64ParseCommandLineGetArgument();
+			viewC64->symbols->ParseSymbols(fname, viewC64->debugInterface);
+		}
+		else if (!strcmp(cmd, "autojmp"))
+		{
+			c64SettingsAutoJmp = true;
 		}
 		else if (!strcmp(cmd, "d64"))
 		{

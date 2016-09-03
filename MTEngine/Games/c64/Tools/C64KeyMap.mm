@@ -362,7 +362,9 @@ void C64KeyMap::InitDefault()
 	
 	AddKeyCode(MTKEY_LCONTROL, 7, 2, NO_SHIFT);
 	AddKeyCode(MTKEY_LALT, 7, 5, NO_SHIFT);
-	
+
+	AddKeyCode(MTKEY_LALT | MTKEY_SPECIAL_SHIFT, 7, 5, LEFT_SHIFT);
+
 	AddKeyCode('`', 7, 1, NO_SHIFT);
 	
 	AddKeyCode('1', 7, 0, NO_SHIFT);

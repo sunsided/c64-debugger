@@ -47,13 +47,13 @@ void SYS_InitFileSystem()
 	NSString *bundleId = [[NSRunningApplication runningApplicationWithProcessIdentifier:getpid()] bundleIdentifier];
 	NSURL *directoryURL = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:bundleId] isDirectory:YES];
 	
-	NSLog(@"Create temp folder at: %@", directoryURL);
+	//NSLog(@"Create temp folder at: %@", directoryURL);
 	[[NSFileManager defaultManager] createDirectoryAtURL:directoryURL withIntermediateDirectories:YES attributes:nil error:&error];
 	
 	//gOSPathToTemp = [[NSString alloc] initWithFormat:@"%@/", [directoryURL path]];
 	gOSPathToTemp = [[NSString alloc] initWithFormat:@"%@", [directoryURL path]];
 	
-	NSLog(@"gOSPathToTemp=%@", gOSPathToTemp);
+	//NSLog(@"gOSPathToTemp=%@", gOSPathToTemp);
 	
 	/// get documents folder
 	NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
@@ -62,7 +62,7 @@ void SYS_InitFileSystem()
 	//gOSPathToDocuments = [[NSString alloc] initWithFormat:@"%@/", documentsDirectory];
 	gOSPathToDocuments = [[NSString alloc] initWithFormat:@"%@", documentsDirectory];
 	
-	NSLog(@"gOSPathToDocuments=%@", gOSPathToDocuments);
+	//NSLog(@"gOSPathToDocuments=%@", gOSPathToDocuments);
 	
 	
 	/// get settings folder
@@ -70,13 +70,13 @@ void SYS_InitFileSystem()
 	NSString *settingsDirectory = [paths firstObject];
 	directoryURL = [NSURL fileURLWithPath:[settingsDirectory stringByAppendingPathComponent:bundleId] isDirectory:YES];
 	
-	NSLog(@"Create settings folder at: %@", directoryURL);
+	//NSLog(@"Create settings folder at: %@", directoryURL);
 	[[NSFileManager defaultManager] createDirectoryAtURL:directoryURL withIntermediateDirectories:YES attributes:nil error:&error];
 	
 	//gOSPathToSettings = [[NSString alloc] initWithFormat:@"%@/", [directoryURL path]];
 	gOSPathToSettings = [[NSString alloc] initWithFormat:@"%@", [directoryURL path]];
 
-	NSLog(@"gOSPathToSettings=%@", gOSPathToSettings);
+	//NSLog(@"gOSPathToSettings=%@", gOSPathToSettings);
 
 	
 	// create CSlrString / ANSI-C versions
@@ -131,7 +131,7 @@ void SYS_InitFileSystem()
 
 	
 #endif
-	
+
 	
 	gFileSystem = new CFileSystem();
 }

@@ -249,6 +249,17 @@ void CSlrString::SetChar(u32 pos, u16 chr)
 	this->DebugPrint("CSlrString::SetChar: text=");
 }
 
+void CSlrString::RemoveCharAt(u32 pos)
+{
+	if (pos < GetLength())
+	{
+		this->chars->erase(this->chars->begin() + pos);
+		return;
+	}
+	
+	SYS_AssertCrash("CSlrString::RemoveCharAt: pos=%d length=%d", pos, GetLength());
+	this->DebugPrint("CSlrString::RemoveCharAt: text=");
+}
 
 bool CSlrString::Equals(char *text)
 {

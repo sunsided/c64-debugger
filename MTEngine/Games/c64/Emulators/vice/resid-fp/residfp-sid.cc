@@ -208,8 +208,10 @@ SIDFP::SIDFP()
   sample = 0;
   fir = 0;
 
-  set_sampling_parameters(985248, SAMPLE_INTERPOLATE, 44100);
+	set_sampling_parameters(985248, SAMPLE_RESAMPLE_INTERPOLATE, 44100); //SAMPLE_INTERPOLATE, 44100);
 
+//SAMPLE_RESAMPLE_INTERPOLATE
+	
   bus_value = 0;
   bus_value_ttl = 0;
 

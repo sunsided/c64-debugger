@@ -79,6 +79,12 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 	options->push_back(new CSlrString("50"));
 	options->push_back(new CSlrString("100"));
 	options->push_back(new CSlrString("200"));
+	
+	kbsSwitchNextMaximumSpeed = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Next maximum speed", ']', false, false, true);
+	viewC64->keyboardShortcuts->AddShortcut(kbsSwitchNextMaximumSpeed);
+	kbsSwitchPrevMaximumSpeed = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Previous maximum speed", '[', false, false, true);
+	viewC64->keyboardShortcuts->AddShortcut(kbsSwitchPrevMaximumSpeed);
+
 	menuItemMaximumSpeed = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("Maximum speed: "),
 												  NULL, tr, tg, tb, options, font, fontScale);
 	menuItemMaximumSpeed->SetSelectedOption(3, false);
@@ -259,6 +265,11 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 															 NULL, tr, tg, tb, options, font, fontScale);
 	menuItemFastBootKernalPatch->SetSelectedOption(c64SettingsFastBootKernalPatch, false);
 	viewMenu->AddMenuItem(menuItemFastBootKernalPatch);
+
+	menuItemDisassembleExecuteAware = new CViewC64MenuItemOption(fontHeight*2.0f, new CSlrString("Execute-aware disassemble: "),
+																 NULL, tr, tg, tb, options, font, fontScale);
+	menuItemDisassembleExecuteAware->SetSelectedOption(c64SettingsRenderDisassembleExecuteAware, false);
+	viewMenu->AddMenuItem(menuItemDisassembleExecuteAware);
 	
 
 	menuItemClearSettings = new CViewC64MenuItem(fontHeight*0.75f, new CSlrString("Clear settings to factory defaults"),
@@ -383,6 +394,11 @@ void CViewSettingsMenu::MenuCallbackItemChanged(CGuiViewMenuItem *menuItem)
 		
 		guiMain->ShowMessage("Please restart debugger to apply ROM changes");
 	}
+	else if (menuItem == menuItemDisassembleExecuteAware)
+	{
+		bool v = menuItemDisassembleExecuteAware->selectedOption == 0 ? false : true;
+		C64DebuggerSetSetting("DisassembleExecuteAware", &(v));
+	}
 	else if (menuItem == menuItemAudioOutDevice)
 	{
 		CSlrString *deviceName = (*menuItemAudioOutDevice->options)[menuItemAudioOutDevice->selectedOption];
@@ -446,36 +462,101 @@ void CViewSettingsMenu::MenuCallbackItemChanged(CGuiViewMenuItem *menuItem)
 	{
 		int sel = menuItemMaximumSpeed->selectedOption;
 		
+		int newMaximumSpeed = 100;
 		if (sel == 0)
 		{
-			int v = 10;
-			C64DebuggerSetSetting("EmulationMaximumSpeed", &v);
+			newMaximumSpeed = 10;
 		}
 		else if (sel == 1)
 		{
-			int v = 20;
-			C64DebuggerSetSetting("EmulationMaximumSpeed", &v);
+			newMaximumSpeed = 20;
 		}
 		else if (sel == 2)
 		{
-			int v = 50;
-			C64DebuggerSetSetting("EmulationMaximumSpeed", &v);
+			newMaximumSpeed = 50;
 		}
 		else if (sel == 3)
 		{
-			int v = 100;
-			C64DebuggerSetSetting("EmulationMaximumSpeed", &v);
+			newMaximumSpeed = 100;
 		}
 		else if (sel == 4)
 		{
-			int v = 200;
-			C64DebuggerSetSetting("EmulationMaximumSpeed", &v);
+			newMaximumSpeed = 200;
 		}
 		
+		SetEmulationMaximumSpeed(newMaximumSpeed);
 	}
 	
 	C64DebuggerStoreSettings();
 }
+
+void CViewSettingsMenu::SwitchNextMaximumSpeed()
+{
+	int newMaximumSpeed = 100;
+	switch(c64SettingsEmulationMaximumSpeed)
+	{
+		case 10:
+			newMaximumSpeed = 20;
+			break;
+		case 20:
+			newMaximumSpeed = 50;
+			break;
+		case 50:
+			newMaximumSpeed = 100;
+			break;
+		case 100:
+			newMaximumSpeed = 200;
+			break;
+		case 200:
+			newMaximumSpeed = 10;
+			break;
+		default:
+			newMaximumSpeed = 100;
+			break;
+	}
+	
+	SetEmulationMaximumSpeed(newMaximumSpeed);
+}
+
+void CViewSettingsMenu::SwitchPrevMaximumSpeed()
+{
+	int newMaximumSpeed = 100;
+	switch(c64SettingsEmulationMaximumSpeed)
+	{
+		case 10:
+			newMaximumSpeed = 200;
+			break;
+		case 20:
+			newMaximumSpeed = 10;
+			break;
+		case 50:
+			newMaximumSpeed = 20;
+			break;
+		case 100:
+			newMaximumSpeed = 50;
+			break;
+		case 200:
+			newMaximumSpeed = 100;
+			break;
+		default:
+			newMaximumSpeed = 100;
+			break;
+	}
+	
+	SetEmulationMaximumSpeed(newMaximumSpeed);
+	
+}
+
+void CViewSettingsMenu::SetEmulationMaximumSpeed(int maximumSpeed)
+{
+	C64DebuggerSetSetting("EmulationMaximumSpeed", &maximumSpeed);
+	
+	char *buf = SYS_GetCharBuf();
+	sprintf(buf, "Emulation speed set to %d", maximumSpeed);
+	guiMain->ShowMessage(buf);
+	SYS_ReleaseCharBuf(buf);
+}
+
 
 void CViewSettingsMenu::MenuCallbackItemEntered(CGuiViewMenuItem *menuItem)
 {

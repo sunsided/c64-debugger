@@ -1352,7 +1352,15 @@ void CViewBreakpoints::RenderAddrBreakpoints(std::map<uint16, C64AddrBreakpoint 
 				strTemp->Set(editHex->textWithCursor);
 			}
 		}
-		font->BlitTextColor(strTemp, px, py, -1, fontNumbersScale, tr, tg, tb, 1, FONT_ALIGN_LEFT);
+		
+		if (IS_SET(addrBreakpoint->actions, C64_ADDR_BREAKPOINT_ACTION_STOP))
+		{
+			font->BlitTextColor(strTemp, px, py, -1, fontNumbersScale, tr, tg, tb, 1, FONT_ALIGN_LEFT);
+		}
+		else
+		{
+			font->BlitTextColor(strTemp, px, py, -1, fontNumbersScale, 0.5f, 0.5f, 0.5f, 1, FONT_ALIGN_LEFT);
+		}
 		
 		elemNum++;
 		

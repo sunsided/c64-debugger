@@ -1,7 +1,7 @@
 #ifndef _GUI_C64_
 #define _GUI_C64_
 
-#define C64DEBUGGER_VERSION_STRING	"0.52"
+#define C64DEBUGGER_VERSION_STRING	"0.54"
 
 #include "CGuiView.h"
 #include "CGuiButton.h"
@@ -56,6 +56,7 @@ enum c64ScreenLayouts
 	C64_SCREEN_LAYOUT_C64_1541_DEBUGGER = 6,
 	//	C64_SCREEN_LAYOUT_C64_1541_DATA_DUMP,
 	C64_SCREEN_LAYOUT_MONITOR_CONSOLE = 7,
+	C64_SCREEN_LAYOUT_CYCLER = 8,
 	C64_SCREEN_LAYOUT_MAX
 };
 
@@ -69,6 +70,11 @@ public:
 	bool c64ScreenVisible;
 	float c64ScreenX, c64ScreenY;
 	float screenSizeX, screenSizeY;
+	bool c64ScreenShowMarkers;
+	bool c64ScreenShowZoomedScreen;
+	float c64ScreenZoomedX, c64ScreenZoomedY;
+	float c64ScreenZoomedSizeX, c64ScreenZoomedSizeY;
+	
 	bool c64StateVisible;
 	float c64StateX, c64StateY;
 	float c64StateFontSize;
@@ -81,12 +87,16 @@ public:
 	float c64DisassembleFontSize;
 	int c64DisassembleNumberOfLines;
 	bool c64DisassembleShowHexCodes;
+	bool c64DisassembleShowLabels;
+
 	bool drive1541DisassembleVisible;
 	float drive1541DisassembleX, drive1541DisassembleY;
 	float drive1541DisassembleSizeX, drive1541DisassembleSizeY;
 	float drive1541DisassembleFontSize;
 	int drive1541DisassembleNumberOfLines;
 	bool drive1541DisassembleShowHexCodes;
+	bool drive1541DisassembleShowLabels;
+
 	bool c64MemoryMapVisible;
 	float c64MemoryMapX, c64MemoryMapY;
 	float c64MemoryMapSizeX, c64MemoryMapSizeY;
@@ -122,6 +132,8 @@ public:
 	float c64StateVICX, c64StateVICY;
 	float c64StateVICFontSize;
 	bool c64StateVICIsVertical;
+	bool c64StateVICShowSprites;
+	
 	bool c64StateDrive1541Visible;
 	float c64StateDrive1541X, c64StateDrive1541Y;
 	float c64StateDrive1541FontSize;
