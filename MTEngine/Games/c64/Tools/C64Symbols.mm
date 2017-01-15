@@ -8,6 +8,7 @@
 #include "CViewC64.h"
 #include "CViewDisassemble.h"
 #include "CViewBreakpoints.h"
+#include "C64AsmSource.h"
 
 #include <fstream>
 #include <iostream>
@@ -24,21 +25,35 @@ C64Symbols::~C64Symbols()
 {
 }
 
-void C64Symbols::ParseSymbols(char *fileName, C64DebugInterface *debugInterface)
+void C64Symbols::ParseSymbols(CSlrString *fileName, C64DebugInterface *debugInterface)
 {
-	CSlrFileFromOS *file = new CSlrFileFromOS(fileName);
+	char *fname = fileName->GetStdASCII();
+	CSlrFileFromOS *file = new CSlrFileFromOS(fname);
 	
 	if (file->Exists() == false)
 	{
-		LOGError("C64Symbols::ParseSymbols: file %s does not exist", fileName);
+		LOGError("C64Symbols::ParseSymbols: file %s does not exist", fname);
+		delete [] fname;
 		return;
 	}
+	delete [] fname;
+	
 	CByteBuffer *byteBuffer = new CByteBuffer(file, false);
 	
 	ParseSymbols(byteBuffer, debugInterface);
 	
 	delete byteBuffer;
 	delete file;
+}
+
+void C64Symbols::ClearSymbols(C64DebugInterface *debugInterface)
+{
+	debugInterface->LockMutex();
+
+	viewC64->viewC64Disassemble->ClearCodeLabels();
+	viewC64->viewDrive1541Disassemble->ClearCodeLabels();
+	
+	debugInterface->UnlockMutex();
 }
 
 void C64Symbols::ParseSymbols(CByteBuffer *byteBuffer, C64DebugInterface *debugInterface)
@@ -185,17 +200,26 @@ void C64Symbols::ParseSymbols(CByteBuffer *byteBuffer, C64DebugInterface *debugI
 }
 
 
-
-
-void C64Symbols::ParseBreakpoints(char *fileName, C64DebugInterface *debugInterface)
+void C64Symbols::ClearBreakpoints(C64DebugInterface *debugInterface)
 {
-	CSlrFileFromOS *file = new CSlrFileFromOS(fileName);
+	viewC64->debugInterface->LockMutex();
+	viewC64->debugInterface->ClearBreakpoints();
+	viewC64->debugInterface->UnlockMutex();
+}
+
+void C64Symbols::ParseBreakpoints(CSlrString *fileName, C64DebugInterface *debugInterface)
+{
+	char *fname = fileName->GetStdASCII();
+	CSlrFileFromOS *file = new CSlrFileFromOS(fname);
 	
 	if (file->Exists() == false)
 	{
-		LOGError("C64Symbols::ParseBreakpoints: file %s does not exist", fileName);
+		LOGError("C64Symbols::ParseBreakpoints: file %s does not exist", fname);
+		delete [] fname;
 		return;
 	}
+	delete [] fname;
+	
 	CByteBuffer *byteBuffer = new CByteBuffer(file, false);
 	
 	ParseBreakpoints(byteBuffer, debugInterface);
@@ -488,3 +512,57 @@ void C64Symbols::ParseBreakpoints(CByteBuffer *byteBuffer, C64DebugInterface *de
 	
 	LOGD("C64Symbols::ParseBreakpoints: done");
 }
+
+///
+
+void C64Symbols::ParseSourceDebugInfo(CSlrString *fileName, C64DebugInterface *debugInterface)
+{
+	char *fname = fileName->GetStdASCII();
+	CSlrFileFromOS *file = new CSlrFileFromOS(fname);
+	
+	if (file->Exists() == false)
+	{
+		LOGError("C64Symbols::ParseSourceDebugInfo: file %s does not exist", fname);
+		delete [] fname;
+		return;
+	}
+	delete [] fname;
+	
+	CByteBuffer *byteBuffer = new CByteBuffer(file, false);
+	
+	ParseSourceDebugInfo(byteBuffer, debugInterface);
+	
+	delete byteBuffer;
+	delete file;
+}
+
+void C64Symbols::ClearSourceDebugInfo(C64DebugInterface *debugInterface)
+{
+	debugInterface->LockMutex();
+	
+	delete this->asmSource;
+	this->asmSource = NULL;
+	
+	debugInterface->UnlockMutex();
+}
+
+void C64Symbols::ParseSourceDebugInfo(CByteBuffer *byteBuffer, C64DebugInterface *debugInterface)
+{
+	LOGM("C64Symbols::ParseSourceDebugInfo");
+	
+	debugInterface->LockMutex();
+	
+	if (this->asmSource != NULL)
+	{
+		delete this->asmSource;
+		asmSource = NULL;
+	}
+	
+	this->asmSource = new C64AsmSource(byteBuffer, debugInterface);
+	
+	
+	debugInterface->UnlockMutex();
+	
+	LOGD("C64Symbols::ParseSymbols: done");
+}
+

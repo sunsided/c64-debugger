@@ -26,11 +26,13 @@
 // generalise using adaptor to read data ("C64MemoryAdaptor", "DiskAdaptor") with GetByte returning bool SKIP to not update display
 // (but will it be performant enough?)
 
-const float dataColorSpeed = 0.020;
-const float dataAlphaSpeed = 0.020;
+float speedDivider = 1.0f;
 
-const float codeColorSpeed = 0.07;
-const float codeAlphaSpeed = 0.10;
+float dataColorSpeed = 0.020 / speedDivider;
+float dataAlphaSpeed = 0.020 / speedDivider;
+
+float codeColorSpeed = 0.07 / speedDivider;
+float codeAlphaSpeed = 0.10 / speedDivider;
 
 const float alphaSplit = 0.55f;
 const float colorSplit = 0.5f;
@@ -54,6 +56,17 @@ float colorExecuteArgumentR2 = colorExecuteArgumentR;
 float colorExecuteArgumentG2 = colorExecuteArgumentG;
 float colorExecuteArgumentB2 = colorExecuteArgumentB;
 float colorExecuteArgumentA2 = 1.0f; //colorExecuteArgumentA * fce;
+
+void C64DebuggerSetMemoryMapCellsFadeSpeed(float fadeSpeed)
+{
+	speedDivider = 1 / fadeSpeed;
+
+	dataColorSpeed = 0.020 / speedDivider;
+	dataAlphaSpeed = 0.020 / speedDivider;
+	
+	codeColorSpeed = 0.07 / speedDivider;
+	codeAlphaSpeed = 0.10 / speedDivider;
+}
 
 // rgb color is represented as <0.0, 1.0>
 // returned rgba is later clamped after adding read/write markers

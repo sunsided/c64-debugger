@@ -136,7 +136,7 @@ static int sdl_init(const char *param, int *speed,
 {
     int nr;
 
-	LOGD("soundsdl: sdl_init, channels=%d fragsize=%d", *channels, *fragsize);
+	LOGD("soundsdl: sdl_init, channels=%d fragsize=%d *fragnr=", *channels, *fragsize, *fragnr);
 	
 	sidNumChannels = *channels;
 	

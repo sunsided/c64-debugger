@@ -16,6 +16,10 @@
 #include <sys/time.h>
 #endif
 
+#ifdef MACOS
+#import <Cocoa/Cocoa.h>
+#endif
+
 #include <stdlib.h>
 #include <pthread.h>
 #include "DBG_Log.h"
@@ -186,6 +190,13 @@ void SYS_NotImplemented()
 void GUI_ShowFatalExitAlert(char *errorMsg);
 void GUI_ShowCleanExitAlert(char *errorMsg);
 
+
+///
+#ifdef LINUX
+void GtkMessageBox(const char* text, const char* caption);
+#endif
+
+
 void SYS_FatalExit(char *fmt, ... )
 {
 	LOGError("SYS_FatalExit:");
@@ -204,28 +215,20 @@ void SYS_FatalExit(char *fmt, ... )
 #endif
 
 #ifdef WIN32
-#ifdef FINAL_RELEASE
+//#ifdef FINAL_RELEASE
 	MessageBox(NULL, buffer, "Fatal Error", MB_OK|MB_ICONEXCLAMATION);
 	SYS_CreateMiniDump( NULL );
+//#endif
 #endif
+
+#ifdef LINUX
+	GtkMessageBox(buffer, "Fatal Error");
 #endif
 
 #ifndef FINAL_RELEASE
 	abort();
 #endif
 	exit(-1);
-}
-
-// blame slajreek
-void BlitFilledRectangle(GLfloat destX, GLfloat destY, GLfloat z, GLfloat sizeX, GLfloat sizeY,
-						 GLfloat colorR, GLfloat colorG, GLfloat colorB, GLfloat alpha);
-#define SCREEN_WIDTH 640
-#define SCREEN_HEIGHT 480
-
-
-void SYS_BlitMarker()
-{
-	BlitFilledRectangle(0, 0, -1, SCREEN_WIDTH, SCREEN_HEIGHT, 1.0, 0.2, 0.2, 1.0);
 }
 
 void SYS_FatalExit(const char *fmt, ... )
@@ -248,14 +251,32 @@ void SYS_FatalExit(const char *fmt, ... )
 	
 #endif
 
-	abort();
-
 #ifdef WIN32
-#ifdef FINAL_RELEASE
+//#ifdef FINAL_RELEASE
 	MessageBox(NULL, buffer, "Fatal Error", MB_OK|MB_ICONEXCLAMATION);
 	SYS_CreateMiniDump( NULL );
+//#endif
 #endif
+
+#ifdef MACOS
+	NSString *str = [NSString stringWithUTF8String:buffer];
+	
+	NSAlert *alert = [[NSAlert alloc] init];
+	[alert addButtonWithTitle:@"OK"];
+	//[alert addButtonWithTitle:@"Cancel"];
+	[alert setMessageText:@"Fatal Error!"];
+	[alert setInformativeText:str];
+	[alert setAlertStyle:NSCriticalAlertStyle];
+	
+	if ([alert runModal] == NSAlertFirstButtonReturn) {
+	}
+	[alert release];
 #endif
+
+#ifdef LINUX
+	GtkMessageBox((const char*)buffer, "Fatal Error");
+#endif
+
 
 #ifndef FINAL_RELEASE
 	abort();
@@ -268,10 +289,10 @@ void SYS_FatalExit()
 	LOGError("SYS_FatalExit()");
 
 #ifdef WIN32
-#ifdef FINAL_RELEASE
+//#ifdef FINAL_RELEASE
 	MessageBox(NULL, "Fatal Exit", "Fatal Error", MB_OK|MB_ICONEXCLAMATION);
 	SYS_CreateMiniDump( NULL );
-#endif
+//#endif
 #endif
 
 #ifdef IOS
@@ -281,11 +302,104 @@ void SYS_FatalExit()
 #ifndef FINAL_RELEASE
 	abort();
 #endif
+	
+#ifdef MACOS
+	NSAlert *alert = [[NSAlert alloc] init];
+	[alert addButtonWithTitle:@"OK"];
+	//[alert addButtonWithTitle:@"Cancel"];
+	[alert setMessageText:@"Fatal Error!"];
+	[alert setInformativeText:@"Fatal error occured and application must close."];
+	[alert setAlertStyle:NSCriticalAlertStyle];
+	
+	if ([alert runModal] == NSAlertFirstButtonReturn) {
+	}
+	[alert release];
+#endif
+
+#ifdef LINUX
+	GtkMessageBox("Fatal error occured and application must close.", "Fatal Error");
+#endif
+
 
 	exit(-1);
 }
 
 /////////////
+void SYS_ShowError(char *fmt, ... )
+{
+	char buffer[4096] = {0};
+	
+	va_list args;
+	
+	va_start(args, fmt);
+	vsprintf(buffer, fmt, args);
+	va_end(args);
+	
+	LOGError(buffer);
+
+#ifdef WIN32
+	MessageBox(NULL, buffer, "Error", MB_OK | MB_ICONERROR);
+#endif
+
+#ifdef MACOS
+	NSString *str = [NSString stringWithUTF8String:buffer];
+	
+	NSAlert *alert = [[NSAlert alloc] init];
+	[alert addButtonWithTitle:@"OK"];
+	//[alert addButtonWithTitle:@"Cancel"];
+	[alert setMessageText:str];
+//	[alert setInformativeText:@"Informative text."];
+	[alert setAlertStyle:NSWarningAlertStyle];
+	
+	if ([alert runModal] == NSAlertFirstButtonReturn) {
+	}
+	[alert release];
+#endif
+	
+#ifdef LINUX
+
+	GtkMessageBox(buffer, "Error");
+
+#endif
+}
+
+void SYS_ShowError(const char *fmt, ... )
+{
+	char buffer[4096] = {0};
+	
+	va_list args;
+	
+	va_start(args, fmt);
+	vsprintf(buffer, fmt, args);
+	va_end(args);
+	
+	LOGError(buffer);
+	
+#ifdef WIN32
+	MessageBox(NULL, buffer, "Error", MB_OK | MB_ICONERROR);
+#endif
+	
+#ifdef MACOS
+	NSString *str = [NSString stringWithUTF8String:buffer];
+	
+	NSAlert *alert = [[NSAlert alloc] init];
+	[alert addButtonWithTitle:@"OK"];
+	//[alert addButtonWithTitle:@"Cancel"];
+	[alert setMessageText:str];
+	//	[alert setInformativeText:@"Informative text."];
+	[alert setAlertStyle:NSWarningAlertStyle];
+	
+	if ([alert runModal] == NSAlertFirstButtonReturn) {
+	}
+	[alert release];
+#endif
+	
+#ifdef LINUX
+	GtkMessageBox(buffer, "Error");
+#endif
+
+
+}
 
 void SYS_CleanExit(char *fmt, ... )
 {
@@ -304,11 +418,11 @@ void SYS_CleanExit(char *fmt, ... )
 	GUI_ShowCleanExitAlert(buffer);
 #endif
 	
-#ifdef WIN32
-#ifdef FINAL_RELEASE
-	MessageBox(NULL, buffer, "Clean Exit", MB_OK);
-#endif
-#endif
+//#ifdef WIN32
+//#ifdef FINAL_RELEASE
+//	MessageBox(NULL, buffer, "Clean Exit", MB_OK);
+//#endif
+//#endif
 	
 	exit(0);
 }
@@ -330,11 +444,11 @@ void SYS_CleanExit(const char *fmt, ... )
 	GUI_ShowCleanExitAlert(buffer);
 #endif
 	
-#ifdef WIN32
-#ifdef FINAL_RELEASE
-	MessageBox(NULL, buffer, "Clean Exit", MB_OK);
-#endif
-#endif
+//#ifdef WIN32
+//#ifdef FINAL_RELEASE
+//	MessageBox(NULL, buffer, "Clean Exit", MB_OK);
+//#endif
+//#endif
 	
 	exit(0);
 }
@@ -343,11 +457,11 @@ void SYS_CleanExit()
 {
 	LOGM("SYS_CleanExit()");
 	
-#ifdef WIN32
-#ifdef FINAL_RELEASE
-	MessageBox(NULL, "Clean Exit", "Clean Exit", MB_OK);
-#endif
-#endif
+//#ifdef WIN32
+//#ifdef FINAL_RELEASE
+//	MessageBox(NULL, "Clean Exit", "Clean Exit", MB_OK);
+//#endif
+//#endif
 	
 #ifdef IOS
 	GUI_ShowCleanExitAlert("Clean Exit");
@@ -430,6 +544,18 @@ void SYS_AssertCrashInRelease(const char *fmt, ...)
 	abort();
 #endif
 	
+}
+
+// blame slajerek
+void BlitFilledRectangle(GLfloat destX, GLfloat destY, GLfloat z, GLfloat sizeX, GLfloat sizeY,
+						 GLfloat colorR, GLfloat colorG, GLfloat colorB, GLfloat alpha);
+#define SCREEN_WIDTH 640
+#define SCREEN_HEIGHT 480
+
+
+void SYS_BlitMarker()
+{
+	BlitFilledRectangle(0, 0, -1, SCREEN_WIDTH, SCREEN_HEIGHT, 1.0, 0.2, 0.2, 1.0);
 }
 
 
@@ -553,9 +679,15 @@ std::list<char *> charBufsPool;
 
 pthread_mutex_t charBufsMutex;
 
+bool _sysCharBufsInit = false;
+
 void SYS_InitCharBufPool()
 {
-	pthread_mutex_init(&charBufsMutex, NULL);
+	if (_sysCharBufsInit == false)
+	{
+		pthread_mutex_init(&charBufsMutex, NULL);
+		_sysCharBufsInit = true;
+	}
 }
 
 char *SYS_GetCharBuf()

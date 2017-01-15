@@ -143,6 +143,25 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 	//
 	options = new std::vector<CSlrString *>();
 	options->push_back(new CSlrString("1"));
+	options->push_back(new CSlrString("10"));
+	options->push_back(new CSlrString("20"));
+	options->push_back(new CSlrString("50"));
+	options->push_back(new CSlrString("100"));
+	options->push_back(new CSlrString("200"));
+	options->push_back(new CSlrString("300"));
+	options->push_back(new CSlrString("400"));
+	options->push_back(new CSlrString("500"));
+	options->push_back(new CSlrString("1000"));
+	
+	menuItemMemoryMapFadeSpeed = new CViewC64MenuItemOption(fontHeight, new CSlrString("Markers fade out speed: "),
+													  NULL, tr, tg, tb, options, font, fontScale);
+	menuItemMemoryMapFadeSpeed->SetSelectedOption(5, false);
+	viewMenu->AddMenuItem(menuItemMemoryMapFadeSpeed);
+
+	
+	//
+	options = new std::vector<CSlrString *>();
+	options->push_back(new CSlrString("1"));
 	options->push_back(new CSlrString("2"));
 	options->push_back(new CSlrString("4"));
 	options->push_back(new CSlrString("10"));
@@ -170,6 +189,67 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 	menuItemMultiTouchMemoryMap->SetSelectedOption(c64SettingsUseMultiTouchInMemoryMap, false);
 	viewMenu->AddMenuItem(menuItemMultiTouchMemoryMap);
 #endif
+
+	//
+	menuItemScreenRasterViewfinderScale = new CViewC64MenuItemFloat(fontHeight, new CSlrString("Screen viewfinder scale: "),
+																	NULL, tr, tg, tb,
+																	0.05f, 25.0f, 0.05f, font, fontScale);
+	menuItemScreenRasterViewfinderScale->SetValue(1.5f, false);
+	viewMenu->AddMenuItem(menuItemScreenRasterViewfinderScale);
+	
+	menuItemScreenGridLinesAlpha = new CViewC64MenuItemFloat(fontHeight, new CSlrString("Screen grid lines alpha: "),
+															 NULL, tr, tg, tb,
+															 0.0f, 1.0f, 0.05f, font, fontScale);
+	menuItemScreenGridLinesAlpha->SetValue(0.35f, false);
+	viewMenu->AddMenuItem(menuItemScreenGridLinesAlpha);
+
+	options = new std::vector<CSlrString *>();
+	options->push_back(new CSlrString("red"));
+	options->push_back(new CSlrString("green"));
+	options->push_back(new CSlrString("blue"));
+	options->push_back(new CSlrString("black"));
+	options->push_back(new CSlrString("dark gray"));
+	options->push_back(new CSlrString("light gray"));
+	options->push_back(new CSlrString("white"));
+	
+	menuItemScreenGridLinesColorScheme = new CViewC64MenuItemOption(fontHeight, new CSlrString("Grid lines: "),
+																			  NULL, tr, tg, tb, options, font, fontScale);
+	menuItemScreenGridLinesColorScheme->SetSelectedOption(0, false);
+	viewMenu->AddMenuItem(menuItemScreenGridLinesColorScheme);
+
+	menuItemScreenRasterCrossLinesAlpha = new CViewC64MenuItemFloat(fontHeight, new CSlrString("Raster cross lines alpha: "),
+																	NULL, tr, tg, tb,
+																	0.0f, 1.0f, 0.05f, font, fontScale);
+	menuItemScreenRasterCrossLinesAlpha->SetValue(0.35f, false);
+	viewMenu->AddMenuItem(menuItemScreenRasterCrossLinesAlpha);
+
+	menuItemScreenRasterCrossLinesColorScheme = new CViewC64MenuItemOption(fontHeight, new CSlrString("Raster cross lines: "),
+																	NULL, tr, tg, tb, options, font, fontScale);
+	menuItemScreenRasterCrossLinesColorScheme->SetSelectedOption(6, false);
+	viewMenu->AddMenuItem(menuItemScreenRasterCrossLinesColorScheme);
+	
+
+	menuItemScreenRasterCrossAlpha = new CViewC64MenuItemFloat(fontHeight, new CSlrString("Raster cross alpha: "),
+																	NULL, tr, tg, tb,
+																	0.0f, 1.0f, 0.05f, font, fontScale);
+	menuItemScreenRasterCrossAlpha->SetValue(0.85f, false);
+	viewMenu->AddMenuItem(menuItemScreenRasterCrossAlpha);
+	
+	menuItemScreenRasterCrossInteriorColorScheme = new CViewC64MenuItemOption(fontHeight, new CSlrString("Raster cross interior: "),
+																			  NULL, tr, tg, tb, options, font, fontScale);
+	menuItemScreenRasterCrossInteriorColorScheme->SetSelectedOption(4, false);
+	viewMenu->AddMenuItem(menuItemScreenRasterCrossInteriorColorScheme);
+
+	menuItemScreenRasterCrossExteriorColorScheme = new CViewC64MenuItemOption(fontHeight, new CSlrString("Raster cross exterior: "),
+																			  NULL, tr, tg, tb, options, font, fontScale);
+	menuItemScreenRasterCrossExteriorColorScheme->SetSelectedOption(0, false);
+	viewMenu->AddMenuItem(menuItemScreenRasterCrossExteriorColorScheme);
+	
+	menuItemScreenRasterCrossTipColorScheme = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("Raster cross tip: "),
+																			  NULL, tr, tg, tb, options, font, fontScale);
+	menuItemScreenRasterCrossTipColorScheme->SetSelectedOption(3, false);
+	viewMenu->AddMenuItem(menuItemScreenRasterCrossTipColorScheme);
+	
 
 	//
 	// memory mapping can be initialised only on startup
@@ -212,7 +292,10 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 
 	
 	//
-	
+	options = new std::vector<CSlrString *>();
+	options->push_back(new CSlrString("No"));
+	options->push_back(new CSlrString("Yes"));
+
 	kbsUseKeboardAsJoystick = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Use keyboard as joystick", 'y', false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsUseKeboardAsJoystick);
 	menuItemUseKeyboardAsJoystick = new CViewC64MenuItemOption(fontHeight, new CSlrString("Use keyboard as joystick: "),
@@ -270,9 +353,16 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 																 NULL, tr, tg, tb, options, font, fontScale);
 	menuItemDisassembleExecuteAware->SetSelectedOption(c64SettingsRenderDisassembleExecuteAware, false);
 	viewMenu->AddMenuItem(menuItemDisassembleExecuteAware);
+
+	
+	menuItemWindowAlwaysOnTop = new CViewC64MenuItemOption(fontHeight*2.0f, new CSlrString("Window always on top: "),
+																 NULL, tr, tg, tb, options, font, fontScale);
+	menuItemWindowAlwaysOnTop->SetSelectedOption(c64SettingsWindowAlwaysOnTop, false);
+	viewMenu->AddMenuItem(menuItemWindowAlwaysOnTop);
 	
 
-	menuItemClearSettings = new CViewC64MenuItem(fontHeight*0.75f, new CSlrString("Clear settings to factory defaults"),
+	float d = 1.25f;//0.75f;
+	menuItemClearSettings = new CViewC64MenuItem(fontHeight*d, new CSlrString("Clear settings to factory defaults"),
 															 NULL, tr, tg, tb);
 	viewMenu->AddMenuItem(menuItemClearSettings);
 
@@ -399,6 +489,11 @@ void CViewSettingsMenu::MenuCallbackItemChanged(CGuiViewMenuItem *menuItem)
 		bool v = menuItemDisassembleExecuteAware->selectedOption == 0 ? false : true;
 		C64DebuggerSetSetting("DisassembleExecuteAware", &(v));
 	}
+	else if (menuItem == menuItemWindowAlwaysOnTop)
+	{
+		bool v = menuItemWindowAlwaysOnTop->selectedOption == 0 ? false : true;
+		C64DebuggerSetSetting("WindowAlwaysOnTop", &(v));
+	}
 	else if (menuItem == menuItemAudioOutDevice)
 	{
 		CSlrString *deviceName = (*menuItemAudioOutDevice->options)[menuItemAudioOutDevice->selectedOption];
@@ -457,6 +552,100 @@ void CViewSettingsMenu::MenuCallbackItemChanged(CGuiViewMenuItem *menuItem)
 			int v = 20;
 			C64DebuggerSetSetting("MemMapRefresh", &v);
 		}
+	}
+	else if (menuItem == menuItemScreenGridLinesAlpha)
+	{
+		float v = menuItemScreenGridLinesAlpha->value;
+		C64DebuggerSetSetting("GridLinesAlpha", &v);
+	}
+	else if (menuItem == menuItemScreenGridLinesColorScheme)
+	{
+		int v = menuItemScreenGridLinesColorScheme->selectedOption;
+		C64DebuggerSetSetting("GridLinesColor", &v);
+	}
+	else if (menuItem == menuItemScreenRasterViewfinderScale)
+	{
+		float v = menuItemScreenRasterViewfinderScale->value;
+		C64DebuggerSetSetting("ViewfinderScale", &v);
+	}
+	else if (menuItem == menuItemScreenRasterCrossLinesAlpha)
+	{
+		float v = menuItemScreenRasterCrossLinesAlpha->value;
+		C64DebuggerSetSetting("CrossLinesAlpha", &v);
+	}
+	else if (menuItem == menuItemScreenRasterCrossLinesColorScheme)
+	{
+		int v = menuItemScreenRasterCrossLinesColorScheme->selectedOption;
+		C64DebuggerSetSetting("CrossLinesColor", &v);
+	}
+	else if (menuItem == menuItemScreenRasterCrossAlpha)
+	{
+		float v = menuItemScreenRasterCrossAlpha->value;
+		C64DebuggerSetSetting("CrossAlpha", &v);
+	}
+	else if (menuItem == menuItemScreenRasterCrossInteriorColorScheme)
+	{
+		int v = menuItemScreenRasterCrossInteriorColorScheme->selectedOption;
+		C64DebuggerSetSetting("CrossInteriorColor", &v);
+	}
+	else if (menuItem == menuItemScreenRasterCrossExteriorColorScheme)
+	{
+		int v = menuItemScreenRasterCrossExteriorColorScheme->selectedOption;
+		C64DebuggerSetSetting("CrossExteriorColor", &v);
+	}
+	else if (menuItem == menuItemScreenRasterCrossTipColorScheme)
+	{
+		int v = menuItemScreenRasterCrossTipColorScheme->selectedOption;
+		C64DebuggerSetSetting("CrossTipColor", &v);
+	}
+	//
+	else if (menuItem == menuItemMemoryMapFadeSpeed)
+	{
+		int sel = menuItemMemoryMapFadeSpeed->selectedOption;
+		
+		int newFadeSpeed = 100;
+		if (sel == 0)
+		{
+			newFadeSpeed = 1;
+		}
+		else if (sel == 1)
+		{
+			newFadeSpeed = 10;
+		}
+		else if (sel == 2)
+		{
+			newFadeSpeed = 20;
+		}
+		else if (sel == 3)
+		{
+			newFadeSpeed = 50;
+		}
+		else if (sel == 4)
+		{
+			newFadeSpeed = 100;
+		}
+		else if (sel == 5)
+		{
+			newFadeSpeed = 200;
+		}
+		else if (sel == 6)
+		{
+			newFadeSpeed = 300;
+		}
+		else if (sel == 7)
+		{
+			newFadeSpeed = 400;
+		}
+		else if (sel == 8)
+		{
+			newFadeSpeed = 500;
+		}
+		else if (sel == 9)
+		{
+			newFadeSpeed = 1000;
+		}
+		
+		C64DebuggerSetSetting("MemMapFadeSpeed", &newFadeSpeed);
 	}
 	else if (menuItem == menuItemMaximumSpeed)
 	{
@@ -572,22 +761,22 @@ void CViewSettingsMenu::MenuCallbackItemEntered(CGuiViewMenuItem *menuItem)
 			delete viewC64->viewC64MainMenu->menuItemInsertD64->str2;
 		viewC64->viewC64MainMenu->menuItemInsertD64->str2 = NULL;
 		
-		delete c64SettingsPathD64;
-		c64SettingsPathD64 = NULL;
+		delete c64SettingsPathToD64;
+		c64SettingsPathToD64 = NULL;
 		
 		if (viewC64->viewC64MainMenu->menuItemInsertCartridge->str2 != NULL)
 			delete viewC64->viewC64MainMenu->menuItemInsertCartridge->str2;
 		viewC64->viewC64MainMenu->menuItemInsertCartridge->str2 = NULL;
 		
-		delete c64SettingsPathCartridge;
-		c64SettingsPathCartridge = NULL;
+		delete c64SettingsPathToCartridge;
+		c64SettingsPathToCartridge = NULL;
 
 		if (viewC64->viewC64MainMenu->menuItemLoadPRG->str2 != NULL)
 			delete viewC64->viewC64MainMenu->menuItemLoadPRG->str2;
 		viewC64->viewC64MainMenu->menuItemLoadPRG->str2 = NULL;
 		
-		delete c64SettingsPathPRG;
-		c64SettingsPathPRG = NULL;
+		delete c64SettingsPathToPRG;
+		c64SettingsPathToPRG = NULL;
 		
 		
 		guiMain->UnlockMutex();
@@ -678,6 +867,8 @@ void CViewSettingsMenu::ClearMemoryMarkers()
 
 void CViewSettingsMenu::OpenDialogDumpC64Memory()
 {
+	//c64SettingsDefaultMemoryDumpFolder->DebugPrint("c64SettingsDefaultMemoryDumpFolder=");
+	
 	openDialogFunction = VIEWC64SETTINGS_DUMP_C64_MEMORY;
 	
 	CSlrString *defaultFileName = new CSlrString("c64memory");
@@ -775,8 +966,8 @@ void CViewSettingsMenu::SystemDialogFileSaveCancelled()
 
 void CViewSettingsMenu::DumpC64Memory(CSlrString *path)
 {
-	path->DebugPrint("CViewSettingsMenu::DumpC64Memory, path=");
-	
+	//path->DebugPrint("CViewSettingsMenu::DumpC64Memory, path=");
+
 	if (c64SettingsDefaultMemoryDumpFolder != NULL)
 		delete c64SettingsDefaultMemoryDumpFolder;
 	c64SettingsDefaultMemoryDumpFolder = path->GetFilePathWithoutFileNameComponentFromPath();
@@ -816,7 +1007,7 @@ void CViewSettingsMenu::DumpC64Memory(CSlrString *path)
 
 void CViewSettingsMenu::DumpDisk1541Memory(CSlrString *path)
 {
-	path->DebugPrint("CViewSettingsMenu::DumpDisk1541Memory, path=");
+	//path->DebugPrint("CViewSettingsMenu::DumpDisk1541Memory, path=");
 	
 	char *asciiPath = path->GetStdASCII();
 
@@ -856,7 +1047,7 @@ void CViewSettingsMenu::DumpDisk1541Memory(CSlrString *path)
 
 void CViewSettingsMenu::DumpC64MemoryMarkers(CSlrString *path)
 {
-	path->DebugPrint("CViewSettingsMenu::DumpC64MemoryMarkers, path=");
+	//path->DebugPrint("CViewSettingsMenu::DumpC64MemoryMarkers, path=");
 	
 	if (c64SettingsDefaultMemoryDumpFolder != NULL)
 		delete c64SettingsDefaultMemoryDumpFolder;
@@ -914,7 +1105,7 @@ void CViewSettingsMenu::DumpC64MemoryMarkers(CSlrString *path)
 
 void CViewSettingsMenu::DumpDisk1541MemoryMarkers(CSlrString *path)
 {
-	path->DebugPrint("CViewSettingsMenu::DumpDisk1541MemoryMarkers, path=");
+	//path->DebugPrint("CViewSettingsMenu::DumpDisk1541MemoryMarkers, path=");
 	
 	if (c64SettingsDefaultMemoryDumpFolder != NULL)
 		delete c64SettingsDefaultMemoryDumpFolder;
@@ -981,7 +1172,7 @@ void CViewSettingsMenu::DumpDisk1541MemoryMarkers(CSlrString *path)
 
 void CViewSettingsMenu::MapC64MemoryToFile(CSlrString *path)
 {
-	path->DebugPrint("CViewSettingsMenu::MapC64MemoryToFile, path=");
+	//path->DebugPrint("CViewSettingsMenu::MapC64MemoryToFile, path=");
 	
 	if (c64SettingsPathToC64MemoryMapFile != path)
 	{
@@ -993,8 +1184,6 @@ void CViewSettingsMenu::MapC64MemoryToFile(CSlrString *path)
 	if (c64SettingsDefaultMemoryDumpFolder != NULL)
 		delete c64SettingsDefaultMemoryDumpFolder;
 	c64SettingsDefaultMemoryDumpFolder = path->GetFilePathWithoutFileNameComponentFromPath();
-	
-	c64SettingsDefaultMemoryDumpFolder->DebugPrint("c64SettingsDefaultMemoryDumpFolder=");
 	
 	UpdateMapC64MemoryToFileLabels();
 	

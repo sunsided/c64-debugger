@@ -942,7 +942,7 @@ void CViewC64KeyMap::UpdateFromKeyMap(C64KeyMap *keyMap)
 		C64KeyCode *keyCode = it->second;
 		
 		int code = KeyCodeFromRowCol(keyCode->matrixRow, keyCode->matrixCol);
-		LOGD("code=%d", code);
+		//LOGD("code=%d", code);
 
 		std::map<int, CViewC64KeyMapKeyData *>::iterator itKey = buttonKeys.find(code);
 		if (itKey == buttonKeys.end())

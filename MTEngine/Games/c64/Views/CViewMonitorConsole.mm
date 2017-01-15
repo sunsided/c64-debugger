@@ -35,7 +35,8 @@ CViewMonitorConsole::CViewMonitorConsole(GLfloat posX, GLfloat posY, GLfloat pos
 	
 	memoryExtensions.push_back(new CSlrString("bin"));
 	prgExtensions.push_back(new CSlrString("prg"));
-
+	disassembleExtensions.push_back(new CSlrString("asm"));
+	
 	char *buf = SYS_GetCharBuf();
 	sprintf(buf, "C64 Debugger v%s monitor", C64DEBUGGER_VERSION_STRING);
 	this->viewConsole->PrintLine(buf);
@@ -59,13 +60,42 @@ bool CViewMonitorConsole::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool is
 	//LOGD("commandLineCursorPos=%d", viewConsole->commandLineCursorPos);
 
 	// hack for case-sensitive file names ;)
-	if (viewConsole->commandLine[0] == 'S' && viewConsole->commandLineCursorPos >= 11)
+	if (viewConsole->commandLine[0] == 'S')
 	{
-		upKey = keyCode;
+		// 0123456789012345678
+		// S XXXX YYYY filename
+		// S PRG XXXX YYYY filename
+
+		if (viewConsole->commandLine[2] != 'P' && viewConsole->commandLineCursorPos >= 11)
+		{
+			upKey = keyCode;
+		}
+		else if (viewConsole->commandLine[2] == 'P' && viewConsole->commandLineCursorPos >= 15)
+		{
+			upKey = keyCode;
+		}
+		else
+		{
+			upKey = toupper(keyCode);
+		}
 	}
-	else if (viewConsole->commandLine[0] == 'L' && viewConsole->commandLineCursorPos >= 6)
+	else if (viewConsole->commandLine[0] == 'L')
 	{
-		upKey = keyCode;
+		// 0123456789012345678
+		// L XXXX filename
+		// L PRG filename
+		if (viewConsole->commandLine[2] != 'P' && viewConsole->commandLineCursorPos >= 6)
+		{
+			upKey = keyCode;
+		}
+		else if (viewConsole->commandLine[2] == 'P' && viewConsole->commandLineCursorPos >= 5)
+		{
+			upKey = keyCode;
+		}
+		else
+		{
+			upKey = toupper(keyCode);
+		}
 	}
 	else
 	{
@@ -146,6 +176,10 @@ void CViewMonitorConsole::GuiViewConsoleExecuteCommand(char *commandText)
 		{
 			CommandGoJMP();
 		}
+		else if (token->CompareWith("D") || token->CompareWith("d"))
+		{
+			CommandDisassemble();
+		}
 		else
 		{
 			this->viewConsole->PrintLine("Unknown command.");
@@ -196,7 +230,9 @@ bool CViewMonitorConsole::GetTokenValueHex(int *value)
 	// check chars
 	for (int i = 0; i < strlen(hexStr); i++)
 	{
-		if ((hexStr[i] >= '0' && hexStr[i] <= '9') || (hexStr[i] >= 'A' && hexStr[i] <= 'F'))
+		if ((hexStr[i] >= '0' && hexStr[i] <= '9')
+			|| (hexStr[i] >= 'A' && hexStr[i] <= 'F')
+			|| (hexStr[i] >= 'a' && hexStr[i] <= 'f'))
 			continue;
 		
 		delete hexStr;
@@ -224,12 +260,14 @@ void CViewMonitorConsole::CommandHelp()
 	this->viewConsole->PrintLine("    compare memory with values");
 	this->viewConsole->PrintLine("T <from address> <to address> <destination address>");
 	this->viewConsole->PrintLine("    copy memory");
-	this->viewConsole->PrintLine("L <from address> [file name]");
+	this->viewConsole->PrintLine("L [PRG] [from address] [file name]");
 	this->viewConsole->PrintLine("    load memory");
-	this->viewConsole->PrintLine("S <from address> <to address> [file name]");
-	this->viewConsole->PrintLine("    save memory");
+	this->viewConsole->PrintLine("S [PRG] <from address> <to address> [file name]");
+	this->viewConsole->PrintLine("    save memory (with option as PRG file)");
 //	this->viewConsole->PrintLine("SPRG <from address> <to address> [file name]");
 //	this->viewConsole->PrintLine("    save memory as PRG file");
+	this->viewConsole->PrintLine("D [NH] <from address> <to address> [file name]");
+	this->viewConsole->PrintLine("    disassemble memory (with option NH without hex)");
 	this->viewConsole->PrintLine("G <address>");
 	this->viewConsole->PrintLine("    jmp to address");
 
@@ -656,10 +694,24 @@ void CViewMonitorConsole::CommandHunt()
 }
 
 void CViewMonitorConsole::CommandMemorySave()
-{	
+{
+	CSlrString *token;
+	if (GetToken(&token) == false)
+	{
+		this->viewConsole->PrintLine("Usage: S [PRG] <from addres> <to address> [file name]");
+		return;
+	}
+	
+	if (token->CompareWith("prg") || token->CompareWith("PRG"))
+	{
+		tokenIndex++;
+		CommandMemorySavePRG();
+		return;
+	}
+	
 	if (GetTokenValueHex(&addrStart) == false)
 	{
-		this->viewConsole->PrintLine("Usage: S <from addres> <to address> [file name]");
+		this->viewConsole->PrintLine("Usage: S [PRG] <from addres> <to address> [file name]");
 		return;
 	}
 	
@@ -684,7 +736,7 @@ void CViewMonitorConsole::CommandMemorySave()
 	
 	if (addrEnd <= addrStart)
 	{
-		this->viewConsole->PrintLine("Usage: S <from addres> <to address> [file name]");
+		this->viewConsole->PrintLine("Usage: S [PRG] <from addres> <to address> [file name]");
 		return;
 	}
 	
@@ -696,7 +748,7 @@ void CViewMonitorConsole::CommandMemorySavePRG()
 {
 	if (GetTokenValueHex(&addrStart) == false)
 	{
-		this->viewConsole->PrintLine("Usage: SPRG <from addres> <to address> [file name]");
+		this->viewConsole->PrintLine("Usage: S [PRG] <from addres> <to address> [file name]");
 		return;
 	}
 	
@@ -721,7 +773,7 @@ void CViewMonitorConsole::CommandMemorySavePRG()
 	
 	if (addrEnd <= addrStart)
 	{
-		this->viewConsole->PrintLine("Usage: SPRG <from addres> <to address> [file name]");
+		this->viewConsole->PrintLine("Usage: S [PRG] <from addres> <to address> [file name]");
 		return;
 	}
 	
@@ -766,19 +818,25 @@ void CViewMonitorConsole::CommandMemorySaveDump()
 		
 		if (DoMemoryDumpToFile(addrStart, addrEnd, memoryDumpAsPRG, filePath) == false)
 		{
-			this->viewConsole->PrintLine("Save memory dump failed.");
+			char *cPath = filePath->GetStdASCII();
+			this->viewConsole->PrintLine("Save memory dump failed to file %s", cPath);
+			delete [] cPath;
 		}
+		
+		delete filePath;
 	}
 }
 
-void CViewMonitorConsole::SystemDialogFileSaveSelected(CSlrString *path)
+void CViewMonitorConsole::SystemDialogFileSaveSelected(CSlrString *filePath)
 {
-	if (DoMemoryDumpToFile(addrStart, addrEnd, memoryDumpAsPRG, path) == false)
+	if (DoMemoryDumpToFile(addrStart, addrEnd, memoryDumpAsPRG, filePath) == false)
 	{
-		this->viewConsole->PrintLine("Save memory dump failed.");
+		char *cPath = filePath->GetStdASCII();
+		this->viewConsole->PrintLine("Save memory dump failed to file %s", cPath);
+		delete [] cPath;
 	}
 	
-	delete path;
+	delete filePath;
 }
 
 void CViewMonitorConsole::SystemDialogFileSaveCancelled()
@@ -859,18 +917,46 @@ bool CViewMonitorConsole::DoMemoryDumpToFile(int addrStart, int addrEnd, bool is
 
 void CViewMonitorConsole::CommandMemoryLoad()
 {
-	if (GetTokenValueHex(&addrStart) == false)
+	CSlrString *token;
+	if (GetToken(&token) == false)
 	{
-		this->viewConsole->PrintLine("Usage: L <from addres> [file name]");
+		//this->viewConsole->PrintLine("Usage: L [PRG] [from addres] [file name]");
+		// no tokens - just open LOAD PRG dialog
+		viewC64->viewC64MainMenu->OpenDialogLoadPRG();
 		return;
 	}
-	
-	if (addrStart < 0x0000 || addrStart > 0xFFFF)
+
+	memoryDumpAsPRG = false;
+
+	if (token->CompareWith("prg") || token->CompareWith("PRG"))
 	{
-		this->viewConsole->PrintLine("Bad 'from' address value.");
-		return;
+		tokenIndex++;
+		
+		memoryDumpAsPRG = true;
+
+		addrStart = -1;
 	}
 	
+	if (memoryDumpAsPRG == false || tokens->size() == 4)
+	{
+		if (GetTokenValueHex(&addrStart) == false)
+		{
+			this->viewConsole->PrintLine("Usage: L [PRG] [from addres] [file name]");
+			return;
+		}
+		
+		if (addrStart < 0x0000 || addrStart > 0xFFFF)
+		{
+			this->viewConsole->PrintLine("Bad 'from' address value.");
+			return;
+		}
+	}
+	
+	CommandMemoryLoadDump();
+}
+
+void CViewMonitorConsole::CommandMemoryLoadDump()
+{
 	CSlrString *fileName = NULL;
 	if (GetToken(&fileName) == false)
 	{
@@ -878,7 +964,16 @@ void CViewMonitorConsole::CommandMemoryLoad()
 		CSlrString *defaultFileName = new CSlrString("c64memory");
 		
 		CSlrString *windowTitle = new CSlrString("Load C64 memory dump");
-		SYS_DialogOpenFile(this, NULL, c64SettingsDefaultMemoryDumpFolder, windowTitle);
+		
+		if (memoryDumpAsPRG == false)
+		{
+			SYS_DialogOpenFile(this, NULL, c64SettingsDefaultMemoryDumpFolder, windowTitle);
+		}
+		else
+		{
+			SYS_DialogOpenFile(this, &prgExtensions, c64SettingsDefaultMemoryDumpFolder, windowTitle);
+		}
+		
 		delete windowTitle;
 		delete defaultFileName;
 	}
@@ -895,28 +990,35 @@ void CViewMonitorConsole::CommandMemoryLoad()
 		}
 		filePath->Concatenate(fileName);
 		
-		if (DoMemoryDumpFromFile(addrStart, filePath) == false)
+		if (DoMemoryDumpFromFile(addrStart, memoryDumpAsPRG, filePath) == false)
 		{
-			this->viewConsole->PrintLine("Loading memory dump failed.");
+			char *cPath = filePath->GetStdASCII();
+			this->viewConsole->PrintLine("Loading memory dump failed from file %s", cPath);
+			delete [] cPath;
 		}
+		
+		delete filePath;
 	}
 }
 
-void CViewMonitorConsole::SystemDialogFileOpenSelected(CSlrString *path)
+void CViewMonitorConsole::SystemDialogFileOpenSelected(CSlrString *filePath)
 {
-	if (DoMemoryDumpFromFile(addrStart, path) == false)
+	if (DoMemoryDumpFromFile(addrStart, memoryDumpAsPRG, filePath) == false)
 	{
-		this->viewConsole->PrintLine("Loading memory dump failed.");
+		char *cPath = filePath->GetStdASCII();
+		this->viewConsole->PrintLine("Loading memory dump failed from file %s", cPath);
+		delete [] cPath;
 	}
 	
-	delete path;
+	delete filePath;
 }
 
 void CViewMonitorConsole::SystemDialogFileOpenCancelled()
 {
 }
 
-bool CViewMonitorConsole::DoMemoryDumpFromFile(int addrStart, CSlrString *filePath)
+// addrStart -1 means take start address from PRG
+bool CViewMonitorConsole::DoMemoryDumpFromFile(int addrStart, bool isPRG, CSlrString *filePath)
 {
 	filePath->DebugPrint("DoMemoryDumpFromFile: ");
 	
@@ -950,9 +1052,26 @@ bool CViewMonitorConsole::DoMemoryDumpFromFile(int addrStart, CSlrString *filePa
 
 	bool a;
 	int addr = addrStart;
-	for (int i = 0; i < byteBuffer->length; i++)
+	int len = byteBuffer->length;
+	
+	if (isPRG)
 	{
-		uint8 val = byteBuffer->data[i];
+		u16 b1 = byteBuffer->GetByte();
+		u16 b2 = byteBuffer->GetByte();
+		
+		u16 loadPoint = (b2 << 8) | b1;
+		
+		if (addrStart == -1)
+		{
+			addr = loadPoint;
+		}
+		
+		len -= 2;
+	}
+	
+	for (int i = 0; i < len; i++)
+	{
+		uint8 val = byteBuffer->GetU8();
 		dataAdapter->AdapterWriteByte(addr, val, &a);
 		
 		if (a == false)
@@ -960,8 +1079,6 @@ bool CViewMonitorConsole::DoMemoryDumpFromFile(int addrStart, CSlrString *filePa
 		
 		addr++;
 	}
-	
-	int len = addr - addrStart;
 	
 	char *buf = SYS_GetCharBuf();
 	CSlrString *fileName = filePath->GetFileNameComponentFromPath();
@@ -1029,5 +1146,580 @@ void CViewMonitorConsole::RestoreMonitorHistory()
 	viewConsole->commandLineHistoryIt = viewConsole->commandLineHistory.end();
 	
 	delete byteBuffer;
+}
+
+
+
+////
+
+void CViewMonitorConsole::CommandDisassemble()
+{
+	disassembleHexCodes = true;
+	
+	CSlrString *token;
+	if (GetToken(&token) == false)
+	{
+		this->viewConsole->PrintLine("Usage: D [NOHEX] <from addres> <to address> [file name]");
+		return;
+	}
+	
+	if (token->CompareWith("nohex") || token->CompareWith("NOHEX")
+		|| token->CompareWith("nh") || token->CompareWith("NH"))
+	{
+		tokenIndex++;
+		disassembleHexCodes = false;
+	}
+	
+	if (GetTokenValueHex(&addrStart) == false)
+	{
+		this->viewConsole->PrintLine("Usage: D [NOHEX] <from addres> <to address> [file name]");
+		return;
+	}
+	
+	if (addrStart < 0x0000 || addrStart > 0xFFFF)
+	{
+		this->viewConsole->PrintLine("Bad 'from' address value.");
+		return;
+	}
+	
+	//
+	if (GetTokenValueHex(&addrEnd) == false)
+	{
+		this->viewConsole->PrintLine("Missing 'to' address value.");
+		return;
+	}
+	
+	if (addrEnd < 0x0000 || addrEnd > 0xFFFF)
+	{
+		this->viewConsole->PrintLine("Bad 'to' address value.");
+		return;
+	}
+	
+	if (addrEnd <= addrStart)
+	{
+		this->viewConsole->PrintLine("Usage: D [NOHEX] <from addres> <to address> [file name]");
+		return;
+	}
+	
+	CommandDoDisassemble();
+}
+
+void CViewMonitorConsole::CommandDoDisassemble()
+{
+	CSlrString *fileName = NULL;
+	if (GetToken(&fileName) == false)
+	{
+//		// no file name supplied, open dialog
+//		CSlrString *defaultFileName = new CSlrString("c64disassemble");
+//		
+//		CSlrString *windowTitle = new CSlrString("Disassemble C64 memory");
+//		
+//		SYS_DialogSaveFile(this, &disassembleExtensions, defaultFileName, c64SettingsDefaultMemoryDumpFolder, windowTitle);
+//		
+//		delete windowTitle;
+//		delete defaultFileName;
+		
+		if (DoDisassembleMemory(addrStart, addrEnd, false, NULL) == false)
+		{
+			this->viewConsole->PrintLine("Disassemble memory failed.");
+		}
+	}
+	else
+	{
+		CSlrString *filePath = new CSlrString();
+		
+		if (c64SettingsDefaultMemoryDumpFolder != NULL)
+		{
+			c64SettingsDefaultMemoryDumpFolder->DebugPrint("c64SettingsDefaultMemoryDumpFolder=");
+			
+			if (SYS_FileDirExists(c64SettingsDefaultMemoryDumpFolder))
+			{
+				filePath->Concatenate(c64SettingsDefaultMemoryDumpFolder);
+			}
+		}
+		filePath->Concatenate(fileName);
+		
+		if (DoDisassembleMemory(addrStart, addrEnd, false, filePath) == false)
+		{
+			this->viewConsole->PrintLine("Disassemble memory failed.");
+		}
+	}
+}
+
+bool CViewMonitorConsole::DoDisassembleMemory(int startAddress, int endAddress, bool withLabels, CSlrString *filePath)
+{
+	FILE *fp = NULL;
+
+	if (filePath != NULL)
+	{
+		filePath->DebugPrint("DoDisassembleMemory: ");
+
+		if (c64SettingsDefaultMemoryDumpFolder != NULL)
+			delete c64SettingsDefaultMemoryDumpFolder;
+		c64SettingsDefaultMemoryDumpFolder = filePath->GetFilePathWithoutFileNameComponentFromPath();
+		C64DebuggerStoreSettings();
+		
+		// get file path
+		char *cFilePath = filePath->GetStdASCII();
+		LOGD("cFilePath='%s'", cFilePath);
+		
+		fp = fopen(cFilePath, "wb");
+		
+		delete [] cFilePath;
+		
+		if (!fp)
+		{
+			return false;
+		}
+	}
+	
+	LOGTODO("!! set correct memory map !!");
+	memoryMap = viewC64->viewC64MemoryMap;
+
+	memoryLength = dataAdapter->AdapterGetDataLength();
+
+	int len = addrEnd - addrStart;
+	memory = new uint8[0x10000];
+	dataAdapter->AdapterReadBlockDirect(memory, startAddress, endAddress);
+	
+	
+	//// perform disassemble
+//	viewConsole->PrintLine("Disassemble %04X to %04X", addrStart, addrEnd);
+
+	CByteBuffer *byteBuffer = new CByteBuffer();
+	
+	int addr = startAddress;
+	int renderAddress = startAddress;
+	int i;
+	bool done = false;
+	uint8 opcode;
+	uint8 op[3];
+
+	do
+	{
+		//LOGD("renderAddress=%4.4x l=%4.4x", renderAddress, memoryLength);
+		if (addr >= memoryLength)
+			break;
+		
+		if (addr == memoryLength-1)
+		{
+			DisassembleHexLine(addr, byteBuffer);
+			break;
+		}
+		
+		addr = renderAddress;
+		
+		for (i=0; i<3; i++, addr++)
+		{
+			if (addr == endAddress)
+			{
+				done = true;
+			}
+			
+			op[i] = memory[addr];
+		}
+		
+		{
+			addr = renderAddress;
+			
+			// +0
+			CViewMemoryMapCell *cell0 = memoryMap->memoryCells[addr];	//% memoryLength
+			if (cell0->isExecuteCode)
+			{
+				opcode = memory[addr ];	//% memoryLength
+				renderAddress += DisassembleLine(renderAddress, op[0], op[1], op[2], byteBuffer);
+			}
+			else
+			{
+				// +1
+				CViewMemoryMapCell *cell1 = memoryMap->memoryCells[ (addr+1) ];	//% memoryLength
+				if (cell1->isExecuteCode)
+				{
+					// check if at addr is 1-length opcode
+					opcode = memory[ (renderAddress) ];	//% memoryLength
+					if (opcodes[opcode].addressingLength == 1)
+					{
+						DisassembleLine(renderAddress, op[0], op[1], op[2], byteBuffer);
+					}
+					else
+					{
+						DisassembleHexLine(renderAddress, byteBuffer);
+					}
+					
+					renderAddress += 1;
+					
+					addr = renderAddress;
+					for (i=0; i<3; i++, addr++)
+					{
+						if (addr == endAddress)
+						{
+							done = true;
+						}
+						
+						op[i] = memory[addr];
+					}
+					
+					opcode = memory[ (renderAddress) ];	//% memoryLength
+					renderAddress += DisassembleLine(renderAddress, op[0], op[1], op[2], byteBuffer);
+				}
+				else
+				{
+					// +2
+					CViewMemoryMapCell *cell2 = memoryMap->memoryCells[ (addr+2) ];	//% memoryLength
+					if (cell2->isExecuteCode)
+					{
+						// check if at addr is 2-length opcode
+						opcode = memory[ (renderAddress) ];	//% memoryLength
+						if (opcodes[opcode].addressingLength == 2)
+						{
+							renderAddress += DisassembleLine(renderAddress, op[0], op[1], op[2], byteBuffer);
+						}
+						else
+						{
+							DisassembleHexLine(renderAddress, byteBuffer);
+							renderAddress += 1;
+							
+							DisassembleHexLine(renderAddress, byteBuffer);
+							renderAddress += 1;
+						}
+						
+						addr = renderAddress;
+						for (i=0; i<3; i++, addr++)
+						{
+							if (addr == endAddress)
+							{
+								done = true;
+							}
+							
+							op[i] = memory[addr];
+						}
+						
+						opcode = memory[ (renderAddress) ];	//% memoryLength
+						renderAddress += DisassembleLine(renderAddress, op[0], op[1], op[2], byteBuffer);
+					}
+					else
+					{
+						if (cell0->isExecuteArgument == false)
+						{
+							// execute not found, just render line
+							renderAddress += DisassembleLine(renderAddress, op[0], op[1], op[2], byteBuffer);
+						}
+						else
+						{
+							// it is argument
+							DisassembleHexLine(renderAddress, byteBuffer);
+							renderAddress++;
+						}
+					}
+				}
+			}
+		}
+		
+		byteBuffer->PutByte('\n');
+		
+		if (renderAddress >= endAddress)
+			break;
+	}
+	while (!done);
+	
+	// end
+	byteBuffer->PutByte(0x00);
+	
+	///
+	if (fp != NULL)
+	{
+		fprintf(fp, "%s", byteBuffer->data);
+		fclose(fp);
+		
+		char *buf = SYS_GetCharBuf();
+		
+		CSlrString *fileName = filePath->GetFileNameComponentFromPath();
+		char *cFileName = fileName->GetStdASCII();
+		
+		sprintf(buf, "Disassembled %04X to %04X to file %s", addrStart, addrEnd, cFileName);
+		viewConsole->PrintLine(buf);
+		
+		delete [] cFileName;
+		delete fileName;
+		
+		SYS_ReleaseCharBuf(buf);
+	}
+	else
+	{
+		viewConsole->PrintString((char*)byteBuffer->data);
+	}
+	
+	return true;
+}
+
+//
+
+// Disassemble one hex-only value (for disassemble up)
+void CViewMonitorConsole::DisassembleHexLine(int addr, CByteBuffer *outBuffer)
+{
+	//	LOGD("addr=%4.4x op=%2.2x", addr, op);
+	
+	// check if this 1-length opcode
+	uint8 op = memory[ (addr) % memoryLength];
+	if (opcodes[op].addressingLength == 1)
+	{
+		DisassembleLine(addr, op, 0x00, 0x00, outBuffer);
+		return;
+	}
+	
+	
+	char buf[128];
+	char buf1[16];
+	
+//	CViewMemoryMapCell *cell = memoryMap->memoryCells[addr];
+//	if (cell->isExecuteCode)
+	
+	
+//	if (showLabels)
+//	{
+//		px += fontSize5*4.0f;
+//		
+//		std::map<u16, CDisassembleCodeLabel *>::iterator it = codeLabels.find(addr);
+//		
+//		if (it != codeLabels.end())
+//		{
+//			CDisassembleCodeLabel *label = it->second;
+//			// found a label
+//			fontDisassemble->BlitTextColor(label->labelText, label->px, py, -1, fontSize, cr, cg, cb, ca);
+//		}
+//	}
+	
+	// addr
+	sprintfHexCode16(buf, addr);
+	DisassemblePrint(outBuffer, buf);
+	
+	if (disassembleHexCodes)
+	{
+		sprintfHexCode8(buf1, op);
+		DisassemblePrint(outBuffer, buf1);
+	}
+	
+	if (disassembleHexCodes)
+	{
+		DisassemblePrint(outBuffer, "???");
+	}
+	else
+	{
+		sprintfHexCode8(buf1, op);
+		DisassemblePrint(outBuffer, buf1);
+	}
+	
+//	if (addr == currentPC)
+//	{
+//		BlitFilledRectangle(posX, py, -1.0f,
+//							markerSizeX, fontSize, cr, cg, cb, 0.3f);
+//	}
+
+}
+
+// Disassemble one instruction, return length
+int CViewMonitorConsole::DisassembleLine(int addr, uint8 op, uint8 lo, uint8 hi, CByteBuffer *outBuffer)
+{
+	//	LOGD("adr=%4.4x op=%2.2x", adr, op);
+	
+	char buf[128];
+	char buf1[16];
+	char buf2[2] = {0};
+	char buf3[16];
+	char buf4[16];
+	char bufHexCodes[16];
+	int length;
+	
+//	CViewMemoryMapCell *cell = memoryMap->memoryCells[addr];
+//	if (cell->isExecuteCode)
+	
+	length = opcodes[op].addressingLength;
+	
+	
+	// TODO:
+//	if (disassembleShowLabels)
+//	{
+//		for (int i = 0; i < length; i++)
+//		{
+//			std::map<u16, CDisassembleCodeLabel *>::iterator it = codeLabels.find(addr + i);
+//			
+//			if (it != codeLabels.end())
+//			{
+//				CDisassembleCodeLabel *label = it->second;
+//				// found a label
+//				fontDisassemble->BlitTextColor(label->labelText, label->px, py, -1, fontSize, cr, cg, cb, ca);
+//				
+//				break;
+//			}
+//		}
+//	}
+	
+	
+	// addr
+	sprintfHexCode16(buf, addr);
+	DisassemblePrint(outBuffer, buf);
+	
+	DisassemblePrint(outBuffer, " ");
+	
+	if (disassembleHexCodes)
+	{
+		strcpy(buf1, "         ");
+		
+		switch (length)
+		{
+			case 1:
+				//sprintf(buf1, "%2.2x       ", op);
+				// "xx       "
+				sprintfHexCode8WithoutZeroEnding(buf1, op);
+				break;
+				
+			case 2:
+				//sprintf(buf1, "%2.2x %2.2x    ", op, lo);
+				// "xx xx    "
+				sprintfHexCode8WithoutZeroEnding(buf1, op);
+				sprintfHexCode8WithoutZeroEnding(buf1+3, lo);
+				break;
+				
+			case 3:
+				//sprintf(buf1, "%2.2x %2.2x %2.2x ", op, lo, hi);
+				// "xx xx xx "
+				sprintfHexCode8WithoutZeroEnding(buf1, op);
+				sprintfHexCode8WithoutZeroEnding(buf1+3, lo);
+				sprintfHexCode8WithoutZeroEnding(buf1+6, hi);
+				break;
+		}
+		
+		strcpy(bufHexCodes, buf1);
+		strcat(bufHexCodes, buf2);
+		DisassemblePrint(outBuffer, bufHexCodes);
+		
+		// illegal opcode?
+		if (opcodes[op].isIllegal == OP_ILLEGAL)
+		{
+			DisassemblePrint(outBuffer, "*");
+		}
+		else
+		{
+			DisassemblePrint(outBuffer, " ");
+		}
+	}
+	
+	// mnemonic
+	strcpy(buf3, opcodes[op].name);
+	strcat(buf3, " ");
+	
+	
+	switch (opcodes[op].addressingMode)
+	{
+		case ADDR_IMP:
+			sprintf(buf4, "");
+			break;
+			
+		case ADDR_IMM:
+			//sprintf(buf4, "#%2.2x", lo);
+			buf4[0] = '#';
+			sprintfHexCode8(buf4+1, lo);
+			break;
+			
+		case ADDR_ZP:
+			//sprintf(buf4, "%2.2x", lo);
+			sprintfHexCode8(buf4, lo);
+			break;
+			
+		case ADDR_ZPX:
+			//sprintf(buf4, "%2.2x,x", lo);
+			sprintfHexCode8WithoutZeroEnding(buf4, lo);
+			buf4[2] = ',';
+			buf4[3] = 'x';
+			buf4[4] = 0x00;
+			break;
+			
+		case ADDR_ZPY:
+			//sprintf(buf4, "%2.2x,y", lo);
+			sprintfHexCode8WithoutZeroEnding(buf4, lo);
+			buf4[2] = ',';
+			buf4[3] = 'y';
+			buf4[4] = 0x00;
+			break;
+			
+		case ADDR_IZX:
+			//sprintf(buf4, "(%2.2x,x)", lo);
+			buf4[0] = '(';
+			sprintfHexCode8WithoutZeroEnding(buf4+1, lo);
+			buf4[3] = ',';
+			buf4[4] = 'x';
+			buf4[5] = ')';
+			buf4[6] = 0x00;
+			break;
+			
+		case ADDR_IZY:
+			//sprintf(buf4, "(%2.2x),y", lo);
+			buf4[0] = '(';
+			sprintfHexCode8WithoutZeroEnding(buf4+1, lo);
+			buf4[3] = ')';
+			buf4[4] = ',';
+			buf4[5] = 'y';
+			buf4[6] = 0x00;
+			break;
+			
+		case ADDR_ABS:
+			//sprintf(buf4, "%4.4x", (hi << 8) | lo);
+			sprintfHexCode8WithoutZeroEnding(buf4, hi);
+			sprintfHexCode8(buf4+2, lo);
+			break;
+			
+		case ADDR_ABX:
+			//sprintf(buf4, "%4.4x,x", (hi << 8) | lo);
+			sprintfHexCode8WithoutZeroEnding(buf4, hi);
+			sprintfHexCode8WithoutZeroEnding(buf4+2, lo);
+			buf4[4] = ',';
+			buf4[5] = 'x';
+			buf4[6] = 0x00;
+			break;
+			
+		case ADDR_ABY:
+			//sprintf(buf4, "%4.4x,y", (hi << 8) | lo);
+			sprintfHexCode8WithoutZeroEnding(buf4, hi);
+			sprintfHexCode8WithoutZeroEnding(buf4+2, lo);
+			buf4[4] = ',';
+			buf4[5] = 'y';
+			buf4[6] = 0x00;
+			break;
+			
+		case ADDR_IND:
+			//sprintf(buf4, "(%4.4x)", (hi << 8) | lo);
+			buf4[0] = '(';
+			sprintfHexCode8WithoutZeroEnding(buf4+1, hi);
+			sprintfHexCode8WithoutZeroEnding(buf4+3, lo);
+			buf4[5] = ')';
+			buf4[6] = 0x00;
+			break;
+			
+		case ADDR_REL:
+			//sprintf(buf4, "%4.4x", ((addr + 2) + (int8)lo) & 0xFFFF);
+			sprintfHexCode16(buf4, ((addr + 2) + (int8)lo) & 0xFFFF);
+			break;
+		default:
+			break;
+	}
+	
+	//sprintf(buf, "%s%s", buf3, buf4);
+	strcpy(buf, buf3);
+	strcat(buf, buf4);
+	
+	DisassemblePrint(outBuffer, buf);
+	
+	int numBytesPerOp = opcodes[op].addressingLength;
+	return numBytesPerOp;
+}
+
+void CViewMonitorConsole::DisassemblePrint(CByteBuffer *byteBuffer, char *text)
+{
+	char *t = text;
+	while (*t != '\0')
+	{
+		byteBuffer->PutByte(*t);
+		t++;
+	}
 }
 

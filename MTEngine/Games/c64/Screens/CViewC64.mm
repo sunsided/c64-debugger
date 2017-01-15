@@ -39,12 +39,14 @@ extern "C"{
 #include "CSlrString.h"
 #include "C64Tools.h"
 #include "C64Symbols.h"
+#include "C64Palette.h"
 #include "C64KeyMap.h"
 #include "C64DebugInterfaceVice.h"
 #include "C64CommandLine.h"
+#include "C64SharedMemory.h"
 #include "SND_SoundEngine.h"
 
-CViewC64 *viewC64;
+CViewC64 *viewC64 = NULL;
 
 #define TEXT_ADDR	0x0400
 #define COLOR_ADDR	0xD800
@@ -55,14 +57,24 @@ CViewC64::CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 	this->name = "CViewC64";
 	viewC64 = this;
 	
+	C64InitPalette();
+	
 	isEmulationThreadRunning = false;
 
-	c64SettingsDefaultScreenLayoutId = C64_SCREEN_LAYOUT_C64_DATA_DUMP; //C64_SCREEN_LAYOUT_C64_DEBUGGER;
+	if (c64SettingsDefaultScreenLayoutId < 0)
+	{
+		c64SettingsDefaultScreenLayoutId = C64_SCREEN_LAYOUT_C64_DATA_DUMP; //C64_SCREEN_LAYOUT_C64_DEBUGGER;
+		
+		LOGD("set c64SettingsDefaultScreenLayoutId=%d", c64SettingsDefaultScreenLayoutId);
+	}
+	
 	//C64_SCREEN_LAYOUT_C64_DEBUGGER);
 	//C64_SCREEN_LAYOUT_C64_1541_MEMORY_MAP; //C64_SCREEN_LAYOUT_C64_ONLY //
 	//C64_SCREEN_LAYOUT_SHOW_STATES; //C64_SCREEN_LAYOUT_C64_DATA_DUMP
 	//C64_SCREEN_LAYOUT_C64_1541_DEBUGGER
 
+	C64DebuggerInitSharedMemory();
+	SYS_SharedMemoryRegisterCallback(viewC64);
 
 	C64DebuggerParseCommandLine1();
 
@@ -142,7 +154,6 @@ CViewC64::CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 	
 	// settings that need to be set when emulation is initialized
 	C64DebuggerRestoreSettings(C64DEBUGGER_BLOCK_POSTLAUNCH);
-
 	
 	// do additional parsing
 	C64DebuggerParseCommandLine2();
@@ -151,11 +162,15 @@ CViewC64::CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 	C64DebuggerComputeMemoryMapColorTables(c64SettingsMemoryValuesStyle);
 	C64DebuggerSetMemoryMapMarkersStyle(c64SettingsMemoryMarkersStyle);
 
-	this->SwitchToScreenLayout(c64SettingsDefaultScreenLayoutId);
+	LOGD("... after parsing c64SettingsDefaultScreenLayoutId=%d", c64SettingsDefaultScreenLayoutId);
 	if (c64SettingsDefaultScreenLayoutId >= C64_SCREEN_LAYOUT_MAX)
 	{
+		LOGD("... c64SettingsDefaultScreenLayoutId=%d >= C64_SCREEN_LAYOUT_MAX=%d", c64SettingsDefaultScreenLayoutId, C64_SCREEN_LAYOUT_MAX);
+		
 		c64SettingsDefaultScreenLayoutId = C64_SCREEN_LAYOUT_C64_DEBUGGER;
+		LOGD("... corrected c64SettingsDefaultScreenLayoutId=%d", c64SettingsDefaultScreenLayoutId);
 	}
+	this->SwitchToScreenLayout(c64SettingsDefaultScreenLayoutId);
 
 	
 	// finished starting up
@@ -628,7 +643,7 @@ void CViewC64::InitLayouts()
 	screenPositions[m]->screenSizeY = (float)debugInterface->GetC64ScreenSizeY() * scale;
 	screenPositions[m]->c64ScreenX = SCREEN_WIDTH - screenPositions[m]->screenSizeX-3.0f;
 	
-	screenPositions[m]->c64ScreenShowMarkers = true;
+	screenPositions[m]->c64ScreenShowGridLines = true;
 	screenPositions[m]->c64ScreenShowZoomedScreen = true;
 	screenPositions[m]->c64ScreenZoomedX = 317;
 	screenPositions[m]->c64ScreenZoomedY = 197;
@@ -697,7 +712,7 @@ void CViewC64::SwitchToScreenLayout(int newScreenLayoutId)
 							   screenLayout->c64ScreenY, posZ,
 							   screenLayout->screenSizeX,
 							   screenLayout->screenSizeY);
-	viewC64Screen->showMarkers = screenLayout->c64ScreenShowMarkers;
+	viewC64Screen->showGridLines = screenLayout->c64ScreenShowGridLines;
 	
 	// zoomed screen
 	viewC64Screen->showZoomedScreen = screenLayout->c64ScreenShowZoomedScreen;
@@ -1715,6 +1730,12 @@ void CViewC64::UnMapC64MemoryFromFile()
 	mappedC64MemoryDescriptor = NULL;
 }
 
+void CViewC64::SharedMemorySignalCallback(CByteBuffer *sharedMemoryData)
+{
+	C64DebuggerReceivedConfiguration(sharedMemoryData);
+}
+
+
 C64ScreenLayout::C64ScreenLayout()
 {
 	c64ScreenVisible = false;
@@ -1735,7 +1756,7 @@ C64ScreenLayout::C64ScreenLayout()
 	
 	c64ScreenX = c64ScreenY = screenSizeX = screenSizeY = c64StateX = c64StateY = drive1541StateX = drive1541StateY = c64DisassembleX = c64DisassembleY = drive1541DisassembleX = drive1541DisassembleY = c64MemoryMapX = c64MemoryMapY = c64MemoryMapSizeX = c64MemoryMapSizeY = drive1541MemoryMapX = drive1541MemoryMapY = drive1541MemoryMapSizeX = drive1541MemoryMapSizeY = c64DataDumpX = c64DataDumpY = c64DataDumpSizeX = c64DataDumpSizeY = c64StateCIAX = c64StateCIAY = c64StateSIDX = c64StateSIDY = c64StateVICX = c64StateVICY = c64StateDrive1541X = c64StateDrive1541Y = monitorConsoleX = monitorConsoleY = emulationStateX = emulationStateY = 0;
 
-	c64ScreenShowMarkers = false;
+	c64ScreenShowGridLines = false;
 	c64ScreenShowZoomedScreen = false;
 	c64ScreenZoomedX = c64ScreenZoomedY = c64ScreenZoomedSizeX = c64ScreenZoomedSizeY = 0;
 	

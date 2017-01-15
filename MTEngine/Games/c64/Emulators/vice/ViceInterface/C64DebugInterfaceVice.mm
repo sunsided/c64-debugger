@@ -381,6 +381,8 @@ void C64DebugInterfaceVice::InsertD64(CSlrString *path)
 {
 	char *asciiPath = path->GetStdASCII();
 	
+	FixFileNameSlashes(asciiPath);
+
 	int rc = file_system_attach_disk(8, asciiPath);
 	
 	if (rc == -1)
@@ -871,6 +873,8 @@ static void cartridge_detach_trap(WORD addr, void *v)
 void C64DebugInterfaceVice::AttachCartridge(CSlrString *filePath)
 {
 	char *asciiPath = filePath->GetStdASCII();
+	
+	FixFileNameSlashes(asciiPath);
 
 //	this->SetDebugMode(C64_DEBUG_RUN_ONE_INSTRUCTION);
 //	SYS_Sleep(5000);
@@ -1114,9 +1118,7 @@ void C64DebugInterfaceVice::RenderStateVIC(float posX, float posY, float posZ, b
 			bits = vicii.regs[0x15];
 			for (i = startId; i < endId; i++)
 			{
-				sprintf(buf2, "%s", (bits & 1) ? "Yes   " : "No    ");
-				bits >>= 1;
-				
+				sprintf(buf2, "%s", ((bits >> i) & 1) ? "Yes   " : "No    ");
 				strcat(buf, buf2);
 			}
 			
@@ -1128,9 +1130,7 @@ void C64DebugInterfaceVice::RenderStateVIC(float posX, float posY, float posZ, b
 			bits2 = vicii.sprite_display_bits;
 			for (i = startId; i < endId; i++)
 			{
-				sprintf(buf2, "%c/%c   ", (bits & 1) ? 'D' : ' ', (bits2 & 1) ? 'd' : ' ');
-				bits >>= 1;
-				bits2 >>= 1;
+				sprintf(buf2, "%c/%c   ", ((bits >> i) & 1) ? 'D' : ' ', ((bits2 >> i) & 1) ? 'd' : ' ');
 				strcat(buf, buf2);
 			}
 			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
@@ -1190,7 +1190,7 @@ void C64DebugInterfaceVice::RenderStateVIC(float posX, float posY, float posZ, b
 			bits = vicii.regs[0x1d];
 			for (i = startId; i < endId; i++)
 			{
-				sprintf(buf2, "%s", (bits & 1) ? "Yes   " : "No    ");
+				sprintf(buf2, "%s", ((bits >> i) & 1) ? "Yes   " : "No    ");
 				strcat(buf, buf2);
 			}
 			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
@@ -1200,7 +1200,7 @@ void C64DebugInterfaceVice::RenderStateVIC(float posX, float posY, float posZ, b
 			bits = vicii.regs[0x17];
 			for (i = startId; i < endId; i++)
 			{
-				sprintf(buf2, "%s", (bits & 1) ? (vicii.sprite[i].exp_flop ? "YES*  " : "Yes   ") : "No    ");
+				sprintf(buf2, "%s", ((bits >> i) & 1) ? (vicii.sprite[i].exp_flop ? "YES*  " : "Yes   ") : "No    ");
 				strcat(buf, buf2);
 			}
 			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
@@ -1209,9 +1209,8 @@ void C64DebugInterfaceVice::RenderStateVIC(float posX, float posY, float posZ, b
 			bits = vicii.regs[0x1c];
 			for (i = startId; i < endId; i++)
 			{
-				sprintf(buf2, "%s", (bits & 1) ? "Multi " : "Std.  ");
+				sprintf(buf2, "%s", ((bits >> i) & 1) ? "Multi " : "Std.  ");
 				strcat(buf, buf2);
-				bits >>= 1;
 			}
 			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 			
@@ -1219,9 +1218,8 @@ void C64DebugInterfaceVice::RenderStateVIC(float posX, float posY, float posZ, b
 			bits = vicii.regs[0x1b];
 			for (int z = startId; z < endId; z++)
 			{
-				sprintf(buf2, "%s", (bits & 1) ? "Back  " : "Fore  ");
+				sprintf(buf2, "%s", ((bits >> i) & 1) ? "Back  " : "Fore  ");
 				strcat(buf, buf2);
-				bits >>= 1;
 			}
 			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 			

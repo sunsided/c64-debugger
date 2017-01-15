@@ -6,10 +6,17 @@
 std::list< std::vector<u16> * > _CSlrString_charVectorsPool;
 pthread_mutex_t _CSlrString_mutex;
 
+bool _sysStringsInit = false;
+
 void SYS_InitStrings()
 {
-	pthread_mutex_init(&_CSlrString_mutex, NULL);
-	_CSlrString_charVectorsPool.clear();
+	if (_sysStringsInit == false)
+	{
+		pthread_mutex_init(&_CSlrString_mutex, NULL);
+		_CSlrString_charVectorsPool.clear();
+		
+		_sysStringsInit = true;
+	}
 }
 
 std::vector<u16> *_CSlrString_GetCharsVector()
@@ -413,6 +420,14 @@ std::vector<CSlrString *> *CSlrString::Split(std::list<u16> splitChars)
 	while(pos < GetLength())
 	{
 		CSlrString *oneWord = this->GetWord(pos, &pos, splitChars);
+		
+		if (oneWord->GetLength() == 0)
+		{
+			delete oneWord;
+			pos++;
+			continue;
+		}
+		
 		words->push_back(oneWord);
 
 		pos++; // = this->SkipChars(pos, splitChars);
@@ -469,6 +484,13 @@ std::vector<CSlrString *> *CSlrString::SplitWithChars(std::list<u16> splitChars)
 			continue;
 		
 		CSlrString *oneWord = this->GetWord(pos, &pos, splitChars);
+		
+		if (oneWord->GetLength() == 0)
+		{
+			delete oneWord;
+			continue;
+		}
+
 		words->push_back(oneWord);
 	}
 	
@@ -605,6 +627,25 @@ u16 CSlrString::PopCharFront()
 	return chr;
 }
 
+bool CSlrString::IsHexValue()
+{
+	for (u32 i = 0; i < GetLength(); i++)
+	{
+		u16 chr = GetChar(i);
+		
+		if ((chr >= 0x30 && chr <= 0x39)
+			|| (chr >= 0x41 && chr <= 0x46)
+			|| (chr >= 0x61 && chr <= 0x66))
+		{
+			continue;
+		}
+		
+		return false;
+	}
+	
+	return true;
+}
+
 void CSlrString::DebugPrint(char *name)
 {
 	char buf[1024];
@@ -659,6 +700,17 @@ void CSlrString::DebugPrint(FILE *fp)
 	{
 		u16 chr = GetChar(i);
 		fwrite(&chr, 1, 2, fp);
+	}
+}
+
+void CSlrString::DebugPrintVector(char *name)
+{
+	LOGD("CSlrString::DebugPrintVector: %s len=%d", name, GetLength());
+	
+	for (u32 i = 0; i < GetLength(); i++)
+	{
+		u16 c = GetChar(i);
+		LOGD("  -> i=%d c=%x '%c'", i, c, c);
 	}
 }
 
@@ -755,28 +807,34 @@ CSlrString *CSlrString::GetFileNameComponentFromPath()
 
 CSlrString *CSlrString::GetFilePathWithoutFileNameComponentFromPath()
 {
-	//LOGD("GetFilePathWithoutFileNameComponentFromPath");
-	//this->DebugPrint("this=");
+	LOGD("GetFilePathWithoutFileNameComponentFromPath");
+//	this->DebugPrint("this=");
 
 	std::vector<CSlrString *> *strs = this->Split(SYS_FILE_SYSTEM_PATH_SEPARATOR);
 	CSlrString *fpath = new CSlrString();
 	
-	for (int i = 0; i < strs->size()-1; i++)
+	if (!strs->empty())
 	{
-		CSlrString *t = (*strs)[i];
-		fpath->Concatenate(t);
 		fpath->Concatenate(SYS_FILE_SYSTEM_PATH_SEPARATOR);
+		
+		for (int i = 0; i < strs->size()-1; i++)
+		{
+			CSlrString *t = (*strs)[i];
+			fpath->Concatenate(t);
+			fpath->Concatenate(SYS_FILE_SYSTEM_PATH_SEPARATOR);
+		}
+		
+		while(!strs->empty())
+		{
+			CSlrString *t = strs->back();
+			strs->pop_back();
+			delete t;
+		}
 	}
 	
-	while(!strs->empty())
-	{
-		CSlrString *t = strs->back();
-		strs->pop_back();
-		delete t;
-	}
 	delete strs;
 	
-	//fpath->DebugPrint("return=");
+//	fpath->DebugPrint("return=");
 	return fpath;
 }
 

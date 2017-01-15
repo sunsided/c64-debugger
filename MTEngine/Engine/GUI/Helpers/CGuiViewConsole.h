@@ -35,6 +35,8 @@ public:
 	
 	int numLines;
 	
+	int maxCharsInLine;
+	
 	float lineHeight;
 	
 	char prompt[256];
@@ -59,6 +61,8 @@ public:
 	
 	void PrintSingleLine(char *text);
 	void PrintLine(const char *format, ...);
+	
+	void PrintString(char *text);
 	
 	virtual bool KeyDown(u32 keyCode);
 	

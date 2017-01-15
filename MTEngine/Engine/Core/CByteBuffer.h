@@ -38,6 +38,7 @@ public:
 	bool crashWhenEOF;
 
 	CByteBuffer();
+	CByteBuffer(CByteBuffer *byteBuffer);
 	CByteBuffer(uint8  *buffer, int size);
 	CByteBuffer(int size);
 	CByteBuffer(char *fileName);

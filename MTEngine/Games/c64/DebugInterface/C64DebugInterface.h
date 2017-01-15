@@ -73,7 +73,11 @@ public:
 	void ClearAddrBreakpoints(std::map<uint16, C64AddrBreakpoint *> *breakpointsMap);
 	void AddAddrBreakpoint(std::map<uint16, C64AddrBreakpoint *> *breakpointsMap, C64AddrBreakpoint *breakpoint);
 	void RemoveAddrBreakpoint(std::map<uint16, C64AddrBreakpoint *> *breakpointsMap, uint16 addr);
-	
+
+	void ClearMemoryBreakpoints(std::map<uint16, C64MemoryBreakpoint *> *breakpointsMap);
+
+	void ClearBreakpoints();
+
 	// data adapters
 	CSlrDataAdapter *dataAdapterC64;
 	CSlrDataAdapter *dataAdapterC64DirectRam;
@@ -217,6 +221,8 @@ public:
 	
 	// drive leds
 	float ledState[C64_NUM_DRIVES];
+	
+	virtual void SetPalette(uint8 *palette);
 	
 private:
 	volatile int debugMode;

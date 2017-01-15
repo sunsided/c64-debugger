@@ -1,7 +1,7 @@
 #ifndef _GUI_C64_
 #define _GUI_C64_
 
-#define C64DEBUGGER_VERSION_STRING	"0.54"
+#define C64DEBUGGER_VERSION_STRING	"0.56"
 
 #include "CGuiView.h"
 #include "CGuiButton.h"
@@ -10,6 +10,7 @@
 #include "SYS_PauseResume.h"
 #include "CViewMainMenu.h"
 #include "CViewSettingsMenu.h"
+#include "SYS_SharedMemory.h"
 #include <list>
 #include <vector>
 #include <map>
@@ -70,7 +71,7 @@ public:
 	bool c64ScreenVisible;
 	float c64ScreenX, c64ScreenY;
 	float screenSizeX, screenSizeY;
-	bool c64ScreenShowMarkers;
+	bool c64ScreenShowGridLines;
 	bool c64ScreenShowZoomedScreen;
 	float c64ScreenZoomedX, c64ScreenZoomedY;
 	float c64ScreenZoomedSizeX, c64ScreenZoomedSizeY;
@@ -155,7 +156,7 @@ public:
 	bool debugOnDrive1541;
 };
 
-class CViewC64 : public CGuiView, CGuiButtonCallback, CSlrThread, CApplicationPauseResumeListener
+class CViewC64 : public CGuiView, CGuiButtonCallback, CSlrThread, CApplicationPauseResumeListener, public CSharedMemorySignalCallback
 {
 public:
 	CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY);
@@ -305,6 +306,10 @@ public:
 	
 	// mouse cursor for scrolling where cursor is
 	float mouseCursorX, mouseCursorY;
+	
+	//
+	virtual void SharedMemorySignalCallback(CByteBuffer *sharedMemoryData);
+
 };
 
 extern CViewC64 *viewC64;

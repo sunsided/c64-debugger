@@ -8,6 +8,7 @@ class CSlrFile;
 class CByteBuffer;
 class CSlrString;
 class C64DebugInterface;
+class C64AsmSource;
 
 #define C64_SYMBOL_DEVICE_COMMODORE	1
 #define C64_SYMBOL_DEVICE_DRIVE1541	2
@@ -18,10 +19,19 @@ public:
 	C64Symbols();
 	~C64Symbols();
 	
-	void ParseSymbols(char *fileName, C64DebugInterface *debugInterface);
+	C64AsmSource *asmSource;
+	
+	void ClearSymbols(C64DebugInterface *debugInterface);
+	void ParseSymbols(CSlrString *fileName, C64DebugInterface *debugInterface);
 	void ParseSymbols(CByteBuffer *byteBuffer, C64DebugInterface *debugInterface);
-	void ParseBreakpoints(char *fileName, C64DebugInterface *debugInterface);
+	
+	void ClearBreakpoints(C64DebugInterface *debugInterface);
+	void ParseBreakpoints(CSlrString *fileName, C64DebugInterface *debugInterface);
 	void ParseBreakpoints(CByteBuffer *byteBuffer, C64DebugInterface *debugInterface);
+	
+	void ClearSourceDebugInfo(C64DebugInterface *debugInterface);
+	void ParseSourceDebugInfo(CSlrString *fileName, C64DebugInterface *debugInterface);
+	void ParseSourceDebugInfo(CByteBuffer *byteBuffer, C64DebugInterface *debugInterface);
 };
 
 #endif

@@ -32,9 +32,11 @@ void c64d_refresh_dbuf();
 void c64d_display_speed(float speed, float frame_rate);
 void c64d_display_drive_led(int drive_number, unsigned int pwm1, unsigned int led_pwm2);
 
-extern const uint8 c64d_palette_red[16];
-extern const uint8 c64d_palette_green[16];
-extern const uint8 c64d_palette_blue[16];
+extern uint8 c64d_palette_red[16];
+extern uint8 c64d_palette_green[16];
+extern uint8 c64d_palette_blue[16];
+
+void c64d_set_palette(uint8 *palette);
 
 int c64d_is_debug_on_c64();
 int c64d_is_debug_on_drive1541();

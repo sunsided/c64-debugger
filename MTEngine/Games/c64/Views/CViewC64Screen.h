@@ -80,9 +80,41 @@ public:
 	float rasterCrossSizeX6;
 	float rasterCrossSizeY6;
 	
+	/// long screen line
+	float rasterLongScrenLineR;
+	float rasterLongScrenLineG;
+	float rasterLongScrenLineB;
+	float rasterLongScrenLineA;
+	
+	// red cross
+	float rasterCrossExteriorR;
+	float rasterCrossExteriorG;
+	float rasterCrossExteriorB;
+	float rasterCrossExteriorA;
+	
+	// cross ending tip
+	float rasterCrossEndingTipR;
+	float rasterCrossEndingTipG;
+	float rasterCrossEndingTipB;
+	float rasterCrossEndingTipA;
+	
+	// white interior cross
+	float rasterCrossInteriorR;
+	float rasterCrossInteriorG;
+	float rasterCrossInteriorB;
+	float rasterCrossInteriorA;
+
+	void InitRasterColors();
+	void GetRasterColorScheme(int schemeNum, float splitAmount, float *r, float *g, float *b);
+	
 	void RenderRaster(int rasterX, int rasterY);
 	
-	bool showMarkers;
+	bool showGridLines;
+	
+	float gridLinesColorR;
+	float gridLinesColorG;
+	float gridLinesColorB;
+	float gridLinesColorA;
 	
 	void SetZoomedScreenPos(float zoomedScreenPosX, float zoomedScreenPosY, float zoomedScreenSizeX, float zoomedScreenSizeY);
 	void SetZoomedScreenLevel(float zoomedScreenLevel);
@@ -107,7 +139,7 @@ public:
 	float zoomedScreenRasterScaleFactorY;
 	float zoomedScreenRasterOffsetX;
 	float zoomedScreenRasterOffsetY;
-	
+
 };
 
 #endif //_CVIEWC64SCREEN_H_

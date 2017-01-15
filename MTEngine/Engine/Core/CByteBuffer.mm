@@ -184,6 +184,18 @@ CByteBuffer::CByteBuffer()
 	//this->logBytes = false;
 }
 
+CByteBuffer::CByteBuffer(CByteBuffer *byteBuffer)
+{
+	error = false;
+	
+	this->data = new uint8[byteBuffer->length];
+	this->wholeDataBufferSize = byteBuffer->wholeDataBufferSize;
+	this->index = byteBuffer->index;
+	this->length = byteBuffer->length;
+	
+	memcpy(this->data, byteBuffer->data, byteBuffer->length);
+}
+
 CByteBuffer::CByteBuffer(char *fileName)
 {
 	error = false;
@@ -868,6 +880,9 @@ bool CByteBuffer::readFromFile(CSlrString *filePath)
 	
 #else
 	char *f = filePath->GetStdASCII();
+	
+	FixFileNameSlashes(f);
+	
 	FILE *fp = fopen(f, "rb");
 	free(f);
 #endif
@@ -885,10 +900,22 @@ bool CByteBuffer::readFromFile(CSlrString *filePath)
 	if (this->data != NULL)
 		delete [] this->data;
 	this->data = new uint8[this->length];
-	fread(this->data, 1, this->length, fp);
+	int readed = fread(this->data, 1, this->length, fp);
 	this->index = 0;
 	this->wholeDataBufferSize = this->length;
 	fclose(fp);
+	
+	LOGD("CByteBuffer::readFromFile: length=%d readed=%d", this->length, readed);
+	
+	if (this->length != readed)
+	{
+		LOGError("CByteBuffer::readFromFile failed: length=%d readed=%d", this->length, readed);
+		delete [] this->data;
+		this->length = 0;
+		this->wholeDataBufferSize = 0;
+		this->data = NULL;
+		return false;
+	}
 	
 	return true;
 }
@@ -896,6 +923,8 @@ bool CByteBuffer::readFromFile(CSlrString *filePath)
 bool CByteBuffer::readFromFile(char *fileName, uint8 sxor[4])
 {
 	LOGD("CByteBuffer::readFromFile: '%s'", fileName);
+	
+	FixFileNameSlashes(fileName);
 	
 	FILE *fp = fopen(fileName, "rb");
 	if (fp == NULL)
@@ -979,6 +1008,8 @@ bool CByteBuffer::readFromFileNoHeader(CSlrFile *file)
 bool CByteBuffer::storeToFileNoHeader(char *fileName)
 {
 	LOGD("CByteBuffer::storeToFileNoHeader: '%s'", fileName);
+	
+	FixFileNameSlashes(fileName);
 	FILE *fp = fopen(fileName, "wb");
 	if (fp == NULL)
 	{

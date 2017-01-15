@@ -100,6 +100,19 @@ public:
 	CViewC64MenuItemOption *menuItemMultiTouchMemoryMap;
 	CViewC64MenuItemOption *menuItemMemoryMapInvert;
 	CViewC64MenuItemOption *menuItemMemoryMapRefreshRate;
+	CViewC64MenuItemOption *menuItemMemoryMapFadeSpeed;
+	
+	//
+	CViewC64MenuItemFloat *menuItemScreenGridLinesAlpha;
+	CViewC64MenuItemOption *menuItemScreenGridLinesColorScheme;
+	CViewC64MenuItemFloat *menuItemScreenRasterViewfinderScale;
+	CViewC64MenuItemFloat *menuItemScreenRasterCrossLinesAlpha;
+	CViewC64MenuItemOption *menuItemScreenRasterCrossLinesColorScheme;
+	CViewC64MenuItemFloat *menuItemScreenRasterCrossAlpha;
+	CViewC64MenuItemOption *menuItemScreenRasterCrossInteriorColorScheme;
+	CViewC64MenuItemOption *menuItemScreenRasterCrossExteriorColorScheme;
+	CViewC64MenuItemOption *menuItemScreenRasterCrossTipColorScheme;
+	
 
 	CViewC64MenuItemOption *menuItemSIDModel;
 	CViewC64MenuItemOption *menuItemMuteSIDOnPause;
@@ -109,7 +122,6 @@ public:
 	CViewC64MenuItemOption *menuItemC64Model;
 	CViewC64MenuItemOption *menuItemFastBootKernalPatch;
 	CViewC64MenuItemOption *menuItemDisassembleExecuteAware;
-
 	
 	CViewC64MenuItemOption *menuItemMaximumSpeed;
 	CSlrKeyboardShortcut *kbsSwitchNextMaximumSpeed;
@@ -117,6 +129,8 @@ public:
 	void SwitchNextMaximumSpeed();
 	void SwitchPrevMaximumSpeed();
 	void SetEmulationMaximumSpeed(int maximumSpeed);
+
+	CViewC64MenuItemOption *menuItemWindowAlwaysOnTop;
 
 	CViewC64MenuItem *menuItemClearSettings;
 	

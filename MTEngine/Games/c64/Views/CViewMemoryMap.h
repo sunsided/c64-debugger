@@ -52,6 +52,8 @@ public:
 	void ClearReadWriteMarkers();
 };
 
+void C64DebuggerSetMemoryMapCellsFadeSpeed(float fadeSpeed);
+
 class CViewMemoryMap : public CGuiView
 {
 public:

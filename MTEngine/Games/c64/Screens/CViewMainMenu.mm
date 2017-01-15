@@ -280,45 +280,49 @@ void CViewMainMenu::SystemDialogFileOpenSelected(CSlrString *path)
 
 	if (openDialogFunction == VIEWC64SETTINGS_OPEN_D64)
 	{
-		InsertD64(path);
+		InsertD64(path, true);
 		C64DebuggerStoreSettings();
 	}
 	else if (openDialogFunction == VIEWC64SETTINGS_OPEN_CRT)
 	{
-		InsertCartridge(path);
+		InsertCartridge(path, true);
 		C64DebuggerStoreSettings();
 	}
 	else if (openDialogFunction == VIEWC64SETTINGS_OPEN_PRG)
 	{
-		LoadPRG(path, true);
+		LoadPRG(path, true, true);
 		C64DebuggerStoreSettings();
 	}
 	
 	delete path;
 }
 
-void CViewMainMenu::InsertD64(CSlrString *path)
+void CViewMainMenu::InsertD64(CSlrString *path, bool updatePathToD64)
 {
 	LOGD("CViewMainMenu::InsertD64: path=%x", path);
-	if (c64SettingsPathD64 != path)
+	if (c64SettingsPathToD64 != path)
 	{
-		if (c64SettingsPathD64 != NULL)
-			delete c64SettingsPathD64;
-		c64SettingsPathD64 = new CSlrString(path);
+		if (c64SettingsPathToD64 != NULL)
+			delete c64SettingsPathToD64;
+		c64SettingsPathToD64 = new CSlrString(path);
 	}
 	
-	if (c64SettingsDefaultD64Folder != NULL)
-		delete c64SettingsDefaultD64Folder;
-	c64SettingsDefaultD64Folder = path->GetFilePathWithoutFileNameComponentFromPath();
-
-	c64SettingsDefaultD64Folder->DebugPrint("c64SettingsDefaultD64Folder=");
+	if (updatePathToD64)
+	{
+		LOGD("...updatePathToD64");
+		if (c64SettingsDefaultD64Folder != NULL)
+			delete c64SettingsDefaultD64Folder;
+		c64SettingsDefaultD64Folder = path->GetFilePathWithoutFileNameComponentFromPath();
+		
+		c64SettingsDefaultD64Folder->DebugPrint("c64SettingsDefaultD64Folder=");
+	}
 	
 	// insert D64
 	viewC64->debugInterface->InsertD64(path);
 
 	
 	// TODO: support UTF paths
-	char *asciiPath = c64SettingsPathD64->GetStdASCII();
+	char *asciiPath = c64SettingsPathToD64->GetStdASCII();
 	
 	// display file name in menu
 	char *fname = SYS_GetFileNameFromFullPath(asciiPath);
@@ -336,27 +340,33 @@ void CViewMainMenu::InsertD64(CSlrString *path)
 	delete asciiPath;
 }
 
-void CViewMainMenu::InsertCartridge(CSlrString *path)
+void CViewMainMenu::InsertCartridge(CSlrString *path, bool updatePathToCRT)
 {
-	if (c64SettingsPathCartridge != path)
+	path->DebugPrint("CViewMainMenu::InsertCartridge, path=");
+	
+	if (c64SettingsPathToCartridge != path)
 	{
-		if (c64SettingsPathCartridge != NULL)
-			delete c64SettingsPathCartridge;
-		c64SettingsPathCartridge = new CSlrString(path);
+		if (c64SettingsPathToCartridge != NULL)
+			delete c64SettingsPathToCartridge;
+		c64SettingsPathToCartridge = new CSlrString(path);
 	}
 	
-	if (c64SettingsDefaultCartridgeFolder != NULL)
-		delete c64SettingsDefaultCartridgeFolder;
-	c64SettingsDefaultCartridgeFolder = path->GetFilePathWithoutFileNameComponentFromPath();
+	if (updatePathToCRT)
+	{
+		LOGD("...updatePathToCRT");
+		if (c64SettingsDefaultCartridgeFolder != NULL)
+			delete c64SettingsDefaultCartridgeFolder;
+		c64SettingsDefaultCartridgeFolder = path->GetFilePathWithoutFileNameComponentFromPath();
+		
+		c64SettingsDefaultCartridgeFolder->DebugPrint("strDefaultCartridgeFolder=");
+	}
 	
-	c64SettingsDefaultCartridgeFolder->DebugPrint("strDefaultCartridgeFolder=");
-
 	// insert CRT
 	viewC64->debugInterface->AttachCartridge(path);
 	
 	
 	// TODO: support UTF paths
-	char *asciiPath = c64SettingsPathCartridge->GetStdASCII();
+	char *asciiPath = c64SettingsPathToCartridge->GetStdASCII();
 	
 	// display file name in menu
 	char *fname = SYS_GetFileNameFromFullPath(asciiPath);
@@ -374,26 +384,38 @@ void CViewMainMenu::InsertCartridge(CSlrString *path)
 	delete asciiPath;
 }
 
-bool CViewMainMenu::LoadPRG(CSlrString *path, bool autoStart)
+bool CViewMainMenu::LoadPRG(CSlrString *path, bool autoStart, bool updatePRGFolderPath)
 {
+	path->DebugPrint("CViewMainMenu::LoadPRG: path=");
+	
 	// TODO: p00 http://vice-emu.sourceforge.net/vice_15.html#SEC299
 	
-	if (c64SettingsPathPRG != path)
+	if (c64SettingsPathToPRG != path)
 	{
-		if (c64SettingsPathPRG != NULL)
-			delete c64SettingsPathPRG;
-		c64SettingsPathPRG = new CSlrString(path);
+		if (c64SettingsPathToPRG != NULL)
+			delete c64SettingsPathToPRG;
+		c64SettingsPathToPRG = new CSlrString(path);
 	}
 	
-	if (c64SettingsDefaultPRGFolder != NULL)
-		delete c64SettingsDefaultPRGFolder;
-	c64SettingsDefaultPRGFolder = path->GetFilePathWithoutFileNameComponentFromPath();
+	if (updatePRGFolderPath)
+	{
+		LOGD("...updatePRGFolderPath");
+		if (c64SettingsDefaultPRGFolder != NULL)
+			delete c64SettingsDefaultPRGFolder;
+		c64SettingsDefaultPRGFolder = path->GetFilePathWithoutFileNameComponentFromPath();
+		
+		c64SettingsDefaultPRGFolder->DebugPrint("c64SettingsDefaultPRGFolder=");
+	}
 	
-	c64SettingsDefaultPRGFolder->DebugPrint("c64SettingsDefaultPRGFolder=");
+	LOGD("... LoadPRG (2)");
+	
+	c64SettingsPathToPRG->DebugPrint("c64SettingsPathToPRG=");
 	
 	// TODO: make CSlrFileFromOS support UTF paths
-	char *asciiPath = c64SettingsPathPRG->GetStdASCII();
+	char *asciiPath = c64SettingsPathToPRG->GetStdASCII();
 
+	LOGD("asciiPath='%s'", asciiPath);
+	
 	CSlrFileFromOS *file = new CSlrFileFromOS(asciiPath);
 	if (!file->Exists())
 	{
@@ -417,7 +439,11 @@ bool CViewMainMenu::LoadPRG(CSlrString *path, bool autoStart)
 	while (!byteBuffer->isEof())
 	{
 		u8 b = byteBuffer->GetByte();
-		viewC64->debugInterface->SetByteC64(addr, b);
+		
+		
+//		viewC64->debugInterface->SetByteC64(addr, b);
+
+		viewC64->debugInterface->SetByteToRamC64(addr, b);
 		addr++;
 	}
 	
@@ -534,10 +560,10 @@ void CViewMainMenu::ResetAndJSR(int startAddr)
 
 void CViewMainMenu::ReloadAndRestartPRG()
 {
-	if (c64SettingsPathPRG != NULL)
+	if (c64SettingsPathToPRG != NULL)
 	{
-		CSlrString *newPath = new CSlrString(c64SettingsPathPRG);
-		LoadPRG(newPath, true);
+		CSlrString *newPath = new CSlrString(c64SettingsPathToPRG);
+		LoadPRG(newPath, true, false);
 		delete newPath;
 	}
 	else
@@ -943,4 +969,97 @@ bool CViewC64MenuItemOption::KeyDown(u32 keyCode)
 	
 	return false;
 }
+
+//
+
+
+CViewC64MenuItemFloat::CViewC64MenuItemFloat(float height, CSlrString *str, CSlrKeyboardShortcut *shortcut, float r, float g, float b,
+											 float minimum, float maximum, float step, CSlrFont *font, float fontScale)
+: CViewC64MenuItem(height, NULL, shortcut, r, g, b)
+{
+	this->minimum = minimum;
+	this->maximum = maximum;
+	this->step = step;
+	
+	textStr = NULL;
+	
+	// update display string
+	this->SetString(str);
+}
+
+void CViewC64MenuItemFloat::SetValue(float value, bool runCallback)
+{
+	this->value = value;
+	
+	UpdateDisplayString();
+	
+	if (runCallback)
+		this->menu->callback->MenuCallbackItemChanged(this);
+}
+
+void CViewC64MenuItemFloat::SetString(CSlrString *str)
+{
+	if (this->textStr != NULL)
+		delete this->textStr;
+	
+	this->textStr = str;
+	
+	UpdateDisplayString();
+	
+}
+
+void CViewC64MenuItemFloat::UpdateDisplayString()
+{
+	char *buf = SYS_GetCharBuf();
+	sprintf(buf, "%-5.2f", value);
+	CSlrString *valStr = new CSlrString(buf);
+	SYS_ReleaseCharBuf(buf);
+	
+	CSlrString *newStr = new CSlrString(this->textStr);
+	newStr->Concatenate(valStr);
+	CViewC64MenuItem::SetString(newStr);
+	
+	delete valStr;
+}
+
+void CViewC64MenuItemFloat::SwitchToPrev()
+{
+	value -= step;
+	
+	if (value < minimum)
+		value = minimum;
+	
+	this->UpdateDisplayString();
+	
+	this->menu->callback->MenuCallbackItemChanged(this);
+}
+
+void CViewC64MenuItemFloat::SwitchToNext()
+{
+	value += step;
+	
+	if (value > maximum)
+		value = maximum;
+	
+	this->UpdateDisplayString();
+	
+	this->menu->callback->MenuCallbackItemChanged(this);
+}
+
+bool CViewC64MenuItemFloat::KeyDown(u32 keyCode)
+{
+	if (keyCode == MTKEY_ARROW_LEFT)
+	{
+		SwitchToPrev();
+		return true;
+	}
+	else if (keyCode == MTKEY_ARROW_RIGHT || keyCode == MTKEY_ENTER)
+	{
+		SwitchToNext();
+		return true;
+	}
+	
+	return false;
+}
+
 

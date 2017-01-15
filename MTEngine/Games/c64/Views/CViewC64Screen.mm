@@ -5,6 +5,7 @@
 #include "CViewC64.h"
 #include "SYS_KeyCodes.h"
 #include "C64DebugInterface.h"
+#include "C64SettingsStorage.h"
 
 CViewC64Screen::CViewC64Screen(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, C64DebugInterface *debugInterface)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
@@ -39,10 +40,10 @@ CViewC64Screen::CViewC64Screen(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	screenTexEndY = 1.0f - (float)debugInterface->GetC64ScreenSizeY() / 512.0f;
 
 	// zoomed screen
-	this->zoomedScreenLevel = 1.5f;
+	this->zoomedScreenLevel = c64SettingsScreenRasterViewfinderScale;
 	this->showZoomedScreen = false;
 	
-	this->showMarkers = false;
+	this->showGridLines = false;
 	
 	this->SetPosition(posX, posY, posZ, sizeX, sizeY);
 	
@@ -53,10 +54,96 @@ CViewC64Screen::CViewC64Screen(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 //	
 //	debugInterface->breakOnC64Raster = true;
 
+	InitRasterColors();
 }
 
 CViewC64Screen::~CViewC64Screen()
 {
+}
+
+void CViewC64Screen::GetRasterColorScheme(int schemeNum, float splitAmount, float *r, float *g, float *b)
+{
+	switch(schemeNum)
+	{
+		default:
+			// red
+			*r = 1.0f - splitAmount;
+			*g = splitAmount;
+			*b = 0.0f;
+			break;
+		case 1:
+			// green
+			*r = splitAmount;
+			*g = 1.0f - splitAmount;
+			*b = 0.0f;
+			break;
+		case 2:
+			// blue
+			*r = splitAmount;
+			*g = 0.0f;
+			*b = 1.0f - splitAmount;
+			break;
+		case 3:
+			// black
+			*r = 0.0f;
+			*g = 0.0f;
+			*b = 0.0f;
+			break;
+		case 4:
+			// dark gray
+			*r = 0.25f;
+			*g = 0.25f;
+			*b = 0.25f;
+			break;
+		case 5:
+			// light gray
+			*r = 0.70f;
+			*g = 0.70f;
+			*b = 0.70f;
+			break;
+		case 6:
+			// white
+			*r = 1.0f;
+			*g = 1.0f;
+			*b = 1.0f;
+			break;
+	}
+
+}
+
+void CViewC64Screen::InitRasterColors()
+{
+	// grid lines
+	GetRasterColorScheme(c64SettingsScreenGridLinesColorScheme, 0.0f,
+						 &gridLinesColorR, &gridLinesColorG, &gridLinesColorB);
+	
+	gridLinesColorA = c64SettingsScreenGridLinesAlpha;
+
+	// raster long screen line
+	GetRasterColorScheme(c64SettingsScreenRasterCrossLinesColorScheme, 0.0f,
+						 &rasterLongScrenLineR, &rasterLongScrenLineG, &rasterLongScrenLineB);
+	rasterLongScrenLineA = c64SettingsScreenRasterCrossLinesAlpha;
+	
+	//c64SettingsScreenRasterCrossAlpha = 0.85
+
+	// exterior
+	GetRasterColorScheme(c64SettingsScreenRasterCrossExteriorColorScheme, 0.1f,
+						 &rasterCrossExteriorR, &rasterCrossExteriorG, &rasterCrossExteriorB);
+	
+	rasterCrossExteriorA = 0.8235f * c64SettingsScreenRasterCrossAlpha;		// 0.7
+	
+	// tip
+	GetRasterColorScheme(c64SettingsScreenRasterCrossTipColorScheme, 0.1f,
+						 &rasterCrossEndingTipR, &rasterCrossEndingTipG, &rasterCrossEndingTipB);
+	
+	rasterCrossEndingTipA = 0.1765f * c64SettingsScreenRasterCrossAlpha;	// 0.15
+	
+	// white interior cross
+	GetRasterColorScheme(c64SettingsScreenRasterCrossInteriorColorScheme, 0.1f,
+						 &rasterCrossInteriorR, &rasterCrossInteriorG, &rasterCrossInteriorB);
+
+	rasterCrossInteriorA = c64SettingsScreenRasterCrossAlpha;	// 0.85
+	
 }
 
 void CViewC64Screen::KeyUpModifierKeys(bool isShift, bool isAlt, bool isControl)
@@ -112,7 +199,6 @@ void CViewC64Screen::RefreshScreen()
 	debugInterface->UnlockRenderScreenMutex();
 }
 
-
 void CViewC64Screen::Render()
 {
 	// render texture of C64's screen
@@ -123,7 +209,7 @@ void CViewC64Screen::Render()
 		 sizeY,
 		 0.0f, 1.0f, screenTexEndX, screenTexEndY);
 	
-	if (showMarkers)
+	if (showGridLines)
 	{
 		// raster screen in hex:
 		// startx = 68 (88) endx = 1e8 (1c8)
@@ -141,7 +227,8 @@ void CViewC64Screen::Render()
 		{
 			float cx = posX + (float)rasterX * rasterScaleFactorX  + rasterCrossOffsetX;
 			
-			BlitLine(cx, cys, cx, cye, -1, 1.0f, 0.0f, 0.0f, 0.3f);
+			BlitLine(cx, cys, cx, cye, -1,
+					 gridLinesColorR, gridLinesColorG, gridLinesColorB, gridLinesColorA);
 		}
 		
 		// horizontal lines
@@ -149,7 +236,8 @@ void CViewC64Screen::Render()
 		{
 			float cy = posY + (float)rasterY * rasterScaleFactorY  + rasterCrossOffsetY;
 			
-			BlitLine(cxs, cy, cxe, cy, -1, 1.0f, 0.0f, 0.0f, 0.3f);
+			BlitLine(cxs, cy, cxe, cy, -1,
+					 gridLinesColorR, gridLinesColorG, gridLinesColorB, gridLinesColorA);
 		}
 		
 		
@@ -203,6 +291,14 @@ void CViewC64Screen::RenderZoomedScreen(int rasterX, int rasterY)
 	SetClipping(zoomedScreenPosX, zoomedScreenPosY, zoomedScreenSizeX, zoomedScreenSizeY);
 	
 	//LOGD("x=%6.2f %6.2f  y=%6.2f y=%6.2f", zoomedScreenImageStartX, zoomedScreenImageStartY, zoomedScreenImageSizeX, zoomedScreenImageSizeY);
+
+	// nearest neighbour
+	{
+		glBindTexture(GL_TEXTURE_2D, imageScreen->texture[0]);
+
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+	}
 	
 	Blit(imageScreen,
 		 zoomedScreenImageStartX,
@@ -211,14 +307,24 @@ void CViewC64Screen::RenderZoomedScreen(int rasterX, int rasterY)
 		 zoomedScreenImageSizeY,
 		 0.0f, 1.0f, screenTexEndX, screenTexEndY);
 	
+	// back to linear scale
+	{
+		glBindTexture(GL_TEXTURE_2D, imageScreen->texture[0]);
+		
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+	}
+
 	// clipping
 	BlitRectangle(zoomedScreenPosX, zoomedScreenPosY, -1, zoomedScreenSizeX, zoomedScreenSizeY, 0.0f, 1.0f, 1.0f, 1.0f);
 	
 	
 	float rs = 1.0f;
 	float rs2 = rs*2.0f;
-	BlitFilledRectangle(zoomedScreenCenterX - rs, zoomedScreenPosY, -1, rs2, zoomedScreenSizeY, 1.0f, 0.0f, 0.0f, 0.3f);
-	BlitFilledRectangle(zoomedScreenPosX, zoomedScreenCenterY, -1, zoomedScreenSizeX, rs2, 1.0f, 0.0f, 0.0f, 0.3f);
+	BlitFilledRectangle(zoomedScreenCenterX - rs, zoomedScreenPosY, -1, rs2, zoomedScreenSizeY,
+						rasterLongScrenLineR, rasterLongScrenLineG, rasterLongScrenLineB, rasterLongScrenLineA);
+	BlitFilledRectangle(zoomedScreenPosX, zoomedScreenCenterY, -1, zoomedScreenSizeX, rs2,
+						rasterLongScrenLineR, rasterLongScrenLineG, rasterLongScrenLineB, rasterLongScrenLineA);
 	
 	ResetClipping();
 }
@@ -295,42 +401,33 @@ void CViewC64Screen::RenderRaster(int rasterX, int rasterY)
 	float cy = posY + (float)rasterY * rasterScaleFactorY  + rasterCrossOffsetY;
 	
 
-	/// long line
-	float rr4 = 0.7f;
-	float rg4 = 0.7f;
-	float rb4 = 0.7f;
-	float ra4 = 0.35f;
-	
-	BlitFilledRectangle(posX, cy - rasterCrossWidth2, posZ, sizeX, rasterCrossWidth, rr4, rg4, rb4, ra4);
-	BlitFilledRectangle(cx - rasterCrossWidth2, posY, posZ, rasterCrossWidth, sizeY, rr4, rg4, rb4, ra4);
+	/// long screen line
+	BlitFilledRectangle(posX, cy - rasterCrossWidth2, posZ, sizeX, rasterCrossWidth,
+						rasterLongScrenLineR, rasterLongScrenLineG, rasterLongScrenLineB, rasterLongScrenLineA);
+	BlitFilledRectangle(cx - rasterCrossWidth2, posY, posZ, rasterCrossWidth, sizeY,
+						rasterLongScrenLineR, rasterLongScrenLineG, rasterLongScrenLineB, rasterLongScrenLineA);
 
-	
-	float rr1 = 0.9f;
-	float rg1 = 0.1f;
-	float rb1 = 0.0f;
-	float ra1 = 0.7f;
-	
-	BlitFilledRectangle(cx - rasterCrossWidth2, cy - rasterCrossSizeY2, posZ, rasterCrossWidth, rasterCrossSizeY, rr1, rg1, rb1, ra1);
-	BlitFilledRectangle(cx - rasterCrossSizeX2, cy - rasterCrossWidth2, posZ, rasterCrossSizeX, rasterCrossWidth, rr1, rg1, rb1, ra1);
+	// red cross
+	BlitFilledRectangle(cx - rasterCrossWidth2, cy - rasterCrossSizeY2, posZ, rasterCrossWidth, rasterCrossSizeY,
+						rasterCrossExteriorR, rasterCrossExteriorG, rasterCrossExteriorB, rasterCrossExteriorA);
+	BlitFilledRectangle(cx - rasterCrossSizeX2, cy - rasterCrossWidth2, posZ, rasterCrossSizeX, rasterCrossWidth,
+						rasterCrossExteriorR, rasterCrossExteriorG, rasterCrossExteriorB, rasterCrossExteriorA);
 
-	float rr2 = 0.0f;
-	float rg2 = 0.0f;
-	float rb2 = 0.0f;
-	float ra2 = 0.15f;
-	
-	BlitFilledRectangle(cx - rasterCrossWidth2, cy - rasterCrossSizeY34, posZ, rasterCrossWidth, rasterCrossSizeY4, rr2, rg2, rb2, ra2);
-	BlitFilledRectangle(cx - rasterCrossWidth2, cy + rasterCrossSizeY2, posZ, rasterCrossWidth, rasterCrossSizeY4, rr2, rg2, rb2, ra2);
-	BlitFilledRectangle(cx - rasterCrossSizeX34, cy - rasterCrossWidth2, posZ, rasterCrossSizeX4, rasterCrossWidth, rr2, rg2, rb2, ra2);
-	BlitFilledRectangle(cx + rasterCrossSizeX2, cy - rasterCrossWidth2, posZ, rasterCrossSizeX4, rasterCrossWidth, rr2, rg2, rb2, ra2);
-	
-	float rr3 = 1.0f;
-	float rg3 = 1.0f;
-	float rb3 = 1.0f;
-	float ra3 = 0.85f;
+	// cross ending tip
+	BlitFilledRectangle(cx - rasterCrossWidth2, cy - rasterCrossSizeY34, posZ, rasterCrossWidth, rasterCrossSizeY4,
+						rasterCrossEndingTipR, rasterCrossEndingTipG, rasterCrossEndingTipB, rasterCrossEndingTipA);
+	BlitFilledRectangle(cx - rasterCrossWidth2, cy + rasterCrossSizeY2, posZ, rasterCrossWidth, rasterCrossSizeY4,
+						rasterCrossEndingTipR, rasterCrossEndingTipG, rasterCrossEndingTipB, rasterCrossEndingTipA);
+	BlitFilledRectangle(cx - rasterCrossSizeX34, cy - rasterCrossWidth2, posZ, rasterCrossSizeX4, rasterCrossWidth,
+						rasterCrossEndingTipR, rasterCrossEndingTipG, rasterCrossEndingTipB, rasterCrossEndingTipA);
+	BlitFilledRectangle(cx + rasterCrossSizeX2, cy - rasterCrossWidth2, posZ, rasterCrossSizeX4, rasterCrossWidth,
+						rasterCrossEndingTipR, rasterCrossEndingTipG, rasterCrossEndingTipB, rasterCrossEndingTipA);
 
-	BlitFilledRectangle(cx - rasterCrossWidth2, cy - rasterCrossSizeY6, posZ, rasterCrossWidth, rasterCrossSizeY3, rr3, rg3, rb3, ra3);
-	BlitFilledRectangle(cx - rasterCrossSizeX6, cy - rasterCrossWidth2, posZ, rasterCrossSizeX3, rasterCrossWidth, rr3, rg3, rb3, ra3);
-
+	// white interior cross
+	BlitFilledRectangle(cx - rasterCrossWidth2, cy - rasterCrossSizeY6, posZ, rasterCrossWidth, rasterCrossSizeY3,
+						rasterCrossInteriorR, rasterCrossInteriorG, rasterCrossInteriorB, rasterCrossInteriorA);
+	BlitFilledRectangle(cx - rasterCrossSizeX6, cy - rasterCrossWidth2, posZ, rasterCrossSizeX3, rasterCrossWidth,
+						rasterCrossInteriorR, rasterCrossInteriorG, rasterCrossInteriorB, rasterCrossInteriorA);
 	
 }
 

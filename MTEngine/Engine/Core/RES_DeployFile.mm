@@ -467,6 +467,7 @@ void RES_GenerateSourceFromData(char *filePathIn, char *filePathOut, char *embed
 	if (!file->Exists())
 	{
 		LOGError("RES_GenerateSourceFromData: file does not exist (path='%s')", filePathIn);
+		return;
 	}
 	CByteBuffer *byteBuffer = new CByteBuffer(file, false);
 	RES_GenerateSourceFromData(byteBuffer, filePathOut, embedName);

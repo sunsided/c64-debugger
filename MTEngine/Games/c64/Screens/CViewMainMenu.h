@@ -125,11 +125,11 @@ public:
 	std::list<CSlrString *> crtExtensions;
 	
 	void OpenDialogInsertD64();
-	void InsertD64(CSlrString *path);
+	void InsertD64(CSlrString *path, bool updatePathToD64);
 	void OpenDialogInsertCartridge();
-	void InsertCartridge(CSlrString *path);
+	void InsertCartridge(CSlrString *path, bool updatePathToCRT);
 	void OpenDialogLoadPRG();
-	bool LoadPRG(CSlrString *path, bool autoStart);
+	bool LoadPRG(CSlrString *path, bool autoStart, bool updatePRGFolderPath);
 	void ReloadAndRestartPRG();
 	void ResetAndJSR(int startAddr);
 	
@@ -186,5 +186,28 @@ public:
 	int selectedOption;
 	virtual void SetSelectedOption(int newSelectedOption, bool runCallback);
 };
+
+class CViewC64MenuItemFloat : public CViewC64MenuItem
+{
+public:
+	CViewC64MenuItemFloat(float height, CSlrString *str, CSlrKeyboardShortcut *shortcut, float r, float g, float b,
+						   float minimum, float maximum, float step, CSlrFont *font, float fontScale);
+	
+	float minimum, maximum, step;
+	
+	CSlrString *textStr;
+	
+	virtual void SetString(CSlrString *str);
+	virtual void UpdateDisplayString();
+	
+	virtual bool KeyDown(u32 keyCode);
+	
+	virtual void SwitchToNext();
+	virtual void SwitchToPrev();
+
+	float value;
+	virtual void SetValue(float value, bool runCallback);
+};
+
 
 #endif //_VIEW_C64MAINMENU_

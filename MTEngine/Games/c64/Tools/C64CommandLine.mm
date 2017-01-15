@@ -8,8 +8,13 @@
 #include "RES_ResourceManager.h"
 #include "C64DebugInterface.h"
 #include "C64SettingsStorage.h"
+#include "C64SharedMemory.h"
 
 #define printLine printf
+#define C64D_PASS_CONFIG_DATA_MARKER	0x029A
+#define C64D_PASS_CONFIG_DATA_VERSION	0x0002
+
+void C64DebuggerPassConfigToRunningInstance();
 
 void c64ShowCommandLineHelp()
 {
@@ -30,32 +35,11 @@ void c64ShowCommandLineHelp()
 	printLine("-autojmp     automatically jmp to address if basic SYS is detected\n");
 	printLine("-snapshot <file>  load snapshot from file\n");
 	printLine("\n");
-	printLine("-clearsettings    clear all config settings");
+	printLine("-clearsettings    clear all config settings\n");
+	printLine("-pass        pass parameters to already running instance\n");
 	printLine("\n");
 	
 	SYS_CleanExit();
-}
-
-
-void C64DebuggerParseCommandLine1()
-{
-	if (sysCommandLineArguments.size() > 0)
-	{
-		char *cmd = sysCommandLineArguments[0];
-		if (!strcmp(cmd, "help") || !strcmp(cmd, "h")
-			|| !strcmp(cmd, "-help") || !strcmp(cmd, "-h")
-			|| !strcmp(cmd, "--help") || !strcmp(cmd, "--h"))
-		{
-			c64ShowCommandLineHelp();
-		}
-		
-		if (!strcmp(cmd, "-clearsettings") || !strcmp(cmd, "clearsettings"))
-		{
-			c64SettingsSkipConfig = true;
-			printLine("Skipping loading config\n");
-			LOGD("Skipping auto loading settings config");
-		}
-	}
 }
 
 std::vector<char *>::iterator c64cmdIt;
@@ -75,15 +59,90 @@ char *c64ParseCommandLineGetArgument()
 	return arg;
 }
 
+void C64DebuggerParseCommandLine0()
+{
+	if (sysCommandLineArguments.empty())
+		return;
+	
+	c64cmdIt = sysCommandLineArguments.begin();
+	
+	while(c64cmdIt != sysCommandLineArguments.end())
+	{
+		char *cmd = c64ParseCommandLineGetArgument();
+		
+		if (!strcmp(cmd, "help") || !strcmp(cmd, "h")
+			|| !strcmp(cmd, "-help") || !strcmp(cmd, "-h")
+			|| !strcmp(cmd, "--help") || !strcmp(cmd, "--h"))
+		{
+			c64ShowCommandLineHelp();
+		}
+		
+		if (!strcmp(cmd, "-pass") || !strcmp(cmd, "pass"))
+		{
+			C64DebuggerInitSharedMemory();
+			C64DebuggerPassConfigToRunningInstance();
+		}
+	}
+}
+
+void C64DebuggerParseCommandLine1()
+{
+	if (sysCommandLineArguments.empty())
+		return;
+
+	c64cmdIt = sysCommandLineArguments.begin();
+	
+	while(c64cmdIt != sysCommandLineArguments.end())
+	{
+		char *cmd = c64ParseCommandLineGetArgument();
+
+		if (!strcmp(cmd, "help") || !strcmp(cmd, "h")
+			|| !strcmp(cmd, "-help") || !strcmp(cmd, "-h")
+			|| !strcmp(cmd, "--help") || !strcmp(cmd, "--h"))
+		{
+			c64ShowCommandLineHelp();
+		}
+		
+		if (!strcmp(cmd, "-clearsettings") || !strcmp(cmd, "clearsettings"))
+		{
+			c64SettingsSkipConfig = true;
+			printLine("Skipping loading config\n");
+			LOGD("Skipping auto loading settings config");
+		}		
+	}
+}
+
 void c64PerformStartupTasksThreaded()
 {
 	LOGD("c64PerformStartupTasksThreaded");
 	
+	// load breakpoints & symbols
+	
+	if (c64SettingsPathToBreakpoints != NULL)
+	{
+		viewC64->symbols->ClearBreakpoints(viewC64->debugInterface);
+		viewC64->symbols->ParseBreakpoints(c64SettingsPathToBreakpoints, viewC64->debugInterface);
+	}
+	
+	if (c64SettingsPathToSymbols != NULL)
+	{
+		viewC64->symbols->ClearSymbols(viewC64->debugInterface);
+		viewC64->symbols->ParseSymbols(c64SettingsPathToSymbols, viewC64->debugInterface);
+	}
+	
+	if (c64SettingsPathToDebugInfo != NULL)
+	{
+		viewC64->symbols->ClearSourceDebugInfo(viewC64->debugInterface);
+		viewC64->symbols->ParseSourceDebugInfo(c64SettingsPathToDebugInfo, viewC64->debugInterface);
+	}
+	
 	// process, order is important
 	// we need to create new strings for path as they will be deleted and updated by loaders
-	if (c64SettingsPathSnapshot != NULL)
+	if (c64SettingsPathToSnapshot != NULL)
 	{
-		viewC64->viewC64Snapshots->LoadSnapshot(c64SettingsPathSnapshot, false);
+		viewC64->viewC64Snapshots->LoadSnapshot(c64SettingsPathToSnapshot, false);
+		
+		SYS_Sleep(150);
 	}
 	else
 	{
@@ -99,41 +158,34 @@ void c64PerformStartupTasksThreaded()
 			viewC64->debugInterface->SetSidType(c64SettingsSIDEngineModel);
 		}
 		
-		if (c64SettingsPathD64 != NULL)
+		if (c64SettingsPathToD64 != NULL)
 		{
-			viewC64->viewC64MainMenu->InsertD64(c64SettingsPathD64);
+			viewC64->viewC64MainMenu->InsertD64(c64SettingsPathToD64, false);
 		}
 		
-		if (c64SettingsPathCartridge != NULL)
+		if (c64SettingsPathToCartridge != NULL)
 		{
-			viewC64->viewC64MainMenu->InsertCartridge(c64SettingsPathCartridge);
+			viewC64->viewC64MainMenu->InsertCartridge(c64SettingsPathToCartridge, false);
 			SYS_Sleep(666);
 		}
+	}
+	
+	///////////
+	
+	if (c64SettingsPathToPRG != NULL)
+	{
+		//LOGD("c64SettingsPathToPRG='%s'", c64SettingsPathToPRG);
 		
-		if (c64SettingsPathPRG != NULL)
-		{
-			//LOGD("c64SettingsPathPRG='%s'", c64SettingsPathPRG);
-			//		if (statepath == NULL)
-			//		{
-			//			// load default state to speed up
-			//			CSlrFile *file = RES_GetFile("/c64/startup", DEPLOY_FILE_TYPE_DATA);
-			//			CByteBuffer *buf = new CByteBuffer(file, false);
-			//			viewC64->viewC64Snapshots->LoadSnapshot(buf, false);
-			//			delete buf;
-			//			delete file;
-			//		}
-			
-			viewC64->viewC64MainMenu->LoadPRG(c64SettingsPathPRG, c64SettingsAutoJmp);
-		}
+		viewC64->viewC64MainMenu->LoadPRG(c64SettingsPathToPRG, c64SettingsAutoJmp, false);
+	}
+	
+	if (c64SettingsJmpOnStartupAddr > 0 && c64SettingsJmpOnStartupAddr < 0x10000)
+	{
+		//SYS_Sleep(150);
 		
-		if (c64SettingsJmpOnStartupAddr > 0 && c64SettingsJmpOnStartupAddr < 0x10000)
-		{
-			//SYS_Sleep(150);
-			
-			//LOGD("c64SettingsJmpOnStartupAddr=%04x", c64SettingsJmpOnStartupAddr);
+		LOGD("c64SettingsJmpOnStartupAddr=%04x", c64SettingsJmpOnStartupAddr);
 
-			viewC64->debugInterface->MakeJsrC64(c64SettingsJmpOnStartupAddr);
-		}
+		viewC64->debugInterface->MakeJsrC64(c64SettingsJmpOnStartupAddr);
 	}
 }
 
@@ -141,10 +193,11 @@ class C64PerformStartupTasksThread : public CSlrThread
 {
 	virtual void ThreadRun(void *data)
 	{
-		if (c64SettingsPathSnapshot != NULL && c64SettingsWaitOnStartup < 150)
+		if (c64SettingsPathToSnapshot != NULL && c64SettingsWaitOnStartup < 150)
 			c64SettingsWaitOnStartup = 150;
 		
 		SYS_Sleep(c64SettingsWaitOnStartup);
+		
 		c64PerformStartupTasksThreaded();
 	};
 };
@@ -156,21 +209,30 @@ void C64DebuggerParseCommandLine2()
 	
 	c64cmdIt = sysCommandLineArguments.begin();
 	
+	LOGD("C64DebuggerParseCommandLine2: iterate");
 	while(c64cmdIt != sysCommandLineArguments.end())
 	{
 		char *cmd = c64ParseCommandLineGetArgument();
+
+		//LOGD("...cmd='%s'", cmd);
+
 		if (cmd[0] == '-')
 			cmd++;
 		
 		if (!strcmp(cmd, "breakpoints") || !strcmp(cmd, "b"))
 		{
-			char *fname = c64ParseCommandLineGetArgument();
-			viewC64->symbols->ParseBreakpoints(fname, viewC64->debugInterface);
+			char *arg = c64ParseCommandLineGetArgument();
+			c64SettingsPathToBreakpoints = new CSlrString(arg);
 		}
 		else if (!strcmp(cmd, "vicesymbols") || !strcmp(cmd, "vs"))
 		{
-			char *fname = c64ParseCommandLineGetArgument();
-			viewC64->symbols->ParseSymbols(fname, viewC64->debugInterface);
+			char *arg = c64ParseCommandLineGetArgument();
+			c64SettingsPathToSymbols = new CSlrString(arg);
+		}
+		else if (!strcmp(cmd, "debuginfo"))
+		{
+			char *arg = c64ParseCommandLineGetArgument();
+			c64SettingsPathToDebugInfo = new CSlrString(arg);
 		}
 		else if (!strcmp(cmd, "autojmp"))
 		{
@@ -179,22 +241,22 @@ void C64DebuggerParseCommandLine2()
 		else if (!strcmp(cmd, "d64"))
 		{
 			char *arg = c64ParseCommandLineGetArgument();
-			c64SettingsPathD64 = new CSlrString(arg);
+			c64SettingsPathToD64 = new CSlrString(arg);
 		}
 		else if (!strcmp(cmd, "prg"))
 		{
 			char *arg = c64ParseCommandLineGetArgument();
-			c64SettingsPathPRG = new CSlrString(arg);
+			c64SettingsPathToPRG = new CSlrString(arg);
 		}
 		else if (!strcmp(cmd, "cartridge"))
 		{
 			char *arg = c64ParseCommandLineGetArgument();
-			c64SettingsPathCartridge = new CSlrString(arg);
+			c64SettingsPathToCartridge = new CSlrString(arg);
 		}
 		else if (!strcmp(cmd, "snapshot"))
 		{
 			char *arg = c64ParseCommandLineGetArgument();
-			c64SettingsPathSnapshot = new CSlrString(arg);
+			c64SettingsPathToSnapshot = new CSlrString(arg);
 		}
 		else if (!strcmp(cmd, "jmp"))
 		{
@@ -220,13 +282,14 @@ void C64DebuggerParseCommandLine2()
 			char *str = c64ParseCommandLineGetArgument();
 			layoutId = atoi(str)-1;
 			c64SettingsDefaultScreenLayoutId = layoutId;
+			
+			LOGD("c64SettingsDefaultScreenLayoutId=%d", layoutId);
 		}
 		else if (!strcmp(cmd, "wait"))
 		{
 			char *str = c64ParseCommandLineGetArgument();
 			c64SettingsWaitOnStartup = atoi(str);
 		}
-
 	}
 }
 
@@ -235,3 +298,264 @@ void C64DebuggerPerformStartupTasks()
 	C64PerformStartupTasksThread *thread = new C64PerformStartupTasksThread();
 	SYS_StartThread(thread, NULL);
 }
+
+//
+
+void C64DebuggerPassConfigToRunningInstance()
+{
+	c64SettingsPassConfigToRunningInstance = true;
+	printLine("Passing parameters to running instance\n");
+	
+	LOGD("C64DebuggerPassConfigToRunningInstance: C64DebuggerParseCommandLine2");
+	C64DebuggerParseCommandLine2();
+
+	LOGD("C64DebuggerPassConfigToRunningInstance: after C64DebuggerParseCommandLine2");
+	
+	// check if we need just to pass parameters to other running instance
+	// and pass them if necessary
+	
+	CByteBuffer *byteBuffer = new CByteBuffer();
+	LOGD("...C64D_PASS_CONFIG_DATA_MARKER");
+	byteBuffer->PutU16(C64D_PASS_CONFIG_DATA_MARKER);
+	byteBuffer->PutU16(C64D_PASS_CONFIG_DATA_VERSION);
+	
+	LOGD("... put folder");
+	gUTFPathToCurrentDirectory->DebugPrint("gUTFPathToCurrentDirectory=");
+	byteBuffer->PutSlrString(gUTFPathToCurrentDirectory);
+
+	if (c64SettingsPathToSnapshot)
+	{
+		byteBuffer->PutU8(C64D_PASS_CONFIG_DATA_LOAD_SNAPSHOT);
+		byteBuffer->PutSlrString(c64SettingsPathToSnapshot);
+	}
+	
+	if (c64SettingsPathToBreakpoints)
+	{
+		byteBuffer->PutU8(C64D_PASS_CONFIG_DATA_BREAKPOINTS_FILE);
+		byteBuffer->PutSlrString(c64SettingsPathToBreakpoints);
+	}
+	
+	if (c64SettingsPathToSymbols)
+	{
+		LOGD("c64SettingsPathToSymbols");
+		c64SettingsPathToSymbols->DebugPrint("c64SettingsPathToSymbols=");
+		byteBuffer->PutU8(C64D_PASS_CONFIG_DATA_SYMBOLS_FILE);
+		byteBuffer->PutSlrString(c64SettingsPathToSymbols);
+	}
+	
+	if (c64SettingsPathToDebugInfo)
+	{
+		byteBuffer->PutU8(C64D_PASS_CONFIG_DATA_DEBUG_INFO);
+		byteBuffer->PutSlrString(c64SettingsPathToDebugInfo);
+	}
+	
+	if (c64SettingsWaitOnStartup > 0)
+	{
+		byteBuffer->PutU8(C64D_PASS_CONFIG_DATA_WAIT);
+		byteBuffer->putInt(c64SettingsWaitOnStartup);
+	}
+	
+	if (c64SettingsPathToCartridge)
+	{
+		byteBuffer->PutU8(C64D_PASS_CONFIG_DATA_PATH_TO_CRT);
+		byteBuffer->PutSlrString(c64SettingsPathToCartridge);
+	}
+
+	if (c64SettingsPathToD64)
+	{
+		byteBuffer->PutU8(C64D_PASS_CONFIG_DATA_PATH_TO_D64);
+		byteBuffer->PutSlrString(c64SettingsPathToD64);
+	}
+	
+	if (c64SettingsAutoJmp)
+	{
+		byteBuffer->PutU8(C64D_PASS_CONFIG_DATA_SET_AUTOJMP);
+		byteBuffer->PutBool(c64SettingsAutoJmp);
+	}
+
+	if (c64SettingsPathToPRG)
+	{
+		LOGD("c64SettingsPathToPRG");
+		c64SettingsPathToPRG->DebugPrint("c64SettingsPathToPRG=");
+		
+		byteBuffer->PutU8(C64D_PASS_CONFIG_DATA_PATH_TO_PRG);
+		byteBuffer->PutSlrString(c64SettingsPathToPRG);
+	}
+	
+	if (c64SettingsJmpOnStartupAddr >= 0)
+	{
+		byteBuffer->PutU8(C64D_PASS_CONFIG_DATA_JMP);
+		byteBuffer->putInt(c64SettingsJmpOnStartupAddr);
+	}
+
+	if (c64SettingsDefaultScreenLayoutId >= 0)
+	{
+		LOGD("c64SettingsDefaultScreenLayoutId=%d", c64SettingsDefaultScreenLayoutId);
+		byteBuffer->PutU8(C64D_PASS_CONFIG_DATA_LAYOUT);
+		byteBuffer->putInt(c64SettingsDefaultScreenLayoutId);
+	}
+
+	LOGD("...C64D_PASS_CONFIG_DATA_EOF");
+	
+	byteBuffer->PutU8(C64D_PASS_CONFIG_DATA_EOF);
+	
+	int pid = C64DebuggerSendConfiguration(byteBuffer);
+	if (pid > 0)
+	{
+		printLine("Parameters sent to instance pid=%d.\n", pid);
+		SYS_CleanExit();
+	}
+	else
+	{
+		printLine("Other instance was not found, performing regular startup\n");
+	}
+}
+
+void c64PerformNewConfigurationTasksThreaded(CByteBuffer *byteBuffer)
+{
+	LOGD("c64PerformNewConfigurationTasksThreaded");
+	//byteBuffer->DebugPrint();
+	byteBuffer->Rewind();
+	
+	u16 marker = byteBuffer->GetU16();
+	if (marker != C64D_PASS_CONFIG_DATA_MARKER)
+	{
+		LOGError("Config data marker not found (received %04x, should be %04x)", marker, C64D_PASS_CONFIG_DATA_MARKER);
+		return;
+	}
+	
+	u16 v = byteBuffer->GetU16();
+	if (v != C64D_PASS_CONFIG_DATA_VERSION)
+	{
+		LOGError("Config data version not correct (received %04x, should be %04x)", v, C64D_PASS_CONFIG_DATA_VERSION);
+		return;
+	}
+
+	CSlrString *currentFolder = byteBuffer->GetSlrString();
+
+	LOGD("... got folder");
+	currentFolder->DebugPrint("currentFolder=");
+
+	SYS_SetCurrentFolder(currentFolder);
+
+	delete currentFolder;
+	
+	while(!byteBuffer->isEof())
+	{
+		uint8 t = byteBuffer->GetU8();
+
+		if (t == C64D_PASS_CONFIG_DATA_EOF)
+			break;
+		
+		if (t == C64D_PASS_CONFIG_DATA_LOAD_SNAPSHOT)
+		{
+			CSlrString *str = byteBuffer->GetSlrString();
+			viewC64->viewC64Snapshots->LoadSnapshot(str, false);
+			delete str;
+			
+			SYS_Sleep(150);
+		}
+		else if (t == C64D_PASS_CONFIG_DATA_BREAKPOINTS_FILE)
+		{
+			CSlrString *str = byteBuffer->GetSlrString();
+			viewC64->symbols->ClearBreakpoints(viewC64->debugInterface);
+			viewC64->symbols->ParseBreakpoints(str, viewC64->debugInterface);
+			delete str;
+		}
+		else if (t == C64D_PASS_CONFIG_DATA_SYMBOLS_FILE)
+		{
+			CSlrString *str = byteBuffer->GetSlrString();
+			viewC64->symbols->ClearSymbols(viewC64->debugInterface);
+			viewC64->symbols->ParseSymbols(str, viewC64->debugInterface);
+			delete str;
+		}
+		else if (t == C64D_PASS_CONFIG_DATA_DEBUG_INFO)
+		{
+			CSlrString *str = byteBuffer->GetSlrString();
+			viewC64->symbols->ClearSymbols(viewC64->debugInterface);
+			viewC64->symbols->ParseSymbols(str, viewC64->debugInterface);
+			delete str;
+		}
+		else if (t == C64D_PASS_CONFIG_DATA_WAIT)
+		{
+			int wait = byteBuffer->getInt();
+			SYS_Sleep(wait);
+		}
+		else if (t == C64D_PASS_CONFIG_DATA_PATH_TO_D64)
+		{
+			CSlrString *str = byteBuffer->GetSlrString();
+			viewC64->viewC64MainMenu->InsertD64(str, false);
+			delete str;
+		}
+		else if (t == C64D_PASS_CONFIG_DATA_PATH_TO_CRT)
+		{
+			CSlrString *str = byteBuffer->GetSlrString();
+			viewC64->viewC64MainMenu->InsertCartridge(str, false);
+			SYS_Sleep(666);
+			delete str;
+		}
+		else if (t == C64D_PASS_CONFIG_DATA_SET_AUTOJMP)
+		{
+			bool b = byteBuffer->GetBool();
+			c64SettingsAutoJmp = b;
+		}
+		else if (t == C64D_PASS_CONFIG_DATA_PATH_TO_PRG)
+		{
+			CSlrString *str = byteBuffer->GetSlrString();
+			viewC64->viewC64MainMenu->LoadPRG(str, c64SettingsAutoJmp, false);
+			delete str;
+		}
+		else if (t == C64D_PASS_CONFIG_DATA_LAYOUT)
+		{
+			int layoutId = byteBuffer->getInt();
+			c64SettingsDefaultScreenLayoutId = layoutId;
+			if (c64SettingsDefaultScreenLayoutId >= C64_SCREEN_LAYOUT_MAX)
+			{
+				c64SettingsDefaultScreenLayoutId = C64_SCREEN_LAYOUT_C64_DEBUGGER;
+			}
+			viewC64->SwitchToScreenLayout(c64SettingsDefaultScreenLayoutId);
+
+		}
+		else if (t == C64D_PASS_CONFIG_DATA_JMP)
+		{
+			int jmpAddr = byteBuffer->getInt();
+			viewC64->debugInterface->MakeJsrC64(jmpAddr);
+		}
+	}
+	
+	delete byteBuffer;
+}
+
+class C64PerformNewConfigurationTasksThread : public CSlrThread
+{
+	virtual void ThreadRun(void *data)
+	{
+		LOGD("C64PerformNewConfigurationTasksThread: ThreadRun");
+		CByteBuffer *byteBuffer = (CByteBuffer *)data;
+		c64PerformNewConfigurationTasksThreaded(byteBuffer);
+	};
+};
+
+
+void C64DebuggerPerformNewConfigurationTasks(CByteBuffer *byteBuffer)
+{
+	CByteBuffer *copyByteBuffer = new CByteBuffer(byteBuffer);
+	
+	C64PerformNewConfigurationTasksThread *thread = new C64PerformNewConfigurationTasksThread();
+	SYS_StartThread(thread, copyByteBuffer);
+
+}
+
+
+//
+//{
+//	//// TEST
+//	
+//	LOGD("CViewC64::DoTap: TEST C64DebuggerSendConfiguration");
+//	CByteBuffer *b = new CByteBuffer();
+//	b->PutFloat(x);
+//	b->PutFloat(y);
+//	
+//	C64DebuggerSendConfiguration(b);
+//
+//}

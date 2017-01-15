@@ -664,6 +664,7 @@ static int get_product_type_from_reg(void)
         }
         return 2;
     }
+    return 1;
 }
 
 static int get_sp_from_reg(void)

@@ -109,6 +109,8 @@ CViewDisassemble::~CViewDisassemble()
 
 void CViewDisassemble::AddCodeLabel(u16 address, char *text)
 {
+	guiMain->LockMutex();
+	
 	// check if exists
 	std::map<u16, CDisassembleCodeLabel *>::iterator it = codeLabels.find(address);
 	
@@ -128,7 +130,26 @@ void CViewDisassemble::AddCodeLabel(u16 address, char *text)
 	label->px = this->posX + fontSize5*3.0f - l*fontSize;
 	
 	codeLabels[address] = label;
+	
+	guiMain->UnlockMutex();
 }
+
+void CViewDisassemble::ClearCodeLabels()
+{
+	guiMain->LockMutex();
+	
+	while (!codeLabels.empty())
+	{
+		std::map<u16, CDisassembleCodeLabel *>::iterator it = codeLabels.begin();
+		CDisassembleCodeLabel *label = it->second;
+		
+		codeLabels.erase(it);
+		delete label;
+	}
+	
+	guiMain->UnlockMutex();
+}
+
 
 void CViewDisassemble::ScrollToAddress(int addr)
 {
@@ -371,7 +392,7 @@ void CViewDisassemble::CalcDisassembleStart(int startAddress, int *newStart, int
 				if (cell1->isExecuteCode)
 				{
 					checkAddress += 1;
-					numRenderLines++;  // just hex code or 1-lenght opcode
+					numRenderLines++;  // just hex code or 1-length opcode
 					
 					opcode = memory[ (checkAddress) % memoryLength];
 					checkAddress += opcodes[opcode].addressingLength;
@@ -388,7 +409,7 @@ void CViewDisassemble::CalcDisassembleStart(int startAddress, int *newStart, int
 						if (opcodes[opcode].addressingLength == 2)
 						{
 							checkAddress += 2;
-							numRenderLines++;  // 2-lenght opcode
+							numRenderLines++;  // 2-length opcode
 						}
 						else
 						{
@@ -1157,7 +1178,7 @@ void CViewDisassemble::RenderHexLine(float px, float py, int addr)
 {
 	//	LOGD("addr=%4.4x op=%2.2x", addr, op);
 
-	// check if this 1-lenght opcode
+	// check if this 1-length opcode
 	uint8 op = memory[ (addr) % memoryLength];
 	if (opcodes[op].addressingLength == 1)
 	{
@@ -1344,7 +1365,7 @@ void CViewDisassemble::UpdateDisassembleHexLine(float py, int addr)
 	addrPositions[addrPositionCounter].y = py;
 	addrPositionCounter++;
 
-	// check if this 1-lenght opcode
+	// check if this 1-length opcode
 	uint8 op = memory[ (addr) % memoryLength];
 	if (opcodes[op].addressingLength == 1)
 	{

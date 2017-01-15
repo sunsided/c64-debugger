@@ -9,6 +9,7 @@
 
 #include "SYS_Funct.h"
 #include "SYS_Main.h"
+#include "SYS_CFileSystem.h"
 
 #if !defined(WIN32) && !defined(ANDROID)
 #include <execinfo.h>
@@ -64,15 +65,18 @@ void FixFileNameSlashes(char *buf)
 {
 	u16 len = strlen(buf);
 
+	// normalize path separators
 	for (u16 i = 0; i < len; i++)
 	{
-		if (buf[i] == '\\')
-			buf[i] = '/';
+		if (buf[i] == '\\' || buf[i] == '/')
+			buf[i] = SYS_FILE_SYSTEM_PATH_SEPARATOR;
 	}
-
+	
+	// check if double path separators exist (fix for c:\dupa\/file.txt paths)
 	for (u16 i = 0; i < len-1; i++)
 	{
-		if (buf[i] == '/' && buf[i+1] == '/')
+		if (buf[i] == SYS_FILE_SYSTEM_PATH_SEPARATOR
+			&& buf[i+1] == SYS_FILE_SYSTEM_PATH_SEPARATOR)
 		{
 			for (u16 j = i; j < len-1; j++)
 			{
@@ -256,8 +260,27 @@ void SYS_PrintMemoryUsed()
 
 char *SYS_GetFileNameFromFullPath(char *fileNameFull)
 {
-	char *fileName = SYS_GetCharBuf();
 	int len = strlen(fileNameFull);
+	
+	// check if there's a path sign inside
+	bool foundPathSign = false;
+	for (int i = 0; i < len; i++)
+	{
+		if (fileNameFull[i] == '/' || fileNameFull[i] == '\\')
+		{
+			foundPathSign = true;
+			break;
+		}
+	}
+	
+	// path sign is not found, just dup the original path as filename
+	if (foundPathSign == false)
+	{
+		char *ret = strdup(fileNameFull);
+		return ret;
+	}
+	
+	char *fileName = SYS_GetCharBuf();
 	int i = len-1;
 
 	for ( ; i >= 0; i--)
@@ -287,7 +310,7 @@ char *SYS_GetPathFromFullPath(char *fileNameFull)
 {
 	char pathName[1024];
 	u32 len = strlen(fileNameFull);
-	u32 i = len-1;
+	int i = len-1;
 
 	for ( ; i >= 0; i--)
 	{

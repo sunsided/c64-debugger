@@ -117,10 +117,40 @@ uint8 C64DebugInterface::GetC64MachineType()
 
 
 //
+void C64DebugInterface::ClearBreakpoints()
+{
+	ClearAddrBreakpoints(&(this->breakpointsC64PC));
+	ClearAddrBreakpoints(&(this->breakpointsC64Raster));
+	ClearAddrBreakpoints(&(this->breakpointsDrive1541PC));
+	
+	ClearMemoryBreakpoints(&(this->breakpointsC64Memory));
+	ClearMemoryBreakpoints(&(this->breakpointsDrive1541Memory));
+}
+
 void C64DebugInterface::ClearAddrBreakpoints(std::map<uint16, C64AddrBreakpoint *> *breakpointsMap)
 {
-	breakpointsMap->clear();
+	while(!breakpointsMap->empty())
+	{
+		std::map<uint16, C64AddrBreakpoint *>::iterator it = breakpointsMap->begin();
+		C64AddrBreakpoint *breakpoint = it->second;
+		
+		breakpointsMap->erase(it);
+		delete breakpoint;
+	}
 }
+
+void C64DebugInterface::ClearMemoryBreakpoints(std::map<uint16, C64MemoryBreakpoint *> *breakpointsMap)
+{
+	while(!breakpointsMap->empty())
+	{
+		std::map<uint16, C64MemoryBreakpoint *>::iterator it = breakpointsMap->begin();
+		C64MemoryBreakpoint *breakpoint = it->second;
+		
+		breakpointsMap->erase(it);
+		delete breakpoint;
+	}
+}
+
 
 void C64DebugInterface::AddAddrBreakpoint(std::map<uint16, C64AddrBreakpoint *> *breakpointsMap, C64AddrBreakpoint *breakpoint)
 {
@@ -527,7 +557,8 @@ void C64DebugInterface::MarkDrive1541CellWrite(uint16 addr, uint8 value)
 
 void C64DebugInterface::UiInsertD64(CSlrString *path)
 {
-	viewC64->viewC64MainMenu->InsertD64(path);
+	LOGTODO("C64DebugInterface::UiInsertD64: shall we update Folder path to D64?");
+	viewC64->viewC64MainMenu->InsertD64(path, false);
 }
 
 //
@@ -587,6 +618,11 @@ void C64DebugInterface::CartridgeFreezeButtonPressed()
 void C64DebugInterface::GetC64CartridgeState(C64StateCartridge *cartridgeState)
 {
 	SYS_FatalExit("C64DebugInterface::GetC64CartridgeState");
+}
+
+void C64DebugInterface::SetPalette(uint8 *palette)
+{
+	SYS_FatalExit("C64DebugInterface::SetPalette");
 }
 
 

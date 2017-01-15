@@ -149,10 +149,10 @@ void CViewKeyboardShortcuts::RestoreKeyboardShortcuts()
 	CByteBuffer *byteBuffer = new CByteBuffer();
 	
 	CSlrString *fileName = new CSlrString("/shortcuts.dat");
-	byteBuffer->loadFromSettings(fileName);
+	bool ret = byteBuffer->loadFromSettings(fileName);
 	delete fileName;
 	
-	if (byteBuffer->length == 0)
+	if (ret == false || byteBuffer->length == 0)
 	{
 		LOGD("... no keyboard shortcuts found");
 		delete byteBuffer;
@@ -162,7 +162,7 @@ void CViewKeyboardShortcuts::RestoreKeyboardShortcuts()
 	u16 version = byteBuffer->GetU16();
 	if (version != C64DEBUGGER_KEYBOARD_SHORTCUTS_VERSION)
 	{
-		LOGError("C64DebuggerReadSettings: incompatible version %04x", version);
+		LOGError("CViewKeyboardShortcuts: incompatible version %04x", version);
 		delete byteBuffer;
 		return;
 	}

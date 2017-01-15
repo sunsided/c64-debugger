@@ -17,6 +17,8 @@ CGuiViewConsole::CGuiViewConsole(float posX, float posY, float posZ, float sizeX
 	this->hasCommandLine = hasCommandLine;
 	
 	promptWidth = 0;
+	
+	maxCharsInLine = 61;
 		
 	mutex = new CSlrMutex();
 	
@@ -90,7 +92,7 @@ void CGuiViewConsole::PrintSingleLine(char *text)
 
 void CGuiViewConsole::PrintLine(const char *format, ...)
 {
-	static char buffer[MAX_CONSOLE_LINE_LENGTH];
+	char buffer[MAX_CONSOLE_LINE_LENGTH];
 	memset(buffer, 0x00, MAX_CONSOLE_LINE_LENGTH);
 	
 	va_list args;
@@ -100,6 +102,42 @@ void CGuiViewConsole::PrintLine(const char *format, ...)
 	va_end(args);
 	
 	PrintSingleLine(buffer);
+}
+
+void CGuiViewConsole::PrintString(char *text)
+{
+	char *buffer = new char[MAX_CONSOLE_LINE_LENGTH];
+	memset(buffer, 0x00, MAX_CONSOLE_LINE_LENGTH);
+	
+	char *t = text;
+	int charsCount = 0;
+	while(*t != 0x00)
+	{
+		if (*t == '\r')
+		{
+			t++;
+			continue;
+		}
+		
+		if (*t == '\n')
+		{
+			t++;
+			buffer[charsCount] = 0x00;
+			charsCount = maxCharsInLine;
+		}
+		
+		if (charsCount == maxCharsInLine)
+		{
+			buffer[charsCount] = 0x00;
+			PrintSingleLine(buffer);
+			charsCount = 0;
+		}
+		
+		buffer[charsCount] = *t;
+		
+		charsCount++;
+		t++;
+	}
 }
 
 bool CGuiViewConsole::KeyDown(u32 keyCode)

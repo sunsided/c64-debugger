@@ -79,8 +79,11 @@ public:
 	void ConvertToLowerCase();
 
 	void DebugPrint(char *name);
+	void DebugPrintVector(char *name);
 	void DebugPrint(char *name, u32 pos);
 	void DebugPrint(FILE *fp);
+	
+	bool IsHexValue();
 
 	static void DeleteVector(std::vector<CSlrString *> *vect);
 	static void DeleteVectorElements(std::vector<CSlrString *> *vect);

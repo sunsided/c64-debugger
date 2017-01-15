@@ -45,13 +45,23 @@ public:
 	void CommandMemorySavePRG();
 	void CommandMemorySaveDump();
 	void CommandMemoryLoad();
+	void CommandMemoryLoadDump();
 	void CommandGoJMP();
+	void CommandDisassemble();
+	void CommandDoDisassemble();
 	
 	bool memoryDumpAsPRG;
 
 	bool DoMemoryDumpToFile(int addrStart, int addrEnd, bool isPRG, CSlrString *filePath);
-	bool DoMemoryDumpFromFile(int addrStart, CSlrString *filePath);
+	bool DoMemoryDumpFromFile(int addrStart, bool isPRG, CSlrString *filePath);
 
+	bool DoDisassembleMemory(int addrStart, int addrEnd, bool withLabels, CSlrString *filePath);
+	void DisassembleHexLine(int addr, CByteBuffer *buffer);
+	int DisassembleLine(int addr, uint8 op, uint8 lo, uint8 hi, CByteBuffer *buffer);
+	void DisassemblePrint(CByteBuffer *byteBuffer, char *text);
+	bool disassembleHexCodes;
+	bool disassembleShowLabels;
+	
 	uint8 device;
 	
 	CViewDataDump *viewDataDump;
@@ -59,9 +69,13 @@ public:
 	CSlrDataAdapter *dataAdapter;
 	
 	int addrStart, addrEnd;
+	uint8 *memory;
+	int memoryLength;
+	CViewMemoryMap *memoryMap;
 	
 	std::list<CSlrString *> memoryExtensions;
 	std::list<CSlrString *> prgExtensions;
+	std::list<CSlrString *> disassembleExtensions;
 	
 	virtual void SystemDialogFileSaveSelected(CSlrString *path);
 	virtual void SystemDialogFileSaveCancelled();

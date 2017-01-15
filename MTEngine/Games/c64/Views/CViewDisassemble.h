@@ -171,6 +171,7 @@ public:
 	
 	std::map<u16, CDisassembleCodeLabel *> codeLabels;
 	void AddCodeLabel(u16 address, char *text);
+	void ClearCodeLabels();
 
 };
 

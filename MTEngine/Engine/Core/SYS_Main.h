@@ -42,6 +42,9 @@ void SYS_NotImplemented();
 extern bool gIsServerMode;
 bool SYS_IsServerMode();
 
+void SYS_ShowError(const char *fmt, ... );
+void SYS_ShowError(char *fmt, ... );
+
 void SYS_FatalExit();
 void SYS_FatalExit(char *fmt, ... );
 void SYS_FatalExit(const char *fmt, ... );

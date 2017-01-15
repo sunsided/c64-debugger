@@ -107,6 +107,8 @@ public:
 	
 	long previousClickTime;
 	int previousClickAddr;
+	
+	void PasteHexValuesFromClipboard();
 };
 
 

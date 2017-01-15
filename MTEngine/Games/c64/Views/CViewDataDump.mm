@@ -16,6 +16,7 @@
 #include "C64DebugInterface.h"
 #include "C64SettingsStorage.h"
 #include "C64KeyboardShortcuts.h"
+#include "SYS_SharedMemory.h"
 #include <math.h>
 
 CViewDataDump::CViewDataDump(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
@@ -894,6 +895,11 @@ bool CViewDataDump::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContro
 			return true;
 		}
 	}
+	
+	if (keyCode == 'v' && isControl)
+	{
+		this->PasteHexValuesFromClipboard();
+	}
 
 	
 	return false;
@@ -932,5 +938,76 @@ void CViewDataDump::GuiEditHexEnteredValue(CGuiEditHex *editHex, u32 lastKeyCode
 		isEditingValueAddr = false;
 	}
 	
+}
+
+void CViewDataDump::PasteHexValuesFromClipboard()
+{
+	LOGD("CViewDataDump::PasteHexValuesFromClipboard");
+	
+	int addrCursor = GetAddrFromDataPosition(editCursorPositionX, editCursorPositionY);
+	int addr = addrCursor;
+	bool onlyHexFound = true;
+	bool addrFound = false;
+	
+	CSlrString *pasteStr = SYS_GetClipboardAsSlrString();
+	pasteStr->DebugPrint("pasteStr=");
+	
+	std::list<u16> splitChars;
+	splitChars.push_back(' ');
+	splitChars.push_back(':');
+	splitChars.push_back(',');
+	splitChars.push_back('-');
+	splitChars.push_back('\n');
+	splitChars.push_back('\r');	
+	splitChars.push_back('\t');
+
+	std::vector<CSlrString *> *strs = pasteStr->Split(splitChars);
+
+	for (std::vector<CSlrString *>::iterator it = strs->begin(); it != strs->end(); it++)
+	{
+		CSlrString *hexVal = *it;
+		
+		if (hexVal->IsHexValue() == false)
+		{
+			onlyHexFound = false;
+			continue;
+		}
+		
+		int len = hexVal->GetLength();
+		int val = hexVal->ToIntFromHex();
+		
+		if (len == 4 || len == 3)
+		{
+			addr = val;
+			addrFound = true;
+		}
+		else if (len == 2 || len == 1)
+		{
+			dataAdapter->AdapterWriteByte(addr, val);
+			addr++;
+		}
+	}
+	
+	while (!strs->empty())
+	{
+		CSlrString *str = strs->back();
+		
+		strs->pop_back();
+		delete str;
+	}
+
+	if (addr != addrCursor)
+	{
+//		if (addrFound)
+//		{
+//			ScrollToAddress(addr-1);
+//		}
+//		else
+		{
+			ScrollToAddress(addr);
+		}
+	}
+	
+	delete pasteStr;
 }
 
