@@ -41,12 +41,25 @@ UTFString *gPathToSettings;
 char *gCPathToSettings;
 CSlrString *gUTFPathToSettings;
 
+UTFString *gPathToCurrentDirectory;
+char *gCPathToCurrentDirectory;
+CSlrString *gUTFPathToCurrentDirectory;
+
 
 std::list<CHttpFileUploadedCallback *> httpFileUploadedCallbacks;
 
 void SYS_InitFileSystem()
 {
 	LOGM("SYS_InitFileSystem");
+
+	// get current folder
+	gPathToCurrentDirectory = new char[PATH_MAX];
+	getcwd(gPathToCurrentDirectory, PATH_MAX);
+
+	LOGD("gPathToCurrentDirectory=%s", gPathToCurrentDirectory);
+
+	gCPathToCurrentDirectory = gPathToCurrentDirectory;
+	gUTFPathToCurrentDirectory = new CSlrString(gCPathToCurrentDirectory);
 
 	gPathToResources = new char[256];
 
@@ -1147,3 +1160,17 @@ void SYS_UnMapMemoryFromFile(uint8 *memoryMap, int memorySize, void **fileDescri
 
         close(*fileHandle);
 }
+
+void SYS_SetCurrentFolder(CSlrString *path)
+{
+	LOGD("SYS_SetCurrentFolder");
+
+	path->DebugPrint("SYS_SetCurrentFolder: ");
+	char *cPath = path->GetStdASCII();
+	chdir(cPath);
+
+	delete [] cPath;
+}
+
+
+

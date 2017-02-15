@@ -38,6 +38,10 @@ extern char *gPathToSettings;
 extern char *gCPathToSettings;
 extern CSlrString *gUTFPathToSettings;
 
+extern UTFString *gPathToCurrentDirectory;
+extern char *gCPathToCurrentDirectory;
+extern CSlrString *gUTFPathToCurrentDirectory;
+
 void SYS_DeleteFile(CSlrString *filePath);
 
 class CHttpFileUploadedCallback
@@ -176,5 +180,7 @@ bool SYS_FileDirExists(CSlrString *path);
 
 uint8 *SYS_MapMemoryToFile(int memorySize, char *filePath, void **fileDescriptor);
 void SYS_UnMapMemoryFromFile(uint8 *memoryMap, int memorySize, void **fileDescriptor);
+
+void SYS_SetCurrentFolder(CSlrString *path);
 
 #endif //__SYS_CFILESYSTEM_H__

@@ -66,14 +66,13 @@ bool logThisLevel(int level)
 
 bool logThisLevel(int level)
 {
-	return true;
 	if (level == DBGLVL_MAIN) return true; 
 	if (level == DBGLVL_DEBUG) return true;
 	if (level == DBGLVL_RES) return false;
 	if (level == DBGLVL_GUI) return false; //	true	false
-	if (level == DBGLVL_HTTP) return true;
-	if (level == DBGLVL_XMPLAYER) return true;
-	if (level == DBGLVL_AUDIO) return true;
+	if (level == DBGLVL_HTTP) return false;
+	if (level == DBGLVL_XMPLAYER) return false;
+	if (level == DBGLVL_AUDIO) return false;
 	if (level == DBGLVL_XML) return true;
 	if (level == DBGLVL_SQL) return true;
 	if (level == DBGLVL_ERROR) return true;	// always
@@ -165,15 +164,15 @@ void LOG_Init(void)
 	SYSTEMTIME tmeCurrent;
 	GetLocalTime(&tmeCurrent);
 
-	sprintf(logBuf, "./log/MTEngine-%04d%02d%02d-%02d%02d.txt", tmeCurrent.wYear, tmeCurrent.wMonth, tmeCurrent.wDay,
-												tmeCurrent.wHour, tmeCurrent.wMinute);
+	sprintf(logBuf, "./log/MTEngine-%04d%02d%02d-%02d%02d%02d.txt", tmeCurrent.wYear, tmeCurrent.wMonth, tmeCurrent.wDay,
+		tmeCurrent.wHour, tmeCurrent.wMinute, tmeCurrent.wSecond);
 
 	fpLog = fopen(logBuf, "wb");
 
 	if (fpLog == NULL)
 	{
-		sprintf(logBuf, "MTEngine-%04d%02d%02d-%02d%02d.txt", tmeCurrent.wYear, tmeCurrent.wMonth, tmeCurrent.wDay,
-												tmeCurrent.wHour, tmeCurrent.wMinute);
+		sprintf(logBuf, "MTEngine-%04d%02d%02d-%02d%02d%02d.txt", tmeCurrent.wYear, tmeCurrent.wMonth, tmeCurrent.wDay,
+			tmeCurrent.wHour, tmeCurrent.wMinute, tmeCurrent.wSecond);
 
 		fpLog = fopen(logBuf, "wb");
 	}

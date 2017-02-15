@@ -16,6 +16,7 @@
 #include "SYS_Funct.h"
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/syslimits.h>
 
 CFileSystem *gFileSystem;
 NSString *gOSPathToDocuments;
@@ -31,6 +32,11 @@ char *gPathToSettings;
 char *gCPathToSettings;
 CSlrString *gUTFPathToSettings;
 
+UTFString *gPathToCurrentDirectory;
+char *gCPathToCurrentDirectory;
+CSlrString *gUTFPathToCurrentDirectory;
+
+
 std::list<CHttpFileUploadedCallback *> httpFileUploadedCallbacks;
 
 void SYS_InitFileSystem()
@@ -40,6 +46,15 @@ void SYS_InitFileSystem()
 
 #if defined(FINAL_RELEASE)
 	// use resources in final release
+	
+	// get current folder
+	gPathToCurrentDirectory = new char[PATH_MAX];
+	getcwd(gPathToCurrentDirectory, PATH_MAX);
+	
+	LOGD("gPathToCurrentDirectory=%s", gPathToCurrentDirectory);
+	
+	gCPathToCurrentDirectory = gPathToCurrentDirectory;
+	gUTFPathToCurrentDirectory = new CSlrString(gCPathToCurrentDirectory);
 	
 	NSError *error;
 	
@@ -1240,5 +1255,15 @@ void SYS_UnMapMemoryFromFile(uint8 *memoryMap, int memorySize, void **fileDescri
 	int *fileHandle = (int*)*fileDescriptor;
 	
 	close(*fileHandle);
+}
+
+void SYS_SetCurrentFolder(CSlrString *path)
+{
+	LOGD("SYS_SetCurrentFolder");
+	path->DebugPrint("SYS_SetCurrentFolder: ");
+	char *cPath = path->GetStdASCII();
+	chdir(cPath);
+	
+	delete [] cPath;
 }
 

@@ -15,6 +15,7 @@
 #include "SYS_KeyCodes.h"
 #include "SND_SoundEngine.h"
 #include "SYS_CommandLine.h"
+#include "SYS_CFileSystem.h"
 
 #include "..\\resource.h"
 
@@ -169,7 +170,7 @@ GLvoid KillGLWindow(GLvoid)								// Properly Kill The Window
 		hWnd=NULL;										// Set hWnd To NULL
 	}
 
-	if (!UnregisterClass("OpenGL",hInstance))			// Are We Able To Unregister Class
+	if (!UnregisterClass(HWND_CLASS_NAME, hInstance))			// Are We Able To Unregister Class
 	{
 		MessageBox(NULL,"Could Not Unregister Class.","SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
 		hInstance=NULL;									// Set hInstance To NULL
@@ -205,7 +206,7 @@ BOOL CreateGLWindow(char* title, int width, int height, int bits, bool fullscree
 	wc.hCursor			= LoadCursor(NULL, IDC_ARROW);			// Load The Arrow Pointer
 	wc.hbrBackground	= NULL;									// No Background Required For GL
 	wc.lpszMenuName		= NULL;									// We Don't Want A Menu
-	wc.lpszClassName	= "OpenGL";								// Set The Class Name
+	wc.lpszClassName	= HWND_CLASS_NAME;								// Set The Class Name
 
 	if (!RegisterClass(&wc))									// Attempt To Register The Window Class
 	{
@@ -258,7 +259,7 @@ BOOL CreateGLWindow(char* title, int width, int height, int bits, bool fullscree
 
 	// Create The Window
 	if (!(hWnd=CreateWindowEx(	dwExStyle,							// Extended Style For The Window
-								"OpenGL",							// Class Name
+								HWND_CLASS_NAME,							// Class Name
 								title,								// Window Title 
 								dwStyle |							// Defined Window Style
 								WS_CLIPSIBLINGS |					// Required Window Style
@@ -275,6 +276,8 @@ BOOL CreateGLWindow(char* title, int width, int height, int bits, bool fullscree
 		MessageBox(NULL,"Create GL window failed", "ERROR", MB_OK|MB_ICONEXCLAMATION);
 		return FALSE;								// Return FALSE
 	}
+
+	LOGD("OpenGL window created hWnd=%x className=%s", hWnd, HWND_CLASS_NAME);
 
 	RECT rc;
 	GetWindowRect (hWnd, &rc) ;
@@ -384,7 +387,21 @@ BOOL CreateGLWindow(char* title, int width, int height, int bits, bool fullscree
 	LOGD("CreateGLWindow done");
 #endif
 
+
 	return TRUE;									// Success
+}
+
+void SYS_Win32SetWindowAlwaysOnTop(bool isAlwaysOnTop)
+{
+	LOGD("SYS_Win32SetWindowAlwaysOnTop");
+	if (isAlwaysOnTop)
+	{
+		SetWindowPos( hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE );
+	}
+	else
+	{
+		SetWindowPos( hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE );
+	}
 }
 
 void ShowTaskBar(bool show)
@@ -545,6 +562,8 @@ void SYS_SetFullScreen(bool fullscreen)
 	SetFocus(hWnd);
 	*/
 }
+
+void mtEngineHandleWM_USER();
 
 
 // oh that mapKey is here, let's swap parameterx to let windows users in :> 
@@ -1079,11 +1098,21 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 			//ReSizeGLScene(LOWORD(lParam),HIWORD(lParam));  // LoWord=Width, HiWord=Height
 			return 0;								// Jump Back
 		}
+
+		case WM_USER:
+		{
+			LOGM("WM_USER received");
+
+			mtEngineHandleWM_USER();
+			return 0;
+		}
 	}
 
 	// Pass All Unhandled Messages To DefWindowProc
 	return DefWindowProc(hWnd,uMsg,wParam,lParam);
 }
+
+void C64DebuggerParseCommandLine0();
 
 int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 					HINSTANCE	hPrevInstance,		// Previous Instance
@@ -1096,6 +1125,7 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	pthread_win32_process_attach_np();
 
 	SYS_InitCharBufPool();
+	SYS_InitStrings();
 
 	SYS_SetCommandLineArguments(__argc, __argv);
 
@@ -1103,9 +1133,14 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	SYSTEMTIME localTime;
 	GetLocalTime(&localTime);
 
-
 	LOG_Init();
-	LOGM("MTEngine (C)2011 Marcin Skoczylas, compiled on " __DATE__ " " __TIME__);
+	DWORD   currentProcessId = GetCurrentProcessId();
+	LOGM("MTEngine (C)2011 Marcin Skoczylas, compiled on " __DATE__ " " __TIME__ ". Pid=%d", currentProcessId);
+
+	SYS_InitFileSystem();
+
+	C64DebuggerParseCommandLine0();
+
 	LOGM("init GLView"); 
 
 

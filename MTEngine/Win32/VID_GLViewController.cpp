@@ -116,6 +116,13 @@ void VID_ResetLogicClock()
 	resetLogicClock = true;
 }
 
+void SYS_Win32SetWindowAlwaysOnTop(bool isAlwaysOnTop);
+
+void VID_SetWindowAlwaysOnTop(bool isAlwaysOnTop)
+{
+	SYS_Win32SetWindowAlwaysOnTop(isAlwaysOnTop);
+}
+
 void SysTextFieldEditFinishedCallback::SysTextFieldEditFinished(UTFString *str)
 {
 }

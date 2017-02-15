@@ -27,7 +27,12 @@ CSlrFileFromOS::CSlrFileFromOS(char *filePath, byte fileMode)
 
 void CSlrFileFromOS::Open(char *filePath)
 {
-	LOGR("CSlrFileFromOS: opening %s", filePath);
+	LOGD("CSlrFileFromOS: opening %s", filePath);
+
+	FixFileNameSlashes(filePath);
+
+	LOGD("...filePath='%s'", filePath);
+
 	strcpy(this->fileName, filePath);
 	strcpy(this->osFilePath, filePath);
 

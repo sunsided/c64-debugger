@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include <GL/gl.h>
@@ -20,6 +21,7 @@
 #include "SYS_KeyCodes.h"
 #include "CGuiMain.h"
 #include "SND_SoundEngine.h"
+#include "SYS_CFileSystem.h"
 #include "CViewC64.h"
 
 #include "SYS_CommandLine.h"
@@ -54,16 +56,40 @@ GLXContext glc;
 XWindowAttributes gwa;
 XEvent xev;
 
+void SYS_InitSharedMemorySignalHandlers();
+void C64DebuggerParseCommandLine0();
+
+void SYS_InitCharBufPool();
+void SYS_InitStrings();
+
 int main(int argc, char *argv[])
 {
 	LOG_Init();
 
 	LOGM("MTEngine (C)2011 Marcin Skoczylas, compiled on " __DATE__ " " __TIME__);
 
+	SYS_InitCharBufPool();
+	SYS_InitStrings();
+
+	SYS_SetCommandLineArguments(argc, argv);
+
+	SYS_InitFileSystem();
+
+	C64DebuggerParseCommandLine0();
+
+
+	// re-route ALSA lib errors to /dev/null
+	int fd = open("/dev/null", O_WRONLY);
+	dup2(fd, 2);
+	close(fd);
+
+//	freopen("/dev/null", "w", stderr);
+//	freopen("/dev/tty", "w", stderr);
+
 	// for open/save dialogs
 	gtk_init(&argc, &argv);
 
-	SYS_SetCommandLineArguments(argc, argv);
+	SYS_InitSharedMemorySignalHandlers();
 
 	SCREEN_WIDTH = 590;
 	SCREEN_HEIGHT = 360;
@@ -478,5 +504,56 @@ int mapKey(bool isAlt, bool isControl, bool isShift, int key)
 
 	LOGD("mapKey: not mapped %4.4x", key);
 	return key;
+}
+
+void GtkMessageBox(const char* text, const char* caption)
+{
+    GtkWidget *dialog;
+
+//	dialog = gtk_message_dialog_new(NULL, GTK_DIALOG_MODAL, GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO, text );
+    dialog = gtk_message_dialog_new(NULL, GTK_DIALOG_MODAL, GTK_MESSAGE_INFO, GTK_BUTTONS_OK, text );
+
+
+    gtk_window_set_title(GTK_WINDOW(dialog), caption);
+    gint result = gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy( GTK_WIDGET(dialog) );
+
+//        switch (result)
+//        {
+//        default:
+//        case GTK_RESPONSE_DELETE_EVENT:
+//        case GTK_RESPONSE_NO:
+//            return;
+//        case GTK_RESPONSE_YES:
+//            return;
+//        }
+}
+
+void X11SetAlwaysOnTop(bool isAlwaysOnTop)
+{
+#define _NET_WM_STATE_REMOVE        0    // remove/unset property
+#define _NET_WM_STATE_ADD           1    // add/set property
+#define _NET_WM_STATE_TOGGLE        2    // toggle property
+
+	XClientMessageEvent xclient;
+	memset( &xclient, 0, sizeof (xclient) );
+
+	xclient.type = ClientMessage;
+	xclient.window = win;
+	xclient.message_type = XInternAtom( dpy, "_NET_WM_STATE", False );
+	xclient.format = 32;
+	xclient.data.l[0] = isAlwaysOnTop ? _NET_WM_STATE_ADD : _NET_WM_STATE_REMOVE;
+	xclient.data.l[1] = XInternAtom( dpy, "_NET_WM_STATE_ABOVE", False );;
+	xclient.data.l[2] = 0;
+	xclient.data.l[3] = 0;
+	xclient.data.l[4] = 0;
+
+	XFlush(dpy);
+	XSendEvent( dpy,
+	      DefaultRootWindow( dpy ),
+	      False,
+	      SubstructureRedirectMask | SubstructureNotifyMask,
+	      (XEvent *)&xclient );
+	XFlush(dpy);
 }
 

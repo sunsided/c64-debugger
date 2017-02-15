@@ -36,6 +36,8 @@ long SYS_GetCurrentTimeInMillis();
 long SYS_RandomSeed();
 void VID_ResetLogicClock();
 
+void VID_SetWindowAlwaysOnTop(bool isAlwaysOnTop);
+
 extern u64 gCurrentFrameTime;
 
 void VID_ApplicationPreloadingFinished();

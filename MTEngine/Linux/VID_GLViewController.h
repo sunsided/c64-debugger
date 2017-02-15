@@ -62,6 +62,8 @@ void GUI_HideSysTextField();
 void GUI_ShowVirtualKeyboard();
 void GUI_HideVirtualKeyboard();
 
+void VID_SetWindowAlwaysOnTop(bool isAlwaysOnTop);
+
 void GUI_ShowAcknowledgements();
 void VID_SetViewKeyboardOffset(float offsetY);
 

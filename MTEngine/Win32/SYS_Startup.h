@@ -8,4 +8,6 @@
 
 extern HWND	hWnd;
 
+#define HWND_CLASS_NAME "MTEngineOpenGL"
+
 #endif

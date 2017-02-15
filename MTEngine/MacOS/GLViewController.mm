@@ -326,6 +326,11 @@
 		[self startAnimation];
 }
 
+- (void)setWindowAlwaysOnTop:(BOOL)isAlwaysOnTop
+{
+	[openGLView setWindowAlwaysOnTop:isAlwaysOnTop];
+}
+
 u32 mapKey(int c)
 {
 	LOGI("mapKey c=%d (%4.4x)", c, c);

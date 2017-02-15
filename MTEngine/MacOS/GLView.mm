@@ -3,6 +3,8 @@
 #include "SND_SoundEngine.h"
 #include "SYS_Threading.h"
 
+GLView *glView;
+
 @implementation GLView
 
 #define MACOS_SUPPORT_RETINA
@@ -111,6 +113,9 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 //														options:options
 //														  owner:self
 //													   userInfo:nil];
+
+	
+	glView = self;
 	
 	return self;
 }
@@ -308,6 +313,19 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 - (BOOL)preservesContentDuringLiveResize
 {
 	return NO;
+}
+
+- (void)setWindowAlwaysOnTop:(BOOL)isAlwaysOnTop
+{
+//	NSLog(@"setWindowAlwaysOnTop: %d", isAlwaysOnTop);
+	if (isAlwaysOnTop)
+	{
+		[self.window setLevel:NSFloatingWindowLevel];
+	}
+	else
+	{
+		[self.window setLevel:NSNormalWindowLevel];
+	}
 }
 
 void SYS_PrepareShutdown();

@@ -39,6 +39,8 @@
 - (CFAbsoluteTime) renderTime;
 - (void) setRenderTime:(CFAbsoluteTime)time;
 
+- (void)setWindowAlwaysOnTop:(BOOL)isAlwaysOnTop;
+
 //// payments
 //- (void) startPayment;
 //- (void) completeTransaction: (SKPaymentTransaction *)transaction;

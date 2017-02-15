@@ -18,6 +18,7 @@
 #include "RES_ResourceManager.h"
 #include "SYS_PauseResume.h"
 #include "SYS_Accelerometer.h"
+#import "GLView.h"
 
 
 //#define SHOW_CURRENT_FPS
@@ -172,6 +173,13 @@ void VID_ResetLogicClock()
 	resetLogicClock = true;
 }
 
+void VID_SetWindowAlwaysOnTop(bool isAlwaysOnTop)
+{
+	LOGError("VID_SetWindowAlwaysOnTop: not implemented");
+
+	[glView setWindowAlwaysOnTop:isAlwaysOnTop];
+
+}
 
 void SysTextFieldEditFinishedCallback::SysTextFieldEditFinished(UTFString *str)
 {

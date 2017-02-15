@@ -1,9 +1,8 @@
 /*
  *  DBG_Log.h WIN32
- *  MobiTracker
  *
  *  Created by Marcin Skoczylas on 09-11-19.
- *  Copyright 2009 __MyCompanyName__. All rights reserved.
+ *  Copyright 2009 Marcin Skoczylas. All rights reserved.
  *
  */
 

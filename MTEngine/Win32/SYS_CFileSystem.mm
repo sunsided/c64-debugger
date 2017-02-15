@@ -50,8 +50,19 @@ UTFString *gPathToSettings;
 char *gCPathToSettings;
 CSlrString *gUTFPathToSettings;
 
+UTFString *gPathToCurrentDirectory;
+char *gCPathToCurrentDirectory;
+CSlrString *gUTFPathToCurrentDirectory;
+
+bool sysInitFileSystemDone = false;
+
 void SYS_InitFileSystem()
 {
+	if (sysInitFileSystemDone == true)
+		return;
+
+	sysInitFileSystemDone = true;
+
 	LOGF(DBGLVL_MAIN, "SYS_InitFileSystem\n");
 
 	TCHAR curDir[MAX_PATH];
@@ -60,6 +71,11 @@ void SYS_InitFileSystem()
 	dwRet = GetCurrentDirectory(MAX_PATH, curDir);
 
 	LOGD("curDir='%s'", curDir);
+
+	gPathToCurrentDirectory = new char[MAX_PATH];
+	strcpy(gPathToCurrentDirectory, curDir);
+	gCPathToCurrentDirectory = gPathToCurrentDirectory;
+	gUTFPathToCurrentDirectory = new CSlrString(gCPathToCurrentDirectory);
 
 	gPathToResources = new char[MAX_PATH];
 	sprintf(gPathToResources, "%s\\Resources\\", curDir);
@@ -1245,3 +1261,12 @@ void SYS_UnMapMemoryFromFile(uint8 *memoryMap, int memorySize, void **fileDescri
 	close(*fileHandle);
 }
 
+void SYS_SetCurrentFolder(CSlrString *path)
+{
+	LOGD("SYS_SetCurrentFolder");
+	path->DebugPrint("SYS_SetCurrentFolder: ");
+	char *cPath = path->GetStdASCII();
+	SetCurrentDirectory(cPath);
+
+	delete [] cPath;
+}

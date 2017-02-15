@@ -34,4 +34,9 @@
 - (void) startAnimation;
 - (void) stopAnimation;
 
+- (void)setWindowAlwaysOnTop:(BOOL)isAlwaysOnTop;
+
 @end
+
+extern GLView *glView;
+

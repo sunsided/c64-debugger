@@ -128,6 +128,13 @@ void VID_ResetLogicClock()
 	resetLogicClock = true;
 }
 
+void X11SetAlwaysOnTop(bool isAlwaysOnTop);
+
+void VID_SetWindowAlwaysOnTop(bool isAlwaysOnTop)
+{
+	X11SetAlwaysOnTop(isAlwaysOnTop);
+}
+
 void VID_ApplicationPreloadingFinished()
 {
 }

@@ -148,6 +148,7 @@
 		411A4EB91A1524E90095EBF9 /* CAudioChannelMusicPlayer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 411A4EB71A1524E90095EBF9 /* CAudioChannelMusicPlayer.mm */; };
 		411AE397191BB9000047026E /* GUI_Debug.mm in Sources */ = {isa = PBXBuildFile; fileRef = 411AE396191BB9000047026E /* GUI_Debug.mm */; };
 		411C1FE119F97F3600E51709 /* CSlrFileZlib.mm in Sources */ = {isa = PBXBuildFile; fileRef = 411C1FDF19F97F3600E51709 /* CSlrFileZlib.mm */; };
+		4128D0B11DC0F4D6007A5CFF /* C64SharedMemory.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4128D0AF1DC0F4D6007A5CFF /* C64SharedMemory.mm */; };
 		412BB9A31614AB6800533AD3 /* CSlrFileFromDocuments.mm in Sources */ = {isa = PBXBuildFile; fileRef = 412BB98C1614AB6800533AD3 /* CSlrFileFromDocuments.mm */; };
 		412BB9A41614AB6800533AD3 /* CSlrFileFromResources.mm in Sources */ = {isa = PBXBuildFile; fileRef = 412BB98E1614AB6800533AD3 /* CSlrFileFromResources.mm */; };
 		412BB9A51614AB6800533AD3 /* CSlrFontSystem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 412BB9901614AB6800533AD3 /* CSlrFontSystem.mm */; };
@@ -160,6 +161,8 @@
 		412BB9AE1614AB6800533AD3 /* VID_GLViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 412BB9A21614AB6800533AD3 /* VID_GLViewController.mm */; };
 		4132CC1119AE145200E7C3B0 /* lodepng.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4132CC0F19AE145200E7C3B0 /* lodepng.cpp */; };
 		4138F97C18BDF69600C6C5A9 /* CGuiViewSelectFolder.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4138F97A18BDF69600C6C5A9 /* CGuiViewSelectFolder.mm */; };
+		413B5F381DC213B300852EA4 /* SYS_SharedMemory.mm in Sources */ = {isa = PBXBuildFile; fileRef = 413B5F371DC213B300852EA4 /* SYS_SharedMemory.mm */; };
+		413D68F71DE06D3E0034BF7E /* C64Palette.mm in Sources */ = {isa = PBXBuildFile; fileRef = 413D68F61DE06D3E0034BF7E /* C64Palette.mm */; };
 		4140E6341A9C91F1002FC265 /* CGuiViewDummy.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4140E6331A9C91F1002FC265 /* CGuiViewDummy.mm */; };
 		41428A9619F966F300D2F7C9 /* stb_image.c in Sources */ = {isa = PBXBuildFile; fileRef = 41428A9419F966F300D2F7C9 /* stb_image.c */; };
 		414535AB1CB2D1A300020916 /* blockdev.c in Sources */ = {isa = PBXBuildFile; fileRef = 414531801CB2D1A100020916 /* blockdev.c */; };
@@ -687,6 +690,7 @@
 		4152D71C1C970F7900EBA9E5 /* CViewSnapshots.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D7121C970F7900EBA9E5 /* CViewSnapshots.mm */; };
 		4152D71E1C970F7900EBA9E5 /* CViewBreakpoints.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D7141C970F7900EBA9E5 /* CViewBreakpoints.mm */; };
 		4152D7221C970FA900EBA9E5 /* CViewC64.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D7201C970FA900EBA9E5 /* CViewC64.mm */; };
+		415838571DC9E89100A56E0E /* C64AsmSource.mm in Sources */ = {isa = PBXBuildFile; fileRef = 415838551DC9E89100A56E0E /* C64AsmSource.mm */; };
 		4159DE0117A7E5390016187E /* SYS_Memory.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4159DE0017A7E5390016187E /* SYS_Memory.mm */; };
 		415B4B2719848A0700B13FFF /* CSlrImageContainer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 415B4B2519848A0700B13FFF /* CSlrImageContainer.mm */; };
 		4160B20C1CEB16AB00EAD217 /* CGuiViewConsole.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4160B20A1CEB16AB00EAD217 /* CGuiViewConsole.mm */; };
@@ -1122,6 +1126,8 @@
 		411AE396191BB9000047026E /* GUI_Debug.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = GUI_Debug.mm; sourceTree = "<group>"; };
 		411C1FDF19F97F3600E51709 /* CSlrFileZlib.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CSlrFileZlib.mm; sourceTree = "<group>"; };
 		411C1FE019F97F3600E51709 /* CSlrFileZlib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CSlrFileZlib.h; sourceTree = "<group>"; };
+		4128D0AF1DC0F4D6007A5CFF /* C64SharedMemory.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64SharedMemory.mm; path = ../Games/c64/Tools/C64SharedMemory.mm; sourceTree = "<group>"; };
+		4128D0B01DC0F4D6007A5CFF /* C64SharedMemory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64SharedMemory.h; path = ../Games/c64/Tools/C64SharedMemory.h; sourceTree = "<group>"; };
 		412BB98B1614AB6800533AD3 /* CSlrFileFromDocuments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CSlrFileFromDocuments.h; sourceTree = "<group>"; };
 		412BB98C1614AB6800533AD3 /* CSlrFileFromDocuments.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CSlrFileFromDocuments.mm; sourceTree = "<group>"; };
 		412BB98D1614AB6800533AD3 /* CSlrFileFromResources.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CSlrFileFromResources.h; sourceTree = "<group>"; };
@@ -1149,6 +1155,10 @@
 		4132CC1019AE145200E7C3B0 /* lodepng.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lodepng.h; sourceTree = "<group>"; };
 		4138F97A18BDF69600C6C5A9 /* CGuiViewSelectFolder.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CGuiViewSelectFolder.mm; sourceTree = "<group>"; };
 		4138F97B18BDF69600C6C5A9 /* CGuiViewSelectFolder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CGuiViewSelectFolder.h; sourceTree = "<group>"; };
+		413B5F361DC213B300852EA4 /* SYS_SharedMemory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SYS_SharedMemory.h; sourceTree = "<group>"; };
+		413B5F371DC213B300852EA4 /* SYS_SharedMemory.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SYS_SharedMemory.mm; sourceTree = "<group>"; };
+		413D68F51DE06D3E0034BF7E /* C64Palette.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64Palette.h; path = ../Games/c64/Tools/C64Palette.h; sourceTree = "<group>"; };
+		413D68F61DE06D3E0034BF7E /* C64Palette.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64Palette.mm; path = ../Games/c64/Tools/C64Palette.mm; sourceTree = "<group>"; };
 		4140E6321A9C91F1002FC265 /* CGuiViewDummy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CGuiViewDummy.h; sourceTree = "<group>"; };
 		4140E6331A9C91F1002FC265 /* CGuiViewDummy.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CGuiViewDummy.mm; sourceTree = "<group>"; };
 		41428A9419F966F300D2F7C9 /* stb_image.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stb_image.c; sourceTree = "<group>"; };
@@ -2228,6 +2238,8 @@
 		4152D71A1C970F7900EBA9E5 /* CViewSnapshots.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewSnapshots.h; path = ../Games/c64/Screens/CViewSnapshots.h; sourceTree = "<group>"; };
 		4152D7201C970FA900EBA9E5 /* CViewC64.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewC64.mm; path = ../Games/c64/Screens/CViewC64.mm; sourceTree = "<group>"; };
 		4152D7211C970FA900EBA9E5 /* CViewC64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewC64.h; path = ../Games/c64/Screens/CViewC64.h; sourceTree = "<group>"; };
+		415838551DC9E89100A56E0E /* C64AsmSource.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64AsmSource.mm; path = ../Games/c64/Tools/C64AsmSource.mm; sourceTree = "<group>"; };
+		415838561DC9E89100A56E0E /* C64AsmSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64AsmSource.h; path = ../Games/c64/Tools/C64AsmSource.h; sourceTree = "<group>"; };
 		4159DDFF17A7E5390016187E /* SYS_Memory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SYS_Memory.h; sourceTree = "<group>"; };
 		4159DE0017A7E5390016187E /* SYS_Memory.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SYS_Memory.mm; sourceTree = "<group>"; };
 		415B4B2519848A0700B13FFF /* CSlrImageContainer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CSlrImageContainer.mm; sourceTree = "<group>"; };
@@ -3052,8 +3064,8 @@
 				41FC3CB91CFEC44F00D598A2 /* CViewAbout.h */,
 				41EC74FB1CDB22CA00D0E99F /* CViewMainMenu.mm */,
 				41EC74FC1CDB22CA00D0E99F /* CViewMainMenu.h */,
-				4152D7191C970F7900EBA9E5 /* CViewSettingsMenu.h */,
 				4152D7111C970F7900EBA9E5 /* CViewSettingsMenu.mm */,
+				4152D7191C970F7900EBA9E5 /* CViewSettingsMenu.h */,
 				4152D7121C970F7900EBA9E5 /* CViewSnapshots.mm */,
 				4152D71A1C970F7900EBA9E5 /* CViewSnapshots.h */,
 				4152D7141C970F7900EBA9E5 /* CViewBreakpoints.mm */,
@@ -4527,6 +4539,12 @@
 		41646C051C8DAAF2006BBE25 /* Tools */ = {
 			isa = PBXGroup;
 			children = (
+				413D68F51DE06D3E0034BF7E /* C64Palette.h */,
+				413D68F61DE06D3E0034BF7E /* C64Palette.mm */,
+				415838551DC9E89100A56E0E /* C64AsmSource.mm */,
+				415838561DC9E89100A56E0E /* C64AsmSource.h */,
+				4128D0AF1DC0F4D6007A5CFF /* C64SharedMemory.mm */,
+				4128D0B01DC0F4D6007A5CFF /* C64SharedMemory.h */,
 				41474DCD1D08607300F1B83F /* C64KeyMap.h */,
 				41474DCE1D08607300F1B83F /* C64KeyMap.mm */,
 				41EC74FE1CE1E51F00D0E99F /* C64SettingsStorage.mm */,
@@ -4787,6 +4805,8 @@
 				412BB99C1614AB6800533AD3 /* SYS_Accelerometer.mm */,
 				412BB99D1614AB6800533AD3 /* SYS_CFileSystem.h */,
 				412BB99E1614AB6800533AD3 /* SYS_CFileSystem.mm */,
+				413B5F361DC213B300852EA4 /* SYS_SharedMemory.h */,
+				413B5F371DC213B300852EA4 /* SYS_SharedMemory.mm */,
 				412BB99F1614AB6800533AD3 /* VID_Blits.h */,
 				412BB9A01614AB6800533AD3 /* VID_Blits.mm */,
 				412BB9A11614AB6800533AD3 /* VID_GLViewController.h */,
@@ -5214,6 +5234,7 @@
 				411A4EB91A1524E90095EBF9 /* CAudioChannelMusicPlayer.mm in Sources */,
 				4145365B1CB2D1A300020916 /* psid.c in Sources */,
 				414536571CB2D1A300020916 /* c64video.c in Sources */,
+				413D68F71DE06D3E0034BF7E /* C64Palette.mm in Sources */,
 				39042A1E186892A800B570B1 /* CGuiMain.mm in Sources */,
 				41E0AC3E18AC2F740065DCAD /* JSONDebug.mm in Sources */,
 				41CF59061920E77600F43331 /* resampler.mm in Sources */,
@@ -5556,6 +5577,7 @@
 				41E0AC3D18AC2F740065DCAD /* JSONChildren.mm in Sources */,
 				390429EE186892A800B570B1 /* SYS_Funct.mm in Sources */,
 				414535C21CB2D1A300020916 /* menu_midi.c in Sources */,
+				415838571DC9E89100A56E0E /* C64AsmSource.mm in Sources */,
 				414537241CB2D1A300020916 /* resid-extfilt.cc in Sources */,
 				39042AF0186892A800B570B1 /* mdct.c in Sources */,
 				414537181CB2D1A300020916 /* raster-line-changes.c in Sources */,
@@ -5620,6 +5642,7 @@
 				414539A61CB2E94F00020916 /* datasette.c in Sources */,
 				414536301CB2D1A300020916 /* crt.c in Sources */,
 				414536161CB2D1A300020916 /* mmc64.c in Sources */,
+				413B5F381DC213B300852EA4 /* SYS_SharedMemory.mm in Sources */,
 				4145360B1CB2D1A300020916 /* gamekiller.c in Sources */,
 				414535D61CB2D1A300020916 /* mousedrv.c in Sources */,
 				414536C61CB2D1A300020916 /* imagecontents.c in Sources */,
@@ -5631,6 +5654,7 @@
 				414538951CB2DC2000020916 /* ds1202_1302.c in Sources */,
 				41E0AC4118AC2F740065DCAD /* JSONNode.mm in Sources */,
 				414536521CB2D1A300020916 /* c64rom.c in Sources */,
+				4128D0B11DC0F4D6007A5CFF /* C64SharedMemory.mm in Sources */,
 				41925D9A1B1DD82F00B33B7F /* jdmerge.c in Sources */,
 				414536881CB2D1A300020916 /* iec-cmdline-options.c in Sources */,
 				41925DB11B1DD82F00B33B7F /* transupp.c in Sources */,

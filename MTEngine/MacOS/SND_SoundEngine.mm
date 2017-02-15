@@ -51,9 +51,11 @@ CSoundEngine::CSoundEngine()
 #endif
 	
 	deviceOutIndex = Pa_GetDefaultOutputDevice();
+	
 	if (deviceOutIndex == paNoDevice)
 	{
-		SYS_FatalExit("No default audio output device detected, bad luck!");
+		SYS_ShowError("No default audio output device detected, bad luck!");
+		SYS_CleanExit();
 	}
 	
 	recordedData = NULL;
@@ -383,7 +385,8 @@ void CSoundEngine::StartAudioUnit(bool isPlayback, bool isRecording, int recordi
 			deviceOutIndex = Pa_GetDefaultOutputDevice(); // default output device
 			if (deviceOutIndex == paNoDevice)
 			{
-				SYS_FatalExit("No default audio output device... bad luck!");
+				SYS_ShowError("No default audio output device detected, bad luck!");
+				SYS_CleanExit();
 			}
 		}
 		
@@ -430,10 +433,11 @@ void CSoundEngine::StartAudioUnit(bool isPlayback, bool isRecording, int recordi
 	{
 		LOGA("opening input stream");
 		inputParameters.device = Pa_GetDefaultInputDevice();
-		LOGTODO("TODO: check paNoDevice");
-		if (inputParameters.device == paNoDevice) 
+
+		if (inputParameters.device == paNoDevice)
 		{
-			SYS_FatalExit("No input device");
+			SYS_ShowError("No default audio input device detected, bad luck!");
+			SYS_CleanExit();
 		}
 		inputParameters.channelCount = 1;                     // mono input
 		inputParameters.sampleFormat = paInt16;

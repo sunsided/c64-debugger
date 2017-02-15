@@ -102,6 +102,8 @@ void VID_TouchesScrollWheel(float deltaX, float deltaY);
 long SYS_GetCurrentTimeInMillis();
 void VID_ResetLogicClock();
 
+void VID_SetWindowAlwaysOnTop(bool isAlwaysOnTop);
+
 void VID_ShowActionSheet();
 
 void VID_SetOrthoScreen();
