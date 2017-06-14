@@ -1,6 +1,7 @@
 C64 Debugger by SLAJEREK/SAMAR
 ------------------------------
 
+C64 Debugger (C) 2016-2017 Marcin Skoczylas
 Vice (C) 1993-2016 The VICE Team
 
 

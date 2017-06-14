@@ -27,7 +27,7 @@
 #ifndef __DBG_LOGF_H__
 #define __DBG_LOGF_H__
 
-//#define GLOBAL_DEBUG_OFF
+#define GLOBAL_DEBUG_OFF
 //#undef GLOBAL_DEBUG_OFF
 
 #define DBGLVL_DEBUG		(1 << 0)
