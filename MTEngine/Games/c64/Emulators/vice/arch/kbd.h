@@ -2,7 +2,8 @@
  * kbd.h - SDL specfic keyboard driver.
  *
  * Written by
- *  Andreas Boose <viceteam@t-online.de>
+ *  Hannu Nuotio <hannu.nuotio@tut.fi>
+ *  Marco van den Heuvel <blackystardust68@yahoo.com>
  *
  * This file is part of VICE, the Versatile Commodore Emulator.
  * See README file for copyright notice.
@@ -31,10 +32,13 @@
 #include "uimenu.h"
 
 extern void kbd_arch_init(void);
+extern int kbd_arch_get_host_mapping(void);
 
 extern signed long kbd_arch_keyname_to_keynum(char *keyname);
 extern const char *kbd_arch_keynum_to_keyname(signed long keynum);
 extern void kbd_initialize_numpad_joykeys(int *joykeys);
+
+#define KBD_PORT_PREFIX "sdl"
 
 #define KBD_C64_SYM_US  "sdl_sym.vkm"
 #define KBD_C64_SYM_DE  "sdl_sym.vkm"
@@ -75,6 +79,8 @@ extern int sdlkbd_hotkeys_dump(const char *filename);
 
 extern int sdlkbd_init_resources(void);
 extern void sdlkbd_resources_shutdown(void);
+
+extern int sdlkbd_init_cmdline(void);
 
 extern void kbd_enter_leave(void);
 extern void kbd_focus_change(void);

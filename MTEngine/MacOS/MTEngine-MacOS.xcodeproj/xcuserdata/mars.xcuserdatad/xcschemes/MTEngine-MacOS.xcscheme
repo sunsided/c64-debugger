@@ -62,6 +62,34 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
+            argument = "-prg"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "/Users/mars/Desktop/vd/sprites1.prg"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "/Users/mars/Desktop/vd/sprites-re.prg"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "/Users/mars/Desktop/vd/bin/sprites_Compiled.prg"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-wait"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "350"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-autojmp"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "-breakpoints"
             isEnabled = "NO">
          </CommandLineArgument>
@@ -110,6 +138,10 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
+            argument = "-autorundisk"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "-layout"
             isEnabled = "NO">
          </CommandLineArgument>
@@ -150,6 +182,13 @@
             isEnabled = "NO">
          </CommandLineArgument>
       </CommandLineArguments>
+      <EnvironmentVariables>
+         <EnvironmentVariable
+            key = ""
+            value = ""
+            isEnabled = "YES">
+         </EnvironmentVariable>
+      </EnvironmentVariables>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>

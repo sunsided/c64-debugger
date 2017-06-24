@@ -131,6 +131,8 @@ void BlitRectangle(GLfloat destX, GLfloat destY, GLfloat z, GLfloat sizeX, GLflo
 
 void BlitLine(GLfloat startX, GLfloat startY, GLfloat endX, GLfloat endY, GLfloat posZ,
 			  GLfloat colorR, GLfloat colorG, GLfloat colorB, GLfloat alpha);
+void BlitLine(GLfloat startX, GLfloat startY, GLfloat endX, GLfloat endY, GLfloat posZ,
+			  GLfloat colorR, GLfloat colorG, GLfloat colorB, GLfloat alpha, float width);
 
 
 void BlitFilledRectangle(GLfloat destX, GLfloat destY, GLfloat z, GLfloat sizeX, GLfloat sizeY, 

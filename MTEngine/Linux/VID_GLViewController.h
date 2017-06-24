@@ -63,6 +63,12 @@ void GUI_ShowVirtualKeyboard();
 void GUI_HideVirtualKeyboard();
 
 void VID_SetWindowAlwaysOnTop(bool isAlwaysOnTop);
+void VID_SetWindowAlwaysOnTopTemporary(bool isAlwaysOnTop);
+bool VID_IsWindowAlwaysOnTop();
+
+bool VID_IsWindowFullScreen();
+void VID_HideMouseCursor();
+void VID_ShowMouseCursor();
 
 void GUI_ShowAcknowledgements();
 void VID_SetViewKeyboardOffset(float offsetY);
@@ -168,6 +174,8 @@ void VID_SetOrthoScreen();
 void VID_SetOrtho(GLfloat xMin, GLfloat xMax, GLfloat yMin, GLfloat yMax,
 				  GLfloat zMin, GLfloat zMax);
 void VID_SetOrthoSwitchBack();
+
+void GUI_GetRealScreenPixelSizes(double *pixelSizeX, double *pixelSizeY);
 
 void BlitTexture(GLuint tex, GLfloat destX, GLfloat destY, GLfloat z, GLfloat sizeX, GLfloat sizeY);
 void BlitTexture(GLuint tex, GLfloat destX, GLfloat destY, GLfloat z, GLfloat sizeX, GLfloat sizeY,
@@ -287,6 +295,9 @@ void glDisable2D();
 //void SetClipping(GLint x, GLint y, GLsizei sizeX, GLsizei sizeY);
 void SetClipping(GLfloat x, GLfloat y, GLfloat sizeX, GLfloat sizeY);
 void ResetClipping();
+
+#define VID_SetClipping SetClipping
+#define VID_ResetClipping ResetClipping
 
 void GUI_SetPressConsumed(bool consumed);
 

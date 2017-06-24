@@ -29,6 +29,7 @@
 
 #include <time.h>
 
+#include "snapshot.h"
 #include "types.h"
 
 typedef struct rtc_58321a_s {
@@ -36,7 +37,9 @@ typedef struct rtc_58321a_s {
     int hour24;
     BYTE address;
     time_t latch;
-    time_t *offset;
+    time_t offset;
+    time_t old_offset;
+    char *device;
 } rtc_58321a_t;
 
 #define RTC58321A_REGISTER_SECONDS       0
@@ -56,8 +59,8 @@ typedef struct rtc_58321a_s {
 #define RTC58321A_REGISTER_SS0           14
 #define RTC58321A_REGISTER_SS1           15
 
-extern rtc_58321a_t *rtc58321a_init(time_t *offset);
-extern void rtc58321a_destroy(rtc_58321a_t *context);
+extern rtc_58321a_t *rtc58321a_init(char *device);
+extern void rtc58321a_destroy(rtc_58321a_t *context, int save);
 
 extern BYTE rtc58321a_read(rtc_58321a_t *context);
 extern void rtc58321a_write_address(rtc_58321a_t *context, BYTE address);
@@ -65,5 +68,8 @@ extern void rtc58321a_write_data(rtc_58321a_t *context, BYTE data);
 
 extern void rtc58321a_stop_clock(rtc_58321a_t *context);
 extern void rtc58321a_start_clock(rtc_58321a_t *context);
+
+extern int rtc58321a_write_snapshot(rtc_58321a_t *context, snapshot_t *s);
+extern int rtc58321a_read_snapshot(rtc_58321a_t *context, snapshot_t *s);
 
 #endif

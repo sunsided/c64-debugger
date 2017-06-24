@@ -25,6 +25,8 @@
  *
  */
 
+/* #define VICE_DEBUG_CMDLINE */
+
 #include "vice.h"
 
 #include <stdio.h>
@@ -40,6 +42,11 @@
 #include "uicmdline.h"
 #include "util.h"
 
+#ifdef VICE_DEBUG_CMDLINE
+#define DBG(x)  printf x
+#else
+#define DBG(x)
+#endif
 
 static unsigned int num_options, num_allocated_options;
 static cmdline_option_ram_t *options;
@@ -74,14 +81,13 @@ int cmdline_register_options(const cmdline_option_t *c)
 
     p = options + num_options;
     for (; c->name != NULL; c++, p++) {
-
         if (lookup_exact(c->name)) {
             archdep_startup_log_error("CMDLINE: (%d) Duplicated option '%s'.\n", num_options, c->name);
             return -1;
         }
 
         if (c->use_description_id != USE_DESCRIPTION_ID) {
-            if(c->description == NULL) {
+            if (c->description == NULL) {
                 archdep_startup_log_error("CMDLINE: (%d) description id not used and description NULL for '%s'.\n", num_options, c->name);
                 return -1;
             }
@@ -116,6 +122,8 @@ int cmdline_register_options(const cmdline_option_t *c)
         p->param_name_trans = c->param_name_trans;
         p->description_trans = c->description_trans;
 
+        p->combined_string = NULL;
+
         num_options++;
     }
 
@@ -129,11 +137,24 @@ static void cmdline_free(void)
     for (i = 0; i < num_options; i++) {
         lib_free((options + i)->name);
         lib_free((options + i)->resource_name);
+        if ((options + i)->combined_string) {
+            lib_free((options + i)->combined_string);
+        }
     }
 }
 
 void cmdline_shutdown(void)
 {
+#ifdef VICE_DEBUG_CMDLINE
+    unsigned int i;
+
+    for (i = 0; i < num_options; i++) {
+        printf("CMDLINE\t%s\t%s\n",
+                (options + i)->name,
+                (options + i)->type == SET_RESOURCE ? (options + i)->resource_name : "(call-function)");
+
+    }
+#endif
     cmdline_free();
 
     lib_free(options);
@@ -170,9 +191,12 @@ static cmdline_option_ram_t *lookup(const char *name, int *is_ambiguous)
 int cmdline_parse(int *argc, char **argv)
 {
     int i = 1;
+    unsigned j;
 
-    while (i < *argc) {
-        if (*argv[i] == '-' || *argv[i] == '+') {
+    DBG(("cmdline_parse (argc:%d)\n", *argc));
+    while ((i < *argc) && (argv[i] != NULL)) {
+        DBG(("%d:%s\n", i, argv[i]));
+        if ((argv[i][0] == '-') || (argv[i][0] == '+')) {
             int is_ambiguous, retval;
             cmdline_option_ram_t *p;
 
@@ -181,15 +205,21 @@ int cmdline_parse(int *argc, char **argv)
                 return -1;
             }
 
-            /* `--' delimits the end of the option list.  */
             if (argv[i][1] == '-') {
-                i++;
-                break;
+                /* `--' delimits the end of the option list.  */
+                if (argv[i][2] == '\0') {
+                    i++;
+                    break;
+                }
+                /* This is a kludge to allow --long options */
+                for (j = 0; j < strlen(argv[i]); j++) {
+                    argv[i][j] = argv[i][j + 1];
+                }
             }
 
             p = lookup(argv[i], &is_ambiguous);
             if (p == NULL) {
-                archdep_startup_log_error("Unknown option '%s'.\n", argv[i]);
+				LOGError("Unknown option '%s'.\n", argv[i]);
                 return -1;
             }
 
@@ -203,47 +233,53 @@ int cmdline_parse(int *argc, char **argv)
                                           p->name);
                 return -1;
             }
-            switch(p->type) {
-              case SET_RESOURCE:
-                if (p->need_arg)
-                    retval = resources_set_value_string(p->resource_name,
-                                                        argv[i + 1]);
-                else
-                    retval = resources_set_value(p->resource_name,
-                                                 p->resource_value);
-                break;
-              case CALL_FUNCTION:
-                retval = p->set_func(p->need_arg ? argv[i+1] : NULL,
-                         p->extra_param);
-                break;
-              default:
-                archdep_startup_log_error("Invalid type for option '%s'.\n",
-                                          p->name);
-                return -1;
+            switch (p->type) {
+                case SET_RESOURCE:
+                    if (p->need_arg) {
+                        retval = resources_set_value_string(p->resource_name, argv[i + 1]);
+                    } else {
+                        retval = resources_set_value(p->resource_name, p->resource_value);
+                    }
+                    break;
+                case CALL_FUNCTION:
+                    retval = p->set_func(p->need_arg ? argv[i + 1] : NULL,
+                                         p->extra_param);
+                    break;
+                default:
+                    archdep_startup_log_error("Invalid type for option '%s'.\n",
+                                              p->name);
+                    return -1;
             }
             if (retval < 0) {
-                if (p->need_arg)
+                if (p->need_arg) {
                     archdep_startup_log_error("Argument '%s' not valid for option `%s'.\n",
                                               argv[i + 1], p->name);
-                else
+                } else {
                     archdep_startup_log_error("Option '%s' not valid.\n", p->name);
+                }
                 return -1;
             }
 
             i += p->need_arg ? 2 : 1;
-        } else
+        } else {
             break;
+        }
     }
 
-    /* Remove all the parsed options.  */
-    {
-        int j;
-
-        for (j = 1; j <= (*argc - i); j++)
-            argv[j] = argv[i + j - 1];
-
-        *argc -= i;
+    /* Remove all of the parsed options. */
+    DBG(("i:%d argc:%d\n", i, *argc));
+    j = 1;
+    while (1) {
+        argv[j] = argv[i];
+        if ((argv[i] == NULL) || (i >= *argc)) {
+            break;
+        }
+        DBG(("%u <- %d:%s\n", j, i, argv[i]));
+        j++;
+        i++;
     }
+    *argc = (int)j;
+    DBG(("new argc:%u\n", j));
 
     return 0;
 }
@@ -269,8 +305,23 @@ char *cmdline_options_get_param(int counter)
 
 char *cmdline_options_get_description(int counter)
 {
+    union char_func cf;
+
     if (options[counter].use_description_id == USE_DESCRIPTION_ID) {
         return translate_text(options[counter].description_trans);
+    } else if (options[counter].use_description_id == USE_DESCRIPTION_COMBO) {
+        if (options[counter].combined_string) {
+            lib_free(options[counter].combined_string);
+        }
+        options[counter].combined_string = util_concat(translate_text(options[counter].description_trans), options[counter].description, NULL);
+        return options[counter].combined_string;
+    } else if (options[counter].use_description_id == USE_DESCRIPTION_DYN) {
+        if (options[counter].combined_string) {
+            lib_free(options[counter].combined_string);
+        }
+        cf.c = options[counter].description;
+        options[counter].combined_string = cf.f(options[counter].description_trans);
+        return options[counter].combined_string;
     } else {
         return (char *)_(options[counter].description);
     }

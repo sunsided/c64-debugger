@@ -6,6 +6,7 @@
  *
  * Written by
  *  Dag Lem <resid@nimrod.no>
+ *  Marco van den Heuvel <blackystardust68@yahoo.com>
  *
  * This file is part of VICE, the Versatile Commodore Emulator.
  * See README for copyright notice.
@@ -44,9 +45,8 @@ struct sid_snapshot_state_s;
 #define SID_ENGINE_RESID          1
 #define SID_ENGINE_CATWEASELMKIII 2
 #define SID_ENGINE_HARDSID        3
-#define SID_ENGINE_PARSID_PORT1   4
-#define SID_ENGINE_PARSID_PORT2   5
-#define SID_ENGINE_PARSID_PORT3   6
+#define SID_ENGINE_PARSID         4
+#define SID_ENGINE_SSI2001        5
 #define SID_ENGINE_RESID_FP       7
 #define SID_ENGINE_DEFAULT       99
 
@@ -78,9 +78,8 @@ struct sid_snapshot_state_s;
 #define SID_RESID_DTVSID          ((SID_ENGINE_RESID << 8) | SID_MODEL_DTVSID)
 #define SID_CATWEASELMKIII        (SID_ENGINE_CATWEASELMKIII << 8)
 #define SID_HARDSID               (SID_ENGINE_HARDSID << 8)
-#define SID_PARSID_PORT1          (SID_ENGINE_PARSID_PORT1 << 8)
-#define SID_PARSID_PORT2          (SID_ENGINE_PARSID_PORT2 << 8)
-#define SID_PARSID_PORT3          (SID_ENGINE_PARSID_PORT3 << 8)
+#define SID_PARSID                (SID_ENGINE_PARSID << 8)
+#define SID_SSI2001               (SID_ENGINE_SSI2001 << 8)
 #define SID_RESIDFP_6581R3_4885   ((SID_ENGINE_RESID_FP << 8) | SID_MODEL_6581R3_4885)
 #define SID_RESIDFP_6581R3_0486S  ((SID_ENGINE_RESID_FP << 8) | SID_MODEL_6581R3_0486S)
 #define SID_RESIDFP_6581R3_3984   ((SID_ENGINE_RESID_FP << 8) | SID_MODEL_6581R3_3984)
@@ -101,6 +100,9 @@ extern BYTE sid3_read(WORD address);
 extern void sid_store(WORD address, BYTE byte);
 extern void sid2_store(WORD address, BYTE byte);
 extern void sid3_store(WORD address, BYTE byte);
+extern int sid_dump(void);
+extern int sid2_dump(void);
+extern int sid3_dump(void);
 extern void sid_reset(void);
 
 extern void sid_set_machine_parameter(long clock_rate);
@@ -113,7 +115,7 @@ extern void sid_state_write(unsigned int channel,
 
 struct sid_engine_s {
     struct sound_s *(*open)(BYTE *sidstate);
-    int (*init)(struct sound_s *psid, int speed, int cycles_per_sec);
+    int (*init)(struct sound_s *psid, int speed, int cycles_per_sec, int factor);
     void (*close)(struct sound_s *psid);
     BYTE (*read)(struct sound_s *psid, WORD addr);
     void (*store)(struct sound_s *psid, WORD addr, BYTE val);
@@ -139,6 +141,7 @@ struct sid_engine_model_s {
 typedef struct sid_engine_model_s sid_engine_model_t;
 
 extern sound_t *sid_sound_machine_open(int chipno);
+extern int sid_sound_machine_init_vbr(sound_t *psid, int speed, int cycles_per_sec, int factor);
 extern int sid_sound_machine_init(sound_t *psid, int speed, int cycles_per_sec);
 extern void sid_sound_machine_close(sound_t *psid);
 extern BYTE sid_sound_machine_read(sound_t *psid, WORD addr);
@@ -153,6 +156,8 @@ extern void sid_sound_machine_enable(int enable);
 extern sid_engine_model_t **sid_get_engine_model_list(void);
 extern int sid_set_engine_model(int engine, int model);
 extern void sid_sound_chip_init(void);
+
+extern void sid_set_enable(int value);
 
 // c64 debugger
 extern void sid_sound_machine_set_voice_mask(sound_t *psid, BYTE voiceMask);

@@ -69,8 +69,8 @@ bool CViewDrive1541State::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isCo
 	return false;
 }
 
-void CViewDrive1541State::SetFocus(bool focus)
+bool CViewDrive1541State::SetFocus(bool focus)
 {
-	return;
+	return false;
 }
 

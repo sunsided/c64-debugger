@@ -1,24 +1,22 @@
-/* A Bison parser, made by GNU Bison 2.3.  */
+/* A Bison parser, made by GNU Bison 2.4.2.  */
 
 /* Skeleton interface for Bison's Yacc-like parsers in C
-
-   Copyright (C) 1984, 1989, 1990, 2000, 2001, 2002, 2003, 2004, 2005, 2006
-   Free Software Foundation, Inc.
-
-   This program is free software; you can redistribute it and/or modify
+   
+      Copyright (C) 1984, 1989-1990, 2000-2006, 2009-2010 Free Software
+   Foundation, Inc.
+   
+   This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
-
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+   
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-
+   
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor,
-   Boston, MA 02110-1301, USA.  */
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* As a special exception, you may create a larger work that contains
    part or all of the Bison parser skeleton and distribute that work
@@ -29,9 +27,10 @@
    special exception, which will cause the skeleton and the resulting
    Bison output files to be licensed under the GNU General Public
    License without this special exception.
-
+   
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
+
 
 /* Tokens.  */
 #ifndef YYTOKENTYPE
@@ -100,15 +99,15 @@
      CMD_HELP = 316,
      CMD_WATCH = 317,
      CMD_DISK = 318,
-     CMD_SYSTEM = 319,
-     CMD_QUIT = 320,
-     CMD_CHDIR = 321,
-     CMD_BANK = 322,
-     CMD_LOAD_LABELS = 323,
-     CMD_SAVE_LABELS = 324,
-     CMD_ADD_LABEL = 325,
-     CMD_DEL_LABEL = 326,
-     CMD_SHOW_LABELS = 327,
+     CMD_QUIT = 319,
+     CMD_CHDIR = 320,
+     CMD_BANK = 321,
+     CMD_LOAD_LABELS = 322,
+     CMD_SAVE_LABELS = 323,
+     CMD_ADD_LABEL = 324,
+     CMD_DEL_LABEL = 325,
+     CMD_SHOW_LABELS = 326,
+     CMD_CLEAR_LABELS = 327,
      CMD_RECORD = 328,
      CMD_MON_STOP = 329,
      CMD_PLAYBACK = 330,
@@ -263,15 +262,15 @@
 #define CMD_HELP 316
 #define CMD_WATCH 317
 #define CMD_DISK 318
-#define CMD_SYSTEM 319
-#define CMD_QUIT 320
-#define CMD_CHDIR 321
-#define CMD_BANK 322
-#define CMD_LOAD_LABELS 323
-#define CMD_SAVE_LABELS 324
-#define CMD_ADD_LABEL 325
-#define CMD_DEL_LABEL 326
-#define CMD_SHOW_LABELS 327
+#define CMD_QUIT 319
+#define CMD_CHDIR 320
+#define CMD_BANK 321
+#define CMD_LOAD_LABELS 322
+#define CMD_SAVE_LABELS 323
+#define CMD_ADD_LABEL 324
+#define CMD_DEL_LABEL 325
+#define CMD_SHOW_LABELS 326
+#define CMD_CLEAR_LABELS 327
 #define CMD_RECORD 328
 #define CMD_MON_STOP 329
 #define CMD_PLAYBACK 330
@@ -368,8 +367,11 @@
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 127 "mon_parse.y"
 {
+
+/* Line 1685 of yacc.c  */
+#line 132 "mon_parse.y"
+
     MON_ADDR a;
     MON_ADDR range[2];
     int i;
@@ -380,14 +382,17 @@ typedef union YYSTYPE
     ACTION action;
     char *str;
     asm_mode_addr_info_t mode;
-}
-/* Line 1489 of yacc.c.  */
-#line 386 "mon_parse.h"
-	YYSTYPE;
+
+
+
+/* Line 1685 of yacc.c  */
+#line 390 "mon_parse.h"
+} YYSTYPE;
+# define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
-# define YYSTYPE_IS_TRIVIAL 1
 #endif
 
 extern YYSTYPE yylval;
+
 

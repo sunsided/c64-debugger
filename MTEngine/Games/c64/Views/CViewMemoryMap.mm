@@ -284,7 +284,7 @@ void CViewMemoryMapCell::MarkCellWrite(uint8 value)
 	isExecuteCode = false;
 	isExecuteArgument = false;
 	isWrite = true;
-	markCellWrite(this);
+	markCellWrite(this);	
 }
 
 void CViewMemoryMapCell::MarkCellExecuteCode(uint8 opcode)
@@ -562,6 +562,17 @@ void CViewMemoryMap::CellWrite(uint16 addr, uint8 value)
 	CViewMemoryMapCell *cell = memoryCells[addr];
 
 	cell->MarkCellWrite(value);
+}
+
+void CViewMemoryMap::CellWrite(uint16 addr, uint8 value, uint16 pc, int viciiRasterLine, int viciiRasterCycle)
+{
+	CViewMemoryMapCell *cell = memoryCells[addr];
+	
+	cell->MarkCellWrite(value);
+	
+	cell->pc = pc;
+	cell->viciiRasterLine = viciiRasterLine;
+	cell->viciiRasterCycle = viciiRasterCycle;
 }
 
 void CViewMemoryMap::CellExecute(uint16 addr, uint8 opcode)
@@ -881,6 +892,21 @@ bool CViewMemoryMap::DoNotTouchedMove(GLfloat x, GLfloat y)
 {
 	//LOGD("CViewMemoryMap::DoNotTouchedMove: x=%f y=%f", x, y);
 	
+	if (isForcedMovingMap)
+	{
+		float dx = -(prevMousePosX - x);
+		float dy = -(prevMousePosY - y);
+		
+		MoveMap(dx / sizeX * mapSizeX * 5.0f, dy / sizeY * mapSizeY * 5.0f);
+		
+		prevMousePosX = x;
+		prevMousePosY = y;
+
+		this->accelerateX = 0.0f;
+		this->accelerateY = 0.0f;
+		return true;
+	}
+	
 	// change x, y into position within memory map area (cursorX, cursorY)
 	
 	float px = (x - posX) / sizeX;
@@ -963,6 +989,7 @@ void CViewMemoryMap::MoveMap(float diffX, float diffY)
 	UpdateMapPosition();
 }
 
+// NOTE: textureStart/End is deprecated and is always displaying full texture (start=0, end=1)
 void CViewMemoryMap::UpdateTexturePosition(float newStartX, float newStartY, float newEndX, float newEndY)
 {
 	this->renderTextureStartX = newStartX;
@@ -975,6 +1002,8 @@ void CViewMemoryMap::UpdateTexturePosition(float newStartX, float newStartY, flo
 	}
 	else
 	{
+		// TODO: make this general, now temporary display only part of texture when memory is from disk
+		
 		// from 1.0 to 0.965
 		const float d = 0.035f;
 		
@@ -1175,6 +1204,10 @@ void CViewMemoryMap::Render()
 	// blit
 	
 	SetClipping(posX, posY, sizeX, sizeY);
+	
+	
+//	LOGD("renderTextureStartX=%f renderTextureEndX=%f renderTextureStartY=%f renderTextureEndY=%f",
+//		 renderTextureStartX, renderTextureEndX, renderTextureStartY, renderTextureEndY);
 	
 	Blit(imageMemoryMap, renderMapPosX, renderMapPosY, -1, renderMapSizeX, renderMapSizeY,
 		 renderTextureStartX,
@@ -1381,6 +1414,15 @@ bool CViewMemoryMap::DoTap(GLfloat x, GLfloat y)
 				previousClickTime = SYS_GetCurrentTimeInMillis();
 				previousClickAddr = addr;
 				
+				if (guiMain->isControlPressed)
+				{
+					CViewMemoryMapCell *cell = this->memoryCells[addr];
+					if (cell->pc != -1)
+					{
+						viewDataDump->viewDisassemble->ScrollToAddress(cell->pc);
+					}
+				}
+
 				viewDataDump->ScrollToAddress(addr);
 				
 				return true;
@@ -1403,6 +1445,14 @@ bool CViewMemoryMap::DoTap(GLfloat x, GLfloat y)
 
 bool CViewMemoryMap::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
+	if (keyCode == MTKEY_SPACEBAR)
+	{
+		isForcedMovingMap = true;
+		prevMousePosX = guiMain->mousePosX;
+		prevMousePosY = guiMain->mousePosY;
+		return true;
+	}
+	
 	CSlrKeyboardShortcut *keyboardShortcut = viewC64->keyboardShortcuts->FindShortcut(KBZONE_DISASSEMBLE, keyCode, isShift, isAlt, isControl);
 	if (keyboardShortcut == viewC64->keyboardShortcuts->kbsToggleTrackPC)
 	{
@@ -1412,6 +1462,17 @@ bool CViewMemoryMap::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContr
 		}
 	}
 
+	return false;
+}
+
+bool CViewMemoryMap::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl)
+{
+	if (keyCode == MTKEY_SPACEBAR)
+	{
+		isForcedMovingMap = false;
+		return true;
+	}
+	
 	return false;
 }
 
@@ -1470,6 +1531,8 @@ void CViewMemoryMapCell::ClearReadWriteMarkers()
 	sg = 0.0f; vg = 0.0f; rg = 0.0f;
 	sb = 0.0f; vb = 0.0f; rb = 0.0f;
 	sa = 0.0f; va = 0.0f; ra = 0.0f;
+	
+	pc = viciiRasterCycle = viciiRasterLine = -1;
 }
 
 
@@ -1485,6 +1548,8 @@ CViewMemoryMapCell::CViewMemoryMapCell()
 	
 	isRead = false;
 	isWrite = false;
+
+	pc = viciiRasterCycle = viciiRasterLine = -1;
 }
 
 CViewMemoryMap::~CViewMemoryMap()

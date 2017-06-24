@@ -111,4 +111,10 @@ extern void archdep_workaround_nop(const char *otto);
 #define archdep_signals_pipe_set()
 #define archdep_signals_pipe_unset()
 
+#define STATIC_PROTOTYPE static
+
+#define ARCHDEP_SOUND_OUTPUT_MODE SOUND_OUTPUT_SYSTEM
+
+const char *archdep_home_path(void);
+
 #endif

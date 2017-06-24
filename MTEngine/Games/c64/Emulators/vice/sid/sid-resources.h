@@ -3,6 +3,7 @@
  *
  * Written by
  *  Andreas Boose <viceteam@t-online.de>
+ *  Marco van den Heuvel <blackystardust68@yahoo.com>
  *
  * This file is part of VICE, the Versatile Commodore Emulator.
  * See README for copyright notice.
@@ -27,6 +28,11 @@
 #ifndef VICE_SID_RESOURCES_H
 #define VICE_SID_RESOURCES_H
 
+#define SID_RESID_SAMPLING_FAST                 0
+#define SID_RESID_SAMPLING_INTERPOLATION        1
+#define SID_RESID_SAMPLING_RESAMPLING           2
+#define SID_RESID_SAMPLING_FAST_RESAMPLING      3
+
 extern int sid_resources_init(void);
 extern int sid_common_resources_init(void);
 
@@ -44,5 +50,9 @@ extern unsigned int sid_triple_address_start;
 extern unsigned int sid_triple_address_end;
 
 extern void c64d_sid_set_engine_model_direct(int engine, int model);
+extern void c64d_sid_set_sampling_method(int samplingMethod);
+extern void c64d_sid_set_emulate_filters(int emulateFilters);
+extern void c64d_sid_set_passband(int passband);
+extern void c64d_sid_set_filter_bias(int filterBias);
 
 #endif

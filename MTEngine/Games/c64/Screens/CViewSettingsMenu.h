@@ -30,6 +30,8 @@ public:
 	virtual bool DoMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat distY, GLfloat diffX, GLfloat diffY);
 	virtual bool FinishMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat distY, GLfloat accelerationX, GLfloat accelerationY);
 
+	virtual bool DoScrollWheel(float deltaX, float deltaY);
+
 	virtual bool InitZoom();
 	virtual bool DoZoomBy(GLfloat x, GLfloat y, GLfloat zoomValue, GLfloat difference);
 	
@@ -66,6 +68,23 @@ public:
 	virtual void MenuCallbackItemEntered(CGuiViewMenuItem *menuItem);
 	virtual void MenuCallbackItemChanged(CGuiViewMenuItem *menuItem);
 	
+	CViewC64MenuItem *menuItemSubMenuEmulation;
+	CViewC64MenuItem *menuItemSubMenuAudio;
+	CViewC64MenuItem *menuItemSubMenuMemory;
+	CViewC64MenuItem *menuItemSubMenuUI;
+
+	CSlrKeyboardShortcut *kbsDetachEverything;
+	CViewC64MenuItem *menuItemDetachEverything;
+	void DetachEverything();
+	void DetachCartridge();
+	void DetachDiskImage();
+
+	CSlrKeyboardShortcut *kbsDetachDiskImage;
+	CViewC64MenuItem *menuItemDetachDiskImage;
+	
+	CSlrKeyboardShortcut *kbsDetachCartridge;
+	CViewC64MenuItem *menuItemDetachCartridge;
+	
 	CSlrKeyboardShortcut *kbsIsWarpSpeed;
 	CViewC64MenuItemOption *menuItemIsWarpSpeed;
 	
@@ -73,14 +92,15 @@ public:
 	CViewC64MenuItemOption *menuItemUseKeyboardAsJoystick;
 	CViewC64MenuItemOption *menuItemJoystickPort;
 	
+
+	//
+	
 	CViewC64MenuItem *menuItemSetC64KeyboardMapping;
 	CViewC64MenuItem *menuItemSetKeyboardShortcuts;
 
 	CSlrKeyboardShortcut *kbsCartridgeFreezeButton;
 	CViewC64MenuItem *menuItemCartridgeFreeze;
 
-	CViewC64MenuItem *menuItemDetachEverything;
-	
 	CSlrKeyboardShortcut *kbsDumpC64Memory;
 	CViewC64MenuItem *menuItemDumpC64Memory;
 	CSlrKeyboardShortcut *kbsDumpDrive1541Memory;
@@ -102,6 +122,17 @@ public:
 	CViewC64MenuItemOption *menuItemMemoryMapRefreshRate;
 	CViewC64MenuItemOption *menuItemMemoryMapFadeSpeed;
 	
+	
+	//
+	CViewC64MenuItemOption *menuItemAutoJmp;
+	CViewC64MenuItemOption *menuItemAutoJmpAlwaysToLoadedPRGAddress;
+	CSlrKeyboardShortcut *kbsAutoJmpFromInsertedDiskFirstPrg;
+	CViewC64MenuItemOption *menuItemAutoJmpFromInsertedDiskFirstPrg;
+	CViewC64MenuItemOption *menuItemAutoJmpDoReset;
+	CViewC64MenuItemFloat  *menuItemAutoJmpWaitAfterReset;
+
+	void ToggleAutoLoadFromInsertedDisk();
+	
 	//
 	CViewC64MenuItemFloat *menuItemScreenGridLinesAlpha;
 	CViewC64MenuItemOption *menuItemScreenGridLinesColorScheme;
@@ -114,14 +145,40 @@ public:
 	CViewC64MenuItemOption *menuItemScreenRasterCrossTipColorScheme;
 	
 
+	CViewC64MenuItemFloat *menuItemPaintGridCharactersColorR;
+	CViewC64MenuItemFloat *menuItemPaintGridCharactersColorG;
+	CViewC64MenuItemFloat *menuItemPaintGridCharactersColorB;
+	CViewC64MenuItemFloat *menuItemPaintGridCharactersColorA;
+
+	CViewC64MenuItemFloat *menuItemPaintGridPixelsColorR;
+	CViewC64MenuItemFloat *menuItemPaintGridPixelsColorG;
+	CViewC64MenuItemFloat *menuItemPaintGridPixelsColorB;
+	CViewC64MenuItemFloat *menuItemPaintGridPixelsColorA;
+
+	CViewC64MenuItemFloat *menuItemPaintGridShowZoomLevel;
+
+	CViewC64MenuItemOption *menuItemVicEditorForceReplaceColor;
+
 	CViewC64MenuItemOption *menuItemSIDModel;
+	CViewC64MenuItemOption *menuItemRESIDEmulateFilters;
+	CViewC64MenuItemOption *menuItemRESIDSamplingMethod;
+	CViewC64MenuItemFloat *menuItemRESIDPassBand;
+	CViewC64MenuItemFloat *menuItemRESIDFilterBias;
+
+	
 	CViewC64MenuItemOption *menuItemMuteSIDOnPause;
+	CViewC64MenuItemOption *menuItemRunSIDWhenInWarp;
 	CViewC64MenuItemOption *menuItemAudioOutDevice;
 	void UpdateAudioOutDevices();
 	
 	CViewC64MenuItemOption *menuItemC64Model;
 	CViewC64MenuItemOption *menuItemFastBootKernalPatch;
+	CViewC64MenuItemOption *menuItemEmulateVSPBug;
+	
 	CViewC64MenuItemOption *menuItemDisassembleExecuteAware;
+	
+	CViewC64MenuItemOption *menuItemVicPalette;
+	CViewC64MenuItemOption *menuItemRenderScreenNearest;
 	
 	CViewC64MenuItemOption *menuItemMaximumSpeed;
 	CSlrKeyboardShortcut *kbsSwitchNextMaximumSpeed;
@@ -131,7 +188,8 @@ public:
 	void SetEmulationMaximumSpeed(int maximumSpeed);
 
 	CViewC64MenuItemOption *menuItemWindowAlwaysOnTop;
-
+	CViewC64MenuItemOption *menuItemVicStateRecordingMode;
+	
 	CViewC64MenuItem *menuItemClearSettings;
 	
 	CViewC64MenuItem *menuItemBack;
@@ -157,6 +215,11 @@ public:
 	void MapC64MemoryToFile(CSlrString *path);
 	
 	byte openDialogFunction;
+	
+	//
+	std::vector<int> *c64ModelTypeIds;
+	
+	void SetOptionC64ModelType(int modelTypeId);
 	
 };
 

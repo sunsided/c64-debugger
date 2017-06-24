@@ -1,5 +1,5 @@
 /*
- * cartio.h -- C64/C128/VIC20 I/O handling.
+ * cartio.h -- C64/C128/VIC20/CBM2/PET/PLUS4 I/O handling.
  *
  * Written by
  *  Marco van den Heuvel <blackystardust68@yahoo.com>
@@ -26,15 +26,11 @@
 
 #ifndef VICE_CARTIO_H
 #define VICE_CARTIO_H
- 
+
 #include "types.h"
 
 #define IO_DETACH_CART     0
 #define IO_DETACH_RESOURCE 1
-
-#define CPU_LINES_C64_256K 1
-#define CPU_LINES_PLUS60K  2
-#define CPU_LINES_PLUS256K 3
 
 #define IO_COLLISION_METHOD_DETACH_ALL    0
 #define IO_COLLISION_METHOD_DETACH_LAST   1
@@ -75,6 +71,9 @@ extern BYTE c64io_df00_read(WORD addr);
 extern BYTE c64io_df00_peek(WORD addr);
 extern void c64io_df00_store(WORD addr, BYTE value);
 
+extern BYTE vic20io0_read(WORD addr);
+extern BYTE vic20io0_peek(WORD addr);
+extern void vic20io0_store(WORD addr, BYTE value);
 extern BYTE vic20io2_read(WORD addr);
 extern BYTE vic20io2_peek(WORD addr);
 extern void vic20io2_store(WORD addr, BYTE value);
@@ -82,22 +81,96 @@ extern BYTE vic20io3_read(WORD addr);
 extern BYTE vic20io3_peek(WORD addr);
 extern void vic20io3_store(WORD addr, BYTE value);
 
+extern BYTE cbm2io_d800_read(WORD addr);
+extern BYTE cbm2io_d800_peek(WORD addr);
+extern void cbm2io_d800_store(WORD addr, BYTE value);
+extern BYTE cbm2io_d900_read(WORD addr);
+extern BYTE cbm2io_d900_peek(WORD addr);
+extern void cbm2io_d900_store(WORD addr, BYTE value);
+extern BYTE cbm2io_da00_read(WORD addr);
+extern BYTE cbm2io_da00_peek(WORD addr);
+extern void cbm2io_da00_store(WORD addr, BYTE value);
+extern BYTE cbm2io_db00_read(WORD addr);
+extern BYTE cbm2io_db00_peek(WORD addr);
+extern void cbm2io_db00_store(WORD addr, BYTE value);
+extern BYTE cbm2io_dc00_read(WORD addr);
+extern BYTE cbm2io_dc00_peek(WORD addr);
+extern void cbm2io_dc00_store(WORD addr, BYTE value);
+extern BYTE cbm2io_dd00_read(WORD addr);
+extern BYTE cbm2io_dd00_peek(WORD addr);
+extern void cbm2io_dd00_store(WORD addr, BYTE value);
+extern BYTE cbm2io_de00_read(WORD addr);
+extern BYTE cbm2io_de00_peek(WORD addr);
+extern void cbm2io_de00_store(WORD addr, BYTE value);
+extern BYTE cbm2io_df00_read(WORD addr);
+extern BYTE cbm2io_df00_peek(WORD addr);
+extern void cbm2io_df00_store(WORD addr, BYTE value);
+
+extern BYTE petio_8800_read(WORD addr);
+extern BYTE petio_8800_peek(WORD addr);
+extern void petio_8800_store(WORD addr, BYTE value);
+extern BYTE petio_8900_read(WORD addr);
+extern BYTE petio_8900_peek(WORD addr);
+extern void petio_8900_store(WORD addr, BYTE value);
+extern BYTE petio_8a00_read(WORD addr);
+extern BYTE petio_8a00_peek(WORD addr);
+extern void petio_8a00_store(WORD addr, BYTE value);
+extern BYTE petio_8b00_read(WORD addr);
+extern BYTE petio_8b00_peek(WORD addr);
+extern void petio_8b00_store(WORD addr, BYTE value);
+extern BYTE petio_8c00_read(WORD addr);
+extern BYTE petio_8c00_peek(WORD addr);
+extern void petio_8c00_store(WORD addr, BYTE value);
+extern BYTE petio_8d00_read(WORD addr);
+extern BYTE petio_8d00_peek(WORD addr);
+extern void petio_8d00_store(WORD addr, BYTE value);
+extern BYTE petio_8e00_read(WORD addr);
+extern BYTE petio_8e00_peek(WORD addr);
+extern void petio_8e00_store(WORD addr, BYTE value);
+extern BYTE petio_8f00_read(WORD addr);
+extern BYTE petio_8f00_peek(WORD addr);
+extern void petio_8f00_store(WORD addr, BYTE value);
+
+extern BYTE petio_e900_read(WORD addr);
+extern BYTE petio_e900_peek(WORD addr);
+extern void petio_e900_store(WORD addr, BYTE value);
+extern BYTE petio_ea00_read(WORD addr);
+extern BYTE petio_ea00_peek(WORD addr);
+extern void petio_ea00_store(WORD addr, BYTE value);
+extern BYTE petio_eb00_read(WORD addr);
+extern BYTE petio_eb00_peek(WORD addr);
+extern void petio_eb00_store(WORD addr, BYTE value);
+extern BYTE petio_ec00_read(WORD addr);
+extern BYTE petio_ec00_peek(WORD addr);
+extern void petio_ec00_store(WORD addr, BYTE value);
+extern BYTE petio_ed00_read(WORD addr);
+extern BYTE petio_ed00_peek(WORD addr);
+extern void petio_ed00_store(WORD addr, BYTE value);
+extern BYTE petio_ee00_read(WORD addr);
+extern BYTE petio_ee00_peek(WORD addr);
+extern void petio_ee00_store(WORD addr, BYTE value);
+extern BYTE petio_ef00_read(WORD addr);
+extern BYTE petio_ef00_peek(WORD addr);
+extern void petio_ef00_store(WORD addr, BYTE value);
+
+extern BYTE plus4io_fd00_read(WORD addr);
+extern BYTE plus4io_fd00_peek(WORD addr);
+extern void plus4io_fd00_store(WORD addr, BYTE value);
+extern BYTE plus4io_fe00_read(WORD addr);
+extern BYTE plus4io_fe00_peek(WORD addr);
+extern void plus4io_fe00_store(WORD addr, BYTE value);
+
 struct mem_ioreg_list_s;
 extern void io_source_ioreg_add_list(struct mem_ioreg_list_s **mem_ioreg_list);
 
-extern int get_cpu_lines_lock(void);
-extern void set_cpu_lines_lock(int device, char *name);
-extern void remove_cpu_lines_lock(void);
-extern char *get_cpu_lines_lock_name(void);
-
 typedef struct io_source_s {
-    char *name; /*!< literal name of this i/o device */
+    char *name; /*!< literal name of this I/O device */
     int detach_id;
     char *resource_name;
     WORD start_address;
     WORD end_address;
     WORD address_mask;
-    int  io_source_valid; /*!< after reading, is 1 if read was valid */
+    int io_source_valid;  /*!< after reading, is 1 if read was valid */
     void (*store)(WORD address, BYTE data);
     BYTE (*read)(WORD address);
     BYTE (*peek)(WORD address); /*!< read without side effects (used by monitor) */

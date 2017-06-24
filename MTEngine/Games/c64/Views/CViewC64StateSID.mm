@@ -214,8 +214,8 @@ bool CViewC64StateSID::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isContr
 	return false;
 }
 
-void CViewC64StateSID::SetFocus(bool focus)
+bool CViewC64StateSID::SetFocus(bool focus)
 {
-	return;
+	return false;
 }
 

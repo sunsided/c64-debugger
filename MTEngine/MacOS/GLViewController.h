@@ -41,6 +41,8 @@
 
 - (void)setWindowAlwaysOnTop:(BOOL)isAlwaysOnTop;
 
+- (bool)isWindowFullScreen;
+
 //// payments
 //- (void) startPayment;
 //- (void) completeTransaction: (SKPaymentTransaction *)transaction;

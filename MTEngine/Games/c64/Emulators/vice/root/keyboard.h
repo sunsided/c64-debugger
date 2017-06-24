@@ -31,7 +31,9 @@
 
 #include "types.h"
 
-#include "joystick.h"
+#ifndef COMMON_KBD
+#include "kbd.h"
+#endif
 
 /* Maximum of keyboard array (CBM-II values
  * (8 for C64/VIC20, 10 for PET, 11 for C128; we need max).  */
@@ -41,14 +43,41 @@
 /* (All have 8, except CBM-II that has 6) */
 #define KBD_COLS    8
 
+/* joystick port attached keypad */
+#define KBD_JOY_KEYPAD_ROWS 5
+#define KDB_JOY_KEYPAD_COLS 4
+
+/* index to select the current keymap ("KeymapIndex") */
+#define KBD_INDEX_SYM     0
+#define KBD_INDEX_POS     1
+#define KBD_INDEX_USERSYM 2
+#define KBD_INDEX_USERPOS 3
+#define KBD_INDEX_LAST    3
+#define KBD_INDEX_NUM     4
+
+/* the mapping of the host ("KeyboardMapping")
+   (keep in sync with table in keyboard.c) */
+#define KBD_MAPPING_US    0     /* "" (us mapping) */
+#define KBD_MAPPING_UK    1     /* "uk" */
+#define KBD_MAPPING_DE    2     /* "de" */
+#define KBD_MAPPING_DA    3     /* "da" */
+#define KBD_MAPPING_NO    4     /* "no" */
+#define KBD_MAPPING_FI    5     /* "fi" */
+#define KBD_MAPPING_IT    6     /* "it" */
+#define KBD_MAPPING_LAST  6
+#define KBD_MAPPING_NUM   7
+extern int keyboard_get_num_mappings(void);
+
+/* mapping info for GUIs */
+typedef struct {
+    char *name;
+    int mapping;
+    char *mapping_name;
+} mapping_info_t;
+
+extern mapping_info_t *keyboard_get_info_list(void);
+
 struct snapshot_s;
-
-// c64d
-void c64d_keyboard_keymap_clear();
-extern void keyboard_parse_set_pos_row(signed long sym, int row, int col,
-								int shift);
-extern int keyboard_parse_set_neg_row(signed long sym, int row, int col);
-
 
 extern void keyboard_init(void);
 extern void keyboard_shutdown(void);
@@ -79,9 +108,13 @@ extern void keyboard_register_column4080_key(key_ctrl_column4080_func_t func);
 typedef void (*key_ctrl_caps_func_t)(void);
 extern void keyboard_register_caps_key(key_ctrl_caps_func_t func);
 
+typedef void (*key_joy_keypad_func_t)(int row, int col, int pressed);
+extern void keyboard_register_joy_keypad(key_joy_keypad_func_t func);
+
 typedef void (*keyboard_machine_func_t)(int *);
 extern void keyboard_register_machine(keyboard_machine_func_t func);
 
+extern void keyboard_register_machine(keyboard_machine_func_t func);
 extern void keyboard_alternative_set(int alternative);
 
 /* These ugly externs will go away sooner or later.  */
@@ -89,41 +122,17 @@ extern int keyarr[KBD_ROWS];
 extern int rev_keyarr[KBD_COLS];
 extern int keyboard_shiftlock;
 
-extern BYTE joystick_value[JOYSTICK_NUM + 1];
-
-extern int c64_kbd_init(void);
-extern int c128_kbd_init(void);
-extern int vic20_kbd_init(void);
-extern int pet_kbd_init(void);
-extern int plus4_kbd_init(void);
-extern int cbm2_kbd_init(void);
-
-extern int kbd_cmdline_options_init(void);
-extern int kbd_resources_init(void);
-
-extern int pet_kbd_cmdline_options_init(void);
-extern int pet_kbd_resources_init(void);
-
-extern int keyboard_key_pressed_matrix(int row, int column, int shift);
-extern int keyboard_key_released_matrix(int row, int column, int shift);
-
-
-enum shift_type {
-	NO_SHIFT = 0,             /* Key is not shifted. */
-	VIRTUAL_SHIFT = (1 << 0), /* The key needs a shift on the real machine. */
-	LEFT_SHIFT = (1 << 1),    /* Key is left shift. */
-	RIGHT_SHIFT = (1 << 2),   /* Key is right shift. */
-	ALLOW_SHIFT = (1 << 3),   /* Allow key to be shifted. */
-	DESHIFT_SHIFT = (1 << 4), /* Although SHIFT might be pressed, do not
-							   press shift on the real machine. */
-	ALLOW_OTHER = (1 << 5),   /* Allow another key code to be assigned if
-							   SHIFT is pressed. */
-	SHIFT_LOCK = (1 << 6),    /* Key is shift lock. */
-	
-	ALT_MAP  = (1 << 8)       /* Key is used for an alternative keyboard
-							   mapping */
-};
-
-
+#ifdef COMMON_KBD
+extern int keyboard_resources_init(void);
+extern int keyboard_cmdline_options_init(void);
 #endif
 
+
+/// c64d
+void c64d_keyboard_keymap_clear();
+extern void keyboard_parse_set_pos_row(signed long sym, int row, int col,
+									   int shift);
+extern int keyboard_parse_set_neg_row(signed long sym, int row, int col);
+///
+
+#endif

@@ -46,6 +46,11 @@ GLfloat SCREEN_HEIGHT = 0.0f;
 GLfloat SCREEN_SCALE = DEFAULT_SCREEN_SCALE; //4:3 monitor sony: 2.23f;
 GLfloat SCREEN_ASPECT_RATIO = 1.0f;
 
+GLint viewPortStartX = 0;
+GLint viewPortStartY = 0;
+GLsizei viewPortSizeX = 1;
+GLsizei viewPortSizeY = 1;
+
 GLfloat VID_GetScreenWidth()
 {
 	return SCREEN_WIDTH;
@@ -116,12 +121,28 @@ void VID_ResetLogicClock()
 	resetLogicClock = true;
 }
 
+bool VID_isAlwaysOnTop = false;
+
 void SYS_Win32SetWindowAlwaysOnTop(bool isAlwaysOnTop);
 
 void VID_SetWindowAlwaysOnTop(bool isAlwaysOnTop)
 {
+	VID_isAlwaysOnTop = isAlwaysOnTop;
 	SYS_Win32SetWindowAlwaysOnTop(isAlwaysOnTop);
 }
+
+// do not store value
+void VID_SetWindowAlwaysOnTopTemporary(bool isAlwaysOnTop)
+{
+	SYS_Win32SetWindowAlwaysOnTop(isAlwaysOnTop);
+}
+
+bool VID_IsWindowAlwaysOnTop()
+{
+	return VID_isAlwaysOnTop;
+}
+
+
 
 void SysTextFieldEditFinishedCallback::SysTextFieldEditFinished(UTFString *str)
 {
@@ -321,6 +342,8 @@ void VID_SetOrthoSwitchBack()
 
 void VID_UpdateViewPort(float newWidth, float newHeight)
 {
+	LOGD("VID_UpdateViewPort: %f %f", newWidth, newHeight);
+	
 	/*
 	 SCREEN_SCALE = (float)newWidth / (float)SCREEN_WIDTH;
 	 //LOGD("new SCREEN_SCALE=%f", SCREEN_SCALE);
@@ -336,29 +359,54 @@ void VID_UpdateViewPort(float newWidth, float newHeight)
 
 	if (A > vA)
 	{
-		//LOGD("glViewport A > vA");
+		LOGD("glViewport A > vA");
 		VIEW_START_X = 0;
 		VIEW_START_Y = (vH * 0.5) - ((vW / A) * 0.5);
 		SCREEN_SCALE = vW / SCREEN_WIDTH;
 		glViewport(VIEW_START_X, VIEW_START_Y, vW, vW / A);
+		
+		LOGD("glViewPort: %d %d %d %d", (GLint)VIEW_START_X, (GLint)VIEW_START_Y, (GLsizei)vW, (GLsizei)(vW/A));
+		
+		viewPortStartX = (GLint)VIEW_START_X;
+		viewPortStartY = (GLint)VIEW_START_Y;
+		viewPortSizeX = (GLsizei)vW;
+		viewPortSizeY = (GLsizei)(vW / A);
 	}
 	else
 	{
 		if (A < vA)
 		{
-			//LOGD("glViewport A < vA");
+			LOGD("glViewport A < vA");
 			VIEW_START_X = (vW * 0.5) - ((vH * A) * 0.5);
 			VIEW_START_Y = 0;
 			SCREEN_SCALE = vH / SCREEN_HEIGHT;
 			glViewport(VIEW_START_X, VIEW_START_Y, vH * A, vH);
+			
+			LOGD("glViewPort: %d %d %d %d", (GLint)VIEW_START_X, (GLint)VIEW_START_Y, (GLsizei)(vH * A), (GLsizei)vH);
+			
+			viewPortStartX = (GLint)VIEW_START_X;
+			viewPortStartY = (GLint)VIEW_START_Y;
+			viewPortSizeX = (GLsizei)(vH * A);
+			viewPortSizeY = (GLsizei)vH;
 		}
 		else
 		{
-			//LOGD("glViewport equal");
+			LOGD("glViewport equal");
 			glViewport(0, 0, vW, vH); // equal aspect ratios
 			SCREEN_SCALE = vH / SCREEN_HEIGHT;
+			
+			// equal aspect ratios
+			viewPortStartX = 0;
+			viewPortStartY = 0;
+			viewPortSizeX = (GLsizei)vW;
+			viewPortSizeY = (GLsizei)vH;
 		}
 	}
+
+	if (guiMain != NULL)
+		guiMain->NotifyGlobalOSWindowChangedCallbacks();
+	
+	LOGD("VID_UpdateViewPort done");
 }
 
 void VID_InitGL()
@@ -1021,6 +1069,26 @@ void ResetClipping()
 	glDisable(GL_SCISSOR_TEST);
 	glScissor(0, 0, SCREEN_HEIGHT, SCREEN_WIDTH);
 }
+
+void GUI_GetRealScreenPixelSizes(double *pixelSizeX, double *pixelSizeY)
+{
+	LOGD("GUI_GetRealScreenPixelSizes");
+	
+	LOGD("  SCREEN_WIDTH=%f SCREEN_HEIGHT=%f  |  SCREEN_SCALE=%f",
+		 SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_SCALE);
+	LOGD("  viewPortSizeX=%d viewPortSizeY=%d |  viewPortStartX=%d viewPortStartY=%d",
+		 viewPortSizeX, viewPortSizeY, viewPortStartX, viewPortStartY);
+	
+	LOGD("... calc pixel size");
+	
+	*pixelSizeX = (double)SCREEN_WIDTH / (double)viewPortSizeX;
+	*pixelSizeY = (double)SCREEN_HEIGHT / (double)viewPortSizeY;
+	
+	LOGD("  pixelSizeX=%f pixelSizeY=%f", *pixelSizeX, *pixelSizeY);
+	
+	LOGD("GUI_GetRealScreenPixelSizes done");
+}
+
 
 void BlitTexture(GLuint tex, GLfloat destX, GLfloat destY, GLfloat z, GLfloat sizeX, GLfloat sizeY)
 {
@@ -3633,3 +3701,29 @@ void BlitMixColor(CSlrImage *what, GLfloat destX, GLfloat destY, GLfloat z, GLfl
 //		//glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
 }
+
+//
+extern bool isFullScreen;
+
+bool VID_IsWindowFullScreen()
+{
+	return isFullScreen;
+}
+
+void VID_ShowMouseCursor()
+{
+	ShowCursor(TRUE);
+}
+
+void VID_HideMouseCursor()
+{
+	// rule #1: don't ever trust windows
+	//while(ShowCursor(FALSE)>=0);
+
+	for (int i = 0; i < 1000; i++)
+	{
+		if (ShowCursor(FALSE) < 0)
+			break;
+	}
+}
+

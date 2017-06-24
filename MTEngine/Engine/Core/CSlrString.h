@@ -45,6 +45,8 @@ public:
 	void Concatenate(u16 chr);
 	void Concatenate(char *str);
 	void Concatenate(CSlrString *str);
+	
+	void RemoveLastCharacter();
 
 	bool CompareWith(u32 pos, char chr);
 	bool CompareWith(char *text);
@@ -93,7 +95,9 @@ public:
 	u16 *GetUTF16(u32 *length);
 	
 	CSlrString *GetFileNameComponentFromPath();
+	CSlrString *GetFileExtensionComponentFromPath();
 	CSlrString *GetFilePathWithoutFileNameComponentFromPath();
+	CSlrString *GetFilePathWithoutExtension();
 	
 private:
 	std::vector<u16> *chars;

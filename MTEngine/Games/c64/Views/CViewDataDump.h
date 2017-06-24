@@ -109,6 +109,9 @@ public:
 	int previousClickAddr;
 	
 	void PasteHexValuesFromClipboard();
+	
+	bool showCharacters;
+	bool showSprites;
 };
 
 

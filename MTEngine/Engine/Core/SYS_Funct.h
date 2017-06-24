@@ -37,10 +37,12 @@ bool FUN_IsHexNumber(char c);
 
 void sprintfNum(char *pszBuffer, int size, char base, char numDigits, char isSigned, char padchar, i64 n);
 void sprintfUnsignedNum(char *pszBuffer, int size, char base, char numDigits, char padchar, u64 n);
+void sprintfHexCode4(char *pszBuffer, uint8 value);
 void sprintfHexCode8(char *pszBuffer, uint8 value);
 void sprintfHexCode16(char *pszBuffer, uint16 value);
 void sprintfHexCode64(char *pszBuffer, u64 n);
 
+void sprintfHexCode4WithoutZeroEnding(char *pszBuffer, uint8 value);
 void sprintfHexCode8WithoutZeroEnding(char *pszBuffer, uint8 value);
 void sprintfHexCode16WithoutZeroEnding(char *pszBuffer, uint16 value);
 void sprintfHexCode16WithoutZeroEndingAndNoLeadingZeros(char *pszBuffer, uint16 value);

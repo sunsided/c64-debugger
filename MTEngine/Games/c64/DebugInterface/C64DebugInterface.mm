@@ -264,6 +264,11 @@ void C64DebugInterface::HardReset()
 	SYS_FatalExit("C64DebugInterface::HardReset");
 }
 
+void C64DebugInterface::DiskDriveReset()
+{
+	SYS_FatalExit("C64DebugInterface::DiskDriveReset");
+}
+
 void C64DebugInterface::KeyboardDown(uint32 mtKeyCode)
 {
 	SYS_FatalExit("C64DebugInterface::KeyboardDown");
@@ -343,7 +348,31 @@ void C64DebugInterface::SetSidType(int sidType)
 	SYS_FatalExit("C64DebugInterface::SetSidType");
 }
 
-void C64DebugInterface::GetC64ModelTypes(std::vector<CSlrString *> *modelTypes)
+// samplingMethod: Fast=0, Interpolating=1, Resampling=2, Fast Resampling=3
+void C64DebugInterface::SetSidSamplingMethod(int samplingMethod)
+{
+	SYS_FatalExit("C64DebugInterface::SetSidSamplingMethod");
+}
+
+// emulateFilters: no=0, yes=1
+void C64DebugInterface::SetSidEmulateFilters(int emulateFilters)
+{
+	SYS_FatalExit("C64DebugInterface::SetSidEmulateFilters");
+}
+
+// passband: 0-90
+void C64DebugInterface::SetSidPassBand(int passband)
+{
+	SYS_FatalExit("C64DebugInterface::SetSidPassBand");
+}
+
+// filterBias: -500 500
+void C64DebugInterface::SetSidFilterBias(int filterBias)
+{
+	SYS_FatalExit("C64DebugInterface::SetSidFilterBias");
+}
+
+void C64DebugInterface::GetC64ModelTypes(std::vector<CSlrString *> *modelTypeNames, std::vector<int> *modelTypeIds)
 {
 	SYS_FatalExit("C64DebugInterface::GetC64ModelTypes");
 }
@@ -353,9 +382,24 @@ void C64DebugInterface::SetC64ModelType(int modelType)
 	SYS_FatalExit("C64DebugInterface::SetC64ModelType");
 }
 
+void C64DebugInterface::SetPatchKernalFastBoot(bool isPatchKernal)
+{
+	SYS_FatalExit("C64DebugInterface::SetPatchKernalFastBoot");
+}
+
+void C64DebugInterface::SetRunSIDWhenInWarp(bool isRunningSIDInWarp)
+{
+	SYS_FatalExit("C64DebugInterface::SetRunSIDWhenInWarp");
+}
+
 void C64DebugInterface::SetEmulationMaximumSpeed(int maximumSpeed)
 {
 	SYS_FatalExit("C64DebugInterface::SetEmulationMaximumSpeed");
+}
+
+void C64DebugInterface::SetVSPBugEmulation(bool isVSPBugEmulation)
+{
+	SYS_FatalExit("C64DebugInterface::SetVSPBugEmulation");
 }
 
 void C64DebugInterface::SetSettingUseKeyboardForJoystick(bool isJoystickOn)
@@ -531,6 +575,11 @@ void C64DebugInterface::GetCBMColor(uint8 colorNum, uint8 *r, uint8 *g, uint8 *b
 	SYS_FatalExit("C64DebugInterface::GetCBMColor");
 }
 
+void C64DebugInterface::GetFloatCBMColor(uint8 colorNum, float *r, float *g, float *b)
+{
+	SYS_FatalExit("C64DebugInterface::GetFloatCBMColor");
+}
+
 //
 
 void C64DebugInterface::MarkC64CellRead(uint16 addr)
@@ -562,8 +611,21 @@ void C64DebugInterface::UiInsertD64(CSlrString *path)
 }
 
 //
+void C64DebugInterface::SetVicRegister(uint8 registerNum, uint8 value)
+{
+	SYS_FatalExit("C64DebugInterface::SetVicRegister");
+}
 
-void C64DebugInterface::RenderStateVIC(float posX, float posY, float posZ, bool isVertical, bool showSprites, CSlrFont *fontBytes, float fontSize, std::vector<CImageData *> *spritesImageData, std::vector<CSlrImage *> *spritesImages, bool renderDataWithColors)
+u8 C64DebugInterface::GetVicRegister(uint8 registerNum)
+{
+	SYS_FatalExit("C64DebugInterface::GetVicRegister");
+	return 0;
+}
+
+
+void C64DebugInterface::RenderStateVIC(vicii_cycle_state_t *viciiState,
+									   float posX, float posY, float posZ, bool isVertical, bool showSprites, CSlrFont *fontBytes, float fontSize,
+									   std::vector<CImageData *> *spritesImageData, std::vector<CSlrImage *> *spritesImages, bool renderDataWithColors)
 {
 	SYS_FatalExit("C64DebugInterface::RenderStateVIC");
 }
@@ -599,6 +661,25 @@ void C64DebugInterface::AddSIDWaveformData(int v1, int v2, int v3, short mix)
 {
 	this->viewC64->viewC64StateSID->AddWaveformData(v1, v2, v3, mix);
 }
+
+void C64DebugInterface::SetVicRecordStateMode(uint8 recordMode)
+{
+	SYS_FatalExit("C64DebugInterface::SetVicRecordStateMode");
+}
+
+bool C64DebugInterface::IsCpuJam()
+{
+	SYS_FatalExit("C64DebugInterface::IsCpuJam");
+}
+
+void C64DebugInterface::ForceRunAndUnJamCpu()
+{
+	SYS_FatalExit("C64DebugInterface::ForceRunAndUnJamCpu");
+}
+
+
+//
+
 
 void C64DebugInterface::AttachCartridge(CSlrString *filePath)
 {

@@ -1,3 +1,7 @@
+/** \file   src/cbmimage.h
+ * \brief   Generic image handling - header
+ */
+
 /*
  * cbmimage.h - Generic image handling.
  *
@@ -30,4 +34,3 @@
 extern int cbmimage_create_image(const char *name, unsigned int type);
 
 #endif
-

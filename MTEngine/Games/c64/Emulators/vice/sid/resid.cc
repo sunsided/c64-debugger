@@ -28,6 +28,11 @@
 
 #include "vice.h"
 
+#ifdef _M_ARM
+#undef _ARM_WINAPI_PARTITION_DESKTOP_SDK_AVAILABLE
+#define _ARM_WINAPI_PARTITION_DESKTOP_SDK_AVAILABLE 1
+#endif
+
 #ifdef WATCOM_COMPILE
 #define _STDIO_H_INCLUDED
 #include <cstdio>
@@ -37,11 +42,21 @@ using std::sprintf;
 
 extern "C" {
 
+#ifdef _MSC_VER
+#  if (_MSC_VER == 1500)
+#    define _IVEC_H_INCLUDED
+#    define _FVEC_H_INCLUDED
+#    define _DVEC_H_INCLUDED
+#  endif
+#endif
+
 /* QNX has problems with const and inline definitions
    in its string.h file when using g++ */
 
 #ifndef __QNX__
 #include <string.h>
+#else
+extern char *strcpy(char *s1, char *s2);
 #endif
 
 #include "sid.h" /* sid_engine_t */
@@ -63,11 +78,31 @@ extern "C" {
 
 struct sound_s
 {
+    /* speed factor */
+    int factor;
+
     /* resid sid implementation */
     reSID::SID *sid;
 };
 
 typedef struct sound_s sound_t;
+
+/* manage temporary buffers. if the requested size is smaller or equal to the
+ * size of the already allocated buffer, reuse it.  */
+static SWORD *buf = NULL;
+static int blen = 0;
+
+static SWORD *getbuf(int len)
+{
+    if ((buf == NULL) || (blen < len)) {
+        if (buf) {
+            lib_free(buf);
+        }
+        blen = len;
+        buf = (SWORD *)lib_calloc(len, 1);
+    }
+    return buf;
+}
 
 static sound_t *resid_open(BYTE *sidstate)
 {
@@ -84,7 +119,7 @@ static sound_t *resid_open(BYTE *sidstate)
     return psid;
 }
 
-static int resid_init(sound_t *psid, int speed, int cycles_per_sec)
+static int resid_init(sound_t *psid, int speed, int cycles_per_sec, int factor)
 {
     sampling_method method;
     char model_text[100];
@@ -111,13 +146,15 @@ static int resid_init(sound_t *psid, int speed, int cycles_per_sec)
     if (resources_get_int("SidResidGain", &gain_percentage) < 0) {
         return 0;
     }
-    
+
     if (resources_get_int("SidResidFilterBias", &filter_bias_mV) < 0) {
         return 0;
     }
 
     passband = speed * passband_percentage / 200.0;
     gain = gain_percentage / 100.0;
+
+    psid->factor = factor;
 
     switch (model) {
       default:
@@ -172,7 +209,7 @@ static int resid_init(sound_t *psid, int speed, int cycles_per_sec)
         break;
       case 3:
         method = SAMPLE_RESAMPLE_FASTMEM;
-        sprintf(method_text, "resampling, pass to %dHz", (int)passband);
+        sprintf(method_text, "fast resampling, pass to %dHz", (int)passband);
         break;
     }
 
@@ -195,6 +232,11 @@ static void resid_close(sound_t *psid)
 {
     delete psid->sid;
     delete psid;
+
+    if (buf) {
+        lib_free(buf);
+        buf = NULL;
+    }
 }
 
 static BYTE resid_read(sound_t *psid, WORD addr)
@@ -215,7 +257,16 @@ static void resid_reset(sound_t *psid, CLOCK cpu_clk)
 static int resid_calculate_samples(sound_t *psid, SWORD *pbuf, int nr,
                                    int interleave, int *delta_t)
 {
-    return psid->sid->clock(*delta_t, pbuf, nr, interleave);
+    SWORD *tmp_buf;
+    int retval;
+
+    if (psid->factor == 1000) {
+        return psid->sid->clock(*delta_t, pbuf, nr, interleave);
+    }
+    tmp_buf = getbuf(2 * nr * psid->factor / 1000);
+    retval = psid->sid->clock(*delta_t, tmp_buf, nr * psid->factor / 1000, interleave) * 1000 / psid->factor;
+    memcpy(pbuf, tmp_buf, 2 * nr);
+    return retval;
 }
 
 static void resid_set_voice_mask(sound_t *psid, BYTE voiceMask)
@@ -237,7 +288,10 @@ static void resid_state_read(sound_t *psid, sid_snapshot_state_t *sid_state)
     reSID::SID::State state;
     unsigned int i;
 
-    state = psid->sid->read_state();
+    /* when sound is disabled *psid is NULL */
+    if (psid) {
+        state = psid->sid->read_state();
+    }
 
     for (i = 0; i < 0x20; i++) {
         sid_state->sid_register[i] = (BYTE)state.sid_register[i];
@@ -263,6 +317,7 @@ static void resid_state_read(sound_t *psid, sid_snapshot_state_t *sid_state)
     }
     sid_state->write_pipeline = (BYTE)state.write_pipeline;
     sid_state->write_address = (BYTE)state.write_address;
+    sid_state->voice_mask = (BYTE)state.voice_mask;
 }
 
 static void resid_state_write(sound_t *psid, sid_snapshot_state_t *sid_state)
@@ -298,6 +353,7 @@ static void resid_state_write(sound_t *psid, sid_snapshot_state_t *sid_state)
     }
     state.write_pipeline = (cycle_count)sid_state->write_pipeline;
     state.write_address = (reg8)sid_state->write_address;
+    state.voice_mask = (reg4)sid_state->voice_mask;
 
     psid->sid->write_state((const reSID::SID::State)state);
 }

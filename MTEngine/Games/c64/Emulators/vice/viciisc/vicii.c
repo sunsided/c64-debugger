@@ -70,8 +70,7 @@ void vicii_set_phi1_addr_options(WORD mask, WORD offset)
     vicii.vaddr_mask_phi1 = mask;
     vicii.vaddr_offset_phi1 = offset;
 
-    VICII_DEBUG_REGISTER(("Set phi1 video addr mask=%04x, offset=%04x",
-                         mask, offset));
+    VICII_DEBUG_REGISTER(("Set phi1 video addr mask=%04x, offset=%04x", mask, offset));
 }
 
 void vicii_set_phi2_addr_options(WORD mask, WORD offset)
@@ -79,8 +78,7 @@ void vicii_set_phi2_addr_options(WORD mask, WORD offset)
     vicii.vaddr_mask_phi2 = mask;
     vicii.vaddr_offset_phi2 = offset;
 
-    VICII_DEBUG_REGISTER(("Set phi2 video addr mask=%04x, offset=%04x",
-                         mask, offset));
+    VICII_DEBUG_REGISTER(("Set phi2 video addr mask=%04x, offset=%04x", mask, offset));
 }
 
 void vicii_set_phi1_chargen_addr_options(WORD mask, WORD value)
@@ -88,8 +86,7 @@ void vicii_set_phi1_chargen_addr_options(WORD mask, WORD value)
     vicii.vaddr_chargen_mask_phi1 = mask;
     vicii.vaddr_chargen_value_phi1 = value;
 
-    VICII_DEBUG_REGISTER(("Set phi1 chargen addr mask=%04x, value=%04x",
-                         mask, value));
+    VICII_DEBUG_REGISTER(("Set phi1 chargen addr mask=%04x, value=%04x", mask, value));
 }
 
 void vicii_set_phi2_chargen_addr_options(WORD mask, WORD value)
@@ -97,8 +94,7 @@ void vicii_set_phi2_chargen_addr_options(WORD mask, WORD value)
     vicii.vaddr_chargen_mask_phi2 = mask;
     vicii.vaddr_chargen_value_phi2 = value;
 
-    VICII_DEBUG_REGISTER(("Set phi2 chargen addr mask=%04x, value=%04x",
-                         mask, value));
+    VICII_DEBUG_REGISTER(("Set phi2 chargen addr mask=%04x, value=%04x", mask, value));
 }
 
 void vicii_set_chargen_addr_options(WORD mask, WORD value)
@@ -108,8 +104,7 @@ void vicii_set_chargen_addr_options(WORD mask, WORD value)
     vicii.vaddr_chargen_mask_phi2 = mask;
     vicii.vaddr_chargen_value_phi2 = value;
 
-    VICII_DEBUG_REGISTER(("Set chargen addr mask=%04x, value=%04x",
-                         mask, value));
+    VICII_DEBUG_REGISTER(("Set chargen addr mask=%04x, value=%04x", mask, value));
 }
 
 /* ---------------------------------------------------------------------*/
@@ -244,7 +239,11 @@ static int init_raster(void)
     raster_set_title(raster, machine_name);
 #else
     /* hack */
-    raster_set_title(raster, "C64 (x64sc)");
+    if (machine_class != VICE_MACHINE_C64SC) {
+        raster_set_title(raster, machine_name);
+    } else {
+        raster_set_title(raster, "C64 (x64sc)");
+    }
 #endif
 
     if (raster_realize(raster) < 0) {
@@ -446,26 +445,24 @@ void vicii_raster_draw_handler(void)
     int in_visible_area;
 
     in_visible_area = (vicii.raster.current_line
-                      >= (unsigned int)vicii.first_displayed_line
-                      && vicii.raster.current_line
-                      <= (unsigned int)vicii.last_displayed_line);
+                       >= (unsigned int)vicii.first_displayed_line
+                       && vicii.raster.current_line
+                       <= (unsigned int)vicii.last_displayed_line);
 
     /* handle wrap if the first few lines are displayed in the visible lower border */
-    if ((unsigned int)vicii.last_displayed_line >= vicii.screen_height)
-	{
+    if ((unsigned int)vicii.last_displayed_line >= vicii.screen_height) {
         in_visible_area |= vicii.raster.current_line
-                          <= ((unsigned int)vicii.last_displayed_line - vicii.screen_height);
+                           <= ((unsigned int)vicii.last_displayed_line - vicii.screen_height);
     }
 
     raster_line_emulate(&vicii.raster);
 
-    if (vicii.raster.current_line == 0)
-	{
+    if (vicii.raster.current_line == 0) {
         /* no vsync here for NTSC  */
-        if ((unsigned int)vicii.last_displayed_line < vicii.screen_height)
-		{
+        if ((unsigned int)vicii.last_displayed_line < vicii.screen_height) {
             raster_skip_frame(&vicii.raster,
-                              vsync_do_vsync(vicii.raster.canvas, vicii.raster.skip_frame, 0));
+                              vsync_do_vsync(vicii.raster.canvas,
+                                             vicii.raster.skip_frame, 0));
         }
 
 #ifdef __MSDOS__
@@ -474,7 +471,7 @@ void vicii_raster_draw_handler(void)
                 <= VICII_SCREEN_XPIX
                 && vicii.raster.canvas->draw_buffer->canvas_height
                 <= VICII_SCREEN_YPIX
-                && vicii.raster.canvas->viewport->update_canvas)
+                && vicii.raster.canvas->viewport->update_canvas) {
                 canvas_set_border_color(vicii.raster.canvas,
                                         vicii.raster.border_color);
         }
@@ -485,15 +482,17 @@ void vicii_raster_draw_handler(void)
     if ((unsigned int)vicii.last_displayed_line >= vicii.screen_height
         && vicii.raster.current_line == vicii.last_displayed_line - vicii.screen_height + 1) {
         raster_skip_frame(&vicii.raster,
-                          vsync_do_vsync(vicii.raster.canvas, vicii.raster.skip_frame, 0));
+                          vsync_do_vsync(vicii.raster.canvas,
+                                         vicii.raster.skip_frame, 0));
 #ifdef __MSDOS__
         if (vicii.raster.canvas->draw_buffer->canvas_width
             <= VICII_SCREEN_XPIX
             && vicii.raster.canvas->draw_buffer->canvas_height
             <= VICII_SCREEN_YPIX
-            && vicii.raster.canvas->viewport->update_canvas)
+            && vicii.raster.canvas->viewport->update_canvas) {
             canvas_set_border_color(vicii.raster.canvas,
                                     vicii.raster.border_color);
+        }
 #endif
     }
 }
@@ -614,6 +613,29 @@ const char *fetch_phi1_type(int addr)
             return "RAM";
         }
     }
+}
+
+#define C64D_PHI1_TYPE_RAM		0
+#define C64D_PHI1_TYPE_CHARROM	1
+#define C64D_PHI1_TYPE_CART		2
+
+unsigned char c64d_fetch_phi1_type(int addr)
+{
+	addr = (addr & vicii.vaddr_mask_phi1) | vicii.vaddr_offset_phi1;
+	
+	if (export.ultimax_phi1) {
+		if ((addr & 0x3fff) >= 0x3000) {
+			return C64D_PHI1_TYPE_CART;
+		} else {
+			return C64D_PHI1_TYPE_RAM;
+		}
+	} else {
+		if ((addr & vicii.vaddr_chargen_mask_phi1) == vicii.vaddr_chargen_value_phi1) {
+			return C64D_PHI1_TYPE_CHARROM;
+		} else {
+			return C64D_PHI1_TYPE_RAM;
+		}
+	}
 }
 
 
@@ -751,8 +773,7 @@ void c64d_get_vic_colors(uint8 *cD021, uint8 *cD022, uint8 *cD023, uint8 *cD025,
 
 void c64d_get_vic_simple_state(struct C64StateVIC *stateVic)
 {
-	stateVic->cycle = vicii.raster_cycle;
-	stateVic->rasterX = vicii.raster_cycle*8;
-	stateVic->rasterY = vicii.raster_line;
+	stateVic->raster_cycle = vicii.raster_cycle;
+	stateVic->raster_line = vicii.raster_line;
 }
 

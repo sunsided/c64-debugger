@@ -43,8 +43,7 @@
 #include "types.h"
 
 
-struct output_gfx_s
-{
+struct output_gfx_s {
     gfxoutputdrv_t *gfxoutputdrv;
     screenshot_t screenshot;
     BYTE *line;
@@ -55,42 +54,32 @@ struct output_gfx_s
 };
 typedef struct output_gfx_s output_gfx_t;
 
-static output_gfx_t output_gfx[3];
+static output_gfx_t output_gfx[NUM_OUTPUT_SELECT];
 
 static unsigned int current_prnr;
 
-/* CURRENTLY NOT USED. ANDREAS B. PROMISED TO IMPLEMENT THIS FEATURE AGAIN
-static int ppb;
-
-static int set_ppb(int val, void *param)
-{
-    ppb = val;
-
-    if (ppb<0) ppb=0;
-    if (ppb>3) ppb=3;
-
-    return 0;
-}
-
-static const resource_int_t resources_int[] = {
-    { "PixelsPerBit", 3, RES_EVENT_NO, NULL,
-      &ppb, set_ppb, (void *)0 },
-    { NULL }
-};
-
-static const cmdline_option_t cmdline_options[] =
-{
-    { "-ppb", SET_RESOURCE, 1, NULL, NULL, "PixelsPerBit", NULL,
-      "<0-3>", "Number of pixel size in graphic [3]" },
-    { NULL }
-};
-*/
-int output_graphics_init_cmdline_options(void)
-{
-    return 1; /* cmdline_register_options(cmdline_options); */
-}
-
 /* ------------------------------------------------------------------------- */
+
+/*
+ * The palette colour order is black, white, blue, green, red.
+ * The black and white printers only have the former two.
+ */
+static BYTE output_pixel_to_palette_index(BYTE pix)
+{
+    switch (pix) {
+        case OUTPUT_PIXEL_BLACK:
+            return 0;
+        case OUTPUT_PIXEL_WHITE:
+        default:
+            return 1;
+        case OUTPUT_PIXEL_BLUE:
+            return 2;
+        case OUTPUT_PIXEL_GREEN:
+            return 3;
+        case OUTPUT_PIXEL_RED:
+            return 4;
+    }
+}
 
 static void output_graphics_line_data(screenshot_t *screenshot, BYTE *data,
                                       unsigned int line, unsigned int mode)
@@ -102,30 +91,22 @@ static void output_graphics_line_data(screenshot_t *screenshot, BYTE *data,
     line_base = output_gfx[current_prnr].line;
 
     switch (mode) {
-      case SCREENSHOT_MODE_PALETTE:
-        for (i = 0; i < screenshot->width; i++) {
-            /* FIXME: Use a table here if color printers are introduced.  */
-            if (line_base[i] == OUTPUT_PIXEL_BLACK)
-                data[i] = 0;
-            else
-                data[i] = 1;
-        }
-        break;
-      case SCREENSHOT_MODE_RGB32:
-        for (i = 0; i < screenshot->width; i++) {
-            /* FIXME: Use a table here if color printers are introduced.  */
-            if (line_base[i] == OUTPUT_PIXEL_BLACK)
-                color = 0;
-            else
-                color = 1;
-            data[i * 4] = screenshot->palette->entries[color].red;
-            data[i * 4 + 1] = screenshot->palette->entries[color].green;
-            data[i * 4 + 2] = screenshot->palette->entries[color].blue;
-            data[i * 4 + 3] = 0;
-        }
-        break;
-      default:
-        log_error(LOG_ERR, "Invalid mode %i.", mode);
+        case SCREENSHOT_MODE_PALETTE:
+            for (i = 0; i < screenshot->width; i++) {
+                data[i] = output_pixel_to_palette_index(line_base[i]);
+            }
+            break;
+        case SCREENSHOT_MODE_RGB32:
+            for (i = 0; i < screenshot->width; i++) {
+                color = output_pixel_to_palette_index(line_base[i]);
+                data[i * 4] = screenshot->palette->entries[color].red;
+                data[i * 4 + 1] = screenshot->palette->entries[color].green;
+                data[i * 4 + 2] = screenshot->palette->entries[color].blue;
+                data[i * 4 + 3] = 0;
+            }
+            break;
+        default:
+            log_error(LOG_ERR, "Invalid mode %i.", mode);
     }
 }
 
@@ -138,30 +119,32 @@ static int output_graphics_open(unsigned int prnr,
     int device = 0;
     output_gfx[prnr].gfxoutputdrv = gfxoutput_get_driver("BMP");
 
-    if (output_gfx[prnr].gfxoutputdrv == NULL)
+    if (output_gfx[prnr].gfxoutputdrv == NULL) {
         return -1;
+    }
 
     switch (prnr) {
-      case 0:
-        resources_get_int("Printer4TextDevice", &device);
-        break;
-      case 1:
-        resources_get_int("Printer5TextDevice", &device);
-        break;
-      case 2:
-        resources_get_int("PrinterUserportTextDevice", &device);
-        break;
-      }
+        case 0:
+            resources_get_int("Printer4TextDevice", &device);
+            break;
+        case 1:
+            resources_get_int("Printer5TextDevice", &device);
+            break;
+        case 2:
+            resources_get_int("PrinterUserportTextDevice", &device);
+            break;
+    }
 
     resources_get_string_sprintf("PrinterTextDevice%d", &filename, device + 1);
 
-    if (filename == NULL)
+    if (filename == NULL) {
         filename = "prngfx";
+    }
 
-    output_gfx[prnr].filename = lib_malloc(strlen(filename)+3);
+    output_gfx[prnr].filename = lib_malloc(strlen(filename) + 3);
     sprintf(output_gfx[prnr].filename, "%s00", filename);
 
-    output_gfx[prnr].screenshot.width  = output_parameter->maxcol;
+    output_gfx[prnr].screenshot.width = output_parameter->maxcol;
     output_gfx[prnr].screenshot.height = output_parameter->maxrow;
     output_gfx[prnr].screenshot.dpi_x = output_parameter->dpi_x;
     output_gfx[prnr].screenshot.dpi_y = output_parameter->dpi_y;
@@ -183,86 +166,80 @@ static int output_graphics_open(unsigned int prnr,
 
 static void output_graphics_close(unsigned int prnr)
 {
-  output_gfx_t *o = &(output_gfx[prnr]);
+    output_gfx_t *o = &(output_gfx[prnr]);
 
-  /* only do this if something has actually been printed on this page */
-  if ( o->isopen )
-    {
-      unsigned int i;
+    /* only do this if something has actually been printed on this page */
+    if (o->isopen) {
+        unsigned int i;
 
-      /* output current line */
-      current_prnr = prnr;
-      (o->gfxoutputdrv->write)(&o->screenshot);
-      o->line_no++;
-
-      /* fill rest of page with blank lines */
-      memset(o->line, OUTPUT_PIXEL_WHITE, o->screenshot.width);
-      for (i = o->line_no; i < o->screenshot.height; i++)
+        /* output current line */
+        current_prnr = prnr;
         (o->gfxoutputdrv->write)(&o->screenshot);
+        o->line_no++;
 
-      /* close output */
-      o->gfxoutputdrv->close(&o->screenshot);
-      o->isopen = 0;
+        /* fill rest of page with blank lines */
+        memset(o->line, OUTPUT_PIXEL_WHITE, o->screenshot.width);
+        for (i = o->line_no; i < o->screenshot.height; i++) {
+            (o->gfxoutputdrv->write)(&o->screenshot);
+        }
+
+        /* close output */
+        o->gfxoutputdrv->close(&o->screenshot);
+        o->isopen = 0;
     }
 
-  /* free filename */
-  lib_free(o->filename);
-  o->filename = NULL;
+    /* free filename */
+    lib_free(o->filename);
+    o->filename = NULL;
 }
 
 static int output_graphics_putc(unsigned int prnr, BYTE b)
 {
-  output_gfx_t *o = &(output_gfx[prnr]);
+    output_gfx_t *o = &(output_gfx[prnr]);
 
-  if (b == OUTPUT_NEWLINE)
-    {
-      /* if output is not open yet, open it now */
-      if ( !o->isopen )
-        {
-          int i;
+    if (b == OUTPUT_NEWLINE) {
+        /* if output is not open yet, open it now */
+        if (!o->isopen) {
+            int i;
 
-          /* increase page count in filename */
-          i = (int)strlen(o->filename);
-          o->filename[i-1]++;
-          if (o->filename[i-1] > '9')
-            {
-              o->filename[i-1] = '0';
-              o->filename[i-2]++;
+            /* increase page count in filename */
+            i = (int)strlen(o->filename);
+            o->filename[i - 1]++;
+            if (o->filename[i - 1] > '9') {
+                o->filename[i - 1] = '0';
+                o->filename[i - 2]++;
             }
 
-          /* open output file */
-          o->gfxoutputdrv->open(&o->screenshot, o->filename);
-          o->isopen = 1;
-          o->line_pos = 0;
-          o->line_no = 0;
+            /* open output file */
+            o->gfxoutputdrv->open(&o->screenshot, o->filename);
+            o->isopen = 1;
+            o->line_pos = 0;
+            o->line_no = 0;
         }
 
-      /* write buffered line to output and clear buffer */
-      current_prnr = prnr;
-      (o->gfxoutputdrv->write)(&o->screenshot);
-      memset(o->line, OUTPUT_PIXEL_WHITE, o->screenshot.width);
-      o->line_pos = 0;
+        /* write buffered line to output and clear buffer */
+        current_prnr = prnr;
+        (o->gfxoutputdrv->write)(&o->screenshot);
+        memset(o->line, OUTPUT_PIXEL_WHITE, o->screenshot.width);
+        o->line_pos = 0;
 
-      /* check for bottom of page.  If so, close output file */
-      o->line_no++;
-      if ( o->line_no == o->screenshot.height )
-        {
-          o->gfxoutputdrv->close(&o->screenshot);
-          o->isopen = 0;
+        /* check for bottom of page.  If so, close output file */
+        o->line_no++;
+        if (o->line_no == o->screenshot.height) {
+            o->gfxoutputdrv->close(&o->screenshot);
+            o->isopen = 0;
+        }
+    } else {
+        /* store pixel in buffer */
+        if (o->line_pos < o->screenshot.width) {
+            o->line[o->line_pos] = b;
+        }
+        if (o->line_pos < o->screenshot.width - 1) {
+            o->line_pos++;
         }
     }
-  else
-    {
-      /* store pixel in buffer */
-      if (o->line_pos < o->screenshot.width) {
-        o->line[o->line_pos] = b;
-      }
-      if (o->line_pos < o->screenshot.width - 1) {
-        o->line_pos++;
-      }
-    }
 
-  return 0;
+    return 0;
 }
 
 static int output_graphics_getc(unsigned int prnr, BYTE *b)
@@ -288,10 +265,6 @@ void output_graphics_init(void)
     }
 }
 
-void output_graphics_reset(void)
-{
-}
-
 int output_graphics_init_resources(void)
 {
     output_select_t output_select;
@@ -305,6 +278,5 @@ int output_graphics_init_resources(void)
 
     output_select_register(&output_select);
 
-    return 1; /* resources_register_int(resources_int); */
+    return 1;
 }
-

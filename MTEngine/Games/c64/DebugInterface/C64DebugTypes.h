@@ -19,6 +19,7 @@ enum c64EmulatorType
 #define C64_MACHINE_UNKNOWN	0
 #define C64_MACHINE_PAL		1
 #define C64_MACHINE_NTSC	2
+#define C64_MACHINE_LOADING_SNAPSHOT	100
 
 enum c64MemoryBreakpointType
 {
@@ -31,6 +32,15 @@ enum c64MemoryBreakpointType
 	
 	C64_MEMORY_BREAKPOINT_LAST
 };
+
+enum c64ViciiRecordMode
+{
+	C64D_VICII_RECORD_MODE_NONE	= 0,
+	C64D_VICII_RECORD_MODE_EVERY_LINE,
+	C64D_VICII_RECORD_MODE_EVERY_CYCLE
+	
+};
+
 
 struct C64StateCPU
 {
@@ -46,9 +56,8 @@ struct C64StateCPU
 
 struct C64StateVIC
 {
-	int rasterY;
-	int rasterX;
-	int cycle;
+	int raster_line;
+	int raster_cycle;
 };
 
 

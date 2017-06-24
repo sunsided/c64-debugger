@@ -282,7 +282,7 @@ void ui_sdl_quit(void)
 /* Initialization  */
 int ui_resources_init(void)
 {
-    DBG(("%s",__func__));
+    //DBG(("%s",__func__));
     if (resources_register_int(resources_int) < 0) {
         return -1;
     }

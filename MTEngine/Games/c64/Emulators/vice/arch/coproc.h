@@ -28,8 +28,8 @@
 #ifndef VICE_SDL_COPROC_H
 #define VICE_SDL_COPROC_H
 
-#if defined(UNIX_COMPILE) && !defined(CEGCC_COMPILE)
-#include "../unix/coproc.h"
-#endif
+//#if defined(UNIX_COMPILE) && !defined(CEGCC_COMPILE)
+//#include "../unix/coproc.h"
+//#endif
 
 #endif

@@ -36,13 +36,12 @@
 
 /* #define DEBUG_PRINTER */
 
-struct raw_s
-{
-    int  mode;
+struct raw_s {
+    int mode;
 };
 typedef struct raw_s raw_t;
 
-static raw_t drv_raw[3];
+static raw_t drv_raw[NUM_OUTPUT_SELECT];
 static log_t drv_raw_log = LOG_ERR;
 
 static int print_char(raw_t *raw, unsigned int prnr, const BYTE c)
@@ -69,24 +68,29 @@ static int print_char(raw_t *raw, unsigned int prnr, const BYTE c)
 
 static int drv_raw_open(unsigned int prnr, unsigned int secondary)
 {
-    output_parameter_t output_parameter;
-
-    /* these are unused for non gfx output */
-    output_parameter.maxcol = 480;
-    output_parameter.maxrow = 66 * 9;
-    output_parameter.dpi_x = 100;
-    output_parameter.dpi_y = 100;
+    raw_t *raw = &drv_raw[prnr];
 
     if (secondary == 7) {
-        print_char(&drv_raw[prnr], prnr, 17);
+        print_char(raw, prnr, 17);
+    } else if (secondary == DRIVER_FIRST_OPEN) {
+        output_parameter_t output_parameter;
+        /* these are unused for non gfx output */
+        output_parameter.maxcol = 480;
+        output_parameter.maxrow = 66 * 9;
+        output_parameter.dpi_x = 100;
+        output_parameter.dpi_y = 100;
+
+        return output_select_open(prnr, &output_parameter);
     }
 
-    return output_select_open(prnr, &output_parameter);
+    return 0;
 }
 
 static void drv_raw_close(unsigned int prnr, unsigned int secondary)
 {
-    output_select_close(prnr);
+    if (secondary == DRIVER_LAST_CLOSE) {
+        output_select_close(prnr);
+    }
 }
 
 static int drv_raw_putc(unsigned int prnr, unsigned int secondary, BYTE b)
@@ -139,4 +143,3 @@ void drv_raw_init(void)
 {
     drv_raw_log = log_open("Drv-Raw");
 }
-

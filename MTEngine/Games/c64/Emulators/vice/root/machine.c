@@ -58,12 +58,15 @@
 #include "printer.h"
 #include "resources.h"
 #include "romset.h"
+#include "screenshot.h"
 #include "sound.h"
 #include "sysfile.h"
 #include "tape.h"
 #include "traps.h"
+#include "translate.h"
 #include "types.h"
 #include "uiapi.h"
+#include "util.h"
 #include "video.h"
 #include "vsync.h"
 #include "zfile.h"
@@ -72,11 +75,16 @@
 #include "joy.h"
 #endif
 
+#ifndef EXIT_SUCCESS
+#define EXIT_SUCCESS 0
+#endif
+
 static int machine_init_was_called = 0;
 static int mem_initialized = 0;
-static int ignore_jam;
+static int ignore_jam = 0;
+static int jam_action = MACHINE_JAM_ACTION_DIALOG;
 int machine_keymap_index;
-
+static char *ExitScreenshotName = NULL;
 
 unsigned int machine_jam(const char *format, ...)
 {
@@ -84,35 +92,48 @@ unsigned int machine_jam(const char *format, ...)
     va_list ap;
     ui_jam_action_t ret;
 
-    if (ignore_jam > 0)
+    if (ignore_jam > 0) {
         return JAM_NONE;
+    }
 
     va_start(ap, format);
     str = lib_mvsprintf(format, ap);
     va_end(ap);
 
-    if (monitor_is_remote())
-    {
-        ret = monitor_network_ui_jam_dialog(str);
-    }
-    else
-    {
-        ret = ui_jam_dialog(str);
+    log_message(LOG_DEFAULT, "*** %s", str);
+
+    if (jam_action == MACHINE_JAM_ACTION_DIALOG) {
+        if (monitor_is_remote()) {
+            ret = monitor_network_ui_jam_dialog(str);
+        } else {
+            ret = ui_jam_dialog(str);
+        }
+    } else if (jam_action == MACHINE_JAM_ACTION_QUIT) {
+        exit(EXIT_SUCCESS);
+    } else {
+        int actions[4] = {
+            -1, UI_JAM_MONITOR, UI_JAM_RESET, UI_JAM_HARD_RESET
+        };
+        ret = actions[jam_action - 1];
     }
     lib_free(str);
 
-    switch (ret) {
-      case UI_JAM_RESET:
-        return JAM_RESET;
-      case UI_JAM_HARD_RESET:
-        return JAM_HARD_RESET;
-      case UI_JAM_MONITOR:
-        return JAM_MONITOR;
-      default:
-        break;
-    }
-
+    /* always ignore subsequent JAMs. reset would clear the flag again, not
+     * setting it when going to the monitor would just repeatedly pop up the
+     * jam dialog (until reset)
+     */
     ignore_jam = 1;
+
+    switch (ret) {
+        case UI_JAM_RESET:
+            return JAM_RESET;
+        case UI_JAM_HARD_RESET:
+            return JAM_HARD_RESET;
+        case UI_JAM_MONITOR:
+            return JAM_MONITOR;
+        default:
+            break;
+    }
     return JAM_NONE;
 }
 
@@ -121,21 +142,22 @@ static void machine_trigger_reset_internal(const unsigned int mode)
     ignore_jam = 0;
 
     switch (mode) {
-      case MACHINE_RESET_MODE_HARD:
-        vsync_frame_counter = 0;
-        mem_initialized = 0; /* force memory initialization */
-        machine_specific_powerup();
+        case MACHINE_RESET_MODE_HARD:
+            vsync_frame_counter = 0;
+            mem_initialized = 0; /* force memory initialization */
+            machine_specific_powerup();
         /* Fall through.  */
-      case MACHINE_RESET_MODE_SOFT:
-        maincpu_trigger_reset();
-        break;
+        case MACHINE_RESET_MODE_SOFT:
+            maincpu_trigger_reset();
+            break;
     }
 }
 
 void machine_trigger_reset(const unsigned int mode)
 {
-    if (event_playback_active())
+    if (event_playback_active()) {
         return;
+    }
 
     if (network_connected()) {
         network_event_record(EVENT_RESETCPU, (void *)&mode, sizeof(mode));
@@ -180,7 +202,7 @@ static void machine_maincpu_clk_overflow_callback(CLOCK sub, void *data)
 void machine_maincpu_init(void)
 {
     maincpu_init();
-    maincpu_monitor_interface = lib_malloc(sizeof(monitor_interface_t));
+    maincpu_monitor_interface = lib_calloc(1, sizeof(monitor_interface_t));
 }
 
 void machine_early_init(void)
@@ -209,13 +231,28 @@ int machine_init(void)
 
 static void machine_maincpu_shutdown(void)
 {
-    if (maincpu_alarm_context != NULL)
+    if (maincpu_alarm_context != NULL) {
         alarm_context_destroy(maincpu_alarm_context);
-    if (maincpu_clk_guard != NULL)
+    }
+    if (maincpu_clk_guard != NULL) {
         clk_guard_destroy(maincpu_clk_guard);
+    }
 
     lib_free(maincpu_monitor_interface);
     maincpu_shutdown();
+}
+
+static void screenshot_at_exit(void)
+{
+    struct video_canvas_s *canvas;
+
+    if ((ExitScreenshotName == NULL) || (ExitScreenshotName[0] == 0)) {
+        return;
+    }
+    /* FIXME: this always uses the first canvas, for x128/VDC we will need extra handling */
+    canvas = machine_video_canvas_get(0);
+    /* FIXME: perhaps select driver based on the extension of the given name. for now PNG is good enough :) */
+    screenshot_save("PNG", ExitScreenshotName, canvas);
 }
 
 void machine_shutdown(void)
@@ -224,6 +261,9 @@ void machine_shutdown(void)
         /* happens at the -help command line command*/
         return;
     }
+
+    screenshot_at_exit();
+    screenshot_shutdown();
 
     file_system_detach_disk_shutdown();
 
@@ -265,7 +305,9 @@ void machine_shutdown(void)
 
     video_shutdown();
 
-    ui_shutdown();
+    if (!console_mode) {
+        ui_shutdown();
+    }
 
     sysfile_shutdown();
 
@@ -276,9 +318,11 @@ void machine_shutdown(void)
     network_shutdown();
 
     autostart_resources_shutdown();
-    fsdevice_resources_shutdown();
-    disk_image_resources_shutdown();
+    sound_resources_shutdown();
+    video_resources_shutdown();
     machine_resources_shutdown();
+    machine_common_resources_shutdown();
+
     sysfile_resources_shutdown();
     zfile_shutdown();
     ui_resources_shutdown();
@@ -291,5 +335,90 @@ void machine_shutdown(void)
     archdep_shutdown();
 
     lib_debug_check();
+}
+
+/* --------------------------------------------------------- */
+/* Resources & cmdline */
+
+static int set_jam_action(int val, void *param)
+{
+    switch (val) {
+        case MACHINE_JAM_ACTION_DIALOG:
+        case MACHINE_JAM_ACTION_CONTINUE:
+        case MACHINE_JAM_ACTION_MONITOR:
+        case MACHINE_JAM_ACTION_RESET:
+        case MACHINE_JAM_ACTION_HARD_RESET:
+        case MACHINE_JAM_ACTION_QUIT:
+            break;
+        default:
+            return -1;
+    }
+
+    jam_action = val;
+
+    return 0;
+}
+
+static int set_exit_screenshot_name(const char *val, void *param)
+{
+    if (util_string_set(&ExitScreenshotName, val)) {
+        return 0;
+    }
+
+    return 0;
+}
+
+static resource_string_t resources_string[] = {
+    { "ExitScreenshotName", "", RES_EVENT_NO, NULL,
+      &ExitScreenshotName, set_exit_screenshot_name, NULL },
+    RESOURCE_STRING_LIST_END
+};
+
+static const resource_int_t resources_int[] = {
+    { "JAMAction", MACHINE_JAM_ACTION_DIALOG, RES_EVENT_SAME, NULL,
+      &jam_action, set_jam_action, NULL },
+    RESOURCE_INT_LIST_END
+};
+
+int machine_common_resources_init(void)
+{
+    if (machine_class != VICE_MACHINE_VSID) {
+        if (resources_register_string(resources_string) < 0) {
+           return -1;
+        }
+    }
+    return resources_register_int(resources_int);
+}
+
+void machine_common_resources_shutdown(void)
+{
+    lib_free(ExitScreenshotName);
+}
+
+static const cmdline_option_t cmdline_options[] = {
+    { "-jamaction", SET_RESOURCE, 1, NULL, NULL, "JAMAction", NULL,
+      USE_PARAM_ID, USE_DESCRIPTION_ID, IDCLS_P_TYPE, IDCLS_SET_MACHINE_JAM_ACTION,
+      NULL, NULL },
+    { "-exitscreenshot", SET_RESOURCE, 1, NULL, NULL, "ExitScreenshotName", NULL,
+      USE_PARAM_ID, USE_DESCRIPTION_ID, IDCLS_P_NAME, IDCLS_SET_EXIT_SCREENSHOT,
+      NULL, NULL },
+    CMDLINE_LIST_END
+};
+
+
+static const cmdline_option_t cmdline_options_vsid[] = {
+    { "-jamaction", SET_RESOURCE, 1, NULL, NULL, "JAMAction", NULL,
+      USE_PARAM_ID, USE_DESCRIPTION_ID, IDCLS_P_TYPE, IDCLS_SET_MACHINE_JAM_ACTION,
+      NULL, NULL },
+    CMDLINE_LIST_END
+};
+
+int machine_common_cmdline_options_init(void)
+{
+    if (machine_class != VICE_MACHINE_VSID) {
+        return cmdline_register_options(cmdline_options);
+    } else {
+        return cmdline_register_options(cmdline_options_vsid);
+    }
 }
 

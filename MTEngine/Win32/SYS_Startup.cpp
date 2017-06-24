@@ -16,6 +16,7 @@
 #include "SND_SoundEngine.h"
 #include "SYS_CommandLine.h"
 #include "SYS_CFileSystem.h"
+#include "C64D_Version.h"
 
 #include "..\\resource.h"
 
@@ -48,7 +49,8 @@ u32 windowWidth;
 u32 windowHeight;
 int fullScreenWidth, fullScreenHeight, fullScreenColourBits, fullScreenRefreshRate;
 
-#define DEFAULT_WINDOW_CAPTION "C64 Debugger (" __DATE__ " " __TIME__ ")"
+//#define DEFAULT_WINDOW_CAPTION "C64 Debugger (" __DATE__ " " __TIME__ ")"
+#define DEFAULT_WINDOW_CAPTION "C64 Debugger v" C64DEBUGGER_VERSION_STRING
 
 HDC			hDC=NULL;		// Private GDI Device Context
 HGLRC		hRC=NULL;		// Permanent Rendering Context
@@ -65,7 +67,6 @@ bool	active=TRUE;		// Window Active Flag Set To TRUE By Default
 bool	fullscreen=TRUE;	// Fullscreen Flag Set To Fullscreen Mode By Default
 
 LRESULT	CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);	// Declaration For WndProc
-
 GLvoid ReSizeGLScene(GLsizei width, GLsizei height)		// Resize And Initialize The GL Window
 {
 	return;
@@ -249,7 +250,7 @@ BOOL CreateGLWindow(char* title, int width, int height, int bits, bool fullscree
 	}
 	else
 	{
-		dwExStyle=WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;			// Window Extended Style
+		dwExStyle=WS_EX_APPWINDOW | WS_EX_WINDOWEDGE | WS_EX_ACCEPTFILES;			// Window Extended Style
 		//dwStyle=WS_OVERLAPPEDWINDOW;							// Windows Style
 		dwStyle=(WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);							// Windows Style
 		//dwStyle=(WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX);							// Windows Style
@@ -387,6 +388,7 @@ BOOL CreateGLWindow(char* title, int width, int height, int bits, bool fullscree
 	LOGD("CreateGLWindow done");
 #endif
 
+	DragAcceptFiles(hWnd, TRUE);
 
 	return TRUE;									// Success
 }
@@ -503,6 +505,7 @@ void SYS_SetFullScreen(bool fullscreen)
 	{
 		LOGD("exitFullScreen");
 		exitFullScreen(hWnd, windowPosX, windowPosY, windowWidth, windowHeight);
+		ShowCursor(TRUE);
 	}
 
 	SetFocus(hWnd);
@@ -579,7 +582,7 @@ u32 mapKey(WPARAM wParamIn, LPARAM lParamIn, bool isShift, bool isAlt, bool isCo
 
 	bool isRightSideKey = (lParam & 0x01000000) != 0;
 
-	LOGD("mapKey wParam=%8.8x lParam=%8.8x isRightSideKey=%d", wParamIn, lParamIn, isRightSideKey);
+	LOGM(".... > mapKey wParam=%8.8x lParam=%8.8x isRightSideKey=%d", wParamIn, lParamIn, isRightSideKey);
 
 	if (wParam == 0x73 && isAlt)
 	{
@@ -612,14 +615,47 @@ u32 mapKey(WPARAM wParamIn, LPARAM lParamIn, bool isShift, bool isAlt, bool isCo
 		return MTKEY_PAGE_UP;
 	if (wParam == 0x22)
 		return MTKEY_PAGE_DOWN;
+	
+	// remember isShift is first checked :)
+
+	if (wParam == 0xDB && isShift)
+		return '{';
+	if (wParam == 0xDB)
+		return '[';
+	if (wParam == 0xDD && isShift)
+		return '}';
+	if (wParam == 0xDD)
+		return ']';
+	if (wParam == 0xDE && isShift)
+		return '|';	
+	if (wParam == 0xDE)
+		return '\'';	
+	if (wParam == 0xDC)
+		return '\\';
+	if (wParam == 0xBA && isShift)
+		return ':';
 	if (wParam == 0xBA)
 		return ';';
+	if (wParam == 0xBB && isShift)
+		return '+';
 	if (wParam == 0xBB)
 		return '=';
 	if (wParam == 0xBC && isShift)
 		return '<';
+	if (wParam == 0xBC)
+		return ',';
+	if (wParam == 0xBD && isShift)
+		return '_';
+	if (wParam == 0xBD)
+		return '-';
 	if (wParam == 0xBE && isShift)
 		return '>';
+	if (wParam == 0xBE)
+		return '.';
+	if (wParam == 0xBF && isShift)
+		return '?';
+	if (wParam == 0xBF)
+		return '/';
 	if (wParam == 0x31 && isShift)
 		return '!';
 	if (wParam == 0x32 && isShift)
@@ -640,18 +676,6 @@ u32 mapKey(WPARAM wParamIn, LPARAM lParamIn, bool isShift, bool isAlt, bool isCo
 		return '(';
 	if (wParam == 0x30 && isShift)
 		return ')';
-	if (wParam == 0xBC)
-		return ',';
-	if (wParam == 0xBD)
-		return '-';
-	if (wParam == 0xBE)
-		return '.';
-	if (wParam == 0xDB)
-		return '[';
-	if (wParam == 0xDD)
-		return ']';
-	if (wParam == 0xDE)
-		return '\'';
 	if (wParam == 0x14)
 		return MTKEY_CAPS_LOCK;
 	if (wParam == 0x2C)
@@ -736,15 +760,13 @@ u32 mapKey(WPARAM wParamIn, LPARAM lParamIn, bool isShift, bool isAlt, bool isCo
 		return MTKEY_HOME;
 	if (wParam == 0x23)
 		return MTKEY_END;
-	if (wParam == 0xBF)
-		return '/';
-	if (wParam == 0xDC)
-		return '\\';
 
 	if (wParam >= 'A' && wParam <= 'Z')
 		return wParam + 0x20;
 	return wParam;
 }
+
+void C64D_DragDropCallback(char *filePath);
 
 bool leftClick = false;
 bool rightClick = false;
@@ -793,7 +815,7 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 
 		case WM_KEYDOWN:							// Is A Key Being Held Down?
 		{
-			LOGD("WM_KEYDOWN: lParam=%8.8x wParam=%8.8x", lParam, wParam);
+			LOGI("WM_KEYDOWN: lParam=%8.8x wParam=%8.8x", lParam, wParam);
 
 			bool isShift = true;
 			bool isAlt = true; //isAltDown;
@@ -819,7 +841,7 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 				_exit(0);
 			}
 
-			LOGD("============ key=%d isShift=%s isAlt=%s isControl=%s", key, STRBOOL(isShift), STRBOOL(isAlt), STRBOOL(isControl));
+			LOGI("============ key=%d isShift=%s isAlt=%s isControl=%s", key, STRBOOL(isShift), STRBOOL(isAlt), STRBOOL(isControl));
 
 			if (isShift && key >= 0x61 && key <= 0x7A)
 			{
@@ -833,7 +855,7 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 
 		case WM_KEYUP:								// Has A Key Been Released?
 		{
-			LOGD("WM_KEYUP: lParam=%8.8x wParam=%8.8x", lParam, wParam);
+			LOGI("WM_KEYUP: lParam=%8.8x wParam=%8.8x", lParam, wParam);
 			if (keyUpEaten)
 			{
 				keyUpEaten = false;
@@ -872,7 +894,7 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 
 		case WM_SYSKEYDOWN:
 		{
-			LOGD("WM_SYSKEYDOWN: lParam=%8.8x wParam=%8.8x", lParam, wParam);
+			LOGI("WM_SYSKEYDOWN: lParam=%8.8x wParam=%8.8x", lParam, wParam);
 
 			//bool ctrlDown = (HIWORD(lParam) & KF_CTRLDOWN) ? true : false;
 			bool altDown = (HIWORD(lParam) & KF_ALTDOWN) ? true : false;
@@ -880,7 +902,7 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 			LOGD("altDown=%d", altDown);
 			if (wParam == 0x0D && altDown)
 			{
-				LOGM("TOGGLEFULLSCREEN");
+				LOGI("TOGGLEFULLSCREEN");
 				keyUpEaten = true;
 				SYS_ToggleFullScreen();
 			}
@@ -907,7 +929,7 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 
 				u32 key = mapKey(wParam, lParam, isShift, isAlt, isControl);
 
-				LOGD("============ key=%d isShift=%s isAlt=%s isControl=%s", key, STRBOOL(isShift), STRBOOL(isAlt), STRBOOL(isControl));
+				LOGI("============ key=%d isShift=%s isAlt=%s isControl=%s", key, STRBOOL(isShift), STRBOOL(isAlt), STRBOOL(isControl));
 				guiMain->KeyDown(key, isShift, isAlt, isControl);
 				keys[wParam] = TRUE;					// If So, Mark It As TRUE
 			}
@@ -915,10 +937,10 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 
 		case WM_SYSKEYUP:
 		{
-			LOGD("WM_SYSKEYUP: lParam=%8.8x wParam=%8.8x", lParam, wParam);
+			LOGI("WM_SYSKEYUP: lParam=%8.8x wParam=%8.8x", lParam, wParam);
 
 			bool altUp = (HIWORD(lParam) & KF_ALTDOWN) ? true : false;
-			LOGD("altUp=%d", altUp);
+			LOGI("altUp=%d", altUp);
 
 			if (altUp == true)
 			{
@@ -950,17 +972,23 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 
 		case WM_LBUTTONDOWN:
 		{
+			LOGI("WM_LBUTTONDOWN: wParam=%x lParam=%x", wParam, lParam);
 			if (wParam & MK_LBUTTON)
 			{
+#if defined(EMULATE_ZOOM_WITH_ALT)
 				// check ALT state
 				short state = GetKeyState(VK_MENU);
+#endif
 
 				int xPos = (int)(((float)GET_X_LPARAM(lParam) - VIEW_START_X) / (float)SCREEN_SCALE);
 				int yPos = (int)(((float)GET_Y_LPARAM(lParam) - VIEW_START_Y) / (float)SCREEN_SCALE);
-				//LOGD("WM_LBUTTONDOWN: x=%d y=%d state=%d", xPos, yPos, state);
+				LOGI("     > VID_TouchesBegan WM_LBUTTONDOWN: x=%d y=%d", xPos, yPos);
 
+#if defined(EMULATE_ZOOM_WITH_ALT)
 				VID_TouchesBegan(xPos, yPos, (state < 0));
-
+#else
+				VID_TouchesBegan(xPos, yPos, false);
+#endif
 				leftClick = true;
 			}
 			return 0;
@@ -968,16 +996,23 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 
 		case WM_LBUTTONUP:
 		{
+			LOGI("WM_LBUTTONUP: wParam=%x lParam=%x", wParam, lParam);
 			if (leftClick && !(wParam & MK_LBUTTON))
 			{
+#if defined(EMULATE_ZOOM_WITH_ALT)
 				// check ALT state
 				short state = GetKeyState(VK_MENU);
+#endif
 
 				int xPos = (int)(((float)GET_X_LPARAM(lParam) - VIEW_START_X) / (float)SCREEN_SCALE);
 				int yPos = (int)(((float)GET_Y_LPARAM(lParam) - VIEW_START_Y) / (float)SCREEN_SCALE);
-				//LOGD("WM_LBUTTONUP: x=%d y=%d state=%d", xPos, yPos, state);
+				LOGI("   > VID_TouchesEnded WM_LBUTTONUP: x=%d y=%d", xPos, yPos);
 
+#if defined(EMULATE_ZOOM_WITH_ALT)
 				VID_TouchesEnded(xPos, yPos, (state < 0));
+#else
+				VID_TouchesEnded(xPos, yPos, false);
+#endif
 
 				leftClick = false;
 			}
@@ -986,10 +1021,13 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 
 		case WM_RBUTTONDOWN:
 		{
+			LOGI("WM_RBUTTONDOWN: wParam=%x lParam=%x", wParam, lParam);
 			if (wParam & MK_RBUTTON)
 			{
 				int xPos = (int)(((float)GET_X_LPARAM(lParam) - VIEW_START_X) / (float)SCREEN_SCALE);
 				int yPos = (int)(((float)GET_Y_LPARAM(lParam) - VIEW_START_Y) / (float)SCREEN_SCALE);
+
+				LOGI("   > VID_RightClickBegan WM_RBUTTONDOWN: x=%d y=%d", xPos, yPos);
 
 				VID_RightClickBegan(xPos, yPos);
 
@@ -1000,10 +1038,13 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 
 		case WM_RBUTTONUP:
 		{
+			LOGI("WM_RBUTTONUP: wParam=%x lParam=%x", wParam, lParam);
 			if (rightClick && !(wParam & MK_RBUTTON))
 			{
 				int xPos = (int)(((float)GET_X_LPARAM(lParam) - VIEW_START_X) / (float)SCREEN_SCALE);
 				int yPos = (int)(((float)GET_Y_LPARAM(lParam) - VIEW_START_Y) / (float)SCREEN_SCALE);
+
+				LOGI("   > VID_RightClickEnded WM_RBUTTONUP: x=%d y=%d", xPos, yPos);
 
 				VID_RightClickEnded(xPos, yPos);
 
@@ -1014,19 +1055,26 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 
 		case WM_MOUSEMOVE:
 		{
+			LOGI("WM_MOUSEMOVE: wParam=%x lParam=%x", wParam, lParam);
+
 			bool isLeftButton = (wParam & MK_LBUTTON);
 			bool isRightButton = (wParam & MK_RBUTTON);
 			if (isLeftButton)
 			{
+#if defined(EMULATE_ZOOM_WITH_ALT)
 				// check ALT state
 				short state = GetKeyState(VK_MENU);
+#endif
 
 				int xPos = (int)(((float)GET_X_LPARAM(lParam) - VIEW_START_X) / (float)SCREEN_SCALE);
 				int yPos = (int)(((float)GET_Y_LPARAM(lParam) - VIEW_START_Y) / (float)SCREEN_SCALE);
-				//LOGD("WM_MOUSEMOVE: x=%d y=%d state=%d", xPos, yPos, state);
+				LOGI("     > VID_TouchesMoved: x=%d y=%d", xPos, yPos);
 
+#if defined(EMULATE_ZOOM_WITH_ALT)
 				VID_TouchesMoved(xPos, yPos, (state < 0));
-
+#else
+				VID_TouchesMoved(xPos, yPos, false);
+#endif
 				leftClick = true;
 			}
 			
@@ -1034,7 +1082,7 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 			{
 				int xPos = (int)(((float)GET_X_LPARAM(lParam) - VIEW_START_X) / (float)SCREEN_SCALE);
 				int yPos = (int)(((float)GET_Y_LPARAM(lParam) - VIEW_START_Y) / (float)SCREEN_SCALE);
-				//LOGD("WM_MOUSEMOVE: x=%d y=%d", xPos, yPos);
+				LOGI("     > VID_RightClickMoved WM_MOUSEMOVE: x=%d y=%d", xPos, yPos);
 
 				VID_RightClickMoved(xPos, yPos);
 
@@ -1046,6 +1094,8 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 				int xPos = (int)(((float)GET_X_LPARAM(lParam) - VIEW_START_X) / (float)SCREEN_SCALE);
 				int yPos = (int)(((float)GET_Y_LPARAM(lParam) - VIEW_START_Y) / (float)SCREEN_SCALE);
 
+				LOGI("     > VID_NotTouchedMoved WM_MOUSEMOVE: x=%d y=%d", xPos, yPos);
+
 				VID_NotTouchedMoved(xPos, yPos);
 			}
 
@@ -1054,6 +1104,8 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 
 		case WM_MOUSEWHEEL:
 		{
+			LOGI("WM_MOUSEWHEEL: wParam=%x lParam=%x", wParam, lParam);
+
 			int zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
 			float deltaY = (float)zDelta/120.0f * 5.0f;
 			VID_TouchesScrollWheel(0, deltaY);
@@ -1083,7 +1135,7 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 
 		case WM_SIZE:								// Resize The OpenGL Window
 		{
-			//LOGD("WM_SIZE");
+			LOGI("WM_SIZE: wParam=%x lParam=%x", wParam, lParam);
 			float newWidth = LOWORD(lParam);
 			float newHeight = HIWORD(lParam);
 
@@ -1105,6 +1157,22 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 
 			mtEngineHandleWM_USER();
 			return 0;
+		}
+
+		case WM_DROPFILES:
+		{
+			LOGM("WM_DROPFILES");
+
+			HDROP hDropInfo = (HDROP)wParam;
+			char dropFilePath[MAX_PATH];
+
+			for (int i = 0; DragQueryFile(hDropInfo, i, dropFilePath, sizeof(dropFilePath)); i++)
+			{
+				LOGD("dropFilePath=%s", dropFilePath);
+				C64D_DragDropCallback(dropFilePath);
+			}
+			
+			DragFinish(hDropInfo);
 		}
 	}
 
@@ -1129,7 +1197,6 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 
 	SYS_SetCommandLineArguments(__argc, __argv);
 
-
 	SYSTEMTIME localTime;
 	GetLocalTime(&localTime);
 
@@ -1141,7 +1208,7 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 
 	C64DebuggerParseCommandLine0();
 
-	LOGM("init GLView"); 
+	LOGD("init GLView"); 
 
 
 	fullscreen=FALSE;
@@ -1185,19 +1252,31 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 			LOGD("PeekMessage?");
 #endif
 
-			if (PeekMessage(&msg,NULL,0,0,PM_REMOVE))	// Is There A Message Waiting?
+			DWORD currentTick = GetTickCount();
+			DWORD endTick = currentTick + 1000/FRAMES_PER_SECOND;
+
+			while(currentTick < endTick)
 			{
-				if (msg.message==WM_QUIT)				// Have We Received A Quit Message?
+				if (PeekMessage(&msg,NULL,0,0,PM_REMOVE))	// Is There A Message Waiting?
 				{
-					done=TRUE;							// If So done=TRUE
+					if (msg.message==WM_QUIT)				// Have We Received A Quit Message?
+					{
+						done=TRUE;							// If So done=TRUE
+					}
+					else									// If Not, Deal With Window Messages
+					{
+						TranslateMessage(&msg);				// Translate The Message
+						DispatchMessage(&msg);				// Dispatch The Message
+					}
+
+					currentTick = GetTickCount();
 				}
-				else									// If Not, Deal With Window Messages
+				else
 				{
-					TranslateMessage(&msg);				// Translate The Message
-					DispatchMessage(&msg);				// Dispatch The Message
+					break;
 				}
 			}
-			else										// If There Are No Messages
+
 			{
 #ifdef LOG_SYSCALLS
 				LOGD("DrawGLScene");

@@ -65,7 +65,31 @@ class CGuiButton : public CGuiElement
 	virtual bool Pressed(GLfloat posX, GLfloat posY);
 
 	virtual void ReleaseClick();
+	
+	float buttonShadeAmount;
+	float buttonShadeDistance;
+	float buttonShadeDistance2;
+	
+	float buttonEnabledColorR;
+	float buttonEnabledColorG;
+	float buttonEnabledColorB;
+	float buttonEnabledColorA;
+	float buttonEnabledColor2R;
+	float buttonEnabledColor2G;
+	float buttonEnabledColor2B;
+	float buttonEnabledColor2A;
+	
+	float buttonDisabledColorR;
+	float buttonDisabledColorG;
+	float buttonDisabledColorB;
+	float buttonDisabledColorA;
+	float buttonDisabledColor2R;
+	float buttonDisabledColor2G;
+	float buttonDisabledColor2B;
+	float buttonDisabledColor2A;
 
+	virtual void InitBackgroundColors();
+	
 	virtual void InitWithText(char *txt);
 	void SetText(char *text);
 	char *text2;

@@ -3,7 +3,7 @@
  *
  * Written by
  *  Andreas Matthies <andreas.matthies@gmx.net>
- *  
+ *
  * This file is part of VICE, the Versatile Commodore Emulator.
  * See README for copyright notice.
  *
@@ -39,6 +39,7 @@
 #endif
 
 #include "archdep.h"
+#include "cmdline.h"
 #include "interrupt.h"
 #include "lib.h"
 #include "log.h"
@@ -92,6 +93,10 @@ static int set_server_bind_address(const char *val, void *param)
 
 static int set_server_port(int val, void *param)
 {
+    if (val < 0 || val > 65535) {
+        return -1;
+    }
+
     res_server_port = val;
 
     server_port = (unsigned short)res_server_port;
@@ -102,6 +107,7 @@ static int set_server_port(int val, void *param)
 static int set_network_control(int val, void *param)
 {
     network_control = val;
+
     /* don't let the server loose control */
     network_control |= NETWORK_CONTROL_RSRC;
 
@@ -115,7 +121,7 @@ static const resource_string_t resources_string[] = {
       &server_name, set_server_name, NULL },
     { "NetworkServerBindAddress", "", RES_EVENT_NO, NULL,
       &server_bind_address, set_server_bind_address, NULL },
-    { NULL }
+    RESOURCE_STRING_LIST_END
 };
 
 static const resource_int_t resources_int[] = {
@@ -123,16 +129,105 @@ static const resource_int_t resources_int[] = {
       &res_server_port, set_server_port, NULL },
     { "NetworkControl", NETWORK_CONTROL_DEFAULT, RES_EVENT_SAME, NULL,
       &network_control, set_network_control, NULL },
-    { NULL }
+    RESOURCE_INT_LIST_END
 };
 
 int network_resources_init(void)
 {
-    if (resources_register_string(resources_string) < 0)
+    if (resources_register_string(resources_string) < 0) {
         return -1;
+    }
 
     return resources_register_int(resources_int);
 }
+
+/*---------------------------------------------------------------------*/
+
+static void network_set_mask(int offset, int val)
+{
+    switch (val) {
+        case 1:
+            network_control |= 1 << offset;
+            break;
+        case 2:
+            network_control |= 1 << (offset + NETWORK_CONTROL_CLIENTOFFSET);
+            break;
+        case 3:
+            network_control |= 1 << offset;
+            network_control |= 1 << (offset + NETWORK_CONTROL_CLIENTOFFSET);
+            break;
+        default:
+        case 0:
+            break;
+    }
+}
+
+static int network_control_cmd(const char *param, void *extra_param)
+{
+    int keyb;
+    int joy1;
+    int joy2;
+    int dev;
+    int rsrc;
+
+    if (strlen(param) != 9) {
+        return -1;
+    }
+
+    if (param[1] != ',' || param[3] != ',' || param[5] != ',' || param[7] != ',') {
+        return -1;
+    }
+
+    keyb = param[0] - '0';
+    joy1 = param[2] - '0';
+    joy2 = param[4] - '0';
+    dev = param[6] - '0';
+    rsrc = param[8] - '0';
+
+    if (keyb < 0 || keyb > 3 || joy1 < 0 || joy1 > 3 || joy2 < 0 || joy2 > 3 || dev < 0 || dev > 3 || rsrc < 0 || rsrc > 2) {
+        return -1;
+    }
+
+    network_control = 0;
+
+    network_set_mask(0, keyb);
+    network_set_mask(1, joy1);
+    network_set_mask(2, joy2);
+    network_set_mask(3, dev);
+    network_set_mask(4, rsrc);
+
+    return 0;
+}
+
+static const cmdline_option_t cmdline_options[] = {
+    { "-netplayserver", SET_RESOURCE, 1,
+      NULL, NULL, "NetworkServerName", NULL,
+      USE_PARAM_ID, USE_DESCRIPTION_ID,
+      IDCLS_P_HOSTNAME, IDCLS_SET_NETPLAY_SERVER,
+      NULL, NULL },
+    { "-netplaybind", SET_RESOURCE, 1,
+      NULL, NULL, "NetworkServerBindAddress", NULL,
+      USE_PARAM_ID, USE_DESCRIPTION_ID,
+      IDCLS_P_HOSTNAME, IDCLS_SET_NETPLAY_BIND_ADDRESS,
+      NULL, NULL },
+    { "-netplayport", SET_RESOURCE, 1,
+      NULL, NULL, "NetworkServerPort", NULL,
+      USE_PARAM_ID, USE_DESCRIPTION_ID,
+      IDCLS_P_PORT, IDCLS_SET_NETPLAY_PORT,
+      NULL, NULL },
+    { "-netplayctrl", CALL_FUNCTION, 1,
+      network_control_cmd, NULL, NULL, NULL,
+      USE_PARAM_STRING, USE_DESCRIPTION_ID,
+      IDCLS_UNUSED, IDCLS_SET_NETPLAY_CONTROL,
+      "<key,joy1,joy2,dev,rsrc>", NULL },
+    CMDLINE_LIST_END
+};
+
+int network_cmdline_options_init(void)
+{
+    return cmdline_register_options(cmdline_options);
+}
+
 
 /*---------------------------------------------------------------------*/
 
@@ -141,8 +236,9 @@ static void network_free_frame_event_list(void)
     int i;
 
     if (frame_event_list != NULL) {
-        for (i=0; i < frame_delta; i++)
+        for (i = 0; i < frame_delta; i++) {
             event_clear_list(&(frame_event_list[i]));
+        }
         lib_free(frame_event_list);
         frame_event_list = NULL;
     }
@@ -152,12 +248,12 @@ static void network_free_frame_event_list(void)
 static void network_event_record_sync_test(WORD addr, void *data)
 {
     BYTE regbuf[5 * 4];
-        
-    util_dword_to_le_buf(&regbuf[0 * 4], (DWORD)(maincpu_regs.pc));
-    util_dword_to_le_buf(&regbuf[1 * 4], (DWORD)(maincpu_regs.a));
-    util_dword_to_le_buf(&regbuf[2 * 4], (DWORD)(maincpu_regs.x));
-    util_dword_to_le_buf(&regbuf[3 * 4], (DWORD)(maincpu_regs.y));
-    util_dword_to_le_buf(&regbuf[4 * 4], (DWORD)(maincpu_regs.sp));
+
+    util_dword_to_le_buf(&regbuf[0 * 4], (DWORD)(maincpu_get_pc()));
+    util_dword_to_le_buf(&regbuf[1 * 4], (DWORD)(maincpu_get_a()));
+    util_dword_to_le_buf(&regbuf[2 * 4], (DWORD)(maincpu_get_x()));
+    util_dword_to_le_buf(&regbuf[3 * 4], (DWORD)(maincpu_get_y()));
+    util_dword_to_le_buf(&regbuf[4 * 4], (DWORD)(maincpu_get_sp()));
 
     network_event_record(EVENT_SYNC_TEST, (void *)regbuf, sizeof(regbuf));
 }
@@ -191,8 +287,9 @@ static unsigned int network_create_event_buffer(BYTE **buf,
     int data_len = 0;
     int num_of_events;
 
-    if (list == NULL)
+    if (list == NULL) {
         return 0;
+    }
 
     /* calculate the buffer length */
     num_of_events = 0;
@@ -205,9 +302,9 @@ static unsigned int network_create_event_buffer(BYTE **buf,
     } while (last_event->type != EVENT_LIST_END);
 
     size = num_of_events * 3 * sizeof(DWORD) + data_len;
-    
+
     *buf = lib_malloc(size);
-    
+
     /* fill the buffer with the events */
     current_event = list->base;
     bufptr = *buf;
@@ -236,7 +333,7 @@ static event_list_state_t *network_create_event_list(BYTE *remote_event_buffer)
 
     do {
         type = util_le_buf_to_dword(&bufptr[0]);
-    /*  clk = util_le_buf_to_dword(&bufptr[4]); */
+        /*  clk = util_le_buf_to_dword(&bufptr[4]); */
         size = util_le_buf_to_dword(&bufptr[8]);
         data = &bufptr[12];
         bufptr += 12 + size;
@@ -253,9 +350,10 @@ static int network_recv_buffer(vice_network_socket_t * s, BYTE *buf, int len)
 
     while (received_total < len) {
         t = vice_network_receive(s, buf, len - received_total, 0);
-        
-        if (t < 0)
+
+        if (t < 0) {
             return t;
+        }
 
         received_total += t;
         buf += t;
@@ -276,9 +374,10 @@ static int network_send_buffer(vice_network_socket_t * s, const BYTE *buf, int l
 
     while (sent_total < len) {
         t = vice_network_send(s, buf, len - sent_total, SEND_FLAGS);
-        
-        if (t < 0)
+
+        if (t < 0) {
             return t;
+        }
 
         sent_total += t;
         buf += t;
@@ -313,8 +412,9 @@ static void network_test_delay(void)
         for (i = 0; i < NUM_OF_TESTPACKETS; i++) {
             pkt.t = vsyncarch_gettime();
             if (network_send_buffer(network_socket, buf, sizeof(testpacket)) < 0
-                || network_recv_buffer(network_socket, buf, sizeof(testpacket)) < 0)
+                || network_recv_buffer(network_socket, buf, sizeof(testpacket)) < 0) {
                 return;
+            }
             packet_delay[i] = vsyncarch_gettime() - pkt.t;
         }
         /* Sort the packets delays*/
@@ -327,7 +427,7 @@ static void network_test_delay(void)
                 }
             }
 #ifdef NETWORK_DEBUG
-            log_debug("packet_delay[%d]=%ld",i,packet_delay[i]);
+            log_debug("packet_delay[%d]=%ld", i, packet_delay[i]);
 #endif
         }
 #ifdef NETWORK_DEBUG
@@ -336,16 +436,17 @@ static void network_test_delay(void)
         /* calculate delay with 90% of packets beeing fast enough */
         /* FIXME: This needs some further investigation */
         new_frame_delta = 5 + (BYTE)(vsync_get_refresh_frequency()
-                            * packet_delay[(int)(0.1 * NUM_OF_TESTPACKETS)]
-                            / (float)vsyncarch_frequency());
+                                     * packet_delay[(int)(0.1 * NUM_OF_TESTPACKETS)]
+                                     / (float)vsyncarch_frequency());
         network_send_buffer(network_socket, &new_frame_delta,
                             sizeof(new_frame_delta));
     } else {
         /* network_mode == NETWORK_CLIENT */
         for (i = 0; i < NUM_OF_TESTPACKETS; i++) {
-            if (network_recv_buffer(network_socket, buf, sizeof(testpacket)) <  0
-                || network_send_buffer(network_socket, buf, sizeof(testpacket)) < 0)
+            if (network_recv_buffer(network_socket, buf, sizeof(testpacket)) < 0
+                || network_send_buffer(network_socket, buf, sizeof(testpacket)) < 0) {
                 return;
+            }
         }
         network_recv_buffer(network_socket, &new_frame_delta,
                             sizeof(new_frame_delta));
@@ -380,7 +481,7 @@ static void network_server_connect_trap(WORD addr, void *data)
         }
         buf_size = util_file_length(f);
         buf = lib_malloc(buf_size);
-        if (fread(buf, 1, buf_size, f) <= 0) {
+        if (fread(buf, 1, buf_size, f) == 0) {
             log_debug("network_server_connect_trap read failed.");
         }
         fclose(f);
@@ -430,18 +531,21 @@ static void network_client_connect_trap(WORD addr, void *data)
     event_list_state_t *settings_list;
 
     /* Set proper settings */
-    if (resources_set_event_safe() < 0)
+    if (resources_set_event_safe() < 0) {
         ui_error("Warning! Failed to set netplay-safe settings.");
+    }
 
     /* Receive settings that need to be same as on server */
-    if (network_recv_buffer(network_socket, recv_buf4, 4) < 0)
+    if (network_recv_buffer(network_socket, recv_buf4, 4) < 0) {
         return;
+    }
 
     buf_size = (size_t)util_le_buf4_to_int(recv_buf4);
     buf = lib_malloc(buf_size);
 
-    if (network_recv_buffer(network_socket, buf, (int)buf_size) < 0)
+    if (network_recv_buffer(network_socket, buf, (int)buf_size) < 0) {
         return;
+    }
 
     settings_list = network_create_event_list(buf);
     lib_free(buf);
@@ -475,37 +579,41 @@ void network_event_record(unsigned int type, void *data, unsigned int size)
     BYTE joyport;
 
     switch (type) {
-      case EVENT_KEYBOARD_MATRIX:
-      case EVENT_KEYBOARD_RESTORE:
-      case EVENT_KEYBOARD_DELAY:
-      case EVENT_KEYBOARD_CLEAR:
-        control = NETWORK_CONTROL_KEYB;
-        break;
-      case EVENT_ATTACHDISK:
-      case EVENT_ATTACHTAPE:
-      case EVENT_DATASETTE:
-        control = NETWORK_CONTROL_DEVC;
-        break;
-      case EVENT_RESOURCE:
-      case EVENT_RESETCPU:
-        control = NETWORK_CONTROL_RSRC;
-        break;
-      case EVENT_JOYSTICK_VALUE:
-        joyport = ((BYTE*)data)[0];
-        if (joyport == 1) 
-            control = NETWORK_CONTROL_JOY1;
-        if (joyport == 2) 
-            control = NETWORK_CONTROL_JOY2;
-        break;
-      default:
-        control = 0;
+        case EVENT_KEYBOARD_MATRIX:
+        case EVENT_KEYBOARD_RESTORE:
+        case EVENT_KEYBOARD_DELAY:
+        case EVENT_KEYBOARD_CLEAR:
+            control = NETWORK_CONTROL_KEYB;
+            break;
+        case EVENT_ATTACHDISK:
+        case EVENT_ATTACHTAPE:
+        case EVENT_DATASETTE:
+            control = NETWORK_CONTROL_DEVC;
+            break;
+        case EVENT_RESOURCE:
+        case EVENT_RESETCPU:
+            control = NETWORK_CONTROL_RSRC;
+            break;
+        case EVENT_JOYSTICK_VALUE:
+            joyport = ((BYTE*)data)[0];
+            if (joyport == 1) {
+                control = NETWORK_CONTROL_JOY1;
+            }
+            if (joyport == 2) {
+                control = NETWORK_CONTROL_JOY2;
+            }
+            break;
+        default:
+            control = 0;
     }
 
-    if (network_get_mode() == NETWORK_CLIENT)
+    if (network_get_mode() == NETWORK_CLIENT) {
         control <<= NETWORK_CONTROL_CLIENTOFFSET;
+    }
 
-    if (control != 0 && (control & network_control) == 0)
+    if (control != 0 && (control & network_control) == 0) {
         return;
+    }
 
     event_record_in_list(&(frame_event_list[current_frame]), type, data, size);
 }
@@ -514,11 +622,13 @@ void network_attach_image(unsigned int unit, const char *filename)
 {
     unsigned int control = NETWORK_CONTROL_DEVC;
 
-    if (network_get_mode() == NETWORK_CLIENT)
+    if (network_get_mode() == NETWORK_CLIENT) {
         control <<= NETWORK_CONTROL_CLIENTOFFSET;
+    }
 
-    if ((control & network_control) == 0)
+    if ((control & network_control) == 0) {
         return;
+    }
 
     event_record_attach_in_list(&(frame_event_list[current_frame]), unit, filename, 1);
 }
@@ -530,11 +640,12 @@ int network_get_mode(void)
 
 int network_connected(void)
 {
-    if (network_mode == NETWORK_SERVER_CONNECTED 
-        || network_mode ==  NETWORK_CLIENT)
+    if (network_mode == NETWORK_SERVER_CONNECTED
+        || network_mode == NETWORK_CLIENT) {
         return 1;
-    else
+    } else {
         return 0;
+    }
 }
 
 int network_start_server(void)
@@ -543,16 +654,17 @@ int network_start_server(void)
     int ret = -1;
 
     do {
-        if (network_mode != NETWORK_IDLE)
+        if (network_mode != NETWORK_IDLE) {
             break;
+        }
 
         server_addr = vice_network_address_generate(server_bind_address, server_port);
-        if ( ! server_addr ) {
+        if (!server_addr) {
             break;
         }
 
         listen_socket = vice_network_server(server_addr);
-        if ( ! listen_socket ) {
+        if (!listen_socket) {
             break;
         }
 
@@ -574,7 +686,7 @@ int network_start_server(void)
     }
 
     return ret;
-} 
+}
 
 
 int network_connect_client(void)
@@ -585,8 +697,9 @@ int network_connect_client(void)
     BYTE recv_buf4[4];
     size_t buf_size;
 
-    if (network_mode != NETWORK_IDLE)
+    if (network_mode != NETWORK_IDLE) {
         return -1;
+    }
 
     vsync_suspend_speed_eval();
 
@@ -608,9 +721,8 @@ int network_connect_client(void)
     vice_network_address_close(server_addr);
     server_addr = NULL;
 
-    if ( ! network_socket ) {
-        ui_error(translate_text(IDGS_CANNOT_CONNECT_TO_S),
-                    server_name, server_port);
+    if (!network_socket) {
+        ui_error(translate_text(IDGS_CANNOT_CONNECT_TO_S), server_name, server_port);
         lib_free(snapshotfilename);
         return -1;
     }
@@ -631,7 +743,7 @@ int network_connect_client(void)
         return -1;
     }
 
-    if (fwrite(buf, 1, buf_size, f) <= 0) {
+    if (fwrite(buf, 1, buf_size, f) == 0) {
         log_debug("network_connect_client write failed.");
     }
     fclose(f);
@@ -658,17 +770,17 @@ void network_suspend(void)
 {
     int dummy_buf_len = 0;
 
-    if (!network_connected() || suspended == 1)
+    if (!network_connected() || suspended == 1) {
         return;
+    }
 
-    network_send_buffer(network_socket, (BYTE*)&dummy_buf_len, 
-                        sizeof(unsigned int));
-    
+    network_send_buffer(network_socket, (BYTE*)&dummy_buf_len, sizeof(unsigned int));
+
     suspended = 1;
 }
 
 #ifdef NETWORK_DEBUG
-    long t1, t2, t3, t4;
+long t1, t2, t3, t4;
 #endif
 
 static void network_hook_connected_send(void)
@@ -708,8 +820,9 @@ static void network_hook_connected_receive(void)
 
     suspended = 0;
 
-    if (current_frame == frame_delta - 1)
+    if (current_frame == frame_delta - 1) {
         frame_buffer_full = 1;
+    }
 
     if (frame_buffer_full) {
         do {
@@ -728,8 +841,9 @@ static void network_hook_connected_receive(void)
             }
         } while (recv_len == 0);
 
-        if (suspended == 1)
+        if (suspended == 1) {
             ui_display_statustext("", 0);
+        }
 
         remote_event_buf = lib_malloc(recv_len);
 
@@ -758,7 +872,7 @@ static void network_hook_connected_receive(void)
         if (client_event_list->base->type == EVENT_SYNC_TEST
             && server_event_list->base->type == EVENT_SYNC_TEST) {
             int i;
-                
+
             for (i = 0; i < 5; i++) {
                 if (((DWORD *)client_event_list->base->data)[i]
                     != ((DWORD *)server_event_list->base->data)[i]) {
@@ -785,16 +899,18 @@ static void network_hook_connected_receive(void)
 
 void network_hook(void)
 {
-    if (network_mode == NETWORK_IDLE)
+    if (network_mode == NETWORK_IDLE) {
         return;
+    }
 
     if (network_mode == NETWORK_SERVER) {
         if (vice_network_select_poll_one(listen_socket) != 0) {
             network_socket = vice_network_accept(listen_socket);
 
-            if (network_socket)
+            if (network_socket) {
                 interrupt_maincpu_trigger_trap(network_server_connect_trap,
                                                (void *)0);
+            }
         }
     }
 
@@ -803,15 +919,16 @@ void network_hook(void)
         network_hook_connected_receive();
 #ifdef NETWORK_DEBUG
         log_debug("network_hook timing: %5ld %5ld %5ld; total: %5ld",
-                  t2-t1, t3-t2, t4-t3, t4-t1);
+                  t2 - t1, t3 - t2, t4 - t3, t4 - t1);
 #endif
     }
 }
 
 void network_shutdown(void)
 {
-    if (network_connected())
+    if (network_connected()) {
         network_disconnect();
+    }
 
     network_free_frame_event_list();
     lib_free(server_name);

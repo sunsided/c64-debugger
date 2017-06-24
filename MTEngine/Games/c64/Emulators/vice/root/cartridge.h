@@ -3,6 +3,7 @@
  *
  * Written by
  *  Andreas Boose <viceteam@t-online.de>
+ *  Marco van den Heuvel <blackystardust68@yahoo.com>
  *
  * This file is part of VICE, the Versatile Commodore Emulator.
  * See README for copyright notice.
@@ -102,7 +103,7 @@ extern void cartridge_ram_init(void);
 
 extern void cartridge_sound_chip_init(void);
 
-/* Carts that don't have a rom images */
+/* Carts that don't have a rom image */
 #define CARTRIDGE_DIGIMAX            -100 /* digimax.c */
 #define CARTRIDGE_DQBB               -101 /* dqbb.c */
 #define CARTRIDGE_GEORAM             -102 /* georam.c */
@@ -117,13 +118,15 @@ extern void cartridge_sound_chip_init(void);
 #define CARTRIDGE_MIDI_NAMESOFT      -111 /* c64-midi.c */
 #define CARTRIDGE_MIDI_MAPLIN        -112 /* c64-midi.c */
 #define CARTRIDGE_DS12C887RTC        -113 /* ds12c887rtc.c */
-#define CARTRIDGE_TFE                -116 /* tfe.c */
+#define CARTRIDGE_TFE                -116 /* ethernetcart.c */
 #define CARTRIDGE_TURBO232           -117 /* c64acia1.c */
 #define CARTRIDGE_SWIFTLINK          -118 /* c64acia1.c */
 #define CARTRIDGE_ACIA               -119 /* c64acia1.c */
 #define CARTRIDGE_PLUS60K            -120 /* plus60k.c */
 #define CARTRIDGE_PLUS256K           -121 /* plus256k.c */
 #define CARTRIDGE_C64_256K           -122 /* c64_256k.c */
+#define CARTRIDGE_CPM                -123 /* cpmcart.c */
+#define CARTRIDGE_DEBUGCART          -124 /* debugcart.c */
 
 /* Known cartridge types.  */
 /* TODO: cartconv (4k and 12k binaries) */
@@ -200,8 +203,12 @@ extern void cartridge_sound_chip_init(void);
 #define CARTRIDGE_KINGSOFT             54 /* kingsoft.c */
 #define CARTRIDGE_SILVERROCK_128       55 /* silverrock128.c */
 #define CARTRIDGE_FORMEL64             56 /* formel64.c */
+#define CARTRIDGE_RGCD                 57 /* rgcd.c */
+#define CARTRIDGE_RRNETMK3             58 /* rrnetmk3.c */
+#define CARTRIDGE_EASYCALC             59 /* easycalc.c */
+#define CARTRIDGE_GMOD2                60 /* gmod2.c */
 
-#define CARTRIDGE_LAST                 56 /* cartconv: last cartridge in list */
+#define CARTRIDGE_LAST                 60 /* cartconv: last cartridge in list */
 
 /* list of canonical names for the c64 cartridges:
    note: often it is hard to determine "the" official name, let alone the way it
@@ -226,7 +233,9 @@ extern void cartridge_sound_chip_init(void);
 #define CARTRIDGE_NAME_GS                 "C64 Games System" /* http://retro.lonningdal.net/home.php?page=Computers&select=c64gs&image=c64gs4.jpg */
 #define CARTRIDGE_NAME_CAPTURE            "Capture" /* see manual http://rr.pokefinder.org/wiki/Capture */
 #define CARTRIDGE_NAME_COMAL80            "Comal 80" /* http://www.retroport.de/C64_C128_Hardware.html */
+#define CARTRIDGE_NAME_CPM                "CP/M cartridge"
 #define CARTRIDGE_NAME_MIDI_DATEL         "Datel MIDI"
+#define CARTRIDGE_NAME_DEBUGCART          "Debug Cartridge"
 #define CARTRIDGE_NAME_DELA_EP64          "Dela EP64"
 #define CARTRIDGE_NAME_DELA_EP7x8         "Dela EP7x8"
 #define CARTRIDGE_NAME_DELA_EP256         "Dela EP256"
@@ -235,9 +244,11 @@ extern void cartridge_sound_chip_init(void);
 #define CARTRIDGE_NAME_DINAMIC            "Dinamic"
 #define CARTRIDGE_NAME_DQBB               "Double Quick Brown Box" /* on the cart itself its all uppercase ? */
 #define CARTRIDGE_NAME_DS12C887RTC        "DS12C887 Real Time Clock" /* Title of the page at http://ytm.bossstation.dnsalias.org/html/rtcds12c887.html */
+#define CARTRIDGE_NAME_EASYCALC           "Easy Calc Result" /* on the cart itself it's "Calc Result EASY", in the manual it's EASYCALC, but we'll go with what is defined ;) */
 #define CARTRIDGE_NAME_EASYFLASH          "EasyFlash" /* see http://skoe.de/easyflash/ */
 #define CARTRIDGE_NAME_EASYFLASH_XBANK    "EasyFlash Xbank" /* see http://skoe.de/easyflash/ */
 #define CARTRIDGE_NAME_EPYX_FASTLOAD      "Epyx FastLoad" /* http://rr.pokefinder.org/wiki/Epyx_FastLoad */
+#define CARTRIDGE_NAME_ETHERNETCART       "Ethernet cartridge"
 #define CARTRIDGE_NAME_EXOS               "EXOS" /* http://rr.pokefinder.org/wiki/ExOS */
 #define CARTRIDGE_NAME_EXPERT             "Expert Cartridge" /* http://rr.pokefinder.org/wiki/Expert_Cartridge */
 #define CARTRIDGE_NAME_FINAL_I            "The Final Cartridge" /* http://rr.pokefinder.org/wiki/Final_Cartridge */
@@ -250,6 +261,7 @@ extern void cartridge_sound_chip_init(void);
 #define CARTRIDGE_NAME_FUNPLAY            "Fun Play" /* also: "Power Play" */ /* http://home.nomansland.biz/~zerqent/commodore_salg/CIMG2132.JPG */
 #define CARTRIDGE_NAME_GAME_KILLER        "Game Killer" /* http://rr.pokefinder.org/wiki/Game_Killer */
 #define CARTRIDGE_NAME_GEORAM             "GEO-RAM" /* http://www.retroport.de/Rex.html */
+#define CARTRIDGE_NAME_GMOD2              "GMod2" /* http://wiki.icomp.de/wiki/GMod2 */
 #define CARTRIDGE_NAME_IDE64              "IDE64" /* see http://www.ide64.org/ */
 #define CARTRIDGE_NAME_IEEE488            "IEEE-488 Interface"
 #define CARTRIDGE_NAME_ISEPIC             "ISEPIC" /* http://rr.pokefinder.org/wiki/Isepic */
@@ -264,17 +276,19 @@ extern void cartridge_sound_chip_init(void);
 #define CARTRIDGE_NAME_MMC64              "MMC64" /* see manual */
 #define CARTRIDGE_NAME_MMC_REPLAY         "MMC Replay" /* see manual */
 #define CARTRIDGE_NAME_MIDI_NAMESOFT      "Namesoft MIDI"
+#define CARTRIDGE_NAME_MIDI_PASSPORT      "Passport MIDI"
+#define CARTRIDGE_NAME_MIDI_SEQUENTIAL    "Sequential MIDI"
 #define CARTRIDGE_NAME_NORDIC_REPLAY      "Nordic Replay" /* "Retro Replay v2" see manual */
 #define CARTRIDGE_NAME_OCEAN              "Ocean"
-#define CARTRIDGE_NAME_MIDI_PASSPORT      "Passport MIDI"
 #define CARTRIDGE_NAME_PAGEFOX            "Pagefox"
 #define CARTRIDGE_NAME_P64                "Prophet64" /* see http://www.prophet64.com/ */
 #define CARTRIDGE_NAME_RAMCART            "RamCart" /* see cc65 driver */
 #define CARTRIDGE_NAME_REU                "RAM Expansion Module" /* http://www.retroport.de/C64_C128_Hardware.html */
 #define CARTRIDGE_NAME_REX_EP256          "REX 256k EPROM Cart" /* http://www.retroport.de/Rex.html */
 #define CARTRIDGE_NAME_REX                "REX Utility"
+#define CARTRIDGE_NAME_RGCD               "RGCD"
 #define CARTRIDGE_NAME_RRNET              "RR-Net" /* see manual */
-#define CARTRIDGE_NAME_MIDI_SEQUENTIAL    "Sequential MIDI"
+#define CARTRIDGE_NAME_RRNETMK3           "RR-Net MK3" /* see manual */
 #define CARTRIDGE_NAME_RETRO_REPLAY       "Retro Replay" /* see manual */
 #define CARTRIDGE_NAME_ROSS               "ROSS"
 #define CARTRIDGE_NAME_SFX_SOUND_EXPANDER "SFX Sound Expander" /* http://www.floodgap.com/retrobits/ckb/secret/cbm-sfx-fmbport.jpg */
@@ -294,6 +308,9 @@ extern void cartridge_sound_chip_init(void);
 #define CARTRIDGE_NAME_WESTERMANN         "Westermann Learning"
 #define CARTRIDGE_NAME_ZAXXON             "Zaxxon"
 
+#define CARTRIDGE_NAME_GENERIC_8KB        "8k game"
+#define CARTRIDGE_NAME_GENERIC_16KB       "16k game"
+#define CARTRIDGE_NAME_ULTIMAX            "Ultimax"
 
 /*
  * VIC20 cartridge system
@@ -305,6 +322,10 @@ extern void cartridge_sound_chip_init(void);
 #define CARTRIDGE_VIC20_FP              4   /* vic-fp.c */
 #define CARTRIDGE_VIC20_IEEE488         5   /* vic20-ieee488.c */
 #define CARTRIDGE_VIC20_SIDCART         6   /* vic20-sidcart.c */
+#define CARTRIDGE_VIC20_UM              7   /* ultimem.c */
+#define CARTRIDGE_VIC20_IO2_RAM         8   /* ioramcart.c */
+#define CARTRIDGE_VIC20_IO3_RAM         9   /* ioramcart.c */
+#define CARTRIDGE_VIC20_BEHRBONZ       10   /* behrbonz.c */
 
 /*
  * VIC20 Generic cartridges
@@ -332,10 +353,16 @@ extern void cartridge_sound_chip_init(void);
 #define CARTRIDGE_VIC20_16KB_6000    0x8015
 
 /* list of canonical names for the VIC20 cartridges: */
+#define CARTRIDGE_VIC20_NAME_BEHRBONZ        "Behr Bonz"
 #define CARTRIDGE_VIC20_NAME_FINAL_EXPANSION "Final Expansion"
 #define CARTRIDGE_VIC20_NAME_MEGACART        "Mega-Cart" /* http://mega-cart.com/ */
+#define CARTRIDGE_VIC20_NAME_UM              "UltiMem"
 #define CARTRIDGE_VIC20_NAME_FP              "Vic Flash Plugin" /* http://www.ktverkko.fi/~msmakela/8bit/vfp/index.en.html */
-
+#define CARTRIDGE_VIC20_NAME_IO2_RAM         "I/O-2 RAM"
+#define CARTRIDGE_VIC20_NAME_IO3_RAM         "I/O-3 RAM"
+#define CARTRIDGE_VIC20_NAME_IEEE488         "IEEE488"
+#define CARTRIDGE_VIC20_NAME_MIDI            "MIDI"
+#define CARTRIDGE_VIC20_NAME_SIDCART         "SIDCART"
 
 /*
  * plus4 cartridge system
@@ -385,5 +412,21 @@ extern void cartridge_sound_chip_init(void);
 
 #define CARTRIDGE_FILETYPE_BIN  1
 #define CARTRIDGE_FILETYPE_CRT  2
+
+/* cartridge info for GUIs */
+typedef struct {
+    char *name;
+    int crtid;
+    unsigned int flags;
+} cartridge_info_t;
+
+#define CARTRIDGE_GROUP_GENERIC         0x0001
+#define CARTRIDGE_GROUP_RAMEX           0x0002
+
+#define CARTRIDGE_GROUP_FREEZER         0x0004
+#define CARTRIDGE_GROUP_GAME            0x0008
+#define CARTRIDGE_GROUP_UTIL            0x0010
+
+extern cartridge_info_t *cartridge_get_info_list(void);
 
 #endif

@@ -1148,6 +1148,82 @@ ui_menu_action_t sdljoy_autorepeat(void)
 //    }
 //}
 
+int joy_arch_cmdline_options_init(void)
+{
+	/*
+#ifdef HAVE_SDL_NUMJOYSTICKS
+	if (cmdline_register_options(cmdline_options) < 0) {
+		return -1;
+	}
+#endif
+	
+	if (sdlkbd_init_cmdline() < 0) {
+		return -1;
+	}
+	
+	if (joyport_get_port_name(JOYPORT_1)) {
+		if (cmdline_register_options(joydev1cmdline_options) < 0) {
+			return -1;
+		}
+	}
+	if (joyport_get_port_name(JOYPORT_2)) {
+		if (cmdline_register_options(joydev2cmdline_options) < 0) {
+			return -1;
+		}
+	}
+	if (joyport_get_port_name(JOYPORT_3)) {
+		if (cmdline_register_options(joydev3cmdline_options) < 0) {
+			return -1;
+		}
+	}
+	if (joyport_get_port_name(JOYPORT_4)) {
+		if (cmdline_register_options(joydev4cmdline_options) < 0) {
+			return -1;
+		}
+	}
+	if (joyport_get_port_name(JOYPORT_5)) {
+		if (cmdline_register_options(joydev5cmdline_options) < 0) {
+			return -1;
+		}
+	}
+	*/
+	
+	return 0;
+}
+
+int joy_arch_resources_init(void)
+{
+//	/* Init the keyboard resources here before resources_set_defaults is called */
+//	if (sdlkbd_init_resources() < 0) {
+//		return -1;
+//	}
+// 
+//#ifdef HAVE_SDL_NUMJOYSTICKS
+//	resources_string[0].factory_value = archdep_default_joymap_file_name();
+// 
+//	if (resources_register_string(resources_string) < 0) {
+//		return -1;
+//	}
+//	if (resources_register_int(resources_int) < 0) {
+//		return -1;
+//	}
+//#endif
+ 
+	return 0;
+}
+
+int joy_arch_set_device(int port_idx, int new_dev)
+{
+//	LOGTODO("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! joy_arch_set_device not implemented");
+	
+	
+//	if (new_dev < 0 || new_dev > JOYDEV_MAX) {
+//		return -1;
+//	}
+ 
+	return 0;
+}
+
 /* ------------------------------------------------------------------------- */
 
 void sdljoy_swap_ports(void)

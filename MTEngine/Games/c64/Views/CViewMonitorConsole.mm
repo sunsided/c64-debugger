@@ -9,6 +9,7 @@
 #include "CGuiMain.h"
 #include "CViewDisassemble.h"
 #include "CViewMemoryMap.h"
+#include "C64D_Version.h"
 
 #define C64DEBUGGER_MONITOR_HISTORY_FILE_VERSION	1
 

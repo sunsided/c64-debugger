@@ -16,20 +16,20 @@ CViewC64Screen::CViewC64Screen(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	
 	int w = 512;
 	int h = 512;
-	CImageData *imageData = new CImageData(w, h, IMG_TYPE_RGBA);
-	imageData->AllocImage(false, true);
+	imageDataScreen = new CImageData(w, h, IMG_TYPE_RGBA);
+	imageDataScreen->AllocImage(false, true);
 	
 	//	for (int x = 0; x < w; x++)
 	//	{
 	//		for (int y = 0; y < h; y++)
 	//		{
-	//			imageData->SetPixelResultRGBA(x, y, x % 255, y % 255, 0, 255);
+	//			imageDataScreen->SetPixelResultRGBA(x, y, x % 255, y % 255, 0, 255);
 	//		}
 	//	}
 	
 	
 	imageScreen = new CSlrImage(true, true);
-	imageScreen->LoadImage(imageData, RESOURCE_PRIORITY_STATIC, false);
+	imageScreen->LoadImage(imageDataScreen, RESOURCE_PRIORITY_STATIC, false);
 	imageScreen->resourceType = RESOURCE_TYPE_IMAGE_DYNAMIC;
 	imageScreen->resourcePriority = RESOURCE_PRIORITY_STATIC;
 	VID_PostImageBinding(imageScreen, NULL);
@@ -54,13 +54,14 @@ CViewC64Screen::CViewC64Screen(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 //	
 //	debugInterface->breakOnC64Raster = true;
 
-	InitRasterColors();
+	InitRasterColorsFromScheme();
 }
 
 CViewC64Screen::~CViewC64Screen()
 {
 }
 
+// TODO: move this to Tools (copy in CViewC64VideoCharacterMode)
 void CViewC64Screen::GetRasterColorScheme(int schemeNum, float splitAmount, float *r, float *g, float *b)
 {
 	switch(schemeNum)
@@ -111,7 +112,7 @@ void CViewC64Screen::GetRasterColorScheme(int schemeNum, float splitAmount, floa
 
 }
 
-void CViewC64Screen::InitRasterColors()
+void CViewC64Screen::InitRasterColorsFromScheme()
 {
 	// grid lines
 	GetRasterColorScheme(c64SettingsScreenGridLinesColorScheme, 0.0f,
@@ -202,6 +203,28 @@ void CViewC64Screen::RefreshScreen()
 void CViewC64Screen::Render()
 {
 	// render texture of C64's screen
+	
+	if (c64SettingsRenderScreenNearest)
+	{
+		// nearest neighbour
+		{
+			glBindTexture(GL_TEXTURE_2D, imageScreen->texture[0]);
+			
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+		}
+	}
+	else
+	{
+		// billinear interpolation
+		{
+			glBindTexture(GL_TEXTURE_2D, imageScreen->texture[0]);
+			
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+		}
+	}
+	
 	Blit(imageScreen,
 		 posX,
 		 posY, -1,
@@ -244,6 +267,7 @@ void CViewC64Screen::Render()
 //		float cx = posX + (float)rasterX * rasterScaleFactorX  + rasterCrossOffsetX;
 //		float cy = posY + (float)rasterY * rasterScaleFactorY  + rasterCrossOffsetY;
 	}
+	
 }
 
 void CViewC64Screen::SetZoomedScreenPos(float zoomedScreenPosX, float zoomedScreenPosY, float zoomedScreenSizeX, float zoomedScreenSizeY)
@@ -292,12 +316,25 @@ void CViewC64Screen::RenderZoomedScreen(int rasterX, int rasterY)
 	
 	//LOGD("x=%6.2f %6.2f  y=%6.2f y=%6.2f", zoomedScreenImageStartX, zoomedScreenImageStartY, zoomedScreenImageSizeX, zoomedScreenImageSizeY);
 
-	// nearest neighbour
+	if (c64SettingsRenderScreenNearest)
 	{
-		glBindTexture(GL_TEXTURE_2D, imageScreen->texture[0]);
-
-		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+		// nearest neighbour
+		{
+			glBindTexture(GL_TEXTURE_2D, imageScreen->texture[0]);
+			
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+		}
+	}
+	else
+	{
+		// billinear interpolation
+		{
+			glBindTexture(GL_TEXTURE_2D, imageScreen->texture[0]);
+			
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+		}
 	}
 	
 	Blit(imageScreen,
@@ -307,19 +344,11 @@ void CViewC64Screen::RenderZoomedScreen(int rasterX, int rasterY)
 		 zoomedScreenImageSizeY,
 		 0.0f, 1.0f, screenTexEndX, screenTexEndY);
 	
-	// back to linear scale
-	{
-		glBindTexture(GL_TEXTURE_2D, imageScreen->texture[0]);
-		
-		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-	}
-
 	// clipping
 	BlitRectangle(zoomedScreenPosX, zoomedScreenPosY, -1, zoomedScreenSizeX, zoomedScreenSizeY, 0.0f, 1.0f, 1.0f, 1.0f);
 	
 	
-	float rs = 1.0f;
+	float rs = 0.3f;
 	float rs2 = rs*2.0f;
 	BlitFilledRectangle(zoomedScreenCenterX - rs, zoomedScreenPosY, -1, rs2, zoomedScreenSizeY,
 						rasterLongScrenLineR, rasterLongScrenLineG, rasterLongScrenLineB, rasterLongScrenLineA);
@@ -327,6 +356,11 @@ void CViewC64Screen::RenderZoomedScreen(int rasterX, int rasterY)
 						rasterLongScrenLineR, rasterLongScrenLineG, rasterLongScrenLineB, rasterLongScrenLineA);
 	
 	ResetClipping();
+	
+	if (this->hasFocus)
+	{
+		this->RenderFocusBorder();
+	}
 }
 
 
@@ -506,13 +540,39 @@ void CViewC64Screen::FinishTouches()
 
 bool CViewC64Screen::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
-	LOGD(".......... CViewC64Screen::KeyDown: keyCode=%d", keyCode);
+	LOGI(".......... CViewC64Screen::KeyDown: keyCode=%d", keyCode);
 //	u32 bareKey = SYS_GetBareKey(keyCode, isShift, isAlt, isControl);
 	
 	debugInterface->LockIoMutex();
+	
+	/*
+	std::map<u32, bool>::iterator it = pressedKeyCodes.find(keyCode);
 
+	if (it == pressedKeyCodes.end())
+	{
+		pressedKeyCodes[keyCode] = true;
+	}
+	else
+	{
+		// key is already pressed
+		LOGD("key %d is already pressed, skipping...", keyCode);
+		debugInterface->UnlockIoMutex();
+		return true;
+	}
+	 */
+	
+	
 	keyCode = SYS_KeyCodeConvertSpecial(keyCode, isShift, isAlt, isControl);
 
+
+	LOGI(".........SYS_KeyCodeConvertSpecial converted key is ", keyCode);
+	
+	
+	/// GIANA SISTERS' pause workaround
+//	if (isShift)
+//		return true;
+	
+	
 	debugInterface->KeyboardDown(keyCode); //bareKey);
 	debugInterface->UnlockIoMutex();
 	return true;
@@ -522,12 +582,31 @@ bool CViewC64Screen::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContr
 
 bool CViewC64Screen::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
-	LOGD(".......... CViewC64Screen::KeyUp: keyCode=%d", keyCode);
+	LOGI(".......... CViewC64Screen::KeyUp: keyCode=%d", keyCode);
 //	u32 bareKey = SYS_GetBareKey(keyCode, isShift, isAlt, isControl);
 	
 	debugInterface->LockIoMutex();
 	
+	/*
+	std::map<u32, bool>::iterator it = pressedKeyCodes.find(keyCode);
+	
+	if (it == pressedKeyCodes.end())
+	{
+		// key is already not pressed
+		LOGD("key %d is already not pressed, skipping...", keyCode);
+		debugInterface->UnlockIoMutex();
+		
+		return true;
+	}
+	else
+	{
+		pressedKeyCodes.erase(it);
+	}
+	 */
+	 
 	keyCode = SYS_KeyCodeConvertSpecial(keyCode, isShift, isAlt, isControl);
+
+	LOGI(".........SYS_KeyCodeConvertSpecial converted key is ", keyCode);
 
 	debugInterface->KeyboardUp(keyCode); //bareKey);
 	debugInterface->UnlockIoMutex();

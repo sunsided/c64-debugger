@@ -25,6 +25,7 @@
 #include "CGuiTheme.h"
 #include "CGlobalKeyboardCallback.h"
 #include "CGlobalLogicCallback.h"
+#include "CGlobalOSWindowChangedCallback.h"
 #include "CConfigStorage.h"
 
 #include "RES_ResourceManager.h"
@@ -107,6 +108,12 @@ public:
 	void AddGlobalLogicCallback(CGlobalLogicCallback *callback);
 	void RemoveGlobalLogicCallback(CGlobalLogicCallback *callback);
 	void ClearGlobalLogicCallbacks();
+	
+	std::list<CGlobalOSWindowChangedCallback *> globalOSWindowChangedCallbacks;
+	void AddGlobalOSWindowChangedCallback(CGlobalOSWindowChangedCallback *callback);
+	void RemoveGlobalOSWindowChangedCallback(CGlobalOSWindowChangedCallback *callback);
+	void ClearGlobalOSWindowChangedCallbacks();
+	void NotifyGlobalOSWindowChangedCallbacks();
 
 #if defined(USE_DEBUGSCREEN)
 	CDebugScreen *debugScreen;
@@ -211,11 +218,25 @@ public:
 	bool isKeyDown;
 	void KeyPressed(u32 keyCode, bool isShift, bool isAlt, bool isControl);	// repeats
 
+	volatile bool isShiftPressed;
+	volatile bool isControlPressed;
+	volatile bool isAltPressed;
+
+	volatile bool isLeftShiftPressed;
+	volatile bool isLeftControlPressed;
+	volatile bool isLeftAltPressed;
+
+	volatile bool isRightShiftPressed;
+	volatile bool isRightControlPressed;
+	volatile bool isRightAltPressed;
+
 	void LockRenderMutex();
 	void UnlockRenderMutex();
 
 	void LockMutex();
 	void UnlockMutex();
+
+	float mousePosX, mousePosY;
 
 private:
 	CSlrMutex *renderMutex;
@@ -232,6 +253,7 @@ private:
 	
 	// temporary walkaround
 	volatile bool isTapping;
+	
 };
 
 class CViewLoaderThread : public CSlrThread

@@ -54,7 +54,7 @@ public:
 	
 	void DumpSidWaveform(uint8 wave, char *buf);
 	
-	virtual void SetFocus(bool focus);
+	virtual bool SetFocus(bool focus);
 
 	CViewC64StateSIDWaveform *sidChannelWaveform[3];
 	CViewC64StateSIDWaveform *sidMixWaveform;

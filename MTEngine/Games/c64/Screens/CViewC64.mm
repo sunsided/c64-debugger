@@ -1,6 +1,10 @@
 //
 // C64 Debugger (C) Marcin Skoczylas, slajerek@gmail.com
 //
+// created on 2016-02-22
+
+// define also in CGuiMain
+//#define DO_NOT_USE_AUDIO_QUEUE
 
 extern "C"{
 #include "c64mem.h"
@@ -26,14 +30,18 @@ extern "C"{
 #include "CViewC64StateVIC.h"
 #include "CViewDrive1541State.h"
 #include "CViewEmulationState.h"
+#include "CViewC64VicDisplay.h"
+#include "CViewC64VicControl.h"
 #include "CViewBreakpoints.h"
 #include "CViewMainMenu.h"
 #include "CViewSettingsMenu.h"
+#include "CViewFileD64.h"
 #include "CViewC64KeyMap.h"
 #include "CViewKeyboardShortcuts.h"
 #include "CViewMonitorConsole.h"
 #include "CViewSnapshots.h"
 #include "CViewAbout.h"
+#include "CViewVicEditor.h"
 #include "C64FileDataAdapter.h"
 #include "C64KeyboardShortcuts.h"
 #include "CSlrString.h"
@@ -44,9 +52,12 @@ extern "C"{
 #include "C64DebugInterfaceVice.h"
 #include "C64CommandLine.h"
 #include "C64SharedMemory.h"
+#include "C64SIDFrequencies.h"
 #include "SND_SoundEngine.h"
 
 CViewC64 *viewC64 = NULL;
+
+long c64dStartupTime = 0;
 
 #define TEXT_ADDR	0x0400
 #define COLOR_ADDR	0xD800
@@ -57,22 +68,19 @@ CViewC64::CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 	this->name = "CViewC64";
 	viewC64 = this;
 	
+	c64dStartupTime = SYS_GetCurrentTimeInMillis();
+	
 	C64InitPalette();
 	
 	isEmulationThreadRunning = false;
 
 	if (c64SettingsDefaultScreenLayoutId < 0)
 	{
-		c64SettingsDefaultScreenLayoutId = C64_SCREEN_LAYOUT_C64_DATA_DUMP; //C64_SCREEN_LAYOUT_C64_DEBUGGER;
+		c64SettingsDefaultScreenLayoutId = C64_SCREEN_LAYOUT_C64_DATA_DUMP;
 		
 		LOGD("set c64SettingsDefaultScreenLayoutId=%d", c64SettingsDefaultScreenLayoutId);
 	}
 	
-	//C64_SCREEN_LAYOUT_C64_DEBUGGER);
-	//C64_SCREEN_LAYOUT_C64_1541_MEMORY_MAP; //C64_SCREEN_LAYOUT_C64_ONLY //
-	//C64_SCREEN_LAYOUT_SHOW_STATES; //C64_SCREEN_LAYOUT_C64_DATA_DUMP
-	//C64_SCREEN_LAYOUT_C64_1541_DEBUGGER
-
 	C64DebuggerInitSharedMemory();
 	SYS_SharedMemoryRegisterCallback(viewC64);
 
@@ -83,8 +91,11 @@ CViewC64::CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 	
 	
 	LOGM("sound engine startup");
+#ifndef DO_NOT_USE_AUDIO_QUEUE
 	gSoundEngine->StartAudioUnit(true, false, 0);
-
+#endif
+	
+	SID_FrequenciesInit();
 
 	mappedC64Memory = NULL;
 	mappedC64MemoryDescriptor = NULL;
@@ -122,6 +133,7 @@ CViewC64::CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 	traversalOfViews.push_back(viewDrive1541MemoryDataDump);
 	traversalOfViews.push_back(viewDrive1541MemoryMap);
 	traversalOfViews.push_back(viewMonitorConsole);
+	traversalOfViews.push_back(viewC64VicDisplay);
 	
 
 	// add views
@@ -133,6 +145,9 @@ CViewC64::CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 	
 	viewC64SettingsMenu = new CViewSettingsMenu(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	guiMain->AddGuiElement(viewC64SettingsMenu);
+	
+	viewFileD64 = new CViewFileD64(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT);
+	guiMain->AddGuiElement(viewFileD64);
 	
 	viewC64Breakpoints = new CViewBreakpoints(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	guiMain->AddGuiElement(viewC64Breakpoints);
@@ -149,6 +164,10 @@ CViewC64::CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 	viewAbout = new CViewAbout(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	guiMain->AddGuiElement(viewAbout);
 
+	//
+	viewVicEditor = new CViewVicEditor(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT);
+	guiMain->AddGuiElement(viewVicEditor);
+
 	SYS_AddApplicationPauseResumeListener(this);
 
 	
@@ -162,6 +181,8 @@ CViewC64::CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 	C64DebuggerComputeMemoryMapColorTables(c64SettingsMemoryValuesStyle);
 	C64DebuggerSetMemoryMapMarkersStyle(c64SettingsMemoryMarkersStyle);
 
+	bool isInVicEditor = c64SettingsIsInVicEditor;
+	
 	LOGD("... after parsing c64SettingsDefaultScreenLayoutId=%d", c64SettingsDefaultScreenLayoutId);
 	if (c64SettingsDefaultScreenLayoutId >= C64_SCREEN_LAYOUT_MAX)
 	{
@@ -172,6 +193,7 @@ CViewC64::CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 	}
 	this->SwitchToScreenLayout(c64SettingsDefaultScreenLayoutId);
 
+	c64SettingsIsInVicEditor = isInVicEditor;
 	
 	// finished starting up
 	RES_SetStateIdle();
@@ -191,19 +213,34 @@ CViewC64::CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 	
 	viewKeyboardShortcuts->UpdateQuitShortcut();
 
+	//
+	C64SetPaletteNum(c64SettingsVicPalette);
 
-	guiMain->SetView(this);
-	
-//	guiMain->SetView(viewKeyboardShortcuts);
-//	guiMain->SetView(viewC64KeyMap);
-//	guiMain->SetView(viewAbout);
-//	guiMain->SetView(viewC64SettingsMenu);
-//	guiMain->SetView(viewC64MainMenu);
-//	guiMain->SetView(viewC64Breakpoints);
-
-
+	// start
+	ShowMainScreen();
 }
 
+void CViewC64::ShowMainScreen()
+{
+	if (c64SettingsIsInVicEditor)
+	{
+		guiMain->SetView(viewVicEditor);
+	}
+	else
+	{
+		guiMain->SetView(this);
+	}
+
+	//	guiMain->SetView(viewKeyboardShortcuts);
+	//	guiMain->SetView(viewC64KeyMap);
+	//	guiMain->SetView(viewAbout);
+	//	guiMain->SetView(viewC64SettingsMenu);
+	//	guiMain->SetView(viewC64MainMenu);
+	//	guiMain->SetView(viewC64Breakpoints);
+	//	guiMain->SetView(viewVicEditor);
+
+	CheckMouseCursorVisibility();
+}
 
 CViewC64::~CViewC64()
 {
@@ -268,9 +305,9 @@ void CViewC64::InitViews()
 											  debugInterface->dataAdapterC64, viewC64MemoryMap, viewC64Disassemble, debugInterface);
 	this->AddGuiElement(viewC64MemoryDataDump);
 	viewDrive1541MemoryDataDump = new CViewDataDump(10, 10, -1, 300, 300,
-													debugInterface->dataAdapterDrive1541, viewDrive1541MemoryMap, viewDrive1541Disassemble, debugInterface);
+													debugInterface->dataAdapterDrive1541, viewDrive1541MemoryMap, viewDrive1541Disassemble,
+													debugInterface);
 	this->AddGuiElement(viewDrive1541MemoryDataDump);
-	
 	
 	
 	viewC64StateCIA = new CViewC64StateCIA(0, 0, posZ, SCREEN_WIDTH, SCREEN_HEIGHT, debugInterface);
@@ -283,6 +320,12 @@ void CViewC64::InitViews()
 	this->AddGuiElement(viewC64StateDrive1541);
 	viewEmulationState = new CViewEmulationState(0, 0, posZ, SCREEN_WIDTH, SCREEN_HEIGHT, debugInterface);
 	this->AddGuiElement(viewEmulationState);
+	
+	viewC64VicDisplay = new CViewC64VicDisplay(0, 0, posZ, SCREEN_WIDTH, SCREEN_HEIGHT, debugInterface);
+	this->AddGuiElement(viewC64VicDisplay);
+
+	viewC64VicControl = new CViewC64VicControl(0, 0, posZ, SCREEN_WIDTH, SCREEN_HEIGHT, viewC64VicDisplay);
+	this->AddGuiElement(viewC64VicControl);
 	
 	viewMonitorConsole = new CViewMonitorConsole(0, 0, posZ, SCREEN_WIDTH, SCREEN_HEIGHT, debugInterface);
 	this->AddGuiElement(viewMonitorConsole);
@@ -304,9 +347,9 @@ void CViewC64::InitLayouts()
 	screenPositions[m] = new C64ScreenLayout();
 	scale = (float)SCREEN_HEIGHT / (float)debugInterface->GetC64ScreenSizeY();
 	screenPositions[m]->c64ScreenVisible = true;
-	screenPositions[m]->screenSizeX = (float)debugInterface->GetC64ScreenSizeX() * scale;
-	screenPositions[m]->screenSizeY = (float)debugInterface->GetC64ScreenSizeY() * scale;
-	screenPositions[m]->c64ScreenX = ((float)SCREEN_WIDTH-screenPositions[m]->screenSizeX)/2.0f;
+	screenPositions[m]->c64ScreenSizeX = (float)debugInterface->GetC64ScreenSizeX() * scale;
+	screenPositions[m]->c64ScreenSizeY = (float)debugInterface->GetC64ScreenSizeY() * scale;
+	screenPositions[m]->c64ScreenX = ((float)SCREEN_WIDTH-screenPositions[m]->c64ScreenSizeX)/2.0f - 0.78f;
 	screenPositions[m]->c64ScreenY = 0.0f;
 	
 	m = C64_SCREEN_LAYOUT_C64_DEBUGGER;
@@ -316,8 +359,8 @@ void CViewC64::InitLayouts()
 	screenPositions[m]->c64ScreenVisible = true;
 	screenPositions[m]->c64ScreenX = 180.0f;
 	screenPositions[m]->c64ScreenY = 10.0f;
-	screenPositions[m]->screenSizeX = (float)debugInterface->GetC64ScreenSizeX() * scale;
-	screenPositions[m]->screenSizeY = (float)debugInterface->GetC64ScreenSizeY() * scale;
+	screenPositions[m]->c64ScreenSizeX = (float)debugInterface->GetC64ScreenSizeX() * scale;
+	screenPositions[m]->c64ScreenSizeY = (float)debugInterface->GetC64ScreenSizeY() * scale;
 	screenPositions[m]->c64StateVisible = true;
 	screenPositions[m]->c64StateX = 181.0f;
 	screenPositions[m]->c64StateY = 0.0f;
@@ -329,6 +372,7 @@ void CViewC64::InitLayouts()
 	screenPositions[m]->c64DisassembleSizeY = SCREEN_HEIGHT-4.0f;
 	screenPositions[m]->c64DisassembleNumberOfLines = 46;
 	screenPositions[m]->c64DisassembleShowHexCodes = true;
+	screenPositions[m]->c64DisassembleShowCodeCycles = true;
 	screenPositions[m]->c64DataDumpVisible = true;
 	screenPositions[m]->c64DataDumpX = 178.0f;
 	screenPositions[m]->c64DataDumpY = 195.0f;
@@ -352,8 +396,8 @@ void CViewC64::InitLayouts()
 	screenPositions[m]->c64ScreenVisible = true;
 	screenPositions[m]->c64ScreenX = 420.0f;
 	screenPositions[m]->c64ScreenY = 10.0f;
-	screenPositions[m]->screenSizeX = (float)debugInterface->GetC64ScreenSizeX() * scale;
-	screenPositions[m]->screenSizeY = (float)debugInterface->GetC64ScreenSizeY() * scale;
+	screenPositions[m]->c64ScreenSizeX = (float)debugInterface->GetC64ScreenSizeX() * scale;
+	screenPositions[m]->c64ScreenSizeY = (float)debugInterface->GetC64ScreenSizeY() * scale;
 	screenPositions[m]->c64StateVisible = true;
 	screenPositions[m]->c64StateX = 78.0f;
 	screenPositions[m]->c64StateY = 0.0f;
@@ -387,8 +431,8 @@ void CViewC64::InitLayouts()
 	screenPositions[m]->c64ScreenVisible = true;
 	screenPositions[m]->c64ScreenX = 80.0f;
 	screenPositions[m]->c64ScreenY = 10.0f;
-	screenPositions[m]->screenSizeX = (float)debugInterface->GetC64ScreenSizeX() * scale;
-	screenPositions[m]->screenSizeY = (float)debugInterface->GetC64ScreenSizeY() * scale;
+	screenPositions[m]->c64ScreenSizeX = (float)debugInterface->GetC64ScreenSizeX() * scale;
+	screenPositions[m]->c64ScreenSizeY = (float)debugInterface->GetC64ScreenSizeY() * scale;
 	screenPositions[m]->c64StateVisible = true;
 	screenPositions[m]->c64StateX = 80.0f;
 	screenPositions[m]->c64StateY = 0.0f;
@@ -444,8 +488,8 @@ void CViewC64::InitLayouts()
 	screenPositions[m]->c64ScreenVisible = true;
 	screenPositions[m]->c64ScreenX = 190.0f;
 	screenPositions[m]->c64ScreenY = 10.0f;
-	screenPositions[m]->screenSizeX = (float)debugInterface->GetC64ScreenSizeX() * scale;
-	screenPositions[m]->screenSizeY = (float)debugInterface->GetC64ScreenSizeY() * scale;
+	screenPositions[m]->c64ScreenSizeX = (float)debugInterface->GetC64ScreenSizeX() * scale;
+	screenPositions[m]->c64ScreenSizeY = (float)debugInterface->GetC64ScreenSizeY() * scale;
 	screenPositions[m]->c64StateVisible = true;
 	screenPositions[m]->c64StateX = 78.0f;
 	screenPositions[m]->c64StateY = 0.0f;
@@ -483,9 +527,9 @@ void CViewC64::InitLayouts()
 	scale = 0.676f;
 	screenPositions[m]->c64ScreenVisible = true;
 	screenPositions[m]->c64ScreenY = 10.5f;
-	screenPositions[m]->screenSizeX = (float)debugInterface->GetC64ScreenSizeX() * scale;
-	screenPositions[m]->screenSizeY = (float)debugInterface->GetC64ScreenSizeY() * scale;
-	screenPositions[m]->c64ScreenX = SCREEN_WIDTH - screenPositions[m]->screenSizeX-3.0f;
+	screenPositions[m]->c64ScreenSizeX = (float)debugInterface->GetC64ScreenSizeX() * scale;
+	screenPositions[m]->c64ScreenSizeY = (float)debugInterface->GetC64ScreenSizeY() * scale;
+	screenPositions[m]->c64ScreenX = SCREEN_WIDTH - screenPositions[m]->c64ScreenSizeX-3.0f;
 	screenPositions[m]->c64StateVisible = true;
 	screenPositions[m]->c64StateX = screenPositions[m]->c64ScreenX;
 	screenPositions[m]->c64StateY = 0.0f;
@@ -519,9 +563,9 @@ void CViewC64::InitLayouts()
 	scale = 0.676f;
 	screenPositions[m]->c64ScreenVisible = true;
 	screenPositions[m]->c64ScreenY = 10.5f;
-	screenPositions[m]->screenSizeX = (float)debugInterface->GetC64ScreenSizeX() * scale;
-	screenPositions[m]->screenSizeY = (float)debugInterface->GetC64ScreenSizeY() * scale;
-	screenPositions[m]->c64ScreenX = SCREEN_WIDTH - screenPositions[m]->screenSizeX-3.0f;
+	screenPositions[m]->c64ScreenSizeX = (float)debugInterface->GetC64ScreenSizeX() * scale;
+	screenPositions[m]->c64ScreenSizeY = (float)debugInterface->GetC64ScreenSizeY() * scale;
+	screenPositions[m]->c64ScreenX = SCREEN_WIDTH - screenPositions[m]->c64ScreenSizeX-3.0f;
 	screenPositions[m]->c64StateVisible = true;
 	screenPositions[m]->c64StateX = screenPositions[m]->c64ScreenX;
 	screenPositions[m]->c64StateY = 0.0f;
@@ -564,9 +608,9 @@ void CViewC64::InitLayouts()
 	scale = 0.676f;
 	screenPositions[m]->c64ScreenVisible = true;
 	screenPositions[m]->c64ScreenY = 10.5f;
-	screenPositions[m]->screenSizeX = (float)debugInterface->GetC64ScreenSizeX() * scale;
-	screenPositions[m]->screenSizeY = (float)debugInterface->GetC64ScreenSizeY() * scale;
-	screenPositions[m]->c64ScreenX = SCREEN_WIDTH - screenPositions[m]->screenSizeX-3.0f;
+	screenPositions[m]->c64ScreenSizeX = (float)debugInterface->GetC64ScreenSizeX() * scale;
+	screenPositions[m]->c64ScreenSizeY = (float)debugInterface->GetC64ScreenSizeY() * scale;
+	screenPositions[m]->c64ScreenX = SCREEN_WIDTH - screenPositions[m]->c64ScreenSizeX-3.0f;
 	screenPositions[m]->c64StateVisible = true;
 	screenPositions[m]->c64StateX = screenPositions[m]->c64ScreenX;
 	screenPositions[m]->c64StateY = 0.0f;
@@ -578,7 +622,7 @@ void CViewC64::InitLayouts()
 	screenPositions[m]->monitorConsoleFontScale = 1.25f;
 	screenPositions[m]->monitorConsoleNumLines = 23;
 	screenPositions[m]->monitorConsoleSizeX = 310.0f;
-	screenPositions[m]->monitorConsoleSizeY = screenPositions[m]->screenSizeY + 10.5f;
+	screenPositions[m]->monitorConsoleSizeY = screenPositions[m]->c64ScreenSizeY + 10.5f;
 
 	screenPositions[m]->c64DisassembleVisible = true;
 	screenPositions[m]->c64DisassembleFontSize = 5.0f;
@@ -588,6 +632,7 @@ void CViewC64::InitLayouts()
 	screenPositions[m]->c64DisassembleSizeY = SCREEN_HEIGHT-200.5f;
 	screenPositions[m]->c64DisassembleNumberOfLines = 31;
 	screenPositions[m]->c64DisassembleShowHexCodes = true;
+	screenPositions[m]->c64DisassembleShowCodeCycles = true;
 	
 	screenPositions[m]->c64DataDumpVisible = true;
 	screenPositions[m]->c64DataDumpX = 128.0f;
@@ -615,6 +660,7 @@ void CViewC64::InitLayouts()
 	screenPositions[m]->drive1541DisassembleSizeY = SCREEN_HEIGHT-200.5f;
 	screenPositions[m]->drive1541DisassembleNumberOfLines = 31;
 	screenPositions[m]->drive1541DisassembleShowHexCodes = true;
+	screenPositions[m]->drive1541DisassembleShowCodeCycles = true;
 	
 	screenPositions[m]->drive1541DataDumpVisible = false;
 	screenPositions[m]->drive1541DataDumpX = 128.0f;
@@ -639,9 +685,9 @@ void CViewC64::InitLayouts()
 	scale = 0.676f;
 	screenPositions[m]->c64ScreenVisible = true;
 	screenPositions[m]->c64ScreenY = 10.5f;
-	screenPositions[m]->screenSizeX = (float)debugInterface->GetC64ScreenSizeX() * scale;
-	screenPositions[m]->screenSizeY = (float)debugInterface->GetC64ScreenSizeY() * scale;
-	screenPositions[m]->c64ScreenX = SCREEN_WIDTH - screenPositions[m]->screenSizeX-3.0f;
+	screenPositions[m]->c64ScreenSizeX = (float)debugInterface->GetC64ScreenSizeX() * scale;
+	screenPositions[m]->c64ScreenSizeY = (float)debugInterface->GetC64ScreenSizeY() * scale;
+	screenPositions[m]->c64ScreenX = SCREEN_WIDTH - screenPositions[m]->c64ScreenSizeX-3.0f;
 	
 	screenPositions[m]->c64ScreenShowGridLines = true;
 	screenPositions[m]->c64ScreenShowZoomedScreen = true;
@@ -662,6 +708,7 @@ void CViewC64::InitLayouts()
 	screenPositions[m]->c64DisassembleSizeY = SCREEN_HEIGHT-4.0f;
 	screenPositions[m]->c64DisassembleNumberOfLines = 46;
 	screenPositions[m]->c64DisassembleShowHexCodes = true;
+	screenPositions[m]->c64DisassembleShowCodeCycles = true;
 	screenPositions[m]->c64DisassembleShowLabels = true;
 	screenPositions[m]->c64DataDumpVisible = false;
 //	screenPositions[m]->c64DataDumpX = 178.0f;
@@ -679,12 +726,138 @@ void CViewC64::InitLayouts()
 	screenPositions[m]->c64StateVICY = 330.0f; //308.0f;
 	screenPositions[m]->c64StateVICIsVertical = true;
 	screenPositions[m]->c64StateVICShowSprites = false;
+
+	//
+	m = C64_SCREEN_LAYOUT_VIC_DISPLAY;
+	screenPositions[m] = new C64ScreenLayout();
+	scale = 0.35f;
+	screenPositions[m]->c64ScreenVisible = true;
+	screenPositions[m]->c64ScreenSizeX = (float)debugInterface->GetC64ScreenSizeX() * scale;
+	screenPositions[m]->c64ScreenSizeY = (float)debugInterface->GetC64ScreenSizeY() * scale;
+	screenPositions[m]->c64ScreenX = SCREEN_WIDTH - screenPositions[m]->c64ScreenSizeX-1.0f;
+	screenPositions[m]->c64ScreenY = 15.0f;
 	
+	screenPositions[m]->c64ScreenShowZoomedScreen = false;
+	screenPositions[m]->c64ScreenZoomedSizeX = screenPositions[m]->c64ScreenSizeX;
+	screenPositions[m]->c64ScreenZoomedSizeY = screenPositions[m]->c64ScreenSizeY;
+	screenPositions[m]->c64ScreenZoomedX = screenPositions[m]->c64ScreenX;
+	screenPositions[m]->c64ScreenZoomedY = screenPositions[m]->c64ScreenY;
 	
+	screenPositions[m]->c64ScreenShowGridLines = false;
 	
+	screenPositions[m]->c64StateVisible = true;
+	screenPositions[m]->c64StateX = SCREEN_WIDTH - screenPositions[m]->c64ScreenSizeX-91.0f;
+	screenPositions[m]->c64StateY = 2.5f;
+	screenPositions[m]->c64StateFontSize = 5.0f;
+	
+	screenPositions[m]->c64DisassembleVisible = true;
+	screenPositions[m]->c64DisassembleFontSize = 7.0f;
+	screenPositions[m]->c64DisassembleX = 1.0f; //503.0f;
+	screenPositions[m]->c64DisassembleY = 1.0f;
+	screenPositions[m]->c64DisassembleSizeX = screenPositions[m]->c64DisassembleFontSize * 25.8f;
+	screenPositions[m]->c64DisassembleSizeY = SCREEN_HEIGHT-4.0f;
+	screenPositions[m]->c64DisassembleNumberOfLines = 46;
+	screenPositions[m]->c64DisassembleCodeMnemonicsOffset = +0.75f;
+	screenPositions[m]->c64DisassembleShowHexCodes = false;
+	screenPositions[m]->c64DisassembleShowCodeCycles = true;
+	screenPositions[m]->c64DisassembleCodeCyclesOffset = -0.5f;
+	screenPositions[m]->c64DisassembleShowLabels = true;
+	screenPositions[m]->c64DisassembleNumberOfLabelCharacters = 10;
+	screenPositions[m]->c64DataDumpVisible = false;
+	screenPositions[m]->c64StateVICVisible = true;
+	screenPositions[m]->c64StateVICFontSize = 4.5f;
+	screenPositions[m]->c64StateVICX = screenPositions[m]->c64DisassembleFontSize * 25.0f + 11.5f;
+	screenPositions[m]->c64StateVICY = 1.0f;
+	screenPositions[m]->c64StateVICIsVertical = false;
+	screenPositions[m]->c64StateVICShowSprites = true;
+	
+	screenPositions[m]->c64DataDumpVisible = true;
+	screenPositions[m]->c64DataDumpX = 447 + 2.5f;
+	screenPositions[m]->c64DataDumpY = 113;
+	screenPositions[m]->c64DataDumpSizeX = 125.0f;
+	screenPositions[m]->c64DataDumpSizeY = 34.0f;
+	screenPositions[m]->c64DataDumpFontSize = 5.0f;
+	screenPositions[m]->c64DataDumpGapAddress = screenPositions[m]->c64DataDumpFontSize*1.3f;
+	screenPositions[m]->c64DataDumpGapHexData = screenPositions[m]->c64DataDumpFontSize*0.51f;
+	screenPositions[m]->c64DataDumpGapDataCharacters = screenPositions[m]->c64DataDumpFontSize*2.5f;
+	screenPositions[m]->c64DataDumpNumberOfBytesPerLine = 8;
+
+	screenPositions[m]->c64VicDisplayVisible = true;
+	screenPositions[m]->c64VicDisplayScale = 1.031250f;
+	screenPositions[m]->c64VicDisplayX = screenPositions[m]->c64DisassembleFontSize * 25.0f + 10.5f;
+	screenPositions[m]->c64VicDisplayY = 150.0f;
+	screenPositions[m]->c64VicDisplayCanScrollDisassemble = true;
+
+	screenPositions[m]->c64VicControlVisible = true;
+	screenPositions[m]->c64VicControlFontSize = 8.25f;
+	screenPositions[m]->c64VicControlX = screenPositions[m]->c64DisassembleFontSize * 73.0f + 10.5f;
+	screenPositions[m]->c64VicControlY = 150.0f;
+
+	//
+	m = C64_SCREEN_LAYOUT_VIC_DISPLAY_LITE;
+	screenPositions[m] = new C64ScreenLayout();
+	scale = 0.35f;
+	screenPositions[m]->c64ScreenVisible = false;
+	
+	screenPositions[m]->c64DisassembleVisible = true;
+	screenPositions[m]->c64DisassembleFontSize = 7.0f;
+	screenPositions[m]->c64DisassembleX = 1.0f; //503.0f;
+	screenPositions[m]->c64DisassembleY = 1.0f;
+	screenPositions[m]->c64DisassembleSizeX = screenPositions[m]->c64DisassembleFontSize * 25.8f;
+	screenPositions[m]->c64DisassembleSizeY = SCREEN_HEIGHT-4.0f;
+	screenPositions[m]->c64DisassembleNumberOfLines = 46;
+	screenPositions[m]->c64DisassembleCodeMnemonicsOffset = +0.75f;
+	screenPositions[m]->c64DisassembleShowHexCodes = false;
+	screenPositions[m]->c64DisassembleShowCodeCycles = true;
+	screenPositions[m]->c64DisassembleCodeCyclesOffset = -0.5f;
+	screenPositions[m]->c64DisassembleShowLabels = true;
+	screenPositions[m]->c64DisassembleNumberOfLabelCharacters = 10;
+	screenPositions[m]->c64DataDumpVisible = false;
+	
+	screenPositions[m]->c64StateVisible = true;
+	screenPositions[m]->c64StateX = screenPositions[m]->c64DisassembleFontSize * 25.0f + 10.5f;
+	screenPositions[m]->c64StateY = 2.5f;
+	screenPositions[m]->c64StateFontSize = 5.0f;
+	
+	screenPositions[m]->c64DataDumpVisible = true;
+	screenPositions[m]->c64DataDumpX = screenPositions[m]->c64DisassembleFontSize * 25.0f + 10.5f;
+	screenPositions[m]->c64DataDumpY = 260;
+	screenPositions[m]->c64DataDumpSizeX = 277.0f;
+	screenPositions[m]->c64DataDumpSizeY = 97.0f;
+	screenPositions[m]->c64DataDumpFontSize = 5.0f;
+	screenPositions[m]->c64DataDumpGapAddress = screenPositions[m]->c64DataDumpFontSize*0.75f;
+	screenPositions[m]->c64DataDumpGapHexData = screenPositions[m]->c64DataDumpFontSize*0.28f;
+	screenPositions[m]->c64DataDumpGapDataCharacters = screenPositions[m]->c64DataDumpFontSize*0.5f;
+	screenPositions[m]->c64DataDumpNumberOfBytesPerLine = 16;
+	screenPositions[m]->c64DataDumpShowCharacters = false;
+	screenPositions[m]->c64DataDumpShowSprites = false;
+	
+	screenPositions[m]->c64VicDisplayVisible = true;
+	screenPositions[m]->c64VicDisplayScale = 1.23f;
+	screenPositions[m]->c64VicDisplayX = screenPositions[m]->c64DisassembleFontSize * 25.0f + 10.5f;
+	screenPositions[m]->c64VicDisplayY = 13.0f;
+	screenPositions[m]->c64VicDisplayCanScrollDisassemble = false;
+	
+	screenPositions[m]->c64MemoryMapVisible = true;
+	screenPositions[m]->c64MemoryMapSizeX = 110.0f;
+	screenPositions[m]->c64MemoryMapSizeY = 99.0f;
+	screenPositions[m]->c64MemoryMapX = SCREEN_WIDTH-screenPositions[m]->c64MemoryMapSizeX-2.5f;
+	screenPositions[m]->c64MemoryMapY = 260;
+	
+	//
+	m = C64_SCREEN_LAYOUT_FULL_SCREEN_ZOOM;
+	screenPositions[m] = new C64ScreenLayout();
+	scale = (float)SCREEN_HEIGHT / (float)debugInterface->GetC64ScreenSizeY();
+	screenPositions[m]->c64ScreenVisible = false;
+	screenPositions[m]->c64ScreenShowZoomedScreen = true;
+	
+	screenPositions[m]->c64ScreenZoomedSizeX = (float)debugInterface->GetC64ScreenSizeX() * scale;
+	screenPositions[m]->c64ScreenZoomedSizeY = (float)debugInterface->GetC64ScreenSizeY() * scale;
+	screenPositions[m]->c64ScreenZoomedX = ((float)SCREEN_WIDTH-screenPositions[m]->c64ScreenZoomedSizeX)/2.0f;
+	screenPositions[m]->c64ScreenZoomedY = 0.0f;
+
 	
 	frameCounter = 0;
-	//nextScreenUpdateFrame = 0;
 	
 	isShowingRasterCross = false;
 	fontDisassemble = guiMain->fntConsole;
@@ -693,9 +866,20 @@ void CViewC64::InitLayouts()
 void CViewC64::SwitchToScreenLayout(int newScreenLayoutId)
 {
 	LOGD("SWITCH to screen layout id #%d", newScreenLayoutId);
-
+	
 	guiMain->LockMutex();
 
+	if (c64SettingsIsInVicEditor)
+	{
+		viewVicEditor->DeactivateView();
+		c64SettingsIsInVicEditor = false;
+	}
+	
+	if (this->currentScreenLayoutId == C64_SCREEN_LAYOUT_VIC_DISPLAY)
+	{
+		viewC64->viewC64VicDisplay->DeactivateView();
+	}
+	
 	this->currentScreenLayoutId = newScreenLayoutId;
 	c64SettingsDefaultScreenLayoutId = newScreenLayoutId;
 	
@@ -710,8 +894,8 @@ void CViewC64::SwitchToScreenLayout(int newScreenLayoutId)
 	viewC64Screen->SetVisible(screenLayout->c64ScreenVisible);
 	viewC64Screen->SetPosition(screenLayout->c64ScreenX,
 							   screenLayout->c64ScreenY, posZ,
-							   screenLayout->screenSizeX,
-							   screenLayout->screenSizeY);
+							   screenLayout->c64ScreenSizeX,
+							   screenLayout->c64ScreenSizeY);
 	viewC64Screen->showGridLines = screenLayout->c64ScreenShowGridLines;
 	
 	// zoomed screen
@@ -727,20 +911,27 @@ void CViewC64::SwitchToScreenLayout(int newScreenLayoutId)
 									this->fontDisassemble,
 									screenLayout->c64DisassembleFontSize,
 									screenLayout->c64DisassembleNumberOfLines,
+									screenLayout->c64DisassembleCodeMnemonicsOffset,
 									screenLayout->c64DisassembleShowHexCodes,
-									screenLayout->c64DisassembleShowLabels);
+									screenLayout->c64DisassembleShowCodeCycles,
+									screenLayout->c64DisassembleCodeCyclesOffset,
+									screenLayout->c64DisassembleShowLabels,
+									screenLayout->c64DisassembleNumberOfLabelCharacters);
 	
 	viewDrive1541Disassemble->SetVisible(screenLayout->drive1541DisassembleVisible);
 	viewDrive1541Disassemble->SetViewParameters(screenLayout->drive1541DisassembleX,
-										 screenLayout->drive1541DisassembleY, posZ,
-										 screenLayout->drive1541DisassembleSizeX, screenLayout->drive1541DisassembleSizeY,
-										 this->fontDisassemble,
-										 screenLayout->drive1541DisassembleFontSize,
-										 screenLayout->drive1541DisassembleNumberOfLines,
-										 screenLayout->drive1541DisassembleShowHexCodes,
-										 screenLayout->drive1541DisassembleShowLabels);
-	
-	
+									screenLayout->drive1541DisassembleY, posZ,
+									screenLayout->drive1541DisassembleSizeX, screenLayout->drive1541DisassembleSizeY,
+									this->fontDisassemble,
+									screenLayout->drive1541DisassembleFontSize,
+									screenLayout->drive1541DisassembleNumberOfLines,
+									screenLayout->drive1541DisassembleCodeMnemonicsOffset,
+									screenLayout->drive1541DisassembleShowHexCodes,
+									screenLayout->drive1541DisassembleShowCodeCycles,
+									screenLayout->drive1541DisassembleCodeCyclesOffset,
+									screenLayout->drive1541DisassembleShowLabels,
+									screenLayout->drive1541DisassembleNumberOfLabelCharacters);
+		
 	// memory map
 	viewC64MemoryMap->SetVisible(screenLayout->c64MemoryMapVisible);
 	viewC64MemoryMap->SetPosition(screenLayout->c64MemoryMapX,
@@ -765,6 +956,8 @@ void CViewC64::SwitchToScreenLayout(int newScreenLayoutId)
 	viewC64MemoryDataDump->gapAddress = screenLayout->c64DataDumpGapAddress;
 	viewC64MemoryDataDump->gapHexData = screenLayout->c64DataDumpGapHexData;
 	viewC64MemoryDataDump->gapDataCharacters = screenLayout->c64DataDumpGapDataCharacters;
+	viewC64MemoryDataDump->showCharacters = screenLayout->c64DataDumpShowCharacters;
+	viewC64MemoryDataDump->showSprites = screenLayout->c64DataDumpShowSprites;
 
 	viewDrive1541MemoryDataDump->SetVisible(screenLayout->drive1541DataDumpVisible);
 	viewDrive1541MemoryDataDump->fontSize = screenLayout->drive1541DataDumpFontSize;
@@ -776,6 +969,8 @@ void CViewC64::SwitchToScreenLayout(int newScreenLayoutId)
 	viewDrive1541MemoryDataDump->gapAddress = screenLayout->drive1541DataDumpGapAddress;
 	viewDrive1541MemoryDataDump->gapHexData = screenLayout->drive1541DataDumpGapHexData;
 	viewDrive1541MemoryDataDump->gapDataCharacters = screenLayout->drive1541DataDumpGapDataCharacters;
+	viewDrive1541MemoryDataDump->showCharacters = screenLayout->drive1541DataDumpShowCharacters;
+	viewDrive1541MemoryDataDump->showSprites = screenLayout->drive1541DataDumpShowSprites;
 	
 	viewC64StateCIA->SetVisible(screenLayout->c64StateCIAVisible);
 	viewC64StateCIA->SetPosition(screenLayout->c64StateCIAX, screenLayout->c64StateCIAY, posZ, 100, 100);
@@ -788,7 +983,7 @@ void CViewC64::SwitchToScreenLayout(int newScreenLayoutId)
 	viewC64StateSID->fontSize = screenLayout->c64StateSIDFontSize;
 
 	viewC64StateVIC->SetVisible(screenLayout->c64StateVICVisible);
-	viewC64StateVIC->SetPosition(screenLayout->c64StateVICX, screenLayout->c64StateVICY, posZ, 100, 100);
+	viewC64StateVIC->SetPosition(screenLayout->c64StateVICX, screenLayout->c64StateVICY);
 	viewC64StateVIC->fontSize = screenLayout->c64StateVICFontSize;
 	viewC64StateVIC->isVertical = screenLayout->c64StateVICIsVertical;
 	viewC64StateVIC->showSprites = screenLayout->c64StateVICShowSprites;
@@ -801,6 +996,18 @@ void CViewC64::SwitchToScreenLayout(int newScreenLayoutId)
 	viewC64StateDrive1541->renderDriveLED = screenLayout->c64StateDrive1541RenderDriveLED;
 	viewC64StateDrive1541->isVertical = screenLayout->c64StateDrive1541IsVertical;
 
+	viewC64VicDisplay->SetVisible(screenLayout->c64VicDisplayVisible);
+	viewC64VicDisplay->SetDisplayPosition(screenLayout->c64VicDisplayX,
+										   screenLayout->c64VicDisplayY,
+										   screenLayout->c64VicDisplayScale, false);
+	viewC64VicDisplay->canScrollDisassemble = screenLayout->c64VicDisplayCanScrollDisassemble;
+	
+	viewC64VicControl->SetVisible(screenLayout->c64VicControlVisible);
+	viewC64VicControl->fontSize = screenLayout->c64VicControlFontSize;
+	viewC64VicControl->SetPosition(screenLayout->c64VicControlX,
+								   screenLayout->c64VicControlY);
+	
+	
 	viewEmulationState->SetVisible(screenLayout->emulationStateVisible);
 	viewEmulationState->SetPosition(screenLayout->emulationStateX, screenLayout->emulationStateY, posZ, 100, 100);
 	
@@ -809,11 +1016,25 @@ void CViewC64::SwitchToScreenLayout(int newScreenLayoutId)
 									screenLayout->monitorConsoleSizeX, screenLayout->monitorConsoleSizeY,
 									screenLayout->monitorConsoleFontScale, screenLayout->monitorConsoleNumLines);
 	
-//	SetFocusForView(viewMonitorConsole);
-	SetFocusForView(viewC64Screen);
+	//
+	// bunch of workarounds must be here, as always
+	//
 	
+//	SetFocus(viewMonitorConsole);
+	SetFocus(viewC64Screen);
+	
+	if (newScreenLayoutId == C64_SCREEN_LAYOUT_VIC_DISPLAY)
+	{
+		viewC64->viewC64VicDisplay->ActivateView();
+	}
+	
+	CheckMouseCursorVisibility();
+	
+	// end of workarounds
+
 	if (guiMain->currentView != this)
 		guiMain->SetView(this);
+	
 	
 	guiMain->UnlockMutex();
 }
@@ -828,26 +1049,6 @@ void CViewC64::ThreadRun(void *data)
 	this->debugInterface->RunEmulationThread();
 	
 	LOGD("CViewC64::ThreadRun: finished");
-}
-
-void CViewC64::ClearViewsFocus()
-{
-	for (std::map<float, CGuiElement *, compareZupwards>::iterator enumGuiElems = guiElementsUpwards.begin();
-		 enumGuiElems != guiElementsUpwards.end(); enumGuiElems++)
-	{
-		CGuiElement *guiElement = (*enumGuiElems).second;
-		
-		guiElement->hasFocus = false;
-	}
-}
-
-void CViewC64::SetFocusForView(CGuiView *view)
-{
-	ClearViewsFocus();
-	view->SetFocus(true);
-	
-	if (view->hasFocus)
-		focusView = view;
 }
 
 void CViewC64::DoLogic()
@@ -890,23 +1091,34 @@ void CViewC64::Render()
 	
 //	if (frameCounter % 2 == 0)
 	{
-		if (viewC64Screen->visible)
+		//if (viewC64Screen->visible)   always do this anyway
 		{
 			viewC64Screen->RefreshScreen();
 		}
 	}
 	
+	// copy current state of VIC
+	c64d_vicii_copy_state(&(this->currentViciiState));
+
+	viewC64VicDisplay->UpdateViciiState();
 	
 	//////////
-	
-	/// CPU
-	C64StateCPU cpuState;
-	debugInterface->GetC64CpuState(&cpuState);
-		
-	/// VIC
-	C64StateVIC vicState;
-	debugInterface->GetVICState(&vicState);
 
+	// deprecated, will take data from this->showViciiState
+	
+//	/// CPU
+//	C64StateCPU cpuState;
+//	debugInterface->GetC64CpuState(&cpuState);
+//		
+//	/// VIC
+//	C64StateVIC vicState;
+//	debugInterface->GetVICState(&vicState);
+
+//	// cartridge
+//	C64StateCartridge cartridgeState;
+//	debugInterface->GetC64CartridgeState(&cartridgeState);
+
+	
 	/// 1541 CPU
 	C64StateCPU diskCpuState;
 	debugInterface->GetDrive1541CpuState(&diskCpuState);
@@ -915,22 +1127,107 @@ void CViewC64::Render()
 	C64StateDrive1541 diskState;
 	debugInterface->GetDrive1541State(&diskState);
 
-	// cartridge
-	C64StateCartridge cartridgeState;
-	debugInterface->GetC64CartridgeState(&cartridgeState);
+	int rasterX = viciiStateToShow.raster_cycle*8;
+	int rasterY = viciiStateToShow.raster_line;
 	
+	
+	// update current colors for rendering states
+	
+	this->rasterToShowX = rasterX;
+	this->rasterToShowY = rasterY;
+	this->rasterCharToShowX = (viewC64->viciiStateToShow.raster_cycle - 0x11);
+	this->rasterCharToShowY = (viewC64->viciiStateToShow.raster_line - 0x32) / 8;
+	
+	//LOGD("       |   rasterCharToShowX=%3d rasterCharToShowY=%3d", rasterCharToShowX, rasterCharToShowY);
+	
+	if (rasterCharToShowX < 0)
+	{
+		rasterCharToShowX = 0;
+	}
+	else if (rasterCharToShowX > 39)
+	{
+		rasterCharToShowX = 39;
+	}
+	
+	if (rasterCharToShowY < 0)
+	{
+		rasterCharToShowY = 0;
+	}
+	else if (rasterCharToShowY > 24)
+	{
+		rasterCharToShowY = 24;
+	}
+	
+	// get current VIC State's pointers and colors
+	u8 *screen_ptr;
+	u8 *color_ram_ptr;
+	u8 *chargen_ptr;
+	u8 *bitmap_low_ptr;
+	u8 *bitmap_high_ptr;
+	
+	viewC64->viewC64VicDisplay->GetViciiPointers(&(viewC64->viciiStateToShow),
+												 &screen_ptr, &color_ram_ptr, &chargen_ptr, &bitmap_low_ptr, &bitmap_high_ptr,
+												 this->colorsToShow);
 
-	// render
+	if (viewC64StateVIC->forceColorD800 == -1)
+	{
+		this->colorToShowD800 = color_ram_ptr[ rasterCharToShowY * 40 + rasterCharToShowX ] & 0x0F;
+	}
+	else
+	{
+		this->colorToShowD800 = viewC64StateVIC->forceColorD800;
+	}
+
+	// force D020-D02E colors?
+	for (int i = 0; i < 0x0F; i++)
+	{
+		if (viewC64StateVIC->forceColors[i] != -1)
+		{
+			colorsToShow[i] = viewC64StateVIC->forceColors[i];
+			viewC64->viciiStateToShow.regs[0x20 + i] = viewC64StateVIC->forceColors[i];
+		}
+	}
+
+	
+	//
+	
+	if (viewC64VicDisplay->canScrollDisassemble)
+	{
+		viewC64Disassemble->SetCurrentPC(viciiStateToShow.lastValidPC);
+	}
+	else
+	{
+		viewC64Disassemble->SetCurrentPC(this->currentViciiState.lastValidPC);
+	}
+	
+	viewDrive1541Disassemble->SetCurrentPC(diskCpuState.lastValidPC);
+	
+	//
+	// now render all visible views
+	//
+	//
+	
+	CGuiView::Render();
+
+	//
+
+
+	// render CPU status
 	C64ScreenLayout *screenLayout = screenPositions[currentScreenLayoutId];
 	
 	// TODO: move to a new class
 	char buf[128];
-
+	
 	if (screenLayout->c64StateVisible)
 	{
 		float px = screenLayout->c64StateX;
 		float py = screenLayout->c64StateY;
 		float fontSize = screenLayout->c64StateFontSize;
+		
+		if (viewC64StateVIC->isLockedState)
+		{
+			BlitFilledRectangle(px-fontSize*0.3f, py-fontSize*0.3f, -1, fontSize*49.6f, fontSize*2.3f, 0.2f, 0.0f, 0.0f, 1.00f);
+		}
 		
 		if (debugInterface->GetDebugMode() != C64_DEBUG_RUNNING)
 		{
@@ -949,19 +1246,20 @@ void CViewC64::Render()
 		
 		strcpy(buf, "PC   AR XR YR SP 01 NV-BDIZC  CC VC RSTY RSTX  EG");
 		char *bufPtr = buf;
-		sprintfHexCode16WithoutZeroEnding(bufPtr, cpuState.pc); bufPtr += 5;
-		sprintfHexCode8WithoutZeroEnding(bufPtr, cpuState.a); bufPtr += 3;
-		sprintfHexCode8WithoutZeroEnding(bufPtr, cpuState.x); bufPtr += 3;
-		sprintfHexCode8WithoutZeroEnding(bufPtr, cpuState.y); bufPtr += 3;
-		sprintfHexCode8WithoutZeroEnding(bufPtr, cpuState.sp); bufPtr += 3;
-		sprintfHexCode8WithoutZeroEnding(bufPtr, cpuState.memory0001); bufPtr += 3;
-		Byte2BitsWithoutEndingZero(cpuState.processorFlags, bufPtr); bufPtr += 10;
-		sprintfHexCode8WithoutZeroEnding(bufPtr, cpuState.instructionCycle); bufPtr += 3;
-		sprintfHexCode8WithoutZeroEnding(bufPtr, vicState.cycle); bufPtr += 3;
-		sprintfHexCode16WithoutZeroEndingAndNoLeadingZeros(bufPtr, vicState.rasterY); bufPtr += 5;
-		sprintfHexCode16WithoutZeroEndingAndNoLeadingZeros(bufPtr, vicState.rasterX); bufPtr += 6;
-		*bufPtr = cartridgeState.exrom + '0'; bufPtr++;
-		*bufPtr = cartridgeState.game + '0';
+		
+		sprintfHexCode16WithoutZeroEnding(bufPtr, viciiStateToShow.pc); bufPtr += 5;
+		sprintfHexCode8WithoutZeroEnding(bufPtr, viciiStateToShow.a); bufPtr += 3;
+		sprintfHexCode8WithoutZeroEnding(bufPtr, viciiStateToShow.x); bufPtr += 3;
+		sprintfHexCode8WithoutZeroEnding(bufPtr, viciiStateToShow.y); bufPtr += 3;
+		sprintfHexCode8WithoutZeroEnding(bufPtr, viciiStateToShow.sp); bufPtr += 3;
+		sprintfHexCode8WithoutZeroEnding(bufPtr, viciiStateToShow.memory0001 /* TODO: cpuState.memory0001 */); bufPtr += 3;
+		Byte2BitsWithoutEndingZero(viciiStateToShow.processorFlags, bufPtr); bufPtr += 10;
+		sprintfHexCode8WithoutZeroEnding(bufPtr, viciiStateToShow.instructionCycle); bufPtr += 3;
+		sprintfHexCode8WithoutZeroEnding(bufPtr, viciiStateToShow.raster_cycle); bufPtr += 3;
+		sprintfHexCode16WithoutZeroEndingAndNoLeadingZeros(bufPtr, rasterY); bufPtr += 5;
+		sprintfHexCode16WithoutZeroEndingAndNoLeadingZeros(bufPtr, rasterX); bufPtr += 6;
+		*bufPtr = viciiStateToShow.exrom + '0'; bufPtr++;
+		*bufPtr = viciiStateToShow.game + '0';
 		
 		fontDisassemble->BlitText(buf, px, py, -1, fontSize);
 	}
@@ -1002,30 +1300,23 @@ void CViewC64::Render()
 
 	////
 	
-	viewC64Disassemble->SetCurrentPC(cpuState.lastValidPC);
-	viewDrive1541Disassemble->SetCurrentPC(diskCpuState.lastValidPC);
-
+	// ^ this up should be moved to a new gui class ^
+	//
 	
-	///
-	
-	
-	CGuiView::Render();
-	
-	if (isShowingRasterCross)
+	if (isShowingRasterCross && viewC64->viewC64Screen->visible)
 	{
-		viewC64Screen->RenderRaster(vicState.rasterX, vicState.rasterY);
+		viewC64Screen->RenderRaster(rasterX, rasterY);
 	}
 	
 	if (viewC64Screen->showZoomedScreen)
 	{
-		viewC64Screen->RenderZoomedScreen(vicState.rasterX, vicState.rasterY);
-	}	
+		viewC64Screen->RenderZoomedScreen(rasterX, rasterY);
+	}
 
 	// render focus border
-	if (focusView != NULL && currentScreenLayoutId != C64_SCREEN_LAYOUT_C64_ONLY)
+	if (focusElement != NULL && currentScreenLayoutId != C64_SCREEN_LAYOUT_C64_ONLY)
 	{
-		const float lineWidth = 0.7f;
-		BlitRectangle(focusView->posX, focusView->posY, focusView->posZ, focusView->sizeX, focusView->sizeY, 1.0f, 0.0f, 0.0f, 0.5f, lineWidth);
+		focusElement->RenderFocusBorder();
 	}
 	
 //	// debug render fps
@@ -1129,7 +1420,28 @@ bool CViewC64::ProcessGlobalKeyboardShortcut(u32 keyCode, bool isShift, bool isA
 		}
 		else if (shortcut == viewC64MainMenu->kbsScreenLayout9)
 		{
+			SwitchToScreenLayout(C64_SCREEN_LAYOUT_FULL_SCREEN_ZOOM);
+			C64DebuggerStoreSettings();
+		}
+		else if (shortcut == viewC64MainMenu->kbsScreenLayout10)
+		{
 			SwitchToScreenLayout(C64_SCREEN_LAYOUT_CYCLER);
+			C64DebuggerStoreSettings();
+		}
+		else if (shortcut == viewC64MainMenu->kbsScreenLayout11)
+		{
+			SwitchToScreenLayout(C64_SCREEN_LAYOUT_VIC_DISPLAY_LITE);
+			C64DebuggerStoreSettings();
+		}
+		else if (shortcut == viewC64MainMenu->kbsScreenLayout12)
+		{
+			SwitchToScreenLayout(C64_SCREEN_LAYOUT_VIC_DISPLAY);
+			C64DebuggerStoreSettings();
+		}
+		else if (shortcut == viewC64MainMenu->kbsVicEditorScreen)
+		{
+			viewVicEditor->SwitchToVicEditor();
+			c64SettingsIsInVicEditor = true;
 			C64DebuggerStoreSettings();
 		}
 		else if (shortcut == viewC64MainMenu->kbsInsertD64)
@@ -1144,7 +1456,8 @@ bool CViewC64::ProcessGlobalKeyboardShortcut(u32 keyCode, bool isShift, bool isA
 		{
 			viewC64MainMenu->OpenDialogLoadPRG();
 		}
-		else if (shortcut == viewC64MainMenu->kbsReloadAndRestart)
+		else if (shortcut == viewC64MainMenu->kbsReloadAndRestart
+				 || shortcut == viewC64MainMenu->kbsRestartPRG)
 		{
 			viewC64MainMenu->ReloadAndRestartPRG();
 		}
@@ -1168,6 +1481,10 @@ bool CViewC64::ProcessGlobalKeyboardShortcut(u32 keyCode, bool isShift, bool isA
 		{
 			SwitchIsWarpSpeed();
 		}
+		else if (shortcut == viewC64MainMenu->kbsDiskDriveReset)
+		{
+			debugInterface->DiskDriveReset();
+		}
 		else if (shortcut == viewC64MainMenu->kbsSoftReset)
 		{
 			debugInterface->Reset();
@@ -1181,6 +1498,10 @@ bool CViewC64::ProcessGlobalKeyboardShortcut(u32 keyCode, bool isShift, bool isA
 		else if (shortcut == viewC64MainMenu->kbsBreakpoints)
 		{
 			viewC64Breakpoints->SwitchBreakpointsScreen();
+		}
+		else if (shortcut == viewC64MainMenu->kbsSnapshots)
+		{
+			viewC64Snapshots->SwitchSnapshotsScreen();
 		}
 		else if (shortcut == viewC64SettingsMenu->kbsUseKeboardAsJoystick)
 		{
@@ -1225,6 +1546,34 @@ bool CViewC64::ProcessGlobalKeyboardShortcut(u32 keyCode, bool isShift, bool isA
 		else if (shortcut == viewC64SettingsMenu->kbsClearMemoryMarkers)
 		{
 			viewC64SettingsMenu->ClearMemoryMarkers();
+		}
+		else if (shortcut == viewC64MainMenu->kbsBrowseD64)
+		{
+			viewFileD64->StartBrowsingD64(0);
+		}
+		else if (shortcut == viewC64MainMenu->kbsStartFromDisk)
+		{
+			viewFileD64->StartFirstDiskPRGEntry();
+		}
+		else if (shortcut == viewC64MainMenu->kbsSaveScreenImageAsPNG)
+		{
+			viewVicEditor->SaveScreenshotAsPNG();
+		}
+		else if (shortcut == viewC64SettingsMenu->kbsDetachEverything)
+		{
+			viewC64SettingsMenu->DetachEverything();
+		}
+		else if (shortcut == viewC64SettingsMenu->kbsDetachCartridge)
+		{
+			viewC64SettingsMenu->DetachCartridge();
+		}
+		else if (shortcut == viewC64SettingsMenu->kbsDetachDiskImage)
+		{
+			viewC64SettingsMenu->DetachDiskImage();
+		}
+		else if (shortcut == viewC64SettingsMenu->kbsAutoJmpFromInsertedDiskFirstPrg)
+		{
+			viewC64SettingsMenu->ToggleAutoLoadFromInsertedDisk();
 		}
 		
 		return true;
@@ -1322,9 +1671,9 @@ bool CViewC64::CanSelectView(CGuiView *view)
 
 void CViewC64::MoveFocusToNextView()
 {
-	if (focusView == NULL)
+	if (focusElement == NULL)
 	{
-		SetFocusForView(traversalOfViews[0]);
+		SetFocus(traversalOfViews[0]);
 		return;
 	}
 	
@@ -1333,7 +1682,7 @@ void CViewC64::MoveFocusToNextView()
 	for (int i = 0; i < traversalOfViews.size(); i++)
 	{
 		CGuiView *view = traversalOfViews[i];
-		if (view == focusView)
+		if (view == focusElement)
 		{
 			selectedViewNum = i;
 			break;
@@ -1356,7 +1705,7 @@ void CViewC64::MoveFocusToNextView()
 	
 	if (CanSelectView(newView))
 	{
-		SetFocusForView(traversalOfViews[selectedViewNum]);
+		SetFocus(traversalOfViews[selectedViewNum]);
 	}
 	else
 	{
@@ -1367,9 +1716,9 @@ void CViewC64::MoveFocusToNextView()
 
 void CViewC64::MoveFocusToPrevView()
 {
-	if (focusView == NULL)
+	if (focusElement == NULL)
 	{
-		SetFocusForView(traversalOfViews[0]);
+		SetFocus(traversalOfViews[0]);
 		return;
 	}
 	
@@ -1378,7 +1727,7 @@ void CViewC64::MoveFocusToPrevView()
 	for (int i = 0; i < traversalOfViews.size(); i++)
 	{
 		CGuiView *view = traversalOfViews[i];
-		if (view == focusView)
+		if (view == focusElement)
 		{
 			selectedViewNum = i;
 			break;
@@ -1407,7 +1756,7 @@ void CViewC64::MoveFocusToPrevView()
 	
 	if (CanSelectView(newView))
 	{
-		SetFocusForView(traversalOfViews[selectedViewNum]);
+		SetFocus(traversalOfViews[selectedViewNum]);
 	}
 	else
 	{
@@ -1419,6 +1768,11 @@ void CViewC64::MoveFocusToPrevView()
 bool CViewC64::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
 	LOGI("CViewC64::KeyDown, keyCode=%4.4x (%d) %c", keyCode, keyCode, keyCode);
+	
+//	if (keyCode == MTKEY_F2)
+//	{
+//		LOGD("@");
+//	}
 	
 //	// debug only
 //	if (keyCode == MTKEY_F7 && isShift)
@@ -1443,10 +1797,50 @@ bool CViewC64::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 //		return true;
 //	}
 
+	
+	//
+	// this is very nasty UX workaround just for now only
+	//
+	if (this->currentScreenLayoutId == C64_SCREEN_LAYOUT_VIC_DISPLAY)
+	{
+		if (this->focusElement == NULL)
+		{
+			if (viewC64VicDisplay->KeyDown(keyCode, isShift, isAlt, isControl))
+				return true;
+		}
+	}
+	
+	//
+	// another nasty UX workaround
+	//
+	if (viewC64MemoryMap->visible)
+	{
+		if (keyCode == MTKEY_SPACEBAR && !isShift && !isAlt && !isControl)
+		{
+			if (viewC64MemoryMap->IsInside(guiMain->mousePosX, guiMain->mousePosY))
+			{
+				this->SetFocus(viewC64MemoryMap);
+				if (viewC64MemoryMap->KeyDown(keyCode, isShift, isAlt, isControl))
+					return true;
+			}
+		}
+	}
+	
+	///
+	
+	
+	if (keyCode >= MTKEY_F1 && keyCode <= MTKEY_F8 && !isControl)
+	{
+		if (viewC64Screen->hasFocus)
+		{
+			return viewC64Screen->KeyDown(keyCode, isShift, isAlt, isControl);
+		}
+	}
+
 	if (viewC64->ProcessGlobalKeyboardShortcut(keyCode, isShift, isAlt, isControl))
 	{
-		// workaround:
-		// send key up for shift/alt/ctrl when key shortcut is detected
+		// when global key shortcut is detected
+		// send key up for shift/alt/ctrl to the c64
 		viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
 		
 		keyDownCodes.push_back(keyCode);
@@ -1454,40 +1848,52 @@ bool CViewC64::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 		return true;
 	}
 	
-	// TODO: this is a temporary workaround for step over jsr
+	// TODO: this is a temporary UX workaround for step over jsr
 	CSlrKeyboardShortcut *shortcut = this->keyboardShortcuts->FindShortcut(KBZONE_DISASSEMBLE, keyCode, isShift, isAlt, isControl);
 
 	if (shortcut == keyboardShortcuts->kbsStepOverJsr)
 	{
-		if (focusView != viewDrive1541Disassemble && viewC64Disassemble->visible)
+		if (focusElement != viewDrive1541Disassemble && viewC64Disassemble->visible)
 		{
 			viewC64Disassemble->StepOverJsr();
 			return true;
 		}
-		if (focusView != viewC64Disassemble && viewDrive1541Disassemble->visible)
+		if (focusElement != viewC64Disassemble && viewDrive1541Disassemble->visible)
 		{
 			viewDrive1541Disassemble->StepOverJsr();
 			return true;
 		}
 	}
 	
-	if (focusView != NULL)
+	//
+	// end of UX workarounds
+	//
+	
+	if (focusElement != NULL)
 	{
-		if (focusView->KeyDown(keyCode, isShift, isAlt, isControl))
+		if (focusElement->KeyDown(keyCode, isShift, isAlt, isControl))
 		{
 			keyDownCodes.push_back(keyCode);
 			return true;
 		}
 	}
 
-	viewC64Screen->KeyDown(keyCode, isShift, isAlt, isControl);
+	if (viewC64Screen->hasFocus)
+	{
+		return viewC64Screen->KeyDown(keyCode, isShift, isAlt, isControl);
+	}
 	
 	return true; //CGuiView::KeyDown(keyCode, isShift, isAlt, isControl);
 }
 
 bool CViewC64::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
-	LOGD("CViewC64::KeyUp, keyCode=%d isShift=%d isAlt=%d isControl=%d", keyCode, isShift, isAlt, isControl);
+	LOGI("CViewC64::KeyUp, keyCode=%d isShift=%d isAlt=%d isControl=%d", keyCode, isShift, isAlt, isControl);
+
+	if (keyCode >= MTKEY_F1 && keyCode <= MTKEY_F8 && !guiMain->isControlPressed)
+	{
+		return viewC64Screen->KeyUp(keyCode, isShift, isAlt, isControl);
+	}
 
 	// check if shortcut
 	std::list<u32> zones;
@@ -1496,9 +1902,9 @@ bool CViewC64::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 	if (shortcut != NULL)
 		return true;
 
-	if (focusView != NULL)
+	if (focusElement != NULL)
 	{
-		if (focusView->KeyUp(keyCode, isShift, isAlt, isControl))
+		if (focusElement->KeyUp(keyCode, isShift, isAlt, isControl))
 		{
 			keyDownCodes.remove(keyCode);
 			return true;
@@ -1526,6 +1932,45 @@ bool CViewC64::DoTap(GLfloat x, GLfloat y)
 {
 	LOGG("CViewC64::DoTap:  x=%f y=%f", x, y);
 
+	// TODO: this is a crude workaround to fix problem that c64 zoomed screen is the same instance of the c64 screen, which must be split
+	//       do not ever do this at home kids
+	
+	if (viewC64Screen->showZoomedScreen)
+	{
+		if (viewC64Screen->IsInsideViewNonVisible(x, y))
+		{
+			guiMain->SetFocus(viewC64Screen);
+			this->focusElement = viewC64Screen;
+			return viewC64Screen->DoTap(x, y);
+		}
+		else
+		{
+			viewC64Screen->hasFocus = false;
+			if (guiMain->focusElement == viewC64Screen)
+			{
+				guiMain->focusElement = NULL;
+				this->focusElement = NULL;
+			}
+		}
+	}
+	else
+	{
+		if (viewC64Screen->IsInsideView(x, y) == false && viewC64Screen->hasFocus == true)
+		{
+			viewC64Screen->hasFocus = false;
+			if (guiMain->focusElement == viewC64Screen
+				|| this->focusElement == viewC64Screen)
+			{
+				guiMain->focusElement = NULL;
+				this->focusElement = NULL;
+			}
+		}
+	}
+	
+	// TODO: end of crude workaround
+	//
+	
+	
 	for (std::map<float, CGuiElement *, compareZupwards>::iterator enumGuiElems = guiElementsUpwards.begin();
 		 enumGuiElems != guiElementsUpwards.end(); enumGuiElems++)
 	{
@@ -1537,31 +1982,22 @@ bool CViewC64::DoTap(GLfloat x, GLfloat y)
 		{
 			LOGG("... is inside=%s", guiElement->name);
 
-			// let view decide what to do even if does not have focus
+			// let view decide what to do even if it does not have focus
 			guiElement->DoTap(x, y);
 
 			if (guiElement->hasFocus == false)
 			{
-				SetFocusForView((CGuiView *)guiElement);
+				SetFocus((CGuiView *)guiElement);
 			}
 		}
 	}
 
 	return true;
 	
-	
-//	float fontSize = 5.0f;
-	
-//	if (x < 100.0f)
-//	{
-//		viewC64Disassemble->DoTap(x, y);
-//	}
-	
-	
 	//return CGuiView::DoTap(x, y);
 }
 
-// scroll only where cursor is
+// scroll only where cursor is moving
 bool CViewC64::DoNotTouchedMove(GLfloat x, GLfloat y)
 {
 //	LOGG("CViewC64::DoNotTouchedMove, mouseCursor=%f %f", mouseCursorX, mouseCursorY);
@@ -1735,6 +2171,31 @@ void CViewC64::SharedMemorySignalCallback(CByteBuffer *sharedMemoryData)
 	C64DebuggerReceivedConfiguration(sharedMemoryData);
 }
 
+void CViewC64::InitRasterColors()
+{
+	viewC64VicDisplay->InitRasterColorsFromScheme();
+	viewC64Screen->InitRasterColorsFromScheme();
+	viewVicEditor->viewVicDisplayMain->InitGridLinesColorFromSettings();
+}
+
+void CViewC64::CheckMouseCursorVisibility()
+{
+	if (guiMain->currentView == this
+		&& this->currentScreenLayoutId == C64_SCREEN_LAYOUT_C64_ONLY
+		&& VID_IsWindowFullScreen())
+	{
+		VID_HideMouseCursor();
+	}
+	else
+	{
+		VID_ShowMouseCursor();
+	}
+}
+
+void CViewC64::ShowMouseCursor()
+{
+	VID_ShowMouseCursor();
+}
 
 C64ScreenLayout::C64ScreenLayout()
 {
@@ -1754,7 +2215,7 @@ C64ScreenLayout::C64ScreenLayout()
 	monitorConsoleVisible = false;
 	emulationStateVisible = false;
 	
-	c64ScreenX = c64ScreenY = screenSizeX = screenSizeY = c64StateX = c64StateY = drive1541StateX = drive1541StateY = c64DisassembleX = c64DisassembleY = drive1541DisassembleX = drive1541DisassembleY = c64MemoryMapX = c64MemoryMapY = c64MemoryMapSizeX = c64MemoryMapSizeY = drive1541MemoryMapX = drive1541MemoryMapY = drive1541MemoryMapSizeX = drive1541MemoryMapSizeY = c64DataDumpX = c64DataDumpY = c64DataDumpSizeX = c64DataDumpSizeY = c64StateCIAX = c64StateCIAY = c64StateSIDX = c64StateSIDY = c64StateVICX = c64StateVICY = c64StateDrive1541X = c64StateDrive1541Y = monitorConsoleX = monitorConsoleY = emulationStateX = emulationStateY = 0;
+	c64ScreenX = c64ScreenY = c64ScreenSizeX = c64ScreenSizeY = c64StateX = c64StateY = drive1541StateX = drive1541StateY = c64DisassembleX = c64DisassembleY = drive1541DisassembleX = drive1541DisassembleY = c64MemoryMapX = c64MemoryMapY = c64MemoryMapSizeX = c64MemoryMapSizeY = drive1541MemoryMapX = drive1541MemoryMapY = drive1541MemoryMapSizeX = drive1541MemoryMapSizeY = c64DataDumpX = c64DataDumpY = c64DataDumpSizeX = c64DataDumpSizeY = c64StateCIAX = c64StateCIAY = c64StateSIDX = c64StateSIDY = c64StateVICX = c64StateVICY = c64StateDrive1541X = c64StateDrive1541Y = c64VicDisplayX = c64VicDisplayY = monitorConsoleX = monitorConsoleY = emulationStateX = emulationStateY = 0;
 
 	c64ScreenShowGridLines = false;
 	c64ScreenShowZoomedScreen = false;
@@ -1762,14 +2223,38 @@ C64ScreenLayout::C64ScreenLayout()
 	
 	c64StateFontSize = 5.0f;
 	drive1541StateFontSize = 5.0f;
+
 	c64DataDumpFontSize = 5.0f;
+	c64DataDumpGapAddress = c64DataDumpFontSize;
+	c64DataDumpGapHexData = c64DataDumpFontSize*0.5f;
+	c64DataDumpGapDataCharacters = c64DataDumpFontSize*0.5f;
+	c64DataDumpNumberOfBytesPerLine = 8;
+	c64DataDumpShowCharacters = true;
+	c64DataDumpShowSprites = true;
+
 	drive1541DataDumpFontSize = 5.0f;
+	drive1541DataDumpGapAddress = drive1541DataDumpFontSize;
+	drive1541DataDumpGapHexData = drive1541DataDumpFontSize*0.5f;
+	drive1541DataDumpGapDataCharacters = drive1541DataDumpFontSize*0.5f;
+	drive1541DataDumpNumberOfBytesPerLine = 8;
+	drive1541DataDumpShowCharacters = true;
+	drive1541DataDumpShowSprites = true;
+	
 	c64DisassembleNumberOfLines = 62;
 	drive1541DisassembleNumberOfLines = 62;
+	c64DisassembleNumberOfLabelCharacters = 20;
+	drive1541DisassembleNumberOfLabelCharacters = 20;
 	
+	c64DisassembleCodeMnemonicsOffset = 0.0f;
 	c64DisassembleShowHexCodes = false;
+	c64DisassembleShowCodeCycles = false;
+	c64DisassembleCodeCyclesOffset = -1.5f;
 	c64DisassembleShowLabels = false;
+	drive1541DisassembleCodeMnemonicsOffset = 0.0f;
 	drive1541DisassembleShowHexCodes = false;
+	drive1541DisassembleShowCodeCycles = false;
+	drive1541DisassembleCodeCyclesOffset = -1.5f;
+
 	drive1541DisassembleShowLabels = false;
 	
 	c64StateCIAFontSize = c64StateSIDFontSize = c64StateVICFontSize = c64StateDrive1541FontSize = 5.0f;
@@ -1785,6 +2270,13 @@ C64ScreenLayout::C64ScreenLayout()
 	c64StateDrive1541RenderDriveLED = true;
 	c64StateDrive1541IsVertical = false;
 	
+	c64VicDisplayVisible = false;
+	c64VicDisplayScale = 1.0f;
+	c64VicDisplayCanScrollDisassemble = true;
+	
+	c64VicControlVisible = false;
+	c64VicControlFontSize = 8.0f;
+
 	monitorConsoleFontScale = 1.5f;
 	monitorConsoleNumLines = 20;
 
@@ -1792,6 +2284,100 @@ C64ScreenLayout::C64ScreenLayout()
 	debugOnC64 = true;
 	debugOnDrive1541 = false;
 }
+
+// drag & drop callbacks
+void C64D_DragDropCallback(char *filePath)
+{
+	CSlrString *slrPath = new CSlrString(filePath);
+	C64D_DragDropCallback(slrPath);
+	delete slrPath;
+}
+
+void C64D_DragDropCallback(CSlrString *filePath)
+{
+	LOGD("C64D_DragDropCallback, c64dStartupTime=%d", c64dStartupTime);
+	
+	CSlrString *ext = filePath->GetFileExtensionComponentFromPath();
+	//ext->DebugPrint("ext=");
+	
+	if (SYS_GetCurrentTimeInMillis() - c64dStartupTime < 500)
+	{
+		LOGD("C64D_DragDropCallback: sleep 500ms");
+		SYS_Sleep(500);
+	}
+	
+	if (ext->CompareWith("prg") || ext->CompareWith("PRG"))
+	{
+		C64D_DragDropCallbackPRG(filePath);
+	}
+	else if (ext->CompareWith("d64") || ext->CompareWith("D64"))
+	{
+		C64D_DragDropCallbackD64(filePath);
+	}
+	else if (ext->CompareWith("crt") || ext->CompareWith("CRT"))
+	{
+		C64D_DragDropCallbackCRT(filePath);
+	}
+	else if (ext->CompareWith("snap") || ext->CompareWith("SNAP")
+			 || ext->CompareWith("vsf") || ext->CompareWith("VSF"))
+	{
+		C64D_DragDropCallbackSNAP(filePath);
+	}
+
+	
+	delete ext;
+}
+
+void C64D_DragDropCallbackPRG(CSlrString *filePath)
+{
+	LOGD("C64D_DragDropCallbackPRG");
+	filePath->DebugPrint("filePath=");
+	
+	viewC64->viewC64MainMenu->LoadPRG(filePath, true, false);
+	
+	C64DebuggerStoreSettings();
+}
+
+void C64D_DragDropCallbackD64(CSlrString *filePath)
+{
+	LOGD("C64D_DragDropCallbackD64");
+	filePath->DebugPrint("filePath=");
+	
+	viewC64->viewC64MainMenu->InsertD64(filePath, false);
+	
+	CSlrString *fileName = filePath->GetFileNameComponentFromPath();
+	char *fn = fileName->GetStdASCII();
+	
+	char *buf = SYS_GetCharBuf();
+	sprintf(buf, "Inserted %s", fn);
+	
+	guiMain->ShowMessage(buf);
+	
+	SYS_ReleaseCharBuf(buf);
+	delete [] fn;
+	delete fileName;
+	
+	C64DebuggerStoreSettings();
+}
+
+void C64D_DragDropCallbackCRT(CSlrString *filePath)
+{
+	LOGD("C64D_DragDropCallbackCRT");
+	filePath->DebugPrint("filePath=");
+	
+	viewC64->viewC64MainMenu->InsertCartridge(filePath, false);
+
+	C64DebuggerStoreSettings();
+}
+
+void C64D_DragDropCallbackSNAP(CSlrString *filePath)
+{
+	LOGD("C64D_DragDropCallbackSNAP");
+	filePath->DebugPrint("filePath=");
+	
+	viewC64->viewC64Snapshots->LoadSnapshot(filePath, false);
+}
+
 
 void CViewC64::AddDebugCode()
 {
@@ -1915,6 +2501,7 @@ void CViewC64::AddDebugCode()
 	
 	debugInterface->MakeJmpC64(0x1000);
 }
+
 
 ////
 // TODO: move it from here and create callbacks

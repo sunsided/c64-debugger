@@ -4,6 +4,11 @@
 #include "SYS_Defs.h"
 #include "CGuiView.h"
 #include "CGuiEditHex.h"
+extern "C"
+{
+#include "ViceWrapper.h"
+};
+
 #include <vector>
 #include <list>
 
@@ -23,17 +28,24 @@ public:
 	
 	virtual bool DoTap(GLfloat x, GLfloat y);
 	
+	virtual bool DoRightClick(GLfloat x, GLfloat y);
+
 	CSlrFont *fontBytes;
 	CSlrFont *fontCharacters;
 	
 	float fontSize;
 	
 	float fontBytesSize;
-	
+
+	virtual void SetPosition(GLfloat posX, GLfloat posY);
 	virtual void SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY);
 	
 	virtual void Render();
 	virtual void DoLogic();
+	
+	void RenderColorRectangle(float px, float py, float ledSizeX, float ledSizeY, float gap, bool isLocked, u8 color);
+	
+	void UpdateSpritesImages();
 	
 	C64DebugInterface *debugInterface;
 
@@ -43,8 +55,13 @@ public:
 	bool isVertical;
 	bool showSprites;
 	
-	virtual void SetFocus(bool focus);
+	virtual bool SetFocus(bool focus);
 
+	volatile bool isLockedState;
+	
+	// force colors D020-D02E, -1 = don't force
+	int forceColors[0x0F];
+	int forceColorD800;
 };
 
 

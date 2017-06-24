@@ -2,7 +2,7 @@
  * userport_joystick.h: Generic userport joystick device emulation.
  *
  * Written by
- *  Marco van den Heuvel <viceteam@t-online.de>
+ *  Marco van den Heuvel <blackystardust68@yahoo.com>
  *
  * This file is part of VICE, the Versatile Commodore Emulator.
  * See README for copyright notice.
@@ -42,12 +42,7 @@
 extern int userport_joystick_enable;
 extern int userport_joystick_type;
 
-extern void userport_joystick_store_pa2(BYTE value);
-extern void userport_joystick_store_pbx(BYTE value);
-extern void userport_joystick_store_sdr(BYTE value);
-
-extern BYTE userport_joystick_read_pa2(BYTE orig);
-extern BYTE userport_joystick_read_pbx(BYTE orig);
-extern BYTE userport_joystick_read_sdr(BYTE orig);
+extern int userport_joystick_resources_init(void);
+extern int userport_joystick_cmdline_options_init(void);
 
 #endif

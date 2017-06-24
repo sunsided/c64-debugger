@@ -4,7 +4,7 @@
  * Written by
  *  Teemu Rantanen <tvr@cs.hut.fi>
  *  Ettore Perazzoli <ettore@comm2000.it>
- *  André Fachat <a.fachat@physik.tu-chemnitz.de>
+ *  Andre Fachat <a.fachat@physik.tu-chemnitz.de>
  *  Andreas Boose <viceteam@t-online.de>
  *  Thomas Bretz <tbretz@ph.tum.de>
  *
@@ -41,6 +41,7 @@
 #include "autostart.h"
 #include "autostart-prg.h"
 #include "attach.h"
+#include "cartridge.h"
 #include "charset.h"
 #include "cmdline.h"
 #include "datasette.h"
@@ -50,7 +51,9 @@
 #include "imagecontents.h"
 #include "tapecontents.h"
 #include "diskcontents.h"
+#include "initcmdline.h"
 #include "interrupt.h"
+#include "ioutil.h"
 #include "kbdbuf.h"
 #include "lib.h"
 #include "log.h"
@@ -78,6 +81,7 @@
 #endif
 
 static void autostart_done(void);
+static void autostart_finish(void);
 
 /* Kernal addresses.  Set by `autostart_init()'.  */
 
@@ -150,12 +154,12 @@ static int trigger_monitor = 0;
 
 int autostart_ignore_reset = 0; /* FIXME: only used by datasette.c, does it really have to be global? */
 
-/* additional random delay of up to 10 frames */
-#define AUTOSTART_RAND() (1 + (int)(((float)machine_get_cycles_per_frame()) * 10.0f * rand() / (RAND_MAX + 1.0)))
+/* flag for special case handling of C128 80 columns mode */
+static int c128_column4080_key;
 
 /* ------------------------------------------------------------------------- */
 
-static int autostart_basic_load = 0;
+int autostart_basic_load = 0;
 
 static int AutostartRunWithColon = 0;
 
@@ -170,7 +174,9 @@ static int AutostartPrgMode = AUTOSTART_PRG_MODE_VFS;
 
 static char *AutostartPrgDiskImage = NULL;
 
-static const char * const AutostartRunCommandsAvailable[] = { "RUN\r", "RUN:\r" };
+static const char * const AutostartRunCommandsAvailable[] = {
+    "RUN\r", "RUN:\r"
+};
 
 static const char * AutostartRunCommand = NULL;
 
@@ -178,7 +184,7 @@ static void set_handle_true_drive_emulation_state(void)
 {
     handle_drive_true_emulation_overridden =
         AutostartHandleTrueDriveEmulation ?
-            handle_drive_true_emulation_by_machine : 0;
+        handle_drive_true_emulation_by_machine : 0;
 }
 
 /*! \internal \brief set if autostart should use LOAD ... ,1 */
@@ -259,10 +265,10 @@ static int set_autostart_delayrandom(int val, void *param)
 /*! \internal \brief set autostart prg mode */
 static int set_autostart_prg_mode(int val, void *param)
 {
-    AutostartPrgMode = val;
     if ((val < 0) || (val > AUTOSTART_PRG_MODE_LAST)) {
-        val = 0;
+        val = AUTOSTART_PRG_MODE_DEFAULT;
     }
+    AutostartPrgMode = val;
 
     return 0;
 }
@@ -271,8 +277,9 @@ static int set_autostart_prg_mode(int val, void *param)
 
 static int set_autostart_prg_disk_image(const char *val, void *param)
 {
-    if (util_string_set(&AutostartPrgDiskImage, val))
+    if (util_string_set(&AutostartPrgDiskImage, val)) {
         return 0;
+    }
 
     return 0;
 }
@@ -281,7 +288,7 @@ static int set_autostart_prg_disk_image(const char *val, void *param)
 static resource_string_t resources_string[] = {
     { "AutostartPrgDiskImage", NULL, RES_EVENT_NO, NULL,
       &AutostartPrgDiskImage, set_autostart_prg_disk_image, NULL },
-    { NULL }
+    RESOURCE_STRING_LIST_END
 };
 
 /*! \brief integer resources used by autostart */
@@ -294,13 +301,13 @@ static const resource_int_t resources_int[] = {
       &AutostartHandleTrueDriveEmulation, set_autostart_handle_tde, NULL },
     { "AutostartWarp", 1, RES_EVENT_NO, (resource_value_t)0,
       &AutostartWarp, set_autostart_warp, NULL },
-    { "AutostartPrgMode", 0, RES_EVENT_NO, (resource_value_t)0,
+    { "AutostartPrgMode", AUTOSTART_PRG_MODE_DEFAULT, RES_EVENT_NO, (resource_value_t)0,
       &AutostartPrgMode, set_autostart_prg_mode, NULL },
     { "AutostartDelay", 0, RES_EVENT_NO, (resource_value_t)0,
       &AutostartDelay, set_autostart_delay, NULL },
     { "AutostartDelayRandom", 1, RES_EVENT_NO, (resource_value_t)0,
       &AutostartDelayRandom, set_autostart_delayrandom, NULL },
-    { NULL }
+    RESOURCE_INT_LIST_END
 };
 
 /*! \brief initialize the resources
@@ -314,8 +321,9 @@ int autostart_resources_init(void)
 {
     resources_string[0].factory_value = archdep_default_autostart_disk_image_file_name();
 
-    if (resources_register_string(resources_string) < 0)
+    if (resources_register_string(resources_string) < 0) {
         return -1;
+    }
 
     return resources_register_int(resources_int);
 }
@@ -373,17 +381,17 @@ static const cmdline_option_t cmdline_options[] =
     { "-autostartprgmode", SET_RESOURCE, 1,
       NULL, NULL, "AutostartPrgMode", NULL,
       USE_PARAM_ID, USE_DESCRIPTION_ID,
-      IDCLS_UNUSED, IDCLS_SET_AUTOSTART_MODE_FOR_PRG,
+      IDCLS_P_MODE, IDCLS_SET_AUTOSTART_MODE_FOR_PRG,
       NULL, NULL },
     { "-autostartprgdiskimage", SET_RESOURCE, 1,
       NULL, NULL, "AutostartPrgDiskImage", NULL,
       USE_PARAM_ID, USE_DESCRIPTION_ID,
-      IDCLS_UNUSED, IDCLS_SET_DISK_IMAGE_FOR_AUTOSTART_PRG,
+      IDCLS_P_NAME, IDCLS_SET_DISK_IMAGE_FOR_AUTOSTART_PRG,
       NULL, NULL },
     { "-autostart-delay", SET_RESOURCE, 1,
       NULL, NULL, "AutostartDelay", NULL,
       USE_PARAM_ID, USE_DESCRIPTION_ID,
-      IDCLS_UNUSED, IDCLS_SET_AUTOSTART_DELAY,
+      IDCLS_P_FRAMES, IDCLS_SET_AUTOSTART_DELAY,
       NULL, NULL },
     { "-autostart-delay-random", SET_RESOURCE, 0,
       NULL, NULL, "AutostartDelayRandom", (resource_value_t)1,
@@ -395,7 +403,7 @@ static const cmdline_option_t cmdline_options[] =
       USE_PARAM_STRING, USE_DESCRIPTION_ID,
       IDCLS_UNUSED, IDCLS_DISABLE_AUTOSTART_RANDOM_DELAY,
       NULL, NULL },
-    { NULL }
+    CMDLINE_LIST_END
 };
 
 /*! \brief initialize the command-line options
@@ -424,36 +432,40 @@ static enum { YES, NO, NOT_YET } check(const char *s, unsigned int blink_mode)
 {
     int screen_addr, line_length, cursor_column, addr, i;
 
-    screen_addr = (int)(mem_read((WORD)(pnt))
-                  | (mem_read((WORD)(pnt + 1)) << 8));
+    screen_addr = (int)(mem_read((WORD)(pnt)) | (mem_read((WORD)(pnt + 1)) << 8));
     cursor_column = (int)mem_read((WORD)(pntr));
 
     line_length = (int)(lnmx < 0 ? -lnmx : mem_read((WORD)(lnmx)) + 1);
 
-    if (!kbdbuf_is_empty())
-        return NOT_YET;
+    DBG(("check(%s) pnt:%04x pntr:%04x addr:%04x column:%d, linelen:%d blnsw:%04x(%d)",
+         s, pnt, pntr, screen_addr, cursor_column, line_length, blnsw, mem_read(blnsw)));
 
-    if (blink_mode == AUTOSTART_WAIT_BLINK && cursor_column != 0)
+    if (!kbdbuf_is_empty()) {
         return NOT_YET;
+    }
 
-    if (blink_mode == AUTOSTART_WAIT_BLINK && blnsw != 0
-        && mem_read(blnsw) != 0)
+    if (blink_mode == AUTOSTART_WAIT_BLINK && cursor_column != 0) {
         return NOT_YET;
+    }
 
-    if (blink_mode == AUTOSTART_WAIT_BLINK)
+    if (blink_mode == AUTOSTART_WAIT_BLINK && blnsw != 0 && mem_read(blnsw) != 0) {
+        return NOT_YET;
+    }
+
+    if (blink_mode == AUTOSTART_WAIT_BLINK) {
         addr = screen_addr - line_length;
-    else
+    } else {
         addr = screen_addr;
+    }
 
     for (i = 0; s[i] != '\0'; i++) {
-
         if (mem_read((WORD)(addr + i)) != s[i] % 64) {
-            if (mem_read((WORD)(addr + i)) != (BYTE)32)
+            if (mem_read((WORD)(addr + i)) != (BYTE)32) {
                 return NO;
+            }
             return NOT_YET;
         }
     }
-
     return YES;
 }
 
@@ -467,8 +479,9 @@ static int get_true_drive_emulation_state(void)
 {
     int value;
 
-    if (resources_get_int("DriveTrueEmulation", &value) < 0)
+    if (resources_get_int("DriveTrueEmulation", &value) < 0) {
         return 0;
+    }
 
     return value;
 }
@@ -525,7 +538,17 @@ static void check_rom_area(void)
         /* special case for auto-starters: ROM left. We also consider
          * BASIC area to be ROM, because it's responsible for writing "READY."
          */
-        if (machine_addr_in_ram(reg_pc)) {
+        /* FIXME: C128 is a special beast, as it would execute some stuff in system
+                  RAM - which this special case hack checks. a better check might
+                  be to look at the current bank too.
+                  without this check eg autostarting a prg file with autostartmode=
+                  "disk image" will fail. (exit from ROM at $some RAM address)
+        */
+        if (((machine_class == VICE_MACHINE_C128) && 
+             !((reg_pc >= 0x2a0) && (reg_pc <= 0x3af)) && 
+             !((reg_pc >= 0x4300) && (reg_pc <= 0x4fff)) && 
+             machine_addr_in_ram(reg_pc)) ||
+            ((machine_class != VICE_MACHINE_C128) && (machine_addr_in_ram(reg_pc)))) {
             log_message(autostart_log, "Left ROM for $%04x", reg_pc);
             disable_warp_if_was_requested();
             autostart_done();
@@ -539,7 +562,7 @@ static void load_snapshot_trap(WORD unused_addr, void *unused_data)
 {
     if (autostart_program_name
         && machine_read_snapshot((char *)autostart_program_name, 0) < 0) {
-        ui_error(translate_text(IDGS_CANNOT_LOAD_SNAPSHOT_FILE));
+        snapshot_display_error();
     }
 
     ui_update_menus();
@@ -580,8 +603,9 @@ int autostart_init(CLOCK _min_cycles, int handle_drive_true_emulation,
 
     if (autostart_log == LOG_ERR) {
         autostart_log = log_open("AUTOSTART");
-        if (autostart_log == LOG_ERR)
+        if (autostart_log == LOG_ERR) {
             return -1;
+        }
     }
 
     return 0;
@@ -589,8 +613,9 @@ int autostart_init(CLOCK _min_cycles, int handle_drive_true_emulation,
 
 void autostart_disable(void)
 {
-    if (!autostart_enabled)
+    if (!autostart_enabled) {
         return;
+    }
 
     autostartmode = AUTOSTART_ERROR;
     trigger_monitor = 0;
@@ -604,13 +629,45 @@ void autostart_trigger_monitor(int enable)
     trigger_monitor = enable;
 }
 
+/* this is called after successful loading */
+static void autostart_finish(void)
+{
+    if (autostart_run_mode == AUTOSTART_MODE_RUN) {
+        log_message(autostart_log, "Starting program.");
+        if ((machine_class == VICE_MACHINE_C128) && (c128_column4080_key == 0)) {
+            kbdbuf_feed("GRAPHIC5:");
+        }
+        /* log_message(autostart_log, "Run command is: '%s' (%s)", AutostartRunCommand, AutostartDelayRandom ? "delayed" : "no delay"); */
+        if (AutostartDelayRandom) {
+            kbdbuf_feed_runcmd(AutostartRunCommand);
+        } else {
+            kbdbuf_feed(AutostartRunCommand);
+        }
+    } else {
+        log_message(autostart_log, "Program loaded.");
+        if ((machine_class == VICE_MACHINE_C128) && (c128_column4080_key == 0)) {
+            kbdbuf_feed("GRAPHIC5\x0d");
+        }
+    }
+    /* printf("autostart_finish cmdline_get_autostart_mode(): %d\n", cmdline_get_autostart_mode()); */
+    /* inject string given to -keybuf option on commandline into keyboard buffer */
+    if (cmdline_get_autostart_mode() != AUTOSTART_MODE_NONE) {
+        kbdbuf_feed_cmdline();
+    }
+}
+
 /* This is called if all steps of an autostart operation were passed successfully */
-void autostart_done(void)
+static void autostart_done(void)
 {
     autostartmode = AUTOSTART_DONE;
-    
+
+    if (machine_class == VICE_MACHINE_C128) {
+        /* restore original state of key */
+        resources_set_int("40/80ColumnKey", c128_column4080_key);
+    }
+
     /* Enter monitor after done */
-    if(trigger_monitor) {
+    if (trigger_monitor) {
         trigger_monitor = 0;
         monitor_startup_trap();
         log_message(autostart_log, "Done. Returning to Monitor.");
@@ -626,31 +683,31 @@ void autostart_done(void)
 static void disk_eof_callback(void)
 {
     if (handle_drive_true_emulation_overridden) {
-        BYTE id[2], *buffer;
+        BYTE id[2], *buffer = NULL;
         unsigned int track, sector;
-
+        /* FIXME: shouldnt this loop over all drives? */
         if (orig_drive_true_emulation_state) {
             log_message(autostart_log, "Turning true drive emulation on.");
-            vdrive_bam_get_disk_id(8, id);
-            vdrive_get_last_read(&track, &sector, &buffer);
+            if (vdrive_bam_get_disk_id(8, id) == 0) {
+                vdrive_get_last_read(&track, &sector, &buffer);
+            }
         }
         set_true_drive_emulation_mode(orig_drive_true_emulation_state);
         if (orig_drive_true_emulation_state) {
-            drive_set_disk_memory(id, track, sector, drive_context[0]);
-            drive_set_last_read(track, sector, buffer, drive_context[0]);
+            if (buffer) {
+                log_message(autostart_log, "Restoring true drive state of drive 8.");
+                drive_set_disk_memory(id, track, sector, drive_context[0]);
+                drive_set_last_read(track, sector, buffer, drive_context[0]);
+            } else {
+                log_message(autostart_log, "No Disk Image in drive 8.");
+            }
         }
     }
 
     if (autostartmode != AUTOSTART_NONE) {
-        if (autostart_run_mode == AUTOSTART_MODE_RUN) {
-            log_message(autostart_log, "Starting program.");
-            kbdbuf_feed(AutostartRunCommand);
-        }
-        else {
-            log_message(autostart_log, "Program loaded.");
-        }
+        autostart_finish();
     }
-    
+
     autostart_done();
 
     machine_bus_eof_callback_set(NULL);
@@ -676,151 +733,155 @@ static void advance_hastape(void)
     char *tmp;
 
     switch (check("READY.", AUTOSTART_WAIT_BLINK)) {
-      case YES:
-        log_message(autostart_log, "Loading file.");
-        if (autostart_program_name) {
-            tmp = util_concat("LOAD\"", autostart_program_name, "\":\r", NULL);
-            kbdbuf_feed(tmp);
-            lib_free(tmp);
-        } else {
-            kbdbuf_feed("LOAD:\r");
-        }
-        if (tape_tap_attached()) {
+        case YES:
+            log_message(autostart_log, "Loading file.");
+            if (autostart_program_name) {
+                tmp = util_concat("LOAD\"", autostart_program_name, "\":\r", NULL);
+                kbdbuf_feed(tmp);
+                lib_free(tmp);
+            } else {
+                kbdbuf_feed("LOAD:\r");
+            }
             autostartmode = AUTOSTART_PRESSPLAYONTAPE;
-        } else {
-            autostartmode = AUTOSTART_LOADINGTAPE;
-        }
-        entered_rom = 0;
-        deallocate_program_name();
-        break;
-      case NO:
-        disable_warp_if_was_requested();
-        autostart_disable();
-        break;
-      case NOT_YET:
-        break;
+            entered_rom = 0;
+            deallocate_program_name();
+            break;
+        case NO:
+            disable_warp_if_was_requested();
+            autostart_disable();
+            break;
+        case NOT_YET:
+            break;
     }
 }
 
 static void advance_pressplayontape(void)
 {
     switch (check("PRESS PLAY ON TAPE", AUTOSTART_NOWAIT_BLINK)) {
-      case YES:
-        autostartmode = AUTOSTART_LOADINGTAPE;
-        datasette_control(DATASETTE_CONTROL_START);
-        break;
-      case NO:
-        disable_warp_if_was_requested();
-        autostart_disable();
-        break;
-      case NOT_YET:
-        break;
+        case YES:
+            autostartmode = AUTOSTART_LOADINGTAPE;
+            datasette_control(DATASETTE_CONTROL_START);
+            break;
+        case NO:
+            disable_warp_if_was_requested();
+            autostart_disable();
+            break;
+        case NOT_YET:
+            break;
     }
 }
 
 static void advance_loadingtape(void)
 {
     switch (check("READY.", AUTOSTART_WAIT_BLINK)) {
-      case YES:
-        disable_warp_if_was_requested();
-
-        if (autostart_run_mode == AUTOSTART_MODE_RUN) {
-            log_message(autostart_log, "Starting program.");
-            kbdbuf_feed(AutostartRunCommand);
-        }
-        autostart_done();
-        break;
-      case NO:
-        disable_warp_if_was_requested();
-        autostart_disable();
-        break;
-      case NOT_YET:
-        /* leave autostart and disable warp if ROM area was left */
-        check_rom_area();
-        break;
+        case YES:
+            disable_warp_if_was_requested();
+            autostart_finish();
+            autostart_done();
+            break;
+        case NO:
+            disable_warp_if_was_requested();
+            autostart_disable();
+            break;
+        case NOT_YET:
+            /* leave autostart and disable warp if ROM area was left */
+            check_rom_area();
+            break;
     }
 }
 
 static void advance_hasdisk(void)
 {
-    char *tmp;
+    char *tmp, *temp_name;
     int traps;
 
     switch (check("READY.", AUTOSTART_WAIT_BLINK)) {
-      case YES:
-        if (autostart_program_name)
-            log_message(autostart_log, "Loading program '%s'",
-                        autostart_program_name);
-        else
-            log_message(autostart_log, "Loading program '*'");
-        orig_drive_true_emulation_state = get_true_drive_emulation_state();
-        if (handle_drive_true_emulation_overridden) {
-            resources_get_int("VirtualDevices", &traps);
-            if (traps) {
-                if (orig_drive_true_emulation_state)
-                    log_message(autostart_log,
-                                "Turning true drive emulation off.");
-                set_true_drive_emulation_mode(0);
-            } else {
-                if (!orig_drive_true_emulation_state)
-                    log_message(autostart_log,
-                                "Turning true drive emulation on.");
-                set_true_drive_emulation_mode(1);
-            }
-        } else {
-            if (!orig_drive_true_emulation_state) {
-                traps = 1;
-            } else {
-                traps = 0;
-            }
-        }
-        tmp = lib_msprintf("LOAD\"%s\",8%s:\r", 
-            autostart_program_name ?
-              autostart_program_name : "*",
-            autostart_basic_load ? "" : ",1");
-        kbdbuf_feed(tmp);
-        lib_free(tmp);
+        case YES:
 
-        if (!traps) {
-            if (AutostartWarp) {
-                autostartmode = AUTOSTART_WAITSEARCHINGFOR;
-            } else {
-                /* be most compatible if warp is disabled */
-                if (autostart_run_mode == AUTOSTART_MODE_RUN) {
-                    kbdbuf_feed(AutostartRunCommand);
+            /* autostart_program_name may be petscii or ascii at this point,
+               ANDing the charcodes with 0x7f here is a cheap way to prevent
+               illegal characters in the printed message */
+            if (autostart_program_name) {
+                temp_name = tmp = lib_stralloc(autostart_program_name);
+                while (*tmp) {
+                    *tmp++ &= 0x7f;
                 }
-                autostart_done();
+                log_message(autostart_log, "Loading program '%s'", temp_name);
+                lib_free(temp_name);
+            } else {
+                log_message(autostart_log, "Loading program '*'");
             }
-        } else {
-            autostartmode = AUTOSTART_LOADINGDISK;
-            machine_bus_attention_callback_set(disk_attention_callback);
-        }
 
-        deallocate_program_name();
-        break;
-      case NO:
-        orig_drive_true_emulation_state = get_true_drive_emulation_state();
-        disable_warp_if_was_requested();
-        autostart_disable();
-        break;
-      case NOT_YET:
-        break;
+            orig_drive_true_emulation_state = get_true_drive_emulation_state();
+            if (handle_drive_true_emulation_overridden) {
+                resources_get_int("VirtualDevices", &traps);
+                if (traps) {
+                    if (orig_drive_true_emulation_state) {
+                        log_message(autostart_log,
+                                    "Turning true drive emulation off.");
+                    }
+                    set_true_drive_emulation_mode(0);
+                } else {
+                    if (!orig_drive_true_emulation_state) {
+                        log_message(autostart_log,
+                                    "Turning true drive emulation on.");
+                    }
+                    set_true_drive_emulation_mode(1);
+                }
+            } else {
+                if (!orig_drive_true_emulation_state) {
+                    traps = 1;
+                } else {
+                    traps = 0;
+                }
+            }
+
+            tmp = lib_msprintf("LOAD\"%s\",8%s:\r",
+                               autostart_program_name ?
+                               autostart_program_name : "*",
+                               autostart_basic_load ? "" : ",1");
+            DBG(("advance_hasdisk '%s'", tmp));
+            kbdbuf_feed(tmp);
+            lib_free(tmp);
+
+            if (!traps) {
+                if (AutostartWarp) {
+                    autostartmode = AUTOSTART_WAITSEARCHINGFOR;
+                } else {
+                    /* be most compatible if warp is disabled */
+                    autostart_finish();
+                    autostart_done();
+                }
+            } else {
+                autostartmode = AUTOSTART_LOADINGDISK;
+                machine_bus_attention_callback_set(disk_attention_callback);
+            }
+
+            deallocate_program_name();
+            break;
+        case NO:
+            orig_drive_true_emulation_state = get_true_drive_emulation_state();
+            disable_warp_if_was_requested();
+            autostart_disable();
+            break;
+        case NOT_YET:
+            break;
     }
 }
 
 static void advance_hassnapshot(void)
 {
     switch (check("READY.", AUTOSTART_WAIT_BLINK)) {
-      case YES:
-        autostart_done();
-        log_message(autostart_log, "Restoring snapshot.");
-        interrupt_maincpu_trigger_trap(load_snapshot_trap, 0);
-        break;
-      case NO:
-        autostart_disable();
-        break;
-      case NOT_YET:
-        break;
+        case YES:
+            autostart_done();
+            log_message(autostart_log, "Restoring snapshot.");
+            interrupt_maincpu_trigger_trap(load_snapshot_trap, 0);
+            break;
+        case NO:
+            autostart_disable();
+            break;
+        case NOT_YET:
+            break;
     }
 }
 
@@ -829,65 +890,61 @@ static void advance_hassnapshot(void)
 static void advance_waitsearchingfor(void)
 {
     switch (check("SEARCHING FOR", AUTOSTART_NOWAIT_BLINK)) {
-      case YES:
-        log_message(autostart_log, "Searching for ...");
-        autostartmode = AUTOSTART_WAITLOADING;
-        break;
-      case NO:
-        log_message(autostart_log, "NO Searching for ...");
-        disable_warp_if_was_requested();
-        autostart_disable();
-        break;
-      case NOT_YET:
-        break;
+        case YES:
+            log_message(autostart_log, "Searching for ...");
+            autostartmode = AUTOSTART_WAITLOADING;
+            break;
+        case NO:
+            log_message(autostart_log, "NO Searching for ...");
+            disable_warp_if_was_requested();
+            autostart_disable();
+            break;
+        case NOT_YET:
+            break;
     }
 }
 
 static void advance_waitloading(void)
 {
     switch (check("LOADING", AUTOSTART_NOWAIT_BLINK)) {
-      case YES:
-        log_message(autostart_log, "Loading");
-        entered_rom = 0;
-        autostartmode = AUTOSTART_WAITLOADREADY;
-        break;
-      case NO:
-        /* still showing SEARCHING FOR ? */
-        if (check("SEARCHING FOR", AUTOSTART_NOWAIT_BLINK)==YES) {
-            return;
-        }
-        /* no something else is shown -> error! */
-        log_message(autostart_log, "NO Loading");
-        disable_warp_if_was_requested();
-        autostart_disable();
-        break;
-      case NOT_YET:
-        break;
+        case YES:
+            log_message(autostart_log, "Loading");
+            entered_rom = 0;
+            autostartmode = AUTOSTART_WAITLOADREADY;
+            break;
+        case NO:
+            /* still showing SEARCHING FOR ? */
+            if (check("SEARCHING FOR", AUTOSTART_NOWAIT_BLINK) == YES) {
+                return;
+            }
+            /* no something else is shown -> error! */
+            log_message(autostart_log, "NO Loading");
+            disable_warp_if_was_requested();
+            autostart_disable();
+            break;
+        case NOT_YET:
+            break;
     }
 }
 
 static void advance_waitloadready(void)
-{    
+{
     switch (check("READY.", AUTOSTART_WAIT_BLINK)) {
-      case YES:
-        log_message(autostart_log, "Ready");
-        disable_warp_if_was_requested();
-
-        if (autostart_run_mode == AUTOSTART_MODE_RUN) {
-            kbdbuf_feed(AutostartRunCommand);
-            log_message(autostart_log, "Running program");
-        }
-        autostart_done();
-        break;
-      case NO:
-        log_message(autostart_log, "NO Ready");
-        disable_warp_if_was_requested();
-        autostart_disable();
-        break;
-      case NOT_YET:
-        /* leave autostart and disable warp if ROM area was left */
-        check_rom_area();
-        break;
+        case YES:
+            log_message(autostart_log, "Ready");
+            disable_warp_if_was_requested();
+            autostart_finish();
+            autostart_done();
+            break;
+        case NO:
+            log_message(autostart_log, "NO Ready");
+            disable_warp_if_was_requested();
+            autostart_disable();
+            break;
+        case NOT_YET:
+            /* leave autostart and disable warp if ROM area was left */
+            check_rom_area();
+            break;
     }
 }
 
@@ -896,7 +953,7 @@ static void advance_inject(void)
 {
     if (autostart_prg_perform_injection(autostart_log) < 0) {
         disable_warp_if_was_requested();
-        autostart_disable();        
+        autostart_disable();
     } else {
         /* wait for ready cursor and type RUN */
         autostartmode = AUTOSTART_WAITLOADREADY;
@@ -911,7 +968,7 @@ void autostart_advance(void)
         return;
     }
 
-    if ( orig_drive_true_emulation_state == -1) {
+    if (orig_drive_true_emulation_state == -1) {
         orig_drive_true_emulation_state = get_true_drive_emulation_state();
     }
 
@@ -925,35 +982,35 @@ void autostart_advance(void)
     }
 
     switch (autostartmode) {
-      case AUTOSTART_HASTAPE:
-        advance_hastape();
-        break;
-      case AUTOSTART_PRESSPLAYONTAPE:
-        advance_pressplayontape();
-        break;
-      case AUTOSTART_LOADINGTAPE:
-        advance_loadingtape();
-        break;
-      case AUTOSTART_HASDISK:
-        advance_hasdisk();
-        break;
-      case AUTOSTART_HASSNAPSHOT:
-        advance_hassnapshot();
-        break;
-      case AUTOSTART_WAITLOADREADY:
-        advance_waitloadready();
-        break;
-      case AUTOSTART_WAITLOADING:
-        advance_waitloading();
-        break;
-      case AUTOSTART_WAITSEARCHINGFOR:
-        advance_waitsearchingfor();
-        break;
-      case AUTOSTART_INJECT:
-        advance_inject();
-        break;
-      default:
-        return;
+        case AUTOSTART_HASTAPE:
+            advance_hastape();
+            break;
+        case AUTOSTART_PRESSPLAYONTAPE:
+            advance_pressplayontape();
+            break;
+        case AUTOSTART_LOADINGTAPE:
+            advance_loadingtape();
+            break;
+        case AUTOSTART_HASDISK:
+            advance_hasdisk();
+            break;
+        case AUTOSTART_HASSNAPSHOT:
+            advance_hassnapshot();
+            break;
+        case AUTOSTART_WAITLOADREADY:
+            advance_waitloadready();
+            break;
+        case AUTOSTART_WAITLOADING:
+            advance_waitloading();
+            break;
+        case AUTOSTART_WAITSEARCHINGFOR:
+            advance_waitsearchingfor();
+            break;
+        case AUTOSTART_INJECT:
+            advance_inject();
+            break;
+        default:
+            return;
     }
 
     if (autostartmode == AUTOSTART_ERROR && handle_drive_true_emulation_overridden) {
@@ -968,13 +1025,34 @@ static void reboot_for_autostart(const char *program_name, unsigned int mode,
                                  unsigned int runmode)
 {
     int rnd;
+    char *temp_name = NULL, *temp;
 
     if (!autostart_enabled) {
         return;
     }
 
+    /* program_name may be petscii or ascii at this point, ANDing the charcodes
+       with 0x7f here is a cheap way to prevent illegal characters in the
+       printed message */
+    if (program_name) {
+        temp_name = temp = lib_stralloc(program_name);
+        while (*temp) {
+            *temp++ &= 0x7f;
+        }
+    }
     log_message(autostart_log, "Resetting the machine to autostart '%s'",
-                program_name ? program_name : "*");
+                program_name ? temp_name : "*");
+    if (program_name) {
+        lib_free(temp_name);
+    }
+
+    /* on x128 autostart will only work in 40 columns mode (and can not be fixed
+       easily for VDC mode). We work around that by switching to 40 columns and
+       back if needed */
+    if (machine_class == VICE_MACHINE_C128) {
+        resources_get_int("40/80ColumnKey", &c128_column4080_key);
+        resources_set_int("40/80ColumnKey", 1);
+    }
 
     mem_powerup();
 
@@ -987,11 +1065,12 @@ static void reboot_for_autostart(const char *program_name, unsigned int mode,
     autostart_initial_delay_cycles = min_cycles;
     resources_get_int("AutostartDelayRandom", &rnd);
     if (rnd) {
-        autostart_initial_delay_cycles += AUTOSTART_RAND();
+        /* additional random delay of up to 10 frames */
+        autostart_initial_delay_cycles += lib_unsigned_rand(1, machine_get_cycles_per_frame() * 10);
     }
     DBG(("autostart_initial_delay_cycles: %d", autostart_initial_delay_cycles));
 
-    machine_trigger_reset(MACHINE_RESET_MODE_SOFT);
+    machine_trigger_reset(MACHINE_RESET_MODE_HARD);
 
     /* The autostartmode must be set AFTER the shutdown to make the autostart
        threadsafe for OS/2 */
@@ -1014,12 +1093,13 @@ int autostart_snapshot(const char *file_name, const char *program_name)
     snapshot_t *snap;
 
     if (network_connected() || event_record_active() || event_playback_active()
-        || file_name == NULL || !autostart_enabled)
+        || file_name == NULL || !autostart_enabled) {
         return -1;
+    }
 
     deallocate_program_name();  /* not needed at all */
 
-    if (!(snap = snapshot_open(file_name, &vmajor, &vminor, machine_get_name())) ) {
+    if (!(snap = snapshot_open(file_name, &vmajor, &vminor, machine_get_name()))) {
         autostartmode = AUTOSTART_ERROR;
         return -1;
     }
@@ -1042,26 +1122,30 @@ int autostart_tape(const char *file_name, const char *program_name,
     BYTE do_seek = 1;
 
     if (network_connected() || event_record_active() || event_playback_active()
-        || !file_name || !autostart_enabled)
+        || !file_name || !autostart_enabled) {
         return -1;
+    }
 
     if (!(tape_image_attach(1, file_name) < 0)) {
         log_message(autostart_log,
                     "Attached file `%s' as a tape image.", file_name);
         if (!tape_tap_attached()) {
-            if (program_number == 0 || program_number == 1)
+            if (program_number == 0 || program_number == 1) {
                 do_seek = 0;
-             program_number -= 1;
+            }
+            program_number -= 1;
         }
         if (do_seek) {
             if (program_number > 0) {
                 /* program numbers in tape_seek_to_file() start at 0 */
-                tape_seek_to_file(tape_image_dev1, program_number-1);
+                tape_seek_to_file(tape_image_dev1, program_number - 1);
             } else {
                 tape_seek_start(tape_image_dev1);
             }
         }
-        resources_set_int("VirtualDevices", 1); /* Kludge: iAN CooG - for t64 images we need devtraps ON */
+        if (!tape_tap_attached()) {
+            resources_set_int("VirtualDevices", 1); /* Kludge: for t64 images we need devtraps ON */
+        }
         reboot_for_autostart(program_name, AUTOSTART_HASTAPE, runmode);
 
         return 0;
@@ -1102,15 +1186,21 @@ int autostart_disk(const char *file_name, const char *program_name,
     char *name = NULL;
 
     if (network_connected() || event_record_active() || event_playback_active()
-        || !file_name || !autostart_enabled)
+        || !file_name || !autostart_enabled) {
         return -1;
+    }
 
     /* Get program name first to avoid more than one file handle open on
        image.  */
-    if (!program_name && program_number > 0)
-        name = image_contents_filename_by_number(diskcontents_filesystem_read(file_name), program_number);
-    else
+    if (!program_name && program_number > 0) {
+        image_contents_t *contents = diskcontents_filesystem_read(file_name);
+        if (contents) {
+            name = image_contents_filename_by_number(contents, program_number);
+            image_contents_destroy(contents);
+        }
+    } else {
         name = lib_stralloc(program_name ? program_name : "*");
+    }
 
     if (name) {
         autostart_disk_cook_name(&name);
@@ -1156,29 +1246,36 @@ int autostart_prg(const char *file_name, unsigned int runmode)
     }
 
     /* determine how to load file */
-    switch(AutostartPrgMode) {
-    case AUTOSTART_PRG_MODE_VFS:
-        log_message(autostart_log, "Loading PRG file `%s' with virtual FS on unit #8.", file_name);
-        result = autostart_prg_with_virtual_fs(file_name, finfo, autostart_log);
-        mode = AUTOSTART_HASDISK;
-        boot_file_name = (const char *)finfo->name;
-        break;
-    case AUTOSTART_PRG_MODE_INJECT:
-        log_message(autostart_log, "Loading PRG file `%s' with direct RAM injection.", file_name);
-        result = autostart_prg_with_ram_injection(file_name, finfo, autostart_log);
-        mode = AUTOSTART_INJECT;
-        boot_file_name = NULL;
-        break;
-    case AUTOSTART_PRG_MODE_DISK:
-        log_message(autostart_log, "Loading PRG file `%s' with autostart disk image.", file_name);
-        result = autostart_prg_with_disk_image(file_name, finfo, autostart_log, AutostartPrgDiskImage);
-        mode = AUTOSTART_HASDISK;
-        boot_file_name = "*";
-        break;
-    default:
-        log_error(autostart_log, "Invalid PRG autostart mode: %d", AutostartPrgMode);
-        result = -1;
-        break;
+    switch (AutostartPrgMode) {
+        case AUTOSTART_PRG_MODE_VFS:
+            log_message(autostart_log, "Loading PRG file `%s' with virtual FS on unit #8.", file_name);
+            result = autostart_prg_with_virtual_fs(file_name, finfo, autostart_log);
+            mode = AUTOSTART_HASDISK;
+            boot_file_name = (const char *)finfo->name;
+            break;
+        case AUTOSTART_PRG_MODE_INJECT:
+            log_message(autostart_log, "Loading PRG file `%s' with direct RAM injection.", file_name);
+            result = autostart_prg_with_ram_injection(file_name, finfo, autostart_log);
+            mode = AUTOSTART_INJECT;
+            boot_file_name = NULL;
+            break;
+        case AUTOSTART_PRG_MODE_DISK:
+            {
+            char *savedir;
+            log_message(autostart_log, "Loading PRG file `%s' with autostart disk image.", file_name);
+            /* create the directory where the image should be written first */
+            util_fname_split(AutostartPrgDiskImage, &savedir, NULL);
+            ioutil_mkdir(savedir, IOUTIL_MKDIR_RWXU);
+            lib_free(savedir);
+            result = autostart_prg_with_disk_image(file_name, finfo, autostart_log, AutostartPrgDiskImage);
+            mode = AUTOSTART_HASDISK;
+            boot_file_name = "*";
+            }
+            break;
+        default:
+            log_error(autostart_log, "Invalid PRG autostart mode: %d", AutostartPrgMode);
+            result = -1;
+            break;
     }
 
     /* Now either proceed with disk image booting or prg injection after reset */
@@ -1195,7 +1292,7 @@ int autostart_prg(const char *file_name, unsigned int runmode)
 
 /* ------------------------------------------------------------------------- */
 
-int autostart_autodetect_opt_prgname(const char *file_prog_name, 
+int autostart_autodetect_opt_prgname(const char *file_prog_name,
                                      unsigned int alt_prg_number,
                                      unsigned int runmode)
 {
@@ -1217,17 +1314,14 @@ int autostart_autodetect_opt_prgname(const char *file_prog_name,
 
             charset_petconvstring((BYTE *)autostart_prg_name, 0);
             name = charset_replace_hexcodes(autostart_prg_name);
-            result = autostart_autodetect(autostart_file, name, 0,
-                                          runmode);
+            result = autostart_autodetect(autostart_file, name, 0, runmode);
             lib_free(name);
         } else {
-            result = autostart_autodetect(file_prog_name, NULL, alt_prg_number,
-                                          runmode);
+            result = autostart_autodetect(file_prog_name, NULL, alt_prg_number, runmode);
         }
         lib_free(autostart_file);
     } else {
-        result = autostart_autodetect(file_prog_name, NULL, alt_prg_number,
-                                      runmode);
+        result = autostart_autodetect(file_prog_name, NULL, alt_prg_number, runmode);
     }
     return result;
 }
@@ -1237,8 +1331,9 @@ int autostart_autodetect(const char *file_name, const char *program_name,
                          unsigned int program_number, unsigned int runmode)
 {
     if (network_connected() || event_record_active() || event_playback_active()
-        || file_name == NULL)
+        || file_name == NULL) {
         return -1;
+    }
 
     if (!autostart_enabled) {
         log_error(autostart_log,
@@ -1253,8 +1348,7 @@ int autostart_autodetect(const char *file_name, const char *program_name,
         return 0;
     }
 
-    if (machine_class != VICE_MACHINE_C64DTV)
-    {
+    if (machine_class != VICE_MACHINE_C64DTV && machine_class != VICE_MACHINE_SCPU64) {
         if (autostart_tape(file_name, program_name, program_number, runmode) == 0) {
             log_message(autostart_log, "`%s' recognized as tape image.", file_name);
             return 0;
@@ -1266,6 +1360,16 @@ int autostart_autodetect(const char *file_name, const char *program_name,
                     file_name);
         return 0;
     }
+
+    if ((machine_class == VICE_MACHINE_C64) || (machine_class == VICE_MACHINE_C64SC) ||
+       (machine_class == VICE_MACHINE_SCPU64) ||(machine_class == VICE_MACHINE_C128)) {
+        if (cartridge_attach_image(CARTRIDGE_CRT, file_name) == 0) {
+            log_message(autostart_log, "`%s' recognized as cartridge image.",
+                        file_name);
+            return 0;
+        }
+    }
+
     if (autostart_prg(file_name, runmode) == 0) {
         log_message(autostart_log, "`%s' recognized as program/p00 file.",
                     file_name);
@@ -1280,23 +1384,24 @@ int autostart_autodetect(const char *file_name, const char *program_name,
 int autostart_device(int num)
 {
     if (network_connected() || event_playback_active() || event_record_active()
-        || !autostart_enabled)
+        || !autostart_enabled) {
         return -1;
+    }
 
     switch (num) {
-      case 8:
-        reboot_for_autostart(NULL, AUTOSTART_HASDISK, AUTOSTART_MODE_RUN);
-        return 0;
-      case 1:
-        reboot_for_autostart(NULL, AUTOSTART_HASTAPE, AUTOSTART_MODE_RUN);
-        return 0;
+        case 8:
+            reboot_for_autostart(NULL, AUTOSTART_HASDISK, AUTOSTART_MODE_RUN);
+            return 0;
+        case 1:
+            reboot_for_autostart(NULL, AUTOSTART_HASTAPE, AUTOSTART_MODE_RUN);
+            return 0;
     }
     return -1;
 }
 
 int autostart_in_progress(void)
 {
-    return (autostartmode != AUTOSTART_NONE && autostartmode != AUTOSTART_DONE);
+    return ((autostartmode != AUTOSTART_NONE) && (autostartmode != AUTOSTART_DONE));
 }
 
 /* Disable autostart on reset.  */
@@ -1304,8 +1409,9 @@ void autostart_reset(void)
 {
     int oldmode;
 
-    if (!autostart_enabled)
+    if (!autostart_enabled) {
         return;
+    }
 
     if (!autostart_ignore_reset
         && autostartmode != AUTOSTART_NONE
@@ -1330,3 +1436,9 @@ void autostart_shutdown(void)
     autostart_prg_shutdown();
 }
 
+#ifdef ANDROID_COMPILE
+void loader_set_warpmode(int on)
+{
+    set_warp_mode(on);
+}
+#endif

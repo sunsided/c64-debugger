@@ -89,12 +89,40 @@ static const ui_menu_entry_t c64_model_submenu[] = {
       MENU_ENTRY_RESOURCE_RADIO,
       custom_C64Model_callback,
       (ui_callback_data_t)C64MODEL_C64_PAL_N },
-    SDL_MENU_LIST_END
+	{ "C64 SX PAL",
+		MENU_ENTRY_RESOURCE_RADIO,
+		custom_C64Model_callback,
+		(ui_callback_data_t)C64MODEL_C64SX_PAL },
+	{ "C64 SX NTSC",
+		MENU_ENTRY_RESOURCE_RADIO,
+		custom_C64Model_callback,
+		(ui_callback_data_t)C64MODEL_C64SX_NTSC },
+	{ "Japanese",
+		MENU_ENTRY_RESOURCE_RADIO,
+		custom_C64Model_callback,
+		(ui_callback_data_t)C64MODEL_C64_JAP },
+	{ "C64 GS",
+		MENU_ENTRY_RESOURCE_RADIO,
+		custom_C64Model_callback,
+		(ui_callback_data_t)C64MODEL_C64_GS },
+	{ "PET64 PAL",
+		MENU_ENTRY_RESOURCE_RADIO,
+		custom_C64Model_callback,
+		(ui_callback_data_t)C64MODEL_PET64_PAL },
+	{ "PET64 NTSC",
+		MENU_ENTRY_RESOURCE_RADIO,
+		custom_C64Model_callback,
+		(ui_callback_data_t)C64MODEL_PET64_NTSC },
+	{ "MAX Machine",
+		MENU_ENTRY_RESOURCE_RADIO,
+		custom_C64Model_callback,
+		(ui_callback_data_t)C64MODEL_ULTIMAX },
+	SDL_MENU_LIST_END
 };
 
 static UI_MENU_CALLBACK(custom_sidsubmenu_callback)
 {
-    /* Display the SID model by using the submenu radio callback 
+    /* Display the SID model by using the submenu radio callback
        on the first submenu (SID model) of the SID settings. */
     return submenu_radio_callback(0, sid_c64_menu[0].data);
 }

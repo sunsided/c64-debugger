@@ -66,10 +66,11 @@ bool logThisLevel(int level)
 
 bool logThisLevel(int level)
 {
+		return true;
 	if (level == DBGLVL_MAIN) return true; 
 	if (level == DBGLVL_DEBUG) return true;
 	if (level == DBGLVL_RES) return false;
-	if (level == DBGLVL_GUI) return false; //	true	false
+	if (level == DBGLVL_GUI) return true; //	true	false
 	if (level == DBGLVL_HTTP) return false;
 	if (level == DBGLVL_XMPLAYER) return false;
 	if (level == DBGLVL_AUDIO) return false;
@@ -110,6 +111,8 @@ const char *getLevelStr(int level)
 		return "[MAIN] ";
 	if (level == DBGLVL_DEBUG)
 		return "[DEBUG]";
+	if (level == DBGLVL_INPUT)
+		return "[INPUT]";
 	if (level == DBGLVL_RES)
 		return "[RES]  ";
 	if (level == DBGLVL_GUI)

@@ -2,7 +2,7 @@
  * viad.h - Drive VIA definitions.
  *
  * Written by
- *  Andre' Fachat <fachat@physik.tu-chemnitz.de>
+ *  Andre Fachat <fachat@physik.tu-chemnitz.de>
  *  Andreas Boose <viceteam@t-online.de>
  *
  * This file is part of VICE, the Versatile Commodore Emulator.
@@ -36,13 +36,12 @@ struct drive_s;
 extern void via2d_setup_context(struct drive_context_s *ctxptr);
 
 extern void via2d_init(struct drive_context_s *ctxptr);
-extern void via2d_store(struct drive_context_s *ctxptr, WORD addr,
-                                 BYTE byte);
+extern void via2d_store(struct drive_context_s *ctxptr, WORD addr, BYTE byte);
 extern BYTE via2d_read(struct drive_context_s *ctxptr, WORD addr);
 extern BYTE via2d_peek(struct drive_context_s *ctxptr, WORD addr);
+extern int via2d_dump(struct drive_context_s *ctxptr, WORD addr);
 extern BYTE c64d_via2d_peek(struct drive_context_s *ctxptr, WORD addr);
 
 extern void via2d_update_pcr(int pcrval, struct drive_s *dptr);
 
 #endif
-

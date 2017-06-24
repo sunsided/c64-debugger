@@ -44,7 +44,8 @@ char *fsdevice_dir[4] = { NULL, NULL, NULL, NULL };
 
 static int set_fsdevice_convert_p00(int val, void *param)
 {
-    fsdevice_convert_p00_enabled[vice_ptr_to_int(param) - 8] = val;
+    fsdevice_convert_p00_enabled[vice_ptr_to_int(param) - 8] = val ? 1 : 0;
+
     return 0;
 }
 
@@ -56,16 +57,18 @@ static int set_fsdevice_dir(const char *name, void *param)
 
 static int set_fsdevice_save_p00(int val, void *param)
 {
-    fsdevice_save_p00_enabled[vice_ptr_to_int(param) - 8] = val;
+    fsdevice_save_p00_enabled[vice_ptr_to_int(param) - 8] = val ? 1 : 0;
+
     return 0;
 }
 
 static int set_fsdevice_hide_cbm_files(int val, void *param)
 {
-    if (val && !fsdevice_convert_p00_enabled[vice_ptr_to_int(param) - 8])
+    if (val && !fsdevice_convert_p00_enabled[vice_ptr_to_int(param) - 8]) {
         return -1;
+    }
 
-    fsdevice_hide_cbm_files_enabled[vice_ptr_to_int(param) - 8] = val;
+    fsdevice_hide_cbm_files_enabled[vice_ptr_to_int(param) - 8] = val ? 1 : 0;
     return 0;
 }
 
@@ -80,7 +83,7 @@ static const resource_string_t resources_string[] = {
       (void *)&fsdevice_dir[2], set_fsdevice_dir, (void *)10 },
     { "FSDevice11Dir", FSDEVICE_DEFAULT_DIR, RES_EVENT_NO, NULL,
       (void *)&fsdevice_dir[3], set_fsdevice_dir, (void *)11 },
-    { NULL }
+    RESOURCE_STRING_LIST_END
 };
 
 static const resource_int_t resources_int[] = {
@@ -120,13 +123,14 @@ static const resource_int_t resources_int[] = {
     { "FSDevice11HideCBMFiles", 0, RES_EVENT_NO, NULL,
       &fsdevice_hide_cbm_files_enabled[3],
       set_fsdevice_hide_cbm_files, (void *)11 },
-    { NULL }
+    RESOURCE_INT_LIST_END
 };
 
 int fsdevice_resources_init(void)
 {
-    if (resources_register_string(resources_string) < 0)
+    if (resources_register_string(resources_string) < 0) {
         return -1;
+    }
 
     return resources_register_int(resources_int);
 }
@@ -138,4 +142,3 @@ void fsdevice_resources_shutdown(void)
     lib_free(fsdevice_dir[2]);
     lib_free(fsdevice_dir[3]);
 }
-

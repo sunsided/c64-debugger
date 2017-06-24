@@ -2,6 +2,9 @@
 #import "GLViewController.h"
 #include "SND_SoundEngine.h"
 #include "SYS_Threading.h"
+#include "CSlrString.h"
+#include "SYS_Funct.h"
+#include "C64SettingsStorage.h"
 
 GLView *glView;
 
@@ -114,6 +117,8 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 //														  owner:self
 //													   userInfo:nil];
 
+	[self registerForDraggedTypes:[NSArray arrayWithObjects: NSFilenamesPboardType, nil]];
+	
 	
 	glView = self;
 	
@@ -136,10 +141,11 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 	NSRect backingBounds = [self bounds];
 #endif
 	
+	//NSRect bounds = [self bounds];
+	
 	[[controller scene] initGL:backingBounds];
 	
 	[[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
-	
 }
 
 - (void) lockFocus
@@ -310,6 +316,11 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 		CVDisplayLinkStop(displayLink);
 }
 
+- (bool)isWindowFullScreen
+{
+	return [controller isWindowFullScreen];
+}
+
 - (BOOL)preservesContentDuringLiveResize
 {
 	return NO;
@@ -327,6 +338,173 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 		[self.window setLevel:NSNormalWindowLevel];
 	}
 }
+
+// drag&drop
+- (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender
+{
+	//NSLog(@"draggingEntered");
+	[self setNeedsDisplay: YES];
+	return NSDragOperationGeneric;
+}
+
+- (void)draggingExited:(id <NSDraggingInfo>)sender
+{
+	//NSLog(@"draggingExited");
+	[self setNeedsDisplay: YES];
+}
+
+- (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender
+{
+	//NSLog(@"prepareForDragOperation");
+	[self setNeedsDisplay: YES];
+	return YES;
+}
+
+- (BOOL)performDragOperation:(id < NSDraggingInfo >)sender
+{
+	//NSLog(@"performDragOperation");
+
+	NSArray *draggedFilenames = [[sender draggingPasteboard] propertyListForType:NSFilenamesPboardType];
+	
+	NSString *strExt = [[draggedFilenames objectAtIndex:0] pathExtension];
+
+	if ([strExt isEqual:@"prg"] || [strExt isEqual:@"d64"] || [strExt isEqual:@"crt"] || [strExt isEqualToString:@"snap"]
+		|| [strExt isEqual:@"PRG"] || [strExt isEqual:@"D64"] || [strExt isEqual:@"CRT"] || [strExt isEqualToString:@"SNAP"])
+	{
+		//NSString *strPath = [draggedFilenames objectAtIndex:0];
+		//NSLog(@"..... YES=%@", strPath);
+		return YES;
+	}
+	else
+	{
+		//NSLog(@"..... NO");
+		return NO;
+	}
+}
+
+
+// drag & drop callbacks
+void C64D_DragDropCallbackPRG(CSlrString *filePath);
+void C64D_DragDropCallbackD64(CSlrString *filePath);
+void C64D_DragDropCallbackCRT(CSlrString *filePath);
+void C64D_DragDropCallbackSNAP(CSlrString *filePath);
+
+- (void)concludeDragOperation:(id <NSDraggingInfo>)sender
+{
+	//NSLog(@"concludeDragOperation");
+
+	NSArray *draggedFilenames = [[sender draggingPasteboard] propertyListForType:NSFilenamesPboardType];
+	NSString *strPath = [draggedFilenames objectAtIndex:0];
+ 
+	MACOS_OpenFile(strPath);
+}
+
+enum
+{
+	MACOS_OPEN_FILE_TYPE_PRG = 1,
+	MACOS_OPEN_FILE_TYPE_D64,
+	MACOS_OPEN_FILE_TYPE_CRT,
+	MACOS_OPEN_FILE_TYPE_SNAP,
+};
+
+static int macOsThreadedOpenFileType = -1;
+static CSlrString *macOsThreadedOpenFilePath = NULL;
+static CMacOsOpenFileThread *macOsOpenFileThread = new CMacOsOpenFileThread();
+static bool macOsThreadedOpenFileAutoJMP = false;
+
+BOOL MACOS_OpenFile(NSString *strPath)
+{
+	LOGD("MACOS_OpenFile");
+	
+	// TODO: fix this workaround by a proper threads scheduling:
+	// store copy of Auto JMP parameter and make it false
+	// so PRG is not loaded twice first with old settings by startup settings thread
+	// the best would be to pass this setting to settings thread,
+	// but we are not sure if it's already being run - and thus could be too late
+	macOsThreadedOpenFileAutoJMP = c64SettingsAutoJmp;
+	
+	NSString *strExt = [strPath pathExtension];
+	
+	if ([strExt isEqual:@"prg"] || [strExt isEqual:@"PRG"])
+	{
+		//NSLog(@"%@", strPath);
+		c64SettingsAutoJmp = false;
+
+		macOsThreadedOpenFileType = MACOS_OPEN_FILE_TYPE_PRG;
+		macOsThreadedOpenFilePath = FUN_ConvertNSStringToCSlrString(strPath);
+		
+		SYS_StartThread(macOsOpenFileThread);
+		
+		return YES;
+	}
+	else if ([strExt isEqual:@"d64"] || [strExt isEqual:@"D64"])
+	{
+		//NSLog(@"%@", strPath);
+		c64SettingsAutoJmp = false;
+
+		macOsThreadedOpenFileType = MACOS_OPEN_FILE_TYPE_D64;
+		macOsThreadedOpenFilePath = FUN_ConvertNSStringToCSlrString(strPath);
+		
+		SYS_StartThread(macOsOpenFileThread);
+		return YES;
+	}
+	else if ([strExt isEqual:@"crt"] || [strExt isEqual:@"CRT"])
+	{
+		//NSLog(@"%@", strPath);
+		c64SettingsAutoJmp = false;
+
+		macOsThreadedOpenFileType = MACOS_OPEN_FILE_TYPE_CRT;
+		macOsThreadedOpenFilePath = FUN_ConvertNSStringToCSlrString(strPath);
+		
+		SYS_StartThread(macOsOpenFileThread);
+		return YES;
+	}
+	else if ([strExt isEqual:@"snap"] || [strExt isEqual:@"SNAP"]
+			 || [strExt isEqual:@"vsf"] || [strExt isEqual:@"VSF"])
+	{
+		//NSLog(@"%@", strPath);
+		c64SettingsAutoJmp = false;
+
+		macOsThreadedOpenFileType = MACOS_OPEN_FILE_TYPE_SNAP;
+		macOsThreadedOpenFilePath = FUN_ConvertNSStringToCSlrString(strPath);
+		
+		SYS_StartThread(macOsOpenFileThread);
+		return YES;
+	}
+	
+	return NO;
+}
+
+void CMacOsOpenFileThread::ThreadRun(void *data)
+{
+	LOGD("CMacOsOpenFileThread::ThreadRun: sleep");
+	SYS_Sleep(400);
+	
+	if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_PRG)
+	{
+		LOGD("CMacOsOpenFileThread::ThreadRun: C64D_DragDropCallbackPRG");
+		C64D_DragDropCallbackPRG(macOsThreadedOpenFilePath);
+	}
+	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_D64)
+	{
+		C64D_DragDropCallbackD64(macOsThreadedOpenFilePath);
+	}
+	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_CRT)
+	{
+		C64D_DragDropCallbackCRT(macOsThreadedOpenFilePath);
+	}
+	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_SNAP)
+	{
+		C64D_DragDropCallbackSNAP(macOsThreadedOpenFilePath);
+	}
+
+	delete macOsThreadedOpenFilePath;
+	macOsThreadedOpenFilePath = NULL;
+	macOsThreadedOpenFileType = -1;
+
+	c64SettingsAutoJmp = macOsThreadedOpenFileAutoJMP;
+}
+
 
 void SYS_PrepareShutdown();
 

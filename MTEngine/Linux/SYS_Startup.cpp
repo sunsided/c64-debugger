@@ -11,6 +11,7 @@
 #include <fcntl.h>
 #include <X11/X.h>
 #include <X11/Xlib.h>
+#include <X11/Xatom.h>
 #include <GL/gl.h>
 #include <GL/glx.h>
 #include <GL/glu.h>
@@ -23,11 +24,13 @@
 #include "SND_SoundEngine.h"
 #include "SYS_CFileSystem.h"
 #include "CViewC64.h"
+#include "C64D_Version.h"
 
 #include "SYS_CommandLine.h"
 #include <gtk/gtk.h>
 
-#define DEFAULT_WINDOW_CAPTION "C64 Debugger v" C64DEBUGGER_VERSION_STRING " (" __DATE__ " " __TIME__ ")"
+#define DEFAULT_WINDOW_CAPTION "C64 Debugger v" C64DEBUGGER_VERSION_STRING
+//" (" __DATE__ " " __TIME__ ")"
 
 int quitKeyCode = -1;
 bool quitIsAlt = false;
@@ -169,6 +172,8 @@ int main(int argc, char *argv[])
 
 			if (xev.type == Expose)
 			{
+				// TODO: VID_UpdateViewPort
+				
 				//LOGD("expose");
 				XGetWindowAttributes(dpy, win, &gwa);
 
@@ -178,6 +183,25 @@ int main(int argc, char *argv[])
 				gwa.height = (unsigned int) (SCREEN_HEIGHT * SCREEN_SCALE);
 				XResizeWindow(dpy, win, gwa.width, gwa.height);
 				glViewport(0, 0, gwa.width, gwa.height);
+				
+				if (guiMain != NULL)
+					guiMain->NotifyGlobalOSWindowChangedCallbacks();
+
+			}
+			else if (xev.type == ClientMessage)
+			{
+				/*
+				LOGD("ClientMessage: %d", xev.xclient.message_type);
+
+				if (xev.xclient.message_type == XdndEnter)
+				{
+					LOGD("XdndEnter");
+				}
+				else if (xev.xclient.message_type == XdndDrop)
+				{
+					LOGD("XdndDrop");
+
+				}*/
 			}
 			else if (xev.type == MotionNotify)
 			{
@@ -527,6 +551,7 @@ void GtkMessageBox(const char* text, const char* caption)
 //        case GTK_RESPONSE_YES:
 //            return;
 //        }
+
 }
 
 void X11SetAlwaysOnTop(bool isAlwaysOnTop)

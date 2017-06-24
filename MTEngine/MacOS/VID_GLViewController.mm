@@ -5,7 +5,7 @@
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #include "CGuiMain.h"
-//#include "SYS_Main.h"	// for EXEC_ON_VALGRIND
+#include "SYS_Main.h"	// for MacOS EXEC_ON_VALGRIND tweak
 #include "VID_ImageBinding.h"
 #include <math.h>
 #include <time.h>
@@ -21,8 +21,11 @@
 #import "GLView.h"
 
 
+// these are two most important features here:
+
 //#define SHOW_CURRENT_FPS
 //#define COUNT_CURRENT_FPS
+
 
 pthread_mutex_t gRenderMutex;
 
@@ -76,6 +79,7 @@ GLint viewPortStartY = 0;
 GLsizei viewPortSizeX = 1;
 GLsizei viewPortSizeY = 1;
 volatile bool updateViewPort = false;
+
 
 float VIEW_WIDTH = (RIGHT_OFFSET_X - LEFT_OFFSET_X);
 float VIEW_HEIGHT = (BOTTOM_OFFSET_Y - TOP_OFFSET_Y);
@@ -173,12 +177,23 @@ void VID_ResetLogicClock()
 	resetLogicClock = true;
 }
 
+bool VID_isAlwaysOnTop = false;
+
 void VID_SetWindowAlwaysOnTop(bool isAlwaysOnTop)
 {
-	LOGError("VID_SetWindowAlwaysOnTop: not implemented");
-
+	VID_isAlwaysOnTop = isAlwaysOnTop;
 	[glView setWindowAlwaysOnTop:isAlwaysOnTop];
+}
 
+// do not store value
+void VID_SetWindowAlwaysOnTopTemporary(bool isAlwaysOnTop)
+{
+	[glView setWindowAlwaysOnTop:isAlwaysOnTop];
+}
+
+bool VID_IsWindowAlwaysOnTop()
+{
+	return VID_isAlwaysOnTop;
 }
 
 void SysTextFieldEditFinishedCallback::SysTextFieldEditFinished(UTFString *str)
@@ -301,6 +316,8 @@ void VID_SetOrthoSwitchBack()
 
 void VID_UpdateViewPort(float newWidth, float newHeight)
 {
+	LOGD("VID_UpdateViewPort: %f %f", newWidth, newHeight);
+	
 	updateViewPort = true;
 	
 	/*
@@ -311,21 +328,21 @@ void VID_UpdateViewPort(float newWidth, float newHeight)
 	 glViewport(0, 0, newWidth, newHeight);
 	 */
 	
-	float vW = (float) newWidth;
-	float vH = (float) newHeight;
-	float A = (float) SCREEN_WIDTH / (float) SCREEN_HEIGHT; //SCREEN_WIDTH / (float)SCREEN_HEIGHT;
-	float vA = (vW / vH);
+	double vW = (double) newWidth;
+	double vH = (double) newHeight;
+	double A = (double) SCREEN_WIDTH / (double) SCREEN_HEIGHT; //SCREEN_WIDTH / (float)SCREEN_HEIGHT;
+	double vA = (vW / vH);
 	
-	//LOGD("vW=%f vH=%f A=%f vA=%f", vW, vH, A, vA);
+	LOGD("vW=%f vH=%f A=%f vA=%f", vW, vH, A, vA);
 	
 	if (A > vA)
 	{
-		//LOGD("glViewport A > vA");
+		LOGD("glViewport A > vA");
 		VIEW_START_X = 0;
 		VIEW_START_Y = (vH * 0.5) - ((vW / A) * 0.5);
 		SCREEN_SCALE = vW / SCREEN_WIDTH;
 		
-		//LOGD("glViewPort: %d %d %d %d", (GLint)VIEW_START_X, (GLint)VIEW_START_Y, (GLsizei)vW, (GLsizei)(vW/A));
+		LOGD("glViewPort: %d %d %d %d", (GLint)VIEW_START_X, (GLint)VIEW_START_Y, (GLsizei)vW, (GLsizei)(vW/A));
 		
 		viewPortStartX = (GLint)VIEW_START_X;
 		viewPortStartY = (GLint)VIEW_START_Y;
@@ -336,12 +353,12 @@ void VID_UpdateViewPort(float newWidth, float newHeight)
 	{
 		if (A < vA)
 		{
-			//LOGD("glViewport A < vA");
+			LOGD("glViewport A < vA");
 			VIEW_START_X = (vW * 0.5) - ((vH * A) * 0.5);
 			VIEW_START_Y = 0;
 			SCREEN_SCALE = vH / SCREEN_HEIGHT;
 
-			//LOGD("glViewPort: %d %d %d %d", (GLint)VIEW_START_X, (GLint)VIEW_START_Y, (GLsizei)(vH * A), (GLsizei)vH);
+			LOGD("glViewPort: %d %d %d %d", (GLint)VIEW_START_X, (GLint)VIEW_START_Y, (GLsizei)(vH * A), (GLsizei)vH);
 			
 			viewPortStartX = (GLint)VIEW_START_X;
 			viewPortStartY = (GLint)VIEW_START_Y;
@@ -350,7 +367,7 @@ void VID_UpdateViewPort(float newWidth, float newHeight)
 		}
 		else
 		{
-			//LOGD("glViewport equal");
+			LOGD("glViewport equal");
 			SCREEN_SCALE = vH / SCREEN_HEIGHT;
 			
 			// equal aspect ratios
@@ -360,8 +377,11 @@ void VID_UpdateViewPort(float newWidth, float newHeight)
 			viewPortSizeY = (GLsizei)vH;
 		}
 	}
-		
-	//LOGD("VID_UpdateViewPort: done");
+	
+	if (guiMain != NULL)
+		guiMain->NotifyGlobalOSWindowChangedCallbacks();
+	
+	LOGD("VID_UpdateViewPort: done");
 }
 
 void VID_InitGL(float viewWidth, float viewHeight)
@@ -866,7 +886,7 @@ void VID_NotTouchedMoved(int x, int y)
 	float xPos = (int)(((float)x - VIEW_START_X) / (float)SCREEN_SCALE);
 	float yPos = (int)SCREEN_HEIGHT - (((float)y - VIEW_START_Y) / (float)SCREEN_SCALE);
 	
-	SYS_LockRenderMutex();
+	//SYS_LockRenderMutex();
 	
 #ifdef ORIENTATION_LANDSCAPE
 		guiMain->DoNotTouchedMove(yPos, VIEW_HEIGHT-xPos);
@@ -878,7 +898,7 @@ void VID_NotTouchedMoved(int x, int y)
 		guiMain->DoNotTouchedMove(xPos, yPos);
 #endif
 	
-	SYS_UnlockRenderMutex();
+	//SYS_UnlockRenderMutex();
 }
 
 static float gMagnifyTotal;
@@ -1073,7 +1093,7 @@ void VID_DrawView()
 			avgFpsCounter = 0;
 		}
 		
-		sprintf(bufFPS, "%3.1f %3.1f", CURRENT_FPS, avgFps);
+		sprintf(bufFPS, "%5.2f %5.2f", CURRENT_FPS, avgFps);
 		
 		///%3.4f  f=%f dtf=%f", CURRENT_FPS, FRAMES_PER_SECOND, frameTimeDiffFpsF, dtf);
 		//LOGD("fps=%s", bufFPS);
@@ -1166,4 +1186,42 @@ void VID_SetFPS(float fps)
 	LOGTODO("VID_SetFPS: MacOS not implemented");
 	//[g_glView setFrameIntervalFPS:fps];
 }
+
+void GUI_GetRealScreenPixelSizes(double *pixelSizeX, double *pixelSizeY)
+{
+	LOGD("GUI_GetRealScreenPixelSizes");
+	
+	LOGD("  SCREEN_WIDTH=%f SCREEN_HEIGHT=%f  |  SCREEN_SCALE=%f",
+		 SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_SCALE);
+	LOGD("  viewPortSizeX=%d viewPortSizeY=%d |  viewPortStartX=%d viewPortStartY=%d",
+		 viewPortSizeX, viewPortSizeY, viewPortStartX, viewPortStartY);
+	
+	LOGD("... calc pixel size");
+	
+	*pixelSizeX = (double)SCREEN_WIDTH / (double)viewPortSizeX;
+	*pixelSizeY = (double)SCREEN_HEIGHT / (double)viewPortSizeY;
+	
+	LOGD("  pixelSizeX=%f pixelSizeY=%f", *pixelSizeX, *pixelSizeY);
+	
+	LOGD("GUI_GetRealScreenPixelSizes done");
+}
+
+//
+bool VID_IsWindowFullScreen()
+{
+	return [glView isWindowFullScreen];
+}
+
+void VID_ShowMouseCursor()
+{
+	LOGM("VID_ShowMouseCursor");
+	[NSCursor unhide];
+}
+
+void VID_HideMouseCursor()
+{
+	LOGM("VID_HideMouseCursor");
+	[NSCursor hide];
+}
+
 

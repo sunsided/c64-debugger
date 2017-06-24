@@ -337,6 +337,12 @@ char *SYS_GetPathFromFullPath(char *fileNameFull)
 const char hexTableSmall[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 const char hexTableSmallNoZero[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 
+void sprintfHexCode4(char *pszBuffer, uint8 value)
+{
+	pszBuffer[0] = hexTableSmall[(value) & 0x0F];
+	pszBuffer[1] = 0x00;
+}
+
 void sprintfHexCode8(char *pszBuffer, uint8 value)
 {
 	pszBuffer[0] = hexTableSmall[(value >> 4) & 0x0F];
@@ -351,6 +357,11 @@ void sprintfHexCode16(char *pszBuffer, uint16 value)
 	pszBuffer[2] = hexTableSmall[(value >> 4) & 0x0F];
 	pszBuffer[3] = hexTableSmall[(value) & 0x0F];
 	pszBuffer[4] = 0x00;
+}
+
+void sprintfHexCode4WithoutZeroEnding(char *pszBuffer, uint8 value)
+{
+	pszBuffer[0] = hexTableSmall[(value) & 0x0F];
 }
 
 void sprintfHexCode8WithoutZeroEnding(char *pszBuffer, uint8 value)

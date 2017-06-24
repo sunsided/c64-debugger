@@ -5,6 +5,33 @@
 #include "C64Tools.h"
 #include "CSlrString.h"
 #include "C64DebugInterface.h"
+#include "C64SIDFrequencies.h"
+#include <float.h>
+
+u8 ConvertPetsciiToSreenCode(u8 chr)
+{
+	if (chr >= 0x00 && chr <= 0x1F)
+		return chr + 0x80;
+	else if (chr >= 0x20 && chr <= 0x3F)
+		return chr;
+	else if (chr >= 0x40 && chr <= 0x5F)
+		return chr - 0x40;
+	else if (chr >= 0x60 && chr <= 0x7F)
+		return chr - 0x20;
+	else if (chr >= 0x80 && chr <= 0x9F)
+		return chr + 0x40;
+	else if (chr >= 0xA0 && chr <= 0xBF)
+		return chr - 0x40;
+	else if (chr >= 0xC0 && chr <= 0xDF)
+		return chr - 0x80;
+	else if (chr >= 0xC0 && chr <= 0xDF)
+		return chr - 0x80;
+	else if (chr >= 0xE0 && chr <= 0xFE)
+		return chr - 0x80;
+
+	// $FF
+	return 0x5E;
+}
 
 void AddCBMScreenCharacters(CSlrFontProportional *font);
 void AddASCIICharacters(CSlrFontProportional *font);
@@ -176,12 +203,12 @@ void ConvertColorCharacterDataToImage(u8 *characterData, CImageData *imageData, 
 	}
 }
 
-void ConvertSpriteDataToImage(u8 *spriteData, CImageData *imageData)
+void ConvertSpriteDataToImage(u8 *spriteData, CImageData *imageData, int gap)
 {
-	ConvertSpriteDataToImage(spriteData, imageData, 0, 0, 0, 255, 255, 255);
+	ConvertSpriteDataToImage(spriteData, imageData, 0, 0, 0, 255, 255, 255, gap);
 }
 
-void ConvertSpriteDataToImage(u8 *spriteData, CImageData *imageData, u8 colorD021, u8 colorD027, C64DebugInterface *debugInterface)
+void ConvertSpriteDataToImage(u8 *spriteData, CImageData *imageData, u8 colorD021, u8 colorD027, C64DebugInterface *debugInterface, int gap)
 {
 	u8 cD021r, cD021g, cD021b;
 	u8 cD027r, cD027g, cD027b;
@@ -189,18 +216,17 @@ void ConvertSpriteDataToImage(u8 *spriteData, CImageData *imageData, u8 colorD02
 	debugInterface->GetCBMColor(colorD021, &cD021r, &cD021g, &cD021b);
 	debugInterface->GetCBMColor(colorD027, &cD027r, &cD027g, &cD027b);
 
-	ConvertSpriteDataToImage(spriteData, imageData, cD021r, cD021g, cD021b, cD027r, cD027g, cD027b);
+	ConvertSpriteDataToImage(spriteData, imageData, cD021r, cD021g, cD021b, cD027r, cD027g, cD027b, gap);
 }
 
-void ConvertSpriteDataToImage(u8 *spriteData, CImageData *imageData, u8 bkgColorR, u8 bkgColorG, u8 bkgColorB, u8 spriteColorR, u8 spriteColorG, u8 spriteColorB)
+void ConvertSpriteDataToImage(u8 *spriteData, CImageData *imageData, u8 bkgColorR, u8 bkgColorG, u8 bkgColorB, u8 spriteColorR, u8 spriteColorG, u8 spriteColorB, int gap)
 {
 	u8 *chd = spriteData;
 	
-	int gap = 4;
-	
 	int chy = 0 + gap;
 	
-	imageData->EraseContent(bkgColorR, bkgColorG, bkgColorB,255);
+	// erase with transparent pixels
+	imageData->EraseContent(bkgColorR, bkgColorG, bkgColorB, 0);
 	
 	// copy pixels around character for better linear scaling
 	for (int y = 0; y < 21; y++)
@@ -241,24 +267,14 @@ void ConvertSpriteDataToImage(u8 *spriteData, CImageData *imageData, u8 bkgColor
 				imageData->SetPixelResultRGBA(chx + 0, chy + y, spriteColorR, spriteColorG, spriteColorB, 255);
 			}
 
-//			if (x == -1 || x == 4)
-//				continue;
-			
 			chx += 8;
 			chd++;
 		}
-		
-//		if (y == -1 || y == 7)
-//			continue;
-		
 	}
-
-	// will be displayed flipped instead
-//	imageData->FlipVertically();
 }
 
 
-void ConvertColorSpriteDataToImage(u8 *spriteData, CImageData *imageData, u8 colorD021, u8 colorD025, u8 colorD026, u8 colorD027, C64DebugInterface *debugInterface)
+void ConvertColorSpriteDataToImage(u8 *spriteData, CImageData *imageData, u8 colorD021, u8 colorD025, u8 colorD026, u8 colorD027, C64DebugInterface *debugInterface, int gap)
 {
 	u8 cD021r, cD021g, cD021b;
 	u8 cD025r, cD025g, cD025b;
@@ -273,11 +289,10 @@ void ConvertColorSpriteDataToImage(u8 *spriteData, CImageData *imageData, u8 col
 	
 	u8 *chd = spriteData;
 	
-	int gap = 4;
-	
 	int chy = 0 + gap;
 	
-	imageData->EraseContent(cD021r, cD021g, cD021b, 255);
+	// erase with transparent pixels
+	imageData->EraseContent(cD021r, cD021g, cD021b, 0);
 	
 	// copy pixels around character for better linear scaling
 	for (int y = 0; y < 21; y++)
@@ -371,22 +386,10 @@ void ConvertColorSpriteDataToImage(u8 *spriteData, CImageData *imageData, u8 col
 				imageData->SetPixelResultRGBA(chx    , chy + y, cD027r, cD027g, cD027b, 255);
 			}
 			
-
-			
-			//			if (x == -1 || x == 4)
-			//				continue;
-			
 			chx += 8;
 			chd++;
 		}
-		
-		//		if (y == -1 || y == 7)
-		//			continue;
-		
 	}
-	
-	// will be displayed flipped instead
-//	imageData->FlipVertically();
 }
 
 
@@ -464,7 +467,7 @@ CSlrFontProportional *ProcessCBMFonts(u8 *charsetData, bool useScreenCodes)
 		}
 	}
 	
-	// don't ask me why - there's a bug in win32 engine part waiting to be fixed
+	// don't ask me why - there's a bug in macos engine part waiting to be fixed
 #if !defined(WIN32) && !defined(LINUX)
 	imageData->FlipVertically();
 #endif
@@ -766,136 +769,152 @@ void ClearInvertCBMText(char *text)
 	}
 }
 
-void GetCBMColor(u8 colorNum, float *r, float *g, float *b)
+///
+
+void CopyHiresCharsetToImage(u8 *charsetData, CImageData *imageData, int numColumns,
+							  u8 colorBackground, u8 colorForeground, C64DebugInterface *debugInterface)
 {
-	switch (colorNum)
+//	int numRows = 256 / numColumns;
+	int cols = numColumns * 8;
+
+	u8 br, bg, bb;
+	u8 fr, fg, fb;
+	
+	debugInterface->GetCBMColor(colorBackground, &br, &bg, &bb);
+	debugInterface->GetCBMColor(colorForeground, &fr, &fg, &fb);
+
+	imageData->EraseContent(br, bg, bb, 255);
+
+	int chx = 0;
+	int chy = 0;
+
+	for (int charId = 0; charId < 256; charId++)
 	{
-		case 0:
-			*r = 0.000f; *g = 0.000f; *b = 0.000f;
-			break;
-		case 1:
-			*r = 1.000f; *g = 1.000f; *b = 1.000f;
-			break;
-		case 2:
-			*r = 0.533f; *g = 0.00f; *b = 0.000f;
-			break;
-		case 3:
-			*r = 0.666f; *g = 1.000f; *b = 0.933f;
-			break;
-		case 4:
-			*r = 0.800f; *g = 0.266f; *b = 0.800f;
-			break;
-		case 5:
-			*r = 0.000f; *g = 0.800f; *b = 0.333f;
-			break;
-		case 6:
-			*r = 0.000f; *g = 0.000f; *b = 0.666f;
-			break;
-		case 7:
-			*r = 0.933f; *g = 0.933f; *b = 0.466f;
-			break;
-		case 8:
-			*r = 0.866f; *g = 0.553f; *b = 0.333f;
-			break;
-		case 9:
-			*r = 0.400f; *g = 0.266f; *b = 0.000f;
-			break;
-		case 10:
-			*r = 1.000f; *g = 0.466f; *b = 0.466f;
-			break;
-		case 11:
-			*r = 0.200f; *g = 0.200f; *b = 0.200f;
-			break;
-		case 12:
-			*r = 0.466f; *g = 0.466f; *b = 0.466f;
-			break;
-		case 13:
-			*r = 0.666f; *g = 1.000f; *b = 0.400f;
-			break;
-		case 14:
-			*r = 0.000f; *g = 0.533f; *b = 1.000f;
-			break;
-		case 15:
-			*r = 0.733f; *g = 0.733f; *b = 0.733f;
-			break;
+		u8 *chd = charsetData + 8*charId;
+		
+		for (int y = 0; y < 8; y++)
+		{
+			if ((*chd & 0x01) == 0x01)
+			{
+				imageData->SetPixelResultRGBA(chx + 7, chy + y, fr, fg, fb, 255);
+			}
+			if ((*chd & 0x02) == 0x02)
+			{
+				imageData->SetPixelResultRGBA(chx + 6, chy + y, fr, fg, fb, 255);
+			}
+			if ((*chd & 0x04) == 0x04)
+			{
+				imageData->SetPixelResultRGBA(chx + 5, chy + y, fr, fg, fb, 255);
+			}
+			if ((*chd & 0x08) == 0x08)
+			{
+				imageData->SetPixelResultRGBA(chx + 4, chy + y, fr, fg, fb, 255);
+			}
+			if ((*chd & 0x10) == 0x10)
+			{
+				imageData->SetPixelResultRGBA(chx + 3, chy + y, fr, fg, fb, 255);
+			}
+			if ((*chd & 0x20) == 0x20)
+			{
+				imageData->SetPixelResultRGBA(chx + 2, chy + y, fr, fg, fb, 255);
+			}
+			if ((*chd & 0x40) == 0x40)
+			{
+				imageData->SetPixelResultRGBA(chx + 1, chy + y, fr, fg, fb, 255);
+			}
+			if ((*chd & 0x80) == 0x80)
+			{
+				imageData->SetPixelResultRGBA(chx + 0, chy + y, fr, fg, fb, 255);
+			}
+			
+			chd++;
+		}
+		
+		chx += 8;
+		
+		if (chx == cols)
+		{
+			chx = 0;
+			chy += 8;
+		}
 	}
+	
+	// don't ask me why - there's a bug in macos engine part waiting to be fixed
+//#if !defined(WIN32) && !defined(LINUX)
+	imageData->FlipVertically();
+//#endif
+
 }
 
-
-
-
-/*
- // create ASCII font from CBM characters
- Cu8Buffer *u8Buffer = new Cu8Buffer(false, "/c64/char", DEPLOY_FILE_TYPE_DATA, false);
- uint8 *charData = u8Buffer->data + 0x0800;
- CSlrFontProportional *newFont = ProcessCBMFonts(charData, false);
- delete u8Buffer;
- 
- u8Buffer = new Cu8Buffer();
- newFont->StoreFontAndTexture(newFont->texturePageImageData, u8Buffer);
- 
- u8Buffer->storeToDocuments("/c64/c64shifted.fnt");
- 
- ////
- //		charData = u8Buffer->data; // + 0x0800;
- //		fontCBM1 = ProcessCBMFonts(charData, true);
- //		u8Buffer = new Cu8Buffer();
- //		font->StoreFontAndTexture(font->texturePageImageData, u8Buffer);
- //		u8Buffer->storeToDocuments("/c64/cbm1.fnt");
-
- 
- */
-
-/*
-switch (colorNum)
+u8 FindC64Color(u8 r, u8 g, u8 b, C64DebugInterface *debugInterface)
 {
-	case 0:
-		*r =   0; *g =   0; *b =   0;
-		break;
-	case 1:
-		*r = 255; *g = 255; *b = 255;
-		break;
-	case 2:
-		*r = 136; *g =   0; *b =   0;
-		break;
-	case 3:
-		*r = 169; *g = 255; *b = 238;
-		break;
-	case 4:
-		*r = 204; *g =  68; *b = 204;
-		break;
-	case 5:
-		*r =   0; *g = 204; *b =  85;
-		break;
-	case 6:
-		*r =   0; *g =   0; *b = 170;
-		break;
-	case 7:
-		*r = 238; *g = 238; *b = 119;
-		break;
-	case 8:
-		*r = 221; *g = 141; *b =  85;
-		break;
-	case 9:
-		*r = 102; *g =  68; *b = 0;
-		break;
-	case 10:
-		*r = 255; *g = 119; *b = 119;
-		break;
-	case 11:
-		*r =  51; *g =  51; *b =  51;
-		break;
-	case 12:
-		*r = 119; *g = 119; *b = 119;
-		break;
-	case 13:
-		*r = 170; *g = 255; *b = 102;
-		break;
-	case 14:
-		*r =   0; *g = 141; *b = 255;
-		break;
-	case 15:
-		*r = 187; *g = 187; *b = 187;
-		break;
+	//LOGD("FindC64Color: %d %d %d", r, g, b);
+	float minDistance = FLT_MAX;
+	int color = -1;
+	for (int i = 0; i < 16; i++)
+	{
+		u8 pr, pg, pb;
+		debugInterface->GetCBMColor(i, &pr, &pg, &pb);
+		
+		// calc distance
+		float tr = ((float)pr - (float)r);
+		float tg = ((float)pg - (float)g);
+		float tb = ((float)pb - (float)b);
+
+		float d = sqrt( tr*tr + tg*tg + tb*tb );
+		
+		if (d < minDistance)
+		{
+			minDistance = d;
+			color = i;
+		}
+	}
+	
+	//LOGD("          color=%d", color);
+	
+	return color;
 }
-*/
+
+float GetC64ColorDistance(u8 color1, u8 color2, C64DebugInterface *debugInterface)
+{
+	u8 c1r, c1g, c1b;
+	debugInterface->GetCBMColor(color1, &c1r, &c1g, &c1b);
+
+	u8 c2r, c2g, c2b;
+	debugInterface->GetCBMColor(color2, &c2r, &c2g, &c2b);
+	
+	// calc distance
+	float tr = ((float)c1r - (float)c2r);
+	float tg = ((float)c1g - (float)c2g);
+	float tb = ((float)c1b - (float)c2b);
+	
+	float d = sqrt( tr*tr + tg*tg + tb*tb );
+	
+	return d;
+}
+
+//
+void RenderColorRectangle(float px, float py, float ledSizeX, float ledSizeY, float gap, bool isLocked, u8 color, C64DebugInterface *debugInterface)
+{
+	float colorR, colorG, colorB;
+	debugInterface->GetFloatCBMColor(color, &colorR, &colorG, &colorB);
+	
+	BlitFilledRectangle(px, py, -1, ledSizeX, ledSizeY,
+						colorR, colorG, colorB, 1.0f);
+	
+	
+	if (!isLocked)
+	{
+		colorR = colorG = colorB = 0.3f;
+	}
+	else
+	{
+		colorR = 1.0f;
+		colorG = colorB = 0.3f;
+	}
+	
+	BlitRectangle(px, py - gap, -1, ledSizeX, ledSizeY,
+				  colorR, colorG, colorB, 1.0f, gap);
+	
+}
+

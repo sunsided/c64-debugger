@@ -5,13 +5,14 @@
 #include "CGuiButton.h"
 #include "CGuiViewMenu.h"
 #include "SYS_CFileSystem.h"
+#include "SYS_Threading.h"
 #include <list>
 
 class CSlrKeyboardShortcut;
 class CViewC64MenuItem;
 class CViewC64MenuItemOption;
 
-class CViewMainMenu : public CGuiView, CGuiButtonCallback, CGuiViewMenuCallback, CSystemFileDialogCallback
+class CViewMainMenu : public CGuiView, CGuiButtonCallback, CGuiViewMenuCallback, CSystemFileDialogCallback, CSlrThread
 {
 public:
 	CViewMainMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY);
@@ -34,6 +35,8 @@ public:
 	virtual bool InitZoom();
 	virtual bool DoZoomBy(GLfloat x, GLfloat y, GLfloat zoomValue, GLfloat difference);
 	
+	virtual bool DoScrollWheel(float deltaX, float deltaY);
+
 	// multi touch
 	virtual bool DoMultiTap(COneTouchData *touch, float x, float y);
 	virtual bool DoMultiMove(COneTouchData *touch, float x, float y);
@@ -72,6 +75,8 @@ public:
 	CSlrKeyboardShortcut *kbsQuitApplication;
 
 	CSlrKeyboardShortcut *kbsMainMenuScreen;
+	
+	CSlrKeyboardShortcut *kbsVicEditorScreen;
 
 	CSlrKeyboardShortcut *kbsScreenLayout1;
 	CSlrKeyboardShortcut *kbsScreenLayout2;
@@ -82,9 +87,21 @@ public:
 	CSlrKeyboardShortcut *kbsScreenLayout7;
 	CSlrKeyboardShortcut *kbsScreenLayout8;
 	CSlrKeyboardShortcut *kbsScreenLayout9;
-	
+	CSlrKeyboardShortcut *kbsScreenLayout10;
+	CSlrKeyboardShortcut *kbsScreenLayout11;
+	CSlrKeyboardShortcut *kbsScreenLayout12;
+
 	CSlrKeyboardShortcut *kbsInsertD64;
 	CViewC64MenuItem *menuItemInsertD64;
+	CSlrKeyboardShortcut *kbsBrowseD64;
+//	CViewC64MenuItem *menuItemBrowseD64;
+
+	CSlrKeyboardShortcut *kbsStartFromDisk;
+	//	CViewC64MenuItem *menuStartFromDisk;
+
+	CSlrKeyboardShortcut *kbsRestartPRG;
+	//CViewC64MenuItem *menuItemRestartPRG;
+	
 	CSlrKeyboardShortcut *kbsLoadPRG;
 	CViewC64MenuItem *menuItemLoadPRG;
 	CSlrKeyboardShortcut *kbsReloadAndRestart;
@@ -93,6 +110,7 @@ public:
 	CViewC64MenuItem *menuItemSoftReset;
 	CSlrKeyboardShortcut *kbsHardReset;
 	CViewC64MenuItem *menuItemHardReset;
+	CSlrKeyboardShortcut *kbsDiskDriveReset;
 
 	CSlrKeyboardShortcut *kbsSnapshots;
 	CViewC64MenuItem *menuItemSnapshots;
@@ -119,6 +137,7 @@ public:
 	CSlrKeyboardShortcut *kbsMoveFocusToNextView;
 	CSlrKeyboardShortcut *kbsMoveFocusToPreviousView;
 
+	CSlrKeyboardShortcut *kbsSaveScreenImageAsPNG;
 	
 	std::list<CSlrString *> diskExtensions;
 	std::list<CSlrString *> prgExtensions;
@@ -130,6 +149,16 @@ public:
 	void InsertCartridge(CSlrString *path, bool updatePathToCRT);
 	void OpenDialogLoadPRG();
 	bool LoadPRG(CSlrString *path, bool autoStart, bool updatePRGFolderPath);
+	bool LoadPRG(CByteBuffer *byteBuffer, bool autoStart, bool showAddressInfo);
+	void LoadPRG(CByteBuffer *byteBuffer, u16 *startAddr, u16 *endAddr);
+	bool LoadPRGNotThreaded(CByteBuffer *byteBuffer, bool autoStart, bool showAddressInfo);
+
+	// LoadPRG threaded
+	CByteBuffer *loadPrgByteBuffer;
+	bool loadPrgAutoStart;
+	bool loadPrgShowAddressInfo;
+	virtual void ThreadRun(void *data);
+	
 	void ReloadAndRestartPRG();
 	void ResetAndJSR(int startAddr);
 	
@@ -148,6 +177,8 @@ class CViewC64MenuItem : public CGuiViewMenuItem
 {
 public:
 	CViewC64MenuItem(float height, CSlrString *str, CSlrKeyboardShortcut *shortcut, float r, float g, float b);
+	CViewC64MenuItem(float height, CSlrString *str, CSlrKeyboardShortcut *shortcut, float r, float g, float b,
+					 CGuiViewMenu *mainMenu);
 	
 	virtual void SetSelected(bool selected);
 	virtual void RenderItem(float px, float py, float pz);
@@ -160,8 +191,11 @@ public:
 	float r;
 	float g;
 	float b;
+	
+	virtual void Execute();
+	
+	virtual void DebugPrint();
 };
-
 
 class CViewC64MenuItemOption : public CViewC64MenuItem
 {
@@ -182,6 +216,8 @@ public:
 	
 	virtual void SwitchToNext();
 	virtual void SwitchToPrev();
+
+	virtual void Execute();
 
 	int selectedOption;
 	virtual void SetSelectedOption(int newSelectedOption, bool runCallback);
@@ -204,6 +240,8 @@ public:
 	
 	virtual void SwitchToNext();
 	virtual void SwitchToPrev();
+
+	virtual void Execute();
 
 	float value;
 	virtual void SetValue(float value, bool runCallback);

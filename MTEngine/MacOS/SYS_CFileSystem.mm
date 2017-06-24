@@ -13,6 +13,7 @@
 #include "TargetConditionals.h"
 #include "CSlrFileFromResources.h"
 #include "CSlrString.h"
+#include "VID_GLViewController.h"
 #include "SYS_Funct.h"
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -999,10 +1000,37 @@ void SYS_RefreshFiles()
 	}
 }
 
+bool SYS_windowAlwaysOnTopBeforeFileDialog = false;
+
 void SYS_DialogOpenFile(CSystemFileDialogCallback *callback, std::list<CSlrString *> *extensions,
 						CSlrString *defaultFolder,
 						CSlrString *windowTitle)
 {
+	LOGD("SYS_DialogOpenFile");
+	
+	// temporary remove always on top window flag
+	SYS_windowAlwaysOnTopBeforeFileDialog = VID_IsWindowAlwaysOnTop();
+	VID_SetWindowAlwaysOnTopTemporary(false);
+	
+	
+	if (defaultFolder != NULL)
+	{
+		defaultFolder->DebugPrint("defaultFolder=");
+	}
+	else
+	{
+		LOGD("defaultFolder=NULL!");
+	}
+	
+	if (windowTitle != NULL)
+	{
+		windowTitle->DebugPrint("defaultFolder=");
+	}
+	else
+	{
+		LOGD("windowTitle=NULL!");
+	}
+	
 	NSMutableArray *extensionsArray = nil;
 	
 	if (extensions != NULL && !extensions->empty())
@@ -1042,16 +1070,25 @@ void SYS_DialogOpenFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 		
 		if (extensionsArray != nil)
 			[panel setAllowedFileTypes:extensionsArray];
-		
+
+		// title was removed after OS X 10.11
+//		if (wtitle != nil)
+//			[panel setTitle:wtitle];
+
 		if (wtitle != nil)
-			[panel setTitle:wtitle];
-		
+			[panel setMessage:wtitle];
+
 		if (dfolder != nil)
-			[panel setDirectoryURL:[NSURL URLWithString:dfolder]];
+		{
+			[panel setDirectoryURL:[NSURL fileURLWithPath:dfolder]];
+		}
 		
 		[panel beginWithCompletionHandler:^(NSInteger result)
 		{
 			LOGD("SYS_DialogOpenFile: dialog result=%d", result);
+			
+			VID_SetWindowAlwaysOnTopTemporary(SYS_windowAlwaysOnTopBeforeFileDialog);
+			
 			if (result == NSFileHandlingPanelOKButton)
 			{
 				for (NSURL *fileURL in [panel URLs])
@@ -1088,6 +1125,10 @@ void SYS_DialogSaveFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 						CSlrString *defaultFileName, CSlrString *defaultFolder,
 						CSlrString *windowTitle)
 {
+	// temporary remove always on top window flag
+	SYS_windowAlwaysOnTopBeforeFileDialog = VID_IsWindowAlwaysOnTop();
+	VID_SetWindowAlwaysOnTopTemporary(false);
+
 	NSMutableArray *extensionsArray = [[NSMutableArray alloc] init];
 	
 	for (std::list<CSlrString *>::iterator it = extensions->begin(); it != extensions->end(); it++)
@@ -1132,19 +1173,27 @@ void SYS_DialogSaveFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 		{
 			[panel setNameFieldStringValue:fname];
 		}
-		if (wtitle != nil)
-		{
-			[panel setTitle:wtitle];
-		}
+		
+//		 title was removed after OS X 10.11
+				if (wtitle != nil)
+					[panel setTitle:wtitle];
+
+//		if (wtitle != nil)
+//		{
+//			[panel setMessage:wtitle];
+//		}
 		
 		if (dfolder != nil)
 		{
-			[panel setDirectoryURL:[NSURL URLWithString:dfolder]];
+			[panel setDirectoryURL:[NSURL fileURLWithPath:dfolder]];
 		}
 
 		[panel beginWithCompletionHandler:^(NSInteger result)
 		 {
 			 LOGD("SYS_DialogSaveFile: dialog result=%d", result);
+			 
+			 VID_SetWindowAlwaysOnTopTemporary(SYS_windowAlwaysOnTopBeforeFileDialog);
+
 			 if (result == NSFileHandlingPanelOKButton)
 			 {
 				 NSString *strPath = [[panel URL] path];
@@ -1190,6 +1239,38 @@ void CSystemFileDialogCallback::SystemDialogFileSaveCancelled()
 {
 }
 
+bool SYS_FileExists(char *path)
+{
+	struct stat info;
+	
+	if(stat( path, &info ) != 0)
+	{
+		return false;
+	}
+	else
+	{
+		return true;
+	}
+}
+
+bool SYS_FileExists(CSlrString *path)
+{
+	char *cPath = path->GetStdASCII();
+	
+	struct stat info;
+	
+	if(stat( cPath, &info ) != 0)
+	{
+		delete [] cPath;
+		return false;
+	}
+	else
+	{
+		delete [] cPath;
+		return true;
+	}
+}
+
 bool SYS_FileDirExists(CSlrString *path)
 {
 	char *cPath = path->GetStdASCII();
@@ -1197,13 +1278,20 @@ bool SYS_FileDirExists(CSlrString *path)
 	struct stat info;
 	
 	if(stat( cPath, &info ) != 0)
+	{
+		delete [] cPath;
 		return false;
+	}
 	else if(info.st_mode & S_IFDIR)
+	{
+		delete [] cPath;
 		return true;
+	}
 	else
+	{
+		delete [] cPath;
 		return false;
-	
-	delete [] cPath;
+	}
 }
 
 uint8 *SYS_MapMemoryToFile(int memorySize, char *filePath, void **fileDescriptor)

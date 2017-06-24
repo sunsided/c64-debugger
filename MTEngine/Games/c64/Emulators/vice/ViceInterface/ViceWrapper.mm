@@ -7,6 +7,10 @@ extern "C" {
 #include "vsync.h"
 #include "raster.h"
 #include "videoarch.h"
+#include "drivetypes.h"
+#include "gcr.h"
+#include "c64.h"
+#include "cia.h"
 }
 
 #include "C64DebugInterfaceVice.h"
@@ -21,6 +25,9 @@ extern "C" {
 #include "CViewMemoryMap.h"
 
 volatile int c64d_debug_mode = C64_DEBUG_RUNNING;
+
+int c64d_patch_kernal_fast_boot_flag = 0;
+int c64d_setting_run_sid_when_in_warp = 1;
 
 uint16 viceCurrentC64PC;
 uint16 viceCurrentDiskPC[4];
@@ -86,7 +93,8 @@ void c64d_mark_c64_cell_read(uint16 addr)
 void c64d_mark_c64_cell_write(uint16 addr, uint8 value)
 {
 //	debugInterfaceVice->MarkC64CellWrite(addr, value);
-	viewC64->viewC64MemoryMap->CellWrite(addr, value);
+	
+	viewC64->viewC64MemoryMap->CellWrite(addr, value, viceCurrentC64PC, vicii.raster_line, vicii.raster_cycle);
 	
 	if (debugInterfaceVice->breakOnC64Memory)
 	{
@@ -244,7 +252,7 @@ void c64d_show_message(char *message)
 	guiMain->ShowMessage(message);
 }
 
-// C64 color palette (more realistic looking colors)
+// C64 frodo color palette (more realistic looking colors)
 uint8 c64d_palette_red[16] = {
 	0x00, 0xff, 0x99, 0x00, 0xcc, 0x44, 0x11, 0xff, 0xaa, 0x66, 0xff, 0x40, 0x80, 0x66, 0x77, 0xc0
 };
@@ -257,6 +265,10 @@ uint8 c64d_palette_blue[16] = {
 	0x00, 0xff, 0x00, 0xcc, 0xcc, 0x44, 0x99, 0x00, 0x00, 0x00, 0x66, 0x40, 0x80, 0x66, 0xff, 0xc0
 };
 
+float c64d_float_palette_red[16];
+float c64d_float_palette_green[16];
+float c64d_float_palette_blue[16];
+
 void c64d_set_palette(uint8 *palette)
 {
 	int j = 0;
@@ -265,8 +277,30 @@ void c64d_set_palette(uint8 *palette)
 		c64d_palette_red[i] = palette[j++];
 		c64d_palette_green[i] = palette[j++];
 		c64d_palette_blue[i] = palette[j++];
+		
+		c64d_float_palette_red[i] = (float)c64d_palette_red[i] / 255.0f;
+		c64d_float_palette_green[i] = (float)c64d_palette_green[i] / 255.0f;
+		c64d_float_palette_blue[i] = (float)c64d_palette_blue[i] / 255.0f;
 	}
 }
+
+// set VICE-style palette
+void c64d_set_palette_vice(uint8 *palette)
+{
+	int j = 0;
+	for (int i = 0; i < 16; i++)
+	{
+		c64d_palette_red[i] = palette[j++];
+		c64d_palette_green[i] = palette[j++];
+		c64d_palette_blue[i] = palette[j++];
+		j++; // just ignore intensity
+		
+		c64d_float_palette_red[i] = (float)c64d_palette_red[i] / 255.0f;
+		c64d_float_palette_green[i] = (float)c64d_palette_green[i] / 255.0f;
+		c64d_float_palette_blue[i] = (float)c64d_palette_blue[i] / 255.0f;
+	}
+}
+
 
 void c64d_clear_screen()
 {
@@ -415,6 +449,22 @@ void c64d_refresh_dbuf()
 	debugInterfaceVice->UnlockRenderScreenMutex();
 }
 
+extern "C" {
+	void cia_update_ta(cia_context_t *cia_context, CLOCK rclk);
+	void cia_update_tb(cia_context_t *cia_context, CLOCK rclk);
+}
+
+void c64d_refresh_cia()
+{
+//	LOGD("c64d_refresh_cia");
+	
+	cia_update_ta(machine_context.cia1, *(machine_context.cia1->clk_ptr));
+	cia_update_tb(machine_context.cia1, *(machine_context.cia1->clk_ptr));
+	
+	cia_update_ta(machine_context.cia2, *(machine_context.cia2->clk_ptr));
+	cia_update_tb(machine_context.cia2, *(machine_context.cia2->clk_ptr));
+}
+
 int c64d_is_debug_on_c64()
 {
 	if (debugInterfaceVice->debugOnC64)
@@ -460,10 +510,13 @@ void c64d_c64_check_pc_breakpoint(uint16 pc)
 				
 				C64StateVIC vicState;
 				c64d_get_vic_simple_state(&vicState);
+				
+				int rasterX = vicState.raster_cycle*8;
+				int rasterY = vicState.raster_line;
 
 				// outside screen (in borders)?
-				if (vicState.rasterY < 0x32 || vicState.rasterY > 0xFA
-					|| vicState.rasterX < 0x88 || vicState.rasterX > 0x1C7)
+				if (rasterY < 0x32 || rasterY > 0xFA
+					|| rasterX < 0x88 || rasterX > 0x1C7)
 				{
 					c64d_mem_write_c64_no_mark(0xD021, addrBreakpoint->data);
 					
@@ -513,6 +566,220 @@ void c64d_drive1541_check_pc_breakpoint(uint16 pc)
 		debugInterfaceVice->UnlockMutex();
 	}
 	
+}
+
+// copy of vic state registers for VIC Display
+//vicii_cycle_state_t viciiStateForCycle[312];	//Lines: PAL 312, NTSC 263
+vicii_cycle_state_t viciiStateForCycle[312][64];	//Cycles: PAL 19655, NTSC 17095
+
+extern "C"
+{
+	void c64d_get_maincpu_regs(uint8 *a, uint8 *x, uint8 *y, uint8 *p, uint8 *sp, uint16 *pc,
+							   uint8 *instructionCycle);
+	void c64d_get_exrom_game(BYTE *exrom, BYTE *game);
+	void c64d_get_ultimax_phi(BYTE *ultimax_phi1, BYTE *ultimax_phi2);
+};
+
+vicii_cycle_state_t *c64d_get_vicii_state_for_raster_cycle(int rasterLine, int rasterCycle)
+{
+	return &(viciiStateForCycle[rasterLine][rasterCycle]);
+}
+
+vicii_cycle_state_t *c64d_get_vicii_state_for_raster_line(int rasterLine)
+{
+	return &(viciiStateForCycle[rasterLine][0]);
+}
+
+extern "C" {
+	BYTE c64d_peek_memory0001();
+};
+
+void c64d_vicii_copy_state(vicii_cycle_state_t *viciiCopy)
+{
+	memcpy(viciiCopy->regs, vicii.regs, 64);
+	
+	viciiCopy->raster_line = vicii.raster_line;
+	viciiCopy->raster_cycle = vicii.raster_cycle;
+	
+	viciiCopy->raster_irq_line = vicii.raster_irq_line;
+	
+	viciiCopy->vbank_phi1 = vicii.vbank_phi1;
+	viciiCopy->vbank_phi2 = vicii.vbank_phi2;
+	
+	viciiCopy->idle_state = vicii.idle_state;
+	viciiCopy->rc = vicii.rc;
+	viciiCopy->vc = vicii.vc;
+	viciiCopy->vcbase = vicii.vcbase;
+	viciiCopy->vmli = vicii.vmli;
+	
+	viciiCopy->bad_line = vicii.bad_line;
+	
+	viciiCopy->last_read_phi1 = vicii.last_read_phi1;
+	viciiCopy->sprite_dma = vicii.sprite_dma;
+	viciiCopy->sprite_display_bits = vicii.sprite_display_bits;
+	
+	for (int i = 0; i < VICII_NUM_SPRITES; i++)
+	{
+		viciiCopy->sprite[i].data = vicii.sprite[i].data;
+		viciiCopy->sprite[i].mc = vicii.sprite[i].mc;
+		viciiCopy->sprite[i].mcbase = vicii.sprite[i].mcbase;
+		viciiCopy->sprite[i].pointer = vicii.sprite[i].pointer;
+		viciiCopy->sprite[i].exp_flop = vicii.sprite[i].exp_flop;
+		viciiCopy->sprite[i].x = vicii.sprite[i].x;
+	}
+	
+	
+	// additional vars
+	c64d_get_exrom_game(&(viciiCopy->exrom), &(viciiCopy)->game);
+	c64d_get_ultimax_phi(&(viciiCopy->export_ultimax_phi1), &(viciiCopy->export_ultimax_phi2));
+
+	viciiCopy->vaddr_mask_phi1 = vicii.vaddr_mask_phi1;
+	viciiCopy->vaddr_mask_phi2 = vicii.vaddr_mask_phi2;
+	viciiCopy->vaddr_offset_phi1 = vicii.vaddr_offset_phi1;
+	viciiCopy->vaddr_offset_phi2 = vicii.vaddr_offset_phi2;
+	viciiCopy->vaddr_chargen_mask_phi1 = vicii.vaddr_chargen_mask_phi1;
+	viciiCopy->vaddr_chargen_value_phi1 = vicii.vaddr_chargen_value_phi1;
+	viciiCopy->vaddr_chargen_mask_phi2 = vicii.vaddr_chargen_mask_phi2;
+	viciiCopy->vaddr_chargen_value_phi2 = vicii.vaddr_chargen_value_phi2;
+	
+	// CPU
+	c64d_get_maincpu_regs(&(viciiCopy->a), &(viciiCopy->x), &(viciiCopy->y), &(viciiCopy->processorFlags), &(viciiCopy->sp), &(viciiCopy->pc),
+						  &(viciiCopy->instructionCycle));
+
+	// TODO: DO WE STILL NEED THIS?
+	viciiCopy->lastValidPC = viciiCopy->pc;
+	
+	//LOGD("mem01=%02x", c64d_peek_memory0001());
+	viciiCopy->memory0001 = c64d_peek_memory0001();
+
+	
+}
+
+void c64d_vicii_copy_state_data(vicii_cycle_state_t *viciiDest, vicii_cycle_state_t *viciiSrc)
+{
+	memcpy(viciiDest->regs, viciiSrc->regs, 64);
+	
+	viciiDest->raster_line = viciiSrc->raster_line;
+	viciiDest->raster_cycle = viciiSrc->raster_cycle;
+	
+	viciiDest->raster_irq_line = viciiSrc->raster_irq_line;
+	
+	viciiDest->vbank_phi1 = viciiSrc->vbank_phi1;
+	viciiDest->vbank_phi2 = viciiSrc->vbank_phi2;
+	
+	viciiDest->idle_state = viciiSrc->idle_state;
+	viciiDest->rc = viciiSrc->rc;
+	viciiDest->vc = viciiSrc->vc;
+	viciiDest->vcbase = viciiSrc->vcbase;
+	viciiDest->vmli = viciiSrc->vmli;
+	
+	viciiDest->bad_line = viciiSrc->bad_line;
+	
+	viciiDest->last_read_phi1 = viciiSrc->last_read_phi1;
+	viciiDest->sprite_dma = viciiSrc->sprite_dma;
+	viciiDest->sprite_display_bits = viciiSrc->sprite_display_bits;
+	
+	for (int i = 0; i < VICII_NUM_SPRITES; i++)
+	{
+		viciiDest->sprite[i].data = viciiSrc->sprite[i].data;
+		viciiDest->sprite[i].mc = viciiSrc->sprite[i].mc;
+		viciiDest->sprite[i].mcbase = viciiSrc->sprite[i].mcbase;
+		viciiDest->sprite[i].pointer = viciiSrc->sprite[i].pointer;
+		viciiDest->sprite[i].exp_flop = viciiSrc->sprite[i].exp_flop;
+		viciiDest->sprite[i].x = viciiSrc->sprite[i].x;
+	}
+	
+	viciiDest->exrom = viciiSrc->exrom;
+	viciiDest->game = viciiSrc->game;
+	
+	viciiDest->export_ultimax_phi1 = viciiSrc->export_ultimax_phi1;
+	viciiDest->export_ultimax_phi2 = viciiSrc->export_ultimax_phi2;
+	
+	
+	viciiDest->vaddr_mask_phi1 = viciiSrc->vaddr_mask_phi1;
+	viciiDest->vaddr_mask_phi2 = viciiSrc->vaddr_mask_phi2;
+	viciiDest->vaddr_offset_phi1 = viciiSrc->vaddr_offset_phi1;
+	viciiDest->vaddr_offset_phi2 = viciiSrc->vaddr_offset_phi2;
+	viciiDest->vaddr_chargen_mask_phi1 = viciiSrc->vaddr_chargen_mask_phi1;
+	viciiDest->vaddr_chargen_value_phi1 = viciiSrc->vaddr_chargen_value_phi1;
+	viciiDest->vaddr_chargen_mask_phi2 = viciiSrc->vaddr_chargen_mask_phi2;
+	viciiDest->vaddr_chargen_value_phi2 = viciiSrc->vaddr_chargen_value_phi2;
+	
+	// CPU
+	viciiDest->a = viciiSrc->a;
+	viciiDest->x = viciiSrc->x;
+	viciiDest->y = viciiSrc->y;
+	viciiDest->processorFlags = viciiSrc->processorFlags;
+	viciiDest->sp = viciiSrc->sp;
+	viciiDest->pc = viciiSrc->pc;
+	viciiDest->instructionCycle = viciiSrc->instructionCycle;
+	
+	
+	// TODO: DO WE STILL NEED THIS?
+	viciiDest->lastValidPC = viciiSrc->lastValidPC;
+	
+	// TODO: ???
+	viciiDest->memory0001 = viciiSrc->memory0001;
+	
+}
+
+
+//uint32 viciiFrameCycleNum = 0;
+
+// TODO: add setting in settings
+uint8 c64d_vicii_record_state_mode = C64D_VICII_RECORD_MODE_EVERY_CYCLE; //C64D_VICII_RECORD_MODE_NONE;
+
+void c64d_c64_set_vicii_record_state_mode(uint8 recordMode)
+{
+	c64d_vicii_record_state_mode = recordMode;
+}
+
+//unsigned int viciiFrameCycleNum = 0;
+
+void c64d_c64_vicii_start_frame()
+{
+	//LOGD("c64d_c64_vicii_start_frame, viciiFrameCycleNum=%d", viciiFrameCycleNum);
+	
+	//viciiFrameCycleNum = 0;
+	
+	// TODO: frame counter + breakpoint on defined frame
+	
+}
+
+void c64d_c64_vicii_cycle()
+{
+//	LOGD("line=%04x / cycle=%04x  start=%d", vicii.raster_line, vicii.raster_cycle, vicii.start_of_frame);
+//	LOGD("viciiFrameCycleNum=%5d line=%04x / cycle=%04x  start=%d", viciiFrameCycleNum, vicii.raster_line, vicii.raster_cycle, vicii.start_of_frame);
+	//viciiFrameCycleNum++;
+	
+	if (c64d_vicii_record_state_mode == C64D_VICII_RECORD_MODE_EVERY_CYCLE)
+	{
+		// correct the raster line on start frame
+		unsigned int rasterLine = vicii.raster_line;
+		unsigned int rasterCycle = vicii.raster_cycle;
+		
+		if (vicii.start_of_frame == 1)
+		{
+			rasterLine = 0;
+		}
+
+		vicii_cycle_state_t *viciiCopy = &viciiStateForCycle[rasterLine][rasterCycle];
+		c64d_vicii_copy_state(viciiCopy);
+	}
+}
+
+void c64d_c64_vicii_start_raster_line(uint16 rasterLine)
+{
+	// copy VIC state
+//	LOGD("c64d_c64_vicii_start_raster_line: rasterLine=%d cycle=%d", rasterLine, vicii.raster_cycle);
+
+	if (c64d_vicii_record_state_mode == C64D_VICII_RECORD_MODE_EVERY_LINE)
+	{
+		vicii_cycle_state_t *viciiCopy = &viciiStateForCycle[rasterLine][0];
+		c64d_vicii_copy_state(viciiCopy);
+	}
+	
+	c64d_c64_check_raster_breakpoint(rasterLine);
 }
 
 void c64d_c64_check_raster_breakpoint(uint16 rasterLine)
@@ -577,7 +844,7 @@ void c64d_c64_check_irqvic_breakpoint()
 {
 	if (debugInterfaceVice->breakOnC64IrqVIC)
 	{
-		debugInterfaceVice->SetDebugMode(C64_DEBUG_RUN_ONE_INSTRUCTION);
+		debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED); //C64_DEBUG_RUN_ONE_INSTRUCTION);
 	}
 }
 
@@ -592,9 +859,10 @@ void c64d_c64_check_irqcia_breakpoint(int ciaNum)
 void c64d_debug_pause_check()
 {
 	if (c64d_debug_mode == C64_DEBUG_PAUSED)
-	{
+	{		
 		c64d_refresh_previous_lines();
 		c64d_refresh_dbuf();
+		c64d_refresh_cia();
 		
 		while (c64d_debug_mode == C64_DEBUG_PAUSED)
 		{
@@ -620,13 +888,4 @@ void c64d_sid_channels_data(int v1, int v2, int v3, short mix)
 	
 	debugInterfaceVice->AddSIDWaveformData(v1, v2, v3, mix);
 }
-
-
-
-
-
-
-
-
-
 

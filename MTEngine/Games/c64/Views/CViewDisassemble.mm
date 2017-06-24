@@ -13,6 +13,8 @@
 #include "CSlrKeyboardShortcuts.h"
 #include "C64KeyboardShortcuts.h"
 #include "C64SettingsStorage.h"
+#include "CViewC64VicDisplay.h"
+#include "CViewDataDump.h"
 
 #define byte unsigned char
 
@@ -63,6 +65,7 @@ CViewDisassemble::CViewDisassemble(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 	this->showLabels = false;
 	
 	this->isTrackingPC = true;
+	this->changedByUser = false;
 	this->currentPC = -1;
 	this->numberOfLinesBack = 31;
 	this->numberOfLinesBack3 = this->numberOfLinesBack * NUM_MULTIPLY_LINES_FOR_DISASSEMBLE;
@@ -185,6 +188,7 @@ void CViewDisassemble::GuiEditHexEnteredValue(CGuiEditHex *editHex, u32 lastKeyC
 	guiMain->LockMutex();
 
 	isTrackingPC = false;
+	changedByUser = true;
 	
 	if (editCursorPos == EDIT_CURSOR_POS_ADDR)
 	{
@@ -282,14 +286,18 @@ void CViewDisassemble::EditBoxTextFinished(CGuiEditBoxText *editBox, char *text)
 }
 
 
-void CViewDisassemble::SetViewParameters(float posX, float posY, float posZ, float sizeX, float sizeY,
-										 CSlrFont *font, float fontSize, int numberOfLines,
-										 bool showHexCodes, bool showLabels)
+void CViewDisassemble::SetViewParameters(float posX, float posY, float posZ, float sizeX, float sizeY, CSlrFont *font, float fontSize, int numberOfLines,
+					   float mnemonicsDisplayOffsetX,
+					   bool showHexCodes,
+					   bool showCodeCycles, float codeCyclesDisplayOffsetX,
+					   bool showLabels, int labelNumCharacters)
 {
 	CGuiView::SetPosition(posX, posY, posZ, sizeX, sizeY);
 	
 	this->fontDisassemble = font;
 	this->fontSize = fontSize;
+	this->mnemonicsOffsetX = fontSize*mnemonicsDisplayOffsetX;
+	this->codeCyclesOffsetX = fontSize*codeCyclesDisplayOffsetX;
 	this->fontSize3 = fontSize*3;
 	this->fontSize5 = fontSize*5;
 	this->fontSize9 = fontSize*9;
@@ -300,17 +308,30 @@ void CViewDisassemble::SetViewParameters(float posX, float posY, float posZ, flo
 	
 	this->markerSizeX = sizeX; //fontSize * 15.3f;
 	this->showHexCodes = showHexCodes;
+	this->showCodeCycles = showCodeCycles;
 	this->showLabels = showLabels;
-	
+	this->labelNumCharacters = labelNumCharacters;
+
+	UpdateLabelsPositions();
+}
+
+void CViewDisassemble::UpdateLabelsPositions()
+{
 	if (showLabels)
 	{
+		float pxe = this->posX + fontSize*labelNumCharacters;
+		
+		this->numberOfCharactersInLabel = labelNumCharacters;
+		
+		disassembledCodeOffsetX = fontSize*labelNumCharacters;
+		
 		// update labels positions
 		for (std::map<u16, CDisassembleCodeLabel *>::iterator it = codeLabels.begin(); it != codeLabels.end(); it++)
 		{
 			CDisassembleCodeLabel *label = it->second;
 			
 			int l = strlen(label->labelText)+1;
-			label->px = this->posX + fontSize5*4.0f - l*fontSize;
+			label->px = pxe - l*fontSize;
 		}
 	}
 }
@@ -903,7 +924,7 @@ int CViewDisassemble::RenderDisassembleLine(float px, float py, int addr, uint8 
 
 	if (showLabels)
 	{
-		px += fontSize5*4.0f;
+		px += disassembledCodeOffsetX;
 
 		for (int i = 0; i < length; i++)
 		{
@@ -1017,6 +1038,37 @@ int CViewDisassemble::RenderDisassembleLine(float px, float py, int addr, uint8 
 		px += fontSize;
 	}
 
+	if (showCodeCycles)
+	{
+		const float cfNot = 0.7f;
+		const float cfActive = 1.3f;
+		
+		float px2 = px + this->codeCyclesOffsetX;
+		
+		if (opcodes[op].addressingMode != ADDR_REL)
+		{
+			sprintfHexCode4(buf3, opcodes[op].numCycles);
+			fontDisassemble->BlitTextColor(buf3, px2, py, -1, fontSize, cr*cfNot, cg*cfNot, cb*cfActive, ca);
+		}
+		else
+		{
+			// check page boundary
+			u16 baddr = ((addr + 2) + (int8)lo) & 0xFFFF;
+			
+			if ((addr & 0xFF00) == (baddr & 0xFF00))
+			{
+				sprintfHexCode4(buf3, opcodes[op].numCycles);
+				fontDisassemble->BlitTextColor(buf3, px2, py, -1, fontSize, cr*cfNot, cg*cfNot, cb*cfActive, ca);
+			}
+			else
+			{
+				sprintfHexCode4(buf3, opcodes[op].numCycles + 1);
+				fontDisassemble->BlitTextColor(buf3, px2, py, -1, fontSize, cr*cfActive, cg*cfNot, cb*cfNot, ca);
+			}
+		}
+		
+	}
+	
 	// mnemonic
 	strcpy(buf3, opcodes[op].name);
 	strcat(buf3, " ");
@@ -1120,6 +1172,7 @@ int CViewDisassemble::RenderDisassembleLine(float px, float py, int addr, uint8 
 	strcpy(buf, buf3);
 	strcat(buf, buf4);
 	
+	px += mnemonicsOffsetX;
 	
 	if (editCursorPos != EDIT_CURSOR_POS_MNEMONIC)
 	{
@@ -1213,7 +1266,7 @@ void CViewDisassemble::RenderHexLine(float px, float py, int addr)
 	
 	if (showLabels)
 	{
-		px += fontSize5*4.0f;
+		px += disassembledCodeOffsetX;
 		
 		std::map<u16, CDisassembleCodeLabel *>::iterator it = codeLabels.find(addr);
 		
@@ -1263,6 +1316,8 @@ void CViewDisassemble::RenderHexLine(float px, float py, int addr)
 		px += fontSize;
 	}
 	
+	px += mnemonicsOffsetX;
+
 	if (editCursorPos != EDIT_CURSOR_POS_MNEMONIC)
 	{
 		if (showHexCodes)
@@ -1771,7 +1826,8 @@ void CViewDisassemble::StartEditingAtCursorPosition(int newCursorPos, bool goLef
 	guiMain->LockMutex();
 	
 	isTrackingPC = false;
-
+	changedByUser = true;
+	
 	if (newCursorPos == EDIT_CURSOR_POS_ADDR)
 	{
 		editHex->SetValue(cursorAddress, 4);
@@ -1915,7 +1971,7 @@ bool CViewDisassemble::DoTap(GLfloat x, GLfloat y)
 		float numChars = 4.0f;
 		if (showLabels == true)
 		{
-			numChars = 24.0f;
+			numChars = 4.0f + numberOfCharactersInLabel;
 		}
 
 		if (!(x >= posX && x <= (posX+fontSize * numChars)))
@@ -2058,11 +2114,13 @@ bool CViewDisassemble::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 		if (isTrackingPC == false)
 		{
 			isTrackingPC = true;
+			changedByUser = false;
 		}
 		else
 		{
 			cursorAddress = currentPC;
 			isTrackingPC = false;
+			changedByUser = true;
 		}
 
 		viewC64->viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
@@ -2089,9 +2147,10 @@ bool CViewDisassemble::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 		ScrollUp();
 		return true;
 	}
-	else if (keyCode == MTKEY_ARROW_LEFT)
+	else if (keyCode == '[')	// was: MTKEY_ARROW_LEFT)
 	{
 		isTrackingPC = false;
+		changedByUser = true;
 		cursorAddress--;
 		if (cursorAddress < 0)
 			cursorAddress = 0;
@@ -2124,12 +2183,23 @@ bool CViewDisassemble::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 		SetCursorToNearExecuteCodeAddress(newCursorAddress);
 		return true;
 	}
-	else if (keyCode == MTKEY_ARROW_RIGHT)
+	else if (keyCode == ']') // was: MTKEY_ARROW_RIGHT)
 	{
 		isTrackingPC = false;
+		changedByUser = true;
 		cursorAddress++;
 		if (cursorAddress > dataAdapter->AdapterGetDataLength()-1)
 			cursorAddress = dataAdapter->AdapterGetDataLength()-1;
+		return true;
+	}
+	else if (keyCode == MTKEY_ARROW_LEFT)
+	{
+		MoveAddressHistoryBack();
+		return true;
+	}
+	else if (keyCode == MTKEY_ARROW_RIGHT)
+	{
+		MoveAddressHistoryForward();
 		return true;
 	}
 	else if (keyCode == MTKEY_ENTER)
@@ -2139,6 +2209,14 @@ bool CViewDisassemble::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 		StartEditingAtCursorPosition(EDIT_CURSOR_POS_MNEMONIC, false);
 		return true;
 	}
+	
+	// TODO: fix me, this is workaround
+	if (viewC64->currentScreenLayoutId == C64_SCREEN_LAYOUT_VIC_DISPLAY)
+	{
+		if (viewC64->viewC64VicDisplay->KeyDown(keyCode, isShift, isAlt, isControl))
+			return true;
+	}
+
 	
 	return CGuiView::KeyDown(keyCode, isShift, isAlt, isControl);
 }
@@ -2201,6 +2279,122 @@ void CViewDisassemble::StepOverJsr()
 	viewC64->debugInterface->UnlockMutex();
 }
 
+void CViewDisassemble::MoveAddressHistoryBack()
+{
+	guiMain->LockMutex();
+
+	if (!traverseHistoryAddresses.empty())
+	{
+		int addr = traverseHistoryAddresses.back();
+		traverseHistoryAddresses.pop_back();
+		
+		cursorAddress = addr;
+	}
+	
+	guiMain->UnlockMutex();
+}
+
+void CViewDisassemble::MoveAddressHistoryForward()
+{
+	guiMain->LockMutex();
+	
+	if (cursorAddress > dataAdapter->AdapterGetDataLength()-3)
+		cursorAddress = dataAdapter->AdapterGetDataLength()-3;
+	
+	u8 opcode;
+	dataAdapter->AdapterReadByte(cursorAddress, &opcode);
+	
+	// $20 JSR, $4C JMP
+	if (opcode == 0x20 || opcode == 0x4C)
+	{
+		u8 a1, a2;
+		dataAdapter->AdapterReadByte(cursorAddress+1, &a1);
+		dataAdapter->AdapterReadByte(cursorAddress+2, &a2);
+		
+		u16 addr = a1 | (a2 << 8);
+		MoveAddressHistoryForwardWithAddr(addr);
+	}
+	// JMP (xxxx)
+	else if (opcode == 0x6C)
+	{
+		u8 a1, a2;
+		dataAdapter->AdapterReadByte(cursorAddress+1, &a1);
+		dataAdapter->AdapterReadByte(cursorAddress+2, &a2);
+		
+		u16 addr1 = a1 | (a2 << 8);
+
+		dataAdapter->AdapterReadByte(addr1,   &a1);
+		dataAdapter->AdapterReadByte(addr1+1, &a2);
+
+		u16 addr = a1 | (a2 << 8);
+		MoveAddressHistoryForwardWithAddr(addr);
+	}
+	else if (opcodes[opcode].addressingMode == ADDR_REL)
+	{
+		u8 a1;
+		dataAdapter->AdapterReadByte(cursorAddress+1, &a1);
+		
+		u16 addr = (cursorAddress + 2 + (int8)a1) & 0xFFFF;
+		MoveAddressHistoryForwardWithAddr(addr);
+	}
+	// scroll memory dump
+	else if (opcodes[opcode].addressingMode == ADDR_ABS
+			 || opcodes[opcode].addressingMode == ADDR_ABX
+			 || opcodes[opcode].addressingMode == ADDR_ABY)
+	{
+		u8 a1, a2;
+		dataAdapter->AdapterReadByte(cursorAddress+1, &a1);
+		dataAdapter->AdapterReadByte(cursorAddress+2, &a2);
+		
+		u16 addr = a1 | (a2 << 8);
+		this->memoryMap->viewDataDump->ScrollToAddress(addr);
+	}
+	else if (opcodes[opcode].addressingMode == ADDR_IND)
+	{
+		u8 a1, a2;
+		dataAdapter->AdapterReadByte(cursorAddress+1, &a1);
+		dataAdapter->AdapterReadByte(cursorAddress+2, &a2);
+		
+		u16 addr1 = a1 | (a2 << 8);
+		
+		dataAdapter->AdapterReadByte(addr1,   &a1);
+		dataAdapter->AdapterReadByte(addr1+1, &a2);
+		
+		u16 addr = a1 | (a2 << 8);
+		this->memoryMap->viewDataDump->ScrollToAddress(addr);
+	}
+	else if (opcodes[opcode].addressingMode == ADDR_ZP
+			 || opcodes[opcode].addressingMode == ADDR_ZPX
+			 || opcodes[opcode].addressingMode == ADDR_ZPY
+			 || opcodes[opcode].addressingMode == ADDR_IZX
+			 || opcodes[opcode].addressingMode == ADDR_IZY)
+	{
+		u8 a;
+		dataAdapter->AdapterReadByte(cursorAddress+1, &a);
+		
+		u16 addr = a;
+		this->memoryMap->viewDataDump->ScrollToAddress(addr);
+	}
+	
+	guiMain->UnlockMutex();
+}
+
+void CViewDisassemble::MoveAddressHistoryForwardWithAddr(u16 addr)
+{
+	traverseHistoryAddresses.push_back(cursorAddress);
+
+	cursorAddress = addr;
+
+	LOGD(" -- traverse history --");
+	for (std::vector<int>::iterator it = traverseHistoryAddresses.begin();
+		 it != traverseHistoryAddresses.end(); it++)
+	{
+		LOGD(" .. %04x", *it);
+	}
+
+	LOGD(" -- traverse history end --");
+}
+
 void CViewDisassemble::SetCursorToNearExecuteCodeAddress(int newCursorAddress)
 {
 	isTrackingPC = false;
@@ -2240,6 +2434,7 @@ bool CViewDisassemble::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isContr
 void CViewDisassemble::ScrollDown()
 {
 	isTrackingPC = false;
+	changedByUser = true;
 	
 	//LOGD("ScrollDown: cursorAddress=%4.4x nextOpAddr=%4.4x", cursorAddress, nextOpAddr);
 	
@@ -2255,6 +2450,7 @@ void CViewDisassemble::ScrollDown()
 void CViewDisassemble::ScrollUp()
 {
 	isTrackingPC = false;
+	changedByUser = true;
 	
 	//LOGD("ScrollUp: cursorAddress=%4.4x previousOpAddr=%4.4x", cursorAddress, previousOpAddr);
 	
@@ -2298,11 +2494,6 @@ bool CViewDisassemble::DoScrollWheel(float deltaX, float deltaY)
 }
 
 
-#define FAIL(ErrorMessage)  		SYS_ReleaseCharBuf(lineBuffer); \
-									delete textParser; \
-									guiMain->ShowMessage((ErrorMessage)); LOGError("CViewDisassemble::error: %s", (ErrorMessage)); \
-									isErrorCode = true; return;
-
 void CViewDisassemble::Assemble(int assembleAddress)
 {
 	// remove all '$'  - assembling is default to hex only
@@ -2327,6 +2518,76 @@ void CViewDisassemble::Assemble(int assembleAddress)
 		return;
 	}
 	
+	Assemble(assembleAddress, lineBuffer);
+	
+	SYS_ReleaseCharBuf(lineBuffer);
+	
+}
+
+int CViewDisassemble::Assemble(int assembleAddress, char *lineBuffer)
+{
+	int instructionOpcode = -1;
+	uint16 instructionValue = 0x0000;
+	char *errorMessage = SYS_GetCharBuf();
+	
+	int ret = this->Assemble(assembleAddress, lineBuffer, &instructionOpcode, &instructionValue, errorMessage);
+	
+	if (ret == -1)
+	{
+		// error
+		guiMain->ShowMessage(errorMessage);
+		SYS_ReleaseCharBuf(errorMessage);
+		return -1;
+	}
+	
+	bool isDataAvailable;
+	
+	switch (opcodes[instructionOpcode].addressingLength)
+	{
+		case 1:
+			dataAdapter->AdapterWriteByte(assembleAddress, instructionOpcode, &isDataAvailable);
+			memoryMap->memoryCells[assembleAddress]->isExecuteCode = true;
+			break;
+			
+		case 2:
+			dataAdapter->AdapterWriteByte(assembleAddress, instructionOpcode, &isDataAvailable);
+			memoryMap->memoryCells[assembleAddress]->isExecuteCode = true;
+			assembleAddress++;
+			dataAdapter->AdapterWriteByte(assembleAddress, (instructionValue & 0xFFFF), &isDataAvailable);
+			break;
+			
+		case 3:
+			dataAdapter->AdapterWriteByte(assembleAddress, instructionOpcode, &isDataAvailable);
+			memoryMap->memoryCells[assembleAddress]->isExecuteCode = true;
+			assembleAddress++;
+			dataAdapter->AdapterWriteByte(assembleAddress, (instructionValue & 0x00FF), &isDataAvailable);
+			assembleAddress++;
+			dataAdapter->AdapterWriteByte(assembleAddress, ((instructionValue >> 8) & 0x00FF), &isDataAvailable);
+			break;
+			
+		default:
+			// should never happen
+			guiMain->ShowMessage(("Assemble failed"));
+			LOGError("CViewDisassemble::error: %s", ("Assemble failed"));
+			isErrorCode = true;
+			SYS_ReleaseCharBuf(errorMessage);
+			return -1;
+	}
+	
+	SYS_ReleaseCharBuf(errorMessage);
+	
+	return opcodes[instructionOpcode].addressingLength;
+}
+
+#define FAIL(ErrorMessage)  		delete textParser; \
+									strcpy(errorMessageBuf, (ErrorMessage)); \
+									LOGError("CViewDisassemble::error: %s", (ErrorMessage)); \
+									isErrorCode = true; \
+									return -1;
+
+
+int CViewDisassemble::Assemble(int assembleAddress, char *lineBuffer, int *instructionOpCode, uint16 *instructionValue, char *errorMessageBuf)
+{
 	CSlrTextParser *textParser = new CSlrTextParser(lineBuffer);
 	textParser->ToUpper();
 	
@@ -2349,7 +2610,6 @@ void CViewDisassemble::Assemble(int assembleAddress)
 	}
 	
 	OpcodeAddressingMode addressingMode = ADDR_UNKNOWN;
-	uint16 instructionValue = 0x0000;
 	
 	// BRK
 	if (token == TOKEN_EOF)
@@ -2359,7 +2619,7 @@ void CViewDisassemble::Assemble(int assembleAddress)
 	// LDA $00...
 	else if (token == TOKEN_HEX_VALUE)
 	{
-		instructionValue = textParser->GetHexNumber();
+		*instructionValue = textParser->GetHexNumber();
 
 		token = AssembleGetToken(textParser);
 
@@ -2370,7 +2630,7 @@ void CViewDisassemble::Assemble(int assembleAddress)
 		// LDA $0000
 		else if (token == TOKEN_EOF)
 		{
-			if (instructionValue < 0x0100)
+			if (*instructionValue < 0x0100)
 			{
 				addressingMode = ADDR_ZP;
 			}
@@ -2387,7 +2647,7 @@ void CViewDisassemble::Assemble(int assembleAddress)
 			// LDA $0000,X
 			if (token == TOKEN_X)
 			{
-				if (instructionValue < 0x0100)
+				if (*instructionValue < 0x0100)
 				{
 					addressingMode = ADDR_ZPX;
 				}
@@ -2406,7 +2666,7 @@ void CViewDisassemble::Assemble(int assembleAddress)
 			// LDA $0000,Y
 			else if (token == TOKEN_Y)
 			{
-				if (instructionValue < 0x0100)
+				if (*instructionValue < 0x0100)
 				{
 					addressingMode = ADDR_ZPY;
 				}
@@ -2439,7 +2699,7 @@ void CViewDisassemble::Assemble(int assembleAddress)
 		
 		if (token == TOKEN_HEX_VALUE)
 		{
-			instructionValue = textParser->GetHexNumber();
+			*instructionValue = textParser->GetHexNumber();
 			addressingMode = ADDR_IMM;
 			
 			token = AssembleGetToken(textParser);
@@ -2461,7 +2721,7 @@ void CViewDisassemble::Assemble(int assembleAddress)
 		// LDA ($00...
 		if (token == TOKEN_HEX_VALUE)
 		{
-			instructionValue = textParser->GetHexNumber();
+			*instructionValue = textParser->GetHexNumber();
 			
 			token = AssembleGetToken(textParser);
 			
@@ -2538,68 +2798,41 @@ void CViewDisassemble::Assemble(int assembleAddress)
 		FAIL("Bad instruction");
 	}
 	
-	int instructionOpcode = -1;
-	
 	// check branching
 	if (addressingMode == ADDR_ABS || addressingMode == ADDR_ZP)
 	{
 		// check if branch opcode exists
-		instructionOpcode = AssembleFindOp(mnemonic, ADDR_REL);
-		if (instructionOpcode != -1)
+		*instructionOpCode = AssembleFindOp(mnemonic, ADDR_REL);
+		if (*instructionOpCode != -1)
 		{
 			addressingMode = ADDR_REL;
-			int16 branchValue = (instructionValue - (assembleAddress + 2)) & 0xFFFF;
+			int16 branchValue = ((*instructionValue) - (assembleAddress + 2)) & 0xFFFF;
 			if (branchValue < -0x80 || branchValue > 0x7F)
 			{
 				FAIL("Branch address too far");
 			}
-			instructionValue = branchValue & 0x00FF;
+			*instructionValue = branchValue & 0x00FF;
 		}
 	}
 	
-	if (instructionOpcode == -1)
+	if (*instructionOpCode == -1)
 	{
-		instructionOpcode = AssembleFindOp(mnemonic, addressingMode);
+		*instructionOpCode = AssembleFindOp(mnemonic, addressingMode);
 	}
 
 	// found opcode?
-	if (instructionOpcode != -1)
+	if (*instructionOpCode != -1)
 	{
-		bool isDataAvailable;
-		
-		switch (opcodes[instructionOpcode].addressingLength)
-		{
-			case 1:
-				dataAdapter->AdapterWriteByte(assembleAddress, instructionOpcode, &isDataAvailable);
-				memoryMap->memoryCells[assembleAddress]->isExecuteCode = true;
-				break;
-				
-			case 2:
-				dataAdapter->AdapterWriteByte(assembleAddress, instructionOpcode, &isDataAvailable);
-				memoryMap->memoryCells[assembleAddress]->isExecuteCode = true;
-				assembleAddress++;
-				dataAdapter->AdapterWriteByte(assembleAddress, (instructionValue & 0xFFFF), &isDataAvailable);
-				break;
-				
-			case 3:
-				dataAdapter->AdapterWriteByte(assembleAddress, instructionOpcode, &isDataAvailable);
-				memoryMap->memoryCells[assembleAddress]->isExecuteCode = true;
-				assembleAddress++;
-				dataAdapter->AdapterWriteByte(assembleAddress, (instructionValue & 0x00FF), &isDataAvailable);
-				assembleAddress++;
-				dataAdapter->AdapterWriteByte(assembleAddress, ((instructionValue >> 8) & 0x00FF), &isDataAvailable);
-				break;
-				
-			default:
-				FAIL("Assemble failed");
-				break;
-		}
+		delete textParser;
+		return 0;
 	}
 	else
 	{
 		FAIL("Instruction not found");
 	}
-
+	
+	delete textParser;
+	return -1;
 }
 
 int CViewDisassemble::AssembleFindOp(char *mnemonic)
@@ -2686,7 +2919,7 @@ void CViewDisassemble::CreateAddrPositions()
 ////////////
 
 //
-// this is simpler (quicker) version which is not execute-aware:
+// this is simpler (quicker) version of disassembler that is not execute-aware:
 //
 
 void CViewDisassemble::CalcDisassembleStartNotExecuteAware(int startAddress, int *newStart, int *renderLinesBefore)

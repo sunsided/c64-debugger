@@ -4,6 +4,8 @@
 #include "SYS_Defs.h"
 #include <vector>
 
+class CSlrString;
+
 class C64PaletteData
 {
 public:
@@ -13,8 +15,11 @@ public:
 };
 
 void C64InitPalette();
+void C64SetPaletteNum(uint16 paletteNum);
 void C64SetPalette(uint8 *palette);
+void C64SetVicePalette(uint8 *palette);
 void C64SetPalette(char *paletteName);
+void C64GetAvailablePalettes(std::vector<CSlrString *> *vicPalettes);
 
 std::vector<C64PaletteData *> *C64GetAvailablePalettes();
 

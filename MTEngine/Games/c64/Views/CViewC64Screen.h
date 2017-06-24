@@ -2,6 +2,7 @@
 #define _CVIEWC64SCREEN_H_
 
 #include "CGuiView.h"
+#include <map>
 
 class CSlrMutex;
 class C64DebugInterface;
@@ -104,7 +105,8 @@ public:
 	float rasterCrossInteriorB;
 	float rasterCrossInteriorA;
 
-	void InitRasterColors();
+	// TODO: move this to Tools
+	void InitRasterColorsFromScheme();
 	void GetRasterColorScheme(int schemeNum, float splitAmount, float *r, float *g, float *b);
 	
 	void RenderRaster(int rasterX, int rasterY);
@@ -139,6 +141,8 @@ public:
 	float zoomedScreenRasterScaleFactorY;
 	float zoomedScreenRasterOffsetX;
 	float zoomedScreenRasterOffsetY;
+
+	//std::map<u32, bool> pressedKeyCodes;
 
 };
 

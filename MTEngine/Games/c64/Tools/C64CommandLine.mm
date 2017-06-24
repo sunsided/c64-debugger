@@ -9,6 +9,9 @@
 #include "C64DebugInterface.h"
 #include "C64SettingsStorage.h"
 #include "C64SharedMemory.h"
+#include "CViewVicEditor.h"
+#include "CGuiMain.h"
+#include "C64D_Version.h"
 
 #define printLine printf
 #define C64D_PASS_CONFIG_DATA_MARKER	0x029A
@@ -18,7 +21,7 @@ void C64DebuggerPassConfigToRunningInstance();
 
 void c64ShowCommandLineHelp()
 {
-	printLine("C64 Debugger v%s by Slajerek/Samar, VICE 2.4 by The VICE Team\n", C64DEBUGGER_VERSION_STRING);
+	printLine("C64 Debugger v%s by Slajerek/Samar, VICE %s by The VICE Team\n", C64DEBUGGER_VERSION_STRING, C64DEBUGGER_VICE_VERSION_STRING);
 	printLine("\n");
 	printLine("-help  show this help\n");
 	printLine("\n");
@@ -33,6 +36,9 @@ void c64ShowCommandLineHelp()
 	printLine("-jmp <addr>  jmp to address\n");
 	printLine("             for example jmp x1000, jmp $1000 or jmp 4096\n");
 	printLine("-autojmp     automatically jmp to address if basic SYS is detected\n");
+	printLine("-alwaysjmp   always jmp to load address of PRG\n");
+	printLine("-autorundisk automatically load first PRG from inserted disk\n");
+	printLine("-unpause     force code running");
 	printLine("-snapshot <file>  load snapshot from file\n");
 	printLine("\n");
 	printLine("-clearsettings    clear all config settings\n");
@@ -61,8 +67,122 @@ char *c64ParseCommandLineGetArgument()
 
 void C64DebuggerParseCommandLine0()
 {
+	LOGD("C64DebuggerParseCommandLine0");
+
 	if (sysCommandLineArguments.empty())
 		return;
+	
+	// check if it's just a single argument with file path (drop file on exe in Win32)
+	if (sysCommandLineArguments.size() == 1)	// 1   , 3 for dev xcode
+	{
+		char *arg = sysCommandLineArguments[0];
+
+		LOGD("arg=%s", arg);
+
+		if (SYS_FileExists(arg))
+		{
+			CSlrString *filePath = new CSlrString(arg);
+			filePath->DebugPrint("filePath=");
+
+			CSlrString *ext = filePath->GetFileExtensionComponentFromPath();			
+			ext->DebugPrint("ext=");
+
+			if (ext->CompareWith("prg") || ext->CompareWith("PRG"))
+			{
+				char *path = sysCommandLineArguments[0];
+				sysCommandLineArguments.clear();
+				sysCommandLineArguments.push_back("-pass");
+				sysCommandLineArguments.push_back("-wait");
+				sysCommandLineArguments.push_back("700");
+				sysCommandLineArguments.push_back("-prg");
+				sysCommandLineArguments.push_back(path);
+				sysCommandLineArguments.push_back("-autojmp");
+
+				// TODO: this will be overwritten by settings loader
+				c64SettingsFastBootKernalPatch = true;
+
+				LOGD("delete filePath");
+				delete filePath;
+				
+//				c64SettingsPathToPRG = filePath;
+				c64SettingsWaitOnStartup = 500;
+//				c64SettingsAutoJmp = true;
+				LOGD("delete ext");
+				delete ext;
+
+				// pass to running instance if exists
+				C64DebuggerInitSharedMemory();
+				C64DebuggerPassConfigToRunningInstance();
+
+				return;
+			}
+			else if (ext->CompareWith("d64") || ext->CompareWith("D64"))
+			{
+				char *path = sysCommandLineArguments[0];
+
+				sysCommandLineArguments.clear();
+				sysCommandLineArguments.push_back("-pass");
+				sysCommandLineArguments.push_back("-d64");
+				sysCommandLineArguments.push_back(path);
+				delete filePath;
+
+//				c64SettingsPathToD64 = filePath;
+//				c64SettingsWaitOnStartup = 500;
+				delete ext;
+				
+				// pass to running instance if exists
+				C64DebuggerInitSharedMemory();
+				C64DebuggerPassConfigToRunningInstance();
+
+				return;
+			}
+			else if (ext->CompareWith("crt") || ext->CompareWith("CRT"))
+			{
+				char *path = sysCommandLineArguments[0];
+
+				sysCommandLineArguments.clear();
+				sysCommandLineArguments.push_back("-pass");
+				sysCommandLineArguments.push_back("-crt");
+				sysCommandLineArguments.push_back(path);
+				delete filePath;
+
+//				c64SettingsPathToCartridge = filePath;
+//				c64SettingsWaitOnStartup = 500;
+				delete ext;
+
+				// pass to running instance if exists
+				C64DebuggerInitSharedMemory();
+				C64DebuggerPassConfigToRunningInstance();
+				
+				return;
+			}
+			else if (ext->CompareWith("snap") || ext->CompareWith("SNAP")
+					 || ext->CompareWith("vsf") || ext->CompareWith("VSF"))
+			{
+				char *path = sysCommandLineArguments[0];
+
+				sysCommandLineArguments.clear();
+				sysCommandLineArguments.push_back("-pass");
+				sysCommandLineArguments.push_back("-snapshot");
+				sysCommandLineArguments.push_back(path);
+				delete filePath;
+
+//				c64SettingsPathToSnapshot = filePath;
+//				c64SettingsWaitOnStartup = 500;
+				delete ext;
+				
+				// pass to running instance if exists
+				C64DebuggerInitSharedMemory();
+				C64DebuggerPassConfigToRunningInstance();
+				
+				return;
+			}
+			delete filePath;
+			delete ext;
+			
+		}
+	}
+
 	
 	c64cmdIt = sysCommandLineArguments.begin();
 	
@@ -112,6 +232,8 @@ void C64DebuggerParseCommandLine1()
 	}
 }
 
+///////////
+
 void c64PerformStartupTasksThreaded()
 {
 	LOGD("c64PerformStartupTasksThreaded");
@@ -146,11 +268,12 @@ void c64PerformStartupTasksThreaded()
 	}
 	else
 	{
-		// TODO: Is it possible to init VICE with proper Engines at startup to not re-create here?
+		// DONE?: Is it possible to init VICE with proper Engines at startup to not re-create here?
+		// DONE?: Vice 3.1 by default starts with strange model (unknown=99), check cmdline parsing how it's handled in VICE
 		if (c64SettingsC64Model != 0)
 		{
-			SYS_Sleep(300);
-			viewC64->debugInterface->SetC64ModelType(c64SettingsC64Model);
+//			SYS_Sleep(300);
+//			viewC64->debugInterface->SetC64ModelType(c64SettingsC64Model);
 		}
 		
 		if (c64SettingsSIDEngineModel != 0)
@@ -160,6 +283,10 @@ void c64PerformStartupTasksThreaded()
 		
 		if (c64SettingsPathToD64 != NULL)
 		{
+			if (c64SettingsAutoJmpFromInsertedDiskFirstPrg)
+			{
+				SYS_Sleep(100);
+			}
 			viewC64->viewC64MainMenu->InsertD64(c64SettingsPathToD64, false);
 		}
 		
@@ -176,7 +303,11 @@ void c64PerformStartupTasksThreaded()
 	{
 		//LOGD("c64SettingsPathToPRG='%s'", c64SettingsPathToPRG);
 		
-		viewC64->viewC64MainMenu->LoadPRG(c64SettingsPathToPRG, c64SettingsAutoJmp, false);
+		// do not load PRG when disk was inserted and started
+		if (!(c64SettingsAutoJmpFromInsertedDiskFirstPrg == true && c64SettingsPathToD64 != NULL))
+		{
+			viewC64->viewC64MainMenu->LoadPRG(c64SettingsPathToPRG, c64SettingsAutoJmp, false);
+		}
 	}
 	
 	if (c64SettingsJmpOnStartupAddr > 0 && c64SettingsJmpOnStartupAddr < 0x10000)
@@ -187,6 +318,9 @@ void c64PerformStartupTasksThreaded()
 
 		viewC64->debugInterface->MakeJsrC64(c64SettingsJmpOnStartupAddr);
 	}
+	
+	//
+	viewC64->viewVicEditor->RunDebug();
 }
 
 class C64PerformStartupTasksThread : public CSlrThread
@@ -196,11 +330,20 @@ class C64PerformStartupTasksThread : public CSlrThread
 		if (c64SettingsPathToSnapshot != NULL && c64SettingsWaitOnStartup < 150)
 			c64SettingsWaitOnStartup = 150;
 		
+		if (c64dStartupTime == 0 || (SYS_GetCurrentTimeInMillis() - c64dStartupTime < 500))
+		{
+			LOGD("C64PerformStartupTasksThread: early run, wait 500ms");
+			c64SettingsWaitOnStartup += 500;
+		}
+		
+		LOGD("C64PerformStartupTasksThread: c64SettingsWaitOnStartup=%d", c64SettingsWaitOnStartup);
 		SYS_Sleep(c64SettingsWaitOnStartup);
 		
 		c64PerformStartupTasksThreaded();
 	};
 };
+
+////////////////////////
 
 void C64DebuggerParseCommandLine2()
 {
@@ -234,9 +377,21 @@ void C64DebuggerParseCommandLine2()
 			char *arg = c64ParseCommandLineGetArgument();
 			c64SettingsPathToDebugInfo = new CSlrString(arg);
 		}
-		else if (!strcmp(cmd, "autojmp"))
+		else if (!strcmp(cmd, "autojmp") || !strcmp(cmd, "autojump"))
 		{
 			c64SettingsAutoJmp = true;
+		}
+		else if (!strcmp(cmd, "unpause"))
+		{
+			c64SettingsForceUnpause = true;
+		}
+		else if (!strcmp(cmd, "autorundisk"))
+		{
+			c64SettingsAutoJmpFromInsertedDiskFirstPrg = true;
+		}
+		else if (!strcmp(cmd, "alwaysjmp") || !strcmp(cmd, "alwaysjump"))
+		{
+			c64SettingsAutoJmpAlwaysToLoadedPRGAddress = true;
 		}
 		else if (!strcmp(cmd, "d64"))
 		{
@@ -303,8 +458,13 @@ void C64DebuggerPerformStartupTasks()
 
 void C64DebuggerPassConfigToRunningInstance()
 {
+	//NSLog(@"C64DebuggerPassConfigToRunningInstance");
+	
 	c64SettingsPassConfigToRunningInstance = true;
-	printLine("Passing parameters to running instance\n");
+	printLine("-----< C64 Debugger v%s by Slajerek/Samar >------\n", C64DEBUGGER_VERSION_STRING);
+	fflush(stdout);
+	
+	//printLine("Passing parameters to running instance\n");
 	
 	LOGD("C64DebuggerPassConfigToRunningInstance: C64DebuggerParseCommandLine2");
 	C64DebuggerParseCommandLine2();
@@ -373,6 +533,24 @@ void C64DebuggerPassConfigToRunningInstance()
 		byteBuffer->PutBool(c64SettingsAutoJmp);
 	}
 
+	if (c64SettingsForceUnpause)
+	{
+		byteBuffer->PutU8(C64D_PASS_CONFIG_DATA_FORCE_UNPAUSE);
+		byteBuffer->PutBool(c64SettingsForceUnpause);
+	}
+	
+	if (c64SettingsAutoJmpFromInsertedDiskFirstPrg)
+	{
+		byteBuffer->PutU8(C64D_PASS_CONFIG_DATA_AUTO_RUN_DISK);
+		byteBuffer->PutBool(c64SettingsAutoJmpFromInsertedDiskFirstPrg);
+	}
+
+	if (c64SettingsAutoJmpAlwaysToLoadedPRGAddress)
+	{
+		byteBuffer->PutU8(C64D_PASS_CONFIG_DATA_ALWAYS_JMP);
+		byteBuffer->PutBool(c64SettingsAutoJmpAlwaysToLoadedPRGAddress);
+	}
+
 	if (c64SettingsPathToPRG)
 	{
 		LOGD("c64SettingsPathToPRG");
@@ -402,12 +580,14 @@ void C64DebuggerPassConfigToRunningInstance()
 	int pid = C64DebuggerSendConfiguration(byteBuffer);
 	if (pid > 0)
 	{
-		printLine("Parameters sent to instance pid=%d.\n", pid);
+		printLine("Parameters sent to instance pid=%d. Bye.\n", pid);
+		fflush(stdout);
 		SYS_CleanExit();
 	}
 	else
 	{
-		printLine("Other instance was not found, performing regular startup\n");
+		printLine("Other instance was not found, performing regular startup instead.\n");
+		fflush(stdout);
 	}
 }
 
@@ -499,6 +679,21 @@ void c64PerformNewConfigurationTasksThreaded(CByteBuffer *byteBuffer)
 			bool b = byteBuffer->GetBool();
 			c64SettingsAutoJmp = b;
 		}
+		else if (t == C64D_PASS_CONFIG_DATA_FORCE_UNPAUSE)
+		{
+			bool b = byteBuffer->GetBool();
+			c64SettingsForceUnpause = b;
+		}
+		else if (t == C64D_PASS_CONFIG_DATA_AUTO_RUN_DISK)
+		{
+			bool b = byteBuffer->GetBool();
+			c64SettingsAutoJmpFromInsertedDiskFirstPrg = b;
+		}
+		else if (t == C64D_PASS_CONFIG_DATA_ALWAYS_JMP)
+		{
+			bool b = byteBuffer->GetBool();
+			c64SettingsAutoJmpAlwaysToLoadedPRGAddress = b;
+		}
 		else if (t == C64D_PASS_CONFIG_DATA_PATH_TO_PRG)
 		{
 			CSlrString *str = byteBuffer->GetSlrString();
@@ -523,6 +718,7 @@ void c64PerformNewConfigurationTasksThreaded(CByteBuffer *byteBuffer)
 		}
 	}
 	
+	//guiMain->ShowMessage("updated");
 	delete byteBuffer;
 }
 

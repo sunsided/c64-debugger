@@ -89,15 +89,19 @@ void video_canvas_render(video_canvas_t *canvas, BYTE *trg, int width,
                          int height, int xs, int ys, int xt, int yt,
                          int pitcht, int depth)
 {
+    static int lastmode = -1;
     viewport_t *viewport = canvas->viewport;
 #ifdef VIDEO_SCALE_SOURCE
-    if (canvas->videoconfig->doublesizex) {
-        xs /= (canvas->videoconfig->doublesizex + 1);
-    }
-    if (canvas->videoconfig->doublesizey) {
-        ys /= (canvas->videoconfig->doublesizey + 1);
-    }
+    xs /= canvas->videoconfig->scalex;
+    ys /= canvas->videoconfig->scaley;
 #endif
+
+    /* when the color encoding changed, the palette must be recalculated */
+    if (viewport->crt_type != lastmode) {
+        canvas->videoconfig->color_tables.updated = 0;
+        lastmode = viewport->crt_type;
+    }
+
     if (!canvas->videoconfig->color_tables.updated) { /* update colors as necessary */
         video_color_update_palette(canvas);
     }
@@ -105,7 +109,6 @@ void video_canvas_render(video_canvas_t *canvas, BYTE *trg, int width,
                       trg, width, height, xs, ys, xt, yt,
                       canvas->draw_buffer->draw_buffer_width, pitcht, depth,
                       viewport);
-
 }
 
 void video_canvas_refresh_all(video_canvas_t *canvas)
@@ -121,15 +124,15 @@ void video_canvas_refresh_all(video_canvas_t *canvas)
     geometry = canvas->geometry;
 
     video_canvas_refresh(canvas,
-                 viewport->first_x
-                 + geometry->extra_offscreen_border_left,
-                 viewport->first_line,
-                 viewport->x_offset,
-                 viewport->y_offset,
-                 MIN(canvas->draw_buffer->canvas_width,
-                     geometry->screen_size.width - viewport->first_x),
-                 MIN(canvas->draw_buffer->canvas_height,
-                     viewport->last_line - viewport->first_line + 1));
+                         viewport->first_x
+                         + geometry->extra_offscreen_border_left,
+                         viewport->first_line,
+                         viewport->x_offset,
+                         viewport->y_offset,
+                         MIN(canvas->draw_buffer->canvas_width,
+                             geometry->screen_size.width - viewport->first_x),
+                         MIN(canvas->draw_buffer->canvas_height,
+                             viewport->last_line - viewport->first_line + 1));
 }
 
 int video_canvas_palette_set(struct video_canvas_s *canvas,
@@ -166,4 +169,3 @@ void video_canvas_create_set(struct video_canvas_s *canvas)
 {
     canvas->created = 1;
 }
-

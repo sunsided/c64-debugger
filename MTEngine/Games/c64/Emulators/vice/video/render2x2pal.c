@@ -33,6 +33,13 @@
 #include "types.h"
 #include "video-color.h"
 
+/*
+    YUV to RGB
+
+    R = Y + V
+    G = Y - (0.1953 * U + 0.5078 * V)
+    B = Y + U
+*/
 static inline
 void yuv_to_rgb(SDWORD y, SDWORD u, SDWORD v, SWORD *red, SWORD *grn, SWORD *blu)
 {
@@ -69,8 +76,8 @@ void store_line_and_scanline_2(
     tmp2 = (WORD *) line;
 
     *tmp1 = (WORD) (gamma_red_fac[512 + red + prevline[0]]
-          | gamma_grn_fac[512 + grn + prevline[1]]
-          | gamma_blu_fac[512 + blu + prevline[2]]);
+                    | gamma_grn_fac[512 + grn + prevline[1]]
+                    | gamma_blu_fac[512 + blu + prevline[2]]);
 
     *tmp2 = (WORD) (gamma_red[256 + red] | gamma_grn[256 + grn] | gamma_blu[256 + blu]);
 
@@ -123,11 +130,11 @@ void store_line_and_scanline_4(
     tmp1 = (DWORD *) scanline;
     tmp2 = (DWORD *) line;
     *tmp1 = gamma_red_fac[512 + red + prevline[0]]
-          | gamma_grn_fac[512 + grn + prevline[1]]
-          | gamma_blu_fac[512 + blu + prevline[2]]
-          | alpha;
+            | gamma_grn_fac[512 + grn + prevline[1]]
+            | gamma_blu_fac[512 + blu + prevline[2]]
+            | alpha;
     *tmp2 = gamma_red[256 + red] | gamma_grn[256 + grn] | gamma_blu[256 + blu]
-          | alpha;
+            | alpha;
 
     prevline[0] = red;
     prevline[1] = grn;
@@ -262,17 +269,17 @@ void get_yuv_from_video(
 
 static inline
 void render_generic_2x2_pal(video_render_color_tables_t *color_tab,
-                       const BYTE *src, BYTE *trg,
-                       unsigned int width, const unsigned int height,
-                       unsigned int xs, const unsigned int ys,
-                       unsigned int xt, const unsigned int yt,
-                       const unsigned int pitchs, const unsigned int pitcht,
-                       viewport_t *viewport, unsigned int pixelstride,
-                       void (*store_func)(
-                            BYTE *const line, BYTE *const scanline,
-                            SWORD *const prevline, const int shade,
-                            SDWORD l, SDWORD u, SDWORD v),
-                       const int write_interpolated_pixels, video_render_config_t *config)
+                            const BYTE *src, BYTE *trg,
+                            unsigned int width, const unsigned int height,
+                            unsigned int xs, const unsigned int ys,
+                            unsigned int xt, const unsigned int yt,
+                            const unsigned int pitchs, const unsigned int pitcht,
+                            viewport_t *viewport, unsigned int pixelstride,
+                            void (*store_func)(
+                                BYTE *const line, BYTE *const scanline,
+                                SWORD *const prevline, const int shade,
+                                SDWORD l, SDWORD u, SDWORD v),
+                            const int write_interpolated_pixels, video_render_config_t *config)
 {
     SWORD *prevrgblineptr;
     const SDWORD *ytablel = color_tab->ytablel;
@@ -282,6 +289,8 @@ void render_generic_2x2_pal(video_render_color_tables_t *color_tab,
     SDWORD *line, *cbtable, *crtable;
     DWORD x, y, wfirst, wlast, yys;
     SDWORD l, l2, u, u2, unew, v, v2, vnew, off, off_flip, shade;
+    int first_line = viewport->first_line * 2;
+    int last_line = (viewport->last_line * 2) + 1;
 
     src = src + pitchs * ys + xs - 2;
     trg = trg + pitcht * yt + xt * pixelstride;
@@ -313,7 +322,7 @@ void render_generic_2x2_pal(video_render_color_tables_t *color_tab,
         line[1] = vnew;
         unew -= cbtable[tmpsrc[0]];
         vnew -= crtable[tmpsrc[0]];
-        tmpsrc ++;
+        tmpsrc++;
         line += 2;
     }
     /* That's all initialization we need for full lines. Unfortunately, for
@@ -329,18 +338,22 @@ void render_generic_2x2_pal(video_render_color_tables_t *color_tab,
 
     /* height & 1 == 0. */
     for (y = yys; y < yys + height + 1; y += 2) {
-
         /* when we are dealing with the last line, the rules change:
          * we no longer write the main output to screen, we just put it into
          * the scanline. */
         if (y == yys + height) {
             /* no place to put scanline in: we are outside viewport or still
              * doing the first iteration (y == yys), height == 0 */
-            if (y == yys || y <= viewport->first_line * 2 || y > viewport->last_line * 2)
+            if (y == yys || y <= (unsigned int)first_line || y > (unsigned int)(last_line + 1)) {
                 break;
+            }
 
             tmptrg = &color_tab->rgbscratchbuffer[0];
             tmptrgscanline = trg - pitcht;
+            if (y == (unsigned int)(last_line + 1)) {
+                /* src would point after the source area, so rewind one line */
+                src -= pitchs;
+            }
         } else {
             /* pixel data to surface */
             tmptrg = trg;
@@ -348,9 +361,9 @@ void render_generic_2x2_pal(video_render_color_tables_t *color_tab,
              * otherwise we dump it to the scratch region... We must never
              * render the scanline for the first row, because prevlinergb is not
              * yet initialized and scanline data would be bogus! */
-            tmptrgscanline = y != yys && y > viewport->first_line * 2 && y <= viewport->last_line * 2
-                ? trg - pitcht
-                : &color_tab->rgbscratchbuffer[0];
+            tmptrgscanline = y != yys && y > (unsigned int)first_line && y <= (unsigned int)last_line
+                             ? trg - pitcht
+                             : &color_tab->rgbscratchbuffer[0];
         }
 
         /* current source image for YUV xform */
@@ -390,7 +403,7 @@ void render_generic_2x2_pal(video_render_color_tables_t *color_tab,
             line += 2;
 
             if (write_interpolated_pixels) {
-                store_func(tmptrg, tmptrgscanline, prevrgblineptr, shade, (l+l2)>>1, (u+u2)>>1, (v+v2)>>1);
+                store_func(tmptrg, tmptrgscanline, prevrgblineptr, shade, (l + l2) >> 1, (u + u2) >> 1, (v + v2) >> 1);
                 tmptrgscanline += pixelstride;
                 tmptrg += pixelstride;
                 prevrgblineptr += 3;
@@ -416,7 +429,7 @@ void render_generic_2x2_pal(video_render_color_tables_t *color_tab,
             line += 2;
 
             if (write_interpolated_pixels) {
-                store_func(tmptrg, tmptrgscanline, prevrgblineptr, shade, (l+l2)>>1, (u+u2)>>1, (v+v2)>>1);
+                store_func(tmptrg, tmptrgscanline, prevrgblineptr, shade, (l + l2) >> 1, (u + u2) >> 1, (v + v2) >> 1);
                 tmptrgscanline += pixelstride;
                 tmptrg += pixelstride;
                 prevrgblineptr += 3;
@@ -436,12 +449,12 @@ void render_generic_2x2_pal(video_render_color_tables_t *color_tab,
 }
 
 void render_UYVY_2x2_pal(video_render_color_tables_t *color_tab,
-                       const BYTE *src, BYTE *trg,
-                       unsigned int width, const unsigned int height,
-                       const unsigned int xs, const unsigned int ys,
-                       const unsigned int xt, const unsigned int yt,
-                       const unsigned int pitchs, const unsigned int pitcht,
-                       viewport_t *viewport, video_render_config_t *config)
+                         const BYTE *src, BYTE *trg,
+                         unsigned int width, const unsigned int height,
+                         const unsigned int xs, const unsigned int ys,
+                         const unsigned int xt, const unsigned int yt,
+                         const unsigned int pitchs, const unsigned int pitcht,
+                         viewport_t *viewport, video_render_config_t *config)
 {
     render_generic_2x2_pal(color_tab, src, trg, width, height, xs, ys,
                            xt, yt, pitchs, pitcht, viewport,
@@ -449,12 +462,12 @@ void render_UYVY_2x2_pal(video_render_color_tables_t *color_tab,
 }
 
 void render_YUY2_2x2_pal(video_render_color_tables_t *color_tab,
-                       const BYTE *src, BYTE *trg,
-                       unsigned int width, const unsigned int height,
-                       const unsigned int xs, const unsigned int ys,
-                       const unsigned int xt, const unsigned int yt,
-                       const unsigned int pitchs, const unsigned int pitcht,
-                       viewport_t *viewport, video_render_config_t *config)
+                         const BYTE *src, BYTE *trg,
+                         unsigned int width, const unsigned int height,
+                         const unsigned int xs, const unsigned int ys,
+                         const unsigned int xt, const unsigned int yt,
+                         const unsigned int pitchs, const unsigned int pitcht,
+                         viewport_t *viewport, video_render_config_t *config)
 {
     render_generic_2x2_pal(color_tab, src, trg, width, height, xs, ys,
                            xt, yt, pitchs, pitcht, viewport,
@@ -462,12 +475,12 @@ void render_YUY2_2x2_pal(video_render_color_tables_t *color_tab,
 }
 
 void render_YVYU_2x2_pal(video_render_color_tables_t *color_tab,
-                       const BYTE *src, BYTE *trg,
-                       unsigned int width, const unsigned int height,
-                       const unsigned int xs, const unsigned int ys,
-                       const unsigned int xt, const unsigned int yt,
-                       const unsigned int pitchs, const unsigned int pitcht,
-                       viewport_t *viewport, video_render_config_t *config)
+                         const BYTE *src, BYTE *trg,
+                         unsigned int width, const unsigned int height,
+                         const unsigned int xs, const unsigned int ys,
+                         const unsigned int xt, const unsigned int yt,
+                         const unsigned int pitchs, const unsigned int pitcht,
+                         viewport_t *viewport, video_render_config_t *config)
 {
     render_generic_2x2_pal(color_tab, src, trg, width, height, xs, ys,
                            xt, yt, pitchs, pitcht, viewport,

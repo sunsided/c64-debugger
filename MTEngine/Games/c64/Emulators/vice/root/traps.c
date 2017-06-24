@@ -39,12 +39,11 @@
 #include "machine-bus.h"
 #include "maincpu.h"
 #include "mem.h"
-#include "mos6510.h"
-#include "mos6510dtv.h"
 #include "resources.h"
 #include "translate.h"
 #include "traps.h"
 #include "types.h"
+#include "wdc65816.h"
 
 typedef struct traplist_s {
     struct traplist_s *next;
@@ -65,21 +64,25 @@ static log_t traps_log = LOG_ERR;
 /* Flag: Should we avoid installing traps at all?  */
 static int traps_enabled;
 
-static int set_traps_enabled(int new_value, void *param)
+static int set_traps_enabled(int val, void *param)
 {
+    int new_value = val ? 1 : 0;
+
     if ((!traps_enabled && new_value) || (traps_enabled && !new_value)) {
         if (!new_value) {
             /* Traps have been disabled.  */
             traplist_t *p;
 
-            for (p = traplist; p != NULL; p = p->next)
+            for (p = traplist; p != NULL; p = p->next) {
                 remove_trap(p->trap);
+            }
         } else {
             /* Traps have been enabled.  */
             traplist_t *p;
 
-            for (p = traplist; p != NULL; p = p->next)
+            for (p = traplist; p != NULL; p = p->next) {
                 install_trap(p->trap);
+            }
         }
     }
 
@@ -91,9 +94,9 @@ static int set_traps_enabled(int new_value, void *param)
 }
 
 static const resource_int_t resources_int[] = {
-    { "VirtualDevices", 1, RES_EVENT_SAME, NULL,
+    { "VirtualDevices", 0, RES_EVENT_SAME, NULL,
       &traps_enabled, set_traps_enabled, NULL },
-    { NULL }
+    RESOURCE_INT_LIST_END
 };
 
 int traps_resources_init(void)
@@ -116,7 +119,7 @@ static const cmdline_option_t cmdline_options[] = {
       USE_PARAM_STRING, USE_DESCRIPTION_ID,
       IDCLS_UNUSED, IDCLS_DISABLE_TRAPS_FAST_EMULATION,
       NULL, NULL },
-    { NULL }
+    CMDLINE_LIST_END
 };
 
 int traps_cmdline_options_init(void)
@@ -157,6 +160,7 @@ static int install_trap(const trap_t *t)
         }
     }
 
+    log_verbose("Trap '%s' installed.", t->name);
     (t->storefunc)(t->address, TRAP_OPCODE);
 
     return 0;
@@ -171,8 +175,11 @@ int traps_add(const trap_t *trap)
     p->trap = trap;
     traplist = p;
 
-    if (traps_enabled)
+    if (traps_enabled) {
         install_trap(trap);
+    } else {
+        log_verbose("Traps are disabled, trap '%s' not installed.", trap->name);
+    }
 
     return 0;
 }
@@ -183,6 +190,7 @@ static int remove_trap(const trap_t *trap)
         log_error(traps_log, "No trap `%s' installed?", trap->name);
         return -1;
     }
+    log_verbose("Trap '%s' disabled.", trap->name);
 
     (trap->storefunc)(trap->address, trap->check[0]);
     return 0;
@@ -193,8 +201,9 @@ int traps_remove(const trap_t *trap)
     traplist_t *p = traplist, *prev = NULL;
 
     while (p) {
-        if (p->trap->address == trap->address)
+        if (p->trap->address == trap->address) {
             break;
+        }
         prev = p;
         p = p->next;
     }
@@ -204,17 +213,32 @@ int traps_remove(const trap_t *trap)
         return -1;
     }
 
-    if (prev)
+    if (prev) {
         prev->next = p->next;
-    else
+    } else {
         traplist = p->next;
+    }
 
     lib_free(p);
 
-    if (traps_enabled)
+    if (traps_enabled) {
         remove_trap(trap);
+    }
 
     return 0;
+}
+
+void traps_refresh(void)
+{
+    if (traps_enabled) {
+        traplist_t *p;
+
+        for (p = traplist; p != NULL; p = p->next) {
+            remove_trap(p->trap);
+            install_trap(p->trap);
+        }
+    }
+    return;
 }
 
 DWORD traps_handler(void)
@@ -223,11 +247,7 @@ DWORD traps_handler(void)
     unsigned int pc;
     int result;
 
-    if (machine_class == VICE_MACHINE_C64DTV) {
-        pc = MOS6510DTV_REGS_GET_PC(&maincpu_regs);
-    } else {
-        pc = MOS6510_REGS_GET_PC(&maincpu_regs);
-    }
+    pc = maincpu_get_pc();
 
     while (p) {
         if (p->trap->address == pc) {
@@ -237,15 +257,10 @@ DWORD traps_handler(void)
             result = (*p->trap->func)();
             if (!result) {
                 return (p->trap->check[0] | (p->trap->check[1] << 8) | (p->trap->check[2] << 16));
-            } 
+            }
             /* XXX ALERT!  `p' might not be valid anymore here, because
                `p->trap->func()' might have removed all the traps.  */
-            if (machine_class == VICE_MACHINE_C64DTV) {
-                MOS6510DTV_REGS_SET_PC(&maincpu_regs, resume_address);
-
-            } else {
-                MOS6510_REGS_SET_PC(&maincpu_regs, resume_address);
-            }
+            maincpu_set_pc(resume_address);
             return 0;
         }
         p = p->next;

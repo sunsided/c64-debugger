@@ -186,7 +186,7 @@ int SYS_SendConfigurationToOtherAppInstance(CByteBuffer *byteBuffer)
 	NSString *appBundleName = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleName"];
 	int appPid = getpid();
 	
-	NSLog(@"appBundleName=%@ appPid=%d", appBundleName, appPid);
+	//NSLog(@"appBundleName=%@ appPid=%d", appBundleName, appPid);
 	
 	ProcessSerialNumber psn = { kNoProcess, kNoProcess };
 	while (GetNextProcess(&psn) == noErr)
@@ -200,7 +200,7 @@ int SYS_SendConfigurationToOtherAppInstance(CByteBuffer *byteBuffer)
 			NSString *bundlePidStr = [dict objectForKey:@"pid"];
 			
 			int bundlePid = [bundlePidStr intValue];
-			NSLog(@"  bundleName=%@ bundlePid=%d", bundleName, bundlePid);
+			//NSLog(@"  bundleName=%@ bundlePid=%d", bundleName, bundlePid);
 			
 			if ([appBundleName isEqualToString:bundleName] && appPid != bundlePid)
 			{
@@ -222,7 +222,7 @@ int SYS_SendConfigurationToOtherAppInstance(CByteBuffer *byteBuffer)
 		}
 	}
 	
-	NSLog(@"...");
+	//NSLog(@"...");
 	
 	// other instance not found
 	return -1;

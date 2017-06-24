@@ -4,6 +4,7 @@
  * Written by
  *  Ettore Perazzoli <ettore@comm2000.it>
  *  Andreas Boose <viceteam@t-online.de>
+ *  Marco van den Heuvel <blackystardust68@yahoo.com>
  *
  * This file is part of VICE, the Versatile Commodore Emulator.
  * See README for copyright notice.
@@ -39,7 +40,7 @@
 #define UTIL_FILE_LOAD_SKIP_ADDRESS 1
 #define UTIL_FILE_LOAD_FILL         2
 
-#define util_arraysize( _x ) ( sizeof( _x ) / sizeof( _x[0] ) )
+#define util_arraysize(_x) (sizeof(_x) / sizeof(_x[0]))
 
 extern char *util_concat(const char *s1, ...);
 extern void util_addline(char **list, const char *line);
@@ -97,6 +98,8 @@ extern char *util_find_next_line(const char *pos);
 extern char util_tolower(char c);
 extern char util_toupper(char c);
 
+extern char *util_gen_hex_address_list(int start, int stop, int step);
+
 #if !defined HAVE_MEMMOVE
 extern void *memmove(void *target, const void *source, unsigned int length);
 #endif
@@ -114,7 +117,7 @@ extern int strcasecmp(const char *s1, const char *s2);
 #endif
 
 #if !defined HAVE_STRNCASECMP
-extern int strncasecmp(const char *s1, const char *s2, unsigned int n);
+extern int strncasecmp(const char *s1, const char *s2, size_t n);
 #endif
 
 #endif

@@ -24,6 +24,13 @@ public:
 	virtual void SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY);
 	virtual void SetSize(GLfloat sizeX, GLfloat sizeY);
 
+	// is inside including frame (with title bar, etc)?
+	virtual bool IsInside(GLfloat x, GLfloat y);
+	
+	// is inside view interior area (without title bar, etc)?
+	virtual bool IsInsideView(GLfloat x, GLfloat y);
+	virtual bool IsInsideViewNonVisible(GLfloat x, GLfloat y);
+
 	virtual void Render();
 	virtual void Render(GLfloat posX, GLfloat posY);
 	//virtual void Render(GLfloat posX, GLfloat posY, GLfloat sizeX, GLfloat sizeY);
@@ -101,6 +108,15 @@ public:
 
 	void RemoveGuiElements();
 	void RemoveGuiElement(CGuiElement *guiElement);
+	
+	void BringToFront(CGuiElement *guiElement);
+	
+	// focus
+	virtual void RenderFocusBorder();
+	virtual void ClearFocus();
+	virtual bool SetFocus(CGuiElement *view);
+	CGuiElement *focusElement;
+		
 
 	// Resource Manager
 	// this method should prepare all resources, refresh resources
@@ -109,9 +125,12 @@ public:
 	// returns if succeeded
 	virtual bool StartAnimationEditorDebug();
 	virtual void ReturnFromAnimationEditorDebug();
-			
+	
+//	float mousePosX, mousePosY;
+	
 private:
 	float previousZ;
+	float previousFrontZ;
 };
 
 #endif

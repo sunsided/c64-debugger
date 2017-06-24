@@ -337,6 +337,14 @@ void CSlrString::Concatenate(char *str)
 	}
 }
 
+void CSlrString::RemoveLastCharacter()
+{
+	if (!this->chars->empty())
+	{
+		this->chars->pop_back();
+	}
+}
+
 CSlrString *CSlrString::GetWord(u32 startPos, u32 *retPos, std::list<u16> stopChars)
 {
 	CSlrString *ret = new CSlrString();
@@ -805,6 +813,25 @@ CSlrString *CSlrString::GetFileNameComponentFromPath()
 	return fname;
 }
 
+CSlrString *CSlrString::GetFileExtensionComponentFromPath()
+{
+	CSlrString *fname = GetFileNameComponentFromPath();
+	std::vector<CSlrString *> *strs = this->Split(SYS_FILE_SYSTEM_EXTENSION_SEPARATOR);
+	CSlrString *fext = new CSlrString(strs->back());
+	
+	while(!strs->empty())
+	{
+		CSlrString *t = strs->back();
+		strs->pop_back();
+		delete t;
+	}
+	delete strs;
+	delete fname;
+	
+	return fext;
+}
+
+
 CSlrString *CSlrString::GetFilePathWithoutFileNameComponentFromPath()
 {
 	LOGD("GetFilePathWithoutFileNameComponentFromPath");
@@ -837,6 +864,42 @@ CSlrString *CSlrString::GetFilePathWithoutFileNameComponentFromPath()
 //	fpath->DebugPrint("return=");
 	return fpath;
 }
+
+CSlrString *CSlrString::GetFilePathWithoutExtension()
+{
+	LOGD("GetFilePathWithoutExtension");
+//	this->DebugPrint("this=");
+
+	std::vector<CSlrString *> *strs = this->Split(SYS_FILE_SYSTEM_EXTENSION_SEPARATOR);
+	CSlrString *fpath = new CSlrString();
+
+	if (!strs->empty())
+	{
+		for (int i = 0; i < strs->size()-1; i++)
+		{
+			CSlrString *t = (*strs)[i];
+			fpath->Concatenate(t);
+			
+			if (i != strs->size()-2)
+			{
+				fpath->Concatenate(SYS_FILE_SYSTEM_EXTENSION_SEPARATOR);
+			}
+		}
+		
+		while(!strs->empty())
+		{
+			CSlrString *t = strs->back();
+			strs->pop_back();
+			delete t;
+		}
+	}
+	
+	delete strs;
+	
+	//	fpath->DebugPrint("return=");
+	return fpath;
+}
+
 
 #if defined(IOS) || defined(MACOS)
 NSString *FUN_ConvertCSlrStringToNSString(CSlrString *str)

@@ -813,6 +813,7 @@
 
 /* Enable SDL UI support. */
 #define USE_SDLUI /**/
+#define USE_C64DEBUGGERUI
 
 /* Enable SDL sound support. */
 #define USE_SDL_AUDIO /**/
@@ -830,7 +831,7 @@
 /* #undef USE_XF86_VIDMODE_EXT */
 
 /* Version number of package */
-#define VERSION "2.4"
+#define VERSION "3.1"
 
 /* Win32 Version string. */
 #define VERSION_RC "$VERSION_RC"
@@ -906,10 +907,25 @@
 #define __func__ __FUNCTION__
 #endif
 
+#if defined(__APPLE__)
+#define HAVE_VSNPRINTF
+#define HAVE_SNPRINTF
+#endif
+
+#if defined(__linux__)
+#define HAVE_STRTOK_R
+#define HAVE_VSNPRINTF
+#define HAVE_SNPRINTF
+#endif
+
+
+#define HAVE_STPCPY
 
 #ifdef WIN32
 #define strcasecmp(s1, s2)      _stricmp(s1, s2)
 #define HAVE_STRCASECMP         1
+#define HAVE_SNPRINTF
+#define HAVE_STRTOUL
 
 #define snprintf _snprintf
 #endif

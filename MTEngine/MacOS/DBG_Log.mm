@@ -1,6 +1,6 @@
 /*
  *  DBG_Log.h
- Created by Marcin Skoczylas on 09-11-19.
+ Created by Marcin Skoczylas on 2009-11-19.
  Copyright 2009 Marcin Skoczylas
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -33,7 +33,6 @@
 //#define FULL_LOG
 
 //#define LOG_FILE
-#undef LOG_FILE
 
 ///////////////////////////////////////////////////////////////
 
@@ -96,7 +95,7 @@ void LOG_Init(void)
 
 	fpLog = fopen([path fileSystemRepresentation], "wb");
 #endif
-
+	
 	LOG_SetLevel(DBGLVL_MAIN, true);
 	LOG_SetLevel(DBGLVL_DEBUG, true);
 	LOG_SetLevel(DBGLVL_DEBUG2, true);

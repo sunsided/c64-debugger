@@ -196,7 +196,23 @@ void CGuiMain::Startup()
 		touches[i] = new COneTouchData(i);
 		touchesNotActive.push_back(touches[i]);
 	}
+	
+	mousePosX = -1;
+	mousePosY = -1;
 
+	isShiftPressed = false;
+	isAltPressed = false;
+	isControlPressed = false;
+	
+	isLeftShiftPressed = false;
+	isLeftControlPressed = false;
+	isLeftAltPressed = false;
+	
+	isRightShiftPressed = false;
+	isRightControlPressed = false;
+	isRightAltPressed = false;
+
+	
 	windowOnTop = NULL;
 
 	showMessage = NULL;
@@ -318,6 +334,12 @@ bool CGuiMain::DoTap(GLfloat x, GLfloat y)
 		return viewOnTop->DoTap(x, y);
 	}
 
+	if (currentView)
+	{
+		LOGI("CGuiMain: DoTap finished");
+		return currentView->DoTap(x, y);
+	}
+	
 	for (std::map<float, CGuiElement *, compareZdownwards>::iterator enumGuiElems =
 			guiElementsDownwards.begin();
 			enumGuiElems != guiElementsDownwards.end(); enumGuiElems++)
@@ -365,6 +387,11 @@ bool CGuiMain::DoFinishTap(GLfloat x, GLfloat y)
 		return viewOnTop->DoFinishTap(x, y);
 	}
 
+	if (currentView)
+	{
+		return currentView->DoFinishTap(x, y);
+	}
+
 	for (std::map<float, CGuiElement *, compareZdownwards>::iterator enumGuiElems =
 			guiElementsDownwards.begin();
 			enumGuiElems != guiElementsDownwards.end(); enumGuiElems++)
@@ -405,6 +432,12 @@ bool CGuiMain::DoDoubleTap(GLfloat x, GLfloat y)
 	{
 		return viewOnTop->DoDoubleTap(x, y);
 	}
+	
+	if (currentView)
+	{
+		return currentView->DoDoubleTap(x, y);
+	}
+
 
 	for (std::map<float, CGuiElement *, compareZdownwards>::iterator enumGuiElems =
 			guiElementsDownwards.begin();
@@ -446,6 +479,12 @@ bool CGuiMain::DoFinishDoubleTap(GLfloat x, GLfloat y)
 		return viewOnTop->DoFinishDoubleTap(x, y);
 	}
 
+	if (currentView)
+	{
+		return currentView->DoFinishDoubleTap(x, y);
+	}
+	
+
 	for (std::map<float, CGuiElement *, compareZdownwards>::iterator enumGuiElems =
 			guiElementsDownwards.begin();
 			enumGuiElems != guiElementsDownwards.end(); enumGuiElems++)
@@ -468,6 +507,9 @@ void CGuiMain::DoMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat distY,
 {
 	//viewScoreTracks->DoMove(x, y, distX, distY, diffX, diffY);
 
+	mousePosX = x;
+	mousePosY = y;
+	
 	if (isTapping == false)
 	{
 		// walkaround for lost tap
@@ -490,6 +532,12 @@ void CGuiMain::DoMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat distY,
 	if (viewOnTop)
 	{
 		viewOnTop->DoMove(x, y, distX, distY, diffX, diffY);
+		return;
+	}
+
+	if (currentView)
+	{
+		currentView->DoMove(x, y, distX, distY, diffX, diffY);
 		return;
 	}
 
@@ -541,7 +589,13 @@ void CGuiMain::FinishMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat distY,
 		viewOnTop->FinishMove(x, y, distX, distY, accelerationX, accelerationY);
 		return;
 	}
-
+	
+	if (currentView)
+	{
+		currentView->FinishMove(x, y, distX, distY, accelerationX, accelerationY);
+		return;
+	}
+	
 	for (std::map<float, CGuiElement *, compareZdownwards>::iterator enumGuiElems =
 			guiElementsDownwards.begin();
 			enumGuiElems != guiElementsDownwards.end(); enumGuiElems++)
@@ -587,6 +641,12 @@ bool CGuiMain::DoRightClick(GLfloat x, GLfloat y)
 	{
 		LOGI("CGuiMain: DoTap finished");
 		return viewOnTop->DoRightClick(x, y);
+	}
+	
+	if (currentView)
+	{
+		LOGI("CGuiMain: DoTap finished");
+		return currentView->DoRightClick(x, y);
 	}
 	
 	for (std::map<float, CGuiElement *, compareZdownwards>::iterator enumGuiElems =
@@ -636,6 +696,11 @@ bool CGuiMain::DoFinishRightClick(GLfloat x, GLfloat y)
 		return viewOnTop->DoFinishRightClick(x, y);
 	}
 	
+	if (currentView)
+	{
+		return currentView->DoFinishRightClick(x, y);
+	}
+	
 	for (std::map<float, CGuiElement *, compareZdownwards>::iterator enumGuiElems =
 			guiElementsDownwards.begin();
 			enumGuiElems != guiElementsDownwards.end(); enumGuiElems++)
@@ -656,6 +721,9 @@ bool CGuiMain::DoFinishRightClick(GLfloat x, GLfloat y)
 void CGuiMain::DoRightClickMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat distY,
 					  GLfloat diffX, GLfloat diffY)
 {
+	mousePosX = x;
+	mousePosY = y;
+
 	if (isTapping == false)
 	{
 		// walkaround for lost tap on some OSes
@@ -678,6 +746,12 @@ void CGuiMain::DoRightClickMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat dis
 	if (viewOnTop)
 	{
 		viewOnTop->DoRightClickMove(x, y, distX, distY, diffX, diffY);
+		return;
+	}
+	
+	if (currentView)
+	{
+		currentView->DoRightClickMove(x, y, distX, distY, diffX, diffY);
 		return;
 	}
 	
@@ -729,6 +803,12 @@ void CGuiMain::FinishRightClickMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat
 		return;
 	}
 	
+	if (currentView)
+	{
+		currentView->FinishRightClickMove(x, y, distX, distY, accelerationX, accelerationY);
+		return;
+	}
+	
 	for (std::map<float, CGuiElement *, compareZdownwards>::iterator enumGuiElems =
 			guiElementsDownwards.begin();
 			enumGuiElems != guiElementsDownwards.end(); enumGuiElems++)
@@ -749,6 +829,9 @@ void CGuiMain::FinishRightClickMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat
 ///
 void CGuiMain::DoNotTouchedMove(GLfloat x, GLfloat y)
 {
+	mousePosX = x;
+	mousePosY = y;
+
 	if (messageBox)
 	{
 		messageBox->DoNotTouchedMove(x, y);
@@ -764,6 +847,12 @@ void CGuiMain::DoNotTouchedMove(GLfloat x, GLfloat y)
 	if (viewOnTop)
 	{
 		viewOnTop->DoNotTouchedMove(x, y);
+		return;
+	}
+	
+	if (currentView)
+	{
+		currentView->DoNotTouchedMove(x, y);
 		return;
 	}
 	
@@ -809,6 +898,12 @@ void CGuiMain::InitZoom()
 		return;
 	}
 
+	if (currentView)
+	{
+		currentView->InitZoom();
+		return;
+	}
+	
 	for (std::map<float, CGuiElement *, compareZdownwards>::iterator enumGuiElems =
 			guiElementsDownwards.begin();
 			enumGuiElems != guiElementsDownwards.end(); enumGuiElems++)
@@ -846,6 +941,12 @@ void CGuiMain::DoZoomBy(GLfloat x, GLfloat y, GLfloat zoomValue, GLfloat differe
 		return;
 	}
 
+	if (currentView)
+	{
+		currentView->DoZoomBy(x, y, zoomValue, difference);
+		return;
+	}
+	
 	for (std::map<float, CGuiElement *, compareZdownwards>::iterator enumGuiElems =
 			guiElementsDownwards.begin();
 			enumGuiElems != guiElementsDownwards.end(); enumGuiElems++)
@@ -876,6 +977,12 @@ void CGuiMain::DoScrollWheel(float deltaX, float deltaY)
 	if (viewOnTop)
 	{
 		viewOnTop->DoScrollWheel(deltaX, deltaY);
+		return;
+	}
+	
+	if (currentView)
+	{
+		currentView->DoScrollWheel(deltaX, deltaY);
 		return;
 	}
 	
@@ -918,6 +1025,11 @@ bool CGuiMain::DoMultiTap(COneTouchData *touch, float x, float y)
 		return viewOnTop->DoMultiTap(touch, x, y);
 	}
 
+	if (currentView)
+	{
+		return currentView->DoMultiTap(touch, x, y);
+	}
+	
 	for (std::map<float, CGuiElement *, compareZdownwards>::iterator enumGuiElems =
 			guiElementsDownwards.begin();
 			enumGuiElems != guiElementsDownwards.end(); enumGuiElems++)
@@ -963,6 +1075,11 @@ bool CGuiMain::DoMultiMove(COneTouchData *touch, float x, float y)
 		return viewOnTop->DoMultiMove(touch, x, y);
 	}
 
+	if (currentView)
+	{
+		return currentView->DoMultiMove(touch, x, y);
+	}
+	
 	for (std::map<float, CGuiElement *, compareZdownwards>::iterator enumGuiElems =
 			guiElementsDownwards.begin();
 			enumGuiElems != guiElementsDownwards.end(); enumGuiElems++)
@@ -1007,6 +1124,11 @@ bool CGuiMain::DoMultiFinishTap(COneTouchData *touch, float x, float y)
 		return viewOnTop->DoMultiFinishTap(touch, x, y);
 	}
 
+	if (currentView)
+	{
+		return currentView->DoMultiFinishTap(touch, x, y);
+	}
+	
 	for (std::map<float, CGuiElement *, compareZdownwards>::iterator enumGuiElems =
 			guiElementsDownwards.begin();
 			enumGuiElems != guiElementsDownwards.end(); enumGuiElems++)
@@ -1050,6 +1172,12 @@ void CGuiMain::FinishTouches()
 		return;
 	}
 
+	if (currentView)
+	{
+		currentView->FinishTouches();
+		return;
+	}
+	
 	for (std::map<float, CGuiElement *, compareZdownwards>::iterator enumGuiElems =
 			guiElementsDownwards.begin();
 			enumGuiElems != guiElementsDownwards.end(); enumGuiElems++)
@@ -1187,7 +1315,7 @@ bool CGuiMain::IsMainView(CGuiView *view)
 
 void CGuiMain::Render()
 {
-//	LOGD("-------------- GUI_Render() --------------");
+	//LOGD("-------------- GUI_Render() --------------");
 
 	this->LockRenderMutex();
 
@@ -1243,21 +1371,29 @@ void CGuiMain::Render()
 	}
 	else
 	{
-		for (std::map<float, CGuiElement *, compareZupwards>::iterator enumGuiElems =
-				guiElementsUpwards.begin();
-				enumGuiElems != guiElementsUpwards.end(); enumGuiElems++) {
-			CGuiElement *guiElement = (*enumGuiElems).second;
-
-			//LOGG("==MAIN== check %3.2f: %s visible=%s", (*enumGuiElems).first, guiElement->name, guiElement->visible ? "true" : "false");
-			if (!guiElement->visible)
-				continue;
-
-			if (guiElement == windowOnTop)
-				continue;
-
-			//LOGG("==MAIN=== render %3.2f: %s", (*enumGuiElems).first, guiElement->name);
-			guiElement->Render();
-			//LOGG("==MAIN=== render %3.2f done: %s", (*enumGuiElems).first, guiElement->name);
+		if (currentView)
+		{
+			currentView->Render();
+		}
+		else
+		{
+			for (std::map<float, CGuiElement *, compareZupwards>::iterator enumGuiElems =
+				 guiElementsUpwards.begin();
+				 enumGuiElems != guiElementsUpwards.end(); enumGuiElems++) {
+				CGuiElement *guiElement = (*enumGuiElems).second;
+				
+				//LOGG("==MAIN== check %3.2f: %s visible=%s", (*enumGuiElems).first, guiElement->name, guiElement->visible ? "true" : "false");
+				if (!guiElement->visible)
+					continue;
+				
+				if (guiElement == windowOnTop)
+					continue;
+				
+				//LOGG("==MAIN=== render %3.2f: %s", (*enumGuiElems).first, guiElement->name);
+				guiElement->Render();
+				//LOGG("==MAIN=== render %3.2f done: %s", (*enumGuiElems).first, guiElement->name);
+			}
+			
 		}
 
 		if (windowOnTop)
@@ -1500,14 +1636,18 @@ void CGuiMain::SetView(CGuiView *element)
 	bool found = false;
 	for (std::map<float, CGuiElement *, compareZupwards>::iterator enumGuiElems =
 			guiElementsUpwards.begin();
-			enumGuiElems != guiElementsUpwards.end(); enumGuiElems++) {
+			enumGuiElems != guiElementsUpwards.end(); enumGuiElems++)
+	{
 		CGuiElement *guiElement = (*enumGuiElems).second;
 
-		if (guiElement == element) {
+		if (guiElement == element)
+		{
 			element->visible = true;
 			element->ActivateView();
 			found = true;
-		} else {
+		}
+		else
+		{
 			guiElement->visible = false;
 			//guiElement->DeactivateView();
 		}
@@ -1515,7 +1655,8 @@ void CGuiMain::SetView(CGuiView *element)
 
 	this->currentView = element;
 
-	if (!found) {
+	if (!found)
+	{
 		SYS_FatalExit("CGuiMain::SetView: view not found (%s)", element->name);
 	}
 }
@@ -1667,6 +1808,11 @@ void CGlobalLogicCallback::GlobalLogicCallback() {
 
 }
 
+void CGlobalOSWindowChangedCallback::GlobalOSWindowChangedCallback() {
+	
+}
+
+
 void CGuiMain::ClearGlobalLogicCallbacks() {
 	this->globalLogicCallbacks.clear();
 }
@@ -1687,6 +1833,47 @@ void CGuiMain::AddGlobalLogicCallback(CGlobalLogicCallback *callback) {
 void CGuiMain::RemoveGlobalLogicCallback(CGlobalLogicCallback *callback) {
 	this->globalLogicCallbacks.remove(callback);
 }
+
+//
+
+void CGuiMain::ClearGlobalOSWindowChangedCallbacks() {
+	this->globalOSWindowChangedCallbacks.clear();
+}
+
+void CGuiMain::AddGlobalOSWindowChangedCallback(CGlobalOSWindowChangedCallback *callback)
+{
+	for (std::list<CGlobalOSWindowChangedCallback *>::iterator it =
+			this->globalOSWindowChangedCallbacks.begin();
+			it != this->globalOSWindowChangedCallbacks.end(); it++)
+	{
+		CGlobalOSWindowChangedCallback *val = (*it);
+		if (val == callback)
+		{
+			LOGWarning("AddGlobalOSWindowChangedCallback: double callback");
+			return;
+		}
+	}
+	this->globalOSWindowChangedCallbacks.push_back(callback);
+}
+
+void CGuiMain::RemoveGlobalOSWindowChangedCallback(CGlobalOSWindowChangedCallback *callback) {
+	this->globalOSWindowChangedCallbacks.remove(callback);
+}
+
+void CGuiMain::NotifyGlobalOSWindowChangedCallbacks()
+{
+	for (std::list<CGlobalOSWindowChangedCallback *>::const_iterator it = this->globalOSWindowChangedCallbacks.begin();
+			it != this->globalOSWindowChangedCallbacks.end();
+			it++)
+	{
+		CGlobalOSWindowChangedCallback *callback = (CGlobalOSWindowChangedCallback *) *it;
+		callback->GlobalOSWindowChangedCallback();
+	}
+
+}
+
+//
+
 
 bool CGlobalKeyboardCallback::GlobalKeyDownCallback(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
@@ -1767,6 +1954,41 @@ void CGuiMain::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
 	LOGI("CGuiMain::KeyDown: keyCode=%d (0x%2.2x = %c) isShift=%s isAlt=%s isControl=%s", keyCode, keyCode, keyCode, STRBOOL(isShift), STRBOOL(isAlt), STRBOOL(isControl));
 	
+	isShiftPressed = isShift;
+	isAltPressed = isAlt;
+	isControlPressed = isControl;
+	
+	if (keyCode == MTKEY_LSHIFT)
+	{
+		isShiftPressed = true;
+		isLeftShiftPressed = true;
+	}
+	else if (keyCode == MTKEY_RSHIFT)
+	{
+		isShiftPressed = true;
+		isRightShiftPressed = true;
+	}
+	else if (keyCode == MTKEY_LALT)
+	{
+		isAltPressed = true;
+		isLeftAltPressed = true;
+	}
+	else if (keyCode == MTKEY_RALT)
+	{
+		isAltPressed = true;
+		isRightAltPressed = true;
+	}
+	else if (keyCode == MTKEY_LCONTROL)
+	{
+		isControlPressed = true;
+		isLeftControlPressed = true;
+	}
+	else if (keyCode == MTKEY_RCONTROL)
+	{
+		isControlPressed = true;
+		isRightControlPressed = true;
+	}
+	
 	this->repeatTime = 0;
 	isKeyDown = true;
 
@@ -1816,6 +2038,37 @@ void CGuiMain::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 void CGuiMain::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
 	LOGI("CGuiMain::KeyUp: keyCode=%d (0x%2.2x = %c) isShift=%s isAlt=%s isControl=%s", keyCode, keyCode, keyCode, STRBOOL(isShift), STRBOOL(isAlt), STRBOOL(isControl));
+	
+	if (keyCode == MTKEY_LSHIFT)
+	{
+		isShiftPressed = false;
+		isLeftShiftPressed = false;
+	}
+	else if (keyCode == MTKEY_RSHIFT)
+	{
+		isShiftPressed = false;
+		isRightShiftPressed = false;
+	}
+	else if (keyCode == MTKEY_LALT)
+	{
+		isAltPressed = false;
+		isLeftAltPressed = false;
+	}
+	else if (keyCode == MTKEY_RALT)
+	{
+		isAltPressed = false;
+		isRightAltPressed = false;
+	}
+	else if (keyCode == MTKEY_LCONTROL)
+	{
+		isControlPressed = false;
+		isLeftControlPressed = false;
+	}
+	else if (keyCode == MTKEY_RCONTROL)
+	{
+		isControlPressed = false;
+		isRightControlPressed = false;
+	}
 
 	this->repeatTime = 0;
 	isKeyDown = false;

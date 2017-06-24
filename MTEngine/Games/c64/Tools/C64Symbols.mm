@@ -193,6 +193,10 @@ void C64Symbols::ParseSymbols(CByteBuffer *byteBuffer, C64DebugInterface *debugI
 		
 		lineNum++;
 	}
+
+	// update positions
+	viewC64->viewC64Disassemble->UpdateLabelsPositions();
+	viewC64->viewDrive1541Disassemble->UpdateLabelsPositions();
 	
 	debugInterface->UnlockMutex();
 	

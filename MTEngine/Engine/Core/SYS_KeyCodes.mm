@@ -190,7 +190,7 @@ const u32 specialKeycodesForConvert[NUM_SPECIAL_KEYCODES_FOR_CONVERT] =
 
 u32 SYS_KeyCodeConvertSpecial(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
-	LOGD("SYS_KeyCodeConvertSpecial: %x %d %d %d", keyCode, isShift, isAlt, isControl);
+	LOGI("SYS_KeyCodeConvertSpecial: %x %d %d %d", keyCode, isShift, isAlt, isControl);
 
 	if (isShift || isAlt || isControl)
 	{

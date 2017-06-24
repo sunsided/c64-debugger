@@ -57,8 +57,8 @@ enum {
     ACIA_SR_BITS_OVERRUN_ERROR     = 0x04, /* cleared automatically by read of ACIA_DR or next error-free reception */
     ACIA_SR_BITS_RECEIVE_DR_FULL   = 0x08, /* cleared automatically by read of ACIA_DR */
     ACIA_SR_BITS_TRANSMIT_DR_EMPTY = 0x10, /* cleared automatically by write of ACIA_DR */
-    ACIA_SR_BITS_DCD               = 0x20, /* reflects current DCD state */
-    ACIA_SR_BITS_DSR               = 0x40, /* reflects current DSR state */
+    ACIA_SR_BITS_DSR               = 0x20, /* reflects current DSR state */
+    ACIA_SR_BITS_DCD               = 0x40, /* reflects current DCD state */
     ACIA_SR_BITS_IRQ               = 0x80, /* cleared by read of status register */
 
     ACIA_SR_DEFAULT_AFTER_HW_RESET = ACIA_SR_BITS_TRANSMIT_DR_EMPTY
@@ -119,15 +119,12 @@ enum {
     ACIA_CTRL_DEFAULT_AFTER_HW_RESET = 0
 };
 
-enum {
-    ACIA_MODE_NORMAL    = 0,  /* Normal ACIA emulation */
-    ACIA_MODE_SWIFTLINK = 1,  /* Swiftlink ACIA emulation, baud rates are doubled */
-    ACIA_MODE_TURBO232  = 2,  /* Turbo232 ACIA emulation, baud rates are doubled,
+#define ACIA_MODE_NORMAL    0  /* Normal ACIA emulation */
+#define ACIA_MODE_SWIFTLINK 1  /* Swiftlink ACIA emulation, baud rates are doubled */
+#define ACIA_MODE_TURBO232  2  /* Turbo232 ACIA emulation, baud rates are doubled,
                                  and enhanced baud rate register */
 
-    ACIA_MODE_LOWEST    = ACIA_MODE_NORMAL,
-    ACIA_MODE_HIGHEST   = ACIA_MODE_TURBO232
-};
+#define ACIA_MODE_LOWEST ACIA_MODE_NORMAL
 
 int acia_dump(void *acia_context);
 

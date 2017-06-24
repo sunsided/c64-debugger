@@ -74,6 +74,8 @@ int vicii_snapshot_write_module(snapshot_t *s)
     if (m == NULL) {
         return -1;
     }
+	
+	LOGD("... vicii_resources.model=%d", (BYTE)vicii_resources.model);
 
     mem_color_ram_to_snapshot(color_ram);
 
@@ -183,6 +185,8 @@ int vicii_snapshot_read_module(snapshot_t *s)
     if (SMR_B_INT(m, &i) < 0) {
         goto fail;
     }
+	
+	LOGD("vicii_resources.model = %d  i=%d", vicii_resources.model, i);
 
     if (i != vicii_resources.model) {
         /* FIXME */
@@ -287,4 +291,3 @@ fail:
 
     return -1;
 }
-

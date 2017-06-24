@@ -19,8 +19,7 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
- *  02111-1307  USA.
+ *  Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335 USA.
  *
  */
 
@@ -38,6 +37,8 @@ enum flash040_type_s {
     FLASH040_TYPE_010,
     /* 29F032B, A0/1 swapped */
     FLASH040_TYPE_032B_A0_1_SWAP,
+    /* Spansion S29GL064N */
+    FLASH040_TYPE_064,
     FLASH040_TYPE_NUM
 };
 typedef enum flash040_type_s flash040_type_t;
@@ -85,11 +86,11 @@ extern void flash040core_shutdown(struct flash040_context_s *flash040_context);
 extern void flash040core_reset(struct flash040_context_s *flash040_context);
 
 extern void flash040core_store(struct flash040_context_s *flash040_context,
-                                        unsigned int addr, BYTE data);
+                               unsigned int addr, BYTE data);
 extern BYTE flash040core_read(struct flash040_context_s *flash040_context,
-                                       unsigned int addr);
+                              unsigned int addr);
 extern BYTE flash040core_peek(struct flash040_context_s *flash040_context,
-                                       unsigned int addr);
+                              unsigned int addr);
 
 struct snapshot_s;
 

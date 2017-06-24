@@ -13,6 +13,7 @@
 #include "SND_SoundEngine.h"
 #include "SYS_Defs.h"
 
+
 @implementation GLViewController
 
 - (IBAction) goFullScreen:(id)sender
@@ -267,6 +268,19 @@
 	
 	SYS_ApplicationEnteredBackground();
 
+}
+
+- (bool)isWindowFullScreen
+{
+	NSWindow *mainWindow = [openGLView window];
+
+	NSUInteger masks = [mainWindow styleMask];
+	if ( masks & NSFullScreenWindowMask)
+	{
+		return true;
+	}
+	
+	return false;
 }
 
 - (void) dealloc
@@ -544,7 +558,12 @@ void SYS_DoFastQuit()
 	NSPoint backingPoint = mousePointInWindow;
 #endif
 	
+#if defined(EMULATE_ZOOM_WITH_ALT)
 	VID_TouchesBegan(backingPoint.x, backingPoint.y, isAltKeyDown);
+#else
+	VID_TouchesBegan(backingPoint.x, backingPoint.y, false);
+#endif
+	
 }
 
 -(void)mouseDragged:(NSEvent *)theEvent
@@ -558,7 +577,11 @@ void SYS_DoFastQuit()
 	NSPoint backingPoint = mousePointInWindow;
 #endif
 
+#if defined(EMULATE_ZOOM_WITH_ALT)
 	VID_TouchesMoved(backingPoint.x, backingPoint.y, isAltKeyDown);
+#else
+	VID_TouchesMoved(backingPoint.x, backingPoint.y, false);
+#endif
 }
 
 -(void)mouseUp:(NSEvent *)theEvent
@@ -572,7 +595,11 @@ void SYS_DoFastQuit()
 	NSPoint backingPoint = mousePointInWindow;
 #endif
 
+#if defined(EMULATE_ZOOM_WITH_ALT)
 	VID_TouchesEnded(backingPoint.x, backingPoint.y, isAltKeyDown);
+#else
+	VID_TouchesEnded(backingPoint.x, backingPoint.y, false);
+#endif
 }
 
 //
@@ -589,7 +616,11 @@ void SYS_DoFastQuit()
 	NSPoint backingPoint = mousePointInWindow;
 #endif
 	
+#if defined(EMULATE_ZOOM_WITH_ALT)
 	VID_RightClickBegan(backingPoint.x, backingPoint.y, isAltKeyDown);
+#else
+	VID_RightClickBegan(backingPoint.x, backingPoint.y, false);
+#endif
 }
 
 -(void)rightMouseDragged:(NSEvent *)theEvent
@@ -602,8 +633,13 @@ void SYS_DoFastQuit()
 #else
 	NSPoint backingPoint = mousePointInWindow;
 #endif
-	
+
+#if defined(EMULATE_ZOOM_WITH_ALT)
 	VID_RightClickMoved(backingPoint.x, backingPoint.y, isAltKeyDown);
+#else
+	VID_RightClickMoved(backingPoint.x, backingPoint.y, false);
+#endif
+
 }
 
 -(void)rightMouseUp:(NSEvent *)theEvent
@@ -617,7 +653,11 @@ void SYS_DoFastQuit()
 	NSPoint backingPoint = mousePointInWindow;
 #endif
 	
+#if defined(EMULATE_ZOOM_WITH_ALT)
 	VID_RightClickEnded(backingPoint.x, backingPoint.y, isAltKeyDown);
+#else
+	VID_RightClickEnded(backingPoint.x, backingPoint.y, false);
+#endif
 }
 
 
@@ -863,6 +903,21 @@ void SYS_DoFastQuit()
 	return YES;
 }
 
+- (BOOL)application:(NSApplication *)sender openFile:(NSString *)filename
+{
+	//NSLog(@"openFile");
+	return MACOS_OpenFile(filename);
+}
+
+- (void)application:(NSApplication *)sender
+		  openFiles:(NSArray *) filenames
+{
+	//NSLog(@"openFiles");
+	NSString *strPath = [filenames objectAtIndex:0];
+	
+	MACOS_OpenFile(strPath);
+	
+}
 
 @end
 

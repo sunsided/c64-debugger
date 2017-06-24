@@ -13,6 +13,7 @@ extern "C" {
 #include "c64-snapshot.h"
 #include "viciitypes.h"
 #include "vicii.h"
+#include "vicii-mem.h"
 #include "drivetypes.h"
 #include "drive.h"
 #include "cia.h"
@@ -38,6 +39,8 @@ extern "C" {
 #include "SND_SoundEngine.h"
 #include "C64Tools.h"
 #include "C64KeyMap.h"
+#include "C64SettingsStorage.h"
+#include "C64SIDFrequencies.h"
 
 extern "C" {
 	void vsync_suspend_speed_eval(void);
@@ -53,6 +56,8 @@ extern "C" {
 }
 
 void c64d_update_c64_model();
+void c64d_update_c64_machine_from_model_type(int modelType);
+void c64d_update_c64_screen_height_from_model_type(int modelType);
 
 void ViceWrapperInit(C64DebugInterfaceVice *debugInterface);
 
@@ -70,11 +75,17 @@ C64DebugInterfaceVice::C64DebugInterfaceVice(CViewC64 *viewC64, uint8 *c64memory
 
 	ViceWrapperInit(this);
 	
-	// patch kernal
+	// set patch kernal flag
+	//	SetPatchKernalFastBoot(patchKernalFastBoot);
 	if (patchKernalFastBoot)
 	{
-		c64d_patch_kernal_fast_boot();
+		c64d_patch_kernal_fast_boot_flag = 1;
 	}
+	else
+	{
+		c64d_patch_kernal_fast_boot_flag = 0;
+	}
+
 	
 	// PAL
 	screenHeight = 272;
@@ -92,7 +103,7 @@ C64DebugInterfaceVice::C64DebugInterfaceVice(CViewC64 *viewC64, uint8 *c64memory
 
 	c64d_init_memory(this->c64memory);
 	
-	int ret = vice_main_program(sysArgc, sysArgv);
+	int ret = vice_main_program(sysArgc, sysArgv, c64SettingsC64Model);
 	if (ret != 0)
 	{
 		SYS_FatalExit("Vice failed, err=%d", ret);
@@ -110,6 +121,36 @@ C64DebugInterfaceVice::C64DebugInterfaceVice(CViewC64 *viewC64, uint8 *c64memory
 
 	isJoystickEnabled = false;
 	joystickPort = 0x03;
+}
+
+extern "C" {
+	void c64d_patch_kernal_fast_boot();
+	void c64d_un_patch_kernal_fast_boot();
+	void c64d_update_rom();
+};
+
+void C64DebugInterfaceVice::SetPatchKernalFastBoot(bool isPatchKernal)
+{
+	LOGM("C64DebugInterfaceVice::SetPatchKernalFastBoot: %d", isPatchKernal);
+
+	c64d_un_patch_kernal_fast_boot();
+	
+	if (isPatchKernal)
+	{
+		c64d_patch_kernal_fast_boot_flag = 1;
+		c64d_patch_kernal_fast_boot();
+	}
+	else
+	{
+		c64d_patch_kernal_fast_boot_flag = 0;
+	}
+	
+	c64d_update_rom();
+}
+
+void C64DebugInterfaceVice::SetRunSIDWhenInWarp(bool isRunningSIDInWarp)
+{
+	c64d_setting_run_sid_when_in_warp = isRunningSIDInWarp ? 1 : 0;
 }
 
 int C64DebugInterfaceVice::GetEmulatorType()
@@ -158,6 +199,8 @@ void C64DebugInterfaceVice::InitKeyMap(C64KeyMap *keyMap)
 			keyboard_parse_set_pos_row(key->keyCode, key->matrixRow, key->matrixCol, key->shift);
 		}
 	}
+	
+	
 }
 
 uint8 *C64DebugInterfaceVice::GetCharRom()
@@ -179,6 +222,23 @@ CImageData *C64DebugInterfaceVice::GetC64ScreenImageData()
 {
 	return screen;
 }
+
+bool C64DebugInterfaceVice::IsCpuJam()
+{
+	if (c64d_is_cpu_in_jam_state == 1)
+	{
+		return true;
+	}
+	
+	return false;
+}
+
+void C64DebugInterfaceVice::ForceRunAndUnJamCpu()
+{
+	c64d_is_cpu_in_jam_state = 0;
+	this->SetDebugMode(C64_DEBUG_RUNNING);
+}
+
 
 void C64DebugInterfaceVice::Reset()
 {
@@ -212,6 +272,13 @@ void C64DebugInterfaceVice::HardReset()
 	}
 }
 
+void C64DebugInterfaceVice::DiskDriveReset()
+{
+	LOGM("C64DebugInterfaceVice::DiskDriveReset()");
+	
+	drivecpu_reset(drive_context[0]);
+}
+
 extern "C" {
 	void c64d_joystick_key_down(int key, unsigned int joyport);
 	void c64d_joystick_key_up(int key, unsigned int joyport);
@@ -230,6 +297,7 @@ extern "C" {
 
 void C64DebugInterfaceVice::KeyboardDown(uint32 mtKeyCode)
 {
+	LOGI("C64DebugInterfaceVice::KeyboardDown: %d", mtKeyCode);
 	if (isJoystickEnabled)
 	{
 		if (mtKeyCode == MTKEY_ARROW_LEFT)
@@ -280,6 +348,7 @@ void C64DebugInterfaceVice::KeyboardDown(uint32 mtKeyCode)
 
 void C64DebugInterfaceVice::KeyboardUp(uint32 mtKeyCode)
 {
+	LOGI("C64DebugInterfaceVice::KeyboardUp: %d", mtKeyCode);
 	if (isJoystickEnabled)
 	{
 		if (mtKeyCode == MTKEY_ARROW_LEFT)
@@ -519,17 +588,86 @@ void C64DebugInterfaceVice::SetSidType(int sidType)
 	}
 }
 
-///
-void C64DebugInterfaceVice::GetC64ModelTypes(std::vector<CSlrString *> *modelTypes)
+// samplingMethod: Fast=0, Interpolating=1, Resampling=2, Fast Resampling=3
+void C64DebugInterfaceVice::SetSidSamplingMethod(int samplingMethod)
 {
-	modelTypes->push_back(new CSlrString("C64 PAL"));
-	modelTypes->push_back(new CSlrString("C64C PAL"));
-	modelTypes->push_back(new CSlrString("C64 old PAL"));
-	modelTypes->push_back(new CSlrString("C64 NTSC"));
-	modelTypes->push_back(new CSlrString("C64C NTSC"));
-	modelTypes->push_back(new CSlrString("C64 old NTSC"));
-	modelTypes->push_back(new CSlrString("C64 PAL N (Drean)"));
+	c64d_sid_set_sampling_method(samplingMethod);
 }
+
+// emulateFilters: no=0, yes=1
+void C64DebugInterfaceVice::SetSidEmulateFilters(int emulateFilters)
+{
+	c64d_sid_set_emulate_filters(emulateFilters);
+}
+
+// passband: 0-90
+void C64DebugInterfaceVice::SetSidPassBand(int passband)
+{
+	c64d_sid_set_passband(passband);
+}
+
+// filterBias: -500 500
+void C64DebugInterfaceVice::SetSidFilterBias(int filterBias)
+{
+	c64d_sid_set_filter_bias(filterBias);
+}
+
+
+///// c64model.c
+//#define C64MODEL_C64_PAL 0
+//#define C64MODEL_C64C_PAL 1
+//#define C64MODEL_C64_OLD_PAL 2
+//
+//#define C64MODEL_C64_NTSC 3
+//#define C64MODEL_C64C_NTSC 4
+//#define C64MODEL_C64_OLD_NTSC 5
+//
+//#define C64MODEL_C64_PAL_N 6
+//
+///* SX-64 */
+//#define C64MODEL_C64SX_PAL 7
+//#define C64MODEL_C64SX_NTSC 8
+//
+//#define C64MODEL_C64_JAP 9
+//#define C64MODEL_C64_GS 10
+//
+//#define C64MODEL_PET64_PAL 11
+//#define C64MODEL_PET64_NTSC 12
+///* max machine */
+//#define C64MODEL_ULTIMAX 13
+
+void C64DebugInterfaceVice::GetC64ModelTypes(std::vector<CSlrString *> *modelTypeNames, std::vector<int> *modelTypeIds)
+{
+	modelTypeNames->push_back(new CSlrString("C64 PAL"));
+	modelTypeIds->push_back(0);
+	modelTypeNames->push_back(new CSlrString("C64C PAL"));
+	modelTypeIds->push_back(1);
+	modelTypeNames->push_back(new CSlrString("C64 old PAL"));
+	modelTypeIds->push_back(2);
+	modelTypeNames->push_back(new CSlrString("C64 NTSC"));
+	modelTypeIds->push_back(3);
+	modelTypeNames->push_back(new CSlrString("C64C NTSC"));
+	modelTypeIds->push_back(4);
+	modelTypeNames->push_back(new CSlrString("C64 old NTSC"));
+	modelTypeIds->push_back(5);
+	// crashes: modelTypeNames->push_back(new CSlrString("C64 PAL N (Drean)"));
+	// crashes: modelTypeIds->push_back(6);
+	modelTypeNames->push_back(new CSlrString("C64 SX PAL"));
+	modelTypeIds->push_back(7);
+	modelTypeNames->push_back(new CSlrString("C64 SX NTSC"));
+	modelTypeIds->push_back(8);
+	// no ROM: modelTypeNames->push_back(new CSlrString("Japanese"));
+	// no ROM: modelTypeIds->push_back(9);
+	// no ROM: modelTypeNames->push_back(new CSlrString("C64 GS"));
+	// no ROM: modelTypeIds->push_back(10);
+	modelTypeNames->push_back(new CSlrString("PET64 PAL"));
+	modelTypeIds->push_back(11);
+	modelTypeNames->push_back(new CSlrString("PET64 NTSC"));
+	modelTypeIds->push_back(12);
+	// no ROM: modelTypeNames->push_back(new CSlrString("MAX Machine"));
+	// no ROM: modelTypeIds->push_back(13);
+}
+
 
 int c64_change_model_type;
 
@@ -538,30 +676,17 @@ static void c64_change_model_trap(WORD addr, void *v)
 	guiMain->LockMutex();
 	debugInterfaceVice->LockRenderScreenMutex();
 	
+	LOGD("c64_change_model_trap: model=%d", c64_change_model_type);
+	
+	//c64_change_model_type = 0;
+	
 	c64model_set(c64_change_model_type);
 	
 	debugInterfaceVice->modelType = c64_change_model_type;
 	
-	switch(c64_change_model_type)
-	{
-		default:
-		case 0:
-		case 1:
-		case 2:
-		case 6:
-			// PAL, 312 lines
-			debugInterfaceVice->screenHeight = 272;
-			debugInterfaceVice->machineType = C64_MACHINE_PAL;
-			break;
-		case 3:
-		case 4:
-		case 5:
-			// NTSC, 275 lines
-			debugInterfaceVice->screenHeight = 259;
-			debugInterfaceVice->machineType = C64_MACHINE_NTSC;
-			break;
-	}
-
+	c64d_update_c64_machine_from_model_type(c64_change_model_type);
+	c64d_update_c64_screen_height_from_model_type(c64_change_model_type);
+	
 	c64d_clear_screen();
 	
 	SYS_Sleep(100);
@@ -581,23 +706,7 @@ void C64DebugInterfaceVice::SetC64ModelType(int modelType)
 	
 	c64d_clear_screen();
 	
-	switch(modelType)
-	{
-		default:
-		case 0:
-		case 1:
-		case 2:
-		case 6:
-			// PAL, 312 lines
-			this->machineType = C64_MACHINE_PAL;
-			break;
-		case 3:
-		case 4:
-		case 5:
-			// NTSC, 275 lines
-			this->machineType = C64_MACHINE_NTSC;
-			break;
-	}
+	c64d_update_c64_machine_from_model_type(c64_change_model_type);
 
 	c64_change_model_type = modelType;
 	interrupt_maincpu_trigger_trap(c64_change_model_trap, NULL);
@@ -626,6 +735,23 @@ void C64DebugInterfaceVice::SetEmulationMaximumSpeed(int maximumSpeed)
 		resources_set_int("Sound", 1);
 	}
 }
+
+extern "C" {
+	int set_vsp_bug_enabled(int val, void *param);
+}
+
+void C64DebugInterfaceVice::SetVSPBugEmulation(bool isVSPBugEmulation)
+{
+	if (isVSPBugEmulation)
+	{
+		set_vsp_bug_enabled(1, NULL);
+	}
+	else
+	{
+		set_vsp_bug_enabled(0, NULL);
+	}
+}
+
 
 ///
 ///
@@ -680,6 +806,22 @@ extern "C" {
 	void c64d_drive_poke(int driveNum, uint16 addr, uint8 value);
 	void c64d_set_drive_pc(int driveNr, uint16 pc);
 
+}
+
+void C64DebugInterfaceVice::SetVicRegister(uint8 registerNum, uint8 value)
+{
+	vicii_store(registerNum, value);
+	
+	if (registerNum >= 0x20 && registerNum <= 0x2E)
+	{
+		c64d_set_color_register(registerNum, value);
+	}
+}
+
+u8 C64DebugInterfaceVice::GetVicRegister(uint8 registerNum)
+{
+	BYTE v = vicii_peek(registerNum);
+	return v;
 }
 
 void C64DebugInterfaceVice::MakeJmpC64(uint16 addr)
@@ -830,6 +972,13 @@ void C64DebugInterfaceVice::GetCBMColor(uint8 colorNum, uint8 *r, uint8 *g, uint
 	*b = c64d_palette_blue[colorNum];
 }
 
+void C64DebugInterfaceVice::GetFloatCBMColor(uint8 colorNum, float *r, float *g, float *b)
+{
+	*r = c64d_float_palette_red[colorNum];
+	*g = c64d_float_palette_green[colorNum];
+	*b = c64d_float_palette_blue[colorNum];
+}
+
 
 
 void C64DebugInterfaceVice::SetDebugMode(uint8 debugMode)
@@ -920,6 +1069,15 @@ void C64DebugInterfaceVice::GetC64CartridgeState(C64StateCartridge *cartridgeSta
 	c64d_get_exrom_game(&(cartridgeState->exrom), &(cartridgeState)->game);
 }
 
+extern "C" {
+	void c64d_c64_set_vicii_record_state_mode(uint8 recordMode);
+}
+
+void C64DebugInterfaceVice::SetVicRecordStateMode(uint8 recordMode)
+{
+	c64d_c64_set_vicii_record_state_mode(recordMode);
+}
+
 /// render states
 extern "C" {
 	const char *fetch_phi1_type(int addr);
@@ -928,7 +1086,8 @@ extern "C" {
 
 // TODO: change all %02x %04x into sprintfHexCode8WithoutZeroEnding(bufPtr, ...);
 
-void C64DebugInterfaceVice::RenderStateVIC(float posX, float posY, float posZ, bool isVertical, bool showSprites, CSlrFont *fontBytes, float fontSize,
+void C64DebugInterfaceVice::RenderStateVIC(vicii_cycle_state_t *viciiState,
+										   float posX, float posY, float posZ, bool isVertical, bool showSprites, CSlrFont *fontBytes, float fontSize,
 										   std::vector<CImageData *> *spritesImageData,
 										   std::vector<CSlrImage *> *spritesImages, bool renderDataWithColors)
 {
@@ -952,48 +1111,48 @@ void C64DebugInterfaceVice::RenderStateVIC(float posX, float posY, float posZ, b
 	int video_mode, m_mcm, m_bmm, m_ecm, v_bank, v_vram;
 	int i, bits, bits2;
 	
-	video_mode = ((vicii.regs[0x11] & 0x60) | (vicii.regs[0x16] & 0x10)) >> 4;
+	video_mode = ((viciiState->regs[0x11] & 0x60) | (viciiState->regs[0x16] & 0x10)) >> 4;
 	
 	m_ecm = (video_mode & 4) >> 2;  /* 0 standard, 1 extended */
 	m_bmm = (video_mode & 2) >> 1;  /* 0 text, 1 bitmap */
 	m_mcm = video_mode & 1;         /* 0 hires, 1 multi */
 	
-	v_bank = vicii.vbank_phi1;
+	v_bank = viciiState->vbank_phi1;
 	
-//	sprintf(buf, "Raster cycle/line: %d/%d IRQ: %d", vicii.raster_cycle, vicii.raster_line, vicii.raster_irq_line);
+//	sprintf(buf, "Raster cycle/line: %d/%d IRQ: %d", viciiState->raster_cycle, viciiState->raster_line, viciiState->raster_irq_line);
 //	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 	
 	if (isVertical == false)
 	{
-		sprintf(buf, "Raster line       : %04x", vicii.raster_line);
+		sprintf(buf, "Raster line       : %04x", viciiState->raster_line);
 		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 	}
 
-	sprintf(buf, "IRQ raster line   : %04x", vicii.raster_irq_line);
+	sprintf(buf, "IRQ raster line   : %04x", viciiState->raster_irq_line);
 	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 	
 //	if (isVertical == false)
 //	{
-//		uint8 irqFlags = vicii.irq_status;// | 0x70;
+//		uint8 irqFlags = viciiState->irq_status;// | 0x70;
 //		sprintf(buf, "Interrupt status  : "); PrintVicInterrupts(irqFlags, buf);
 //		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 //	}
-	uint8 irqMask = vicii.regs[0x1a];
+	uint8 irqMask = viciiState->regs[0x1a];
 	sprintf(buf, "Enabled interrupts: "); PrintVicInterrupts(irqMask, buf);
 	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 
-//	sprintf(buf, "Scroll X/Y: %d/%d, RC %d, Idle: %d, %dx%d", vicii.regs[0x16] & 0x07, vicii.regs[0x11] & 0x07,
-//			vicii.rc, vicii.idle_state,
-//			39 + ((vicii.regs[0x16] >> 3) & 1), 24 + ((vicii.regs[0x11] >> 3) & 1));
+//	sprintf(buf, "Scroll X/Y: %d/%d, RC %d, Idle: %d, %dx%d", viciiState->regs[0x16] & 0x07, viciiState->regs[0x11] & 0x07,
+//			viciiState->rc, viciiState->idle_state,
+//			39 + ((viciiState->regs[0x16] >> 3) & 1), 24 + ((viciiState->regs[0x11] >> 3) & 1));
 //	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 	
 
-	sprintf(buf, "X scroll          : %d", vicii.regs[0x16] & 0x07);
+	sprintf(buf, "X scroll          : %d", viciiState->regs[0x16] & 0x07);
 	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-	sprintf(buf, "Y scroll          : %d", vicii.regs[0x11] & 0x07);
+	sprintf(buf, "Y scroll          : %d", viciiState->regs[0x11] & 0x07);
 	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 
-	sprintf(buf, "Border            : %dx%d", 39 + ((vicii.regs[0x16] >> 3) & 1), 24 + ((vicii.regs[0x11] >> 3) & 1));
+	sprintf(buf, "Border            : %dx%d", 39 + ((viciiState->regs[0x16] >> 3) & 1), 24 + ((viciiState->regs[0x11] >> 3) & 1));
 	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 
 	if (showSprites == true)
@@ -1012,52 +1171,52 @@ void C64DebugInterfaceVice::RenderStateVIC(float posX, float posY, float posZ, b
 //	sprintf(buf, "Mode: %s (ECM/BMM/MCM=%d/%d/%d)", mode_name[video_mode], m_ecm, m_bmm, m_mcm);
 //	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 
-	sprintf(buf, "Sequencer state   : %s", vicii.idle_state ? "Display" : "Idle");
+	sprintf(buf, "Sequencer state   : %s", viciiState->idle_state ? "Display" : "Idle");
 	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 
-	sprintf(buf, "Row counter       : %d", vicii.rc);
+	sprintf(buf, "Row counter       : %d", viciiState->rc);
 	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 
 	const int FIRST_DMA_LINE = 0x30;
 	const int LAST_DMA_LINE = 0xf7;
-	uint8 yScroll = vicii.regs[0x11] & 0x07;
-	bool isBadLine = vicii.raster_line >= FIRST_DMA_LINE && vicii.raster_line <= LAST_DMA_LINE && ((vicii.raster_line & 7) == yScroll);
+	uint8 yScroll = viciiState->regs[0x11] & 0x07;
+	bool isBadLine = viciiState->raster_line >= FIRST_DMA_LINE && viciiState->raster_line <= LAST_DMA_LINE && ((viciiState->raster_line & 7) == yScroll);
 
 	
 	sprintf(buf, "Bad line state    : %s", isBadLine ? "Yes" : "No");
 	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 
-	sprintf(buf, "VC %03x VCBASE %03x VMLI %2d Phi1 %02x", vicii.vc, vicii.vcbase, vicii.vmli, vicii.last_read_phi1);
+	sprintf(buf, "VC %03x VCBASE %03x VMLI %2d Phi1 %02x", viciiState->vc, viciiState->vcbase, viciiState->vmli, viciiState->last_read_phi1);
 	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 
-//	sprintf(buf, "Colors: Border: %x BG: %x ", vicii.regs[0x20], vicii.regs[0x21]);
+//	sprintf(buf, "Colors: Border: %x BG: %x ", viciiState->regs[0x20], viciiState->regs[0x21]);
 //	if (m_ecm)
 //	{
-//		sprintf(buf2, "BG1: %x BG2: %x BG3: %x\n", vicii.regs[0x22], vicii.regs[0x23], vicii.regs[0x24]);
+//		sprintf(buf2, "BG1: %x BG2: %x BG3: %x\n", viciiState->regs[0x22], viciiState->regs[0x23], viciiState->regs[0x24]);
 //		strcat(buf, buf2);
 //	}
 //	else if (m_mcm && !m_bmm)
 //	{
-//		sprintf(buf2, "MC1: %x MC2: %x\n", vicii.regs[0x22], vicii.regs[0x23]);
+//		sprintf(buf2, "MC1: %x MC2: %x\n", viciiState->regs[0x22], viciiState->regs[0x23]);
 //		strcat(buf, buf2);
 //	}
 //	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 	
 	
-	v_vram = ((vicii.regs[0x18] >> 4) * 0x0400) + vicii.vbank_phi2;
+	v_vram = ((viciiState->regs[0x18] >> 4) * 0x0400) + viciiState->vbank_phi2;
 	
 	if (isVertical == false)
 	{
 		sprintf(buf, "Video base        : %04x, ", v_vram);
 		if (m_bmm)
 		{
-			i = ((vicii.regs[0x18] >> 3) & 1) * 0x2000 + v_bank;
+			i = ((viciiState->regs[0x18] >> 3) & 1) * 0x2000 + v_bank;
 			sprintf(buf2, "Bitmap  %04x (%s)", i, fetch_phi1_type(i));
 			strcat(buf, buf2);
 		}
 		else
 		{
-			i = (((vicii.regs[0x18] >> 1) & 0x7) * 0x0800) + v_bank;
+			i = (((viciiState->regs[0x18] >> 1) & 0x7) * 0x0800) + v_bank;
 			sprintf(buf2, "Charset %04x (%s)", i, fetch_phi1_type(i));
 			strcat(buf, buf2);
 		}
@@ -1069,12 +1228,12 @@ void C64DebugInterfaceVice::RenderStateVIC(float posX, float posY, float posZ, b
 		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 		if (m_bmm)
 		{
-			i = ((vicii.regs[0x18] >> 3) & 1) * 0x2000 + v_bank;
+			i = ((viciiState->regs[0x18] >> 3) & 1) * 0x2000 + v_bank;
 			sprintf(buf, "            Bitmap: %04x (%s)", i, fetch_phi1_type(i));
 		}
 		else
 		{
-			i = (((vicii.regs[0x18] >> 1) & 0x7) * 0x800) + v_bank;
+			i = (((viciiState->regs[0x18] >> 1) & 0x7) * 0x800) + v_bank;
 			sprintf(buf, "           Charset: %04x (%s)", i, fetch_phi1_type(i));
 		}
 		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
@@ -1096,28 +1255,54 @@ void C64DebugInterfaceVice::RenderStateVIC(float posX, float posY, float posZ, b
 		}
 		
 	 // get VIC sprite colors
-		uint8 cD021 = vicii.regs[0x21];
-		uint8 cD025 = vicii.regs[0x25];
-		uint8 cD026 = vicii.regs[0x26];
+		uint8 cD021 = viciiState->regs[0x21];
+		uint8 cD025 = viciiState->regs[0x25];
+		uint8 cD026 = viciiState->regs[0x26];
 		
+		float fss = fontSize * 0.25f;
+		
+		//bool isEnabled[8] = { false };
 		for (int passNum = 0; passNum < numPasses; passNum++)
 		{
 			int startId = passNum * step;
 			int endId = (passNum+1) * step;
 			
 			sprintf(buf, "         ");
-			for (int z = startId; z < endId; z++)
+			
+			if (isVertical)
 			{
-				sprintf(buf2, "#%d    ", z);
-				strcat(buf, buf2);
+				for (int z = startId; z < endId; z++)
+				{
+					sprintf(buf2, "#%d    ", z);
+					strcat(buf, buf2);
+				}
+				fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
+			}
+			else
+			{
+				for (int z = startId; z < endId; z++)
+				{
+					sprintf(buf2, "%d     ", z);
+					strcat(buf, buf2);
+				}
+				fontBytes->BlitText(buf, px, py-fss, posZ, fontSize); py += fontSize;
 			}
 			
-			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-			
 			sprintf(buf, "Enabled: ");
-			bits = vicii.regs[0x15];
+			bits = viciiState->regs[0x15];
 			for (i = startId; i < endId; i++)
 			{
+				/*
+				if (((bits >> i) & 1))
+				{
+					isEnabled[i] = true;
+				}
+				else
+				{
+					isEnabled[i] = false;
+				}
+				*/
+				
 				sprintf(buf2, "%s", ((bits >> i) & 1) ? "Yes   " : "No    ");
 				strcat(buf, buf2);
 			}
@@ -1126,8 +1311,8 @@ void C64DebugInterfaceVice::RenderStateVIC(float posX, float posY, float posZ, b
 			
 			/////////////"         "
 			sprintf(buf, "DMA/dis: ");
-			bits = vicii.sprite_dma;
-			bits2 = vicii.sprite_display_bits;
+			bits = viciiState->sprite_dma;
+			bits2 = viciiState->sprite_display_bits;
 			for (i = startId; i < endId; i++)
 			{
 				sprintf(buf2, "%c/%c   ", ((bits >> i) & 1) ? 'D' : ' ', ((bits2 >> i) & 1) ? 'd' : ' ');
@@ -1139,7 +1324,7 @@ void C64DebugInterfaceVice::RenderStateVIC(float posX, float posY, float posZ, b
 			sprintf(buf, "Pointer: ");
 			for (i = startId; i < endId; i++)
 			{
-				sprintf(buf2, "%02x    ", vicii.sprite[i].pointer);
+				sprintf(buf2, "%02x    ", viciiState->sprite[i].pointer);
 				strcat(buf, buf2);
 			}
 			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
@@ -1149,7 +1334,7 @@ void C64DebugInterfaceVice::RenderStateVIC(float posX, float posY, float posZ, b
 			sprintf(buf, "MC:      ");
 			for (i = startId; i < endId; i++)
 			{
-				sprintf(buf2, "%02x    ", vicii.sprite[i].mc);
+				sprintf(buf2, "%02x    ", viciiState->sprite[i].mc);
 				strcat(buf, buf2);
 			}
 			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
@@ -1160,7 +1345,7 @@ void C64DebugInterfaceVice::RenderStateVIC(float posX, float posY, float posZ, b
 				sprintf(buf, "MCBASE:  ");
 				for (i = startId; i < endId; i++)
 				{
-					sprintf(buf2, "%02x    ", vicii.sprite[i].mcbase);
+					sprintf(buf2, "%02x    ", viciiState->sprite[i].mcbase);
 					strcat(buf, buf2);
 				}
 				fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
@@ -1170,7 +1355,21 @@ void C64DebugInterfaceVice::RenderStateVIC(float posX, float posY, float posZ, b
 			sprintf(buf, "X-Pos:   ");
 			for (i = startId; i < endId; i++)
 			{
-				sprintf(buf2, "%-4d  ", vicii.sprite[i].x);
+				sprintf(buf2, "%-4d  ", viciiState->sprite[i].x);
+				
+				/*
+				int x = viciiState->regs[0 + (i << 1)];
+				
+				bits = viciiState->regs[0x10];
+				int e = ((bits >> i) & 1);
+				
+				if (e != 0)
+				{
+					x += 256;
+				}
+				LOGD(" .. #%d s.x=%d x=%d", i, viciiState->sprite[i].x, x);
+				*/
+				
 				strcat(buf, buf2);
 			}
 			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
@@ -1180,14 +1379,15 @@ void C64DebugInterfaceVice::RenderStateVIC(float posX, float posY, float posZ, b
 			sprintf(buf, "Y-Pos:   ");
 			for (i = startId; i < endId; i++)
 			{
-				sprintf(buf2, "%-4d  ", vicii.regs[1 + (i << 1)]);
+				sprintf(buf2, "%-4d  ", viciiState->regs[1 + (i << 1)]);
 				strcat(buf, buf2);
 			}
 			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 			
 			/////////////"         "
 			sprintf(buf, "X-Exp:   ");
-			bits = vicii.regs[0x1d];
+			bits = viciiState->regs[0x1d];
+			
 			for (i = startId; i < endId; i++)
 			{
 				sprintf(buf2, "%s", ((bits >> i) & 1) ? "Yes   " : "No    ");
@@ -1197,16 +1397,17 @@ void C64DebugInterfaceVice::RenderStateVIC(float posX, float posY, float posZ, b
 			
 			/////////////"         "
 			sprintf(buf, "Y-Exp:   ");
-			bits = vicii.regs[0x17];
+			bits = viciiState->regs[0x17];
+			
 			for (i = startId; i < endId; i++)
 			{
-				sprintf(buf2, "%s", ((bits >> i) & 1) ? (vicii.sprite[i].exp_flop ? "YES*  " : "Yes   ") : "No    ");
+				sprintf(buf2, "%s", ((bits >> i) & 1) ? (viciiState->sprite[i].exp_flop ? "YES*  " : "Yes   ") : "No    ");
 				strcat(buf, buf2);
 			}
 			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 			
 			sprintf(buf, "Mode   : ");
-			bits = vicii.regs[0x1c];
+			bits = viciiState->regs[0x1c];
 			for (i = startId; i < endId; i++)
 			{
 				sprintf(buf2, "%s", ((bits >> i) & 1) ? "Multi " : "Std.  ");
@@ -1215,7 +1416,7 @@ void C64DebugInterfaceVice::RenderStateVIC(float posX, float posY, float posZ, b
 			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 			
 			sprintf(buf, "Prio.  : ");
-			bits = vicii.regs[0x1b];
+			bits = viciiState->regs[0x1b];
 			for (int z = startId; z < endId; z++)
 			{
 				sprintf(buf2, "%s", ((bits >> i) & 1) ? "Back  " : "Fore  ");
@@ -1226,7 +1427,7 @@ void C64DebugInterfaceVice::RenderStateVIC(float posX, float posY, float posZ, b
 			sprintf(buf, "Data   : ");
 			for (int z = startId; z < endId; z++)
 			{
-				int addr = v_bank + vicii.sprite[z].pointer * 64;
+				int addr = v_bank + viciiState->sprite[z].pointer * 64;
 				sprintf(buf2, "%04x  ", addr);
 				strcat(buf, buf2);
 			}
@@ -1256,7 +1457,7 @@ void C64DebugInterfaceVice::RenderStateVIC(float posX, float posY, float posZ, b
 				CSlrImage *image = (*spritesImages)[zi];
 				CImageData *imageData = (*spritesImageData)[zi];
 				
-				int addr = v_bank + vicii.sprite[zi].pointer * 64;
+				int addr = v_bank + viciiState->sprite[zi].pointer * 64;
 				
 				//LOGD("sprite#=%d dataAddr=%04x", zi, addr);
 				uint8 spriteData[63];
@@ -1270,7 +1471,7 @@ void C64DebugInterfaceVice::RenderStateVIC(float posX, float posY, float posZ, b
 				}
 				
 				bool isColor = false;
-				if (vicii.regs[0x1c] & (1<<zi))
+				if (viciiState->regs[0x1c] & (1<<zi))
 				{
 					isColor = true;
 				}
@@ -1278,18 +1479,18 @@ void C64DebugInterfaceVice::RenderStateVIC(float posX, float posY, float posZ, b
 				{
 					if (renderDataWithColors)
 					{
-						uint8 spriteColor = vicii.regs[0x27+zi];
-						ConvertSpriteDataToImage(spriteData, imageData, cD021, spriteColor, this);
+						uint8 spriteColor = viciiState->regs[0x27+zi];
+						ConvertSpriteDataToImage(spriteData, imageData, cD021, spriteColor, this, 4);
 					}
 					else
 					{
-						ConvertSpriteDataToImage(spriteData, imageData);
+						ConvertSpriteDataToImage(spriteData, imageData, 4);
 					}
 				}
 				else
 				{
-					uint8 spriteColor = vicii.regs[0x27+zi];
-					ConvertColorSpriteDataToImage(spriteData, imageData, cD021, cD025, cD026, spriteColor, this);
+					uint8 spriteColor = viciiState->regs[0x27+zi];
+					ConvertColorSpriteDataToImage(spriteData, imageData, cD021, cD025, cD026, spriteColor, this, 4);
 				}
 				
 				// re-bind image
@@ -1305,7 +1506,7 @@ void C64DebugInterfaceVice::RenderStateVIC(float posX, float posY, float posZ, b
 			px = posX;
 			py += 5.5f*fontSize;
 		}
-	}
+	}	
 }
 
 void C64DebugInterfaceVice::PrintVicInterrupts(uint8 flags, char *buf)
@@ -1320,6 +1521,61 @@ void C64DebugInterfaceVice::PrintVicInterrupts(uint8 flags, char *buf)
 	else
 	{
 		strcat(buf, "None");
+	}
+}
+
+void C64DebugInterfaceVice::UpdateVICSpritesImages(vicii_cycle_state_t *viciiState,
+										   std::vector<CImageData *> *spritesImageData,
+										   std::vector<CSlrImage *> *spritesImages, bool renderDataWithColors)
+{
+	int v_bank = viciiState->vbank_phi1;
+	uint8 cD021 = viciiState->regs[0x21];
+	uint8 cD025 = viciiState->regs[0x25];
+	uint8 cD026 = viciiState->regs[0x26];
+
+	for (int zi = 0; zi < 8; zi++)
+	{
+		CSlrImage *image = (*spritesImages)[zi];
+		CImageData *imageData = (*spritesImageData)[zi];
+		
+		int addr = v_bank + viciiState->sprite[zi].pointer * 64;
+		
+		//LOGD("sprite#=%d dataAddr=%04x", zi, addr);
+		uint8 spriteData[63];
+		
+		for (int i = 0; i < 63; i++)
+		{
+			uint8 v;
+			this->dataAdapterC64DirectRam->AdapterReadByte(addr, &v);
+			spriteData[i] = v;
+			addr++;
+		}
+		
+		bool isColor = false;
+		if (viciiState->regs[0x1c] & (1<<zi))
+		{
+			isColor = true;
+		}
+		if (isColor == false)
+		{
+			if (renderDataWithColors)
+			{
+				uint8 spriteColor = viciiState->regs[0x27+zi];
+				ConvertSpriteDataToImage(spriteData, imageData, cD021, spriteColor, this, 4);
+			}
+			else
+			{
+				ConvertSpriteDataToImage(spriteData, imageData, 4);
+			}
+		}
+		else
+		{
+			uint8 spriteColor = viciiState->regs[0x27+zi];
+			ConvertColorSpriteDataToImage(spriteData, imageData, cD021, cD025, cD026, spriteColor, this, 4);
+		}
+		
+		// re-bind image
+		image->ReplaceImageData(imageData);		
 	}
 }
 
@@ -1446,9 +1702,14 @@ void C64DebugInterfaceVice::RenderStateSID(uint16 sidBase, float posX, float pos
 		reg_ad = sid_peek(voiceBase + 0x05);
 		reg_sr = sid_peek(voiceBase + 0x06);
 		
+		uint16 freq = (reg_freq_hi << 8) | reg_freq_lo;
+		
+		const sid_frequency_t *sidFrequencyData = SidValueToNote(freq);
+		
+		
 		sprintf(buf, "Voice #%d", (voice+1));
 		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-		sprintf(buf, " Frequency  : %04x", (reg_freq_hi << 8) | reg_freq_lo);
+		sprintf(buf, " Frequency  : %04x %s", freq, sidFrequencyData->name);
 		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 		
 		sprintf(buf, " Pulse Width: %04x", ((reg_pw_hi & 0x0f) << 8) | reg_pw_lo);
@@ -1563,25 +1824,61 @@ void C64DebugInterfaceVice::SaveFullSnapshot(CByteBuffer *snapshotBuffer)
 void c64d_update_c64_model()
 {
 	int modelType = c64model_get();
-	switch(modelType)
+	c64d_update_c64_machine_from_model_type(modelType);
+	c64d_update_c64_screen_height_from_model_type(modelType);
+
+}
+
+void c64d_update_c64_machine_from_model_type(int modelType)
+{
+	switch(c64_change_model_type)
 	{
 		default:
 		case 0:
 		case 1:
 		case 2:
 		case 6:
+		case 7:
+		case 11:
 			// PAL, 312 lines
-			debugInterfaceVice->screenHeight = 272;
 			debugInterfaceVice->machineType = C64_MACHINE_PAL;
 			break;
 		case 3:
 		case 4:
 		case 5:
+		case 8:
+		case 12:
 			// NTSC, 275 lines
-			debugInterfaceVice->screenHeight = 259;
 			debugInterfaceVice->machineType = C64_MACHINE_NTSC;
 			break;
 	}
+	
+}
+
+void c64d_update_c64_screen_height_from_model_type(int modelType)
+{
+	switch(c64_change_model_type)
+	{
+		default:
+		case 0:
+		case 1:
+		case 2:
+		case 6:
+		case 7:
+		case 11:
+			// PAL, 312 lines
+			debugInterfaceVice->screenHeight = 272;
+			break;
+		case 3:
+		case 4:
+		case 5:
+		case 8:
+		case 12:
+			// NTSC, 275 lines
+			debugInterfaceVice->screenHeight = 259;
+			break;
+	}
+	
 }
 
 static void load_snapshot_trap(WORD addr, void *v)
@@ -1590,9 +1887,17 @@ static void load_snapshot_trap(WORD addr, void *v)
 	
 	char *filePath = (char*)v;
 	//int ret =
+
+	FILE *fp = fopen(filePath, "rb");
+	if (!fp)
+	{
+		guiMain->ShowMessage("Snapshot not found");
+		return;
+	}
+	fclose(fp);
 	
 	gSoundEngine->LockMutex("load_snapshot_trap");
-	
+
 	if (c64_snapshot_read(filePath, 0) < 0)
 	{
 		guiMain->ShowMessage("Snapshot loading failed");
@@ -1602,7 +1907,22 @@ static void load_snapshot_trap(WORD addr, void *v)
 		
 		c64d_clear_screen();
 	}
+	else
+	{
+		// if CPU is in JAM then un-jam and continue
+		if (c64d_is_cpu_in_jam_state == 1)
+		{
+			c64d_is_cpu_in_jam_state = 0;
+			c64d_set_debug_mode(C64_DEBUG_RUNNING);
+		}
+	}
 	
+	debugInterfaceVice->SetSidType(c64SettingsSIDEngineModel);
+	debugInterfaceVice->SetSidSamplingMethod(c64SettingsRESIDSamplingMethod);
+	debugInterfaceVice->SetSidEmulateFilters(c64SettingsRESIDEmulateFilters);
+	debugInterfaceVice->SetSidPassBand(c64SettingsRESIDPassBand);
+	debugInterfaceVice->SetSidFilterBias(c64SettingsRESIDFilterBias);
+
 	gSoundEngine->UnlockMutex("load_snapshot_trap");
 	
 	SYS_ReleaseCharBuf(filePath);
@@ -1613,6 +1933,8 @@ bool C64DebugInterfaceVice::LoadFullSnapshot(char *filePath)
 {
 	char *buf = SYS_GetCharBuf();
 	strcpy(buf, filePath);
+	
+	this->machineType = C64_MACHINE_LOADING_SNAPSHOT;
 	
 	interrupt_maincpu_trigger_trap(load_snapshot_trap, buf);
 	
@@ -1833,25 +2155,28 @@ void C64DebugInterfaceVice::RenderStateDrive1541(float posX, float posY, float p
 /// default keymap
 void ViceKeyMapInitDefault()
 {
-	/*
-	 C64 keyboard matrix:
-	 
-	 Bit   7   6   5   4   3   2   1   0
-	 0    CUD  F5  F3  F1  F7 CLR RET DEL
-	 1    SHL  E   S   Z   4   A   W   3
-	 2     X   T   F   C   6   D   R   5
-	 3     V   U   H   B   8   G   Y   7
-	 4     N   O   K   M   0   J   I   9
-	 5     ,   @   :   .   -   L   P   +
-	 6     /   ^   =  SHR HOM  ;   *   £
-	 7    R/S  Q   C= SPC  2  CTL  <-  1
-	 */
+	SYS_FatalExit("ViceKeyMapInitDefault");
+	
+	
+//	 C64 keyboard matrix:
+//	 
+//	 Bit   7   6   5   4   3   2   1   0
+//	 0    CUD  F5  F3  F1  F7 CLR RET DEL
+//	 1    SHL  E   S   Z   4   A   W   3
+//	 2     X   T   F   C   6   D   R   5
+//	 3     V   U   H   B   8   G   Y   7
+//	 4     N   O   K   M   0   J   I   9
+//	 5     ,   @   :   .   -   L   P   +
+//	 6     /   ^   =  SHR HOM  ;   *   £
+//	 7    R/S  Q   C= SPC  2  CTL  <-  1
 	
 	// MATRIX (row, column)
 	
 	// http://classiccmp.org/dunfield/c64/h/front.jpg
 	
 	//	keyboard_parse_set_pos_row('a', int row, int col, int shift);
+	
+	/*
 	
 	keyboard_parse_set_pos_row(MTKEY_F5, 0, 6, NO_SHIFT);
 	keyboard_parse_set_pos_row(MTKEY_F6, 0, 6, LEFT_SHIFT);
@@ -1929,19 +2254,20 @@ void ViceKeyMapInitDefault()
 	keyboard_parse_set_pos_row(MTKEY_ARROW_LEFT, 0, 2, LEFT_SHIFT);
 	keyboard_parse_set_pos_row(MTKEY_ARROW_RIGHT, 0, 2, NO_SHIFT);
 	
+	*/
+
 	
-	
-	/*
-	 C64 keyboard matrix:
-	 
-	 Bit   7   6   5   4   3   2   1   0
-	 0    CUD  F5  F3  F1  F7 CLR RET DEL
-	 1    SHL  E   S   Z   4   A   W   3
-	 2     X   T   F   C   6   D   R   5
-	 3     V   U   H   B   8   G   Y   7
-	 4     N   O   K   M   0   J   I   9
-	 5     ,   @   :   .   -   L   P   +
-	 6     /   ^   =  SHR HOM  ;   *   £
-	 7    R/S  Q   C= SPC  2  CTL  <-  1
-	 */
+//	 C64 keyboard matrix:
+//	 
+//	 Bit   7   6   5   4   3   2   1   0
+//	 0    CUD  F5  F3  F1  F7 CLR RET DEL
+//	 1    SHL  E   S   Z   4   A   W   3
+//	 2     X   T   F   C   6   D   R   5
+//	 3     V   U   H   B   8   G   Y   7
+//	 4     N   O   K   M   0   J   I   9
+//	 5     ,   @   :   .   -   L   P   +
+//	 6     /   ^   =  SHR HOM  ;   *   £
+//	 7    R/S  Q   C= SPC  2  CTL  <-  1
+
 }
+

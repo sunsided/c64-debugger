@@ -4,6 +4,65 @@
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>prg</string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>Commodore 64 PRG</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>pl.rabidus.C64Debugger.PRG</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>d64</string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>Commodore 64 D64 disk</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>pl.rabidus.C64Debugger.D64</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>crt</string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>Commodore 64 CRT cartridge</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>pl.rabidus.C64Debugger.CRT</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>snap</string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>C64 Debugger snapshot</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>pl.rabidus.C64Debugger.SNAP</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleExecutable</key>
 	<string>${EXECUTABLE_NAME}</string>
 	<key>CFBundleIdentifier</key>
@@ -15,11 +74,11 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.56</string>
+	<string>0.60</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>0.56</string>
+	<string>0.60</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.productivity</string>
 	<key>LSMinimumSystemVersion</key>
@@ -30,5 +89,84 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Commodore 64 PRG</string>
+			<key>UTTypeIdentifier</key>
+			<string>pl.rabidus.C64Debugger.PRG</string>
+			<key>UTTypeReferenceURL</key>
+			<string>https://sourceforge.net/projects/c64-debugger/</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>prg</string>
+				</array>
+			</dict>
+		</dict>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Commodore 64 D64 disk</string>
+			<key>UTTypeIdentifier</key>
+			<string>pl.rabidus.C64Debugger.D64</string>
+			<key>UTTypeReferenceURL</key>
+			<string>https://sourceforge.net/projects/c64-debugger/</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>d64</string>
+				</array>
+			</dict>
+		</dict>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Commdoore 64 CRT cartridge</string>
+			<key>UTTypeIdentifier</key>
+			<string>pl.rabidus.C64Debugger.CRT</string>
+			<key>UTTypeReferenceURL</key>
+			<string>https://sourceforge.net/projects/c64-debugger/</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>crt</string>
+				</array>
+			</dict>
+		</dict>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>C64 Debugger snapshot</string>
+			<key>UTTypeIdentifier</key>
+			<string>pl.rabidus.C64Debugger.SNAP</string>
+			<key>UTTypeReferenceURL</key>
+			<string>https://sourceforge.net/projects/c64-debugger/</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>snap</string>
+				</array>
+			</dict>
+		</dict>
+	</array>
 </dict>
 </plist>

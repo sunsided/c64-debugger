@@ -33,8 +33,7 @@ struct output_parameter_s;
 
 struct output_select_s {
     const char *output_name;
-    int (*output_open)(unsigned int prnr,
-        struct output_parameter_s *output_parameter);
+    int (*output_open)(unsigned int prnr, struct output_parameter_s *output_parameter);
     void (*output_close)(unsigned int prnr);
     int (*output_putc)(unsigned int prnr, BYTE b);
     int (*output_getc)(unsigned int prnr, BYTE *b);
@@ -42,11 +41,13 @@ struct output_select_s {
 };
 typedef struct output_select_s output_select_t;
 
-extern void output_select_init(void);
+#define NUM_OUTPUT_SELECT       4 /* serial dev 4, 5, 6 and user port */
+
 extern int output_select_init_resources(void);
+extern int output_select_userport_init_resources(void);
 extern void output_select_shutdown(void);
-extern void output_select_shutdown_resources(void);
 extern int output_select_init_cmdline_options(void);
+extern int output_select_userport_init_cmdline_options(void);
 
 extern void output_select_register(output_select_t *output_select);
 
@@ -59,4 +60,3 @@ extern int output_select_flush(unsigned int prnr);
 extern void output_select_writeline(unsigned int prnr);
 
 #endif
-

@@ -37,6 +37,8 @@ long SYS_RandomSeed();
 void VID_ResetLogicClock();
 
 void VID_SetWindowAlwaysOnTop(bool isAlwaysOnTop);
+void VID_SetWindowAlwaysOnTopTemporary(bool isAlwaysOnTop);
+bool VID_IsWindowAlwaysOnTop();
 
 extern u64 gCurrentFrameTime;
 
@@ -167,6 +169,12 @@ void VID_SetOrtho(GLfloat xMin, GLfloat xMax, GLfloat yMin, GLfloat yMax,
 				  GLfloat zMin, GLfloat zMax);
 void VID_SetOrthoSwitchBack();
 
+void GUI_GetRealScreenPixelSizes(double *pixelSizeX, double *pixelSizeY);
+
+bool VID_IsWindowFullScreen();
+void VID_ShowMouseCursor();
+void VID_HideMouseCursor();
+
 void BlitTexture(GLuint tex, GLfloat destX, GLfloat destY, GLfloat z, GLfloat sizeX, GLfloat sizeY);
 void BlitTexture(GLuint tex, GLfloat destX, GLfloat destY, GLfloat z, GLfloat sizeX, GLfloat sizeY,
 				 GLfloat texStartX, GLfloat texStartY,
@@ -279,6 +287,9 @@ void BlitRotatedImage(CSlrImage *image, GLfloat pX, GLfloat pY, GLfloat pZ, GLfl
 
 void glEnable2D();
 void glDisable2D();
+
+#define VID_SetClipping SetClipping
+#define VID_ResetClipping ResetClipping
 
 void SetClipping(GLint x, GLint y, GLsizei sizeX, GLsizei sizeY);
 void ResetClipping();

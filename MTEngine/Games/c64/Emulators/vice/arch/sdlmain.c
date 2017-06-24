@@ -61,7 +61,7 @@ int SDL_Main(int argc, char **argv)
 
     return main_program(argc_local, argv_local);
 #else
-    return vice_main_program(argc, argv);
+    return vice_main_program(argc, argv, 0);
 #endif
 }
 #endif

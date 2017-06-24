@@ -6,6 +6,7 @@
  *  Michael Schwendt <sidplay@geocities.com>
  *  Ettore Perazzoli <ettore@comm2000.it>
  *  Dag Lem <resid@nimrod.no>
+ *  Marco van den Heuvel <blackystardust68@yahoo.com>
  *
  * This file is part of VICE, the Versatile Commodore Emulator.
  * See README for copyright notice.
@@ -35,17 +36,17 @@
 #include "catweaselmkiii.h"
 #include "fastsid.h"
 #include "hardsid.h"
+#include "joyport.h"
 #include "lib.h"
 #include "machine.h"
 #include "maincpu.h"
-#ifdef HAVE_PARSID
 #include "parsid.h"
-#endif
 #include "resources.h"
 #include "sid-resources.h"
 #include "sid-snapshot.h"
 #include "sid.h"
 #include "sound.h"
+#include "ssi2001.h"
 #include "types.h"
 
 #ifdef HAVE_MOUSE
@@ -72,8 +73,14 @@ static BYTE siddata[SOUND_SIDS_MAX][32];
 
 static int (*sid_read_func)(WORD addr, int chipno);
 static void (*sid_store_func)(WORD addr, BYTE val, int chipno);
+static int (*sid_dump_func)(int chipno);
 
 static int sid_enable, sid_engine_type = -1;
+
+#ifdef HAVE_MOUSE
+static CLOCK pot_cycle = 0;  /* pot sampling cycle */
+static BYTE val_pot_x = 0xff, val_pot_y = 0xff; /* last sampling value */
+#endif
 
 static BYTE c64d_sid_voiceMask = 0xFF;
 
@@ -117,18 +124,18 @@ static BYTE sid_read_chip(WORD addr, int chipno)
     machine_handle_pending_alarms(0);
 
 #ifdef HAVE_MOUSE
-    if (addr == 0x19 && _mouse_enabled && chipno == 0) {
-        val = mouse_get_x();
-    } else if (addr == 0x1a && _mouse_enabled && chipno == 0) {
-        val = mouse_get_y();
-    } else if (addr == 0x19 && lightpen_enabled && chipno == 0) {
-        val = lightpen_read_button_x();
-    } else if (addr == 0x1a && lightpen_enabled && chipno == 0) {
-        val = lightpen_read_button_y();
-    } else
+    if (chipno == 0 && (addr == 0x19 || addr == 0x1a)) {
+        if ((maincpu_clk ^ pot_cycle) & ~511) {
+            pot_cycle = maincpu_clk & ~511; /* simplistic 512 cycle sampling */
+            val_pot_x = read_joyport_potx();
+            val_pot_y = read_joyport_poty();
+        }
+        val = (addr == 0x19) ? val_pot_x : val_pot_y;
+
+    } else {
 #endif
-    {
-        if (machine_class == VICE_MACHINE_C64SC) {
+        if (machine_class == VICE_MACHINE_C64SC
+            || machine_class == VICE_MACHINE_SCPU64) {
             /* On x64sc, the read/write calls both happen before incrementing
                the clock, so don't mess with maincpu_clk here.  */
             val = sid_read_func(addr, chipno);
@@ -139,12 +146,14 @@ static BYTE sid_read_chip(WORD addr, int chipno)
             val = sid_read_func(addr, chipno);
             maincpu_clk--;
         }
+#ifdef HAVE_MOUSE
     }
+#endif
 
     /* Fallback when sound is switched off. */
     if (val < 0) {
         if (addr == 0x19 || addr == 0x1a) {
-	    val = 0xff;
+            val = 0xff;
         } else {
             if (addr == 0x1b || addr == 0x1c) {
                 val = maincpu_clk % 256;
@@ -177,25 +186,34 @@ static void sid_store_chip(WORD addr, BYTE byte, int chipno)
     machine_handle_pending_alarms(maincpu_rmw_flag + 1);
 
     if (maincpu_rmw_flag) {
-	maincpu_clk--;
-	sid_store_func(addr, lastsidread, chipno);
-	maincpu_clk++;
+        maincpu_clk--;
+        sid_store_func(addr, lastsidread, chipno);
+        maincpu_clk++;
     }
 
     sid_store_func(addr, byte, chipno);
+}
+
+static int sid_dump_chip(int chipno)
+{
+    if (sid_dump_func) {
+        return sid_dump_func(chipno);
+    }
+
+    return -1;
 }
 
 /* ------------------------------------------------------------------------- */
 
 BYTE sid_read(WORD addr)
 {
-    if (sid_stereo == 1
+    if (sid_stereo >= 1
         && addr >= sid_stereo_address_start
         && addr < sid_stereo_address_end) {
         return sid_read_chip(addr, 1);
     }
 
-    if (sid_stereo == 2
+    if (sid_stereo >= 2
         && addr >= sid_triple_address_start
         && addr < sid_triple_address_end) {
         return sid_read_chip(addr, 2);
@@ -206,13 +224,13 @@ BYTE sid_read(WORD addr)
 
 BYTE sid_peek(WORD addr)
 {
-    if (sid_stereo == 1
+    if (sid_stereo >= 1
         && addr >= sid_stereo_address_start
         && addr < sid_stereo_address_end) {
         return sid_peek_chip(addr, 1);
     }
 
-    if (sid_stereo == 2
+    if (sid_stereo >= 2
         && addr >= sid_triple_address_start
         && addr < sid_triple_address_end) {
         return sid_peek_chip(addr, 2);
@@ -233,16 +251,17 @@ BYTE sid3_read(WORD addr)
 
 void sid_store(WORD addr, BYTE byte)
 {
-    if (sid_stereo == 1
+    if (sid_stereo >= 1
         && addr >= sid_stereo_address_start
         && addr < sid_stereo_address_end) {
         sid_store_chip(addr, byte, 1);
         return;
     }
-    if (sid_stereo == 2
+    if (sid_stereo >= 2
         && addr >= sid_triple_address_start
         && addr < sid_triple_address_end) {
         sid_store_chip(addr, byte, 2);
+        return;
     }
     sid_store_chip(addr, byte, 0);
 }
@@ -255,6 +274,21 @@ void sid2_store(WORD addr, BYTE byte)
 void sid3_store(WORD addr, BYTE byte)
 {
     sid_store_chip(addr, byte, 2);
+}
+
+int sid_dump(void)
+{
+    return sid_dump_chip(0);
+}
+
+int sid2_dump(void)
+{
+    return sid_dump_chip(1);
+}
+
+int sid3_dump(void)
+{
+    return sid_dump_chip(2);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -293,9 +327,45 @@ sound_t *sid_sound_machine_open(int chipno)
     return sid_engine.open(siddata[chipno]);
 }
 
+/* manage temporary buffers. if the requested size is smaller or equal to the
+ * size of the already allocated buffer, reuse it.  */
+static SWORD *buf1 = NULL;
+static SWORD *buf2 = NULL;
+static int blen1 = 0;
+static int blen2 = 0;
+
+static SWORD *getbuf1(int len)
+{
+    if ((buf1 == NULL) || (blen1 < len)) {
+        if (buf1) {
+            lib_free(buf1);
+        }
+        blen1 = len;
+        buf1 = lib_calloc(len, 1);
+    }
+    return buf1;
+}
+
+static SWORD *getbuf2(int len)
+{
+    if ((buf2 == NULL) || (blen2 < len)) {
+        if (buf2) {
+            lib_free(buf2);
+        }
+        blen2 = len;
+        buf2 = lib_calloc(len, 1);
+    }
+    return buf2;
+}
+
+int sid_sound_machine_init_vbr(sound_t *psid, int speed, int cycles_per_sec, int factor)
+{
+    return sid_engine.init(psid, speed * factor / 1000, cycles_per_sec, factor);
+}
+
 int sid_sound_machine_init(sound_t *psid, int speed, int cycles_per_sec)
 {
-    int ret = sid_engine.init(psid, speed, cycles_per_sec);
+    int ret = sid_engine.init(psid, speed, cycles_per_sec, 1000);
 	
 	sid_engine.set_voice_mask(psid, c64d_sid_voiceMask);
 
@@ -305,6 +375,15 @@ int sid_sound_machine_init(sound_t *psid, int speed, int cycles_per_sec)
 void sid_sound_machine_close(sound_t *psid)
 {
     sid_engine.close(psid);
+    /* free the temp. buffers */
+    if (buf1) {
+        lib_free(buf1);
+        buf1 = NULL;
+    }
+    if (buf2) {
+        lib_free(buf2);
+        buf2 = NULL;
+    }
 }
 
 BYTE sid_sound_machine_read(sound_t *psid, WORD addr)
@@ -334,18 +413,17 @@ int sid_sound_machine_calculate_samples(sound_t **psid, SWORD *pbuf, int nr, int
         return sid_engine.calculate_samples(psid[0], pbuf, nr, 1, delta_t);
     }
     if (soc == 1 && scc == 2) {
-        tmp_buf1 = lib_malloc(2 * nr);
+        tmp_buf1 = getbuf1(2 * nr);
         tmp_nr = sid_engine.calculate_samples(psid[0], tmp_buf1, nr, 1, &tmp_delta_t);
         tmp_nr = sid_engine.calculate_samples(psid[1], pbuf, nr, 1, delta_t);
         for (i = 0; i < tmp_nr; i++) {
             pbuf[i] = sound_audio_mix(pbuf[i], tmp_buf1[i]);
         }
-        lib_free(tmp_buf1);
         return tmp_nr;
     }
     if (soc == 1 && scc == 3) {
-        tmp_buf1 = lib_malloc(2 * nr);
-        tmp_buf2 = lib_malloc(2 * nr);
+        tmp_buf1 = getbuf1(2 * nr);
+        tmp_buf2 = getbuf2(2 * nr);
         tmp_nr = sid_engine.calculate_samples(psid[0], tmp_buf1, nr, 1, &tmp_delta_t);
         tmp_delta_t = *delta_t;
         tmp_nr = sid_engine.calculate_samples(psid[2], tmp_buf2, nr, 1, &tmp_delta_t);
@@ -354,8 +432,6 @@ int sid_sound_machine_calculate_samples(sound_t **psid, SWORD *pbuf, int nr, int
             pbuf[i] = sound_audio_mix(pbuf[i], tmp_buf1[i]);
             pbuf[i] = sound_audio_mix(pbuf[i], tmp_buf2[i]);
         }
-        lib_free(tmp_buf1);
-        lib_free(tmp_buf2);
         return tmp_nr;
     }
     if (soc == 2 && scc == 1) {
@@ -371,7 +447,7 @@ int sid_sound_machine_calculate_samples(sound_t **psid, SWORD *pbuf, int nr, int
         return tmp_nr;
     }
     if (soc == 2 && scc == 3) {
-        tmp_buf1 = lib_malloc(2 * nr);
+        tmp_buf1 = getbuf1(2 * nr);
         tmp_nr = sid_engine.calculate_samples(psid[2], tmp_buf1, nr, 1, &tmp_delta_t);
         tmp_delta_t = *delta_t;
         tmp_nr = sid_engine.calculate_samples(psid[0], pbuf, nr, 2, &tmp_delta_t);
@@ -380,7 +456,6 @@ int sid_sound_machine_calculate_samples(sound_t **psid, SWORD *pbuf, int nr, int
             pbuf[i * 2] = sound_audio_mix(pbuf[i * 2], tmp_buf1[i]);
             pbuf[(i * 2) + 1] = sound_audio_mix(pbuf[(i * 2) + 1], tmp_buf1[i]);
         }
-        lib_free(tmp_buf1);
     }
     return tmp_nr;
 }
@@ -404,29 +479,31 @@ char *sid_sound_machine_dump_state(sound_t *psid)
 int sid_sound_machine_cycle_based(void)
 {
     switch (sidengine) {
-      case SID_ENGINE_FASTSID:
-        return 0;
+        case SID_ENGINE_FASTSID:
+            return 0;
 #ifdef HAVE_RESID
-      case SID_ENGINE_RESID:
-        return 1;
+        case SID_ENGINE_RESID:
+            return 1;
 #endif
 #ifdef HAVE_RESID_FP
       case SID_ENGINE_RESID_FP:
         return 1;
 #endif
 #ifdef HAVE_CATWEASELMKIII
-      case SID_ENGINE_CATWEASELMKIII:
-        return 0;
+        case SID_ENGINE_CATWEASELMKIII:
+            return 0;
 #endif
 #ifdef HAVE_HARDSID
-      case SID_ENGINE_HARDSID:
-        return 0;
+        case SID_ENGINE_HARDSID:
+            return 0;
 #endif
 #ifdef HAVE_PARSID
-      case SID_ENGINE_PARSID_PORT1:
-      case SID_ENGINE_PARSID_PORT2:
-      case SID_ENGINE_PARSID_PORT3:
-        return 0;
+        case SID_ENGINE_PARSID:
+            return 0;
+#endif
+#ifdef HAVE_SSI2001
+        case SID_ENGINE_SSI2001:
+            return 0;
 #endif
     }
 
@@ -448,42 +525,55 @@ static void set_sound_func(void)
         if (sid_engine_type == SID_ENGINE_FASTSID) {
             sid_read_func = sound_read;
             sid_store_func = sound_store;
+            sid_dump_func = sound_dump;
         }
 #ifdef HAVE_RESID
         if (sid_engine_type == SID_ENGINE_RESID) {
             sid_read_func = sound_read;
             sid_store_func = sound_store;
+            sid_dump_func = sound_dump;
         }
 #endif
 #ifdef HAVE_RESID_FP
         if (sid_engine_type == SID_ENGINE_RESID_FP) {
             sid_read_func = sound_read;
             sid_store_func = sound_store;
+            sid_dump_func = sound_dump; /* TODO: Resid-FP dump */
+
         }
 #endif
 #ifdef HAVE_CATWEASELMKIII
         if (sid_engine_type == SID_ENGINE_CATWEASELMKIII) {
             sid_read_func = catweaselmkiii_read;
             sid_store_func = catweaselmkiii_store;
+            sid_dump_func = NULL; /* TODO: catweasel dump */
         }
 #endif
 #ifdef HAVE_HARDSID
         if (sid_engine_type == SID_ENGINE_HARDSID) {
             sid_read_func = hardsid_read;
             sid_store_func = hardsid_store;
+            sid_dump_func = NULL; /* TODO: hardsid dump */
         }
 #endif
 #ifdef HAVE_PARSID
-        if (sid_engine_type == SID_ENGINE_PARSID_PORT1 ||
-            sid_engine_type == SID_ENGINE_PARSID_PORT2 ||
-            sid_engine_type == SID_ENGINE_PARSID_PORT3) {
+        if (sid_engine_type == SID_ENGINE_PARSID) {
             sid_read_func = parsid_read;
             sid_store_func = parsid_store;
+            sid_dump_func = NULL; /* TODO: parsid dump */
+        }
+#endif
+#ifdef HAVE_SSI2001
+        if (sid_engine_type == SID_ENGINE_SSI2001) {
+            sid_read_func = ssi2001_read;
+            sid_store_func = ssi2001_store;
+            sid_dump_func = NULL; /* TODO: hardsid dump */
         }
 #endif
     } else {
         sid_read_func = sid_read_off;
         sid_store_func = sid_write_off;
+        sid_dump_func = NULL;
     }
 }
 
@@ -521,27 +611,27 @@ int sid_engine_set(int engine)
     }
 #endif
 #ifdef HAVE_PARSID
-    if ((engine == SID_ENGINE_PARSID_PORT1 || engine == SID_ENGINE_PARSID_PORT2 || engine == SID_ENGINE_PARSID_PORT3)
+    if ((engine == SID_ENGINE_PARSID)
         && sid_engine_type != engine) {
-        if (engine == SID_ENGINE_PARSID_PORT1) {
-            if (parsid_open(1) < 0) {
-                return -1;
-            }
-        }
-        if (engine == SID_ENGINE_PARSID_PORT2) {
-            if (parsid_open(2) < 0) {
-                return -1;
-            }
-        }
-        if (engine == SID_ENGINE_PARSID_PORT3) {
-            if (parsid_open(3) < 0) {
-                return -1;
-            }
+        if (parsid_open() < 0) {
+            return -1;
         }
     }
-    if (engine != SID_ENGINE_PARSID_PORT1 && engine != SID_ENGINE_PARSID_PORT2 && engine != SID_ENGINE_PARSID_PORT3
-        && (sid_engine_type == SID_ENGINE_PARSID_PORT1 || sid_engine_type == SID_ENGINE_PARSID_PORT2 || sid_engine_type == SID_ENGINE_PARSID_PORT3)) {
+    if (engine != SID_ENGINE_PARSID
+        && sid_engine_type == SID_ENGINE_PARSID) {
         parsid_close();
+    }
+#endif
+#ifdef HAVE_SSI2001
+    if (engine == SID_ENGINE_SSI2001
+        && sid_engine_type != SID_ENGINE_SSI2001) {
+        if (ssi2001_open() < 0) {
+            return -1;
+        }
+    }
+    if (engine != SID_ENGINE_SSI2001
+        && sid_engine_type == SID_ENGINE_SSI2001) {
+        ssi2001_close();
     }
 #endif
 

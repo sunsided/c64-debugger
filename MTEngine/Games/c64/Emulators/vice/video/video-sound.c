@@ -1,5 +1,5 @@
 /*
- * video-sound.h - Video to Audio leak emulation
+ * video-sound.c - Video to Audio leak emulation
  *
  * Written by
  *  groepaz <groepaz@gmx.net>
@@ -34,6 +34,7 @@
 
 #include <string.h>
 
+#include "archdep.h"
 #include "log.h"
 #include "machine.h"
 #include "sound.h"
@@ -42,8 +43,9 @@
 #include "video-sound.h"
 #include "video.h"
 
-#define NOISE_VOLUME            (0.05f)
-#define LUMALINES_VOLUME        (0.15f)
+#define TOTAL_VOLUME            (1.50f)
+#define NOISE_VOLUME            (0.15f * TOTAL_VOLUME)
+#define LUMALINES_VOLUME        (1.00f * TOTAL_VOLUME)
 
 #define NOISE_RATE              (44100)
 #define LUMALINES_RATE          (15000)
@@ -51,23 +53,18 @@
 #define MAX_LUMALINES   512 /* maximum height of picture */
 
 /* noise floor vaguely resembling random spikes at line frequency (~15khz) */
-const static signed char noise_sample[] = {
-    7,0,0,8,0,7,0,0,7,0,6,0,0,8,0,0
+static const signed char noise_sample[] = {
+    2, 1, 1, 1, 3, 2, 1, 1, 2, 1, 1, 1, 3, 2, 1, 1
 };
 
-#if defined(__BEOS__) && defined(WORDS_BIGENDIAN)
-extern sound_chip_t video_sound;
-#else
-static sound_chip_t video_sound;
-#endif
+STATIC_PROTOTYPE sound_chip_t video_sound;
 
 static WORD video_sound_offset;
 static int cycles_per_sec = 1000000;
 static int sample_rate = 22050;
 static int numchips = 1;
 
-typedef struct
-{
+typedef struct {
     float lumas[MAX_LUMALINES];
     float avglum;
     const signed char *sampleptr;
@@ -89,19 +86,16 @@ static int video_sound_machine_calculate_samples(sound_t **psid, SWORD *pbuf, in
 
     for (i = 0; i < nr; i++) {
         for (num = 0; num < numchips; num++) {
-            smpval1 = (int)((float)(*chip[num].sampleptr) * chip[num].avglum * NOISE_VOLUME) / (1 << 19);
+            smpval1 = (int)((float)(*chip[num].sampleptr) * chip[num].avglum * NOISE_VOLUME) / (1 << 16);
             smpval2 = (int)((*chip[num].lumaptr) * LUMALINES_VOLUME) / (1 << 16);
             switch (soc) {
                 default:
                 case 1:
-                    pbuf[i] = sound_audio_mix(pbuf[i], smpval2);
-                    pbuf[i] = sound_audio_mix(pbuf[i], smpval1);
+                    pbuf[i] = sound_audio_mix(pbuf[i], smpval1 + smpval2);
                     break;
                 case 2:
-                    pbuf[i * 2] = sound_audio_mix(pbuf[i * 2], smpval2);
-                    pbuf[i * 2] = sound_audio_mix(pbuf[i * 2], smpval1);
-                    pbuf[i * 2 + 1] = sound_audio_mix(pbuf[i * 2 + 1], smpval2);
-                    pbuf[i * 2 + 1] = sound_audio_mix(pbuf[i * 2 + 1], smpval1);
+                    pbuf[i * 2] = sound_audio_mix(pbuf[i * 2], smpval1 + smpval2);
+                    pbuf[i * 2 + 1] = sound_audio_mix(pbuf[i * 2 + 1], smpval1 + smpval2);
                     break;
             }
 
@@ -196,9 +190,9 @@ static inline int check_enabled(void)
 }
 
 void video_sound_update(video_render_config_t *config, const BYTE *src,
-                      unsigned int width, unsigned int height,
-                      unsigned int xs, unsigned int ys,
-                      unsigned int pitchs, viewport_t *viewport)
+                        unsigned int width, unsigned int height,
+                        unsigned int xs, unsigned int ys,
+                        unsigned int pitchs, viewport_t *viewport)
 {
     const SDWORD *c1 = config->color_tables.ytablel;
     const SDWORD *c2 = config->color_tables.ytableh;
@@ -216,11 +210,11 @@ void video_sound_update(video_render_config_t *config, const BYTE *src,
 
     chip[chipnum].firstline = viewport->first_line;
     chip[chipnum].lastline = viewport->last_line;
-    DBG(("video_sound_update (firstline:%d lastline:%d w:%d h:%d xs:%d ys:%d)", 
+    DBG(("video_sound_update (firstline:%d lastline:%d w:%d h:%d xs:%d ys:%d)",
          chip[chipnum].firstline, chip[chipnum].lastline, width, height, xs, ys));
 
-    width /= (config->doublesizex + 1);
-    /* height /= (config->doublesizey + 1); */
+    width /= config->scalex;
+    /* height /= scaley; */
 
     /* width += xs; */
     ys = chip[chipnum].firstline;
@@ -232,10 +226,10 @@ void video_sound_update(video_render_config_t *config, const BYTE *src,
         lum = 0;
         tmpsrc = src;
         for (x = 0; x < width; x++) {
-            lum += (c1[*tmpsrc] << 2) + c2[*tmpsrc] + 0x00010000;
+            lum += (c1[*tmpsrc] << 2) + c2[*tmpsrc] + 0x10000;
             tmpsrc++;
         }
-        chip[chipnum].lumas[ys] = lum / (float)width;
+        chip[chipnum].lumas[ys] = lum / (float)(width * 5);
         src += pitchs;
         ys++;
     }

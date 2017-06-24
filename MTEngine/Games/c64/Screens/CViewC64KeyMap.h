@@ -142,6 +142,10 @@ public:
 	
 	void OpenDialogExportKeyMap();
 	void OpenDialogImportKeyMap();
+	
+	//
+	std::map<u32, bool> pressedKeyCodes;
+
 };
 
 

@@ -2,6 +2,7 @@
 #define __CViewMemoryMap__
 
 #include "CGuiView.h"
+#include "C64DebugTypes.h"
 
 class C64;
 class CImageData;
@@ -50,6 +51,10 @@ public:
 	
 	void ClearExecuteMarkers();
 	void ClearReadWriteMarkers();
+	
+	// write PC & raster
+	int pc;
+	int viciiRasterLine, viciiRasterCycle;
 };
 
 void C64DebuggerSetMemoryMapCellsFadeSpeed(float fadeSpeed);
@@ -64,7 +69,7 @@ public:
 	virtual void SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY);
 
 	virtual bool KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl);
-//	virtual bool KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl);
+	virtual bool KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl);
 	virtual void DoLogic();
 	virtual void Render();
 	
@@ -108,6 +113,7 @@ public:
 	
 	void CellRead(uint16 addr);
 	void CellWrite(uint16 addr, uint8 value);
+	void CellWrite(uint16 addr, uint8 value, uint16 pc, int rasterX, int rasterY);
 	void CellExecute(uint16 addr, uint8 opcode);
 	
 	void CellsAnimationLogic();
@@ -177,6 +183,11 @@ public:
 	
 	// move acceleration
 	float accelerateX, accelerateY;
+	
+	bool isForcedMovingMap;
+	float prevMousePosX;
+	float prevMousePosY;
+
 };
 
 extern float colorExecuteCodeR;

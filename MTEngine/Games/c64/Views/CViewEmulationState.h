@@ -33,7 +33,7 @@ public:
 	
 	C64DebugInterface *debugInterface;
 	
-	virtual void SetFocus(bool focus);
+	virtual bool SetFocus(bool focus);
 };
 
 

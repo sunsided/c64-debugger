@@ -29,13 +29,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef HAVE_RAWDRIVE
+
 #include "archdep.h"
 #include "blockdev.h"
+#include "cmdline.h"
 #include "diskimage.h"
 #include "lib.h"
 #include "log.h"
 #include "rawimage.h"
 #include "resources.h"
+#include "translate.h"
 #include "types.h"
 #include "util.h"
 
@@ -45,16 +49,16 @@ static log_t rawimage_log = LOG_DEFAULT;
 static char *raw_drive_driver = NULL;
 
 
-void rawimage_name_set(disk_image_t *image, char *name)
+void rawimage_name_set(disk_image_t *image, const char *name)
 {
     rawimage_t *rawimage;
 
     rawimage = image->media.rawimage;
 
-    rawimage->name = name;
+    rawimage->name = lib_stralloc(name);
 }
 
-char *rawimage_name_get(const disk_image_t *image)
+const char *rawimage_name_get(const disk_image_t *image)
 {
     rawimage_t *rawimage;
 
@@ -65,7 +69,7 @@ char *rawimage_name_get(const disk_image_t *image)
 
 void rawimage_driver_name_set(disk_image_t *image)
 {
-    rawimage_name_set(image, lib_stralloc(raw_drive_driver));
+    rawimage_name_set(image, raw_drive_driver);
 }
 
 /*-----------------------------------------------------------------------*/
@@ -94,7 +98,7 @@ void rawimage_media_destroy(disk_image_t *image)
 
 int rawimage_open(disk_image_t *image)
 {
-    char *name;
+    const char *name;
 
     image->type = DISK_IMAGE_TYPE_D81;
     image->tracks = 80;
@@ -140,8 +144,9 @@ void rawimage_init(void)
 
 static int set_raw_drive_driver(const char *val, void *param)
 {
-    if (util_string_set(&raw_drive_driver, val))
+    if (util_string_set(&raw_drive_driver, val)) {
         return 0;
+    }
 
     return 0;
 }
@@ -149,13 +154,12 @@ static int set_raw_drive_driver(const char *val, void *param)
 static const resource_string_t resources_string[] = {
     { "RawDriveDriver", ARCHDEP_RAWDRIVE_DEFAULT, RES_EVENT_NO, NULL,
       &raw_drive_driver, set_raw_drive_driver, NULL },
-    { NULL }
+    RESOURCE_STRING_LIST_END
 };
 
 int rawimage_resources_init(void)
 {
-    return resources_register_string(resources_string)
-        | blockdev_resources_init();
+    return resources_register_string(resources_string) | blockdev_resources_init();
 }
 
 void rawimage_resources_shutdown(void)
@@ -165,8 +169,22 @@ void rawimage_resources_shutdown(void)
 
 /*-----------------------------------------------------------------------*/
 
+static const cmdline_option_t cmdline_options[] =
+{
+    { "-rawdrive", SET_RESOURCE, 1,
+      NULL, NULL, "RawDriveDriver", NULL,
+      USE_PARAM_ID, USE_DESCRIPTION_ID,
+      IDCLS_P_NAME, IDCLS_SET_RAW_DRIVE_DEVICE,
+      NULL, NULL },
+    CMDLINE_LIST_END
+};
+
 int rawimage_cmdline_options_init()
 {
+    if (cmdline_register_options(cmdline_options) < 0) {
+        return -1;
+    }
+
     return blockdev_cmdline_options_init();
 }
-
+#endif

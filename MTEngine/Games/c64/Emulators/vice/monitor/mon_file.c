@@ -35,6 +35,7 @@
 #include "attach.h"
 #include "autostart.h"
 #include "cartridge.h"
+#include "charset.h"
 #include "machine.h"
 #include "mem.h"
 #include "montypes.h"
@@ -58,32 +59,47 @@ static int mon_file_read_eof[4][16];
 static int mon_file_open(const char *filename, unsigned int secondary,
                          int device)
 {
+    char pname[17];
+    const char *s;
+    int i;
+
     switch (device) {
-      case 0:
-        if (secondary == 0)
-            fp = fopen(filename, MODE_READ);
-        else
-            fp = fopen(filename, MODE_WRITE);
-        if (fp == NULL)
-            return -1;
-        break;
-      case 8:
-      case 9:
-      case 10:
-      case 11:
-        vdrive = file_system_get_vdrive((unsigned int)device);
-        if (vdrive == NULL)
-            return -1;
+        case 0:
+            if (secondary == 0) {
+                fp = fopen(filename, MODE_READ);
+            } else {
+                fp = fopen(filename, MODE_WRITE);
+            }
+            if (fp == NULL) {
+                return -1;
+            }
+            break;
+        case 8:
+        case 9:
+        case 10:
+        case 11:
+            vdrive = file_system_get_vdrive((unsigned int)device);
+            if (vdrive == NULL) {
+                return -1;
+            }
+            /* convert filename to petscii */
+            s = filename;
+            for (i = 0; (i < 16) && (*s); ++i) {
+                pname[i] = charset_p_topetcii(*s);
+                ++s;
+            }
+            pname[i] = 0;
 
-        if (vdrive_iec_open(vdrive, (const BYTE *)filename,
-            (int)strlen(filename), secondary, NULL) != SERIAL_OK)
-            return -1;
+            if (vdrive_iec_open(vdrive, (const BYTE *)pname,
+                                (int)strlen(pname), secondary, NULL) != SERIAL_OK) {
+                return -1;
+            }
 
-        /* initialize EOF buffer. */
-        mon_file_read_eof[device-8][secondary] = 0;
-        break;
-      default:
-        return -1;
+            /* initialize EOF buffer. */
+            mon_file_read_eof[device - 8][secondary] = 0;
+            break;
+        default:
+            return -1;
     }
     return 0;
 }
@@ -91,23 +107,24 @@ static int mon_file_open(const char *filename, unsigned int secondary,
 static int mon_file_read(BYTE *data, unsigned int secondary, int device)
 {
     switch (device) {
-      case 0:
-        if (fread((char *)data, 1, 1, fp) < 1)
-            return -1;
-        break;
-      case 8:
-      case 9:
-      case 10:
-      case 11:
-        /* Return EOF if we hit a CBM EOF on the last read. */
-        if (mon_file_read_eof[device-8][secondary]) {
-            *data = 0xc7;
-            return -1;
-        }
-        /* Set next EOF based on CBM EOF. */
-        mon_file_read_eof[device-8][secondary] = 
-            vdrive_iec_read(vdrive, data, secondary);
-        break;
+        case 0:
+            if (fread((char *)data, 1, 1, fp) < 1) {
+                return -1;
+            }
+            break;
+        case 8:
+        case 9:
+        case 10:
+        case 11:
+            /* Return EOF if we hit a CBM EOF on the last read. */
+            if (mon_file_read_eof[device - 8][secondary]) {
+                *data = 0xc7;
+                return -1;
+            }
+            /* Set next EOF based on CBM EOF. */
+            mon_file_read_eof[device - 8][secondary] =
+                vdrive_iec_read(vdrive, data, secondary);
+            break;
     }
     return 0;
 }
@@ -115,17 +132,19 @@ static int mon_file_read(BYTE *data, unsigned int secondary, int device)
 static int mon_file_write(BYTE data, unsigned int secondary, int device)
 {
     switch (device) {
-      case 0:
-        if (fwrite((char *)&data, 1, 1, fp) < 1)
-            return -1;
-        break;
-      case 8:
-      case 9:
-      case 10:
-      case 11:
-        if (vdrive_iec_write(vdrive, data, secondary) != SERIAL_OK)
-            return -1;
-        break;
+        case 0:
+            if (fwrite((char *)&data, 1, 1, fp) < 1) {
+                return -1;
+            }
+            break;
+        case 8:
+        case 9:
+        case 10:
+        case 11:
+            if (vdrive_iec_write(vdrive, data, secondary) != SERIAL_OK) {
+                return -1;
+            }
+            break;
     }
     return 0;
 }
@@ -133,17 +152,19 @@ static int mon_file_write(BYTE data, unsigned int secondary, int device)
 static int mon_file_close(unsigned int secondary, int device)
 {
     switch (device) {
-      case 0:
-        if (fclose(fp) != 0)
-            return -1;
-        break;
-      case 8:
-      case 9:
-      case 10:
-      case 11:
-        if (vdrive_iec_close(vdrive, secondary) != SERIAL_OK)
-            return -1;
-        break;
+        case 0:
+            if (fclose(fp) != 0) {
+                return -1;
+            }
+            break;
+        case 8:
+        case 9:
+        case 10:
+        case 11:
+            if (vdrive_iec_close(vdrive, secondary) != SERIAL_OK) {
+                return -1;
+            }
+            break;
     }
     return 0;
 }
@@ -152,7 +173,7 @@ static int mon_file_close(unsigned int secondary, int device)
 void mon_file_load(const char *filename, int device, MON_ADDR start_addr,
                    bool is_bload)
 {
-    WORD adr;
+    WORD adr, load_addr = 0, basic_addr;
     BYTE b1 = 0, b2 = 0;
     int ch = 0;
     MEMSPACE mem;
@@ -163,38 +184,34 @@ void mon_file_load(const char *filename, int device, MON_ADDR start_addr,
         return;
     }
 
+    /* if loading a .prg file, read/skip the start address */
     if (is_bload == FALSE) {
         mon_file_read(&b1, 0, device);
         mon_file_read(&b2, 0, device);
+        load_addr = (BYTE)b1 | ((BYTE)b2 << 8);
     }
 
-    mon_evaluate_default_addr(&start_addr);
+    mem_get_basic_text(&basic_addr, NULL); /* get BASIC start */
+    mon_evaluate_default_addr(&start_addr); /* get target addr given in monitor */
 
     if (!mon_is_valid_addr(start_addr)) {   /* No Load address given */
         if (is_bload == TRUE) {
+            /* when loading plain binary, load addr is required */
             mon_out("No LOAD address given.\n");
             mon_file_close(0, device);
             return;
         }
 
-        if (b1 == 1) {   /* Load Basic */
-            mem_get_basic_text(&adr, NULL);
-        mem = e_comp_space;
-        }
-        else {
-            adr = (BYTE)b1 | ((BYTE)b2 << 8);
-            mem = e_default_space;
-            start_addr = new_addr(mem, adr);
+        if (load_addr == basic_addr) {   /* Load to BASIC start */
+            adr = basic_addr;
+            mem = e_comp_space;
+        } else {
+            start_addr = new_addr(e_default_space, load_addr);
             mon_evaluate_default_addr(&start_addr);
             adr = addr_location(start_addr);
             mem = addr_memspace(start_addr);
-
-            /* if we are not writing to BASIC, do not 
-             * adjust BASIC pointers */
-            if (mem != e_comp_space)
-                is_bload = TRUE;
-        };
-    } else  {
+        }
+    } else {
         adr = addr_location(start_addr);
         mem = addr_memspace(start_addr);
     }
@@ -202,30 +219,44 @@ void mon_file_load(const char *filename, int device, MON_ADDR start_addr,
     mon_out("Loading %s", filename);
     mon_out(" from %04X\n", adr);
 
-    if (machine_class == VICE_MACHINE_C64DTV) origbank = curbank;
+    if (machine_class == VICE_MACHINE_C64DTV) {
+        origbank = curbank;
+    }
 
     do {
         BYTE load_byte;
 
-        if (mon_file_read(&load_byte, 0, device) < 0)
+        if (mon_file_read(&load_byte, 0, device) < 0) {
             break;
+        }
         mon_set_mem_val(mem, ADDR_LIMIT(adr + ch), load_byte);
 
         /* Hack to be able to read large .prgs for x64dtv */
-        if ((machine_class == VICE_MACHINE_C64DTV) && (ADDR_LIMIT(adr + ch) == 0xffff) && ((curbank >= mem_bank_from_name("ram00")) && (curbank <= mem_bank_from_name("ram1f")))) {
+        if ((machine_class == VICE_MACHINE_C64DTV) &&
+            (ADDR_LIMIT(adr + ch) == 0xffff) &&
+            ((curbank >= mem_bank_from_name("ram00")) && (curbank <= mem_bank_from_name("ram1f")))) {
             curbank++;
-            if (curbank > mem_bank_from_name("ram1f")) curbank = mem_bank_from_name("ram00");
+            if (curbank > mem_bank_from_name("ram1f")) {
+                curbank = mem_bank_from_name("ram00");
+            }
             mon_out("Crossing 64k boundary.\n");
         }
-        ch ++;
-    } while (1);
+        ch++;
+    }
+    while (1);
 
-    if (machine_class == VICE_MACHINE_C64DTV) curbank = origbank;
-    
+    if (machine_class == VICE_MACHINE_C64DTV) {
+        curbank = origbank;
+    }
+
     mon_out("to %04X (%x bytes)\n", ADDR_LIMIT(adr + ch), ch);
 
-    if (is_bload == FALSE && (adr & 0xff) == 1) {
-        /* set end of load addresses like kernal load */
+    /* set end of load addresses like kernal load if
+     * 1. loading .prg file
+     * 2. loading to BASIC start
+     * 3. loading to computer bank/memory
+     */
+    if ((is_bload == FALSE) && (load_addr == basic_addr) && (mem == e_comp_space)) {
         mem_set_basic_text(adr, (WORD)(adr + ch));
     }
 
@@ -298,11 +329,11 @@ void mon_file_verify(const char *filename, int device, MON_ADDR start_addr)
 
 void mon_attach(const char *filename, int device)
 {
-    switch(device) {
+    switch (device) {
         case 1:
             if (machine_class == VICE_MACHINE_C64DTV) {
                 mon_out("Unimplemented.\n");
-            } else if (tape_image_attach(device,filename)) {
+            } else if (tape_image_attach(device, filename)) {
                 mon_out("Failed.\n");
             }
             break;
@@ -310,13 +341,13 @@ void mon_attach(const char *filename, int device)
         case 9:
         case 10:
         case 11:
-            if (file_system_attach_disk(device,filename)) {
+            if (file_system_attach_disk(device, filename)) {
                 mon_out("Failed.\n");
             }
             break;
         case 32:
             if (mon_cart_cmd.cartridge_attach_image != NULL) {
-                if ((mon_cart_cmd.cartridge_attach_image)(CARTRIDGE_CRT,filename)) {
+                if ((mon_cart_cmd.cartridge_attach_image)(CARTRIDGE_CRT, filename)) {
                     mon_out("Failed.\n");
                 }
             } else {
@@ -324,19 +355,19 @@ void mon_attach(const char *filename, int device)
             }
             break;
         default:
-            mon_out("Unknown device %i.\n",device);
+            mon_out("Unknown device %i.\n", device);
             break;
     }
 }
 
 void mon_detach(int device)
 {
-    switch(device) {
+    switch (device) {
         case 1:
             if (machine_class == VICE_MACHINE_C64DTV) {
                 mon_out("Unimplemented.\n");
             } else {
-               tape_image_detach(device);
+                tape_image_detach(device);
             }
             break;
         case 8:
@@ -353,7 +384,7 @@ void mon_detach(int device)
             }
             break;
         default:
-            mon_out("Unknown device %i.\n",device);
+            mon_out("Unknown device %i.\n", device);
             break;
     }
 }
@@ -362,15 +393,12 @@ void mon_autostart(const char *image_name,
                    int file_index,
                    int run)
 {
-    mon_out("auto%s %s #%d\n", run ? "starting" : "loading", 
-            image_name, 
-            file_index);
-    autostart_autodetect_opt_prgname(image_name, file_index, 
+    mon_out("auto%s %s #%d\n", run ? "starting" : "loading",
+            image_name, file_index);
+    autostart_autodetect_opt_prgname(image_name, file_index,
                                      run ? AUTOSTART_MODE_RUN : AUTOSTART_MODE_LOAD);
 
     /* leave monitor but return after autostart */
     autostart_trigger_monitor(1);
     exit_mon = 1;
 }
-
-

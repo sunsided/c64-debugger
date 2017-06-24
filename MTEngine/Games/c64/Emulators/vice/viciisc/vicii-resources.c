@@ -70,10 +70,10 @@ static int set_sprite_background_collisions_enabled(int val, void *param)
     return 0;
 }
 
-static int set_new_luminances(int val, void *param)
+int set_vsp_bug_enabled(int val, void *param)
 {
-    vicii_resources.new_luminances = val;
-    return vicii_color_update_palette(vicii.raster.canvas);
+    vicii_resources.vsp_bug_enabled = val;
+    return 0;
 }
 
 struct vicii_model_info_s {
@@ -108,8 +108,17 @@ static int set_model(int model, void *param)
 {
     int old;
 
-    if ((model < 0) || (model >= VICII_MODEL_NUM)) {
-        return -1;
+    switch (model) {
+        case VICII_MODEL_6569:
+        case VICII_MODEL_8565:
+        case VICII_MODEL_6569R1:
+        case VICII_MODEL_6567:
+        case VICII_MODEL_8562:
+        case VICII_MODEL_6567R56A:
+        case VICII_MODEL_6572:
+            break;
+        default:
+            return -1;
     }
 
     old = vicii_resources.model;
@@ -118,7 +127,6 @@ static int set_model(int model, void *param)
     if (model != old) {
         vicii_chip_model_init();
         resources_set_int("MachineVideoStandard", vicii_info[model].video);
-        set_new_luminances(vicii_info[model].luma, NULL);
     }
 
     return 0;
@@ -135,15 +143,19 @@ static const resource_int_t resources_int[] =
     { "VICIICheckSbColl", 1, RES_EVENT_SAME, NULL,
       &vicii_resources.sprite_background_collisions_enabled,
       set_sprite_background_collisions_enabled, NULL },
-    { "VICIINewLuminances", 1, RES_EVENT_NO, NULL,
-      &vicii_resources.new_luminances,
-      set_new_luminances, NULL },
-    { "VICIIModel", 0, RES_EVENT_NO, NULL,
-      &vicii_resources.model,
-      set_model, NULL },
-    { NULL }
+    { "VICIIVSPBug", 0, RES_EVENT_SAME, NULL,
+      &vicii_resources.vsp_bug_enabled,
+      set_vsp_bug_enabled, NULL },
+    RESOURCE_INT_LIST_END
 };
 
+static resource_int_t resources_int2[] =
+{
+    { "VICIIModel", VICII_MODEL_6569, RES_EVENT_NO, NULL,
+      &vicii_resources.model,
+      set_model, NULL },
+    RESOURCE_INT_LIST_END
+};
 
 int vicii_resources_init(void)
 {
@@ -154,9 +166,7 @@ int vicii_resources_init(void)
     video_chip_cap.dscan_allowed = ARCHDEP_VICII_DSCAN;
     video_chip_cap.hwscale_allowed = ARCHDEP_VICII_HWSCALE;
     video_chip_cap.scale2x_allowed = ARCHDEP_VICII_DSIZE;
-    video_chip_cap.internal_palette_allowed = 1;
-    video_chip_cap.external_palette_name = "default";
-    video_chip_cap.palemulation_allowed = 1;
+    video_chip_cap.external_palette_name = "vice";
     video_chip_cap.double_buffering_allowed = ARCHDEP_VICII_DBUF;
     video_chip_cap.single_mode.sizex = 1;
     video_chip_cap.single_mode.sizey = 1;
@@ -169,10 +179,17 @@ int vicii_resources_init(void)
 
     vicii.video_chip_cap = &video_chip_cap;
 
-    if (raster_resources_chip_init("VICII", &vicii.raster,
-        &video_chip_cap) < 0)
-        return -1;
+    if ((machine_class == VICE_MACHINE_C64SC) ||
+        (machine_class == VICE_MACHINE_SCPU64)){
+        resources_int2[0].factory_value = VICII_MODEL_8565;
+    }
 
+    if (raster_resources_chip_init("VICII", &vicii.raster, &video_chip_cap) < 0) {
+        return -1;
+    }
+
+    if (resources_register_int(resources_int2) < 0) {
+        return -1;
+    }
     return resources_register_int(resources_int);
 }
-

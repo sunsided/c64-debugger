@@ -3,6 +3,7 @@
  *
  * Written by
  *  Andreas Boose <viceteam@t-online.de>
+ *  Marco van den Heuvel <blackystardust68@yahoo.com>
  *
  * This file is part of VICE, the Versatile Commodore Emulator.
  * See README for copyright notice.
@@ -31,6 +32,10 @@
 #define IOUTIL_ACCESS_W_OK 2
 #define IOUTIL_ACCESS_X_OK 1
 #define IOUTIL_ACCESS_F_OK 0
+
+#define IOUTIL_MKDIR_RWXU   0700
+#define IOUTIL_MKDIR_RWXUG  0770
+#define IOUTIL_MKDIR_RWXUGO 0777
 
 #define IOUTIL_ERRNO_EPERM  0
 #define IOUTIL_ERRNO_EEXIST 1

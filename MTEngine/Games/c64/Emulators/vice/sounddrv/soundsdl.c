@@ -55,7 +55,7 @@ int sidNumChannels = 0;
 
 void sdl_callback(void *userdata, uint8 *stream, int numSamples)
 {
-	// TODO: sdl_callback
+	//LOGD("sdl sound callback: numSamples=%d", numSamples);
 
 	int len = numSamples * sizeof(SWORD);
 	
@@ -120,7 +120,6 @@ void sdl_callback(void *userdata, uint8 *stream, int numSamples)
 			}
 		}
 		
-		
 		total += amount;
         sdl_outptr += amount;
 
@@ -136,7 +135,7 @@ static int sdl_init(const char *param, int *speed,
 {
     int nr;
 
-	LOGD("soundsdl: sdl_init, channels=%d fragsize=%d *fragnr=", *channels, *fragsize, *fragnr);
+	LOGD("soundsdl: sdl_init, channels=%d fragsize=%d fragnr=%d", *channels, *fragsize, *fragnr);
 	
 	sidNumChannels = *channels;
 	
@@ -161,7 +160,8 @@ static int sdl_init(const char *param, int *speed,
     /* recalculate the number of fragments since the frag size might
      * have changed and we want to keep approximately the same
      * buffersize */
-	LOGTODO("soundsdl: sdl_init: num samples");
+	
+	// LOGTODO("soundsdl: sdl_init: num samples");  512 samples is default for portaudio
 	
 //    nr = (*fragnr) * (*fragsize) / spec.samples;
 	nr = (*fragnr) * (*fragsize) / 512; //(*fragsize);
@@ -170,8 +170,11 @@ static int sdl_init(const char *param, int *speed,
 	sdl_len = 512 * nr;
 	
     sdl_inptr = sdl_outptr = sdl_full = 0;
+	
     sdl_buf = lib_malloc(sizeof(SWORD)*sdl_len);
+	memset(sdl_buf, 0, sizeof(SWORD)*sdl_len);
 
+	
 //    if (!sdl_buf) {
 //        SDL_CloseAudio();
 //        return 1;

@@ -1,6 +1,6 @@
 /*
  *  DBG_Log.h
- Created by Marcin Skoczylas on 09-11-19.
+ Created by Marcin Skoczylas on 2009-11-19.
  Copyright 2009 M
  
  

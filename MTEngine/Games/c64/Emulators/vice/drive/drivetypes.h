@@ -45,9 +45,12 @@ struct drive_context_s;         /* forward declaration */
 struct monitor_interface_s;
 
 /* This defines the memory access for the drive CPU.  */
-typedef BYTE drive_read_func_t(struct drive_context_s *, WORD);
-typedef void drive_store_func_t(struct drive_context_s *, WORD,
-                                         BYTE);
+typedef BYTE drive_read_func_t (struct drive_context_s *, WORD);
+typedef drive_read_func_t *drive_read_func_ptr_t;
+typedef void drive_store_func_t (struct drive_context_s *, WORD, BYTE);
+typedef drive_store_func_t *drive_store_func_ptr_t;
+typedef BYTE drive_peek_func_t (struct drive_context_s *, WORD);
+typedef drive_peek_func_t *drive_peek_func_ptr_t;
 
 /*
  *  The private CPU data.
@@ -110,18 +113,21 @@ typedef struct drivecpu_context_s {
  */
 
 typedef struct drivecpud_context_s {
-    /* Drive RAM */
-    BYTE drive_ram[DRIVE_RAM_SIZE];
+    /* Pointers to the currently used memory read and write tables. */
+    drive_read_func_ptr_t *read_func_ptr;
+    drive_store_func_ptr_t *store_func_ptr;
+    drive_peek_func_ptr_t *peek_func_ptr;
+    BYTE **read_base_tab_ptr;
+    DWORD *read_limit_tab_ptr;
 
-    /* functions */
-    drive_read_func_t  *read_func[0x101];
-    drive_store_func_t *store_func[0x101];
-    drive_read_func_t  *read_func_watch[0x101];
-    drive_store_func_t *store_func_watch[0x101];
-    drive_read_func_t  *read_func_nowatch[0x101];
-    drive_store_func_t *store_func_nowatch[0x101];
+    /* Memory read and write tables.  */
+    drive_read_func_t *read_tab[1][0x101];
+    drive_store_func_t *store_tab[1][0x101];
+    drive_peek_func_t *peek_tab[1][0x101];
+    BYTE *read_base_tab[1][0x101];
+    DWORD read_limit_tab[1][0x101];
 
-	int sync_factor;
+    int sync_factor;
 } drivecpud_context_t;
 
 
@@ -143,9 +149,9 @@ extern drivefunc_context_t drive_funcs[DRIVE_NUM];
  * Helper macros for dual disk drives.
  */
 #define is_drive0(d)    (!is_drive1(d))
-#define is_drive1(d)    ((d) &  1)
+#define is_drive1(d)    ((d) & 1)
 #define mk_drive0(d)    ((d) & ~1)
-#define mk_drive1(d)    ((d) |  1)
+#define mk_drive1(d)    ((d) | 1)
 
 /*
  * The context for an entire drive.
@@ -180,4 +186,3 @@ typedef struct drive_context_s {
 } drive_context_t;
 
 #endif
-

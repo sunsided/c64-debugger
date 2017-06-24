@@ -25,6 +25,7 @@
 
 #include "SYS_Startup.h"
 #include "SYS_DocsVsRes.h"
+#include "VID_GLViewController.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -32,6 +33,8 @@
 #include <io.h>
 
 #include "mman.h"
+
+#include "CGuiMain.h"
 
 std::list<CHttpFileUploadedCallback *> httpFileUploadedCallbacks;
 
@@ -1039,12 +1042,34 @@ void SYS_RefreshFiles()
 	}
 }
 
+void GUI_KeyUpAllModifiers()
+{
+	guiMain->isShiftPressed = false;
+	guiMain->isControlPressed = false;
+	guiMain->isAltPressed = false;
+
+	guiMain->isLeftShiftPressed = false;
+	guiMain->isLeftControlPressed = false;
+	guiMain->isLeftAltPressed = false;
+
+	guiMain->isRightShiftPressed = false;
+	guiMain->isRightControlPressed = false;
+	guiMain->isRightAltPressed = false;
+
+}
+
+bool SYS_windowAlwaysOnTopBeforeFileDialog = false;
+
 void SYS_DialogOpenFile(CSystemFileDialogCallback *callback, std::list<CSlrString *> *extensions, CSlrString *defaultFolder, CSlrString *windowTitle)
 {
 	LOGD("SYS_DialogOpenFile");
 
 	OPENFILENAME ofn;
     char szFileName[MAX_PATH] = "";
+
+	// temporary remove always on top window flag
+	SYS_windowAlwaysOnTopBeforeFileDialog = VID_IsWindowAlwaysOnTop();
+	//VID_SetWindowAlwaysOnTopTemporary(false);
 
     ZeroMemory(&ofn, sizeof(ofn));
 
@@ -1058,11 +1083,46 @@ void SYS_DialogOpenFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 
 	if (extensions != NULL)
 	{
-		CSlrString *extStr = extensions->front();
-		ext = extStr->GetStdASCII();
+		char *filterExtAll = new char[1024];
+		filterExtAll[0] = 0x00;
 
-		sprintf(buf, "Files (*.%s)$*.%s$All Files(*.*)$*.*$", ext, ext);
-		LOGD("buf=%s", buf);
+		char *filterExtSingle = new char[1024];
+		filterExtSingle[0] = 0x00;
+		
+		for (std::list<CSlrString *>::iterator it = extensions->begin();
+			it != extensions->end(); it++)
+		{
+			CSlrString *extStr = *it;
+			ext = extStr->GetStdASCII();
+
+			char extBuf[128];
+			if (it == extensions->begin())
+			{
+				sprintf(extBuf, "*.%s", ext);
+			}
+			else
+			{
+				sprintf(extBuf, ";*.%s", ext);
+			}
+			strcat(filterExtAll, extBuf);
+
+			sprintf(extBuf, "Only %s files$*.%s$", ext, ext);
+			strcat(filterExtSingle, extBuf);
+
+			free(ext); ext = NULL;
+		}
+		
+		if (extensions->size() == 1)
+		{
+			sprintf(buf, "Supported files$%s$All Files(*.*)$*.*$", filterExtAll);
+		}
+		else
+		{
+			sprintf(buf, "Supported files$%s$%sAll Files(*.*)$*.*$", filterExtAll, filterExtSingle);
+		}
+
+		delete [] filterExtAll;
+		delete [] filterExtSingle;
 
 		int z = strlen(buf);
 		for (int i = 0; i < z; i++)
@@ -1072,7 +1132,15 @@ void SYS_DialogOpenFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 		}
 
 		ofn.lpstrFilter = buf;
-	    ofn.lpstrDefExt = ext;
+	    ofn.lpstrDefExt = NULL;
+	}
+
+	char *title = NULL;
+
+	if (windowTitle != NULL)
+	{
+		title = windowTitle->GetStdASCII();
+		ofn.lpstrTitle = title;
 	}
 
     ofn.lpstrFile = szFileName;
@@ -1091,11 +1159,19 @@ void SYS_DialogOpenFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 
     ofn.nMaxFile = MAX_PATH;
     ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
-
+    
+    // workaround
+    GUI_KeyUpAllModifiers();
+    
+    LOGD("...... GetOpenFileName");
     if(GetOpenFileName(&ofn))
     {
-		if (ext != NULL)
-			free(ext);
+    	LOGD("..... callback: file open selected");
+		VID_SetWindowAlwaysOnTopTemporary(SYS_windowAlwaysOnTopBeforeFileDialog);
+
+		if (title != NULL)
+			free(title);
+
 		LOGD("szFileName='%s'", szFileName);
 		SYS_ReleaseCharBuf(buf);
 		CSlrString *outPath = new CSlrString(szFileName);
@@ -1105,8 +1181,11 @@ void SYS_DialogOpenFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 	}
 	else
 	{
-		if (ext != NULL)
-			free(ext);
+		LOGD("..... callback: file open cancelled");
+		VID_SetWindowAlwaysOnTopTemporary(SYS_windowAlwaysOnTopBeforeFileDialog);
+
+		if (title != NULL)
+			free(title);
 		SYS_ReleaseCharBuf(buf);
 		callback->SystemDialogFileOpenCancelled();
 	}
@@ -1117,6 +1196,10 @@ void SYS_DialogSaveFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 	OPENFILENAME ofn;
     char szFileName[MAX_PATH] = "";
 
+	// temporary remove always on top window flag
+	SYS_windowAlwaysOnTopBeforeFileDialog = VID_IsWindowAlwaysOnTop();
+	//VID_SetWindowAlwaysOnTopTemporary(false);
+
     ZeroMemory(&ofn, sizeof(ofn));
 
     ofn.lStructSize = sizeof(ofn); // SEE NOTE BELOW
@@ -1125,14 +1208,51 @@ void SYS_DialogSaveFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 	char *initialFolder = NULL;
 	char *buf = SYS_GetCharBuf();
 	char *ext = NULL;
+	char defExt[16];
 
 	if (extensions != NULL)
 	{
-		CSlrString *extStr = extensions->front();
-		ext = extStr->GetStdASCII();
+		char *filterExtAll = new char[1024];
+		filterExtAll[0] = 0x00;
 
-		sprintf(buf, "Files (*.%s)$*.%s$All Files(*.*)$*.*$", ext, ext);
-		LOGD("buf=%s", buf);
+		char *filterExtSingle = new char[1024];
+		filterExtSingle[0] = 0x00;
+		
+		for (std::list<CSlrString *>::iterator it = extensions->begin();
+			it != extensions->end(); it++)
+		{
+			CSlrString *extStr = *it;
+			ext = extStr->GetStdASCII();
+
+			char extBuf[128];
+			if (it == extensions->begin())
+			{
+				sprintf(extBuf, "*.%s", ext);
+				strcpy(defExt, ext);
+			}
+			else
+			{
+				sprintf(extBuf, ";*.%s", ext);
+			}
+			strcat(filterExtAll, extBuf);
+
+			sprintf(extBuf, "Only %s files$*.%s$", ext, ext);
+			strcat(filterExtSingle, extBuf);
+
+			free(ext); ext = NULL;
+		}
+		
+		if (extensions->size() == 1)
+		{
+			sprintf(buf, "%s file$%s$All Files(*.*)$*.*$", defExt, filterExtAll);
+		}
+		else
+		{
+			sprintf(buf, "Supported files$%s$%sAll Files(*.*)$*.*$", filterExtAll, filterExtSingle);
+		}
+
+		delete [] filterExtAll;
+		delete [] filterExtSingle;
 
 		int z = strlen(buf);
 		for (int i = 0; i < z; i++)
@@ -1142,7 +1262,15 @@ void SYS_DialogSaveFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 		}
 
 		ofn.lpstrFilter = buf;
-		ofn.lpstrDefExt = ext;
+	    ofn.lpstrDefExt = defExt;
+	}
+
+	char *title = NULL;
+
+	if (windowTitle != NULL)
+	{
+		title = windowTitle->GetStdASCII();
+		ofn.lpstrTitle = title;
 	}
 
     ofn.lpstrFile = szFileName;
@@ -1153,11 +1281,20 @@ void SYS_DialogSaveFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 	}
     ofn.nMaxFile = MAX_PATH;
 	ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
-
+	
+	
+	// workaround
+	GUI_KeyUpAllModifiers();
+	
+	LOGD("....... GetSaveFileName");
     if(GetSaveFileName(&ofn))
     {
-		if (ext != NULL)
-			free(ext);
+    	LOGD("     ...callback OK");
+		VID_SetWindowAlwaysOnTopTemporary(SYS_windowAlwaysOnTopBeforeFileDialog);
+
+		if (title != NULL)
+			free(title);
+
 		LOGD("szFileName='%s'", szFileName);
 		SYS_ReleaseCharBuf(buf);
 		CSlrString *outPath = new CSlrString(szFileName);
@@ -1168,8 +1305,12 @@ void SYS_DialogSaveFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 	}
 	else
 	{
-		if (ext != NULL)
-			free(ext);
+		LOGD("    ...callback cancelled");
+		VID_SetWindowAlwaysOnTopTemporary(SYS_windowAlwaysOnTopBeforeFileDialog);
+
+		if (title != NULL)
+			free(title);
+
 		SYS_ReleaseCharBuf(buf);
 		callback->SystemDialogFileSaveCancelled();
 	}
@@ -1190,6 +1331,42 @@ void CSystemFileDialogCallback::SystemDialogFileSaveSelected(CSlrString *path)
 
 void CSystemFileDialogCallback::SystemDialogFileSaveCancelled()
 {
+}
+
+bool SYS_FileExists(char *cPath)
+{
+	struct stat info;
+
+	LOGD("SYS_FileExists, cPath='%s'", cPath);
+	
+	if(stat( cPath, &info ) != 0)
+	{
+		LOGD("..false");
+		return false;
+	}
+	else 
+	{
+		LOGD("..true");
+		return true;
+	}
+}
+
+bool SYS_FileExists(CSlrString *path)
+{
+	char *cPath = path->GetStdASCII();
+	
+	struct stat info;
+	
+	if(stat( cPath, &info ) != 0)
+	{
+		delete [] cPath;
+		return false;
+	}
+	else 
+	{
+		delete [] cPath;
+		return true;
+	}
 }
 
 bool SYS_FileDirExists(CSlrString *path)

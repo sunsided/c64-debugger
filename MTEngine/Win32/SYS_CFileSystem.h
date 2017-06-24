@@ -19,6 +19,7 @@
 #define MAX_FILENAME_LENGTH 512
 
 #define SYS_FILE_SYSTEM_PATH_SEPARATOR	'\\'
+#define SYS_FILE_SYSTEM_EXTENSION_SEPARATOR	'.'
 
 void SYS_InitFileSystem();
 
@@ -172,6 +173,8 @@ char *SYS_DialogSaveAnimFile();
 char *SYS_DialogOpenElemFile();
 char *SYS_DialogSaveElemFile();
 
+bool SYS_FileExists(char *path);
+bool SYS_FileExists(CSlrString *path);
 bool SYS_FileDirExists(CSlrString *path);
 
 uint8 *SYS_MapMemoryToFile(int memorySize, char *filePath, void **fileDescriptor);

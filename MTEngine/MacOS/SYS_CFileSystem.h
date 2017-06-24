@@ -18,6 +18,7 @@
 #define MAX_FILENAME_LENGTH 512
 
 #define SYS_FILE_SYSTEM_PATH_SEPARATOR	'/'
+#define SYS_FILE_SYSTEM_EXTENSION_SEPARATOR	'.'
 
 void SYS_InitFileSystem();
 
@@ -176,6 +177,8 @@ void SYS_DialogOpenFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 void SYS_DialogSaveFile(CSystemFileDialogCallback *callback, std::list<CSlrString *> *extensions,
 						CSlrString *defaultFileName, CSlrString *defaultFolder, CSlrString *windowTitle);
 
+bool SYS_FileExists(char *path);
+bool SYS_FileExists(CSlrString *path);
 bool SYS_FileDirExists(CSlrString *path);
 
 uint8 *SYS_MapMemoryToFile(int memorySize, char *filePath, void **fileDescriptor);

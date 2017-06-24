@@ -20,6 +20,7 @@
 #include <functional>
 #include "CSlrString.h"
 #include "SYS_Funct.h"
+#include "VID_GLViewController.h"
 
 #include <gtk/gtk.h>
 #include <pwd.h>
@@ -934,6 +935,8 @@ void CSystemFileDialogCallback::SystemDialogFileSaveCancelled()
 {
 }
 
+bool SYS_windowAlwaysOnTopBeforeFileDialog = false;
+
 //GTK_FILE_CHOOSER_ACTION_OPEN
 //GTK_FILE_CHOOSER_ACTION_SAVE
 //GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER
@@ -944,6 +947,11 @@ void CSystemFileDialogCallback::SystemDialogFileSaveCancelled()
 
 void SYS_DialogOpenFile(CSystemFileDialogCallback *callback, std::list<CSlrString *> *extensions, CSlrString *defaultFolder, CSlrString *windowTitle)
 {
+	// temporary remove always on top window flag
+	SYS_windowAlwaysOnTopBeforeFileDialog = VID_IsWindowAlwaysOnTop();
+	VID_SetWindowAlwaysOnTopTemporary(false);
+
+	
 	GtkWidget *dialog;
 
 	dialog = gtk_file_chooser_dialog_new("Open file", NULL, GTK_FILE_CHOOSER_ACTION_OPEN,
@@ -991,13 +999,17 @@ void SYS_DialogOpenFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 		
 		gtk_widget_destroy(dialog);
 		
+		VID_SetWindowAlwaysOnTopTemporary(SYS_windowAlwaysOnTopBeforeFileDialog);
+
 		CSlrString *outPath = new CSlrString(filePath);
 		callback->SystemDialogFileOpenSelected(outPath);
 	}
 	else
 	{
 		gtk_widget_destroy(dialog);
-		
+
+		VID_SetWindowAlwaysOnTopTemporary(SYS_windowAlwaysOnTopBeforeFileDialog);
+
 		callback->SystemDialogFileOpenCancelled();
 	}
 
@@ -1011,6 +1023,10 @@ void SYS_DialogOpenFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 
 void SYS_DialogSaveFile(CSystemFileDialogCallback *callback, std::list<CSlrString *> *extensions, CSlrString *defaultFileName, CSlrString *defaultFolder, CSlrString *windowTitle)
 {
+	// temporary remove always on top window flag
+	SYS_windowAlwaysOnTopBeforeFileDialog = VID_IsWindowAlwaysOnTop();
+	VID_SetWindowAlwaysOnTopTemporary(false);
+
 	GtkWidget *dialog;
 	
 	dialog = gtk_file_chooser_dialog_new("Save file", NULL, GTK_FILE_CHOOSER_ACTION_SAVE,
@@ -1067,6 +1083,8 @@ void SYS_DialogSaveFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 		
 		gtk_widget_destroy(dialog);
 		
+		VID_SetWindowAlwaysOnTopTemporary(SYS_windowAlwaysOnTopBeforeFileDialog);
+
 		CSlrString *outPath = new CSlrString(filePath);
 
 		// TODO: workaround gtk_dialog does not add default extension...
@@ -1081,7 +1099,9 @@ void SYS_DialogSaveFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 	else
 	{
 		gtk_widget_destroy(dialog);
-		
+	
+		VID_SetWindowAlwaysOnTopTemporary(SYS_windowAlwaysOnTopBeforeFileDialog);
+
 		callback->SystemDialogFileSaveCancelled();
 	}
 
@@ -1091,7 +1111,38 @@ void SYS_DialogSaveFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 		gtk_main_iteration_do(false);
 		SYS_Sleep(10);
 	}
+}
 
+bool SYS_FileExists(char *path)
+{
+	struct stat info;
+	
+	if(stat( path, &info ) != 0)
+	{
+		return false;
+	}
+	else
+	{
+		return true;
+	}
+}
+
+bool SYS_FileExists(CSlrString *path)
+{
+	char *cPath = path->GetStdASCII();
+	
+	struct stat info;
+	
+	if(stat( cPath, &info ) != 0)
+	{
+		delete [] cPath;
+		return false;
+	}
+	else
+	{
+		delete [] cPath;
+		return true;
+	}
 }
 
 bool SYS_FileDirExists(CSlrString *path)

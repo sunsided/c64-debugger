@@ -39,14 +39,20 @@
 int mouse_x, mouse_y;
 int mouse_accelx = 2, mouse_accely = 2;
 static unsigned long mouse_timestamp = 0;
+static mouse_func_t mouse_funcs;
 
 void mousedrv_mouse_changed(void)
 {
     ui_check_mouse_cursor();
 }
 
-int mousedrv_resources_init(void)
+int mousedrv_resources_init(mouse_func_t *funcs)
 {
+    mouse_funcs.mbl = funcs->mbl;
+    mouse_funcs.mbr = funcs->mbr;
+    mouse_funcs.mbm = funcs->mbm;
+    mouse_funcs.mbu = funcs->mbu;
+    mouse_funcs.mbd = funcs->mbd;
     return 0;
 }
 
@@ -68,44 +74,62 @@ void mousedrv_init(void)
 void mouse_button(int bnumber, int state)
 {
 //    switch (bnumber) {
-//    case SDL_BUTTON_LEFT:
-//        mouse_button_left(state);
-//        break;
-//    case SDL_BUTTON_MIDDLE:
-//        mouse_button_middle(state);
-//        break;
-//    case SDL_BUTTON_RIGHT:
-//        mouse_button_right(state);
-//        break;
-//    case SDL_BUTTON_WHEELUP:
-//        mouse_button_up(state);
-//        break;
-//    case SDL_BUTTON_WHEELDOWN:
-//        mouse_button_down(state);
-//        break;
-//    default:
-//        break;
+//        case SDL_BUTTON_LEFT:
+//            mouse_funcs.mbl(state);
+//            break;
+//        case SDL_BUTTON_MIDDLE:
+//            mouse_funcs.mbm(state);
+//            break;
+//        case SDL_BUTTON_RIGHT:
+//            mouse_funcs.mbr(state);
+//            break;
+///* FIXME: fix for SDL2 */
+//#ifndef USE_SDLUI2
+//        case SDL_BUTTON_WHEELUP:
+//            mouse_funcs.mbu(state);
+//            break;
+//        case SDL_BUTTON_WHEELDOWN:
+//            mouse_funcs.mbd(state);
+//            break;
+//#endif
+//        default:
+//            break;
 //    }
 }
 
 int mousedrv_get_x(void)
 {
-    return mouse_x >> 1;
+    return mouse_x;
 }
 
 int mousedrv_get_y(void)
 {
-    return mouse_y >> 1;
+    return mouse_y;
 }
 
 void mouse_move(int x, int y)
 {
-    mouse_x += x * mouse_accelx;
-    mouse_y -= y * mouse_accely;
+    mouse_x += x;
+    mouse_y -= y;
     mouse_timestamp = vsyncarch_gettime();
 }
 
 unsigned long mousedrv_get_timestamp(void)
 {
     return mouse_timestamp;
+}
+
+void mousedrv_button_left(int pressed)
+{
+    mouse_funcs.mbl(pressed);
+}
+
+void mousedrv_button_right(int pressed)
+{
+    mouse_funcs.mbr(pressed);
+}
+
+void mousedrv_button_middle(int pressed)
+{
+    mouse_funcs.mbm(pressed);
 }

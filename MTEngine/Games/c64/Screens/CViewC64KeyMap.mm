@@ -25,6 +25,8 @@ extern "C"{
 
 #include "CGuiMain.h"
 
+#include "C64DebugInterfaceVice.h"
+
 #define KeyCodeFromRowCol(row, col)  ( ((row)+8)*8 + (col) )
 
 CViewC64KeyMap::CViewC64KeyMap(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY)
@@ -54,7 +56,7 @@ CViewC64KeyMap::CViewC64KeyMap(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	
 	btnBack = new CGuiButton(NULL, NULL,
 								   px, py, posZ, buttonSizeX, buttonSizeY,
-								   new CSlrString("<< BACK"),
+								   new CSlrString("<< SAVE"),
 								   FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
 								   font, fontScale,
 								   1.0, 1.0, 1.0, 1.0,
@@ -1086,6 +1088,24 @@ void CViewC64KeyMap::RemoveSelectedKey()
 
 bool CViewC64KeyMap::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
+	LOGM("CViewC64KeyMap::KeyDown: keyCode=%d %d %d %d", keyCode, isShift, isAlt, isControl);
+
+	// block repeats first
+	std::map<u32, bool>::iterator it = pressedKeyCodes.find(keyCode);
+	
+	if (it == pressedKeyCodes.end())
+	{
+		pressedKeyCodes[keyCode] = true;
+	}
+	else
+	{
+		// key is already pressed
+		LOGD("key %d is already pressed, skipping...", keyCode);
+		return true;
+	}
+
+	//
+	
 	if (isAssigningKey)
 	{
 #if !defined(WIN32)
@@ -1236,6 +1256,21 @@ void CViewC64KeyMap::SwitchScreen()
 
 bool CViewC64KeyMap::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
+	LOGM("CViewC64KeyMap::KeyUp: keyCode=%d %d %d %d", keyCode, isShift, isAlt, isControl);
+
+	std::map<u32, bool>::iterator it = pressedKeyCodes.find(keyCode);
+	
+	if (it == pressedKeyCodes.end())
+	{
+		// key is already not pressed
+		LOGD("key %d is already not pressed, skipping...", keyCode);
+		return true;
+	}
+	else
+	{
+		pressedKeyCodes.erase(it);
+	}
+
 	return CGuiView::KeyUp(keyCode, isShift, isAlt, isControl);
 }
 

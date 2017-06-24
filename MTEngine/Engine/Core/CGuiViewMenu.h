@@ -12,10 +12,17 @@ class CGuiViewMenu;
 class CGuiViewMenuItem
 {
 public:
+	// regular menu item
 	CGuiViewMenuItem(float height);
 	
-	CGuiViewMenu *menu;
+	// will create sub-menu based on main menu
+	CGuiViewMenuItem(float height, CGuiViewMenu *parentMenu);
+	~CGuiViewMenuItem();
 	
+	CGuiViewMenu *menu;
+
+	CGuiViewMenu *subMenu;
+
 	bool isSelected;
 	float height;
 	
@@ -23,6 +30,12 @@ public:
 	virtual void RenderItem(float px, float py, float pz);
 	virtual bool KeyDown(u32 keyCode);
 	virtual bool KeyUp(u32 keyCode);
+	
+	virtual void AddMenuItem(CGuiViewMenuItem *menuItem);
+	
+	virtual void Execute();
+
+	virtual void DebugPrint();
 };
 
 class CGuiViewMenuCallback
@@ -65,6 +78,8 @@ public:
 	virtual bool KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl);
 	virtual bool KeyPressed(u32 keyCode, bool isShift, bool isAlt, bool isControl);	// repeats
 	
+	virtual bool DoScrollWheel(float deltaX, float deltaY);
+
 	virtual void ActivateView();
 	virtual void DeactivateView();
 	
@@ -82,6 +97,11 @@ public:
 	
 	void ClearItems();
 	
+	CGuiViewMenu *currentSubMenu;
+	CGuiViewMenu *parentMenu;
+	
+	void ExecuteSelectedItem();
+
 	CGuiViewMenuCallback *callback;
 };
 

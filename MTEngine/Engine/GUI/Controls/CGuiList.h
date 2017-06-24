@@ -45,6 +45,7 @@ public:
 	GLfloat backgroundAlpha;
 	
 	CSlrFont *font;
+	CSlrFont *fontSelected;
 	
 	byte typeOfElements;
 	
@@ -91,6 +92,9 @@ public:
 	
 	float listUpGap;
 	float elementsGap;
+	
+	float textOffsetX;
+	float textOffsetY;
 
 	
 	virtual void ElementSelected();
@@ -113,6 +117,8 @@ public:
 class CGuiListCallback
 {
 public:
+	// called a while before selection after user tap: return true=yes, do select; false=no, cancel select
+	virtual bool ListElementPreSelect(CGuiList *listBox, int elementNum);
 	virtual void ListElementSelected(CGuiList *listBox);
 };
 

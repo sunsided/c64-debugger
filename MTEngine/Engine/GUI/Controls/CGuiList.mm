@@ -18,6 +18,11 @@ void CGuiListCallback::ListElementSelected(CGuiList *listBox)
 	return;
 }
 
+bool CGuiListCallback::ListElementPreSelect(CGuiList *listBox, int elementNum)
+{
+	return true;
+}
+
 CGuiList::CGuiList(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, GLfloat fontSize,
 				   char **elements, int numElements, bool deleteElements, CSlrFont *font,
 				   CSlrImage *imgBackground, GLfloat backgroundAlpha,
@@ -62,6 +67,9 @@ CGuiList::CGuiList(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 
 	this->ySpeed = 0.0;
 	this->zoomFontSize = fontSize;
+
+	textOffsetX = 0.0f;
+	textOffsetY = 0.0f;
 
 	this->moving = false;
 	this->scrollModified = false;
@@ -112,6 +120,8 @@ void CGuiList::Init(char **elements, int numElements, bool deleteElements)
 		this->UpdateRollUp();
 	}
 	this->scrollModified = false;
+	
+	fontSelected = NULL;
 
 	this->UnlockRenderMutex();
 	LOGG("CGuiList::Init done");
@@ -308,25 +318,28 @@ void CGuiList::MoveView(GLfloat diffX, GLfloat diffY)
 
 bool CGuiList::DoTap(GLfloat x, GLfloat y)
 {
+	LOGD("CGuiList::DoTap");
 	scrollModified = false;
+	
+	LOGD("scrollModified = %d", scrollModified);
 	return CGuiElement::DoTap(x, y);
 }
 
 bool CGuiList::DoFinishTap(GLfloat x, GLfloat y)
 {
-	//LOGD("CGuiList::DoFinishTap: '%s'", this->name);
+	LOGD("CGuiList::DoFinishTap: '%s'", this->name);
 	if (!visible)
 		return false;
 
 	if (!IsInside(x, y))
 	{
-		//LOGD("   -outside");
+		LOGD("   -outside");
 		return false;
 	}
 
 	if (scrollModified == true)
 	{
-		//LOGD("CGuiList::DoFinishTap: scrollModified");
+		LOGD("CGuiList::DoFinishTap: scrollModified");
 		return false;
 	}
 
@@ -361,10 +374,20 @@ bool CGuiList::DoFinishTap(GLfloat x, GLfloat y)
 	
 	if (!found)
 	{
+		if (this->callback)
+		{
+			// cancel select?
+			if (this->callback->ListElementPreSelect(this, -1) == false)
+			{
+				return true;
+			}
+		}
+
 		this->selectedElement = -1;
 		if (this->callback)
 			this->callback->ListElementSelected(this);
 		this->ElementSelected();
+		
 		return true;
 	}
 	
@@ -375,6 +398,15 @@ bool CGuiList::DoFinishTap(GLfloat x, GLfloat y)
 	{
 		if (selected < numElements)
 		{
+			if (this->callback)
+			{
+				// cancel select?
+				if (this->callback->ListElementPreSelect(this, selected) == false)
+				{
+					return true;
+				}
+			}
+
 			this->selectedElement = selected;
 
 			if (this->callback)
@@ -449,7 +481,16 @@ void CGuiList::Render()
 				else if (font->fontType == FONT_TYPE_PROPORTIONAL)
 				{
 					if (elemNum == selectedElement)
-						guiMain->theme->imgListSelection->Render(this->posX, drawY-1.0f, this->posZ, this->sizeX, this->zoomFontSize+1.0f);
+					{
+						if (guiMain->theme->imgListSelection != NULL)
+						{
+							guiMain->theme->imgListSelection->Render(this->posX, drawY-1.0f, this->posZ, this->sizeX, this->zoomFontSize+1.0f);
+						}
+						else
+						{
+							BlitFilledRectangle(posX + drawX, posY + drawY, posZ, sizeX, fontSize+elementsGap, 0.0f, 0.0f, 1.0f, 1.0f);
+						}
+					}
 				}
 				else
 				{
@@ -554,7 +595,7 @@ void CGuiList::Render()
 				}
 				else if (font->fontType == FONT_TYPE_PROPORTIONAL)
 				{
-					font->BlitText(elements[elemNum], posX + drawX, posY + drawY, this->posZ+0.01f, fontScale, 1.0f);
+					font->BlitText(elements[elemNum], posX + drawX + textOffsetX, posY + drawY + textOffsetY, this->posZ+0.01f, fontScale, 1.0f);
 				}
 				else
 				{
@@ -630,7 +671,7 @@ void CGuiList::SetElement(int elementNum, bool updatePosition)
 
 void CGuiList::ElementSelected()
 {
-	LOGG("CGuiList::ElementSelected()");
+	//LOGG("CGuiList::ElementSelected()");
 }
 
 void CGuiList::BackupListPosition()

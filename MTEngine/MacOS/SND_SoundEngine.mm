@@ -10,7 +10,7 @@
 
 /// **** WRITE AUDIO TO DISK
 
-#define WRITE_AUDIO_OUT_TO_FILE
+//#define WRITE_AUDIO_OUT_TO_FILE
 
 CSoundEngine *gSoundEngine = NULL;
 
@@ -399,8 +399,7 @@ void CSoundEngine::StartAudioUnit(bool isPlayback, bool isRecording, int recordi
 		outputParameters.hostApiSpecificStreamInfo = NULL;
 		
 		LOGA("Pa_OpenStream");
-		err = Pa_OpenStream(
-							&streamOutput,
+		err = Pa_OpenStream(&streamOutput,
 							NULL, /* no input */
 							&outputParameters,
 							SOUND_SAMPLE_RATE,

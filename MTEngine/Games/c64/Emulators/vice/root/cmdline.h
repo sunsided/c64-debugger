@@ -1,5 +1,5 @@
 /*
- * cmdline.c - Command-line parsing.
+ * cmdline.h - Command-line parsing.
  *
  * Written by
  *  Ettore Perazzoli <ettore@comm2000.it>
@@ -37,7 +37,7 @@ typedef enum cmdline_option_type { SET_RESOURCE, CALL_FUNCTION }
 
 typedef struct cmdline_option_s {
     /* Name of command-line option.  */
-    const char *name;
+    char *name;
 
     /* Behavior of this command-line option.  */
     cmdline_option_type_t type;
@@ -54,7 +54,7 @@ typedef struct cmdline_option_s {
     void *extra_param;
 
     /* Resource to change if `type' is `SET_RESOURCE'.  */
-    const char *resource_name;
+    char *resource_name;
 
     /* Value to assign to `resource_name' if `type' is `SET_RESOURCE' and
        `need_arg' is zero.  */
@@ -120,6 +120,8 @@ typedef struct cmdline_option_ram_s {
     /* Description string. */
     const char *description;
 
+    /* Place holder for translated combined string */
+    char *combined_string;
 } cmdline_option_ram_t;
 
 extern int cmdline_init(void);
@@ -134,6 +136,6 @@ extern char *cmdline_options_get_param(int counter);
 extern char *cmdline_options_get_description(int counter);
 extern int cmdline_get_num_options(void);
 
-#define CMDLINE_LIST_END { NULL, 0, 0, NULL, NULL, NULL, NULL, 0, 0, 0, 0, NULL, NULL } 
+#define CMDLINE_LIST_END { NULL, (cmdline_option_type_t)0, 0, NULL, NULL, NULL, NULL, 0, 0, 0, 0, NULL, NULL }
 
 #endif

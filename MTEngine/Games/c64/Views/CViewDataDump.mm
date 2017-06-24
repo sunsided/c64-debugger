@@ -17,6 +17,7 @@
 #include "C64SettingsStorage.h"
 #include "C64KeyboardShortcuts.h"
 #include "SYS_SharedMemory.h"
+#include "CViewC64VicDisplay.h"
 #include <math.h>
 
 CViewDataDump::CViewDataDump(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
@@ -55,6 +56,9 @@ CViewDataDump::CViewDataDump(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 	
 	numberOfCharactersToShow = 5;
 	numberOfSpritesToShow = 4;
+	
+	showCharacters = true;
+	showSprites = true;
 	
 	editHex = new CGuiEditHex(this);
 	editHex->isCapitalLetters = false;
@@ -368,68 +372,89 @@ void CViewDataDump::Render()
 	// blit data cursor
 	//if (isVisibleEditCursor)
 	{
-		BlitRectangle(cx, cy, posZ, fontBytesSize*2.0f, fontCharactersWidth, 0.3f, 1.0f, 0.3f, 0.5f, 1.3f);
+		if (cx >= posX-5 && cx <= posEndX+5
+			&& cy >= posY-5 && cy <= posEndY+5)
+		{
+			BlitRectangle(cx, cy, posZ, fontBytesSize*2.0f, fontCharactersWidth, 0.3f, 1.0f, 0.3f, 0.5f, 1.3f);
+		}
 	}
 //	else
 //	{
 //		dataAddr = dataShowStart;
 //	}
 	
+
+	
 	// get VIC colors
 	byte cD021, cD022, cD023;
 	byte cD800;
 	byte cD025, cD026, cD027;
-	viewC64->debugInterface->GetVICColors(&cD021, &cD022, &cD023, &cD025, &cD026, &cD027, &cD800);
-
-	// render characters
-	UpdateCharacters(renderDataWithColors, cD021, cD022, cD023, cD800);
-
-	px += 5.0f;
-	py = posY;
-
-	const float characterSize = 32.0f;
 	
-	for (std::list<CSlrImage *>::iterator it = charactersImages.begin(); it != charactersImages.end(); it++)
+	cD021 = viewC64->colorsToShow[1];
+	cD022 = viewC64->colorsToShow[2];
+	cD023 = viewC64->colorsToShow[3];
+	cD800 = viewC64->colorToShowD800;
+	
+	cD025 = viewC64->colorsToShow[5];
+	cD026 = viewC64->colorsToShow[6];
+	cD027 = viewC64->colorsToShow[7];
+	
+	
+	if (showCharacters)
 	{
-		CSlrImage *image = *it;
+		// refresh texture of C64's character mode screen
+		UpdateCharacters(renderDataWithColors, cD021, cD022, cD023, cD800);
 		
-		const float characterTexStartX = 4.0/16.0;
-		const float characterTexStartY = 4.0/16.0;
-		const float characterTexEndX = (4.0+8.0)/16.0;
-		const float characterTexEndY = (4.0+8.0)/16.0;
-
-		//BlitFilledRectangle(px, py, posZ, 32, 32, 0.5, 0.5, 1.0f, 1.0f);
-
-		Blit(image, px, py, posZ, characterSize, characterSize, characterTexStartX, characterTexStartY, characterTexEndX, characterTexEndY);
+		px += 5.0f;
+		py = posY;
 		
-		py += characterSize;
+		const float characterSize = 32.0f;
+		
+		for (std::list<CSlrImage *>::iterator it = charactersImages.begin(); it != charactersImages.end(); it++)
+		{
+			CSlrImage *image = *it;
+			
+			const float characterTexStartX = 4.0/16.0;
+			const float characterTexStartY = 4.0/16.0;
+			const float characterTexEndX = (4.0+8.0)/16.0;
+			const float characterTexEndY = (4.0+8.0)/16.0;
+			
+			//BlitFilledRectangle(px, py, posZ, 32, 32, 0.5, 0.5, 1.0f, 1.0f);
+			
+			Blit(image, px, py, posZ, characterSize, characterSize, characterTexStartX, characterTexStartY, characterTexEndX, characterTexEndY);
+			
+			py += characterSize;
+		}
 	}
 
-	// render sprites
-	UpdateSprites(renderDataWithColors, cD021, cD025, cD026, cD027);
-	
-	px += 40.0f;
-	py = posY;
-	
-	const float scale = 1.9f;
-	const float spriteSizeX = 24.0f * scale;
-	const float spriteSizeY = 21.0f * scale;
-	
-	for (std::list<CSlrImage *>::iterator it = spritesImages.begin(); it != spritesImages.end(); it++)
+	if (showSprites)
 	{
-		CSlrImage *image = *it;
+		// render sprites
+		UpdateSprites(renderDataWithColors, cD021, cD025, cD026, cD027);
 		
-		// sprites are rendered upside down
-		const float spriteTexStartX = 4.0/32.0;
-		const float spriteTexStartY = (32.0-4.0)/32.0;
-		const float spriteTexEndX = (4.0+24.0)/32.0;
-		const float spriteTexEndY = (32.0-(4.0+21.0))/32.0;
+		px += 40.0f;
+		py = posY;
 		
-		//BlitFilledRectangle(px, py, posZ, 32, 32, 0.5, 0.5, 1.0f, 1.0f);
+		const float scale = 1.9f;
+		const float spriteSizeX = 24.0f * scale;
+		const float spriteSizeY = 21.0f * scale;
 		
-		Blit(image, px, py, posZ, spriteSizeX, spriteSizeY, spriteTexStartX, spriteTexStartY, spriteTexEndX, spriteTexEndY);
-		
-		py += spriteSizeY;
+		for (std::list<CSlrImage *>::iterator it = spritesImages.begin(); it != spritesImages.end(); it++)
+		{
+			CSlrImage *image = *it;
+			
+			// sprites are rendered upside down
+			const float spriteTexStartX = 4.0/32.0;
+			const float spriteTexStartY = (32.0-4.0)/32.0;
+			const float spriteTexEndX = (4.0+24.0)/32.0;
+			const float spriteTexEndY = (32.0-(4.0+21.0))/32.0;
+			
+			//BlitFilledRectangle(px, py, posZ, 32, 32, 0.5, 0.5, 1.0f, 1.0f);
+			
+			Blit(image, px, py, posZ, spriteSizeX, spriteSizeY, spriteTexStartX, spriteTexStartY, spriteTexEndX, spriteTexEndY);
+			
+			py += spriteSizeY;
+		}
 	}
 
 }
@@ -503,11 +528,11 @@ void CViewDataDump::UpdateSprites(bool useColors, byte colorD021, byte colorD025
 		
 		if (useColors == false)
 		{
-			ConvertSpriteDataToImage(spriteData, imageData);
+			ConvertSpriteDataToImage(spriteData, imageData, 4);
 		}
 		else
 		{
-			ConvertColorSpriteDataToImage(spriteData, imageData, colorD021, colorD025, colorD026, colorD027, debugInterface);
+			ConvertColorSpriteDataToImage(spriteData, imageData, colorD021, colorD025, colorD026, colorD027, debugInterface, 4);
 		}
 		
 		addr++;
@@ -557,13 +582,24 @@ bool CViewDataDump::DoTap(GLfloat x, GLfloat y)
 //		return true;
 //	}
 
-	if (dataPositionAddr == previousClickAddr)
+	if (guiMain->isControlPressed)
 	{
-		long time = SYS_GetCurrentTimeInMillis() - previousClickTime;
-		if (time < c64SettingsDoubleClickMS)
+		CViewMemoryMapCell *cell = viewMemoryMap->memoryCells[dataPositionAddr];
+		if (cell->pc != -1)
 		{
-			// double click
-			viewDisassemble->ScrollToAddress(dataPositionAddr);
+			viewDisassemble->ScrollToAddress(cell->pc);
+		}
+	}
+	else
+	{
+		if (dataPositionAddr == previousClickAddr)
+		{
+			long time = SYS_GetCurrentTimeInMillis() - previousClickTime;
+			if (time < c64SettingsDoubleClickMS)
+			{
+				// double click
+				viewDisassemble->ScrollToAddress(dataPositionAddr);
+			}
 		}
 	}
 	
@@ -662,7 +698,7 @@ void CViewDataDump::ScrollDataPageDown()
 
 void CViewDataDump::ScrollToAddress(int address)
 {
-	LOGD("CViewDataDump::ScrollToAddress: address=%4.4x", address);
+	//LOGD("CViewDataDump::ScrollToAddress: address=%4.4x", address);
 
 	if (this->visible == false || numberOfBytesPerLine == 0)
 		return;

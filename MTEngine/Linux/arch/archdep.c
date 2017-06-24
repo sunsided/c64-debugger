@@ -267,7 +267,8 @@ char *archdep_default_resource_file_name(void)
 		const char *home;
 		
 		home = archdep_home_path();
-		return util_concat(home, "/.vice/sdl-vicerc", NULL);
+//		return util_concat(home, "/.vice/sdl-vicerc", NULL);
+		return util_concat(home, "/.C64Debugger/sdl-vicerc", NULL);
 	} else {
 		return util_concat(archdep_pref_path, "/sdl-vicerc", NULL);
 	}
@@ -279,7 +280,8 @@ char *archdep_default_fliplist_file_name(void)
 		const char *home;
 		
 		home = archdep_home_path();
-		return util_concat(home, "/.vice/fliplist-", machine_get_name(), ".vfl", NULL);
+//		return util_concat(home, "/.vice/fliplist-", machine_get_name(), ".vfl", NULL);
+		return util_concat(home, "/.C64Debugger/fliplist-", machine_get_name(), ".vfl", NULL);
 	} else {
 		return util_concat(archdep_pref_path, "/fliplist-", machine_get_name(), ".vfl", NULL);
 	}
@@ -291,7 +293,8 @@ char *archdep_default_autostart_disk_image_file_name(void)
 		const char *home;
 		
 		home = archdep_home_path();
-		return util_concat(home, "/.vice/autostart-", machine_get_name(), ".d64", NULL);
+//		return util_concat(home, "/.vice/autostart-", machine_get_name(), ".d64", NULL);
+		return util_concat(home, "/.C64Debugger/autostart-", machine_get_name(), ".d64", NULL);
 	} else {
 		return util_concat(archdep_pref_path, "/autostart-", machine_get_name(), ".d64", NULL);
 	}
@@ -303,7 +306,8 @@ char *archdep_default_hotkey_file_name(void)
 		const char *home;
 		
 		home = archdep_home_path();
-		return util_concat(home, "/.vice/sdl-hotkey-", machine_get_name(), ".vkm", NULL);
+//		return util_concat(home, "/.vice/sdl-hotkey-", machine_get_name(), ".vkm", NULL);
+		return util_concat(home, "/.C64Debugger/sdl-hotkey-", machine_get_name(), ".vkm", NULL);
 	} else {
 		return util_concat(archdep_pref_path, "/sdl-hotkey-", machine_get_name(), ".vkm", NULL);
 	}
@@ -315,7 +319,8 @@ char *archdep_default_joymap_file_name(void)
 		const char *home;
 		
 		home = archdep_home_path();
-		return util_concat(home, "/.vice/sdl-joymap-", machine_get_name(), ".vjm", NULL);
+//		return util_concat(home, "/.vice/sdl-joymap-", machine_get_name(), ".vjm", NULL);
+		return util_concat(home, "/.C64Debugger/sdl-joymap-", machine_get_name(), ".vjm", NULL);
 	} else {
 		return util_concat(archdep_pref_path, "/sdl-joymap-", machine_get_name(), ".vjm", NULL);
 	}
@@ -329,7 +334,8 @@ char *archdep_default_save_resource_file_name(void)
 	
 	if (archdep_pref_path == NULL) {
 		home = archdep_home_path();
-		viceuserdir = util_concat(home, "/.vice", NULL);
+//		viceuserdir = util_concat(home, "/.vice", NULL);
+		viceuserdir = util_concat(home, "/.C64Debugger", NULL);
 	} else {
 		viceuserdir = archdep_pref_path;
 	}
@@ -338,6 +344,7 @@ char *archdep_default_save_resource_file_name(void)
 		mkdir(viceuserdir, 0700);
 	}
 	
+//	fname = util_concat(viceuserdir, "/sdl-vicerc", NULL);
 	fname = util_concat(viceuserdir, "/sdl-vicerc", NULL);
 	
 	if (archdep_pref_path == NULL) {
@@ -775,7 +782,43 @@ char *archdep_get_runtime_cpu(void)
 #endif
 }
 
+/* create the default directory where prefs, fliplist, autostart images etc are stored
+   a pointer to the resulting path is returned, and it should be freed by the caller. */
+static char *archdep_make_default_pref_path(int create)
+{
+    char *path;
+    if (archdep_pref_path == NULL) {
+        const char *home;
+        home = archdep_home_path();
+//        path = util_concat(home, "/.vice", NULL);
+        path = util_concat(home, "/.C64Debugger", NULL);
+    } else {
+        path = lib_stralloc(archdep_pref_path);
+    }
+    if(create) {
+        if (access(path, F_OK)) {
+            mkdir(path, S_IRWXU);
+        }
+    }
+    return path;
+}
 
+int archdep_rename(const char *oldpath, const char *newpath)
+{
+    return rename(oldpath, newpath);
+}
+
+char *archdep_default_rtc_file_name(void)
+{
+    char *fname;
+    const char *viceuserdir;
+        
+    viceuserdir = archdep_make_default_pref_path(0);
+    fname = util_concat(viceuserdir, "/vice.rtc", NULL);
+    lib_free(viceuserdir);
+
+    return fname;
+}
 
 
 

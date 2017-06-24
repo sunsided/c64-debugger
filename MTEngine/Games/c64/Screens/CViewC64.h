@@ -1,7 +1,13 @@
+/*
+ *  C64 Debugger
+ *
+ *  Created by Marcin Skoczylas on 16-02-22.
+ *  Copyright 2016 Marcin Skoczylas. All rights reserved.
+ *
+ */
+
 #ifndef _GUI_C64_
 #define _GUI_C64_
-
-#define C64DEBUGGER_VERSION_STRING	"0.56"
 
 #include "CGuiView.h"
 #include "CGuiButton.h"
@@ -11,6 +17,12 @@
 #include "CViewMainMenu.h"
 #include "CViewSettingsMenu.h"
 #include "SYS_SharedMemory.h"
+
+extern "C"
+{
+#include "ViceWrapper.h"
+};
+
 #include <list>
 #include <vector>
 #include <map>
@@ -33,11 +45,15 @@ class CViewDisassemble;
 class CViewC64StateCIA;
 class CViewC64StateSID;
 class CViewC64StateVIC;
+class CViewC64VicDisplay;
+class CViewC64VicControl;
+class CViewVicEditor;
 class CViewDrive1541State;
 class CViewEmulationState;
 class CViewMonitorConsole;
 class CViewMainMenu;
 class CViewSettingsMenu;
+class CViewFileD64;
 class CViewC64KeyMap;
 class CViewKeyboardShortcuts;
 class CViewSnapshots;
@@ -58,6 +74,9 @@ enum c64ScreenLayouts
 	//	C64_SCREEN_LAYOUT_C64_1541_DATA_DUMP,
 	C64_SCREEN_LAYOUT_MONITOR_CONSOLE = 7,
 	C64_SCREEN_LAYOUT_CYCLER = 8,
+	C64_SCREEN_LAYOUT_VIC_DISPLAY = 9,
+	C64_SCREEN_LAYOUT_VIC_DISPLAY_LITE = 10,
+	C64_SCREEN_LAYOUT_FULL_SCREEN_ZOOM = 11,
 	C64_SCREEN_LAYOUT_MAX
 };
 
@@ -70,7 +89,7 @@ public:
 	
 	bool c64ScreenVisible;
 	float c64ScreenX, c64ScreenY;
-	float screenSizeX, screenSizeY;
+	float c64ScreenSizeX, c64ScreenSizeY;
 	bool c64ScreenShowGridLines;
 	bool c64ScreenShowZoomedScreen;
 	float c64ScreenZoomedX, c64ScreenZoomedY;
@@ -87,16 +106,24 @@ public:
 	float c64DisassembleSizeX, c64DisassembleSizeY;
 	float c64DisassembleFontSize;
 	int c64DisassembleNumberOfLines;
+	float c64DisassembleCodeMnemonicsOffset;
 	bool c64DisassembleShowHexCodes;
+	bool c64DisassembleShowCodeCycles;
+	float c64DisassembleCodeCyclesOffset;
 	bool c64DisassembleShowLabels;
+	int c64DisassembleNumberOfLabelCharacters;
 
 	bool drive1541DisassembleVisible;
 	float drive1541DisassembleX, drive1541DisassembleY;
 	float drive1541DisassembleSizeX, drive1541DisassembleSizeY;
 	float drive1541DisassembleFontSize;
 	int drive1541DisassembleNumberOfLines;
+	float drive1541DisassembleCodeMnemonicsOffset;
 	bool drive1541DisassembleShowHexCodes;
+	bool drive1541DisassembleShowCodeCycles;
+	float drive1541DisassembleCodeCyclesOffset;
 	bool drive1541DisassembleShowLabels;
+	int drive1541DisassembleNumberOfLabelCharacters;
 
 	bool c64MemoryMapVisible;
 	float c64MemoryMapX, c64MemoryMapY;
@@ -111,6 +138,8 @@ public:
 	float c64DataDumpGapAddress;
 	float c64DataDumpGapHexData;
 	float c64DataDumpGapDataCharacters;
+	bool c64DataDumpShowCharacters;
+	bool c64DataDumpShowSprites;
 	int c64DataDumpNumberOfBytesPerLine;
 	bool drive1541DataDumpVisible;
 	float drive1541DataDumpX, drive1541DataDumpY;
@@ -119,6 +148,8 @@ public:
 	float drive1541DataDumpGapAddress;
 	float drive1541DataDumpGapHexData;
 	float drive1541DataDumpGapDataCharacters;
+	bool drive1541DataDumpShowCharacters;
+	bool drive1541DataDumpShowSprites;
 	int drive1541DataDumpNumberOfBytesPerLine;
 	
 	bool c64StateCIAVisible;
@@ -142,6 +173,15 @@ public:
 	bool c64StateDrive1541RenderVIA2;
 	bool c64StateDrive1541RenderDriveLED;
 	bool c64StateDrive1541IsVertical;
+	
+	bool c64VicDisplayVisible;
+	float c64VicDisplayX, c64VicDisplayY;
+	float c64VicDisplayScale;
+	bool c64VicDisplayCanScrollDisassemble;
+	
+	bool c64VicControlVisible;
+	float c64VicControlX, c64VicControlY;
+	float c64VicControlFontSize;
 	
 	bool monitorConsoleVisible;
 	float monitorConsoleX, monitorConsoleY;
@@ -206,6 +246,7 @@ public:
 
 	CViewMainMenu *viewC64MainMenu;
 	CViewSettingsMenu *viewC64SettingsMenu;
+	CViewFileD64 *viewFileD64;
 	CViewC64KeyMap *viewC64KeyMap;
 	CViewKeyboardShortcuts *viewKeyboardShortcuts;
 	CViewBreakpoints *viewC64Breakpoints;
@@ -233,9 +274,31 @@ public:
 	CViewDrive1541State *viewC64StateDrive1541;
 	
 	CViewEmulationState *viewEmulationState;
+	
+	CViewC64VicDisplay *viewC64VicDisplay;
+	CViewC64VicControl *viewC64VicControl;
 
 	CViewMonitorConsole *viewMonitorConsole;
 	
+	// VIC Editor
+	CViewVicEditor *viewVicEditor;
+	
+	// updated every render frame
+	vicii_cycle_state_t currentViciiState;
+	
+	// state to show
+	vicii_cycle_state_t viciiStateToShow;
+	
+	// current colors D020-D02E for displaying states
+	u8 colorsToShow[0x0F];
+	u8 colorToShowD800;
+	
+	int rasterToShowX;
+	int rasterToShowY;
+	int rasterCharToShowX;
+	int rasterCharToShowY;
+	
+	//
 	void InitViceC64();
 
 	void InitViews();
@@ -266,10 +329,6 @@ public:
 	void RunContinueEmulation();
 	
 	void SwitchIsDataDirectlyFromRam();
-	
-	void ClearViewsFocus();
-	void SetFocusForView(CGuiView *view);
-	CGuiView *focusView;
 	
 	// fonts
 	CSlrFont *fontCBM1;
@@ -310,9 +369,25 @@ public:
 	//
 	virtual void SharedMemorySignalCallback(CByteBuffer *sharedMemoryData);
 
+	void InitRasterColors();
+	
+	void CheckMouseCursorVisibility();
+	void ShowMouseCursor();
+
+	//
+	void ShowMainScreen();
 };
 
 extern CViewC64 *viewC64;
 
+// drag & drop callbacks
+extern long c64dStartupTime;
+
+void C64D_DragDropCallback(char *filePath);
+void C64D_DragDropCallback(CSlrString *filePath);
+void C64D_DragDropCallbackPRG(CSlrString *filePath);
+void C64D_DragDropCallbackD64(CSlrString *filePath);
+void C64D_DragDropCallbackCRT(CSlrString *filePath);
+void C64D_DragDropCallbackSNAP(CSlrString *filePath);
 
 #endif //_GUI_C64DEMO_

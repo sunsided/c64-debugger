@@ -58,8 +58,9 @@ void video_viewport_resize(video_canvas_t *canvas, char resize_canvas)
     int y_offset;
     int small_x_border, small_y_border;
 
-    if (canvas->initialized == 0)
+    if (canvas->initialized == 0) {
         return;
+    }
 
     geometry = canvas->geometry;
     viewport = canvas->viewport;
@@ -73,15 +74,14 @@ void video_viewport_resize(video_canvas_t *canvas, char resize_canvas)
            the size of the emulator's screen changes in order to adapt to it */
         canvas->draw_buffer->canvas_width = canvas->draw_buffer->visible_width;
         canvas->draw_buffer->canvas_height = canvas->draw_buffer->visible_height;
-        canvas->draw_buffer->canvas_physical_width = canvas->draw_buffer->canvas_width * (canvas->videoconfig->doublesizex + 1);
-        canvas->draw_buffer->canvas_physical_height = canvas->draw_buffer->canvas_height * (canvas->videoconfig->doublesizey + 1);
-    }
-    else {
+        canvas->draw_buffer->canvas_physical_width = canvas->draw_buffer->canvas_width * canvas->videoconfig->scalex;
+        canvas->draw_buffer->canvas_physical_height = canvas->draw_buffer->canvas_height * canvas->videoconfig->scaley;
+    } else {
         /* The emulator's screen has been resized,
            or he emulated screen has changed but the emulator's screen is unable to adapt:
            in any case, the size of the emulator screen won't change now */
-        canvas->draw_buffer->canvas_width = canvas->draw_buffer->canvas_physical_width / (canvas->videoconfig->doublesizex + 1);
-        canvas->draw_buffer->canvas_height = canvas->draw_buffer->canvas_physical_height / (canvas->videoconfig->doublesizey + 1);
+        canvas->draw_buffer->canvas_width = canvas->draw_buffer->canvas_physical_width / canvas->videoconfig->scalex;
+        canvas->draw_buffer->canvas_height = canvas->draw_buffer->canvas_physical_height / canvas->videoconfig->scaley;
     }
     width = canvas->draw_buffer->canvas_width;
     height = canvas->draw_buffer->canvas_height;
@@ -153,7 +153,7 @@ void video_viewport_resize(video_canvas_t *canvas, char resize_canvas)
     if (!geometry->gfx_area_moves && first_line > (int)gfx_position->y) {
         first_line = (int)gfx_position->y;
     }
-    displayed_height = (real_gfx_height > height) ? height : real_gfx_height;
+    displayed_height = (real_gfx_height > (int)height) ? (int)height : real_gfx_height;
     viewport->first_line = (unsigned int)first_line;
     viewport->y_offset = (unsigned int)y_offset;
     viewport->last_line = viewport->first_line + (unsigned int)displayed_height - 1;
@@ -179,4 +179,3 @@ void video_viewport_title_free(viewport_t *viewport)
 {
     lib_free(viewport->title);
 }
-

@@ -3,6 +3,7 @@
  *
  * Written by
  *  Andreas Boose <viceteam@t-online.de>
+ *  Marco van den Heuvel <blackystardust68@yahoo.com>
  *
  * This file is part of VICE, the Versatile Commodore Emulator.
  * See README for copyright notice.
@@ -31,9 +32,5 @@
 
 extern int interface_userport_init_resources(void);
 extern int interface_userport_init_cmdline_options(void);
-extern void interface_userport_write_data(BYTE b);
-extern void interface_userport_write_strobe(int s);
-extern void interface_userport_init(void (*set_busy)(unsigned int));
 
 #endif
-

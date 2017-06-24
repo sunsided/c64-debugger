@@ -70,7 +70,7 @@ void CViewKeyboardShortcuts::UpdateMenuKeyboardShortcuts()
 	viewMenu->ClearItems();
 	
 	//
-	menuItemBack  = new CViewC64MenuItem(fontHeight*2.0f, new CSlrString("<< BACK"),
+	menuItemBack  = new CViewC64MenuItem(fontHeight*2.0f, new CSlrString("<< SAVE"),
 										 NULL, tr, tg, tb);
 	viewMenu->AddMenuItem(menuItemBack);
 	
@@ -115,6 +115,8 @@ void CViewKeyboardShortcuts::UpdateMenuKeyboardShortcuts()
 
 void CViewKeyboardShortcuts::SaveAndBack()
 {
+	LOGD("CViewKeyboardShortcuts::SaveAndBack");
+	
 	if (viewC64->viewC64MainMenu->kbsMainMenuScreen->keyCode < 1)
 	{
 		guiMain->ShowMessage("Please assign \"Main Menu\" keyboard shortcut");
@@ -133,6 +135,8 @@ void CViewKeyboardShortcuts::SaveAndBack()
 
 void CViewKeyboardShortcuts::StoreKeyboardShortcuts()
 {
+	LOGD("CViewKeyboardShortcuts::StoreKeyboardShortcuts");
+	
 	CByteBuffer *byteBuffer = new CByteBuffer();
 	byteBuffer->PutU16(C64DEBUGGER_KEYBOARD_SHORTCUTS_VERSION);
 	shortcuts->StoreToByteBuffer(byteBuffer);
@@ -142,10 +146,14 @@ void CViewKeyboardShortcuts::StoreKeyboardShortcuts()
 	delete fileName;
 	
 	delete byteBuffer;
+
+	LOGD("CViewKeyboardShortcuts::StoreKeyboardShortcuts: done");
 }
 
 void CViewKeyboardShortcuts::RestoreKeyboardShortcuts()
 {
+	LOGD("CViewKeyboardShortcuts::RestoreKeyboardShortcuts");
+
 	CByteBuffer *byteBuffer = new CByteBuffer();
 	
 	CSlrString *fileName = new CSlrString("/shortcuts.dat");
@@ -172,6 +180,8 @@ void CViewKeyboardShortcuts::RestoreKeyboardShortcuts()
 	delete byteBuffer;
 	
 	UpdateQuitShortcut();
+	
+	LOGD("CViewKeyboardShortcuts::RestoreKeyboardShortcuts: done");
 }
 
 void CViewKeyboardShortcuts::UpdateQuitShortcut()

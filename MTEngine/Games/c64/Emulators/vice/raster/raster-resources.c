@@ -57,15 +57,21 @@ static int set_video_cache_enabled(int val, void *param)
     raster_resource_chip = (raster_resource_chip_t *)param;
 
     if (val == 99) {
-        if (machine_class == VICE_MACHINE_C64DTV) {
+        /* HACK: some machines do not have a working video cache, so
+                 disable it by default */
+        if ((machine_class == VICE_MACHINE_C64DTV) ||
+            (machine_class == VICE_MACHINE_SCPU64) ||
+            (machine_class == VICE_MACHINE_C64SC) ||
+            (machine_class == VICE_MACHINE_PLUS4)) {
             val = 0;
         } else {
             val = 1;
         }
     }
 
-    if (val >= 0)
+    if (val >= 0) {
         raster_resource_chip->video_cache_enabled = val;
+    }
 
     raster_enable_cache(raster_resource_chip->raster,
                         raster_resource_chip->video_cache_enabled);
@@ -93,26 +99,30 @@ int raster_resources_chip_init(const char *chipname, raster_t *raster,
     raster->raster_resource_chip = raster_resource_chip;
     raster_resource_chip->raster = raster;
 
-    for (i = 0; rname_chip[i] != NULL; i++) {
-        resources_chip[i].name = util_concat(chipname, rname_chip[i], NULL);
-        resources_chip[i].value_ptr
-            = &(raster_resource_chip->video_cache_enabled);
-        resources_chip[i].param = (void *)raster_resource_chip;
+    if (machine_class != VICE_MACHINE_VSID) {
+        for (i = 0; rname_chip[i] != NULL; i++) {
+            resources_chip[i].name = util_concat(chipname, rname_chip[i], NULL);
+            resources_chip[i].value_ptr
+                = &(raster_resource_chip->video_cache_enabled);
+            resources_chip[i].param = (void *)raster_resource_chip;
+        }
     }
 
     raster->canvas = video_canvas_init();
 
-    if (resources_register_int(resources_chip) < 0)
-        return -1;
+    if (machine_class != VICE_MACHINE_VSID) {
+        if (resources_register_int(resources_chip) < 0) {
+            return -1;
+        }
 
-    for (i = 0; rname_chip[i] != NULL; i++)
-        lib_free((char *)(resources_chip[i].name));
+        for (i = 0; rname_chip[i] != NULL; i++) {
+            lib_free(resources_chip[i].name);
+        }
+    } else {
+        set_video_cache_enabled(0, (void *)raster_resource_chip);
+    }
 
-    if (video_resources_chip_init(chipname, &raster->canvas, video_chip_cap)
-        < 0)
-        return -1;
-
-    return 0;
+    return video_resources_chip_init(chipname, &raster->canvas, video_chip_cap);
 }
 
 void raster_resources_chip_shutdown(raster_t *raster)
@@ -121,4 +131,3 @@ void raster_resources_chip_shutdown(raster_t *raster)
     lib_free(raster->raster_resource_chip);
     video_canvas_shutdown(raster->canvas);
 }
-

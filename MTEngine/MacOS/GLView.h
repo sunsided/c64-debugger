@@ -1,6 +1,8 @@
 #import <Cocoa/Cocoa.h>
 #import <QuartzCore/CVDisplayLink.h>
 
+#include "SYS_Threading.h"
+
 @class GLViewController;
 
 @interface GLView : NSView
@@ -36,7 +38,16 @@
 
 - (void)setWindowAlwaysOnTop:(BOOL)isAlwaysOnTop;
 
+- (bool)isWindowFullScreen;
+
 @end
 
 extern GLView *glView;
 
+BOOL MACOS_OpenFile(NSString *strPath);
+
+class CMacOsOpenFileThread : public CSlrThread
+{
+public:
+	virtual void ThreadRun(void *data);
+};

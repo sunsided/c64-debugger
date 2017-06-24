@@ -13,6 +13,8 @@ CGuiElement::CGuiElement(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX
 {
 	this->name = "GuiElement";
 
+	this->parent = NULL;
+	
 	this->visible = true;
 	SetPosition(posX, posY, posZ, sizeX, sizeY);
 
@@ -24,6 +26,10 @@ CGuiElement::CGuiElement(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX
 	this->hasFocus = false;
 
 	this->manualRender = false;
+	this->bringToFrontOnTap = false;
+	
+	this->repeatTime = 0;
+	this->isKeyDown = false;
 	
 	this->userData = NULL;
 }
@@ -41,14 +47,7 @@ void CGuiElement::SetVisible(bool isVisible)
 
 void CGuiElement::SetPosition(GLfloat posX, GLfloat posY)
 {
-	//LOGD("CGuiElement::SetPosition1");
-	this->posX = posX;
-	this->posY = posY;
-	this->posEndX = posX + sizeX;
-	this->posEndY = posY + sizeY;
-
-	this->gapX = 0;
-	this->gapY = 0;
+	this->SetPosition(posX, posY, this->posZ, sizeX, sizeY);
 }
 
 void CGuiElement::SetSize(GLfloat sizeX, GLfloat sizeY)
@@ -109,6 +108,18 @@ void CGuiElement::Render(GLfloat posX, GLfloat posY)
 void CGuiElement::Render(GLfloat posX, GLfloat posY, GLfloat sizeX, GLfloat sizeY)
 {
 	Render(posX, posY);
+}
+
+void CGuiElement::RenderFocusBorder()
+{
+	// TODO: render focus rectangle based on colours from theme!
+	const float lineWidth = 0.7f;
+	BlitRectangle(this->posX, this->posY, this->posZ, this->sizeX, this->sizeY, 1.0f, 0.0f, 0.0f, 0.5f, lineWidth);
+}
+
+bool CGuiElement::IsFocusable()
+{
+	return false;
 }
 
 bool CGuiElement::DoTap(GLfloat x, GLfloat y)
@@ -226,6 +237,8 @@ void CGuiElement::AddGuiElement(CGuiElement *guiElement, float z)
 	//map<int, CObjectInfo *>::iterator objDataIt = detectedObjects.find(val);
 	this->guiElementsUpwards[z] = guiElement;
 	this->guiElementsDownwards[z] = guiElement;
+	
+	guiElement->parent = this;
 }
 
 GLfloat CGuiElement::GetWidth()
@@ -273,8 +286,9 @@ void CGuiElement::ResourcesPostLoad()
 {
 }
 
-void CGuiElement::SetFocus(bool focus)
+bool CGuiElement::SetFocus(bool focus)
 {
-	this->hasFocus = focus;
+	this->FocusReceived();
+	return true;
 }
 

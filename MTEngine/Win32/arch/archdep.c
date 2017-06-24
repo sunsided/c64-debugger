@@ -36,6 +36,7 @@
 #include <winsock.h>
 #include <tlhelp32.h>
 #include <tchar.h>
+#include <shlobj.h>
 
 #include "ui.h"
 
@@ -399,12 +400,12 @@ char *archdep_default_save_resource_file_name(void)
 
 char *archdep_default_resource_file_name(void)
 {
-    return util_concat(archdep_boot_path(), "\\vice.ini", NULL);
+    return util_concat(archdep_boot_path(), "\\c64d-vice.ini", NULL);
 }
 
 char *archdep_default_fliplist_file_name(void)
 {
-    return util_concat(archdep_boot_path(), "\\fliplist-", machine_get_name(), ".vfl", NULL);
+    return util_concat(archdep_boot_path(), "\\c64d-fliplist-", machine_get_name(), ".vfl", NULL);
 }
 
 char *archdep_default_autostart_disk_image_file_name(void)
@@ -412,7 +413,7 @@ char *archdep_default_autostart_disk_image_file_name(void)
     const char *home;
 
     home = archdep_boot_path();
-    return util_concat(home, "\\autostart-", machine_get_name(), ".d64", NULL);
+    return util_concat(home, "\\c64d-autostart-", machine_get_name(), ".d64", NULL);
 }
 
 FILE *archdep_open_default_log_file(void)
@@ -729,3 +730,71 @@ char *archdep_get_runtime_cpu(void)
     return "Unknown CPU";
 #endif
 }
+
+char *archdep_default_rtc_file_name(void)
+{
+    return util_concat(archdep_home_path(), "\\c64d-vice.rtc", NULL);
+}
+
+int archdep_rename(const char *oldpath, const char *newpath)
+{
+    unlink(newpath);
+    return rename(oldpath, newpath);
+} 
+
+const char *archdep_home_path(void)
+{
+    static char *cached_home = NULL;
+	char *home;
+#ifndef NO_SHGETFOLDERPATH
+    char *home_prefix;
+    char data_path[MAX_PATH + 1];
+    HRESULT res;
+#endif
+
+    if (cached_home) {
+        return cached_home;
+    }
+
+#ifndef NO_SHGETFOLDERPATH
+    res = SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 0 /* SHGFP_TYPE_CURRENT */, data_path);
+    if (res != S_OK) {
+#endif
+        /* Only use 'userprofile' when on windows nt and up */
+        if (!(GetVersion() & 0x80000000)) {
+            home = getenv("USERPROFILE");
+        } else {
+            home = "C:\\My Documents";
+        }
+
+        if (!home) {
+            home = ".";
+        }
+#ifndef NO_SHGETFOLDERPATH
+    } else {
+       /* create the base directory within appdata */
+        home_prefix = util_concat(data_path, "\\c64d-vice", NULL);
+        if (!CreateDirectory(home_prefix, NULL)) {
+            if (GetLastError() != ERROR_ALREADY_EXISTS) {
+                lib_free(home_prefix);
+                home = ".";
+                goto fail;
+            }
+        } 
+		        /* create a version-numbered subdirectory */
+        home = util_concat(home_prefix, "\\", VERSION, NULL);
+        lib_free(home_prefix);
+        if (!CreateDirectory(home, NULL)) {
+            if (GetLastError() != ERROR_ALREADY_EXISTS) {
+                lib_free(home);
+                home = ".";
+            }
+        }
+    }
+
+ fail:
+#endif
+    return home;
+}
+
+

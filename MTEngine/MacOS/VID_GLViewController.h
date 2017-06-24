@@ -103,6 +103,8 @@ long SYS_GetCurrentTimeInMillis();
 void VID_ResetLogicClock();
 
 void VID_SetWindowAlwaysOnTop(bool isAlwaysOnTop);
+void VID_SetWindowAlwaysOnTopTemporary(bool isAlwaysOnTop);
+bool VID_IsWindowAlwaysOnTop();
 
 void VID_ShowActionSheet();
 
@@ -113,6 +115,17 @@ void VID_SetOrthoSwitchBack();
 
 void SYS_ProcessAcceleration(float x, float y, float z);
 void GUI_SetPressConsumed(bool consumed);
+
+void GUI_GetRealScreenPixelSizes(double *pixelSizeX, double *pixelSizeY);
+
+//
+bool VID_IsWindowFullScreen();
+void VID_ShowMouseCursor();
+void VID_HideMouseCursor();
+
+// TODO: fix me
+#define VID_SetClipping SetClipping
+#define VID_ResetClipping ResetClipping
 
 void SetClipping(GLint x, GLint y, GLsizei sizeX, GLsizei sizeY);
 void ResetClipping();

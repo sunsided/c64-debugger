@@ -1,5 +1,5 @@
 
-/*! \file vice.h 
+/*! \file vice.h
  *
  *  \brief Main header file for VICE.
  *
@@ -38,7 +38,7 @@
    actually automake barfs if the source directory was already
    configured, so this should not be an issue anymore.  */
 
-#define SDL_DEBUG
+//#define SDL_DEBUG
 
 #ifdef IDE_COMPILE
 # include <ide-config.h> /* standard config file for IDE based compiles. */
@@ -107,13 +107,13 @@
 #if defined(sun) || defined(__sun)
 #  if !defined(__SVR4) && !defined(__svr4__)
 #    include <unistd.h>
-     typedef int ssize_t;
+typedef int ssize_t;
 #  endif
 #endif
 
 /* ------------------------------------------------------------------------- */
 /* Which OS is using the common keyboard routines?  */
-#if !defined(__OS2__) || defined(USE_SDLUI)
+#if !defined(__OS2__) || defined(USE_SDLUI) || defined(USE_SDLUI2)
 #define COMMON_KBD
 #endif
 
@@ -143,6 +143,25 @@
    to be added to the translate.* translation tables. */
 #define T_(String) (String)
 
+#if defined(WIN32_COMPILE) && (defined(UNICODE) || defined(_UNICODE))
+/* enable WinNT Unicode support in VICE. */
+#ifndef WIN32_UNICODE_SUPPORT
+#define WIN32_UNICODE_SUPPORT
+#endif
+#endif
+
+#ifdef WIN32_UNICODE_SUPPORT
+/* enable WinNT Unicode API calls. */
+#ifndef UNICODE
+#define UNICODE
+#endif
+
+/* enable Unicode support in tchar.h. */
+#ifndef _UNICODE
+#define _UNICODE
+#endif
+#endif
+
 #ifdef __OS2__
 int yyparse (void);
 #undef __GNUC__
@@ -167,6 +186,11 @@ static int noop;
 #ifdef USE_GCC
 #define int64_t_C(c) (c ## ll)
 #define uint64_t_C(c) (c ## ull)
+#endif
+
+/* sortix does not have rs232 support */
+#ifdef __sortix__
+#undef HAVE_RS232DEV
 #endif
 
 #endif

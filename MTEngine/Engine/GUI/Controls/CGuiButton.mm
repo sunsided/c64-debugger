@@ -74,6 +74,8 @@ CGuiButton::CGuiButton(CSlrImage *image, GLfloat posX, GLfloat posY, GLfloat pos
 	this->textDrawPosY = 0;
 
 	this->imageFlippedX = false;
+	
+	InitBackgroundColors();
 }
 
 CGuiButton::CGuiButton(char *text, GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, byte alignment, CGuiButtonCallback *callback)
@@ -122,6 +124,8 @@ CGuiButton::CGuiButton(char *text, GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 	this->imageFlippedX = false;
 	this->textUTF = NULL;
 
+	InitBackgroundColors();
+	
 	SetText(text);
 }
 
@@ -186,8 +190,35 @@ CGuiButton::CGuiButton(CSlrImage *bkgImage, CSlrImage *bkgImageDisabled,
 	this->textDrawPosY = textOffsetY;
 	
 	this->imageFlippedX = false;
+	
+	InitBackgroundColors();
 }
 
+void CGuiButton::InitBackgroundColors()
+{
+	buttonShadeAmount = guiMain->theme->buttonShadeAmount;
+	buttonShadeDistance = guiMain->theme->buttonShadeDistance;
+	buttonShadeDistance2 = guiMain->theme->buttonShadeDistance2;
+	
+	buttonEnabledColorR = guiMain->theme->buttonEnabledColorR;
+	buttonEnabledColorG = guiMain->theme->buttonEnabledColorG;
+	buttonEnabledColorB = guiMain->theme->buttonEnabledColorB;
+	buttonEnabledColorA = guiMain->theme->buttonEnabledColorA;
+	buttonEnabledColor2R = guiMain->theme->buttonEnabledColor2R;
+	buttonEnabledColor2G = guiMain->theme->buttonEnabledColor2G;
+	buttonEnabledColor2B = guiMain->theme->buttonEnabledColor2B;
+	buttonEnabledColor2A = guiMain->theme->buttonEnabledColor2A;
+	
+	buttonDisabledColorR = guiMain->theme->buttonDisabledColorR;
+	buttonDisabledColorG = guiMain->theme->buttonDisabledColorG;
+	buttonDisabledColorB = guiMain->theme->buttonDisabledColorB;
+	buttonDisabledColorA = guiMain->theme->buttonDisabledColorA;
+	buttonDisabledColor2R = guiMain->theme->buttonDisabledColor2R;
+	buttonDisabledColor2G = guiMain->theme->buttonDisabledColor2G;
+	buttonDisabledColor2B = guiMain->theme->buttonDisabledColor2B;
+	buttonDisabledColor2A = guiMain->theme->buttonDisabledColor2A;
+
+}
 
 void CGuiButton::SetFont(CSlrFont *font, float fontScale)
 {
@@ -318,24 +349,24 @@ void CGuiButton::RenderUTFButton(GLfloat posX, GLfloat posY)
 		if (this->enabled)
 		{
 				BlitFilledRectangle(posX, posY, posZ, this->sizeX, this->sizeY,
-									guiMain->theme->buttonEnabledColor2R, guiMain->theme->buttonEnabledColor2G, guiMain->theme->buttonEnabledColor2B,
-									guiMain->theme->buttonEnabledColor2A);
+									this->buttonEnabledColor2R, this->buttonEnabledColor2G, this->buttonEnabledColor2B,
+									this->buttonEnabledColor2A);
 				
-				BlitFilledRectangle(posX + guiMain->theme->buttonShadeDistance, posY + guiMain->theme->buttonShadeDistance, posZ,
-									this->sizeX - guiMain->theme->buttonShadeDistance2, this->sizeY - guiMain->theme->buttonShadeDistance2,
-									guiMain->theme->buttonEnabledColorR, guiMain->theme->buttonEnabledColorG, guiMain->theme->buttonEnabledColorB,
-									guiMain->theme->buttonEnabledColorA);
+				BlitFilledRectangle(posX + this->buttonShadeDistance, posY + this->buttonShadeDistance, posZ,
+									this->sizeX - this->buttonShadeDistance2, this->sizeY - this->buttonShadeDistance2,
+									this->buttonEnabledColorR, this->buttonEnabledColorG, this->buttonEnabledColorB,
+									this->buttonEnabledColorA);
 		}
 		else
 		{
 			BlitFilledRectangle(posX, posY, posZ, this->sizeX, this->sizeY,
-								guiMain->theme->buttonDisabledColor2R, guiMain->theme->buttonDisabledColor2G, guiMain->theme->buttonDisabledColor2B,
-								guiMain->theme->buttonDisabledColor2A);
+								this->buttonDisabledColor2R, this->buttonDisabledColor2G, this->buttonDisabledColor2B,
+								this->buttonDisabledColor2A);
 			
-			BlitFilledRectangle(posX + guiMain->theme->buttonShadeDistance, posY + guiMain->theme->buttonShadeDistance, posZ,
-								this->sizeX - guiMain->theme->buttonShadeDistance2, this->sizeY - guiMain->theme->buttonShadeDistance2,
-								guiMain->theme->buttonDisabledColorR, guiMain->theme->buttonDisabledColorG, guiMain->theme->buttonDisabledColorB,
-								guiMain->theme->buttonDisabledColorA);
+			BlitFilledRectangle(posX + this->buttonShadeDistance, posY + this->buttonShadeDistance, posZ,
+								this->sizeX - this->buttonShadeDistance2, this->sizeY - this->buttonShadeDistance2,
+								this->buttonDisabledColorR, this->buttonDisabledColorG, this->buttonDisabledColorB,
+								this->buttonDisabledColorA);
 		}
 		
 	}
@@ -415,13 +446,13 @@ void CGuiButton::Render(GLfloat posX, GLfloat posY)
 			{
 				//shade
 				BlitFilledRectangle(posX, posY, posZ, this->sizeX, this->sizeY,
-						guiMain->theme->buttonEnabledColor2R, guiMain->theme->buttonEnabledColor2G, guiMain->theme->buttonEnabledColor2B,
-						guiMain->theme->buttonEnabledColor2A);
+						this->buttonEnabledColor2R, this->buttonEnabledColor2G, this->buttonEnabledColor2B,
+						this->buttonEnabledColor2A);
 
-				BlitFilledRectangle(posX + guiMain->theme->buttonShadeDistance, posY + guiMain->theme->buttonShadeDistance, posZ,
-									this->sizeX - guiMain->theme->buttonShadeDistance2, this->sizeY - guiMain->theme->buttonShadeDistance2,
-									guiMain->theme->buttonEnabledColorR, guiMain->theme->buttonEnabledColorG, guiMain->theme->buttonEnabledColorB,
-									guiMain->theme->buttonEnabledColorA);
+				BlitFilledRectangle(posX + this->buttonShadeDistance, posY + this->buttonShadeDistance, posZ,
+									this->sizeX - this->buttonShadeDistance2, this->sizeY - this->buttonShadeDistance2,
+									this->buttonEnabledColorR, this->buttonEnabledColorG, this->buttonEnabledColorB,
+									this->buttonEnabledColorA);
 			}
 		}
 		else
@@ -441,13 +472,13 @@ void CGuiButton::Render(GLfloat posX, GLfloat posY)
 			{
 				//shade
 				BlitFilledRectangle(posX, posY, posZ, this->sizeX, this->sizeY,
-						guiMain->theme->buttonDisabledColor2R, guiMain->theme->buttonDisabledColor2G, guiMain->theme->buttonDisabledColor2B,
-						guiMain->theme->buttonDisabledColor2A);
+						this->buttonDisabledColor2R, this->buttonDisabledColor2G, this->buttonDisabledColor2B,
+						this->buttonDisabledColor2A);
 
-				BlitFilledRectangle(posX + guiMain->theme->buttonShadeDistance, posY + guiMain->theme->buttonShadeDistance, posZ,
-									this->sizeX - guiMain->theme->buttonShadeDistance2, this->sizeY - guiMain->theme->buttonShadeDistance2,
-									guiMain->theme->buttonDisabledColorR, guiMain->theme->buttonDisabledColorG, guiMain->theme->buttonDisabledColorB,
-									guiMain->theme->buttonDisabledColorA);
+				BlitFilledRectangle(posX + this->buttonShadeDistance, posY + this->buttonShadeDistance, posZ,
+									this->sizeX - this->buttonShadeDistance2, this->sizeY - this->buttonShadeDistance2,
+									this->buttonDisabledColorR, this->buttonDisabledColorG, this->buttonDisabledColorB,
+									this->buttonDisabledColorA);
 			}
 		}
 

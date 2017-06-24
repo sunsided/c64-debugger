@@ -775,8 +775,22 @@ char *archdep_get_runtime_cpu(void)
 #endif
 }
 
+char *archdep_default_rtc_file_name(void)
+{
+	if (archdep_pref_path == NULL) {
+		const char *home;
+		
+		home = archdep_home_path();
+		return util_concat(home, "/.vice/sdl-vice.rtc", NULL);
+	} else {
+		return util_concat(archdep_pref_path, "/sdl-vice.rtc", NULL);
+	}
+}
 
-
+int archdep_rename(const char *oldpath, const char *newpath)
+{
+	return rename(oldpath, newpath);
+}
 
 
 int archdep_init(int *argc, char **argv)

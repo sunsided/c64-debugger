@@ -1066,3 +1066,16 @@ void sdl_ui_init_finalize(void)
 //    sdl_canvas_create(sdl_active_canvas, &width, &height);/* set the real canvas size */
 //    sdl_ui_finalized = 1;
 }
+
+int video_arch_cmdline_options_init(void)
+{
+	DBG(("%s", __func__));
+ 
+//	if (machine_class == VICE_MACHINE_VSID) {
+//		if (joystick_cmdline_options_init() < 0) {
+//			return -1;
+//		}
+//	}
+// 
+	return cmdline_register_options(cmdline_options);
+}

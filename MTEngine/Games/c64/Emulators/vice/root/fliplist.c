@@ -35,6 +35,7 @@
 #include "attach.h"
 #include "cmdline.h"
 #include "fliplist.h"
+#include "ioutil.h"
 #include "lib.h"
 #include "log.h"
 #include "resources.h"
@@ -69,10 +70,11 @@ static char *fliplist_file_name = NULL;
 
 static int set_fliplist_file_name(const char *val, void *param)
 {
-    if (util_string_set(&fliplist_file_name, val))
+    if (util_string_set(&fliplist_file_name, val)) {
         return 0;
+    }
 
-    fliplist_load_list((unsigned int)-1, fliplist_file_name, 0);
+    fliplist_load_list(FLIPLIST_ALL_UNITS, fliplist_file_name, 0);
 
     return 0;
 }
@@ -80,15 +82,16 @@ static int set_fliplist_file_name(const char *val, void *param)
 static resource_string_t resources_string[] = {
     { "FliplistName", NULL, RES_EVENT_NO, NULL,
       &fliplist_file_name, set_fliplist_file_name, NULL },
-    { NULL }
+    RESOURCE_STRING_LIST_END
 };
 
 int fliplist_resources_init(void)
 {
     resources_string[0].factory_value = archdep_default_fliplist_file_name();
 
-    if (resources_register_string(resources_string) < 0)
+    if (resources_register_string(resources_string) < 0) {
         return -1;
+    }
 
     return 0;
 }
@@ -97,8 +100,9 @@ void fliplist_resources_shutdown(void)
 {
     int i;
 
-    for (i = 0; i < NUM_DRIVES; i++)
+    for (i = 0; i < NUM_DRIVES; i++) {
         fliplist_clear_list(8 + i);
+    }
 
     lib_free(fliplist_file_name);
     lib_free((char *)(resources_string[0].factory_value));
@@ -111,7 +115,7 @@ static const cmdline_option_t cmdline_options[] =
       USE_PARAM_ID, USE_DESCRIPTION_ID,
       IDCLS_P_NAME, IDCLS_SPECIFY_FLIP_LIST_NAME,
       NULL, NULL },
-    { NULL }
+    CMDLINE_LIST_END
 };
 
 int fliplist_cmdline_options_init(void)
@@ -138,23 +142,26 @@ void fliplist_set_current(unsigned int unit, const char *filename)
 #if 0
 char *fliplist_get_head(unsigned int unit)
 {
-    if (fliplist[unit - 8])
+    if (fliplist[unit - 8]) {
         return fliplist[unit - 8]->image;
+    }
     return (char *) NULL;
 }
 #endif
 
 const char *fliplist_get_next(unsigned int unit)
 {
-    if (fliplist[unit - 8])
+    if (fliplist[unit - 8]) {
         return fliplist[unit - 8]->next->image;
+    }
     return (const char *) NULL;
 }
 
 const char *fliplist_get_prev(unsigned int unit)
 {
-    if (fliplist[unit - 8])
+    if (fliplist[unit - 8]) {
         return fliplist[unit - 8]->prev->image;
+    }
     return (const char *) NULL;
 }
 
@@ -172,10 +179,12 @@ void fliplist_add_image(unsigned int unit)
 {
     fliplist_t n;
 
-    if (current_image == NULL)
+    if (current_image == NULL) {
         return;
-    if (strcmp(current_image, "") == 0)
+    }
+    if (strcmp(current_image, "") == 0) {
         return;
+    }
 
     n = lib_malloc(sizeof(struct fliplist_s));
     n->image = lib_stralloc(current_image);
@@ -200,8 +209,9 @@ void fliplist_remove(unsigned int unit, const char *image)
 {
     fliplist_t tmp;
 
-    if (fliplist[unit - 8] ==  NULL)
+    if (fliplist[unit - 8] == NULL) {
         return;
+    }
     if (image == (char *) NULL) {
         /* no image given, so remove the head */
         if ((fliplist[unit - 8] == fliplist[unit - 8]->next) &&
@@ -232,8 +242,9 @@ void fliplist_remove(unsigned int unit, const char *image)
         }
         it = it->next;
         while ((strcmp(it->image, image) != 0) &&
-               (it != fliplist[unit - 8]))
+               (it != fliplist[unit - 8])) {
             it = it->next;
+        }
 
         if (it == fliplist[unit - 8]) {
             log_message(LOG_DEFAULT,
@@ -252,18 +263,18 @@ void fliplist_remove(unsigned int unit, const char *image)
 
 void fliplist_attach_head (unsigned int unit, int direction)
 {
-    if (fliplist[unit - 8] == NULL)
+    if (fliplist[unit - 8] == NULL) {
         return;
+    }
 
-    if (direction)
+    if (direction) {
         fliplist[unit - 8] = fliplist[unit - 8]->next;
-    else
+    } else {
         fliplist[unit - 8] = fliplist[unit - 8]->prev;
+    }
 
-    if (file_system_attach_disk(fliplist[unit - 8]->unit,
-                                fliplist[unit - 8]->image) < 0) {
+    if (file_system_attach_disk(fliplist[unit - 8]->unit, fliplist[unit - 8]->image) < 0) {
         /* shouldn't happen, so ignore it */
-        ;
     }
 }
 
@@ -286,7 +297,7 @@ fliplist_t fliplist_next_iterate(unsigned int unit)
     if (iterator) {
         if (iterator != fliplist[unit - 8]) {
             ret = iterator;
-            iterator=iterator->next;
+            iterator = iterator->next;
         }
     }
     return ret;
@@ -315,8 +326,14 @@ int fliplist_save_list(unsigned int unit, const char *filename)
     int all_units = 0;
     fliplist_t flip;
     FILE *fp = NULL;
+    char *savedir;
 
-    if (unit == (unsigned int)-1) {
+    /* create the directory where the fliplist should be written first */
+    util_fname_split(filename, &savedir, NULL);
+    ioutil_mkdir(savedir, IOUTIL_MKDIR_RWXU);
+    lib_free(savedir);
+
+    if (unit == FLIPLIST_ALL_UNITS) {
         all_units = 1;
         unit = 8;
     }
@@ -370,7 +387,7 @@ int fliplist_load_list(unsigned int unit, const char *filename, int autoattach)
         fclose(fp);
         return -1;
     }
-    if (unit == (unsigned int)-1) {
+    if (unit == FLIPLIST_ALL_UNITS) {
         all_units = 1;
         for (i = 0; i < NUM_DRIVES; i++) {
             fliplist_clear_list(i + 8);
@@ -409,7 +426,7 @@ int fliplist_load_list(unsigned int unit, const char *filename, int autoattach)
 
             *b = '\0';
 
-            if (unit == (unsigned int)-1) {
+            if (unit == FLIPLIST_ALL_UNITS) {
                 log_message(LOG_DEFAULT, "Fliplist has inconsistent view for unit, assuming 8.\n");
                 unit = 8;
             }
@@ -437,7 +454,7 @@ int fliplist_load_list(unsigned int unit, const char *filename, int autoattach)
 
     if (listok) {
         current_drive = unit;
-    
+
         if (all_units) {
             for (i = 0; i < NUM_DRIVES; i++) {
                 show_fliplist(i + 8);
@@ -471,7 +488,7 @@ static void show_fliplist(unsigned int unit)
                         it->next->image, it->prev->image);
             it = it->next;
         } while (it != fliplist[unit - 8]);
-    } else
+    } else {
         log_message(LOG_DEFAULT, "\tnothing");
+    }
 }
-

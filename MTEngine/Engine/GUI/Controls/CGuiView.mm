@@ -9,15 +9,47 @@
 
 #include "CGuiView.h"
 #include "VID_GLViewController.h"
+#include "CGuiMain.h"
 
 CGuiView::CGuiView(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY)
 	: CGuiElement(posX, posY, posZ, sizeX, sizeY)
 {
 	this->name = "CGuiView";
 	this->previousZ = posZ;
+	this->previousFrontZ = posZ;
+	
+	focusElement = NULL;
 	
 	consumeTapBackground = true;
+	
+	
+	//mousePosX = mousePosY = -1;
 }
+
+bool CGuiView::IsInside(GLfloat x, GLfloat y)
+{
+	return CGuiElement::IsInside(x,y);
+}
+
+bool CGuiView::IsInsideView(GLfloat x, GLfloat y)
+{
+	if (!this->visible)
+		return false;
+	
+	return this->IsInsideViewNonVisible(x, y);
+}
+
+bool CGuiView::IsInsideViewNonVisible(GLfloat x, GLfloat y)
+{
+	if (x >= this->posX && x <= this->posEndX
+		&& y >= this->posY && y <= this->posEndY)
+	{
+		return true;
+	}
+	
+	return false;
+}
+
 
 void CGuiView::SetPosition(GLfloat posX, GLfloat posY)
 {
@@ -40,6 +72,13 @@ void CGuiView::SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat siz
 
 void CGuiView::RemoveGuiElements()
 {
+	for (std::map<float, CGuiElement *, compareZupwards>::iterator enumGuiElems = guiElementsUpwards.begin();
+		 enumGuiElems != guiElementsUpwards.end(); enumGuiElems++)
+	{
+		CGuiElement *pElement = (*enumGuiElems).second;
+		pElement->parent = NULL;
+	}
+
 	guiElementsUpwards.clear();
 	guiElementsDownwards.clear();
 }
@@ -69,6 +108,8 @@ void CGuiView::RemoveGuiElement(CGuiElement *guiElement)
 			break;
 		}
 	}
+	
+	guiElement->parent = NULL;
 }
 
 
@@ -92,6 +133,11 @@ void CGuiView::AddGuiElement(CGuiElement *guiElement, float z)
 	this->guiElementsUpwards[z] = guiElement;
 	this->guiElementsDownwards[z] = guiElement;
 //	this->previousZ = z;
+	
+	if (previousFrontZ < z)
+		previousFrontZ = z;
+	
+	guiElement->parent = this;
 }
 
 void CGuiView::AddGuiElement(CGuiElement *guiElement)
@@ -115,7 +161,15 @@ void CGuiView::AddGuiElement(CGuiElement *guiElement)
 	this->previousZ += 0.001;
 	this->guiElementsUpwards[previousZ] = guiElement;
 	this->guiElementsDownwards[previousZ] = guiElement;
+	
+	guiElement->parent = this;
 
+}
+
+void CGuiView::BringToFront(CGuiElement *guiElement)
+{
+	RemoveGuiElement(guiElement);	
+	AddGuiElement(guiElement, previousFrontZ + 0.01f);
 }
 
 void CGuiView::DoLogic()
@@ -161,10 +215,33 @@ bool CGuiView::DoTapNoBackground(GLfloat x, GLfloat y)
 		if (!guiElement->visible)
 			continue;
 
+		if (guiElement->IsFocusable() && guiElement->IsInside(x, y))
+		{
+			SetFocus(guiElement);
+		}
+		
 		if (guiElement->DoTap(x, y))
+		{
+			if (focusElement != guiElement)
+			{
+				ClearFocus();
+			}
+			
+			if (guiElement->bringToFrontOnTap)
+			{
+				guiMain->LockMutex();
+				this->BringToFront(guiElement);
+				guiMain->UnlockMutex();
+			}
 			return true;
+		}
 	}
 
+	if (focusElement && !focusElement->IsInside(x, y))
+	{
+		ClearFocus();
+	}
+	
 	return false;
 }
 
@@ -245,20 +322,22 @@ bool CGuiView::DoFinishDoubleTap(GLfloat x, GLfloat y)
 
 bool CGuiView::DoMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat distY, GLfloat diffX, GLfloat diffY)
 {
-	//viewScoreTracks->DoMove(x, y, distX, distY, diffX, diffY);
+	LOGG("CGuiView::DoMove: this is '%s'", this->name);
 	
 	//	LOGG("--- DoMove ---");
 	for (std::map<float, CGuiElement *, compareZdownwards>::iterator enumGuiElems = guiElementsDownwards.begin();
 		 enumGuiElems != guiElementsDownwards.end(); enumGuiElems++)
 	{
 		CGuiElement *guiElement = (*enumGuiElems).second;
+
+		LOGG("DoMove %f: %s", (*enumGuiElems).first, guiElement->name);
+		
 		if (!guiElement->visible)
 			continue;
 		
-		//LOGG("DoMove %f: %s", (*enumGuiElems).first, guiElement->name);
+		volatile bool consumed = guiElement->DoMove(x, y, distX, distY, diffX, diffY);
 		
-		bool consumed = guiElement->DoMove(x, y, distX, distY, diffX, diffY);
-		//LOGG("   consumed=%d", consumed);
+		LOGG("   consumed=%d", consumed);
 		if (consumed)
 			return true;
 	}
@@ -292,17 +371,28 @@ bool CGuiView::FinishMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat distY, GL
 //@returns is consumed
 bool CGuiView::DoRightClick(GLfloat x, GLfloat y)
 {
-	//LOGD("CGuiView::DoRightClick: '%s' x=%f y=%f", this->name, x, y);
+	LOGG("CGuiView::DoRightClick: '%s' x=%f y=%f", this->name, x, y);
 	for (std::map<float, CGuiElement *, compareZdownwards>::iterator enumGuiElems = guiElementsDownwards.begin();
 		 enumGuiElems != guiElementsDownwards.end(); enumGuiElems++)
 	{
 		CGuiElement *guiElement = (*enumGuiElems).second;
-		//LOGD("CGuiView::DoRightClick: %s", guiElement->name);
+		
+		LOGG("CGuiView::DoRightClick: %s visible=%d", guiElement->name, guiElement->visible);
 		if (!guiElement->visible)
 			continue;
 		
 		if (guiElement->DoRightClick(x, y))
+		{
+			if (guiElement->bringToFrontOnTap)
+			{
+				guiMain->LockMutex();
+				this->BringToFront(guiElement);
+				guiMain->UnlockMutex();
+			}
+			
 			return true;
+		}
+			
 	}
 	
 	if (consumeTapBackground)
@@ -344,6 +434,18 @@ bool CGuiView::DoFinishRightClick(GLfloat x, GLfloat y)
 bool CGuiView::DoRightClickMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat distY, GLfloat diffX, GLfloat diffY)
 {
 	//	LOGG("--- DoRightClickMove ---");
+	/*
+	if (this->IsInside(x, y))
+	{
+		mousePosX = x;
+		mousePosY = y;
+	}
+	else
+	{
+		mousePosX = -1;
+		mousePosY = -1;
+	}*/
+	
 	for (std::map<float, CGuiElement *, compareZdownwards>::iterator enumGuiElems = guiElementsDownwards.begin();
 		 enumGuiElems != guiElementsDownwards.end(); enumGuiElems++)
 	{
@@ -382,6 +484,19 @@ bool CGuiView::FinishRightClickMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat
 bool CGuiView::DoNotTouchedMove(GLfloat x, GLfloat y)
 {
 	//	LOGG("--- DoNotTouchedMove ---");
+	/*
+	if (this->IsInside(x, y))
+	{
+		mousePosX = x;
+		mousePosY = y;
+	}
+	else
+	{
+		mousePosX = -1;
+		mousePosY = -1;
+	}
+	 */
+	
 	for (std::map<float, CGuiElement *, compareZdownwards>::iterator enumGuiElems = guiElementsDownwards.begin();
 		 enumGuiElems != guiElementsDownwards.end(); enumGuiElems++)
 	{
@@ -438,6 +553,10 @@ bool CGuiView::DoZoomBy(GLfloat x, GLfloat y, GLfloat zoomValue, GLfloat differe
 bool CGuiView::DoScrollWheel(float deltaX, float deltaY)
 {
 	LOGG("CGuiView::DoScrollWheel: deltaX=%f deltaY=%f", deltaX, deltaY);
+
+	if (!this->IsInsideView(guiMain->mousePosX, guiMain->mousePosY))
+		return false;
+	
 	for (std::map<float, CGuiElement *, compareZdownwards>::iterator enumGuiElems = guiElementsDownwards.begin();
 		 enumGuiElems != guiElementsDownwards.end(); enumGuiElems++)
 	{
@@ -445,8 +564,12 @@ bool CGuiView::DoScrollWheel(float deltaX, float deltaY)
 		if (!guiElement->visible)
 			continue;
 		
-		if (guiElement->DoScrollWheel(deltaX, deltaY))
-			return true;
+		if (guiElement->IsInside(guiMain->mousePosX, guiMain->mousePosY))
+		{
+			if (guiElement->DoScrollWheel(deltaX, deltaY))
+				return true;
+		}
+		
 	}
 	
 	return false;
@@ -468,6 +591,12 @@ void CGuiView::FinishTouches()
 
 bool CGuiView::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
+	if (focusElement)
+	{
+		if (focusElement->KeyDown(keyCode, isShift, isAlt, isControl))
+			return true;
+	}
+	
 	for (std::map<float, CGuiElement *, compareZdownwards>::iterator enumGuiElems = guiElementsDownwards.begin();
 		 enumGuiElems != guiElementsDownwards.end(); enumGuiElems++)
 	{
@@ -486,6 +615,12 @@ bool CGuiView::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 
 bool CGuiView::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
+	if (focusElement)
+	{
+		if (focusElement->KeyUp(keyCode, isShift, isAlt, isControl))
+			return true;
+	}
+
 	for (std::map<float, CGuiElement *, compareZdownwards>::iterator enumGuiElems = guiElementsDownwards.begin();
 		 enumGuiElems != guiElementsDownwards.end(); enumGuiElems++)
 	{
@@ -504,6 +639,12 @@ bool CGuiView::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 
 bool CGuiView::KeyPressed(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
+	if (focusElement)
+	{
+		if (focusElement->KeyPressed(keyCode, isShift, isAlt, isControl))
+			return true;
+	}
+	
 	for (std::map<float, CGuiElement *, compareZdownwards>::iterator enumGuiElems = guiElementsDownwards.begin();
 		 enumGuiElems != guiElementsDownwards.end(); enumGuiElems++)
 	{
@@ -616,6 +757,8 @@ void CGuiView::DeactivateView()
 void CGuiView::Render()
 {
 //#define LOGGUIVIEW
+	
+	
 #if defined(LOGGUIVIEW)
 	LOGD("-------------- CGuiView::Render() --------------");
 	LOGD("view=%s", this->name);
@@ -678,6 +821,55 @@ void CGuiView::Render(GLfloat posX, GLfloat posY, GLfloat sizeX, GLfloat sizeY)
 }
 */
 
+void CGuiView::RenderFocusBorder()
+{
+	if (this->focusElement != NULL)
+	{
+		this->focusElement->RenderFocusBorder();
+	}
+	else
+	{
+		const float lineWidth = 0.7f;
+		BlitRectangle(this->posX, this->posY, this->posZ, this->sizeX, this->sizeY, 1.0f, 0.0f, 0.0f, 0.5f, lineWidth);		
+	}
+}
+
+
+// focus
+void CGuiView::ClearFocus()
+{
+	if (focusElement != NULL)
+	{
+		focusElement->FocusLost();
+	}
+
+	for (std::map<float, CGuiElement *, compareZupwards>::iterator enumGuiElems = guiElementsUpwards.begin();
+		 enumGuiElems != guiElementsUpwards.end(); enumGuiElems++)
+	{
+		CGuiElement *guiElement = (*enumGuiElems).second;
+		
+		guiElement->hasFocus = false;
+	}
+	
+	focusElement = NULL;
+}
+
+bool CGuiView::SetFocus(CGuiElement *element)
+{
+	//LOGD("CGuiMain::SetFocus: %s", (element ? element->name : "NULL"));
+	this->repeatTime = 0;
+	ClearFocus();
+
+	if (element->SetFocus(true))
+	{
+		focusElement = element;
+	}
+	
+	return true;
+}
+
+
+
 void CGuiView::ResourcesPrepare()
 {
 	for (std::map<float, CGuiElement *, compareZupwards>::iterator enumGuiElems = guiElementsUpwards.begin();
@@ -696,6 +888,8 @@ void CGuiView::ResourcesPrepare()
 
 	}
 }
+
+//
 
 bool CGuiView::StartAnimationEditorDebug()
 {

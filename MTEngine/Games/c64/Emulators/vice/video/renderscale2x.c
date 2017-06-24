@@ -35,13 +35,11 @@ static DWORD scale2x(const DWORD *colortab, const BYTE **srcx1,
                      const BYTE **srcx2, const BYTE **srcy1,
                      const BYTE **srcy2, const BYTE **srce)
 {
-    register DWORD colx1, colx2, coly1, coly2, cole;
+    DWORD colx1, coly1, cole;
 
-    colx1 = colortab[**srcx1];
-    colx2 = colortab[**srcx2];
-    coly1 = colortab[**srcy1];
-    coly2 = colortab[**srcy2];
-    cole = colortab[**srce];
+    colx1 = **srcx1;
+    coly1 = **srcy1;
+    cole = colortab[colx1 == coly1 && **srcx2 != coly1 && colx1 != **srcy2 ? colx1 : **srce];
 
     if (*srcx1 < *srcx2) {
         *srcx1 += 2;
@@ -54,12 +52,7 @@ static DWORD scale2x(const DWORD *colortab, const BYTE **srcx1,
         (*srce)++;
     }
 
-    if ((colx1 == coly1 && colx2 != coly1 && colx1 != coly2 ? colx1 : cole)
-        != cole) {
-        cole = cole;
-    }
-
-    return (colx1 == coly1 && colx2 != coly1 && colx1 != coly2 ? colx1 : cole);
+    return cole;
 }
 
 
@@ -89,8 +82,7 @@ void render_08_scale2x(const video_render_color_tables_t *color_tab,
         srcy2 = (y & 1 ? tmpsrc - pitchs : tmpsrc + pitchs);
 
         for (x = 0; x < width; x++) {
-            *tmptrg++ = (BYTE)scale2x(colortab, &srcx1, &srcx2,
-                                        &srcy1, &srcy2, &tmpsrc);
+            *tmptrg++ = (BYTE)scale2x(colortab, &srcx1, &srcx2, &srcy1, &srcy2, &tmpsrc);
         }
 
         if (y & 1) {
@@ -128,8 +120,7 @@ void render_16_scale2x(const video_render_color_tables_t *color_tab,
         srcy2 = (y & 1 ? tmpsrc - pitchs : tmpsrc + pitchs);
 
         for (x = 0; x < width; x++) {
-            *tmptrg++ = (WORD)scale2x(colortab, &srcx1, &srcx2,
-                                        &srcy1, &srcy2, &tmpsrc);
+            *tmptrg++ = (WORD)scale2x(colortab, &srcx1, &srcx2, &srcy1, &srcy2, &tmpsrc);
         }
 
         if (y & 1) {
@@ -168,8 +159,7 @@ void render_24_scale2x(const video_render_color_tables_t *color_tab,
         srcy2 = (y & 1 ? tmpsrc - pitchs : tmpsrc + pitchs);
 
         for (x = 0; x < width; x++) {
-            color = scale2x(colortab, &srcx1, &srcx2,
-                                        &srcy1, &srcy2, &tmpsrc);
+            color = scale2x(colortab, &srcx1, &srcx2, &srcy1, &srcy2, &tmpsrc);
             *tmptrg++ = (BYTE)color;
             color >>= 8;
             *tmptrg++ = (BYTE)color;
@@ -212,8 +202,7 @@ void render_32_scale2x(const video_render_color_tables_t *color_tab,
         srcy2 = (y & 1 ? tmpsrc - pitchs : tmpsrc + pitchs);
 
         for (x = 0; x < width; x++) {
-            *tmptrg++ = scale2x(colortab, &srcx1, &srcx2,
-                                        &srcy1, &srcy2, &tmpsrc);
+            *tmptrg++ = scale2x(colortab, &srcx1, &srcx2, &srcy1, &srcy2, &tmpsrc);
         }
 
         if (y & 1) {
@@ -223,4 +212,3 @@ void render_32_scale2x(const video_render_color_tables_t *color_tab,
         trg += pitcht;
     }
 }
-

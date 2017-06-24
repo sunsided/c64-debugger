@@ -2,7 +2,8 @@
  * rs232.h - RS232 emulation.
  *
  * Written by
- *  André Fachat <a.fachat@physik.tu-chemnitz.de>
+ *  Andre Fachat <a.fachat@physik.tu-chemnitz.de>
+ *  Marco van den Heuvel <blackystardust68@yahoo.com>
  *
  * This file is part of VICE, the Versatile Commodore Emulator.
  * See README for copyright notice.

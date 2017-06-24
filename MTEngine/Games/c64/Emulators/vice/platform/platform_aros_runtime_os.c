@@ -27,8 +27,15 @@
 #include "vice.h"
 
 /* Tested and confirmed working on:
-   - i386-aros (mingw hosted)
-   - i386-aros (native)
+CPU   | PLATFORM
+----------------
+amd64 | native
+amd64 | linux hosted
+i386  | native
+i386  | linux hosted
+i386  | windows hosted
+m68k  | amiga native
+ppc   | linux hosted
 */
 
 #ifdef AMIGA_AROS
@@ -49,33 +56,46 @@ struct Library *ArosBase;
 APTR ProcessorBase;
 
 static char runtime_os[256];
+static int got_runtime_os = 0;
+
+static CONST_STRPTR modelstring = NULL;
 
 char *platform_get_aros_runtime_os(void)
 {
     int rc;
     ULONG relMajor, relMinor;
-    STRPTR arch;
+    STRPTR arch = NULL;
 
-    if (!(ArosBase = OpenLibrary(AROSLIBNAME, AROSLIBVERSION))) {
-        return "Unknown AROS version";
+    if (!got_runtime_os) {
+        if (!(ArosBase = OpenLibrary(AROSLIBNAME, AROSLIBVERSION))) {
+            sprintf(runtime_os, "Unknown AROS version");
+            got_runtime_os = 1;
+        }
     }
 
-    ArosInquire(AI_ArosReleaseMajor, (IPTR)&relMajor, AI_ArosReleaseMinor, (IPTR)&relMinor, AI_ArosArchitecture, (IPTR)&arch, TAG_DONE);
-
-    sprintf(runtime_os, "AROS-%ld.%ld (%s)", relMajor, relMinor, arch);
-
-    CloseLibrary(ArosBase);
+    if (!got_runtime_os) {
+        ArosInquire(AI_ArosReleaseMajor, (IPTR)&relMajor, AI_ArosReleaseMinor, (IPTR)&relMinor, AI_ArosArchitecture, (IPTR)&arch, TAG_DONE);
+        if (arch) {
+            sprintf(runtime_os, "AROS-%ld.%ld (%s)", relMajor, relMinor, arch);
+        } else {
+            sprintf(runtime_os, "Unknown AROS version.");
+        }
+        got_runtime_os = 1;
+        CloseLibrary(ArosBase);
+    }
 
     return runtime_os;
 }
 
-static CONST_STRPTR modelstring;
-
 char *platform_get_aros_runtime_cpu(void)
 {
-    ProcessorBase = OpenResource(PROCESSORNAME);
-    GetCPUInfoTags(GCIT_ModelString, (IPTR)&modelstring, TAG_DONE);
-
-    return modelstring;
+    if (!modelstring) {
+        ProcessorBase = OpenResource(PROCESSORNAME);
+        GetCPUInfoTags(GCIT_ModelString, (IPTR)&modelstring, TAG_DONE);
+    }
+    if (modelstring) {
+        return (char *)modelstring;
+    }
+    return "Unknown CPU";
 }
 #endif

@@ -36,6 +36,7 @@
 #include "embedded.h"
 #include "lib.h"
 #include "log.h"
+#include "machine.h"
 #include "palette.h"
 #include "sysfile.h"
 #include "types.h"
@@ -55,9 +56,11 @@ palette_t *palette_create(unsigned int num_entries, const char *entry_names[])
     p->num_entries = num_entries;
     p->entries = lib_calloc(num_entries, sizeof(palette_entry_t));
 
-    if (entry_names != NULL)
-        for (i = 0; i < num_entries; i++)
+    if (entry_names != NULL) {
+        for (i = 0; i < num_entries; i++) {
             p->entries[i].name = lib_stralloc(entry_names[i]);
+        }
+    }
 
     return p;
 }
@@ -66,8 +69,9 @@ void palette_free(palette_t *p)
 {
     unsigned int i;
 
-    if (p == NULL)
+    if (p == NULL) {
         return;
+    }
 
     for (i = 0; i < p->num_entries; i++) {
         lib_free(p->entries[i].name);
@@ -79,8 +83,9 @@ void palette_free(palette_t *p)
 static int palette_set_entry(palette_t *p, unsigned int number,
                              BYTE red, BYTE green, BYTE blue, BYTE dither)
 {
-    if (p == NULL || number >= p->num_entries)
+    if (p == NULL || number >= p->num_entries) {
         return -1;
+    }
 
     p->entries[number].red = red;
     p->entries[number].green = green;
@@ -100,17 +105,19 @@ static int palette_copy(palette_t *dest, const palette_t *src)
         return -1;
     }
 
-    for (i = 0; i < src->num_entries; i++)
+    for (i = 0; i < src->num_entries; i++) {
         palette_set_entry(dest, i, src->entries[i].red, src->entries[i].green,
                           src->entries[i].blue, src->entries[i].dither);
+    }
 
     return 0;
 }
 
 static char *next_nonspace(const char *p)
 {
-    while (*p != '\0' && isspace((int)*p))
+    while (*p != '\0' && isspace((int)*p)) {
         p++;
+    }
 
     return (char *)p;
 }
@@ -121,7 +128,7 @@ static int palette_load_core(FILE *f, const char *file_name,
 {
     char buf[1024];
 
-    unsigned int line_num  = 0;
+    unsigned int line_num = 0;
     unsigned int entry_num = 0;
 
     while (1) {
@@ -131,18 +138,21 @@ static int palette_load_core(FILE *f, const char *file_name,
 
         int line_len = util_get_line(buf, 1024, f);
 
-        if (line_len < 0)
+        if (line_len < 0) {
             break;
+        }
 
         line_num++;
 
-        if (*buf == '#')
+        if (*buf == '#') {
             continue;
+        }
 
         p1 = next_nonspace(buf);
 
-        if (*p1 == '\0') /* empty line */
+        if (*p1 == '\0') { /* empty line */
             continue;
+        }
 
         for (i = 0; i < 4; i++) {
             long result;
@@ -226,8 +236,10 @@ int palette_load(const char *file_name, palette_t *palette_return)
         f = sysfile_open(tmp, &complete_path, MODE_READ_TEXT);
         lib_free(tmp);
 
-        if (f == NULL)
+        if (f == NULL) {
+            log_error(palette_log, "Palette not found: `%s'.", file_name);
             return -1;
+        }
     }
 
     log_message(palette_log, "Loading palette `%s'.", complete_path);
@@ -250,25 +262,94 @@ int palette_save(const char *file_name, const palette_t *palette)
 
     f = fopen(file_name, MODE_WRITE);
 
-    if (f == NULL)
+    if (f == NULL) {
         return -1;
+    }
 
     fprintf(f, "#\n# VICE Palette file\n#\n");
     fprintf(f, "# Syntax:\n# Red Green Blue Dither\n#\n\n");
 
-    for (i = 0; i < palette->num_entries; i++)
+    for (i = 0; i < palette->num_entries; i++) {
         fprintf(f, "# %s\n%02X %02X %02X %01X\n\n",
                 palette->entries[i].name,
                 palette->entries[i].red,
                 palette->entries[i].green,
                 palette->entries[i].blue,
                 palette->entries[i].dither);
+    }
 
     return fclose(f);
 }
+
+/******************************************************************************/
+
+/*
+ TODO: the following list should be generated at runtime, by scanning the
+       "SYSTEMPATH" for .vpl files and extracting the respective info.
+       - "opendir" kind of API that searches the SYSTEMPATH is needed
+       - existing .vpl files must be extended to contain CHIP and NAME info
+       - when generating the list, sort by NAME
+ */
+static palette_info_t palettelist[] = {
+    /* data/C64/ */
+    /* data/C128/ */
+    /* data/CBM-II/ */
+    /* data/SCPU64/ */
+    { "VICII", "Pepto (PAL)",        "pepto-pal"}, /* default */
+    { "VICII", "Pepto (old PAL)",    "pepto-palold"},
+    { "VICII", "Pepto (NTSC, Sony)", "pepto-ntsc-sony"},
+    { "VICII", "Pepto (NTSC)",       "pepto-ntsc"},
+    { "VICII", "Colodore (PAL)",     "colodore"},
+    { "VICII", "VICE",               "vice"},
+    { "VICII", "C64HQ",              "c64hq"},
+    { "VICII", "C64S",               "c64s"},
+    { "VICII", "CCS64",              "ccs64"},
+    { "VICII", "Frodo",              "frodo"},
+    { "VICII", "Godot",              "godot"},
+    { "VICII", "PC64",               "pc64"},
+    { "VICII", "RGB",                "rgb"},
+    { "VICII", "Deekay",             "deekay"},
+    { "VICII", "Ptoing",             "ptoing"},
+    { "VICII", "Community Colors",   "community-colors"},
+    /* data/C128/ */
+    { "VDC",   "RGB",                "vdc_deft"}, /* default */
+    { "VDC",   "Composite",          "vdc_comp"},
+    /* data/VIC20/ */
+    { "VIC",   "Mike (PAL)",         "mike-pal"}, /* default */
+    { "VIC",   "Mike (NTSC)",        "mike-ntsc"},
+    { "VIC",   "Colodore (PAL)",     "colodore_vic"},
+    { "VIC",   "VICE",               "vice"},
+    /* data/CBM-II/ */
+    /* data/PET/ */
+    { "Crtc",  "Green",              "green"}, /* default */
+    { "Crtc",  "Amber",              "amber"},
+    { "Crtc",  "Black/White",        "white"},
+    /* data/PLUS4/ */
+    { "TED",   "YAPE (PAL)",         "yape-pal"}, /* default */
+    { "TED",   "YAPE (NTSC)",        "yape-ntsc"},
+    { "TED",   "Colodore (PAL)",     "colodore_ted"},
+
+    { NULL, 0, 0 }
+};
+
+static palette_info_t palettelist_dtv[] = {
+    /* data/C64dtv/ */
+    { "VICII","Spiff", "spiff"}, /* default */
+    { NULL, 0, 0 }
+};
+
+palette_info_t *palette_get_info_list(void)
+{
+    /* special case handling is needed to distinguish from regular VICII */
+    if (machine_class == VICE_MACHINE_C64DTV) {
+        return &palettelist_dtv[0];
+    }
+    return &palettelist[0];
+}
+
+/******************************************************************************/
 
 void palette_init(void)
 {
     palette_log = log_open("Palette");
 }
-

@@ -115,11 +115,10 @@ void vicii_irq_check_state(BYTE value, unsigned int high)
    line counter matches the value stored in the raster line register.  */
 void vicii_irq_raster_trigger(void)
 {
-    if (!(vicii.irq_status & 0x1))
-	{
-		vicii.c64d_irq_flag = 1;
+    if (!(vicii.irq_status & 0x1)) {
         vicii_irq_raster_set(maincpu_clk);
-    }
+		vicii.c64d_irq_flag = 1;
+     }
 }
 
 void vicii_irq_init(void)

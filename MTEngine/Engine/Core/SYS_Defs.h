@@ -71,6 +71,8 @@
 #define MACOS
 #define MACOS_SUPPORT_RETINA
 
+#undef EMULATE_ZOOM_WITH_ALT
+
 //#undef FINAL_RELEASE
 
 #undef IPHONE
@@ -151,7 +153,8 @@
 //#define ANDROID
 //#endif
 
-#define MAX_STRING_LENGTH 1024
+#define MAX_STRING_LENGTH 4096
+
 
 #define RELEASE
 

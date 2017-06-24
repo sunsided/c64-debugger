@@ -29,8 +29,7 @@
 #define VICE_VICII_RESOURCES_H
 
 /* VIC-II resources.  */
-struct vicii_resources_s
-{
+struct vicii_resources_s {
     /* VIC-II border mode, 0..2 */
     int border_mode;
 
@@ -41,11 +40,11 @@ struct vicii_resources_s
        IRQ?  */
     int sprite_background_collisions_enabled;
 
-    /* Flag: New or old luminances? */
-    int new_luminances;
-
     /* VIC-II model */
     int model;
+
+    /* Flag: Do we emulate the "VSP bug" behaviour? */
+    int vsp_bug_enabled;
 };
 typedef struct vicii_resources_s vicii_resources_t;
 
@@ -54,4 +53,3 @@ extern vicii_resources_t vicii_resources;
 extern int vicii_resources_init(void);
 
 #endif
-

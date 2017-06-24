@@ -416,7 +416,7 @@ char *CByteBuffer::getString()
 	int len = getInt();
 	if (len > MAX_STRING_LENGTH)
 	{
-		LOGError("CByteBuffer::getString: len=%d", len);
+		LOGError("CByteBuffer::getString: len=%d, max=%d", len, MAX_STRING_LENGTH);
 		this->error = true;
 		return strdup("");
 	}
@@ -705,6 +705,8 @@ bool CByteBuffer::storeToFile(char *fileName)
 {
 	LOGD("CByteBuffer::storeToFile: '%s'", fileName);
 	
+	FixFileNameSlashes(fileName);
+	
 	FILE *fp = fopen(fileName, "wb");
 	if (fp == NULL)
 	{
@@ -734,7 +736,10 @@ bool CByteBuffer::storeToFile(CSlrString *filePath)
 	FILE *fp = fopen([strFilePath fileSystemRepresentation], "wb");
 	
 #else
+	
 	char *f = filePath->GetStdASCII();
+	FixFileNameSlashes(f);
+
 	FILE *fp = fopen(f, "wb");
 	free(f);
 #endif
@@ -848,6 +853,8 @@ bool CByteBuffer::readFromFile(char *fileName)
 {
 	LOGD("CByteBuffer::readFromFile: '%s'", fileName);
 
+	FixFileNameSlashes(fileName);
+	
 	FILE *fp = fopen(fileName, "rb");
 	if (fp == NULL)
 	{
@@ -988,6 +995,8 @@ bool CByteBuffer::readFromFile(CSlrFile *file, bool readHeader)
 
 bool CByteBuffer::readFromFileNoHeader(char *fileName)
 {
+	FixFileNameSlashes(fileName);
+
 	CSlrFile *file = RES_GetFile(fileName, DEPLOY_FILE_TYPE_DATA);
 	if (!file)
 		return false;
@@ -1312,7 +1321,7 @@ void CByteBuffer::PutBytes(uint8 *b, int len)
 
 uint8 *CByteBuffer::GetBytes(int len)
 {
-	return this->GetBytes(len);
+	return this->getBytes(len);
 }
 
 void CByteBuffer::PutString(char *str)

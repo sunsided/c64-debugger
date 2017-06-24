@@ -1215,7 +1215,7 @@ void CViewBreakpoints::SwitchBreakpointsScreen()
 {
 	if (guiMain->currentView == this)
 	{
-		guiMain->SetView(viewC64);
+		viewC64->ShowMainScreen();
 		
 		UpdateRenderBreakpoints();
 	}
@@ -1721,6 +1721,14 @@ bool CViewBreakpoints::ButtonSwitchChanged(CGuiButtonSwitch *button)
 	{
 		viewC64->debugInterface->breakOnDrive1541IrqIEC = btnBreakpointDrive1541IrqIEC->IsOn();
 	}
+	else if (button == btnBreakpointsDrive1541PC)
+	{
+		viewC64->debugInterface->breakOnDrive1541PC = btnBreakpointsDrive1541PC->IsOn();
+	}
+	else if (button == btnBreakpointsDrive1541Memory)
+	{
+		viewC64->debugInterface->breakOnDrive1541Memory = btnBreakpointsDrive1541Memory->IsOn();
+	}
 	
 	return true;
 }
@@ -1868,6 +1876,8 @@ void CViewBreakpoints::ActivateView()
 	LOGG("CViewBreakpoints::ActivateView()");
 	
 	prevView = guiMain->currentView;
+	
+	viewC64->ShowMouseCursor();
 }
 
 void CViewBreakpoints::DeactivateView()

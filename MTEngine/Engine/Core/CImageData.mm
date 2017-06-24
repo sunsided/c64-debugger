@@ -2004,8 +2004,6 @@ void CImageData::ConvertToShortCount()
 
 void CImageData::Save(char *fileName)
 {
-//#if !defined(IOS) && !defined(ANDROID) && !defined(MACOS)
-
 	if (this->type != IMG_TYPE_GRAYSCALE
 		&& this->type != IMG_TYPE_RGB
 		&& this->type != IMG_TYPE_RGBA
@@ -2227,19 +2225,10 @@ void CImageData::Save(char *fileName)
 
 	fclose(fp);
 	LOGD("CImageData (width=%d height=%d) saved as '%s'", this->width, this->height, fileName);
-
-//#else
-//
-//	SYS_FatalExit("Not supported on iOS/Android");
-//
-//#endif
-
 }
 
 void CImageData::SaveScaled(char *fileName, short int min, short int max)
 {
-#if !defined(IOS) && !defined(ANDROID) && !defined(MACOS)
-
 	if (this->type != IMG_TYPE_GRAYSCALE
 		&& this->type != IMG_TYPE_RGB
 		&& this->type != IMG_TYPE_SHORT_INT)
@@ -2399,21 +2388,7 @@ void CImageData::SaveScaled(char *fileName, short int min, short int max)
 	fclose(fp);
 	LOGD("CImageData saved as '%s'", fileName);
 
-#else
-
-	SYS_FatalExit("Not supported on iOS/Android");
-
-#endif
-
 }
-
-//Hi Alpesh,
-//
-//Regarding the availability of beta builds please find attached project plan for WP version of the My Local Pharmacy application. I will review the progress after each sprint, if you wish we can also deliver you a package then - note it's going to be probably very unstable, but will show some progress. What we can call beta will be available after 4th sprint (thus by 2014/09/30).
-//
-//Regards,
-//Marcin
-
 
 bool CImageData::Load(char *fileName, bool dealloc)
 {
@@ -2421,16 +2396,6 @@ bool CImageData::Load(char *fileName, bool dealloc)
 	if (dealloc)
 		DeallocImage();
 
-#if !defined(MACOS) && !defined(IOS) && !defined(LINUX) && !defined(WIN32)
-TODO: LodePNG for MacOS < 7 only
-	
-	// synchronous
-	SYS_ApkOpenFile(fileName);
-	SYS_ApkFileRead(header, 8);
-
-	SYS_FatalExit("TODO: Android from APK with LodePNG");
-#endif
-	
 	std::vector<unsigned char> image;
 	unsigned imgWidth, imgHeight;
 	unsigned error = lodepng::decode(image, imgWidth, imgHeight, fileName);

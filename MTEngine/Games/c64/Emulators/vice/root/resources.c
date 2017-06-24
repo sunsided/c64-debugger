@@ -35,6 +35,8 @@
 
 #include "vice.h"
 
+/* #define VICE_DEBUG_RESOURCES */
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -53,7 +55,12 @@
 #include "resources.h"
 #include "util.h"
 #include "vice-event.h"
-#include "log.h"
+
+#ifdef VICE_DEBUG_RESOURCES
+#define DBG(x)  printf x
+#else
+#define DBG(x)
+#endif
 
 typedef struct resource_ram_s {
     /* Resource name.  */
@@ -118,13 +125,16 @@ static unsigned int resources_calc_hash_key(const char *name)
 {
     unsigned int key, i, shift;
 
+    DBG(("resources_calc_hash_key: '%s'\n", name ? name : "<empty/null>"));
+
     key = 0; shift = 0;
     for (i = 0; name[i] != '\0'; i++) {
         /* resources are case-insensitive */
         unsigned int sym = (unsigned int)tolower((int)name[i]);
 
-        if (shift >= logHashSize)
+        if (shift >= logHashSize) {
             shift = 0;
+        }
 
         key ^= (sym << shift);
         if (shift + 8 > logHashSize) {
@@ -169,11 +179,13 @@ static void resources_exec_callback_chain(const resource_callback_desc_t
 /* issue callbacks for a modified resource */
 static void resources_issue_callback(resource_ram_t *res, int global_callback)
 {
-    if (res->callback != NULL)
+    if (res->callback != NULL) {
         resources_exec_callback_chain(res->callback, res->name);
+    }
 
-    if ((global_callback != 0) && (resource_modified_callback != NULL))
+    if ((global_callback != 0) && (resource_modified_callback != NULL)) {
         resources_exec_callback_chain(resource_modified_callback, res->name);
+    }
 }
 
 
@@ -226,16 +238,15 @@ char *vice_config_file = NULL;
 /* ------------------------------------------------------------------------- */
 /* register an array(!) of integer resources */
 int resources_register_int(const resource_int_t *r)
-{	
+{
     const resource_int_t *sp;
-	resource_ram_t *dp;
+    resource_ram_t *dp;
 
-	LOGD("resources_register_int: name=%s", r->name);
+    DBG(("resources_register_int name:'%s'\n", r->name ? r->name : "<empty/null>"));
 
     sp = r;
     dp = resources + num_resources;
     while (sp->name != NULL) {
-
         unsigned int hashkey;
 
         if (sp->value_ptr == NULL || sp->set_func == NULL) {
@@ -282,10 +293,11 @@ int resources_register_string(const resource_string_t *r)
     const resource_string_t *sp;
     resource_ram_t *dp;
 
+    DBG(("resources_register_string name:'%s'\n", r->name ? r->name : "<empty/null>"));
+
     sp = r;
     dp = resources + num_resources;
     while (sp->name != NULL) {
-
         unsigned int hashkey;
 
         if (sp->factory_value == NULL
@@ -333,10 +345,14 @@ static void resources_free(void)
 {
     unsigned int i;
 
-    for (i = 0; i < num_resources; i++)
+    for (i = 0; i < num_resources; i++) {
         lib_free((resources + i)->name);
+    }
 }
 
+
+/** \brief  Shutown resources
+ */
 void resources_shutdown(void)
 {
     resources_free();
@@ -351,10 +367,11 @@ resource_type_t resources_query_type(const char *name)
 {
     resource_ram_t *res;
 
-    if ((res = lookup(name)) != NULL)
+    if ((res = lookup(name)) != NULL) {
         return res->type;
-    else
+    } else {
         return (resource_type_t)-1;
+    }
 }
 
 int resources_write_item_to_file(FILE *fp, const char *name)
@@ -374,8 +391,9 @@ char *resources_write_item_to_string(const char *name, const char *delim)
 {
     resource_ram_t *res = lookup(name);
 
-    if (res != NULL)
+    if (res != NULL) {
         return string_resource_item((int)(res - resources), delim);
+    }
 
     log_warning(LOG_DEFAULT, "Trying to save unknown resource '%s'", name);
 
@@ -391,18 +409,20 @@ static void resource_create_event_data(char **event_data, int *data_size,
 
     name_size = (int)strlen(name) + 1;
 
-    if (r->type == RES_INTEGER)
+    if (r->type == RES_INTEGER) {
         *data_size = name_size + sizeof(DWORD);
-    else
+    } else {
         *data_size = name_size + (int)strlen((char *)value) + 1;
+    }
 
     *event_data = lib_malloc(*data_size);
     strcpy(*event_data, name);
 
-    if (r->type == RES_INTEGER)
+    if (r->type == RES_INTEGER) {
         *(DWORD *)(*event_data + name_size) = vice_ptr_to_uint(value);
-    else
+    } else {
         strcpy(*event_data + name_size, (char *)value);
+    }
 }
 
 static void resource_record_event(resource_ram_t *r,
@@ -433,8 +453,9 @@ int resources_init(const char *machine)
        pointers into the array because the array may be reallocated. */
     hashTable = lib_malloc((1 << logHashSize) * sizeof(int));
 
-    for (i = 0; i < (unsigned int)(1 << logHashSize); i++)
+    for (i = 0; i < (unsigned int)(1 << logHashSize); i++) {
         hashTable[i] = -1;
+    }
 
     return 0;
 }
@@ -445,16 +466,17 @@ static int resources_set_value_internal(resource_ram_t *r,
     int status = 0;
 
     switch (r->type) {
-      case RES_INTEGER:
-        status = (*r->set_func_int)(vice_ptr_to_int(value), r->param);
-        break;
-      case RES_STRING:
-        status = (*r->set_func_string)((const char *)value, r->param);
-        break;
+        case RES_INTEGER:
+            status = (*r->set_func_int)(vice_ptr_to_int(value), r->param);
+            break;
+        case RES_STRING:
+            status = (*r->set_func_string)((const char *)value, r->param);
+            break;
     }
 
-    if (status != 0)
+    if (status != 0) {
         resources_issue_callback(r, 1);
+    }
 
     return status;
 }
@@ -471,11 +493,11 @@ int resources_set_value(const char *name, resource_value_t value)
     }
 
     if (r->event_relevant == RES_EVENT_STRICT
-        && network_get_mode() != NETWORK_IDLE)
+        && network_get_mode() != NETWORK_IDLE) {
         return -2;
+    }
 
-    if (r->event_relevant == RES_EVENT_SAME && network_connected())
-    {
+    if (r->event_relevant == RES_EVENT_SAME && network_connected()) {
         resource_record_event(r, value);
         return 0;
     }
@@ -488,15 +510,16 @@ static int resources_set_internal_int(resource_ram_t *r, int value)
     int status = 0;
 
     switch (r->type) {
-      case RES_INTEGER:
-        status = (*r->set_func_int)(value, r->param);
-        break;
-      default:
-        return -1;
+        case RES_INTEGER:
+            status = (*r->set_func_int)(value, r->param);
+            break;
+        default:
+            return -1;
     }
 
-    if (status != 0)
+    if (status != 0) {
         resources_issue_callback(r, 1);
+    }
 
     return status;
 }
@@ -507,15 +530,16 @@ static int resources_set_internal_string(resource_ram_t *r,
     int status = 0;
 
     switch (r->type) {
-      case RES_STRING:
-        status = (*r->set_func_string)(value, r->param);
-        break;
-      default:
-        return -1;
+        case RES_STRING:
+            status = (*r->set_func_string)(value, r->param);
+            break;
+        default:
+            return -1;
     }
 
-    if (status != 0)
+    if (status != 0) {
         resources_issue_callback(r, 1);
+    }
 
     return status;
 }
@@ -531,12 +555,11 @@ int resources_set_int(const char *name, int value)
         return -1;
     }
 
-    if (r->event_relevant == RES_EVENT_STRICT
-        && network_get_mode() != NETWORK_IDLE)
+    if (r->event_relevant == RES_EVENT_STRICT && network_get_mode() != NETWORK_IDLE) {
         return -2;
+    }
 
-    if (r->event_relevant == RES_EVENT_SAME && network_connected())
-    {
+    if (r->event_relevant == RES_EVENT_SAME && network_connected()) {
         resource_record_event(r, uint_to_void_ptr(value));
         return 0;
     }
@@ -555,12 +578,11 @@ int resources_set_string(const char *name, const char *value)
         return -1;
     }
 
-    if (r->event_relevant == RES_EVENT_STRICT
-        && network_get_mode() != NETWORK_IDLE)
+    if (r->event_relevant == RES_EVENT_STRICT && network_get_mode() != NETWORK_IDLE) {
         return -2;
+    }
 
-    if (r->event_relevant == RES_EVENT_SAME && network_connected())
-    {
+    if (r->event_relevant == RES_EVENT_SAME && network_connected()) {
         resource_record_event(r, (resource_value_t)value);
         return 0;
     }
@@ -570,11 +592,11 @@ int resources_set_string(const char *name, const char *value)
 
 void resources_set_value_event(void *data, int size)
 {
-    const char *name;
-    const char *valueptr;
+    char *name;
+    char *valueptr;
     resource_ram_t *r;
 
-    name = (const char *)data;
+    name = data;
     valueptr = name + strlen(name) + 1;
     r = lookup(name);
     if (r->type == RES_INTEGER) {
@@ -629,27 +651,27 @@ int resources_set_value_string(const char *name, const char *value)
     }
 
     switch (r->type) {
-      case RES_INTEGER:
-        {
-            char *endptr;
-            int int_value;
+        case RES_INTEGER:
+            {
+                char *endptr;
+                int int_value;
 
-            int_value = (int)strtol(value, &endptr, 0);
+                int_value = (int)strtol(value, &endptr, 0);
 
-            if (*endptr == '\0') {
-                status = (*r->set_func_int)(int_value, r->param);
-            } else {
-                status = -1;
+                if (*endptr == '\0') {
+                    status = (*r->set_func_int)(int_value, r->param);
+                } else {
+                    status = -1;
+                }
             }
-        }
-        break;
-      case RES_STRING:
-        status = (*r->set_func_string)(value, r->param);
-        break;
-      default:
-        log_warning(LOG_DEFAULT, "Unknown resource type for `%s'", name);
-        status = -1;
-        break;
+            break;
+        case RES_STRING:
+            status = (*r->set_func_string)(value, r->param);
+            break;
+        default:
+            log_warning(LOG_DEFAULT, "Unknown resource type for `%s'", name);
+            status = -1;
+            break;
     }
 
     if (status != 0) {
@@ -671,15 +693,15 @@ int resources_get_value(const char *name, void *value_return)
     }
 
     switch (r->type) {
-      case RES_INTEGER:
-        *(int *)value_return = *(int *)r->value_ptr;
-        break;
-      case RES_STRING:
-        *(char **)value_return = *(char **)r->value_ptr;
-        break;
-      default:
-        log_warning(LOG_DEFAULT, "Unknown resource type for `%s'", name);
-        return -1;
+        case RES_INTEGER:
+            *(int *)value_return = *(int *)r->value_ptr;
+            break;
+        case RES_STRING:
+            *(char **)value_return = *(char **)r->value_ptr;
+            break;
+        default:
+            log_warning(LOG_DEFAULT, "Unknown resource type for `%s'", name);
+            return -1;
     }
 
     return 0;
@@ -697,12 +719,12 @@ int resources_get_int(const char *name, int *value_return)
     }
 
     switch (r->type) {
-      case RES_INTEGER:
-        *value_return = *(int *)r->value_ptr;
-        break;
-      default:
-        log_warning(LOG_DEFAULT, "Unknown resource type for `%s'", name);
-        return -1;
+        case RES_INTEGER:
+            *value_return = *(int *)r->value_ptr;
+            break;
+        default:
+            log_warning(LOG_DEFAULT, "Unknown resource type for `%s'", name);
+            return -1;
     }
 
     return 0;
@@ -720,12 +742,12 @@ int resources_get_string(const char *name, const char **value_return)
     }
 
     switch (r->type) {
-      case RES_STRING:
-        *value_return = *(const char **)r->value_ptr;
-        break;
-      default:
-        log_warning(LOG_DEFAULT, "Unknown resource type for `%s'", name);
-        return -1;
+        case RES_STRING:
+            *value_return = *(const char **)r->value_ptr;
+            break;
+        default:
+            log_warning(LOG_DEFAULT, "Unknown resource type for `%s'", name);
+            return -1;
     }
 
     return 0;
@@ -764,6 +786,37 @@ int resources_get_string_sprintf(const char *name, const char **value_return,
     return result;
 }
 
+int resources_set_default_int(const char *name, int value)
+{
+    resource_ram_t *r = lookup(name);
+
+    if (r == NULL) {
+        log_warning(LOG_DEFAULT,
+                    "Trying to assign default to unknown "
+                    "resource `%s'.", name);
+        return -1;
+    }
+
+    r->factory_value = uint_to_void_ptr(value);
+    return 0;
+}
+
+int resources_set_default_string(const char *name, char *value)
+{
+    resource_ram_t *r = lookup(name);
+
+    if (r == NULL) {
+        log_warning(LOG_DEFAULT,
+                    "Trying to assign default to unknown "
+                    "resource `%s'.", name);
+        return -1;
+    }
+    /* since these pointers are usually static/not allocated, we just
+       assign it here and don't free() as one might expect */
+    r->factory_value = value;
+    return 0;
+}
+
 int resources_get_default_value(const char *name, void *value_return)
 {
     resource_ram_t *r = lookup(name);
@@ -776,15 +829,15 @@ int resources_get_default_value(const char *name, void *value_return)
     }
 
     switch (r->type) {
-      case RES_INTEGER:
-        *(int *)value_return = vice_ptr_to_int(r->factory_value);
-        break;
-      case RES_STRING:
-        *(char **)value_return = (char *)(r->factory_value);
-        break;
-      default:
-        log_warning(LOG_DEFAULT, "Unknown resource type for `%s'", name);
-        return -1;
+        case RES_INTEGER:
+            *(int *)value_return = vice_ptr_to_int(r->factory_value);
+            break;
+        case RES_STRING:
+            *(char **)value_return = (char *)(r->factory_value);
+            break;
+        default:
+            log_warning(LOG_DEFAULT, "Unknown resource type for `%s'", name);
+            return -1;
     }
 
     return 0;
@@ -797,27 +850,28 @@ int resources_set_defaults(void)
 
     for (i = 0; i < num_resources; i++) {
         switch (resources[i].type) {
-          case RES_INTEGER:
-            if ((*resources[i].set_func_int)(vice_ptr_to_int(resources[i].factory_value),
-                resources[i].param) < 0) {
-                /*printf("Cannot set resource %s", resources[i].name);*/
-                return -1;
-            }
-            break;
-          case RES_STRING:
-            if ((*resources[i].set_func_string)((const char *)(resources[i].factory_value),
-                resources[i].param) < 0) {
-                /*printf("Cannot set resource %s", resources[i].name);*/
-                return -1;
-            }
-            break;
+            case RES_INTEGER:
+                if ((*resources[i].set_func_int)(vice_ptr_to_int(resources[i].factory_value),
+                                                 resources[i].param) < 0) {
+                    log_verbose("Cannot set resource %s", resources[i].name);
+                    return -1;
+                }
+                break;
+            case RES_STRING:
+                if ((*resources[i].set_func_string)((const char *)(resources[i].factory_value),
+                                                    resources[i].param) < 0) {
+                    log_verbose("Cannot set resource %s", resources[i].name);
+                    return -1;
+                }
+                break;
         }
 
         resources_issue_callback(resources + i, 0);
     }
 
-    if (resource_modified_callback != NULL)
+    if (resource_modified_callback != NULL) {
         resources_exec_callback_chain(resource_modified_callback, NULL);
+    }
 
     return 0;
 }
@@ -828,26 +882,29 @@ int resources_set_event_safe(void)
 
     for (i = 0; i < num_resources; i++) {
         switch (resources[i].type) {
-          case RES_INTEGER:
-            if (resources[i].event_relevant == RES_EVENT_STRICT) {
-                if ((*resources[i].set_func_int)(vice_ptr_to_int(resources[i].event_strict_value),
-                    resources[i].param) < 0)
-                    return -1;
-            }
-            break;
-          case RES_STRING:
-            if (resources[i].event_relevant == RES_EVENT_STRICT) {
-                if ((*resources[i].set_func_string)((const char *)(resources[i].event_strict_value),
-                    resources[i].param) < 0)
-                    return -1;
-            }
-            break;
+            case RES_INTEGER:
+                if (resources[i].event_relevant == RES_EVENT_STRICT) {
+                    if ((*resources[i].set_func_int)(vice_ptr_to_int(resources[i].event_strict_value),
+                                                     resources[i].param) < 0) {
+                        return -1;
+                    }
+                }
+                break;
+            case RES_STRING:
+                if (resources[i].event_relevant == RES_EVENT_STRICT) {
+                    if ((*resources[i].set_func_string)((const char *)(resources[i].event_strict_value),
+                                                        resources[i].param) < 0) {
+                        return -1;
+                    }
+                }
+                break;
         }
         resources_issue_callback(resources + i, 0);
     }
 
-    if (resource_modified_callback != NULL)
+    if (resource_modified_callback != NULL) {
         resources_exec_callback_chain(resource_modified_callback, NULL);
+    }
 
     return 0;
 }
@@ -885,12 +942,13 @@ int resources_toggle(const char *name, int *new_value_return)
 
     value = !(*(int *)r->value_ptr);
 
-    if (r->event_relevant == RES_EVENT_STRICT
-        && network_get_mode() != NETWORK_IDLE)
+    if (r->event_relevant == RES_EVENT_STRICT && network_get_mode() != NETWORK_IDLE) {
         return -2;
+    }
 
-    if (new_value_return != NULL)
+    if (new_value_return != NULL) {
         *new_value_return = value;
+    }
 
     if (r->event_relevant == RES_EVENT_SAME && network_connected()) {
         resource_record_event(r, uint_to_void_ptr(value));
@@ -904,8 +962,9 @@ int resources_touch(const char *name)
 {
     void *tmp;
 
-    if (resources_get_value(name, (resource_value_t *)&tmp) < 0)
+    if (resources_get_value(name, (resource_value_t *)&tmp) < 0) {
         return -1;
+    }
 
     return resources_set_value(name, (resource_value_t)tmp);
 }
@@ -918,27 +977,36 @@ static int check_emu_id(const char *buf)
     size_t machine_id_len, buf_len;
 
     buf_len = strlen(buf);
-    if (*buf != '[' || *(buf + buf_len - 1) != ']')
+    if (*buf != '[' || *(buf + buf_len - 1) != ']') {
         return 0;
+    }
 
-    if (machine_id == NULL)
+    if (machine_id == NULL) {
         return 1;
+    }
 
     machine_id_len = strlen(machine_id);
-    if (machine_id_len != buf_len - 2)
+    if (machine_id_len != buf_len - 2) {
         return 0;
+    }
 
-    if (strncmp(buf + 1, machine_id, machine_id_len) == 0)
+    if (strncmp(buf + 1, machine_id, machine_id_len) == 0) {
         return 1;
-    else
+    } else {
         return 0;
+    }
 }
 
 /* ------------------------------------------------------------------------- */
 
-/* Read one resource line from the file descriptor `f'.  Return 1 on success,
-   -1 on parse/type error, -2 on unknown resource error, 0 on EOF or
-   end of emulator section.  */
+/* Read one resource line from the file descriptor `f'.
+   Returns:
+    1 on success,
+    0 on EOF or end of emulator section.
+   -1 on general error
+   RESERR_TYPE_INVALID on parse/type error
+   RESERR_UNKNOWN_RESOURCE on unknown resource error
+*/
 /* FIXME: make event safe */
 int resources_read_item_from_file(FILE *f)
 {
@@ -950,12 +1018,14 @@ int resources_read_item_from_file(FILE *f)
 
     line_len = util_get_line(buf, 1024, f);
 
-    if (line_len < 0)
+    if (line_len < 0) {
         return 0;
+    }
 
     /* Ignore empty lines.  */
-    if (*buf == '\0')
+    if (*buf == '\0') {
         return 1;
+    }
 
     if (*buf == '[') {
         /* End of emulator-specific section.  */
@@ -963,8 +1033,9 @@ int resources_read_item_from_file(FILE *f)
     }
 
     arg_ptr = strchr(buf, '=');
-    if (!arg_ptr)
+    if (!arg_ptr) {
         return -1;
+    }
 
     resname_len = (int)(arg_ptr - buf);
     arg_ptr++;
@@ -984,26 +1055,33 @@ int resources_read_item_from_file(FILE *f)
         r = lookup(buf);
         if (r == NULL) {
             log_error(LOG_DEFAULT, "Unknown resource `%s'.", buf);
-            return -2;
+            return RESERR_UNKNOWN_RESOURCE;
         }
 
         switch (r->type) {
-          case RES_INTEGER:
-            result = (*r->set_func_int)(atoi(arg_ptr), r->param);
-            break;
-          case RES_STRING:
-            result = (*r->set_func_string)(arg_ptr, r->param);
-            break;
-          default:
-            log_error(LOG_DEFAULT, "Unknown resource type for `%s'.",
-                      r->name);
-            result = -1;
-	    break;
+            case RES_INTEGER:
+                result = (*r->set_func_int)(atoi(arg_ptr), r->param);
+                break;
+            case RES_STRING:
+                result = (*r->set_func_string)(arg_ptr, r->param);
+                break;
+            default:
+                log_error(LOG_DEFAULT, "Unknown resource type for `%s'.",
+                          r->name);
+                result = RESERR_TYPE_INVALID;
+                break;
         }
 
         if (result < 0) {
-            log_error(LOG_DEFAULT, "Cannot assign value to resource `%s'.",
-                      r->name);
+            switch (r->type) {
+                case RES_INTEGER:
+                case RES_STRING:
+                    log_error(LOG_DEFAULT, "Cannot assign value `%s' to resource `%s'.", arg_ptr, r->name);
+                    break;
+                default:
+                    log_error(LOG_DEFAULT, "Cannot assign value to resource `%s'.", r->name);
+                    break;
+            }
             return -1;
         }
 
@@ -1042,7 +1120,7 @@ int resources_load(const char *fname)
     log_message(LOG_DEFAULT, "Reading configuration file `%s'.", fname);
 
     /* Find the start of the configuration section for this emulator.  */
-    for (line_num = 1; ; line_num++) {
+    for (line_num = 1;; line_num++) {
         char buf[1024];
 
         if (util_get_line(buf, 1024, f) < 0) {
@@ -1059,16 +1137,18 @@ int resources_load(const char *fname)
 
     do {
         retval = resources_read_item_from_file(f);
-        if (retval == -1) {
-            log_error(LOG_DEFAULT,
-                      "%s: Invalid resource specification at line %d.",
-                      fname, line_num);
-            err = 1;
-        } else
-        if (retval == -2) {
-            log_warning(LOG_DEFAULT,
-                      "%s: Unknown resource specification at line %d.",
-                      fname, line_num);
+        switch (retval) {
+            case RESERR_TYPE_INVALID:
+                    log_error(LOG_DEFAULT,
+                            "%s: Invalid resource specification at line %d.",
+                            fname, line_num);
+                    err = 1;
+                break;
+            case RESERR_UNKNOWN_RESOURCE:
+                    log_warning(LOG_DEFAULT,
+                                "%s: Unknown resource specification at line %d.",
+                                fname, line_num);
+                break;
         }
         line_num++;
     } while (retval != 0);
@@ -1076,8 +1156,9 @@ int resources_load(const char *fname)
     fclose(f);
     lib_free(default_name);
 
-    if (resource_modified_callback != NULL)
+    if (resource_modified_callback != NULL) {
         resources_exec_callback_chain(resource_modified_callback, NULL);
+    }
 
     return err ? RESERR_FILE_INVALID : 0;
 }
@@ -1089,22 +1170,23 @@ static char *string_resource_item(int num, const char *delim)
     resource_value_t v;
 
     switch (resources[num].type) {
-      case RES_INTEGER:
-        v = (resource_value_t) uint_to_void_ptr(*(int *)resources[num].value_ptr);
-        line = lib_msprintf("%s=%d%s", resources[num].name, vice_ptr_to_int(v), delim);
-        break;
-      case RES_STRING:
-        v = *resources[num].value_ptr;
-        if ((char *)v != NULL)
-            line = lib_msprintf("%s=\"%s\"%s", resources[num].name, (char *)v,
-                   delim);
-        else
-            line = lib_msprintf("%s=%s", resources[num].name, delim);
-        break;
-      default:
-        log_error(LOG_DEFAULT, "Unknown value type for resource `%s'.",
-                  resources[num].name);
-        break;
+        case RES_INTEGER:
+            v = (resource_value_t) uint_to_void_ptr(*(int *)resources[num].value_ptr);
+            line = lib_msprintf("%s=%d%s", resources[num].name, vice_ptr_to_int(v), delim);
+            break;
+        case RES_STRING:
+            v = *resources[num].value_ptr;
+            if ((char *)v != NULL) {
+                line = lib_msprintf("%s=\"%s\"%s", resources[num].name, (char *)v,
+                                    delim);
+            } else {
+                line = lib_msprintf("%s=%s", resources[num].name, delim);
+            }
+            break;
+        default:
+            log_error(LOG_DEFAULT, "Unknown value type for resource `%s'.",
+                      resources[num].name);
+            break;
     }
     return line;
 }
@@ -1123,6 +1205,39 @@ static void write_resource_item(FILE *f, int num)
     }
 }
 
+/* check if a resource contains its default value */
+static int resource_item_isdefault(int num)
+{
+    int i1, i2;
+    char *s1, *s2;
+    resource_value_t v;
+
+    switch (resources[num].type) {
+        case RES_INTEGER:
+            v = (resource_value_t) uint_to_void_ptr(*(int *)resources[num].value_ptr);
+            i1 = vice_ptr_to_int(v);
+            i2 = vice_ptr_to_int(resources[num].factory_value);
+            if (i1 == i2) {
+                return 1;
+            }
+            DBG(("%s = (int) default: \"%d\" is: \"%d\"\n", resources[num].name, i2, i1));
+            break;
+        case RES_STRING:
+            v = *resources[num].value_ptr;
+            s1 = (char *)v == NULL ? "" : (char *)v;
+            s2 = (char *)resources[num].factory_value == NULL ? "" : (char *)resources[num].factory_value;
+            if (!strcmp(s1, s2)) {
+                return 1;
+            }
+            DBG(("%s = (string) default: \"%s\" is: \"%s\"\n", resources[num].name, s2, s1));
+            break;
+        default:
+            log_error(LOG_DEFAULT, "Unknown value type for resource `%s'.", resources[num].name);
+            break;
+    }
+    return 0;
+}
+
 /* Save all the resources into file `fname'.  If `fname' is NULL, save them
    in the default resource file.  Writing the resources does not destroy the
    resources for the other emulators.  */
@@ -1136,6 +1251,7 @@ int resources_save(const char *fname)
     /* get name for config file */
     if (fname == NULL) {
         if (vice_config_file == NULL) {
+            /* get default filename. this also creates the .vice directory if not present */
             default_name = archdep_default_save_resource_file_name();
         } else {
             default_name = lib_stralloc(vice_config_file);
@@ -1195,7 +1311,7 @@ int resources_save(const char *fname)
     setbuf(out_file, NULL);
 
     /* Copy the configuration for the other emulators.  */
-    if(in_file != NULL) {
+    if (in_file != NULL) {
         while (1) {
             char buf[1024];
 
@@ -1212,13 +1328,16 @@ int resources_save(const char *fname)
     }
 
     /* Write our current configuration.  */
-    fprintf(out_file,"[%s]\n", machine_id);
+    fprintf(out_file, "[%s]\n", machine_id);
     for (i = 0; i < num_resources; i++) {
-        write_resource_item(out_file, i);
+        /* only dump into the file what is different to the default config */
+        if (!resource_item_isdefault(i)) {
+            write_resource_item(out_file, i);
+        }
     }
     fprintf(out_file, "\n");
 
-    if(in_file != NULL) {
+    if (in_file != NULL) {
         char buf[1024];
 
         /* Skip the old configuration for this emulator.  */
@@ -1251,6 +1370,32 @@ int resources_save(const char *fname)
     return 0;
 }
 
+/* dump ALL resources of the current machine into a file */
+int resources_dump(const char *fname)
+{
+    FILE *out_file;
+    unsigned int i;
+
+    log_message(LOG_DEFAULT, "Dumping %d resources to file `%s'.", num_resources, fname);
+
+    out_file = fopen(fname, MODE_WRITE_TEXT);
+    if (!out_file) {
+        return RESERR_CANNOT_CREATE_FILE;
+    }
+
+    setbuf(out_file, NULL);
+
+    /* Write our current configuration.  */
+    fprintf(out_file, "[%s]\n", machine_id);
+    for (i = 0; i < num_resources; i++) {
+        write_resource_item(out_file, i);
+    }
+    fprintf(out_file, "\n");
+
+    fclose(out_file);
+    return 0;
+}
+
 int resources_register_callback(const char *name,
                                 resource_callback_func_t *callback,
                                 void *callback_param)
@@ -1269,4 +1414,3 @@ int resources_register_callback(const char *name,
     }
     return -1;
 }
-

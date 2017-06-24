@@ -2,7 +2,7 @@
  * riot.h - RIOT emulation.
  *
  * Written by
- *  André Fachat <fachat@physik.tu-chemnitz.de>
+ *  Andre Fachat <fachat@physik.tu-chemnitz.de>
  *  Andreas Boose <viceteam@t-online.de>
  *
  * This file is part of VICE, the Versatile Commodore Emulator.
@@ -93,13 +93,11 @@ extern void riotcore_shutdown(struct riot_context_s *riot_context);
 extern void riotcore_reset(riot_context_t *riot_context);
 extern void riotcore_disable(riot_context_t *riot_context);
 extern void riotcore_signal(riot_context_t *riot_context, int sig, int type);
-extern void riotcore_store(riot_context_t *riot_context, WORD addr,
-                                    BYTE data);
+extern void riotcore_store(riot_context_t *riot_context, WORD addr, BYTE data);
 extern BYTE riotcore_read(riot_context_t *riot_context, WORD addr);
+extern BYTE riotcore_peek(riot_context_t *riot_context, WORD addr);
+extern void riotcore_dump(riot_context_t *riot_context);
 
-extern int riotcore_snapshot_write_module(struct riot_context_s *riot_context,
-                                          struct snapshot_s *p);
-extern int riotcore_snapshot_read_module(struct riot_context_s *riot_context,
-                                         struct snapshot_s *p);
+extern int riotcore_snapshot_write_module(struct riot_context_s *riot_context, struct snapshot_s *p);
+extern int riotcore_snapshot_read_module(struct riot_context_s *riot_context, struct snapshot_s *p);
 #endif
-

@@ -2,7 +2,7 @@
  * mem.h - Memory interface.
  *
  * Written by
- *  André Fachat <fachat@physik.tu-chemnitz.de>
+ *  Andre Fachat <fachat@physik.tu-chemnitz.de>
  *  Ettore Perazzoli <ettore@comm2000.it>
  *  Andreas Boose <viceteam@t-online.de>
  *
@@ -87,7 +87,8 @@ typedef struct mem_ioreg_list_s {
     WORD start;
     WORD end;
     unsigned int next;
-    int (*dump)(WORD address);
+    int (*dump)(void *context, WORD address);
+    void *context;
 } mem_ioreg_list_t;
 
 extern mem_ioreg_list_t *mem_ioreg_list_get(void *context);
@@ -98,4 +99,3 @@ extern int mem_write_snapshot_module(struct snapshot_s *s, int save_roms);
 extern int mem_read_snapshot_module(struct snapshot_s *s);
 
 #endif
-

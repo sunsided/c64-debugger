@@ -104,4 +104,12 @@ extern int archdep_require_vkbd(void);
 #include "archdep_dingoo.h"
 #endif
 
+
+#define STATIC_PROTOTYPE static
+
+/* Default sound output mode */
+#define ARCHDEP_SOUND_OUTPUT_MODE SOUND_OUTPUT_SYSTEM
+
+
+
 #endif

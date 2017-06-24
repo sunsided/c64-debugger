@@ -770,9 +770,9 @@ void sdl_ui_activate_post_action(void)
         sound_resume();
     }
 
-    if (vsid_mode) {
-        sdl_vsid_activate();
-    }
+//    if (vsid_mode) {
+//        sdl_vsid_activate();
+//    }
 
     /* Force a video refresh */
     raster_force_repaint(sdl_active_canvas->parent_raster);

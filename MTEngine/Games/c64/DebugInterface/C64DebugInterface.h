@@ -5,6 +5,12 @@
 #include "CSlrDataAdapter.h"
 #include "CByteBuffer.h"
 #include "C64DebugTypes.h"
+
+extern "C"
+{
+#include "ViceWrapper.h"
+};
+
 #include <map>
 
 class CViewC64;
@@ -94,6 +100,7 @@ public:
 	
 	virtual void Reset();
 	virtual void HardReset();
+	virtual void DiskDriveReset();
 	
 	// C64 keyboard mapper
 	virtual void KeyboardDown(uint32 mtKeyCode);
@@ -135,11 +142,23 @@ public:
 	virtual void GetSidTypes(std::vector<CSlrString *> *sidTypes);
 	virtual void SetSidType(int sidType);
 	
-	virtual void GetC64ModelTypes(std::vector<CSlrString *> *modelTypes);
+	// samplingMethod: Fast=0, Interpolating=1, Resampling=2, Fast Resampling=3
+	virtual void SetSidSamplingMethod(int samplingMethod);
+	// emulateFilters: no=0, yes=1
+	virtual void SetSidEmulateFilters(int emulateFilters);
+	// passband: 0-90
+	virtual void SetSidPassBand(int passband);
+	// filterBias: -500 500
+	virtual void SetSidFilterBias(int filterBias);
+
+	//
+	virtual void GetC64ModelTypes(std::vector<CSlrString *> *modelTypeNames, std::vector<int> *modelTypeIds);
 	virtual void SetC64ModelType(int modelType);
 	
 	virtual void SetEmulationMaximumSpeed(int maximumSpeed);
 	
+	virtual void SetVSPBugEmulation(bool isVSPBugEmulation);
+
 	// memory access
 	virtual void SetByteC64(uint16 addr, uint8 val);
 	virtual void SetByteToRamC64(uint16 addr, uint8 val);
@@ -185,6 +204,7 @@ public:
 	virtual void GetVICSpriteColors(uint8 *cD021, uint8 *cD025, uint8 *cD026, uint8 *spriteColors);
 	
 	virtual void GetCBMColor(uint8 colorNum, uint8 *r, uint8 *g, uint8 *b);
+	virtual void GetFloatCBMColor(uint8 colorNum, float *r, float *g, float *b);
 
 	// cartridge
 	virtual void AttachCartridge(CSlrString *filePath);
@@ -206,13 +226,25 @@ public:
 	virtual void MarkDrive1541CellWrite(uint16 addr, uint8 value);
 	
 	virtual void UiInsertD64(CSlrString *path);
+	
+	virtual bool IsCpuJam();
+	virtual void ForceRunAndUnJamCpu();
 
 	// state rendering
-	virtual void RenderStateVIC(float posX, float posY, float posZ, bool isVertical, bool showSprites, CSlrFont *fontBytes, float fontSize, std::vector<CImageData *> *spritesImageData, std::vector<CSlrImage *> *spritesImages, bool renderDataWithColors);
+	virtual void RenderStateVIC(vicii_cycle_state_t *viciiState,
+								float posX, float posY, float posZ, bool isVertical, bool showSprites, CSlrFont *fontBytes, float fontSize,
+								std::vector<CImageData *> *spritesImageData, std::vector<CSlrImage *> *spritesImages, bool renderDataWithColors);
 	virtual void RenderStateDrive1541(float posX, float posY, float posZ, CSlrFont *fontBytes, float fontSize,
 									  bool renderVia1, bool renderVia2, bool renderDriveLed, bool isVertical);
 	virtual void RenderStateCIA(float px, float py, float posZ, CSlrFont *fontBytes, float fontSize, int ciaId);
 	virtual void RenderStateSID(uint16 sidBase, float posX, float posY, float posZ, CSlrFont *fontBytes, float fontSize);
+
+	// state recording
+	virtual void SetVicRecordStateMode(uint8 recordMode);
+	
+	// VIC
+	virtual void SetVicRegister(uint8 registerNum, uint8 value);
+	virtual u8 GetVicRegister(uint8 registerNum);
 
 	// SID
 	virtual void SetSIDMuteChannels(bool mute1, bool mute2, bool mute3, bool muteExt);
@@ -223,6 +255,9 @@ public:
 	float ledState[C64_NUM_DRIVES];
 	
 	virtual void SetPalette(uint8 *palette);
+	
+	virtual void SetPatchKernalFastBoot(bool isPatchKernal);
+	virtual void SetRunSIDWhenInWarp(bool isRunningSIDInWarp);
 	
 private:
 	volatile int debugMode;

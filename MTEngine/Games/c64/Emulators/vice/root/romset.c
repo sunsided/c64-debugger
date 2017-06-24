@@ -37,91 +37,101 @@
 #endif
 
 #include "archdep.h"
+#include "cmdline.h"
+#include "ioutil.h"
 #include "lib.h"
 #include "log.h"
 #include "machine.h"
 #include "resources.h"
 #include "romset.h"
 #include "sysfile.h"
+#include "translate.h"
 #include "types.h"
 #include "util.h"
 
 
 static log_t romset_log = LOG_DEFAULT;
 
-static int romset_source_file;
-
-static char *romset_filename = NULL;
-static char *romset_archive_name = NULL;
-static char *romset_archive_active = NULL;
-
-static int set_romset_source_file(int source, void *param)
-{
-    if (source < 0 || source > 1)
-        return -1;
-
-    romset_source_file = source;
-
-    return 0;
-}
-
-static int set_romset_archive_name(const char *val, void *param)
-{
-    if (util_string_set(&romset_archive_name, val))
-        return 0;
-
-    return 0;
-}
-
-static int set_romset_archive_active(const char *val, void *param)
-{
-    if (util_string_set(&romset_archive_active, val))
-        return 0;
-
-    if (romset_archive_item_select(romset_archive_active) < 0)
-        return 0;
-
-    return 0;
-}
-
-static int set_romset_filename(const char *val, void *param)
-{
-    if (util_string_set(&romset_filename, val))
-        return 0;
-
-    return 0;
-}
-
-static const resource_string_t resources_string[] = {
-    { "RomsetArchiveName", "default", RES_EVENT_NO, NULL,
-      /* FIXME: filenames may differ */
-      &romset_archive_name, set_romset_archive_name, NULL },
-    { "RomsetArchiveActive", "", RES_EVENT_NO, NULL,
-      &romset_archive_active, set_romset_archive_active, NULL },
-    { "RomsetFileName", "default", RES_EVENT_NO, NULL,
-      &romset_filename, set_romset_filename, NULL },
-    { NULL }
-};
-
-static const resource_int_t resources_int[] = {
-    { "RomsetSourceFile", 1, RES_EVENT_NO, NULL,
-      &romset_source_file, set_romset_source_file, NULL },
-    { NULL }
-};
-
 int romset_resources_init(void)
 {
-    if (resources_register_string(resources_string) < 0)
-        return -1;
-
-    return resources_register_int(resources_int);
+    return 0;
 }
 
 void romset_resources_shutdown(void)
 {
-    lib_free(romset_archive_name);
-    lib_free(romset_archive_active);
-    lib_free(romset_filename);
+}
+
+static int option_romsetfile(const char *value, void *extra_param)
+{
+    return romset_file_load(value);
+}
+
+static int option_romsetarchive(const char *value, void *extra_param)
+{
+    return romset_archive_load(value, 0);
+}
+
+static int option_romsetarchiveselect(const char *value, void *extra_param)
+{
+    return romset_archive_item_select(value);
+}
+
+static const cmdline_option_t cmdline_options[] = {
+    { "-romsetfile", CALL_FUNCTION, 1,
+      option_romsetfile, NULL, NULL, NULL,
+      USE_PARAM_ID, USE_DESCRIPTION_ID,
+      IDCLS_PB_FILE, IDCLS_LOAD_ROMSET_FILE,
+      NULL, NULL },
+    { "-romsetarchive", CALL_FUNCTION, 1,
+      option_romsetarchive, NULL, NULL, NULL,
+      USE_PARAM_ID, USE_DESCRIPTION_ID,
+      IDCLS_PB_FILE, IDCLS_LOAD_ROMSET_ARCHIVE,
+      NULL, NULL },
+    { "-romsetarchiveselect", CALL_FUNCTION, 1,
+      option_romsetarchiveselect, NULL, NULL, NULL,
+      USE_PARAM_ID, USE_DESCRIPTION_ID,
+      IDCLS_P_ITEM_NUMBER, IDCLS_SELECT_ITEM_FROM_ROMSET_ARCHIVE,
+      NULL, NULL },
+    CMDLINE_LIST_END
+};
+
+int romset_cmdline_options_init()
+{
+    return cmdline_register_options(cmdline_options);
+}
+
+const char *prepend_dir_to_path(const char *dir)
+{
+    const char *saved_path;
+    char *new_path;
+
+    resources_get_string("Directory", &saved_path);
+    saved_path = lib_stralloc(saved_path);
+
+    if (dir && *dir) {
+        new_path = util_concat(dir,
+                               ARCHDEP_FINDPATH_SEPARATOR_STRING,
+                               saved_path,
+                               NULL);
+    } else {
+        char *current_dir = ioutil_current_dir();
+        new_path = util_concat(current_dir,
+                               ARCHDEP_FINDPATH_SEPARATOR_STRING,
+                               saved_path,
+                               NULL);
+        lib_free(current_dir);
+    }
+
+    resources_set_string("Directory", new_path);
+    lib_free(new_path);
+
+    return saved_path;
+} 
+
+void restore_path(const char *saved_path)
+{
+    resources_set_string("Directory", saved_path);
+    lib_free(saved_path);
 }
 
 int romset_file_load(const char *filename)
@@ -129,13 +139,15 @@ int romset_file_load(const char *filename)
     FILE *fp;
     int retval, line_num;
     int err = 0;
+    char *complete_path, *dir;
+    const char *saved_path;
 
     if (filename == NULL) {
         log_error(romset_log, "ROM set filename is NULL!");
         return -1;
     }
 
-    fp = sysfile_open(filename, NULL, MODE_READ_TEXT);
+    fp = sysfile_open(filename, &complete_path, MODE_READ_TEXT);
 
     if (fp == NULL) {
         log_warning(romset_log, "Could not open file '%s' for reading (%s)!",
@@ -145,24 +157,33 @@ int romset_file_load(const char *filename)
 
     log_message(romset_log, "Loading ROM set from file '%s'", filename);
 
+    /* Prepend dir to search path */
+    util_fname_split(complete_path, &dir, NULL);
+    saved_path = prepend_dir_to_path(dir);
+    lib_free(dir);
+    lib_free(complete_path);
+
     line_num = 0;
     do {
         retval = resources_read_item_from_file(fp);
-        if (retval == -1) {
-            log_error(romset_log,
-                      "%s: Invalid resource specification at line %d.",
-                      filename, line_num);
-            err = 1;
-        } else {
-            if (retval == -2) {
+        switch (retval) {
+            case RESERR_TYPE_INVALID:
+                log_error(romset_log,
+                        "%s: Invalid resource specification at line %d.",
+                        filename, line_num);
+                err = 1;
+                break;
+            case RESERR_UNKNOWN_RESOURCE:
                 log_warning(romset_log,
                             "%s: Unknown resource specification at line %d.",
                             filename, line_num);
-            }
+                break;
         }
         line_num++;
     } while (retval != 0);
 
+    /* Restore search path */
+    restore_path(saved_path);
     fclose(fp);
 
     return err;
@@ -231,12 +252,15 @@ typedef struct string_link_s {
 static int num_romsets = 0;
 static int array_size = 0;
 static string_link_t *romsets = NULL;
+static char *romset_dir;
 
 
 #define READ_ROM_LINE \
     if ((bptr = fgets(buffer, 256, fp)) != NULL) { \
         line_num++; b = buffer;                    \
-        while ((*b == ' ') || (*b == '\t')) b++;   \
+        while ((*b == ' ') || (*b == '\t')) {      \
+            b++;                                   \
+        }                                          \
     }
 
 int romset_archive_load(const char *filename, int autostart)
@@ -253,6 +277,8 @@ int romset_archive_load(const char *filename, int autostart)
     }
 
     log_message(romset_log, "Loading ROM set archive from file '%s'", filename);
+    lib_free(romset_dir);
+    util_fname_split(filename, &romset_dir, NULL);
 
     line_num = 0;
     while (!feof(fp)) {
@@ -262,14 +288,17 @@ int romset_archive_load(const char *filename, int autostart)
         int entry;
 
         READ_ROM_LINE;
-        if (bptr == NULL)
+        if (bptr == NULL) {
             break;
-        if ((*b == '\n') || (*b == '#'))
+        }
+        if ((*b == '\n') || (*b == '#')) {
             continue;
+        }
         length = strlen(b);
         for (entry = 0, item = romsets; entry < num_romsets; entry++, item++) {
-            if (strncmp(item->name, b, length - 1) == 0)
+            if (strncmp(item->name, b, length - 1) == 0) {
                 break;
+            }
         }
         if (entry >= array_size) {
             array_size += 4;
@@ -290,8 +319,9 @@ int romset_archive_load(const char *filename, int autostart)
         }
         anchor->next = NULL;
 
-        if ((autostart != 0) && (autoset == NULL))
+        if ((autostart != 0) && (autoset == NULL)) {
             autoset = anchor;
+        }
 
         READ_ROM_LINE
         if ((bptr == NULL) || (*b != '{')) {
@@ -307,8 +337,9 @@ int romset_archive_load(const char *filename, int autostart)
                 fclose(fp);
                 return -1;
             }
-            if (*b == '}')
+            if (*b == '}') {
                 break;
+            }
             length = strlen(b);
             item = lib_malloc(sizeof(string_link_t));
             item->name = lib_malloc(length);
@@ -318,14 +349,16 @@ int romset_archive_load(const char *filename, int autostart)
             last->next = item;
             last = item;
         }
-        if (entry >= num_romsets)
+        if (entry >= num_romsets) {
             num_romsets++;
+        }
     }
 
     fclose(fp);
 
-    if (autoset != 0)
+    if (autoset != 0) {
         romset_archive_item_select(autoset->name);
+    }
 
     return 0;
 }
@@ -444,6 +477,9 @@ int romset_archive_item_select(const char *romset_name)
 
     for (i = 0, item = romsets; i < num_romsets; i++, item++) {
         if (strcmp(romset_name, item->name) == 0) {
+            /* Prepend dir to search path */
+            const char *saved_path = prepend_dir_to_path(romset_dir);
+
             while (item->next != NULL) {
                 /* FIXME: Apparently there are no boundary checks! */
                 char buffer[256];
@@ -453,10 +489,11 @@ int romset_archive_item_select(const char *romset_name)
                 b = buffer;
                 d = item->name;
                 while (*d != '\0') {
-                    if (*d == '=')
+                    if (*d == '=') {
                         break;
-                    else
+                    } else {
                         *b++ = *d++;
+                    }
                 }
                 *b++ = '\0';
                 if (*d == '=') {
@@ -465,25 +502,27 @@ int romset_archive_item_select(const char *romset_name)
 
                     arg = b; d++;
                     while (*d != '\0') {
-                        if (*d != '\"')
+                        if (*d != '\"') {
                             *b++ = *d;
+                        }
                         d++;
                     }
                     *b++ = '\0';
                     tp = resources_query_type(buffer);
                     switch (tp) {
-                      case RES_INTEGER:
-                        resources_set_int(buffer, atoi(arg));
-                        break;
-                      case RES_STRING:
-                        resources_set_string(buffer, arg);
-                        break;
-                      default:
-                        b = NULL;
-                        break;
+                        case RES_INTEGER:
+                            resources_set_int(buffer, atoi(arg));
+                            break;
+                        case RES_STRING:
+                            resources_set_string(buffer, arg);
+                            break;
+                        default:
+                            b = NULL;
+                            break;
                     }
                 }
             }
+            restore_path(saved_path);
             return 0;
         }
     }
@@ -499,8 +538,9 @@ int romset_archive_item_create(const char *romset_name,
     const char **res;
 
     for (entry = 0, item = romsets; entry < num_romsets; entry++, item++) {
-        if (strcmp(romset_name, item->name) == 0)
+        if (strcmp(romset_name, item->name) == 0) {
             break;
+        }
     }
     if (entry >= array_size) {
         array_size += 4;
@@ -532,8 +572,9 @@ int romset_archive_item_create(const char *romset_name,
         res++;
     }
 
-    if (entry >= num_romsets)
+    if (entry >= num_romsets) {
         num_romsets++;
+    }
 
     return 0;
 }
@@ -591,6 +632,8 @@ void romset_archive_clear(void)
 
     num_romsets = 0;
     array_size = 0;
+    lib_free(romset_dir);
+    romset_dir = NULL;
 }
 
 int romset_archive_get_number(void)
@@ -601,8 +644,9 @@ int romset_archive_get_number(void)
 
 char *romset_archive_get_item(int number)
 {
-    if ((number < 0) || (number >= num_romsets))
+    if ((number < 0) || (number >= num_romsets)) {
         return NULL;
+    }
 
     return romsets[number].name;
 }
@@ -613,4 +657,3 @@ void romset_init(void)
 
     machine_romset_init();
 }
-

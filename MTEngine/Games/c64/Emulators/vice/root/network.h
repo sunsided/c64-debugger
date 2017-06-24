@@ -42,12 +42,16 @@ typedef enum {
 #define NETWORK_CONTROL_CLIENTOFFSET 8
 
 #define NETWORK_CONTROL_DEFAULT \
-    ( NETWORK_CONTROL_KEYB | NETWORK_CONTROL_JOY2 | NETWORK_CONTROL_RSRC \
-    | NETWORK_CONTROL_DEVC \
-    | (NETWORK_CONTROL_KEYB | NETWORK_CONTROL_JOY1) \
+    ( NETWORK_CONTROL_KEYB      \
+      | NETWORK_CONTROL_JOY2    \
+      | NETWORK_CONTROL_RSRC    \
+      | NETWORK_CONTROL_DEVC    \
+      | (NETWORK_CONTROL_KEYB   \
+      | NETWORK_CONTROL_JOY1)   \
         << NETWORK_CONTROL_CLIENTOFFSET)
 
 extern int network_resources_init(void);
+extern int network_cmdline_options_init(void);
 extern int network_start_server(void);
 extern int network_connect_client(void);
 extern void network_disconnect(void);

@@ -5,7 +5,7 @@
  *  Hannu Nuotio <hannu.nuotio@tut.fi>
  *
  * Based on code by
- *  Andr. Fachat <a.fachat@physik.tu-chemnitz.de>
+ *  Andre Fachat <a.fachat@physik.tu-chemnitz.de>
  *
  * This file is part of VICE, the Versatile Commodore Emulator.
  * See README for copyright notice.
@@ -55,6 +55,8 @@ struct midi_interface_s {
     int cartid;
 };
 typedef struct midi_interface_s midi_interface_t;
+
+#define MIDI_INFERFACE_LIST_END { NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 
 extern midi_interface_t midi_interface[];
 

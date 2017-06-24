@@ -27,6 +27,12 @@
 #ifndef VICE_VSYNC_H
 #define VICE_VSYNC_H
 
+/* Manually defined */
+/* To enable/disable this option by hand change the 0 below to 1. */
+#if 0
+#define VSYNC_DEBUG
+#endif
+
 struct video_canvas_s;
 
 extern int vsync_frame_counter;
@@ -42,4 +48,3 @@ extern int vsync_do_vsync(struct video_canvas_s *c, int been_skipped, int isPaus
 extern int vsync_disable_timer(void);
 
 #endif
-

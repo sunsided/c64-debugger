@@ -79,15 +79,22 @@ public:
 
 	virtual void DoLogic();
 
+	virtual bool IsFocusable();
 	virtual void FocusReceived();
 	virtual void FocusLost();
+	virtual bool SetFocus(bool focus);
+	virtual void RenderFocusBorder();
+	volatile bool hasFocus;
 
 	virtual bool KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl);
 	virtual bool KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl);
 	virtual bool KeyPressed(u32 keyCode, bool isShift, bool isAlt, bool isControl);	// repeats
+	u32 repeatTime;
+	bool isKeyDown;
 
 	virtual GLfloat GetHeight();
 	virtual GLfloat GetWidth();
+	
 	
 	// Resource Manager
 	// this method should prepare all resources, refresh resources
@@ -102,11 +109,9 @@ public:
 	byte elementAlignment;
 
 	char *name;
-
-	virtual void SetFocus(bool focus);
 	
-	volatile bool hasFocus;
 	volatile bool locked;
+
 	//NSString *fullPath;
 	char *fullPath;
 
@@ -136,6 +141,10 @@ public:
 
 	void AddGuiElement(CGuiElement *guiElement, float z);
 	//	void RemoveGuiElement(CGuiElement *guiElement);
+	
+	CGuiElement *parent;
+	
+	bool bringToFrontOnTap;
 	
 	void *userData;
 

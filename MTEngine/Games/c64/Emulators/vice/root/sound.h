@@ -3,6 +3,7 @@
  *
  * Written by
  *  Teemu Rantanen <tvr@cs.hut.fi>
+ *  Marco van den Heuvel <blackystardust68@yahoo.com>
  *
  * This file is part of VICE, the Versatile Commodore Emulator.
  * See README for copyright notice.
@@ -34,8 +35,39 @@
 #include "types.h"
 
 
+/* OSS: check if needed defines are present */
+#ifdef USE_OSS
+
+#if defined(HAVE_LINUX_SOUNDCARD_H)
+#include <linux/soundcard.h>
+#endif
+
+#if defined(HAVE_MACHINE_SOUNDCARD_H)
+#include <machine/soundcard.h>
+#endif
+
+#if defined(HAVE_SYS_SOUNDCARD_H)
+#include <sys/soundcard.h>
+#endif
+
+#if defined(HAVE_SOUNDCARD_H)
+#include <soundcard.h>
+#endif
+
+#if !defined(AFMT_U8) || !defined(AFMT_S16_LE)
+#undef USE_OSS
+#endif
+
+#endif
+
+
 /* Sound defaults.  */
+#ifdef ANDROID_COMPILE
+#define SOUND_SAMPLE_RATE 22050
+#else
 #define SOUND_SAMPLE_RATE 44100
+#endif
+
 #define SOUND_CHANNELS_MAX 2
 #define SOUND_BUFSIZE 32768
 #define SOUND_SIDS_MAX 3
@@ -50,14 +82,19 @@
 # define SOUND_SAMPLE_BUFFER_SIZE       100
 #endif
 
+/* largest value in the UIs. also used by VSID as default */
+#define SOUND_SAMPLE_MAX_BUFFER_SIZE    350
+
+#define SOUND_RECORD_DEVICE     0
+#define SOUND_PLAYBACK_DEVICE   1
+
 /* I need this to serialize close_sound and enablesound/sound_open in
    the OS/2 Multithreaded environment                              */
 extern int sound_state_changed;
 extern int sid_state_changed;
 
 /* device structure */
-typedef struct sound_device_s
-{
+typedef struct sound_device_s {
     /* name of the device */
     const char *name;
     /* init -routine to be called at device initialization. Should use
@@ -87,15 +124,15 @@ typedef struct sound_device_s
 static inline SWORD sound_audio_mix(int ch1, int ch2)
 {
     if (ch1 == 0) {
-       return (SWORD)ch2;
+        return (SWORD)ch2;
     }
 
     if (ch2 == 0) {
         return (SWORD)ch1;
     }
 
-    if ((ch1 > 0 && ch2 < 0) || (ch1 < 0 && ch2 >0)) {
-        return (SWORD)ch1 + ch2;
+    if ((ch1 > 0 && ch2 < 0) || (ch1 < 0 && ch2 > 0)) {
+        return (SWORD)(ch1 + ch2);
     }
 
     if (ch1 > 0) {
@@ -112,9 +149,11 @@ static inline SWORD sound_audio_mix(int ch1, int ch2)
 #define SOUND_ADJUST_EXACT      2
 
 /* Fragment sizes */
-#define SOUND_FRAGMENT_SMALL    0
-#define SOUND_FRAGMENT_MEDIUM   1
-#define SOUND_FRAGMENT_LARGE    2
+#define SOUND_FRAGMENT_VERY_SMALL    0
+#define SOUND_FRAGMENT_SMALL         1
+#define SOUND_FRAGMENT_MEDIUM        2
+#define SOUND_FRAGMENT_LARGE         3
+#define SOUND_FRAGMENT_VERY_LARGE    4
 
 /* Sound output modes */
 #define SOUND_OUTPUT_SYSTEM   0
@@ -166,6 +205,7 @@ extern int sound_init_mmos2_device(void);
 extern int sound_init_dart_device(void);
 extern int sound_init_dart2_device(void);
 extern int sound_init_beos_device(void);
+extern int sound_init_bsp_device(void);
 extern int sound_init_arts_device(void);
 extern int sound_init_wmm_device(void);
 extern int sound_init_movie_device(void);
@@ -175,6 +215,8 @@ extern int sound_init_voc_device(void);
 extern int sound_init_iff_device(void);
 extern int sound_init_aiff_device(void);
 extern int sound_init_mp3_device(void);
+extern int sound_init_flac_device(void);
+extern int sound_init_vorbis_device(void);
 extern int sound_init_pulse_device(void);
 
 /* internal function for sound device registration */
@@ -184,6 +226,7 @@ extern int sound_register_device(sound_device_t *pdevice);
 extern int sound_read(WORD addr, int chipno);
 extern void sound_store(WORD addr, BYTE val, int chipno);
 extern long sound_sample_position(void);
+extern int sound_dump(int chipno);
 
 /* functions and structs implemented by each machine */
 typedef struct sound_s sound_t;
@@ -211,7 +254,21 @@ typedef struct sound_chip_s {
 
 extern WORD sound_chip_register(sound_chip_t *chip);
 
+typedef struct sound_dac_s {
+    float output;
+    float alpha;
+    int value;
+} sound_dac_t;
+
+extern void sound_dac_init(sound_dac_t *dac, int speed);
+extern int sound_dac_calculate_samples(sound_dac_t *dac, SWORD *pbuf, int value, int nr, int soc, int cs);
+
+/* recording related functions, equivalent to screenshot_... */
+extern void sound_stop_recording(void);
+extern int sound_is_recording(void);
+
 // c64 debugger
 extern void sid_set_voice_mask(int sidNum, unsigned char voiceMask);
+
 
 #endif

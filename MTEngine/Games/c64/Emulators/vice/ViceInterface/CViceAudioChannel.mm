@@ -19,6 +19,8 @@ void CViceAudioChannel::MixIn(int *mixBuffer, u32 numSamples)
 {
 	sdl_callback(NULL, (uint8*)mixBuffer, numSamples);
 
+//	memset(mixBuffer, 0, numSamples*4);
+
 	
 	if (c64SettingsMuteSIDOnPause)
 	{

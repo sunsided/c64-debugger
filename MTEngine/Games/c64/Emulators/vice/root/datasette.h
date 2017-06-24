@@ -3,6 +3,7 @@
  *
  * Written by
  *  Andreas Boose <viceteam@t-online.de>
+ *  Marco van den Heuvel <blackystardust68@yahoo.com>
  *
  * This file is part of VICE, the Versatile Commodore Emulator.
  * See README for copyright notice.
@@ -49,27 +50,25 @@
 /* at FF/REWIND, Datasette-counter makes ~4 rounds per second */
 #define DS_RPS_FAST 4.00
 
-struct snapshot_s;
 struct tap_s;
 
 extern void datasette_init(void);
 extern void datasette_set_tape_image(struct tap_s *image);
 extern void datasette_control(int command);
-extern void datasette_set_motor(int flag);
-extern void datasette_toggle_write_bit(int write_bit);
 extern void datasette_reset(void);
 extern void datasette_reset_counter(void);
 extern void datasette_event_playback(CLOCK offset, void *data);
 
 /* Emulator specific functions.  */
-extern void datasette_trigger_flux_change(unsigned int on);
+extern void machine_trigger_flux_change(unsigned int on);
+extern void machine_set_tape_sense(int sense);
+extern void machine_set_tape_write_in(int val);
+extern void machine_set_tape_motor_in(int val);
+
 extern void datasette_set_tape_sense(int sense);
 
 /* For registering the resources.  */
 extern int datasette_resources_init(void);
 extern int datasette_cmdline_options_init(void);
 
-extern int datasette_write_snapshot(struct snapshot_s *s);
-extern int datasette_read_snapshot(struct snapshot_s *s);
 #endif
-

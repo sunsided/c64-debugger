@@ -47,36 +47,48 @@ extern const char machine_name[];
 #define VICE_MACHINE_C64DTV    8
 #define VICE_MACHINE_C64SC     9
 #define VICE_MACHINE_VSID      10
+#define VICE_MACHINE_SCPU64    11
 
-/* Sync factors.  */
-#define MACHINE_SYNC_PAL     -1
-#define MACHINE_SYNC_NTSC    -2
-#define MACHINE_SYNC_NTSCOLD -3
-#define MACHINE_SYNC_PALN    -4
+/* Sync factors (changed to positive 2016-11-07, BW)  */
+#define MACHINE_SYNC_PAL     1
+#define MACHINE_SYNC_NTSC    2
+#define MACHINE_SYNC_NTSCOLD 3
+#define MACHINE_SYNC_PALN    4
 
 struct machine_timing_s {
     unsigned int cycles_per_line;
     long cycles_per_rfsh;
     long cycles_per_sec;
+    unsigned int power_freq;   /* mains power frequency in hz */
     double rfsh_per_sec;
     unsigned int screen_lines;
 };
 typedef struct machine_timing_s machine_timing_t;
 
 extern int machine_class;
-extern int vsid_mode;
 extern
 #ifdef __OS2__
-    const
+const
 #endif
 int console_mode;
 extern int video_disabled_mode;
 
+#define MACHINE_JAM_ACTION_DIALOG       0
+#define MACHINE_JAM_ACTION_CONTINUE     1
+#define MACHINE_JAM_ACTION_MONITOR      2
+#define MACHINE_JAM_ACTION_RESET        3
+#define MACHINE_JAM_ACTION_HARD_RESET   4
+#define MACHINE_JAM_ACTION_QUIT         5
+#define MACHINE_NUM_JAM_ACTIONS         6
+
 /* Initialize the machine's resources.  */
+extern int machine_common_resources_init(void);
 extern int machine_resources_init(void);
+extern void machine_common_resources_shutdown(void);
 extern void machine_resources_shutdown(void);
 
 /* Initialize the machine's command-line options.  */
+extern int machine_common_cmdline_options_init(void);
 extern int machine_cmdline_options_init(void);
 
 /* Initialize the machine.  */
@@ -142,7 +154,7 @@ extern int machine_sid2_check_range(unsigned int sid2_adr);
 extern int machine_sid3_check_range(unsigned int sid3_adr);
 
 /* Change the timing parameters of the maching (for example PAL/NTSC).  */
-extern void machine_change_timing(int timeval);
+extern void machine_change_timing(int timeval, int border_mode);
 
 /* Get screenshot data.  */
 struct screenshot_s;
@@ -163,7 +175,6 @@ unsigned int machine_jam(const char *format, ...);
 extern void machine_update_memory_ptrs(void);
 
 extern int machine_keymap_index;
-extern const char *machine_keymap_res_name_list[];
 extern char *machine_keymap_file_list[];
 extern int machine_num_keyboard_mappings(void);
 
@@ -178,6 +189,7 @@ extern char *machine_romset_file_list(void);
 extern int machine_romset_archive_item_create(const char *romset_name);
 
 extern BYTE machine_tape_type_default(void);
+extern BYTE machine_tape_behaviour(void);
 
 /* Check if address is in RAM (for autostart) */
 extern int machine_addr_in_ram(unsigned int addr);
@@ -185,5 +197,22 @@ extern int machine_addr_in_ram(unsigned int addr);
 /* Get "real" name for machine. May differ from machine_name.  */
 extern const char *machine_get_name(void);
 
-#endif
+/* Get keymap res name with range checking */
+extern char *machine_get_keymap_res_name(int val);
 
+/* mapping info for GUIs */
+typedef struct {
+    char *name;
+    int type;
+    unsigned int flags;
+} kbdtype_info_t;
+
+extern int machine_get_num_keyboard_types(void);
+extern kbdtype_info_t *machine_get_keyboard_info_list(void);
+
+extern int machine_get_keyboard_type(void);
+extern char *machine_get_keyboard_type_name(int type);
+
+extern int machine_register_userport(void);
+
+#endif

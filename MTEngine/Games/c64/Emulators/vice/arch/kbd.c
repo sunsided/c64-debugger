@@ -404,3 +404,27 @@ void kbd_initialize_numpad_joykeys(int* joykeys)
 //    joykeys[7] = SDLK_KP8;
 //    joykeys[8] = SDLK_KP9;
 }
+
+int kbd_arch_get_host_mapping(void)
+{
+//	LOGTODO("!!!!!!!!!!kbd_arch_get_host_mapping");
+	
+//	int n;
+//	char *l;
+//	int maps[KBD_MAPPING_NUM] = {
+//		KBD_MAPPING_US, KBD_MAPPING_UK, KBD_MAPPING_DE, KBD_MAPPING_DA,
+//		KBD_MAPPING_NO, KBD_MAPPING_FI, KBD_MAPPING_IT };
+//	char str[KBD_MAPPING_NUM][3] = {
+//		"us", "uk", "de", "da", "no", "fi", "it"};
+//	/* setup the locale */
+//	setlocale(LC_ALL, "");
+//	l = setlocale(LC_ALL, NULL);
+//	if (l && (strlen(l) > 1)) {
+//		for (n = 1; n < KBD_MAPPING_NUM; n++) {
+//			if (memcmp(l, str[n], 2) == 0) {
+//				return maps[n];
+//			}
+//		}
+//	}
+	return KBD_MAPPING_US;
+}

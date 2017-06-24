@@ -11,11 +11,19 @@
 // settings that need to be set when emulation is initialized
 #define C64DEBUGGER_BLOCK_POSTLAUNCH	2
 
+enum autoJmpResetMode : u8
+{
+	AUTOJMP_RESET_NONE = 0,
+	AUTOJMP_RESET_SOFT = 1,
+	AUTOJMP_RESET_HARD = 2
+};
+
 // settings
 extern bool c64SettingsSkipConfig;
 extern bool c64SettingsPassConfigToRunningInstance;
 
 extern int c64SettingsDefaultScreenLayoutId;
+extern bool c64SettingsIsInVicEditor;
 
 extern uint8 c64SettingsMemoryValuesStyle;
 extern uint8 c64SettingsMemoryMarkersStyle;
@@ -28,7 +36,18 @@ extern int c64SettingsEmulationMaximumSpeed;
 extern bool c64SettingsFastBootKernalPatch;
 
 extern uint8 c64SettingsSIDEngineModel;
+extern uint8 c64SettingsRESIDSamplingMethod;
+extern bool c64SettingsRESIDEmulateFilters;
+extern uint32 c64SettingsRESIDPassBand;
+extern uint32 c64SettingsRESIDFilterBias;
+
 extern bool c64SettingsMuteSIDOnPause;
+
+extern bool c64SettingsEmulateVSPBug;
+
+extern uint8 c64SettingsVicStateRecordingMode;
+extern uint16 c64SettingsVicPalette;
+extern bool c64SettingsRenderScreenNearest;
 
 extern uint8 c64SettingsJoystickPort;
 
@@ -67,7 +86,33 @@ extern CSlrString *c64SettingsPathToDebugInfo;
 extern CSlrString *c64SettingsAudioOutDevice;
 
 extern int c64SettingsJmpOnStartupAddr;
+
 extern bool c64SettingsAutoJmp;
+extern bool c64SettingsAutoJmpAlwaysToLoadedPRGAddress;
+extern bool c64SettingsAutoJmpFromInsertedDiskFirstPrg;
+extern u8 c64SettingsAutoJmpDoReset;
+extern int c64SettingsAutoJmpWaitAfterReset;
+extern bool c64SettingsForceUnpause;
+
+extern bool c64SettingsRunSIDWhenInWarp;
+
+extern u8 c64SettingsVicDisplayBorderType;
+
+extern float c64SettingsPaintGridCharactersColorR;
+extern float c64SettingsPaintGridCharactersColorG;
+extern float c64SettingsPaintGridCharactersColorB;
+extern float c64SettingsPaintGridCharactersColorA;
+
+extern float c64SettingsPaintGridPixelsColorR;
+extern float c64SettingsPaintGridPixelsColorG;
+extern float c64SettingsPaintGridPixelsColorB;
+extern float c64SettingsPaintGridPixelsColorA;
+
+extern float c64SettingsPaintGridShowZoomLevel;
+extern float c64SettingsPaintGridShowValuesZoomLevel;
+
+extern bool c64SettingsVicEditorForceReplaceColor;
+
 
 extern int c64SettingsDoubleClickMS;
 

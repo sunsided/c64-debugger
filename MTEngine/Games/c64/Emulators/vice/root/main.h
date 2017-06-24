@@ -27,9 +27,8 @@
 #ifndef VICE_MAIN_H
 #define VICE_MAIN_H
 
-extern int vice_main_program(int argc, char **argv);
+extern int vice_main_program(int argc, char **argv, int c64model);
 extern int vice_main_loop_run();
 extern void main_exit(void);
 
 #endif
-

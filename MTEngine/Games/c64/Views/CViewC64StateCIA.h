@@ -35,7 +35,7 @@ public:
 	virtual void Render();
 	virtual void DoLogic();	
 	
-	virtual void SetFocus(bool focus);
+	virtual bool SetFocus(bool focus);
 	
 	bool renderCIA1;
 	bool renderCIA2;

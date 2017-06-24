@@ -2,7 +2,7 @@
  * parallel.c - IEEE488 emulation.
  *
  * Written by
- *  André Fachat <a.fachat@physik.tu-chemnitz.de>
+ *  Andre Fachat <a.fachat@physik.tu-chemnitz.de>
  *  Andreas Boose <viceteam@t-online.de>
  *
  * This file is part of VICE, the Versatile Commodore Emulator.
@@ -41,9 +41,9 @@
 
 #include <stdio.h>
 
+#include "archdep.h"
 #include "cmdline.h"
 #include "drive.h"
-#include "drivecpu.h"
 #include "drivetypes.h"
 #include "ieee.h"
 #include "log.h"
@@ -149,29 +149,28 @@ typedef struct State_t {
 } State_t;
 
 static const char *Trans[NTRANS] = {
-        "ATN low", "ATN high", "DAV low", "DAV high",
-        "NDAC low", "NDAC high", "NRFD low", "NRFD high"
+    "ATN low", "ATN high", "DAV low", "DAV high",
+    "NDAC low", "NDAC high", "NRFD low", "NRFD high"
 };
 
-#if defined(__BEOS__) && defined(WORDS_BIGENDIAN)
-extern State_t State[];
-#else
-static State_t State[NSTATE];
-#endif
+STATIC_PROTOTYPE State_t State[NSTATE];
 
 static int state = WaitATN;
 
-#define Go(a)           state=(a);return
-#define isListening()   ((par_status&0xf000)==0x2000)
-#define isTalking()     ((par_status&0xf000)==0x4000)
+#define Go(a)           state = (a); return
+#define isListening()   ((par_status & 0xf000) == 0x2000)
+#define isTalking()     ((par_status & 0xf000) == 0x4000)
 
 #ifdef PARALLEL_DEBUG_VERBOSE
-static void DoTrans(int tr) {
-    if (parallel_debug)
-        log_debug("DoTrans(%s).%s\n",State[state].name, Trans[tr]);
-        State[state].m[tr](tr);
-        if (parallel_debug)
-            log_debug(" -> %s\n",State[state].name);
+static void DoTrans(int tr)
+{
+    if (parallel_debug) {
+        log_debug("DoTrans(%s).%s\n", State[state].name, Trans[tr]);
+    }
+    State[state].m[tr](tr);
+    if (parallel_debug) {
+        log_debug(" -> %s\n", State[state].name);
+    }
 }
 #else
 #define DoTrans(a)      State[state].m[(a)]((a))
@@ -199,15 +198,15 @@ static void ResetBus(void)
 
 static void ignore(int i)
 {
-
 }
 
 static void unexpected(int trans)
 {
-    if (parallel_debug)
+    if (parallel_debug) {
         log_warning(LOG_DEFAULT,
                     "IEEE488: unexpected line transition in state %s: %s.",
                     State[state].name, Trans[trans]);
+    }
 }
 
 static void WATN_atnlo(int tr)
@@ -240,10 +239,11 @@ static void In1_atnhi(int tr)
                     return;
                 }
             } else {
-                if (parallel_debug)
+                if (parallel_debug) {
                     log_warning(LOG_DEFAULT,
                                 "IEEE488: Ouch, something weird happened: %s got %s",
                                 State[In1].name, Trans[tr]);
+                }
                 ResetBus();
                 Go(WaitATN);
             }
@@ -264,30 +264,33 @@ static void In1_davlo(int tr)
     } else {
         par_status = parallel_trap_sendbyte((BYTE)(b ^ 0xff));
     }
-    if (parallel_debug)
-        log_warning(LOG_DEFAULT,
-                    "IEEE488: sendbyte returns %04x",par_status);
+    if (parallel_debug) {
+        log_warning(LOG_DEFAULT, "IEEE488: sendbyte returns %04x", par_status);
+    }
 
     Go(In2);
 }
 
 static void In1_ndaclo(int tr)
 {
-    if (!parallel_atn)
+    if (!parallel_atn) {
         unexpected(tr);
+    }
 }
 
 static void In1_nrfdlo(int tr)
 {
-    if (!parallel_atn)
+    if (!parallel_atn) {
         ignoreown(tr);
+    }
 }
 
 
 static void In1_nrfdhi(int tr)
 {
-    if (!parallel_atn)
+    if (!parallel_atn) {
         unexpected(tr);
+    }
 }
 
 #define In2_atnlo       WATN_atnlo
@@ -308,8 +311,9 @@ static void In2_davhi(int tr)
 
 static void In2_ndachi(int tr)
 {
-    if (!parallel_atn)
+    if (!parallel_atn) {
         unexpected(tr);
+    }
 }
 
 /* OldPET fixed PET2*** and PET3*** IEEE, as well as CBM610 */
@@ -330,8 +334,9 @@ static void OPet_ndaclo(int tr)
 
 static void OPet_nrfdlo(int tr)
 {
-    if (parallel_debug)
+    if (parallel_debug) {
         log_warning(LOG_DEFAULT, "OPet_nrfdlo()");
+    }
     State[Out1].m[NRFDhi](tr);
 }
 
@@ -394,20 +399,20 @@ static void Out2_ndachi(int tr)
  */
 
 static State_t State[NSTATE] = {
-    { "WaitATN", { WATN_atnlo,   ignore,       ignore,     ignore,
-      ignore,      ignore,       ignore,       ignore } },
-    { "In1",     { In1_atnlo,    In1_atnhi,    In1_davlo,  unexpected,
-      In1_ndaclo,  ignoreown,    In1_nrfdlo,   In1_nrfdhi } },
-    { "In2",     { In2_atnlo,    In2_atnhi,    unexpected, In2_davhi,
-      ignoreown,   In2_ndachi,   unexpected,   ignoreown } },
-    { "OldPet",  { OPet_atnlo,   unexpected,   unexpected, unexpected,
-      OPet_ndaclo, unexpected,   OPet_nrfdlo,  unexpected } },
-    { "Out1",    { Out1_atnlo,   unexpected,   ignoreown,  unexpected,
-      ignore,      unexpected,   unexpected,   Out1_nrfdhi } },
-    { "Out1a",   { Out1a_atnlo,  unexpected,   unexpected, unexpected,
-      unexpected,  Out1a_ndachi, Out1a_nrfdlo, unexpected } },
-    { "Out2",    { Out2_atnlo,   unexpected,   unexpected, ignoreown,
-      unexpected,  Out2_ndachi,  unexpected,   unexpected } }
+    { "WaitATN", { WATN_atnlo, ignore, ignore, ignore,
+                   ignore, ignore, ignore, ignore } },
+    { "In1", { In1_atnlo, In1_atnhi, In1_davlo, unexpected,
+               In1_ndaclo, ignoreown, In1_nrfdlo, In1_nrfdhi } },
+    { "In2", { In2_atnlo, In2_atnhi, unexpected, In2_davhi,
+               ignoreown, In2_ndachi, unexpected, ignoreown } },
+    { "OldPet", { OPet_atnlo, unexpected, unexpected, unexpected,
+                  OPet_ndaclo, unexpected, OPet_nrfdlo, unexpected } },
+    { "Out1", { Out1_atnlo, unexpected, ignoreown, unexpected,
+                ignore, unexpected, unexpected, Out1_nrfdhi } },
+    { "Out1a", { Out1a_atnlo, unexpected, unexpected, unexpected,
+                 unexpected, Out1a_ndachi, Out1a_nrfdlo, unexpected } },
+    { "Out2", { Out2_atnlo, unexpected, unexpected, ignoreown,
+                unexpected, Out2_ndachi, unexpected, unexpected } }
 };
 
 /**************************************************************************
@@ -417,27 +422,27 @@ static State_t State[NSTATE] = {
 
 #define PARALLEL_LINE_DEBUG_CLR(line, linecap)                          \
     if (parallel_debug) {                                                \
-        if (old && !parallel_##line)                                    \
+        if (old && !parallel_ ## line) {                                    \
             log_warning(LOG_DEFAULT,                                    \
-                        "clr_" #line "(%02x) -> " #linecap "hi",        \
-                        ~mask & 0xff);                                  \
+                        "clr_" # line "(%02x) -> " # linecap "hi",        \
+                        ~mask & 0xff); }                                  \
         else                                                            \
-            if (old & ~mask)                                            \
-                log_warning(LOG_DEFAULT,                                \
-                            "clr_" #line "(%02x) -> %02x",              \
-                            ~mask & 0xff, parallel_##line);             \
+        if (old & ~mask) {                                            \
+            log_warning(LOG_DEFAULT,                                \
+                        "clr_" # line "(%02x) -> %02x",              \
+                        ~mask & 0xff, parallel_ ## line); }             \
     }
 
 #define PARALLEL_LINE_DEBUG_SET(line, linecap)                          \
     if (parallel_debug) {                                                \
-        if (!old)                                                       \
+        if (!old) {                                                       \
             log_warning(LOG_DEFAULT,                                    \
-                        "set_" #line "(%02x) -> " #linecap "lo", mask); \
+                        "set_" # line "(%02x) -> " # linecap "lo", mask); } \
         else                                                            \
-            if (!(old & mask))                                          \
-                log_warning(LOG_DEFAULT,                                \
-                            "set_" #line "(%02x) -> %02x",              \
-                            mask, parallel_##line);                     \
+        if (!(old & mask)) {                                          \
+            log_warning(LOG_DEFAULT,                                \
+                        "set_" # line "(%02x) -> %02x",              \
+                        mask, parallel_ ## line); }                     \
     }
 
 void parallel_set_eoi(BYTE mask)
@@ -504,8 +509,9 @@ void parallel_restore_set_atn(BYTE mask)
     BYTE old = parallel_atn;
     parallel_atn |= mask;
 
-    if (parallel_debug && !old)
+    if (parallel_debug && !old) {
         log_warning(LOG_DEFAULT, "set_atn(%02x) -> ATNlo", mask);
+    }
 
     /* we do not send IRQ signals to chips on restore */
 }
@@ -515,8 +521,9 @@ void parallel_restore_clr_atn(BYTE mask)
     BYTE old = parallel_atn;
     parallel_atn &= mask;
 
-    if (parallel_debug && old && !parallel_atn)
+    if (parallel_debug && old && !parallel_atn) {
         log_warning(LOG_DEFAULT, "clr_atn(%02x) -> ATNhi", ~mask & 0xff);
+    }
 
     /* we do not send IRQ signals to chips on restore */
 }
@@ -599,7 +606,7 @@ void parallel_clr_ndac(BYTE mask)
 
 #define PARALLEL_DEBUG_SET_BUS(type)                                    \
     if (parallel_debug) {                                               \
-        log_warning(LOG_DEFAULT, #type "_set_bus(%02x) -> %02x (%02x)", \
+        log_warning(LOG_DEFAULT, # type "_set_bus(%02x) -> %02x (%02x)", \
                     b, parallel_bus, ~parallel_bus & 0xff);             \
     }
 
@@ -689,7 +696,7 @@ drivefunc_context_t drive_funcs[DRIVE_NUM] = {
       parallel_drv3_set_ndac,
       parallel_drv3_set_nrfd, },
 };
-    
+
 /**************************************************************************
  *
  */
@@ -697,7 +704,7 @@ drivefunc_context_t drive_funcs[DRIVE_NUM] = {
 #define PARALLEL_CPU_SET_LINE(line, dev, mask)     \
     void parallel_##dev##_set_##line(char val)     \
     {                                              \
-        drivecpu_execute_all(maincpu_clk);         \
+        drive_cpu_execute_all(maincpu_clk);         \
         if (val) {                                 \
             parallel_set_##line(PARALLEL_##mask);  \
         } else {                                   \
@@ -706,4 +713,3 @@ drivefunc_context_t drive_funcs[DRIVE_NUM] = {
     }
 
 PARALLEL_CPU_SET_LINE(atn, cpu, CPU)
-

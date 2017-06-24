@@ -1,3 +1,3 @@
-// not used on win32 yet
+// not used on linux yet
 
 

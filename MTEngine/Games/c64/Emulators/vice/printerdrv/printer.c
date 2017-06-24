@@ -29,9 +29,8 @@
 #include "driver-select.h"
 #include "drv-ascii.h"
 #include "drv-mps803.h"
-#ifndef DINGOO_NATIVE
 #include "drv-nl10.h"
-#endif
+#include "drv-1520.h"
 #include "drv-raw.h"
 #include "interface-serial.h"
 #include "interface-userport.h"
@@ -41,7 +40,6 @@
 #include "output-text.h"
 #include "printer.h"
 
-
 int printer_resources_init(void)
 {
     if (output_graphics_init_resources() < 0
@@ -49,9 +47,8 @@ int printer_resources_init(void)
         || output_select_init_resources() < 0
         || drv_ascii_init_resources() < 0
         || drv_mps803_init_resources() < 0
-#ifndef DINGOO_NATIVE
         || drv_nl10_init_resources() < 0
-#endif
+        || drv_1520_init_resources() < 0
         || drv_raw_init_resources() < 0
         || driver_select_init_resources() < 0
         || machine_printer_resources_init() < 0) {
@@ -60,17 +57,23 @@ int printer_resources_init(void)
     return 0;
 }
 
+int printer_userport_resources_init(void)
+{
+    if (driver_select_userport_init_resources() < 0
+        || output_select_userport_init_resources() < 0) {
+        return -1;
+    }
+    return 0;
+}
+
 void printer_resources_shutdown(void)
 {
     output_text_shutdown_resources();
-    output_select_shutdown_resources();
-    driver_select_shutdown_resources();
 }
 
 int printer_cmdline_options_init(void)
 {
-    if (output_graphics_init_cmdline_options() < 0
-        || output_text_init_cmdline_options() < 0
+    if (output_text_init_cmdline_options() < 0
         || output_select_init_cmdline_options() < 0
         || driver_select_init_cmdline_options() < 0
         || machine_printer_cmdline_options_init() < 0) {
@@ -79,16 +82,22 @@ int printer_cmdline_options_init(void)
     return 0;
 }
 
+int printer_userport_cmdline_options_init(void)
+{
+    if (driver_select_userport_init_cmdline_options() < 0
+        || output_select_userport_init_cmdline_options() < 0) {
+        return -1;
+    }
+    return 0;
+}
+
 void printer_init(void)
 {
     output_graphics_init();
-    output_text_init();
-    output_select_init();
     drv_ascii_init();
     drv_mps803_init();
-#ifndef DINGOO_NATIVE
     drv_nl10_init();
-#endif
+    drv_1520_init();
     drv_raw_init();
     driver_select_init();
     machine_printer_init();
@@ -96,20 +105,15 @@ void printer_init(void)
 
 void printer_reset(void)
 {
-    output_graphics_reset();
-    output_text_reset();
-#ifndef DINGOO_NATIVE
     drv_nl10_reset();
-#endif
 }
 
 void printer_shutdown(void)
 {
     output_select_shutdown();
     drv_mps803_shutdown();
-#ifndef DINGOO_NATIVE
     drv_nl10_shutdown();
-#endif
+    drv_1520_shutdown();
     driver_select_shutdown();
     machine_printer_shutdown();
 }

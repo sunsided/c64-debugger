@@ -33,6 +33,8 @@
 #include "archdep.h"
 #include "cmdline.h"
 #include "lib.h"
+#include "log.h"
+#include "machine.h"
 #include "output-select.h"
 #include "output-text.h"
 #include "output.h"
@@ -41,9 +43,25 @@
 #include "types.h"
 #include "util.h"
 
-static char *PrinterDev[3] = { NULL, NULL, NULL };
-static int printer_device[3];
-static FILE *output_fd[3] = { NULL, NULL, NULL };
+/// c64d
+
+/* TODO: configure check that matches what arch/unix/coproc.c does...
+#if defined(HAVE_FORK)
+#  if !defined(MINIX_SUPPORT) && !defined(OPENSTEP_COMPILE) && !defined(RHAPSODY_COMPILE) && !defined(NEXTSTEP_COMPILE) && !defined(BEOS_COMPILE) && !defined(__MSDOS__) && !defined(__ANDROID__)
+#    include <unistd.h>
+#    define COPROC_SUPPORT        1
+#    include "coproc.h"
+# endif
+#endif
+*/
+
+#undef COPROC_SUPPORT
+
+///
+
+static char *PrinterDev[NUM_OUTPUT_SELECT] = { NULL, NULL, NULL };
+static int printer_device[NUM_OUTPUT_SELECT];
+static FILE *output_fd[NUM_OUTPUT_SELECT] = { NULL, NULL, NULL };
 
 static int set_printer_device_name(const char *val, void *param)
 {
@@ -53,7 +71,7 @@ static int set_printer_device_name(const char *val, void *param)
 
 static int set_printer_device(int prn_dev, void *param)
 {
-    if (prn_dev > 3) {
+    if (prn_dev < 0 || prn_dev > 2) {
         return -1;
     }
 
@@ -71,7 +89,7 @@ static const resource_string_t resources_string[] = {
     { "PrinterTextDevice3", ARCHDEP_PRINTER_DEFAULT_DEV3,
       RES_EVENT_NO, NULL,
       &PrinterDev[2], set_printer_device_name, (void *)2 },
-    { NULL }
+    RESOURCE_STRING_LIST_END
 };
 
 static const resource_int_t resources_int[] = {
@@ -79,9 +97,15 @@ static const resource_int_t resources_int[] = {
       &printer_device[0], set_printer_device, (void *)0 },
     { "Printer5TextDevice", 0, RES_EVENT_NO, NULL,
       &printer_device[1], set_printer_device, (void *)1 },
-    { "PrinterUserportTextDevice", 0, RES_EVENT_NO, NULL,
+    { "Printer6TextDevice", 0, RES_EVENT_NO, NULL,
       &printer_device[2], set_printer_device, (void *)2 },
-    { NULL }
+    RESOURCE_INT_LIST_END
+};
+
+static const resource_int_t resources_int_userport[] = {
+    { "PrinterUserportTextDevice", 0, RES_EVENT_NO, NULL,
+      &printer_device[3], set_printer_device, (void *)3 },
+    RESOURCE_INT_LIST_END
 };
 
 static const cmdline_option_t cmdline_options[] =
@@ -102,26 +126,68 @@ static const cmdline_option_t cmdline_options[] =
       IDCLS_P_NAME, IDCLS_SPECIFY_TEXT_DEVICE_DUMP_NAME,
       NULL, NULL },
     { "-pr4txtdev", SET_RESOURCE, 1,
-      NULL, NULL, "Printer4TextDevice", (resource_value_t)0,
+      NULL, NULL, "Printer4TextDevice", NULL,
       USE_PARAM_STRING, USE_DESCRIPTION_ID,
       IDCLS_UNUSED, IDCLS_SPECIFY_TEXT_DEVICE_4,
       "<0-2>", NULL },
     { "-pr5txtdev", SET_RESOURCE, 1,
-      NULL, NULL, "Printer5TextDevice", (resource_value_t)0,
+      NULL, NULL, "Printer5TextDevice", NULL,
       USE_PARAM_STRING, USE_DESCRIPTION_ID,
       IDCLS_UNUSED, IDCLS_SPECIFY_TEXT_DEVICE_5,
       "<0-2>", NULL },
+    { "-pr6txtdev", SET_RESOURCE, 1,
+      NULL, NULL, "Printer6TextDevice", NULL,
+      USE_PARAM_STRING, USE_DESCRIPTION_ID,
+      IDCLS_UNUSED, IDCLS_SPECIFY_TEXT_DEVICE_6,
+      "<0-2>", NULL },
+    CMDLINE_LIST_END
+};
+
+static const cmdline_option_t cmdline_options_userport[] =
+{
     { "-prusertxtdev", SET_RESOURCE, 1,
       NULL, NULL, "PrinterUserportTextDevice", (resource_value_t)0,
       USE_PARAM_STRING, USE_DESCRIPTION_ID,
       IDCLS_UNUSED, IDCLS_SPECIFY_TEXT_USERPORT,
       "<0-2>", NULL },
-    { NULL }
+    CMDLINE_LIST_END
 };
 
 int output_text_init_cmdline_options(void)
 {
+    if (machine_class != VICE_MACHINE_C64DTV
+        && machine_class != VICE_MACHINE_PLUS4) {
+        if (cmdline_register_options(cmdline_options_userport) < 0) {
+            return -1;
+        }
+    }
+
     return cmdline_register_options(cmdline_options);
+}
+
+/* ------------------------------------------------------------------------- */
+
+/*
+ * TODO: only do this on systems which support it.
+ */
+FILE *fopen_or_pipe(char *name)
+{
+    if (name[0] == '|') {
+#if COPROC_SUPPORT
+        int fd_rd, fd_wr;
+        if (fork_coproc(&fd_wr, &fd_rd, name + 1) < 0) {
+            /* error */
+            return NULL;
+        }
+        close(fd_rd);   /* We only want to write to the process */
+        return fdopen(fd_wr, MODE_WRITE);
+#else
+        log_error(LOG_DEFAULT, "Cannot fork process.");
+        return NULL;
+#endif
+    } else {
+        return fopen(name, MODE_APPEND);
+    }
 }
 
 /* ------------------------------------------------------------------------- */
@@ -130,24 +196,24 @@ static int output_text_open(unsigned int prnr,
                             output_parameter_t *output_parameter)
 {
     switch (printer_device[prnr]) {
-      case 0:
-      case 1:
-      case 2:
-        if (PrinterDev[printer_device[prnr]] == NULL) {
-            return -1;
-        }
-
-        if (output_fd[printer_device[prnr]] == NULL) {
-            FILE *fd;
-            fd = fopen(PrinterDev[printer_device[prnr]], MODE_APPEND);
-            if (fd == NULL) {
+        case 0:
+        case 1:
+        case 2:
+            if (PrinterDev[printer_device[prnr]] == NULL) {
                 return -1;
             }
-            output_fd[printer_device[prnr]] = fd;
-        }
-        return 0;
-      default:
-        return -1;
+
+            if (output_fd[printer_device[prnr]] == NULL) {
+                FILE *fd;
+                fd = fopen_or_pipe(PrinterDev[printer_device[prnr]]);
+                if (fd == NULL) {
+                    return -1;
+                }
+                output_fd[printer_device[prnr]] = fd;
+            }
+            return 0;
+        default:
+            return -1;
     }
 }
 
@@ -174,7 +240,7 @@ static int output_text_getc(unsigned int prnr, BYTE *b)
     if (output_fd[printer_device[prnr]] == NULL) {
         return -1;
     }
-    *b = fgetc(output_fd[printer_device[prnr]]);
+    *b = (BYTE)fgetc(output_fd[printer_device[prnr]]);
     return 0;
 }
 
@@ -189,14 +255,6 @@ static int output_text_flush(unsigned int prnr)
 }
 
 /* ------------------------------------------------------------------------- */
-
-void output_text_init(void)
-{
-}
-
-void output_text_reset(void)
-{
-}
 
 int output_text_init_resources(void)
 {
@@ -213,6 +271,13 @@ int output_text_init_resources(void)
 
     if (resources_register_string(resources_string) < 0) {
         return -1;
+    }
+
+    if (machine_class != VICE_MACHINE_C64DTV
+        && machine_class != VICE_MACHINE_PLUS4) {
+        if (resources_register_int(resources_int_userport) < 0) {
+            return -1;
+        }
     }
 
     return resources_register_int(resources_int);

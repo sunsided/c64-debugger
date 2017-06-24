@@ -2,7 +2,7 @@
  * via.h - VIA emulation.
  *
  * Written by
- *  André Fachat <fachat@physik.tu-chemnitz.de>
+ *  Andre Fachat <fachat@physik.tu-chemnitz.de>
  *  Andreas Boose <viceteam@t-online.de>
  *
  * This file is part of VICE, the Versatile Commodore Emulator.
@@ -42,7 +42,8 @@
 #define VIA_T1LH        7  /* Timer 1 latch high */
 #define VIA_T2CL        8  /* Timer 2 count low - read only */
 #define VIA_T2LL        8  /* Timer 2 latch low - write only */
-#define VIA_T2CH        9  /* Timer 2 latch/count high */
+#define VIA_T2CH        9  /* Timer 2 count high - read only */
+#define VIA_T2LH        9  /* Timer 2 latch high - write only */
 
 #define VIA_SR          10 /* Serial port shift register */
 #define VIA_ACR         11 /* Auxiliary control register */
@@ -85,7 +86,8 @@ typedef struct via_context_s {
     int ifr;
     int ier;
     unsigned int tal;
-    unsigned int tbl;
+    BYTE t2cl; /* T2 counter low */
+    BYTE t2ch; /* T2 counter high */
     CLOCK tau;
     CLOCK tbu;
     CLOCK tai;
@@ -101,8 +103,10 @@ typedef struct via_context_s {
     BYTE ilb;
     int ca2_state;
     int cb2_state;
+    BYTE shift_state;          /* state helper for shift register */
     struct alarm_s *t1_alarm;
     struct alarm_s *t2_alarm;
+    struct alarm_s *sr_alarm;
     signed int log;            /* init to LOG_ERR */
 
     CLOCK read_clk;            /* init to 0 */
@@ -160,15 +164,13 @@ extern void viacore_signal(struct via_context_s *via_context, int line,
                            int edge);
 
 extern void viacore_store(struct via_context_s *via_context,
-                                   WORD addr, BYTE data);
+                          WORD addr, BYTE data);
 extern BYTE viacore_read(struct via_context_s *via_context,
-                                  WORD addr);
+                         WORD addr);
 extern BYTE viacore_peek(struct via_context_s *via_context,
-                                  WORD addr);
-extern BYTE c64d_viacore_peek(struct via_context_s *via_context,
-						 WORD addr);
+                         WORD addr);
 
-
+/* WARNING: this is a hack */
 extern void viacore_set_sr(via_context_t *via_context, BYTE data);
 
 extern int viacore_snapshot_write_module(struct via_context_s *via_context,
@@ -176,5 +178,10 @@ extern int viacore_snapshot_write_module(struct via_context_s *via_context,
 extern int viacore_snapshot_read_module(struct via_context_s *via_context,
                                         struct snapshot_s *s);
 extern int viacore_dump(via_context_t *via_context);
+
+// c64d
+BYTE c64d_viacore_peek(via_context_t *via_context, WORD addr);
+
+
 #endif
 

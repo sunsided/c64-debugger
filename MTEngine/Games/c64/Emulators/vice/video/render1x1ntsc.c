@@ -33,17 +33,22 @@
 
 /*
     right now this is basically the PAL renderer without delay line emulation
-
-    TODO: use NTSC color space and conversion matrix
 */
 
+/*
+    YIQ->RGB (Sony CXA2025AS US decoder matrix)
+
+    R = Y + (1.630 * I + 0.317 * Q)
+    G = Y - (0.378 * I + 0.466 * Q)
+    B = Y - (1.089 * I - 1.677 * Q)
+*/
 static inline
 void yuv_to_rgb(SDWORD y, SDWORD u, SDWORD v,
                 SDWORD *red, SDWORD *grn, SDWORD *blu)
 {
-    *red = (y + v) >> 16;
-    *blu = (y + u) >> 16;
-    *grn = (y - ((50 * u + 130 * v) >> 8)) >> 16;
+    *red = (y + ((209 * u +  41 * v) >> 7)) >> 15;
+    *grn = (y - (( 48 * u +  69 * v) >> 7)) >> 15;
+    *blu = (y - ((139 * u - 215 * v) >> 7)) >> 15;
 }
 
 static inline
@@ -151,15 +156,15 @@ void store_pixel_YVYU(BYTE *trg, SDWORD y1_, SDWORD u1, SDWORD v1, SDWORD y2_, S
 /* NTSC 1x1 renderers */
 static inline void
 render_generic_1x1_ntsc(video_render_color_tables_t *color_tab, const BYTE *src, BYTE *trg,
-                       unsigned int width, const unsigned int height,
-                       unsigned int xs, const unsigned int ys,
-                       unsigned int xt, const unsigned int yt,
-                       const unsigned int pitchs, const unsigned int pitcht,
-                       const unsigned int pixelstride,
-                       void (*store_func)(BYTE *trg,
-                                          SDWORD y1, SDWORD u1, SDWORD v1,
-                                          SDWORD y2, SDWORD u2, SDWORD v2),
-                       int yuvtarget)
+                        unsigned int width, const unsigned int height,
+                        unsigned int xs, const unsigned int ys,
+                        unsigned int xt, const unsigned int yt,
+                        const unsigned int pitchs, const unsigned int pitcht,
+                        const unsigned int pixelstride,
+                        void (*store_func)(BYTE *trg,
+                                           SDWORD y1, SDWORD u1, SDWORD v1,
+                                           SDWORD y2, SDWORD u2, SDWORD v2),
+                        int yuvtarget)
 {
     const SDWORD *cbtable = color_tab->cbtable;
     const SDWORD *crtable = color_tab->crtable;
@@ -174,9 +179,9 @@ render_generic_1x1_ntsc(video_render_color_tables_t *color_tab, const BYTE *src,
 
     /* ensure starting on even coords */
     if ((xt & 1) && xs > 0) {
-        xs --;
-        xt --;
-        width ++;
+        xs--;
+        xt--;
+        width++;
     }
 
     src = src + pitchs * ys + xs - 2;
@@ -228,78 +233,78 @@ render_generic_1x1_ntsc(video_render_color_tables_t *color_tab, const BYTE *src,
 
 void
 render_UYVY_1x1_ntsc(video_render_color_tables_t *color_tab,
-                  const BYTE *src, BYTE *trg,
-                  const unsigned int width, const unsigned int height,
-                  const unsigned int xs, const unsigned int ys,
-                  const unsigned int xt, const unsigned int yt,
-                  const unsigned int pitchs, const unsigned int pitcht)
+                     const BYTE *src, BYTE *trg,
+                     const unsigned int width, const unsigned int height,
+                     const unsigned int xs, const unsigned int ys,
+                     const unsigned int xt, const unsigned int yt,
+                     const unsigned int pitchs, const unsigned int pitcht)
 {
     render_generic_1x1_ntsc(color_tab, src, trg, width, height, xs, ys, xt, yt,
-                           pitchs, pitcht,
-                           4, store_pixel_UYVY, 1);
+                            pitchs, pitcht,
+                            4, store_pixel_UYVY, 1);
 }
 
 void
 render_YUY2_1x1_ntsc(video_render_color_tables_t *color_tab,
-                  const BYTE *src, BYTE *trg,
-                  const unsigned int width, const unsigned int height,
-                  const unsigned int xs, const unsigned int ys,
-                  const unsigned int xt, const unsigned int yt,
-                  const unsigned int pitchs, const unsigned int pitcht)
+                     const BYTE *src, BYTE *trg,
+                     const unsigned int width, const unsigned int height,
+                     const unsigned int xs, const unsigned int ys,
+                     const unsigned int xt, const unsigned int yt,
+                     const unsigned int pitchs, const unsigned int pitcht)
 {
     render_generic_1x1_ntsc(color_tab, src, trg, width, height, xs, ys, xt, yt,
-                           pitchs, pitcht,
-                           4, store_pixel_YUY2, 1);
+                            pitchs, pitcht,
+                            4, store_pixel_YUY2, 1);
 }
 
 void
 render_YVYU_1x1_ntsc(video_render_color_tables_t *color_tab,
-                  const BYTE *src, BYTE *trg,
-                  const unsigned int width, const unsigned int height,
-                  const unsigned int xs, const unsigned int ys,
-                  const unsigned int xt, const unsigned int yt,
-                  const unsigned int pitchs, const unsigned int pitcht)
+                     const BYTE *src, BYTE *trg,
+                     const unsigned int width, const unsigned int height,
+                     const unsigned int xs, const unsigned int ys,
+                     const unsigned int xt, const unsigned int yt,
+                     const unsigned int pitchs, const unsigned int pitcht)
 {
     render_generic_1x1_ntsc(color_tab, src, trg, width, height, xs, ys, xt, yt,
-                           pitchs, pitcht,
-                           4, store_pixel_YVYU, 1);
+                            pitchs, pitcht,
+                            4, store_pixel_YVYU, 1);
 }
 
 void
 render_16_1x1_ntsc(video_render_color_tables_t *color_tab,
-                  const BYTE *src, BYTE *trg,
-                  const unsigned int width, const unsigned int height,
-                  const unsigned int xs, const unsigned int ys,
-                  const unsigned int xt, const unsigned int yt,
-                  const unsigned int pitchs, const unsigned int pitcht)
+                   const BYTE *src, BYTE *trg,
+                   const unsigned int width, const unsigned int height,
+                   const unsigned int xs, const unsigned int ys,
+                   const unsigned int xt, const unsigned int yt,
+                   const unsigned int pitchs, const unsigned int pitcht)
 {
     render_generic_1x1_ntsc(color_tab, src, trg, width, height, xs, ys, xt, yt,
-                           pitchs, pitcht,
-                           4, store_pixel_2, 0);
+                            pitchs, pitcht,
+                            4, store_pixel_2, 0);
 }
 
 void
 render_24_1x1_ntsc(video_render_color_tables_t *color_tab,
-                  const BYTE *src, BYTE *trg,
-                  const unsigned int width, const unsigned int height,
-                  const unsigned int xs, const unsigned int ys,
-                  const unsigned int xt, const unsigned int yt,
-                  const unsigned int pitchs, const unsigned int pitcht)
+                   const BYTE *src, BYTE *trg,
+                   const unsigned int width, const unsigned int height,
+                   const unsigned int xs, const unsigned int ys,
+                   const unsigned int xt, const unsigned int yt,
+                   const unsigned int pitchs, const unsigned int pitcht)
 {
     render_generic_1x1_ntsc(color_tab, src, trg, width, height, xs, ys, xt, yt,
-                           pitchs, pitcht,
-                           6, store_pixel_3, 0);
+                            pitchs, pitcht,
+                            6, store_pixel_3, 0);
 }
 
 void
 render_32_1x1_ntsc(video_render_color_tables_t *color_tab,
-                  const BYTE *src, BYTE *trg,
-                  const unsigned int width, const unsigned int height,
-                  const unsigned int xs, const unsigned int ys,
-                  const unsigned int xt, const unsigned int yt,
-                  const unsigned int pitchs, const unsigned int pitcht)
+                   const BYTE *src, BYTE *trg,
+                   const unsigned int width, const unsigned int height,
+                   const unsigned int xs, const unsigned int ys,
+                   const unsigned int xt, const unsigned int yt,
+                   const unsigned int pitchs, const unsigned int pitcht)
 {
     render_generic_1x1_ntsc(color_tab, src, trg, width, height, xs, ys, xt, yt,
-                           pitchs, pitcht,
-                           8, store_pixel_4, 0);
+                            pitchs, pitcht,
+                            8, store_pixel_4, 0);
 }

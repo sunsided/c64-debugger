@@ -35,7 +35,7 @@ public:
 	
 	void DumpViaInts(uint8 i, char *buf);
 	
-	virtual void SetFocus(bool focus);
+	virtual bool SetFocus(bool focus);
 
 	bool renderVIA1;
 	bool renderVIA2;

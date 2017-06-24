@@ -1,9 +1,9 @@
-/*! \file cia.h 
+/*! \file cia.h
  *
  *  \brief Definitions for MOS6526 (CIA) chip emulation.
  *
  *  \author Jouko Valta <jopi@stekt.oulu.fi>
- *  \author André Fachat <fachat@physik.tu-chemnitz.de>
+ *  \author Andre Fachat <fachat@physik.tu-chemnitz.de>
  *  \author Andreas Boose <viceteam@t-online.de>
  *
  *  \page cia CIA timer emulation
@@ -95,12 +95,19 @@ typedef struct cia_context_s {
     BYTE shifter;
     BYTE old_pa;
     BYTE old_pb;
+
     char todstopped;
     char todlatched;
     BYTE todalarm[4];
     BYTE todlatch[4];
     int todticks;                 /* init to 100000 */
     BYTE todtickcounter;
+
+    int power_freq;
+    int power_tickcounter;
+    CLOCK power_ticks;
+    CLOCK ticks_per_sec;
+
     signed int log;               /* init to LOG_ERR */
 
     struct ciat_s *ta;
@@ -153,12 +160,9 @@ extern void ciacore_init(struct cia_context_s *cia_context,
 extern void ciacore_shutdown(cia_context_t *cia_context);
 extern void ciacore_reset(struct cia_context_s *cia_context);
 extern void ciacore_disable(struct cia_context_s *cia_context);
-extern void ciacore_store(struct cia_context_s *cia_context,
-                                   WORD addr, BYTE data);
-extern BYTE ciacore_read(struct cia_context_s *cia_context,
-                                  WORD addr);
-extern BYTE ciacore_peek(struct cia_context_s *cia_context,
-                                  WORD addr);
+extern void ciacore_store(struct cia_context_s *cia_context, WORD addr, BYTE data);
+extern BYTE ciacore_read(struct cia_context_s *cia_context, WORD addr);
+extern BYTE ciacore_peek(struct cia_context_s *cia_context, WORD addr);
 
 extern void ciacore_set_flag(struct cia_context_s *cia_context);
 extern void ciacore_set_sdr(struct cia_context_s *cia_context, BYTE data);
@@ -169,4 +173,3 @@ extern int ciacore_snapshot_read_module(struct cia_context_s *cia_context,
                                         struct snapshot_s *s);
 extern int ciacore_dump(cia_context_t *cia_context);
 #endif
-

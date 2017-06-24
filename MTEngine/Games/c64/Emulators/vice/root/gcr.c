@@ -49,16 +49,20 @@
 #include "diskimage.h"
 
 static const BYTE GCR_conv_data[16] =
-    { 0x0a, 0x0b, 0x12, 0x13,
-      0x0e, 0x0f, 0x16, 0x17,
-      0x09, 0x19, 0x1a, 0x1b,
-      0x0d, 0x1d, 0x1e, 0x15 };
+{
+    0x0a, 0x0b, 0x12, 0x13,
+    0x0e, 0x0f, 0x16, 0x17,
+    0x09, 0x19, 0x1a, 0x1b,
+    0x0d, 0x1d, 0x1e, 0x15
+};
 
 static const BYTE From_GCR_conv_data[32] =
-    { 0,  0,  0,  0,  0,  0,  0,  0,
-      0,  8,  0,  1,  0, 12,  4,  5,
-      0,  0,  2,  3,  0, 15,  6,  7,
-      0,  9, 10, 11,  0, 13, 14,  0 };
+{
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 8, 0, 1, 0, 12, 4, 5,
+    0, 0, 2, 3, 0, 15, 6, 7,
+    0, 9, 10, 11, 0, 13, 14, 0
+};
 
 
 static void gcr_convert_4bytes_to_GCR(const BYTE *source, BYTE *dest)
@@ -69,21 +73,21 @@ static void gcr_convert_4bytes_to_GCR(const BYTE *source, BYTE *dest)
     for (i = 2; i < 10; i += 2, source++, dest++)
     {
         tdest <<= 5;  /* make room for the upper nybble */
-        tdest  |= GCR_conv_data[(*source) >> 4];
+        tdest |= GCR_conv_data[(*source) >> 4];
 
         tdest <<= 5;  /* make room for the lower nybble */
-        tdest  |= GCR_conv_data[(*source) & 0x0f];
+        tdest |= GCR_conv_data[(*source) & 0x0f];
 
-        *dest   = (BYTE)(tdest >> i);
+        *dest = (BYTE)(tdest >> i);
     }
 
-    *dest   = (BYTE)tdest;
+    *dest = (BYTE)tdest;
 }
 
 static void gcr_convert_GCR_to_4bytes(const BYTE *source, BYTE *dest)
 {
     int i;
-        /* at least 24 bits for shifting into bits 16...20 */
+    /* at least 24 bits for shifting into bits 16...20 */
     register DWORD tdest = *source;
 
     tdest <<= 13;
@@ -91,16 +95,16 @@ static void gcr_convert_GCR_to_4bytes(const BYTE *source, BYTE *dest)
     for (i = 5; i < 13; i += 2, dest++)
     {
         source++;
-        tdest  |= ((DWORD)(*source)) << i;
+        tdest |= ((DWORD)(*source)) << i;
 
-            /*  "tdest >> 16" could be optimized to a word
-             *  aligned access, hopefully the compiler does
-             *  this for us (in a portable way)
-             */
-        *dest   = From_GCR_conv_data[ (tdest >> 16) & 0x1f ] << 4;
+        /*  "tdest >> 16" could be optimized to a word
+         *  aligned access, hopefully the compiler does
+         *  this for us (in a portable way)
+         */
+        *dest = From_GCR_conv_data[(tdest >> 16) & 0x1f] << 4;
         tdest <<= 5;
 
-        *dest  |= From_GCR_conv_data[ (tdest >> 16) & 0x1f ];
+        *dest |= From_GCR_conv_data[(tdest >> 16) & 0x1f];
         tdest <<= 5;
     }
 }
@@ -137,7 +141,13 @@ void gcr_convert_sector_to_GCR(const BYTE *buffer, BYTE *data, const gcr_header_
     data += sync;
 
     chksum = (error_code == CBMDOS_FDC_ERR_DCHECK) ? 0xff : 0x00;
-    buf[0] = (error_code == CBMDOS_FDC_ERR_NOBLOCK) ? 0xff : 0x07;
+    /* note: error 4 (CBMDOS_FDC_ERR_NOBLOCK) is considered a "soft error",
+             meaning the data is still available. because of that, we must use
+             a value (incase of error) here that in GCR will have its leftmost
+             bit 0, or else it will be taken as part of the SYNC and the framing
+             will break (and the data mess up).
+     */
+    buf[0] = (error_code == CBMDOS_FDC_ERR_NOBLOCK) ? 0x00 : 0x07;
     memcpy(buf + 1, buffer, 3);
     chksum ^= buffer[0] ^ buffer[1] ^ buffer[2];
     gcr_convert_4bytes_to_GCR(buf, data);
@@ -157,10 +167,13 @@ void gcr_convert_sector_to_GCR(const BYTE *buffer, BYTE *data, const gcr_header_
     gcr_convert_4bytes_to_GCR(buf, data);
 }
 
-static int gcr_find_sync(const disk_track_t *raw, int p, int s) {
+static int gcr_find_sync(const disk_track_t *raw, int p, int s)
+{
     int w, b;
 
-    if (!raw->data || !raw->size) return -CBMDOS_FDC_ERR_SYNC;
+    if (!raw->data || !raw->size) {
+        return -CBMDOS_FDC_ERR_SYNC;
+    }
 
     w = 0;
     b = raw->data[p >> 3] << (p & 7);
@@ -224,7 +237,7 @@ static int gcr_find_sector_header(const disk_track_t *raw, BYTE sector)
 
     p = 0;
     p2 = -CBMDOS_FDC_ERR_SYNC;
-    for (;;) {
+    for (;; ) {
         p = gcr_find_sync(raw, p, raw->size * 8);
         if (p2 == p) {
             break;
@@ -253,12 +266,14 @@ fdc_err_t gcr_read_sector(const disk_track_t *raw, BYTE *data, BYTE sector)
     int i, p;
 
     p = gcr_find_sector_header(raw, sector);
-    if (p < 0)
+    if (p < 0) {
         return -p;
+    }
 
     p = gcr_find_sync(raw, p, 500 * 8);
-    if (p < 0)
+    if (p < 0) {
         return -p;
+    }
 
     gcr_decode_block(raw, p, buffer, 65);
 
@@ -283,12 +298,14 @@ fdc_err_t gcr_write_sector(disk_track_t *raw, const BYTE *data, BYTE sector)
     int i, j, shift, p;
 
     p = gcr_find_sector_header(raw, sector);
-    if (p < 0)
+    if (p < 0) {
         return -p;
+    }
 
     p = gcr_find_sync(raw, p, 500 * 8);
-    if (p < 0)
+    if (p < 0) {
         return -p;
+    }
 
     shift = p & 7;
     offset = raw->data + (p >> 3);
@@ -298,8 +315,9 @@ fdc_err_t gcr_write_sector(disk_track_t *raw, const BYTE *data, BYTE sector)
     buffer[0] = 0x07;
     memcpy(buffer + 1, data, 256);
     chksum = buffer[1];
-    for (i = 2; i < 257; i++)
+    for (i = 2; i < 257; i++) {
         chksum ^= buffer[i];
+    }
     buffer[257] = chksum;
     buffer[258] = buffer[259] = 0;
 
@@ -316,8 +334,9 @@ fdc_err_t gcr_write_sector(disk_track_t *raw, const BYTE *data, BYTE sector)
                 offset[0] = gcr[j];
             }
             offset++;
-            if (offset >= end)
+            if (offset >= end) {
                 offset = raw->data;
+            }
         }
     }
     offset[0] = b | (offset[0] & (0xff >> shift));

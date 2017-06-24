@@ -34,7 +34,26 @@ public:
 			   float textColorDisabledR, float textColorDisabledG, float textColorDisabledB, float textColorDisabledA,
 			   CGuiButtonSwitchCallback *callback);
 
+	virtual void InitBackgroundColors();
 	
+	float buttonSwitchOnColorR;
+	float buttonSwitchOnColorG;
+	float buttonSwitchOnColorB;
+	float buttonSwitchOnColorA;
+	float buttonSwitchOnColor2R;
+	float buttonSwitchOnColor2G;
+	float buttonSwitchOnColor2B;
+	float buttonSwitchOnColor2A;
+	
+	float buttonSwitchOffColorR;
+	float buttonSwitchOffColorG;
+	float buttonSwitchOffColorB;
+	float buttonSwitchOffColorA;
+	float buttonSwitchOffColor2R;
+	float buttonSwitchOffColor2G;
+	float buttonSwitchOffColor2B;
+	float buttonSwitchOffColor2A;
+
 	void InitWithText(char *txt);
 
 	virtual void Render();

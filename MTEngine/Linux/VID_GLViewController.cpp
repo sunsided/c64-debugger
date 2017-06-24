@@ -128,11 +128,41 @@ void VID_ResetLogicClock()
 	resetLogicClock = true;
 }
 
+bool VID_isAlwaysOnTop = false;
+
 void X11SetAlwaysOnTop(bool isAlwaysOnTop);
 
 void VID_SetWindowAlwaysOnTop(bool isAlwaysOnTop)
 {
+	VID_isAlwaysOnTop = isAlwaysOnTop;
 	X11SetAlwaysOnTop(isAlwaysOnTop);
+}
+
+// do not store value
+void VID_SetWindowAlwaysOnTopTemporary(bool isAlwaysOnTop)
+{
+	X11SetAlwaysOnTop(isAlwaysOnTop);
+}
+
+bool VID_IsWindowAlwaysOnTop()
+{
+	return VID_isAlwaysOnTop;
+}
+
+bool VID_IsWindowFullScreen()
+{
+    // TODO: not implemented
+    return false;
+}
+
+void VID_HideMouseCursor()
+{
+    // TODO: not implemented
+}
+
+void VID_ShowMouseCursor()
+{
+    // TODO: not implemented
 }
 
 void VID_ApplicationPreloadingFinished()
@@ -349,6 +379,76 @@ void VID_InitServerMode()
 	currentGameTime = GetTickCount();
 
 }
+
+/*
+void VID_UpdateViewPort(float newWidth, float newHeight)
+{
+	LOGD("VID_UpdateViewPort: %f %f", newWidth, newHeight);
+	
+	updateViewPort = true;
+	
+//	 SCREEN_SCALE = (float)newWidth / (float)SCREEN_WIDTH;
+//	 //LOGD("new SCREEN_SCALE=%f", SCREEN_SCALE);
+//	 newWidth = (unsigned int)(SCREEN_WIDTH * SCREEN_SCALE);
+//	 newHeight = (unsigned int)(SCREEN_HEIGHT * SCREEN_SCALE);
+//	 glViewport(0, 0, newWidth, newHeight);
+	
+	double vW = (double) newWidth;
+	double vH = (double) newHeight;
+	double A = (double) SCREEN_WIDTH / (double) SCREEN_HEIGHT; //SCREEN_WIDTH / (float)SCREEN_HEIGHT;
+	double vA = (vW / vH);
+	
+	LOGD("vW=%f vH=%f A=%f vA=%f", vW, vH, A, vA);
+	
+	if (A > vA)
+	{
+		LOGD("glViewport A > vA");
+		VIEW_START_X = 0;
+		VIEW_START_Y = (vH * 0.5) - ((vW / A) * 0.5);
+		SCREEN_SCALE = vW / SCREEN_WIDTH;
+		
+		LOGD("glViewPort: %d %d %d %d", (GLint)VIEW_START_X, (GLint)VIEW_START_Y, (GLsizei)vW, (GLsizei)(vW/A));
+		
+		viewPortStartX = (GLint)VIEW_START_X;
+		viewPortStartY = (GLint)VIEW_START_Y;
+		viewPortSizeX = (GLsizei)vW;
+		viewPortSizeY = (GLsizei)(vW / A);
+	}
+	else
+	{
+		if (A < vA)
+		{
+			LOGD("glViewport A < vA");
+			VIEW_START_X = (vW * 0.5) - ((vH * A) * 0.5);
+			VIEW_START_Y = 0;
+			SCREEN_SCALE = vH / SCREEN_HEIGHT;
+			
+			LOGD("glViewPort: %d %d %d %d", (GLint)VIEW_START_X, (GLint)VIEW_START_Y, (GLsizei)(vH * A), (GLsizei)vH);
+			
+			viewPortStartX = (GLint)VIEW_START_X;
+			viewPortStartY = (GLint)VIEW_START_Y;
+			viewPortSizeX = (GLsizei)(vH * A);
+			viewPortSizeY = (GLsizei)vH;
+		}
+		else
+		{
+			LOGD("glViewport equal");
+			SCREEN_SCALE = vH / SCREEN_HEIGHT;
+			
+			// equal aspect ratios
+			viewPortStartX = 0;
+			viewPortStartY = 0;
+			viewPortSizeX = (GLsizei)vW;
+			viewPortSizeY = (GLsizei)vH;
+		}
+	}
+	
+	if (guiMain != NULL)
+		guiMain->NotifyGlobalOSWindowChangedCallbacks();
+	
+	LOGD("VID_UpdateViewPort: done");
+}
+*/
 
 void VID_InitGL()
 {
@@ -1039,6 +1139,25 @@ void ResetClipping()
 {
 	glDisable(GL_SCISSOR_TEST);
 	//glScissor(0, 0, SCREEN_HEIGHT, SCREEN_WIDTH);
+}
+
+void GUI_GetRealScreenPixelSizes(double *pixelSizeX, double *pixelSizeY)
+{
+	LOGD("GUI_GetRealScreenPixelSizes");
+	
+	LOGD("  SCREEN_WIDTH=%f SCREEN_HEIGHT=%f  |  SCREEN_SCALE=%f",
+		 SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_SCALE);
+//	LOGD("  viewPortSizeX=%d viewPortSizeY=%d |  viewPortStartX=%d viewPortStartY=%d",
+//		 viewPortSizeX, viewPortSizeY, viewPortStartX, viewPortStartY);
+	
+	LOGD("... calc pixel size");
+	
+	*pixelSizeX = (1.0f / SCREEN_SCALE); //(double)SCREEN_WIDTH / (double)viewPortSizeX;
+	*pixelSizeY = (1.0f / SCREEN_SCALE); //(double)SCREEN_HEIGHT / (double)viewPortSizeY;
+	
+	LOGD("  pixelSizeX=%f pixelSizeY=%f", *pixelSizeX, *pixelSizeY);
+	
+	LOGD("GUI_GetRealScreenPixelSizes done");
 }
 
 void BlitTexture(GLuint tex, GLfloat destX, GLfloat destY, GLfloat z, GLfloat sizeX, GLfloat sizeY)

@@ -42,6 +42,14 @@
 #include "translate.h"
 #include "util.h"
 
+/* #define DBGSYSFILE */
+
+#ifdef DBGSYSFILE
+#define DBG(x)  printf x
+#else
+#define DBG(x)
+#endif
+
 /* Resources.  */
 
 static char *default_path = NULL;
@@ -74,20 +82,20 @@ static int set_system_path(const char *val, void *param)
                 s = util_concat(tmp_path, NULL); /* concat allocs a new str. */
             } else {
                 s = util_concat(expanded_system_path,
-                    ARCHDEP_FINDPATH_SEPARATOR_STRING,
-                    tmp_path, NULL );
+                                ARCHDEP_FINDPATH_SEPARATOR_STRING,
+                                tmp_path, NULL );
             }
         } else { /* relative path */
             if (expanded_system_path == NULL) {
                 s = util_concat(current_dir,
-                    FSDEV_DIR_SEP_STR,
-                    tmp_path, NULL );
+                                FSDEV_DIR_SEP_STR,
+                                tmp_path, NULL );
             } else {
                 s = util_concat(expanded_system_path,
-                    ARCHDEP_FINDPATH_SEPARATOR_STRING,
-                    current_dir,
-                    FSDEV_DIR_SEP_STR,
-                    tmp_path, NULL );
+                                ARCHDEP_FINDPATH_SEPARATOR_STRING,
+                                current_dir,
+                                FSDEV_DIR_SEP_STR,
+                                tmp_path, NULL );
             }
         }
         lib_free(expanded_system_path);
@@ -99,13 +107,15 @@ static int set_system_path(const char *val, void *param)
     lib_free(current_dir);
     lib_free(tmp_path_save);
 
+    DBG(("set_system_path -> expanded_system_path:'%s'\n", expanded_system_path));
+
     return 0;
 }
 
 static const resource_string_t resources_string[] = {
     { "Directory", "$$", RES_EVENT_NO, NULL,
       &system_path, set_system_path, NULL },
-    { NULL },
+    RESOURCE_STRING_LIST_END
 };
 
 /* Command-line options.  */
@@ -116,7 +126,7 @@ static const cmdline_option_t cmdline_options[] = {
       USE_PARAM_ID, USE_DESCRIPTION_ID,
       IDCLS_P_PATH, IDCLS_DEFINE_SYSTEM_FILES_PATH,
       NULL, NULL },
-    { NULL },
+    CMDLINE_LIST_END
 };
 
 /* ------------------------------------------------------------------------- */
@@ -124,7 +134,10 @@ static const cmdline_option_t cmdline_options[] = {
 int sysfile_init(const char *emu_id)
 {
     default_path = archdep_default_sysfile_pathlist(emu_id);
-
+    DBG(("sysfile_init(%s) -> default_path:'%s'\n", emu_id, default_path));
+    /* HACK: set the default value early, so the systemfile locater also works
+             in early startup */
+    set_system_path("$$", NULL);
     return 0;
 }
 
@@ -157,19 +170,9 @@ int sysfile_cmdline_options_init(void)
 FILE *sysfile_open(const char *name, char **complete_path_return,
                    const char *open_mode)
 {
-#ifndef DINGOO_NATIVE
     char *p = NULL;
-#endif
     FILE *f;
 
-#ifdef DINGOO_NATIVE
-    *complete_path_return = make_absolute_system_path(name);
-    f = fopen(*complete_path_return, open_mode);
-    if (!f) {
-        *complete_path_return = NULL;
-    }
-    return f;
-#else
     if (name == NULL || *name == '\0') {
         log_error(LOG_DEFAULT, "Missing name for system file.");
         return NULL;
@@ -178,8 +181,9 @@ FILE *sysfile_open(const char *name, char **complete_path_return,
     p = findpath(name, expanded_system_path, IOUTIL_ACCESS_R_OK);
 
     if (p == NULL) {
-        if (complete_path_return != NULL)
+        if (complete_path_return != NULL) {
             *complete_path_return = NULL;
+        }
         return NULL;
     } else {
         f = fopen(p, open_mode);
@@ -188,11 +192,11 @@ FILE *sysfile_open(const char *name, char **complete_path_return,
             lib_free(p);
             p = NULL;
         }
-        if (complete_path_return != NULL)
+        if (complete_path_return != NULL) {
             *complete_path_return = p;
+        }
         return f;
     }
-#endif	/* DINGOO_NATIVE */
 }
 
 /* As `sysfile_open', but do not open the file.  Just return 0 if the file is
@@ -204,8 +208,9 @@ int sysfile_locate(const char *name, char **complete_path_return)
     if (f != NULL) {
         fclose(f);
         return 0;
-    } else
+    } else {
         return -1;
+    }
 }
 
 /* ------------------------------------------------------------------------- */
@@ -242,9 +247,10 @@ int sysfile_load(const char *name, BYTE *dest, int minsize, int maxsize)
     fp = sysfile_open(name, &complete_path, MODE_READ);
 
     if (fp == NULL) {
-
         /* Try to open the file from the current directory. */
-        const char working_dir_prefix[3] = { '.', FSDEV_DIR_SEP_CHR, '\0' };
+        const char working_dir_prefix[3] = {
+            '.', FSDEV_DIR_SEP_CHR, '\0'
+        };
         char *local_name = NULL;
 
         local_name = util_concat(working_dir_prefix, name, NULL);
@@ -261,10 +267,10 @@ int sysfile_load(const char *name, BYTE *dest, int minsize, int maxsize)
 
     rsize = util_file_length(fp);
     if (minsize < 0) {
-	minsize = -minsize;
-	load_at_end = 0;
+        minsize = -minsize;
+        load_at_end = 0;
     } else {
-	load_at_end = 1;
+        load_at_end = 1;
     }
 
     if (rsize < ((size_t)minsize)) {
@@ -275,7 +281,7 @@ int sysfile_load(const char *name, BYTE *dest, int minsize, int maxsize)
         log_warning(LOG_DEFAULT,
                     "ROM `%s': two bytes too large - removing assumed "
                     "start address.", complete_path);
-        if(fread((char *)dest, 1, 2, fp) < 2) {
+        if (fread((char *)dest, 1, 2, fp) < 2) {
             goto fail;
         }
         rsize -= 2;
@@ -287,8 +293,9 @@ int sysfile_load(const char *name, BYTE *dest, int minsize, int maxsize)
                     complete_path);
         rsize = maxsize;
     }
-    if ((rsize = fread((char *)dest, 1, rsize, fp)) < ((size_t)minsize))
+    if ((rsize = fread((char *)dest, 1, rsize, fp)) < ((size_t)minsize)) {
         goto fail;
+    }
 
     fclose(fp);
     lib_free(complete_path);

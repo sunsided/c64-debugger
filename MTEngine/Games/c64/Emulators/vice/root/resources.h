@@ -32,8 +32,8 @@
 
 
 typedef enum resource_type_s {
-     RES_INTEGER,
-     RES_STRING
+    RES_INTEGER,
+    RES_STRING
 } resource_type_t;
 
 typedef enum resource_event_relevant_s {
@@ -54,7 +54,7 @@ struct event_list_state_s;
 
 struct resource_int_s {
     /* Resource name.  */
-    const char *name;
+    char *name;
 
     /* Factory default value.  */
     int factory_value;
@@ -77,11 +77,11 @@ struct resource_int_s {
 };
 typedef struct resource_int_s resource_int_t;
 
-#define RESOURCE_INT_LIST_END { NULL, 0, 0, NULL, NULL, NULL, NULL }
+#define RESOURCE_INT_LIST_END { NULL, 0, (resource_event_relevant_t)0, NULL, NULL, NULL, NULL }
 
 struct resource_string_s {
     /* Resource name.  */
-    const char *name;
+    char *name;
 
     /* Factory default value.  */
     const char *factory_value;
@@ -104,15 +104,18 @@ struct resource_string_s {
 };
 typedef struct resource_string_s resource_string_t;
 
-#define RESOURCE_STRING_LIST_END { NULL, NULL, 0, NULL, NULL, NULL, NULL }
+#define RESOURCE_STRING_LIST_END { NULL, NULL, (resource_event_relevant_t)0, NULL, NULL, NULL, NULL }
 
-#define RESERR_FILE_NOT_FOUND       -1
-#define RESERR_FILE_INVALID         -2
-#define RESERR_READ_ERROR           -3
-#define RESERR_CANNOT_CREATE_FILE   -4
-#define RESERR_CANNOT_REMOVE_BACKUP -5
-#define RESERR_WRITE_PROTECTED      -6
-#define RESERR_CANNOT_RENAME_FILE   -7
+/* do not use -1 here since that is reserved for generic/other errors */
+#define RESERR_FILE_NOT_FOUND       -2
+#define RESERR_FILE_INVALID         -3
+#define RESERR_TYPE_INVALID         -4
+#define RESERR_UNKNOWN_RESOURCE     -5
+#define RESERR_READ_ERROR           -6
+#define RESERR_CANNOT_CREATE_FILE   -7
+#define RESERR_CANNOT_REMOVE_BACKUP -8
+#define RESERR_WRITE_PROTECTED      -9
+#define RESERR_CANNOT_RENAME_FILE   -10
 
 /* ------------------------------------------------------------------------- */
 
@@ -127,8 +130,7 @@ extern int resources_set_int(const char *name, int value);
 extern int resources_set_string(const char *name, const char *value);
 extern void resources_set_value_event(void *data, int size);
 extern int resources_set_int_sprintf(const char *name, int value, ...);
-extern int resources_set_string_sprintf(const char *name, const char *value,
-                                        ...);
+extern int resources_set_string_sprintf(const char *name, const char *value, ...);
 extern int resources_set_value_string(const char *name, const char *value);
 extern int resources_toggle(const char *name, int *new_value_return);
 extern int resources_touch(const char *name);
@@ -136,19 +138,21 @@ extern int resources_get_value(const char *name, void *value_return);
 extern int resources_get_int(const char *name, int *value_return);
 extern int resources_get_string(const char *name, const char **value_return);
 extern int resources_get_int_sprintf(const char *name, int *value_return, ...);
-extern int resources_get_string_sprintf(const char *name,
-                                        const char **value_return, ...);
+extern int resources_get_string_sprintf(const char *name, const char **value_return, ...);
 extern int resources_get_default_value(const char *name, void *value_return);
 extern resource_type_t resources_query_type(const char *name);
 extern int resources_save(const char *fname);
 extern int resources_load(const char *fname);
+extern int resources_dump(const char *fname);
 
 extern int resources_write_item_to_file(FILE *fp, const char *name);
 extern int resources_read_item_from_file(FILE *fp);
-extern char *resources_write_item_to_string(const char *name,
-                                            const char *delim);
+extern char *resources_write_item_to_string(const char *name, const char *delim);
 
 extern int resources_set_defaults(void);
+extern int resources_set_default_int(const char *name, int value);
+extern int resources_set_default_string(const char *name, char *value);
+
 extern int resources_set_event_safe(void);
 extern void resources_get_event_safe_list(struct event_list_state_s *list);
 
@@ -159,4 +163,3 @@ extern int resources_register_callback(const char *name, resource_callback_func_
                                        void *callback_param);
 
 #endif /* _RESOURCES_H */
-

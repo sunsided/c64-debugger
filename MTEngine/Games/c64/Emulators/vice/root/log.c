@@ -24,6 +24,8 @@
  *
  */
 
+/* #define DBGLOGGING */
+
 #include "vice.h"
 
 #include <stdarg.h>
@@ -39,7 +41,11 @@
 #include "translate.h"
 #include "util.h"
 
-#include "ViceLogWrapper.h"
+#ifdef DBGLOGGING
+#define DBG(x) printf x
+#else
+#define DBG(x)
+#endif
 
 static FILE *log_file = NULL;
 
@@ -58,18 +64,18 @@ static void log_file_open(void)
 {
     if (log_file_name == NULL || *log_file_name == 0) {
         log_file = archdep_open_default_log_file();
-        return;
     } else {
 #ifndef __OS2__
-        if (strcmp(log_file_name, "-") == 0)
+        if (strcmp(log_file_name, "-") == 0) {
             log_file = stdout;
-        else
+        } else
 #endif
-            log_file = fopen(log_file_name, MODE_WRITE_TEXT);
+        log_file = fopen(log_file_name, MODE_WRITE_TEXT);
     }
     /* flush all data direct to the output stream. */
-    if (log_file)
+    if (log_file) {
         setbuf(log_file, NULL);
+    }
 }
 
 static int set_log_file_name(const char *val, void *param)
@@ -96,6 +102,14 @@ static int log_verbose_opt(const char *param, void *extra_param)
     return 0;
 }
 
+static int log_silent_opt(const char *param, void *extra_param)
+{
+    int silent = vice_ptr_to_int(extra_param);
+    log_enabled = ! silent;
+    return 0;
+}
+
+
 int log_set_verbose(int n)
 {
     if (n) {
@@ -104,11 +118,29 @@ int log_set_verbose(int n)
     return log_verbose_opt(NULL, (void*)0);
 }
 
+
+int log_set_silent(int n)
+{
+    log_enabled = !n;
+    return 0;
+}
+
+
+
 int log_verbose_init(int argc, char **argv)
 {
+    int i;
+    DBG(("log_verbose_init: %d %s\n", argc, argv[0]));
     if (argc > 1) {
-        if (!strcmp("-verbose", argv[1])) {
-            log_set_verbose(1);
+        for (i = 1; i < argc; i++) {
+            DBG(("log_verbose_init: %d %s\n", i, argv[i]));
+            if (strcmp("-verbose", argv[i]) == 0) {
+                log_set_verbose(1);
+                break;
+            } else if (strcmp("-silent", argv[1]) == 0) {
+                log_enabled = 0;
+                break;
+            }
         }
     }
     return 0;
@@ -118,7 +150,7 @@ int log_verbose_init(int argc, char **argv)
 static const resource_string_t resources_string[] = {
     { "LogFileName", "", RES_EVENT_NO, NULL,
       &log_file_name, set_log_file_name, NULL },
-    { NULL }
+    RESOURCE_STRING_LIST_END
 };
 
 static int log_logfile_opt(const char *param, void *extra_param)
@@ -150,7 +182,12 @@ static const cmdline_option_t cmdline_options[] = {
       USE_PARAM_STRING, USE_DESCRIPTION_ID,
       IDCLS_UNUSED, IDCLS_ENABLE_VERBOSE_LOG_OUTPUT,
       NULL, NULL },
-    { NULL }
+    { "-silent", CALL_FUNCTION, 0,
+      log_silent_opt, (void*)1, NULL, NULL,
+      USE_PARAM_STRING, USE_DESCRIPTION_ID,
+      IDCLS_UNUSED, IDCLS_DISABLE_LOG_OUTPUT,
+      NULL, NULL },
+    CMDLINE_LIST_END
 };
 
 int log_cmdline_options_init(void)
@@ -163,8 +200,9 @@ int log_cmdline_options_init(void)
 
 int log_init_with_fd(FILE *f)
 {
-    if (f == NULL)
+    if (f == NULL) {
         return -1;
+    }
 
     log_file = f;
     return 0;
@@ -180,13 +218,14 @@ int log_init(void)
      * stdout (e.g win32) no logging will be seen.  On win32 startup will
      * also be preceeded by a modal error requester.  / tlr
      */
-    if (logs != NULL)
+    if (logs != NULL) {
         return -1;
+    }
 #endif
 
     log_file_open();
 
-    return log_file == NULL ? -1 : 0;
+    return (log_file == NULL) ? -1 : 0;
 }
 
 log_t log_open(const char *id)
@@ -202,18 +241,21 @@ log_t log_open(const char *id)
     }
     if (i == num_logs) {
         new_log = num_logs++;
-        logs = (char**)lib_realloc(logs, sizeof(*logs) * num_logs);
+        logs = lib_realloc(logs, sizeof(*logs) * num_logs);
     }
 
     logs[new_log] = lib_stralloc(id);
 
+    /* printf("log_open(%s) = %d\n", id, (int)new_log); */
     return new_log;
 }
 
 int log_close(log_t log)
 {
-    if (logs[(unsigned int)log] == NULL)
+    /* printf("log_close(%d)\n", (int)log); */
+    if (logs[(unsigned int)log] == NULL) {
         return -1;
+    }
 
     lib_free(logs[(unsigned int)log]);
     logs[(unsigned int)log] = NULL;
@@ -225,10 +267,12 @@ void log_close_all(void)
 {
     log_t i;
 
-    for (i = 0; i < num_logs; i++)
+    for (i = 0; i < num_logs; i++) {
         log_close(i);
+    }
 
     lib_free(logs);
+    logs = NULL;
 }
 
 static int log_archdep(const char *logtxt, const char *fmt, va_list ap)
@@ -246,16 +290,18 @@ static int log_archdep(const char *logtxt, const char *fmt, va_list ap)
     while (beg < end) {
         char *eol = strchr(beg, '\n');
 
-        if (eol)
-            *eol='\0';
+        if (eol) {
+            *eol = '\0';
+        }
 
         if (archdep_default_logger(*beg ? logtxt : "", beg) < 0) {
             rc = -1;
             break;
         }
 
-        if (!eol)
+        if (!eol) {
             break;
+        }
 
         beg = eol + 1;
     }
@@ -282,8 +328,13 @@ static int log_helper(log_t log, unsigned int level, const char *format,
         return 0;
     }
 
-    if ((logi != LOG_DEFAULT) && (logi != LOG_ERR) && (logs == NULL || logs[logi] == NULL)) {
-        return -1;
+    if ((logi != LOG_DEFAULT) && (logi != LOG_ERR)) {
+        if ((logs == NULL) || (logi < 0)|| (logi >= num_logs) || (logs[logi] == NULL)) {
+#ifdef DEBUG
+            log_archdep("log_helper: internal error (invalid id or closed log), messages follows:\n", format, ap);
+#endif
+            return -1;
+        }
     }
 
     if ((logi != LOG_DEFAULT) && (logi != LOG_ERR) && (*logs[logi] != '\0')) {
@@ -295,68 +346,20 @@ static int log_helper(log_t log, unsigned int level, const char *format,
     if (log_file == NULL) {
         rc = log_archdep(logtxt, format, ap);
     } else {
-#ifdef WIN32
+#ifdef ARCHDEP_EXTRA_LOG_CALL
         log_archdep(logtxt, format, ap);
-#endif /* #ifdef WIN32 */
+#endif
         if (fputs(logtxt, log_file) == EOF
             || vfprintf(log_file, format, ap) < 0
-            || fputc ('\n', log_file) == EOF)
+            || fputc ('\n', log_file) == EOF) {
             rc = -1;
+        }
     }
 
     lib_free(logtxt);
 
     return rc;
 }
-
-void LOGD(const char *format, ...)
-{
-	char buffer[8192];
-	va_list args;
-	
-	va_start(args, format);
-	vsnprintf(buffer, 8192, format, args);
-	va_end(args);
-	
-	vice_wrapper_mt_debug(buffer);
-}
-
-void LOGM(const char *format, ...)
-{
-	char buffer[8192];
-	va_list args;
-	
-	va_start(args, format);
-	vsnprintf(buffer, 8192, format, args);
-	va_end(args);
-	
-	vice_wrapper_mt_main(buffer);
-}
-
-void LOGTODO(const char *format, ...)
-{
-	char buffer[8192];
-	va_list args;
-	
-	va_start(args, format);
-	vsnprintf(buffer, 8192, format, args);
-	va_end(args);
-	
-	vice_wrapper_mt_todo(buffer);
-}
-
-void LOGError(const char *format, ...)
-{
-	char buffer[8192];
-	va_list args;
-	
-	va_start(args, format);
-	vsnprintf(buffer, 8192, format, args);
-	va_end(args);
-	
-	vice_wrapper_log_error(buffer);
-}
-
 
 int log_message(log_t log, const char *format, ...)
 {
@@ -473,5 +476,55 @@ int log_verbose(const char *format, ...)
 void log_enable(int on)
 {
     log_enabled = on;
+}
+
+///
+
+void LOGD(const char *format, ...)
+{
+	char buffer[8192];
+	va_list args;
+	
+	va_start(args, format);
+	vsnprintf(buffer, 8192, format, args);
+	va_end(args);
+	
+	vice_wrapper_mt_debug(buffer);
+}
+
+void LOGM(const char *format, ...)
+{
+	char buffer[8192];
+	va_list args;
+	
+	va_start(args, format);
+	vsnprintf(buffer, 8192, format, args);
+	va_end(args);
+	
+	vice_wrapper_mt_main(buffer);
+}
+
+void LOGTODO(const char *format, ...)
+{
+	char buffer[8192];
+	va_list args;
+	
+	va_start(args, format);
+	vsnprintf(buffer, 8192, format, args);
+	va_end(args);
+	
+	vice_wrapper_mt_todo(buffer);
+}
+
+void LOGError(const char *format, ...)
+{
+	char buffer[8192];
+	va_list args;
+	
+	va_start(args, format);
+	vsnprintf(buffer, 8192, format, args);
+	va_end(args);
+	
+	vice_wrapper_log_error(buffer);
 }
 

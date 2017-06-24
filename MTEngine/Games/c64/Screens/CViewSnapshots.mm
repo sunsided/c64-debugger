@@ -1,3 +1,7 @@
+extern "C" {
+#include "c64model.h"
+};
+
 #include "SND_SoundEngine.h"
 #include "CViewC64.h"
 #include "CViewSnapshots.h"
@@ -570,6 +574,10 @@ void CViewSnapshots::Render(GLfloat posX, GLfloat posY)
 bool CViewSnapshots::DoTap(GLfloat x, GLfloat y)
 {
 	LOGG("CViewSnapshots::DoTap:  x=%f y=%f", x, y);
+	
+	if (viewMenu->DoTap(x, y))
+		return true;
+
 	return CGuiView::DoTap(x, y);
 }
 
@@ -637,7 +645,7 @@ void CViewSnapshots::SwitchSnapshotsScreen()
 {
 	if (guiMain->currentView == this)
 	{
-		guiMain->SetView(viewC64);
+		viewC64->ShowMainScreen();
 	}
 	else
 	{
@@ -689,6 +697,8 @@ void CViewSnapshots::ActivateView()
 	LOGG("CViewSnapshots::ActivateView()");
 	
 	prevView = guiMain->currentView;
+	
+	viewC64->ShowMouseCursor();
 }
 
 void CViewSnapshots::DeactivateView()
@@ -714,7 +724,12 @@ void CSnapshotUpdateThread::ThreadRun(void *data)
 		
 		viewC64->debugInterface->UnlockIoMutex();
 		
-		SYS_Sleep(500);
+		while (viewC64->debugInterface->GetC64MachineType() == C64_MACHINE_LOADING_SNAPSHOT)
+		{
+			SYS_Sleep(100);
+		}
+		
+		SYS_Sleep(100);
 		
 		if (viewC64->debugInterface->GetC64MachineType() == C64_MACHINE_UNKNOWN)
 		{
@@ -728,6 +743,11 @@ void CSnapshotUpdateThread::ThreadRun(void *data)
 			else
 			{
 				viewC64->debugInterface->SetC64ModelType(0);
+			}
+			
+			if (model == C64MODEL_UNKNOWN)
+			{
+				model = 0;
 			}
 			
 			SYS_Sleep(200);
@@ -746,5 +766,7 @@ void CSnapshotUpdateThread::ThreadRun(void *data)
 	}
 	
 	viewC64->debugInterface->UnlockIoMutex();
+	
+	LOGD("CSnapshotUpdateThread::ThreadRun finished");
 }
 

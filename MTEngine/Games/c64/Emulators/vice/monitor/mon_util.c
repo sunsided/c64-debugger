@@ -29,6 +29,7 @@
 #include <assert.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "archdep.h"
@@ -43,9 +44,53 @@
 #include "uimon.h"
 
 
-static char *             bigbuffer      = NULL;
-static const unsigned int bigbuffersize  = 10000;
-static unsigned int       bigbufferwrite = 0;
+static char *bigbuffer = NULL;
+static const unsigned int bigbuffersize = 10000;
+static unsigned int bigbufferwrite = 0;
+
+static FILE *mon_log_file = NULL;
+
+/******************************************************************************/
+
+int mon_log_file_open(const char *name)
+{
+    FILE *fp;
+
+    if (name) {
+        /* try to open new file */
+        fp = fopen(name, MODE_WRITE_TEXT);
+        if (fp) {
+            /* close old logfile */
+            mon_log_file_close();
+            mon_log_file = fp;
+            return 0;
+        }
+    }
+    return -1;
+}
+
+void mon_log_file_close(void)
+{
+    if (mon_log_file) {
+        fclose(mon_log_file);
+    }
+    mon_log_file = NULL;
+}
+
+static int mon_log_file_out(const char *buffer)
+{
+    int len;
+
+    if ((mon_log_file) && (buffer)) {
+        len = strlen(buffer);
+        if (fwrite(buffer, 1, len, mon_log_file) == (size_t)len) {
+            return 0;
+        }
+    }
+    return -1;
+}
+
+/******************************************************************************/
 
 static void mon_buffer_alloc(void)
 {
@@ -67,14 +112,15 @@ static int mon_buffer_flush(void)
     return rv;
 }
 
-/* like strncpy, but: 
+/* like strncpy, but:
  * 1. always add a null character
  * 2. do not fill the rest of the buffer
  */
 static void stringcopy_n(char *dest, const char *src, unsigned int len)
 {
-    while (*src && len--)
+    while (*src && len--) {
         *dest++ = *src++;
+    }
 
     *dest = 0;
 }
@@ -82,7 +128,7 @@ static void stringcopy_n(char *dest, const char *src, unsigned int len)
 static void mon_buffer_add(const char *buffer, unsigned int bufferlen)
 {
     if (bigbufferwrite + bufferlen > bigbuffersize) {
-        /* the buffer does not fit into bigbuffer, thus, 
+        /* the buffer does not fit into bigbuffer, thus,
            flush the buffer! */
         mon_buffer_flush();
     }
@@ -123,18 +169,19 @@ int mon_out(const char *format, ...)
 #ifdef HAVE_NETWORK
     if (monitor_is_remote()) {
         rc = monitor_network_transmit(buffer, strlen(buffer));
-    }
-    else {
+    } else {
 #endif
         rc = mon_out_buffered(buffer);
 #ifdef HAVE_NETWORK
     }
 #endif
+    mon_log_file_out(buffer);
 
     lib_free(buffer);
 
-    if (rc < 0)
+    if (rc < 0) {
         monitor_abort();
+    }
 
     return rc;
 }
@@ -150,7 +197,7 @@ char *mon_disassemble_with_label(MEMSPACE memspace, WORD loc, int hex,
         if (p) {
             *label_p = 1;
             *opc_size_p = 0;
-            return lib_msprintf("%s:",p);
+            return lib_msprintf("%s:", p);
         }
     } else {
         *label_p = 0;
@@ -168,7 +215,7 @@ char *mon_disassemble_with_label(MEMSPACE memspace, WORD loc, int hex,
                                      hex,
                                      opc_size_p);
 
-    return lib_msprintf((hex ? "%04X: %s%10s" : "05u: %s%10s"), loc, p, "");
+    return lib_msprintf((hex ? "%04X: %s%10s" : "%05u: %s%10s"), loc, p, "");
 }
 
 char *mon_dump_with_label(MEMSPACE memspace, WORD loc, int hex, unsigned *label_p)
@@ -181,14 +228,14 @@ char *mon_dump_with_label(MEMSPACE memspace, WORD loc, int hex, unsigned *label_
         p = mon_symbol_table_lookup_name(memspace, loc);
         if (p) {
             *label_p = 1;
-            return lib_msprintf("%s:",p);
+            return lib_msprintf("%s:", p);
         }
     } else {
         *label_p = 0;
     }
 
     val = mon_get_mem_val(memspace, loc);
-    return lib_msprintf((hex ? "%04X: $%02X   %03u   '%c'" : "%05u: $%02X   %03u   '%c'"), loc, val, val, isprint(val)?val:' ');
+    return lib_msprintf((hex ? "%04X: $%02X   %03u   '%c'" : "%05u: $%02X   %03u   '%c'"), loc, val, val, isprint(val) ? val : ' ');
 }
 
 #ifndef __OS2__
@@ -199,11 +246,11 @@ void mon_set_command(console_t *console_log, char *command,
 {
     pchCommandLine = command;
 
-    uimon_out(command);
-    uimon_out("\n");
+    mon_out("%s\n", command);
 
-    if (pAfter)
+    if (pAfter) {
         (*pAfter)();
+    }
 }
 
 char *uimon_in(const char *prompt)
@@ -215,14 +262,16 @@ char *uimon_in(const char *prompt)
 
 #ifdef HAVE_NETWORK
         if (monitor_is_remote()) {
-            monitor_network_transmit(prompt, strlen(prompt));
+            if (monitor_network_transmit(prompt, strlen(prompt)) < 0) {
+              return NULL;
+            }
 
             p = monitor_network_get_command_line();
             if (p == NULL) {
                 mon_set_command(NULL, "x", NULL);
+                return NULL;
             }
-        }
-        else {
+        } else {
 #endif
             /* make sure to flush the output buffer */
             mon_buffer_flush();
@@ -236,11 +285,14 @@ char *uimon_in(const char *prompt)
 
     if (pchCommandLine) {
         /* we have an "artificially" generated command line */
-
         lib_free(p);
         p = lib_stralloc(pchCommandLine);
         pchCommandLine = NULL;
     }
+
+    mon_log_file_out(prompt);
+    mon_log_file_out(p);
+    mon_log_file_out("\n");
 
     /* return the command (the one or other way...) */
     return p;

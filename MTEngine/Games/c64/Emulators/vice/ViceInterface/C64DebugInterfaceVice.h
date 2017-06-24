@@ -6,6 +6,23 @@
 
 //HAVE_NETWORK  ?
 
+enum shift_type {
+	NO_SHIFT = 0,             /* Key is not shifted. */
+	VIRTUAL_SHIFT = (1 << 0), /* The key needs a shift on the real machine. */
+	LEFT_SHIFT = (1 << 1),    /* Key is left shift. */
+	RIGHT_SHIFT = (1 << 2),   /* Key is right shift. */
+	ALLOW_SHIFT = (1 << 3),   /* Allow key to be shifted. */
+	DESHIFT_SHIFT = (1 << 4), /* Although SHIFT might be pressed, do not
+							   press shift on the real machine. */
+	ALLOW_OTHER = (1 << 5),   /* Allow another key code to be assigned if
+							   SHIFT is pressed. */
+	SHIFT_LOCK = (1 << 6),    /* Key is shift lock. */
+	
+	ALT_MAP  = (1 << 8)       /* Key is used for an alternative keyboard
+							   mapping */
+};
+
+
 class CViceAudioChannel;
 
 class C64DebugInterfaceVice : public C64DebugInterface
@@ -41,6 +58,7 @@ public:
 
 	virtual void Reset();
 	virtual void HardReset();
+	virtual void DiskDriveReset();
 
 	virtual void KeyboardDown(uint32 mtKeyCode);
 	virtual void KeyboardUp(uint32 mtKeyCode);
@@ -64,13 +82,24 @@ public:
 
 	virtual void GetSidTypes(std::vector<CSlrString *> *sidTypes);
 	virtual void SetSidType(int sidType);
+	
+	// samplingMethod: Fast=0, Interpolating=1, Resampling=2, Fast Resampling=3
+	virtual void SetSidSamplingMethod(int samplingMethod);
+	// emulateFilters: no=0, yes=1
+	virtual void SetSidEmulateFilters(int emulateFilters);
+	// passband: 0-90
+	virtual void SetSidPassBand(int passband);
+	// filterBias: -500 500
+	virtual void SetSidFilterBias(int filterBias);
 
-	virtual void GetC64ModelTypes(std::vector<CSlrString *> *modelTypes);
+	virtual void GetC64ModelTypes(std::vector<CSlrString *> *modelTypeNames, std::vector<int> *modelTypeIds);
 	virtual void SetC64ModelType(int modelType);
 	virtual void SetEmulationMaximumSpeed(int maximumSpeed);
 
 	bool isJoystickEnabled;
 	uint8 joystickPort;
+	
+	virtual void SetVSPBugEmulation(bool isVSPBugEmulation);
 
 	virtual void SetByteC64(uint16 addr, uint8 val);
 	virtual void SetByteToRamC64(uint16 addr, uint8 val);
@@ -103,7 +132,8 @@ public:
 	virtual void GetVICColors(uint8 *cD021, uint8 *cD022, uint8 *cD023, uint8 *cD025, uint8 *cD026, uint8 *cD027, uint8 *cD800);
 	virtual void GetVICSpriteColors(uint8 *cD021, uint8 *cD025, uint8 *cD026, uint8 *spriteColors);
 	virtual void GetCBMColor(uint8 colorNum, uint8 *r, uint8 *g, uint8 *b);
-	
+	virtual void GetFloatCBMColor(uint8 colorNum, float *r, float *g, float *b);
+
 	virtual bool LoadFullSnapshot(CByteBuffer *snapshotBuffer);
 	virtual void SaveFullSnapshot(CByteBuffer *snapshotBuffer);
 	
@@ -113,14 +143,29 @@ public:
 	virtual void SetDebugMode(uint8 debugMode);
 	virtual uint8 GetDebugMode();
 	
+	virtual bool IsCpuJam();
+	virtual void ForceRunAndUnJamCpu();
+
 	virtual void AttachCartridge(CSlrString *filePath);
 	virtual void DetachCartridge();
 	virtual void CartridgeFreezeButtonPressed();
 	virtual void GetC64CartridgeState(C64StateCartridge *cartridgeState);
 
+	//
+	virtual void SetVicRegister(uint8 registerNum, uint8 value);
+	virtual u8 GetVicRegister(uint8 registerNum);
+
+	virtual void SetVicRecordStateMode(uint8 recordMode);
+
 	// render states
-	virtual void RenderStateVIC(float posX, float posY, float posZ, bool isVertical, bool showSprites, CSlrFont *fontBytes, float fontSize, std::vector<CImageData *> *spritesImageData, std::vector<CSlrImage *> *spritesImages, bool renderDataWithColors);
+	virtual void RenderStateVIC(vicii_cycle_state_t *viciiState,
+								float posX, float posY, float posZ, bool isVertical, bool showSprites, CSlrFont *fontBytes, float fontSize,
+								std::vector<CImageData *> *spritesImageData, std::vector<CSlrImage *> *spritesImages, bool renderDataWithColors);
 	void PrintVicInterrupts(uint8 flags, char *buf);
+	void UpdateVICSpritesImages(vicii_cycle_state_t *viciiState,
+								std::vector<CImageData *> *spritesImageData,
+								std::vector<CSlrImage *> *spritesImages, bool renderDataWithColors);
+
 	virtual void RenderStateDrive1541(float posX, float posY, float posZ, CSlrFont *fontBytes, float fontSize,
 									  bool renderVia1, bool renderVia2, bool renderDriveLed, bool isVertical);
 	virtual void RenderStateCIA(float px, float py, float posZ, CSlrFont *fontBytes, float fontSize, int ciaId);
@@ -133,6 +178,9 @@ public:
 
 	// memory
 	uint8 *c64memory;
+	
+	virtual void SetPatchKernalFastBoot(bool isPatchKernal);
+	virtual void SetRunSIDWhenInWarp(bool isRunningSIDInWarp);
 };
 
 extern C64DebugInterfaceVice *debugInterfaceVice;

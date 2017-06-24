@@ -7,6 +7,8 @@ extern "C"{
 #include "CByteBuffer.h"
 #include "CSlrString.h"
 
+#include "C64DebugInterfaceVice.h"
+
 #define C64D_KEYMAP_MAGIC			0xEA
 #define C64D_KEYMAP_FILE_VERSION	0x01
 
@@ -132,6 +134,8 @@ void C64KeyMapCreateDefault()
 
 void C64KeyMapLoadFromSettings()
 {
+	LOGD("C64KeyMapLoadFromSettings");
+	
 	if (defaultKeyMap != NULL)
 	{
 		delete defaultKeyMap;
@@ -161,10 +165,13 @@ void C64KeyMapLoadFromSettings()
 		return;
 	}
 	delete byteBuffer;
+	
+	LOGD("C64KeyMapLoadFromSettings: done");
 }
 
 void C64KeyMapStoreToSettings()
 {
+	LOGD("C64KeyMapStoreToSettings");
 	CByteBuffer *byteBuffer = new CByteBuffer();
 	
 	defaultKeyMap->SaveKeyMapToBuffer(byteBuffer);
@@ -174,6 +181,9 @@ void C64KeyMapStoreToSettings()
 	delete fileName;
 	
 	delete byteBuffer;
+	
+	LOGD("C64KeyMapStoreToSettings: done");
+
 }
 
 bool C64KeyMapLoadFromFile(CSlrString *filePath)
@@ -375,7 +385,8 @@ void C64KeyMap::InitDefault()
 	AddKeyCode(MTKEY_ARROW_LEFT, 0, 2, LEFT_SHIFT);
 	AddKeyCode(MTKEY_ARROW_RIGHT, 0, 2, NO_SHIFT);
 	
-	AddKeyCode('\\', C64_KEYCODE_RESTORE_ROW, C64_KEYCODE_RESTORE_COLUMN, NO_SHIFT);
+//	AddKeyCode('\\', C64_KEYCODE_RESTORE_ROW, C64_KEYCODE_RESTORE_COLUMN, NO_SHIFT);
+	AddKeyCode('\\', 6, 5, NO_SHIFT);
 	
 	
 	/*

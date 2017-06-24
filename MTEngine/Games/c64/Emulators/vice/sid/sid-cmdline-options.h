@@ -3,6 +3,7 @@
  *
  * Written by
  *  Andreas Boose <viceteam@t-online.de>
+ *  Marco van den Heuvel <blackystardust68@yahoo.com>
  *
  * This file is part of VICE, the Versatile Commodore Emulator.
  * See README for copyright notice.
@@ -30,5 +31,6 @@
 extern int sid_cmdline_options_init(void);
 extern int sid_common_set_engine_model(const char *param, void *extra_param);
 
-#endif
+extern void sid_cmdline_options_shutdown(void);
 
+#endif

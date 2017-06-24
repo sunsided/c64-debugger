@@ -77,8 +77,8 @@ bool CViewC64StateCIA::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isContr
 	return false;
 }
 
-void CViewC64StateCIA::SetFocus(bool focus)
+bool CViewC64StateCIA::SetFocus(bool focus)
 {
-	return;
+	return false;
 }
 

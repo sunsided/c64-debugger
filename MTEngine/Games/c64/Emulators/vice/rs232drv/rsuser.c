@@ -2,7 +2,7 @@
  * rsuser.c - Daniel Dallmann's 9600 baud RS232 userport interface.
  *
  * Written by
- *  André Fachat <a.fachat@physik.tu-chemnitz.de>
+ *  Andre Fachat <a.fachat@physik.tu-chemnitz.de>
  *  Andreas Boose <viceteam@t-online.de>
  *
  * This file is part of VICE, the Versatile Commodore Emulator.
@@ -113,19 +113,20 @@ static int rsuser_device;
 static void calculate_baudrate(void)
 {
     if (rsuser_enabled) {
-        char_clk_ticks = (int)(10.0 * cycles_per_sec
-                         / ((double)rsuser_baudrate));
+        char_clk_ticks = (int)(10.0 * cycles_per_sec / ((double)rsuser_baudrate));
     } else {
         char_clk_ticks = RSUSER_TICKS;
     }
     bit_clk_ticks = (int)((double)(char_clk_ticks) / 10.0);
 
     LOG_DEBUG(("RS232: %d cycles per char (cycles_per_sec=%ld).",
-              char_clk_ticks, cycles_per_sec));
+               char_clk_ticks, cycles_per_sec));
 }
 
-static int set_enable(int newval, void *param)
+static int set_enable(int value, void *param)
 {
+    int newval = value ? 1 : 0;
+
     if (newval && !rsuser_enabled) {
         dtr = DTR_OUT;  /* inactive */
         rts = RTS_OUT;  /* inactive */
@@ -136,8 +137,9 @@ static int set_enable(int newval, void *param)
             /* if (clk_start_tx) rs232drv_putc(fd, rxdata); */
             rs232drv_close(fd);
         }
-        if (rsuser_alarm)
+        if (rsuser_alarm) {
             alarm_unset(rsuser_alarm);
+        }
         fd = -1;
     }
 
@@ -150,6 +152,10 @@ static int set_enable(int newval, void *param)
 
 static int set_baudrate(int val, void *param)
 {
+    if (val < 1) {
+        return -1;
+    }
+
     rsuser_baudrate = val;
 
     calculate_baudrate();
@@ -159,7 +165,12 @@ static int set_baudrate(int val, void *param)
 
 static int set_up_device(int val, void *param)
 {
+    if (val < 0 || val > 3) {
+        return -1;
+    }
+
     rsuser_device = val;
+
     if (fd != -1) {
         rs232drv_close(fd);
         fd = rs232drv_open(rsuser_device);
@@ -174,7 +185,7 @@ static const resource_int_t resources_int[] = {
       &rsuser_baudrate, set_baudrate, NULL },
     { "RsUserDev", 0, RES_EVENT_NO, NULL,
       &rsuser_device, set_up_device, NULL },
-    { NULL }
+    RESOURCE_INT_LIST_END
 };
 
 int rsuser_resources_init(void)
@@ -194,16 +205,16 @@ static const cmdline_option_t cmdline_options[] = {
       IDCLS_UNUSED, IDCLS_DISABLE_RS232_USERPORT,
       NULL, NULL },
     { "-rsuserbaud", SET_RESOURCE, 1,
-      NULL, NULL, "RsUserBaud", (resource_value_t)300,
+      NULL, NULL, "RsUserBaud", NULL,
       USE_PARAM_ID, USE_DESCRIPTION_ID,
       IDCLS_P_BAUD, IDCLS_SET_BAUD_RS232_USERPORT,
       NULL, NULL },
     { "-rsuserdev", SET_RESOURCE, 1,
-      NULL, NULL, "RsUserDev", (resource_value_t)0,
+      NULL, NULL, "RsUserDev", NULL,
       USE_PARAM_STRING, USE_DESCRIPTION_ID,
       IDCLS_UNUSED, IDCLS_SPECIFY_RS232_DEVICE_USERPORT,
       "<0-3>", NULL },
-    { NULL }
+    CMDLINE_LIST_END
 };
 
 int rsuser_cmdline_options_init(void)
@@ -217,8 +228,10 @@ static unsigned char code[256];
 static unsigned int buf;
 static unsigned int valid;
 static const unsigned int masks[] =
-    { 1, 2, 4, 8, 0x10, 0x20, 0x40, 0x80, 0x100, 0x200, 0x400, 0x800,
-      0x1000, 0x2000, 0x4000, 0x8000 };
+{
+    1, 2, 4, 8, 0x10, 0x20, 0x40, 0x80, 0x100, 0x200, 0x400, 0x800,
+    0x1000, 0x2000, 0x4000, 0x8000
+};
 
 void rsuser_init(long cycles, void (*startfunc)(void), void (*bytefunc)(BYTE))
 {
@@ -237,10 +250,11 @@ void rsuser_init(long cycles, void (*startfunc)(void), void (*bytefunc)(BYTE))
 
     for (i = 0; i < 256; i++) {
         c = i; d = 0;
-        for (j = 0 ; j < 8; j++) {
+        for (j = 0; j < 8; j++) {
             d <<= 1;
-            if (c & 1)
+            if (c & 1) {
                 d |= 1;
+            }
             c >>= 1;
         }
         code[i] = d;
@@ -308,8 +322,9 @@ static void check_tx_buffer(void)
 {
     BYTE c;
 
-    while (valid >= 10 && (buf & masks[valid-1]))
+    while (valid >= 10 && (buf & masks[valid - 1])) {
         valid--;
+    }
 
     if (valid >= 10) {     /* (valid-1)-th bit is not set = start bit! */
         if (!(buf & masks[valid - 10])) {
@@ -327,25 +342,28 @@ static void check_tx_buffer(void)
 
 static void keepup_tx_buffer(void)
 {
-
-    if ((!clk_start_bit) || maincpu_clk < clk_start_bit)
+    if ((!clk_start_bit) || maincpu_clk < clk_start_bit) {
         return;
+    }
 
     while (clk_start_bit < clk_end_tx) {
         LOG_DEBUG(("keepup: clk=%d, _bit=%d (%d), _tx=%d.",
-                  maincpu_clk, clk_start_bit-clk_start_tx, clk_start_bit,
-                  clk_start_tx));
-        buf= buf << 1;
-        if (txbit)
+                   maincpu_clk, clk_start_bit - clk_start_tx, clk_start_bit,
+                   clk_start_tx));
+        buf = buf << 1;
+        if (txbit) {
             buf |= 1;
-        valid ++;
-        if (valid >= 10)
+        }
+        valid++;
+        if (valid >= 10) {
             check_tx_buffer();
+        }
 
         clk_start_bit += bit_clk_ticks;
 
-        if (clk_start_bit >= maincpu_clk)
-           break;
+        if (clk_start_bit >= maincpu_clk) {
+            break;
+        }
     }
     if (clk_start_bit >= clk_end_tx) {
         clk_start_tx = 0;
@@ -357,10 +375,10 @@ static void keepup_tx_buffer(void)
 void rsuser_set_tx_bit(int b)
 {
     LOG_DEBUG(("rsuser_set_tx(clk=%d, clk_start_tx=%d, b=%d).",
-              maincpu_clk, clk_start_tx, b));
+               maincpu_clk, clk_start_tx, b));
 
     LOG_DEBUG_TIMING_TX(("rsuser_set_tx(clk=%d, clk_start_tx=%d, b=%d).",
-              maincpu_clk, clk_start_tx, b));
+                         maincpu_clk, clk_start_tx, b));
 
     if (fd == -1 || rsuser_baudrate > 2400) {
         clk_start_tx = 0;
@@ -373,7 +391,7 @@ void rsuser_set_tx_bit(int b)
 
     if (!clk_start_tx && !b) {
         /* the clock where we start sampling - in the middle of the bit */
-        clk_start_tx = maincpu_clk + (bit_clk_ticks / 2) ;
+        clk_start_tx = maincpu_clk + (bit_clk_ticks / 2);
         clk_start_bit = clk_start_tx;
         /* note: bit_clk_ticks * 10 may not be the same as char_clk_ticks
          *       because of integer division.  So always compute it
@@ -387,20 +405,21 @@ BYTE rsuser_get_rx_bit(void)
 {
     int bit = 0, byte = 1;
     LOG_DEBUG_TIMING_RX(("rsuser_get_rx_bit(clk=%d, clk_start_rx=%d).",
-              maincpu_clk, clk_start_rx));
+                         maincpu_clk, clk_start_rx));
 
     if (clk_start_rx) {
         byte = 0;
         bit = (maincpu_clk - clk_start_rx) / (bit_clk_ticks);
         LOG_DEBUG(("read ctrl(_rx=%d, clk-start_rx=%d -> bit=%d)",
-                  clk_start_rx, maincpu_clk - clk_start_rx, bit));
+                   clk_start_rx, maincpu_clk - clk_start_rx, bit));
         if (!bit) {
             byte = 0;   /* start bit */
         } else
         if (bit < 9) {    /* 8 data bits */
             byte = rxdata & (1 << (bit - 1));
-            if (byte)
+            if (byte) {
                 byte = 1;
+            }
         } else {        /* stop bits */
             byte = 1;
         }
@@ -408,14 +427,13 @@ BYTE rsuser_get_rx_bit(void)
     return byte;
 }
 
-BYTE rsuser_read_ctrl(void)
+BYTE rsuser_read_ctrl(BYTE b)
 {
-    return rsuser_get_rx_bit() | CTS_IN | (rsuser_baudrate > 2400 ? 0 : DCD_IN);
+    return b & (rsuser_get_rx_bit() | CTS_IN | (rsuser_baudrate > 2400 ? 0 : DCD_IN));
 }
 
 void rsuser_tx_byte(BYTE b)
 {
-
     buf = (buf << 8) | b;
     valid += 8;
 
@@ -429,33 +447,38 @@ static void int_rsuser(CLOCK offset, void *data)
     keepup_tx_buffer();
 
     switch (rxstate) {
-      case 0:
-        if (fd != -1 && rs232drv_getc(fd, &rxdata)) {
-            /* byte received, signal startbit on flag */
-            rxstate ++;
-            if (start_bit_trigger)
-                start_bit_trigger();
-            clk_start_rx = rclk;
-        }
-        alarm_set(rsuser_alarm, maincpu_clk + char_clk_ticks);
-        break;
-      case 1:
-        /* now byte should be in shift register */
-        if (byte_rx_func)
-            byte_rx_func((BYTE)(code[rxdata]));
-        rxstate = 0;
-        clk_start_rx = 0;
-        alarm_set(rsuser_alarm, maincpu_clk + char_clk_ticks / 8);
-        break;
+        case 0:
+            if (fd != -1 && rs232drv_getc(fd, &rxdata)) {
+                /* byte received, signal startbit on flag */
+                rxstate++;
+                if (start_bit_trigger) {
+                    start_bit_trigger();
+                }
+                clk_start_rx = rclk;
+            }
+            alarm_set(rsuser_alarm, maincpu_clk + char_clk_ticks);
+            break;
+        case 1:
+            /* now byte should be in shift register */
+            if (byte_rx_func) {
+                byte_rx_func((BYTE)(code[rxdata]));
+            }
+            rxstate = 0;
+            clk_start_rx = 0;
+            alarm_set(rsuser_alarm, maincpu_clk + char_clk_ticks / 8);
+            break;
     }
 }
 
 static void clk_overflow_callback(CLOCK sub, void *data)
 {
-    if (clk_start_tx)
+    if (clk_start_tx) {
         clk_start_tx -= sub;
-    if (clk_start_rx)
+    }
+    if (clk_start_rx) {
         clk_start_rx -= sub;
-    if (clk_start_bit)
+    }
+    if (clk_start_bit) {
         clk_start_bit -= sub;
+    }
 }

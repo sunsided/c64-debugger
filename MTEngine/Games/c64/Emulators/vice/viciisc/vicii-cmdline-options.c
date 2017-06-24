@@ -45,23 +45,23 @@
 
 int border_set_func(const char *value, void *extra_param)
 {
-   int video;
+    int video;
 
-   resources_get_int("MachineVideoStandard", &video);
+    resources_get_int("MachineVideoStandard", &video);
 
-   if (strcmp(value, "1") == 0 || strcmp(value, "full") == 0) {
-       vicii_resources.border_mode = VICII_FULL_BORDERS;
-   } else if (strcmp(value, "2") == 0 || strcmp(value, "debug") == 0) {
-       vicii_resources.border_mode = VICII_DEBUG_BORDERS;
-   } else if (strcmp(value, "3") == 0 || strcmp(value, "none") == 0) {
-       vicii_resources.border_mode = VICII_NO_BORDERS;
-   } else {
-       vicii_resources.border_mode = VICII_NORMAL_BORDERS;
-   }
+    if (strcmp(value, "1") == 0 || strcmp(value, "full") == 0) {
+        vicii_resources.border_mode = VICII_FULL_BORDERS;
+    } else if (strcmp(value, "2") == 0 || strcmp(value, "debug") == 0) {
+        vicii_resources.border_mode = VICII_DEBUG_BORDERS;
+    } else if (strcmp(value, "3") == 0 || strcmp(value, "none") == 0) {
+        vicii_resources.border_mode = VICII_NO_BORDERS;
+    } else {
+        vicii_resources.border_mode = VICII_NORMAL_BORDERS;
+    }
 
-   machine_change_timing(video ^ VICII_BORDER_MODE(vicii_resources.border_mode));
+    machine_change_timing(video, vicii_resources.border_mode);
 
-   return 0;
+    return 0;
 }
 
 struct model_s {
@@ -154,15 +154,15 @@ static const cmdline_option_t cmdline_options[] =
       USE_PARAM_STRING, USE_DESCRIPTION_ID,
       IDCLS_UNUSED, IDCLS_DISABLE_SPRITE_SPRITE,
       NULL, NULL },
-    { "-VICIInewluminance", SET_RESOURCE, 0,
-      NULL, NULL, "VICIINewLuminances", (void *)1,
+    { "-VICIIvspbug", SET_RESOURCE, 0,
+      NULL, NULL, "VICIIVSPBug", (void *)1,
       USE_PARAM_STRING, USE_DESCRIPTION_ID,
-      IDCLS_UNUSED, IDCLS_USE_NEW_LUMINANCES,
+      IDCLS_UNUSED, IDCLS_ENABLE_VSPBUG,
       NULL, NULL },
-    { "+VICIInewluminance", SET_RESOURCE, 0,
-      NULL, NULL, "VICIINewLuminances", (void *)0,
+    { "+VICIIvspbug", SET_RESOURCE, 0,
+      NULL, NULL, "VICIIVSPBug", (void *)0,
       USE_PARAM_STRING, USE_DESCRIPTION_ID,
-      IDCLS_UNUSED, IDCLS_USE_OLD_LUMINANCES,
+      IDCLS_UNUSED, IDCLS_ENABLE_VSPBUG,
       NULL, NULL },
     { "-VICIImodel", CALL_FUNCTION, 1,
       set_vicii_model, NULL, NULL, NULL,

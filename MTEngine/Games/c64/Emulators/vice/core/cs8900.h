@@ -24,10 +24,9 @@
  *
  */
 
-#ifdef HAVE_TFE
-#else
-  #error CS8900.H should not be included if HAVE_TFE is not defined!
-#endif /* #ifdef HAVE_TFE */
+#ifndef HAVE_PCAP
+  #error CS8900.H should not be included if HAVE_PCAP is not defined!
+#endif /* #ifdef HAVE_PCAP */
 
 #ifndef VICE_CS8900_H
 #define VICE_CS8900_H
@@ -48,11 +47,7 @@ extern void cs8900_shutdown(void);
 extern BYTE cs8900_read(WORD io_address);
 extern BYTE cs8900_peek(WORD io_address);
 extern void cs8900_store(WORD io_address, BYTE byte);
-
-#if 0
-/* TODO */
-extern void cs8900_dump(void);
-#endif
+extern int cs8900_dump(void);
 
 /*
  This is a helper for cs8900_receive() to determine if the received frame should be accepted

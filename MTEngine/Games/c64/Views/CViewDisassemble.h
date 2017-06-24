@@ -7,6 +7,7 @@
 #include "CSlrTextParser.h"
 #include "C64Opcodes.h"
 #include <list>
+#include <vector>
 
 class CSlrDataAdapter;
 class CSlrFont;
@@ -74,6 +75,9 @@ public:
 	float fontSize3;
 	float fontSize5;
 	float fontSize9;
+	
+	int numberOfCharactersInLabel;
+	float disassembledCodeOffsetX;
 
 	int renderStartAddress;
 	void CalcDisassembleStart(int startAddress, int *newStart, int *renderLinesBefore);
@@ -121,13 +125,23 @@ public:
 	int renderSkipLines;
 	
 	void SetViewParameters(float posX, float posY, float posZ, float sizeX, float sizeY, CSlrFont *font, float fontSize, int numberOfLines,
-						   bool showHexCodes, bool showLabels);
+						   float mnemonicsDisplayOffsetX,
+						   bool showHexCodes,
+						   bool showCodeCycles, float codeCyclesDisplayOffsetX,
+						   bool showLabels, int labelNumCharacters);
 	void SetCurrentPC(int pc);
 	
+	void UpdateLabelsPositions();
+
+	float mnemonicsOffsetX;
 	bool showHexCodes;
+	bool showCodeCycles;
+	float codeCyclesOffsetX;
 	bool showLabels;
+	int labelNumCharacters;
 	
 	bool isTrackingPC;
+	bool changedByUser;
 	int cursorAddress;
 	
 	int editCursorPos;
@@ -147,6 +161,8 @@ public:
 	void FinalizeEditing();
 	
 	void Assemble(int assembleAddress);
+	int Assemble(int assembleAddress, char *lineBuffer);
+	int Assemble(int assembleAddress, char *lineBuffer, int *instructionOpCode, uint16 *instructionValue, char *errorMessageBuf);
 
 	AssembleToken AssembleGetToken(CSlrTextParser *textParser);
 	int AssembleFindOp(char *mnemonic);
@@ -173,6 +189,10 @@ public:
 	void AddCodeLabel(u16 address, char *text);
 	void ClearCodeLabels();
 
+	std::vector<int> traverseHistoryAddresses;
+	void MoveAddressHistoryBack();
+	void MoveAddressHistoryForward();
+	void MoveAddressHistoryForwardWithAddr(u16 addr);
 };
 
 

@@ -79,7 +79,8 @@ static sound_t *residfp_open(BYTE *sidstate)
     return psid;
 }
 
-static int residfp_init(sound_t *psid, int speed, int cycles_per_sec)
+	// TODO: factor
+static int residfp_init(sound_t *psid, int speed, int cycles_per_sec, int factor)
 {
     sampling_method method;
     char model_text[100];

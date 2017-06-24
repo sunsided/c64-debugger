@@ -7,6 +7,7 @@
 #include "SYS_KeyCodes.h"
 #include "CSlrKeyboardShortcuts.h"
 #include "CSlrFileFromOS.h"
+#include "C64D_Version.h"
 
 #include "C64KeyboardShortcuts.h"
 #include "CViewBreakpoints.h"
@@ -14,11 +15,14 @@
 #include "CViewAbout.h"
 #include "C64DebugInterface.h"
 #include "CViewMemoryMap.h"
+#include "CViewFileD64.h"
 
 #include "C64SettingsStorage.h"
 
 #include "CGuiMain.h"
+#include "CViewVicEditor.h"
 
+#define VIEWC64SETTINGS_OPEN_NONE	0
 #define VIEWC64SETTINGS_OPEN_D64	1
 #define VIEWC64SETTINGS_OPEN_CRT	2
 #define VIEWC64SETTINGS_OPEN_PRG	3
@@ -97,15 +101,40 @@ CViewMainMenu::CViewMainMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 	kbsScreenLayout8 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Layout #8", MTKEY_F8, false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsScreenLayout8);
 
-	kbsScreenLayout9 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Layout #9", MTKEY_F2, true, false, true);
+	kbsScreenLayout9 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Layout #9", MTKEY_F1, true, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsScreenLayout9);
+	
+	kbsScreenLayout10 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Layout #10", MTKEY_F2, true, false, true);
+	viewC64->keyboardShortcuts->AddShortcut(kbsScreenLayout10);
 
+	kbsScreenLayout11 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Layout #11", MTKEY_F4, true, false, true);
+	viewC64->keyboardShortcuts->AddShortcut(kbsScreenLayout11);
+	
+	kbsScreenLayout12 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Layout #12", MTKEY_F5, true, false, true);
+	viewC64->keyboardShortcuts->AddShortcut(kbsScreenLayout12);
+	
+	//
+	
+	kbsVicEditorScreen = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "VIC Editor screen", MTKEY_F6, true, false, true);
+	viewC64->keyboardShortcuts->AddShortcut(kbsVicEditorScreen);
+	
 	//
 	
 	kbsInsertD64 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Insert Device #8", '8', false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsInsertD64);
 	menuItemInsertD64 = new CViewC64MenuItem(fontHeight*2.5, new CSlrString("1541 Device 8..."), kbsInsertD64, tr, tg, tb);
 	viewMenu->AddMenuItem(menuItemInsertD64);
+	
+
+	
+	// TODO: add shortcut to second line of menuItemInsertD64 (browse)
+	kbsBrowseD64 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Browse Device #8", MTKEY_F7, false, false, false);
+	viewC64->keyboardShortcuts->AddShortcut(kbsBrowseD64);
+	
+	kbsStartFromDisk = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Start from Device #8", MTKEY_F3, false, false, false);
+	viewC64->keyboardShortcuts->AddShortcut(kbsStartFromDisk);
+
+	//
 	
 	kbsLoadPRG = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Load PRG", 'o', false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsLoadPRG);
@@ -116,6 +145,9 @@ CViewMainMenu::CViewMainMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 	viewC64->keyboardShortcuts->AddShortcut(kbsReloadAndRestart);
 	menuItemReloadAndRestart = new CViewC64MenuItem(fontHeight, new CSlrString("Reload PRG & Start"), kbsReloadAndRestart, tr, tg, tb);
 	viewMenu->AddMenuItem(menuItemReloadAndRestart);
+
+	kbsRestartPRG = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Reload & Restart PRG", MTKEY_F5, false, false, false);
+	viewC64->keyboardShortcuts->AddShortcut(kbsRestartPRG);
 	
 	kbsSoftReset = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Soft Reset", 'r', false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsSoftReset);
@@ -126,6 +158,11 @@ CViewMainMenu::CViewMainMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 	viewC64->keyboardShortcuts->AddShortcut(kbsHardReset);
 	menuItemHardReset = new CViewC64MenuItem(fontHeight*2, new CSlrString("Hard Reset"), kbsHardReset, tr, tg, tb);
 	viewMenu->AddMenuItem(menuItemHardReset);
+
+	kbsDiskDriveReset = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Disk Drive Reset", 'r', false, true, true);
+	viewC64->keyboardShortcuts->AddShortcut(kbsDiskDriveReset);
+//	menuItemDiskDriveReset = new CViewC64MenuItem(fontHeight, new CSlrString("Disk Drive Reset"), kbsDiskDriveReset, tr, tg, tb);
+//	viewMenu->AddMenuItem(menuItemDiskDriveReset);
 
 	kbsInsertCartridge = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Insert Cartridge", '0', false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsInsertCartridge);
@@ -178,8 +215,11 @@ CViewMainMenu::CViewMainMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 	kbsMoveFocusToPreviousView = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Move focus to previous view", MTKEY_TAB, true, false, false);
 	viewC64->keyboardShortcuts->AddShortcut(kbsMoveFocusToPreviousView);
 	
+	//
+	kbsSaveScreenImageAsPNG = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Save screenshot as PNG", 'p', true, false, true);
+	viewC64->keyboardShortcuts->AddShortcut(kbsSaveScreenImageAsPNG);
 	
-	viewMenu->SelectMenuItem(menuItemInsertD64);
+	viewMenu->InitSelection();
 	
 	
 //	std::list<u32> zones;
@@ -189,7 +229,7 @@ CViewMainMenu::CViewMainMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 	//LOGD("---done");
 	
 
-
+	loadPrgByteBuffer = NULL;
 }
 
 CViewMainMenu::~CViewMainMenu()
@@ -212,6 +252,14 @@ void CViewMainMenu::MenuCallbackItemEntered(CGuiViewMenuItem *menuItem)
 	{
 		OpenDialogLoadPRG();
 	}
+	else if (menuItem == menuItemHardReset)
+	{
+		viewC64->debugInterface->HardReset();
+	}
+	else if (menuItem == menuItemSoftReset)
+	{
+		viewC64->debugInterface->Reset();
+	}	
 	else if (menuItem == menuItemBreakpoints)
 	{
 		viewC64->viewC64Breakpoints->SwitchBreakpointsScreen();
@@ -232,7 +280,6 @@ void CViewMainMenu::MenuCallbackItemEntered(CGuiViewMenuItem *menuItem)
 	{
 		viewC64->viewAbout->SwitchAboutScreen();
 	}
-	
 	
 }
 
@@ -294,12 +341,25 @@ void CViewMainMenu::SystemDialogFileOpenSelected(CSlrString *path)
 		C64DebuggerStoreSettings();
 	}
 	
+	openDialogFunction = VIEWC64SETTINGS_OPEN_NONE;
+	
 	delete path;
 }
 
 void CViewMainMenu::InsertD64(CSlrString *path, bool updatePathToD64)
 {
 	LOGD("CViewMainMenu::InsertD64: path=%x", path);
+	
+	if (SYS_FileExists(path) == false)
+	{
+		if (c64SettingsPathToD64 != NULL)
+			delete c64SettingsPathToD64;
+		
+		c64SettingsPathToD64 = NULL;
+		LOGError("InsertD64: file not found, skipping");
+		return;
+	}
+	
 	if (c64SettingsPathToD64 != path)
 	{
 		if (c64SettingsPathToD64 != NULL)
@@ -333,11 +393,19 @@ void CViewMainMenu::InsertD64(CSlrString *path, bool updatePathToD64)
 	
 	menuItemInsertD64->str2 = new CSlrString(fname);
 	delete fname;
-
+	
 	guiMain->UnlockMutex();
 
 	LOGM("Inserted new d64: %s", asciiPath);
 	delete asciiPath;
+	
+	if (guiMain->currentView == viewC64->viewFileD64)
+		viewC64->viewFileD64->StartSelectedDiskImageBrowsing();
+	
+	if (c64SettingsAutoJmpFromInsertedDiskFirstPrg)
+	{
+		viewC64->viewFileD64->StartFirstDiskPRGEntry();
+	}
 }
 
 void CViewMainMenu::InsertCartridge(CSlrString *path, bool updatePathToCRT)
@@ -388,6 +456,8 @@ bool CViewMainMenu::LoadPRG(CSlrString *path, bool autoStart, bool updatePRGFold
 {
 	path->DebugPrint("CViewMainMenu::LoadPRG: path=");
 	
+	LOGD("   >>> LoadPRG, autostart=%d", autoStart);
+	
 	// TODO: p00 http://vice-emu.sourceforge.net/vice_15.html#SEC299
 	
 	if (c64SettingsPathToPRG != path)
@@ -423,66 +493,143 @@ bool CViewMainMenu::LoadPRG(CSlrString *path, bool autoStart, bool updatePRGFold
 		guiMain->ShowMessage("Error loading PRG file");
 		return false;
 	}
-
-	viewC64->debugInterface->LockMutex();
-
+	
 	CByteBuffer *byteBuffer = new CByteBuffer(file, false);
 	
-	u16 b1 = byteBuffer->GetByte();
-	u16 b2 = byteBuffer->GetByte();
+	bool ret = LoadPRG(byteBuffer, autoStart, true);
 	
-	u16 loadPoint = (b2 << 8) | b1;
-	
-	LOGD("..loadPoint=%4.4x", loadPoint);
-	
-	u16 addr = loadPoint;
-	while (!byteBuffer->isEof())
+	if (ret)
 	{
-		u8 b = byteBuffer->GetByte();
+		// display file name in menu
+		char *fname = SYS_GetFileNameFromFullPath(asciiPath);
 		
+		guiMain->LockMutex();
+		if (menuItemLoadPRG->str2 != NULL)
+			delete menuItemLoadPRG->str2;
 		
-//		viewC64->debugInterface->SetByteC64(addr, b);
-
-		viewC64->debugInterface->SetByteToRamC64(addr, b);
-		addr++;
+		menuItemLoadPRG->str2 = new CSlrString(fname);
+		delete fname;
+		guiMain->UnlockMutex();
 	}
 	
-	LOGD("..loaded till=%4.4x", addr);
+	delete asciiPath;
+	delete file;
+
+	delete byteBuffer;
 	
-	// display file name in menu
-	char *fname = SYS_GetFileNameFromFullPath(asciiPath);
+	return ret;
+}
 
-	guiMain->LockMutex();
-	if (menuItemLoadPRG->str2 != NULL)
-		delete menuItemLoadPRG->str2;
+bool CViewMainMenu::LoadPRG(CByteBuffer *byteBuffer, bool autoStart, bool showAddressInfo)
+{
+	LOGM("CViewMainMenu::LoadPRG: autoStart=%d showAddressInfo=%d c64SettingsAutoJmpDoReset=%d", autoStart, showAddressInfo, c64SettingsAutoJmpDoReset);
+	this->loadPrgByteBuffer = new CByteBuffer(byteBuffer);
+	this->loadPrgAutoStart = autoStart;
+	this->loadPrgShowAddressInfo = showAddressInfo;
 	
-	menuItemLoadPRG->str2 = new CSlrString(fname);
-	delete fname;
+	SYS_StartThread(this);
+	return true;
+}
 
-	guiMain->UnlockMutex();
+// TODO: move LoadPRG logic to C64 Tools
+void CViewMainMenu::ThreadRun(void *data)
+{
+	LOGD("CViewMainMenu::ThreadRun");
+	
+	if (loadPrgAutoStart && c64SettingsAutoJmpDoReset != AUTOJMP_RESET_NONE)
+	{
+		viewC64->debugInterface->SetDebugMode(C64_DEBUG_RUNNING);
+		viewC64->debugInterface->SetPatchKernalFastBoot(true);
 
+		if (c64SettingsAutoJmpDoReset == AUTOJMP_RESET_SOFT)
+		{
+			viewC64->debugInterface->Reset();
+		}
+		else if (c64SettingsAutoJmpDoReset == AUTOJMP_RESET_HARD)
+		{
+			viewC64->debugInterface->HardReset();
+		}
+		
+		SYS_Sleep(c64SettingsAutoJmpWaitAfterReset);
+		
+		viewC64->viewFileD64->UpdateDriveDiskID();
+	}
+	
+	LoadPRGNotThreaded(loadPrgByteBuffer, loadPrgAutoStart, loadPrgShowAddressInfo);
+	delete loadPrgByteBuffer;
+	loadPrgByteBuffer = NULL;
+}
+
+bool CViewMainMenu::LoadPRGNotThreaded(CByteBuffer *byteBuffer, bool autoStart, bool showAddressInfo)
+{
+	viewC64->debugInterface->LockMutex();
+
+	u16 startAddr;
+	u16 endAddr;
+	
+	LoadPRG(byteBuffer, &startAddr, &endAddr);
+	
+	bool foundBasicSys = false;
+	
 	if (autoStart == true)
 	{
+		LOGD("LoadPRG: autostart");
+		
 		//http://www.lemon64.com/forum/viewtopic.php?t=870&sid=a13a63a952d295ff70c67d93409bc392
-		if (loadPoint == 0x0801)
+		
+		if (startAddr == 0x0801)
 		{
-			// SYS ?
-			if (viewC64->debugInterface->GetByteC64(0x0805) == 0x9E)
+			// 1001 SYS 2066
+			
+			// hidden SYS:          $0805    1  0  0  1 SYS   B
+			// 0800: 00 10 08 E9 03    00   31 30 30 31  9E  32 30 36 36 00
+			
+			// not hidden SYS:
+			// 0800: 00 0C 08 E9 03 9E      20 32 30 36 36 00
+			
+			int sysNumberAddr = -1;
+			
+			u8 b = viewC64->debugInterface->GetByteC64(0x0805);
+			
+			if (b == 0x9E)
+			{
+				// regular SYS
+				sysNumberAddr = 0x0806;
+			}
+			else if (b == 0x00)
+			{
+				// hidden SYS, scan for SYS ($9E), hope $0900 is enough :)
+				for (int i = 0x0806; i < 0x0900; i++)
+				{
+					if (viewC64->debugInterface->GetByteC64(i) == 0x9E)
+					{
+						sysNumberAddr = i + 1;
+						break;
+					}
+				}
+			}
+			
+			if (sysNumberAddr != -1)
 			{
 				char *buf = SYS_GetCharBuf();
 				int i = 0;
 				
-				u16 endAddr = addr;
-				
-				u16 addr = 0x0806;
+				u16 addr = sysNumberAddr;
 				
 				bool isOK = true;
+				
 				while (true)
 				{
 					byte c = viewC64->debugInterface->GetByteC64(addr);
 					
 					LOGD("addr=%4.4x c=%2.2x '%c'", addr, c, c);
 					buf[i] = c;
+					
+					if (c == 0x20)
+					{
+						addr++;
+						continue;
+					}
 					
 					if (c < 0x30 || c > 0x39)
 						break;
@@ -499,6 +646,8 @@ bool CViewMainMenu::LoadPRG(CSlrString *path, bool autoStart, bool updatePRGFold
 				
 				if (isOK)
 				{
+					foundBasicSys = true;
+					
 					int startAddr = atoi(buf);
 					
 					// some decrunchers need correct basic pointers
@@ -517,38 +666,97 @@ bool CViewMainMenu::LoadPRG(CSlrString *path, bool autoStart, bool updatePRGFold
 					viewC64->debugInterface->SetByteC64(0x0030, (endAddr >> 8) & 0x00FF);
 					viewC64->debugInterface->SetByteC64(0x0032, (endAddr >> 8) & 0x00FF);
 					viewC64->debugInterface->SetByteC64(0x00AF, (endAddr >> 8) & 0x00FF);
-
+					
 					// set end of BASIC area
 					viewC64->debugInterface->SetByteC64(0x0033, 0x00);
 					viewC64->debugInterface->SetByteC64(0x0037, 0x00);
-
+					
 					viewC64->debugInterface->SetByteC64(0x0034, 0xA0);
 					viewC64->debugInterface->SetByteC64(0x0038, 0xA0);
 					
 					// stop cursor flash
 					viewC64->debugInterface->SetByteC64(0x00CC, 0x01);
 					
-					LOGD("... JMP '%s' (%d)", buf, startAddr);
+					LOGD("LoadPRG: ... JMP '%s' (%d)", buf, startAddr);
 					
 					viewC64->viewC64MemoryMap->ClearReadWriteMarkers();
 					viewC64->viewDrive1541MemoryMap->ClearReadWriteMarkers();
 					
 					viewC64->debugInterface->MakeJsrC64(startAddr);
-					guiMain->SetView(viewC64);
+					
+					viewC64->ShowMainScreen();
+
+					if (viewC64->debugInterface->IsCpuJam())
+					{
+						viewC64->debugInterface->ForceRunAndUnJamCpu();
+					}
 				}
 				
 				SYS_ReleaseCharBuf(buf);
 			}
 		}
+	}
 	
+	if (autoStart && c64SettingsAutoJmpAlwaysToLoadedPRGAddress && !foundBasicSys)
+	{
+		LOGD("LoadPRG: c64SettingsAutoJmpAlwaysToLoadedPRGAddress");
+		viewC64->debugInterface->MakeJsrC64(startAddr);
+		viewC64->ShowMainScreen();
+		
+		if (viewC64->debugInterface->IsCpuJam())
+		{
+			viewC64->debugInterface->ForceRunAndUnJamCpu();
+		}
+
 	}
 
-	delete asciiPath;
-	delete file;
-
+	if ((c64SettingsAutoJmpAlwaysToLoadedPRGAddress || autoStart) && showAddressInfo)
+	{
+		char *buf = SYS_GetCharBuf();
+		
+		sprintf(buf, "Loaded from $%04X to $%04X", startAddr, endAddr);
+		guiMain->ShowMessage(buf);
+		
+		SYS_ReleaseCharBuf(buf);
+	}
+	
+	if (c64SettingsForceUnpause)
+	{
+		LOGD("LoadPRG: unpause");
+		viewC64->debugInterface->SetDebugMode(C64_DEBUG_RUNNING);
+	}
+	
 	viewC64->debugInterface->UnlockMutex();
-
+	
 	return true;
+}
+
+
+void CViewMainMenu::LoadPRG(CByteBuffer *byteBuffer, u16 *startAddr, u16 *endAddr)
+{
+	u16 b1 = byteBuffer->GetByte();
+	u16 b2 = byteBuffer->GetByte();
+	
+	u16 loadPoint = (b2 << 8) | b1;
+	
+	LOGD("..loadPoint=%4.4x", loadPoint);
+	
+	u16 addr = loadPoint;
+	while (!byteBuffer->isEof())
+	{
+		u8 b = byteBuffer->GetByte();
+		
+		
+		//		viewC64->debugInterface->SetByteC64(addr, b);
+		
+		viewC64->debugInterface->SetByteToRamC64(addr, b);
+		addr++;
+	}
+	
+	LOGD("LoadPRG: ..loaded till=%4.4x", addr);
+	
+	*startAddr = loadPoint;
+	*endAddr = addr;
 }
 
 void CViewMainMenu::ResetAndJSR(int startAddr)
@@ -562,9 +770,27 @@ void CViewMainMenu::ReloadAndRestartPRG()
 {
 	if (c64SettingsPathToPRG != NULL)
 	{
-		CSlrString *newPath = new CSlrString(c64SettingsPathToPRG);
-		LoadPRG(newPath, true, false);
-		delete newPath;
+		char *asciiPath = c64SettingsPathToPRG->GetStdASCII();
+		LOGD("asciiPath='%s'", asciiPath);
+		
+		CSlrFileFromOS *file = new CSlrFileFromOS(asciiPath);
+		if (!file->Exists())
+		{
+			delete file;
+			guiMain->ShowMessage("Error loading PRG file");
+			return;
+		}
+		
+		CByteBuffer *byteBuffer = new CByteBuffer(file, false);
+		
+		bool ret = LoadPRG(byteBuffer, true, false);
+		
+		delete asciiPath;
+		delete file;
+		
+		delete byteBuffer;
+		
+		return;
 	}
 	else
 	{
@@ -664,6 +890,8 @@ bool CViewMainMenu::ButtonPressed(CGuiButton *button)
 bool CViewMainMenu::DoTap(GLfloat x, GLfloat y)
 {
 	LOGG("CViewMainMenu::DoTap:  x=%f y=%f", x, y);
+	
+	viewMenu->DoTap(x, y);
 	return CGuiView::DoTap(x, y);
 }
 
@@ -686,6 +914,10 @@ bool CViewMainMenu::DoFinishDoubleTap(GLfloat x, GLfloat y)
 	return CGuiView::DoFinishDoubleTap(x, y);
 }
 
+bool CViewMainMenu::DoScrollWheel(float deltaX, float deltaY)
+{
+	return viewMenu->DoScrollWheel(deltaX, deltaY);
+}
 
 bool CViewMainMenu::DoMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat distY, GLfloat diffX, GLfloat diffY)
 {
@@ -731,7 +963,7 @@ void CViewMainMenu::SwitchMainMenuScreen()
 {
 	if (guiMain->currentView == this)
 	{
-		guiMain->SetView(viewC64);
+		viewC64->ShowMainScreen();
 	}
 	else
 	{
@@ -781,6 +1013,8 @@ bool CViewMainMenu::KeyPressed(u32 keyCode, bool isShift, bool isAlt, bool isCon
 void CViewMainMenu::ActivateView()
 {
 	LOGG("CViewMainMenu::ActivateView()");
+	
+	viewC64->ShowMouseCursor();
 }
 
 void CViewMainMenu::DeactivateView()
@@ -790,6 +1024,22 @@ void CViewMainMenu::DeactivateView()
 
 CViewC64MenuItem::CViewC64MenuItem(float height, CSlrString *str, CSlrKeyboardShortcut *shortcut, float r, float g, float b)
 : CGuiViewMenuItem(height)
+{
+	this->str = NULL;
+	this->str2 = NULL;
+	this->shortcut = shortcut;
+	this->r = r;
+	this->g = g;
+	this->b = b;
+	
+	if (str != NULL)
+		this->SetString(str);
+}
+
+// sub item
+CViewC64MenuItem::CViewC64MenuItem(float height, CSlrString *str, CSlrKeyboardShortcut *shortcut, float r, float g, float b,
+								   CGuiViewMenu *mainMenu)
+: CGuiViewMenuItem(height, mainMenu)
 {
 	this->str = NULL;
 	this->str2 = NULL;
@@ -815,24 +1065,28 @@ void CViewC64MenuItem::SetString(CSlrString *str)
 	}
 }
 
+void CViewC64MenuItem::Execute()
+{
+}
+
+void CViewC64MenuItem::DebugPrint()
+{
+	LOGD("CGuiViewMenuItem: %x menu=%x subMenu=%x", this, this->menu, this->subMenu);
+
+	if (this->str != NULL)
+	{
+		this->str->DebugPrint("menu item str=");
+	}
+}
+
 void CViewC64MenuItem::SetSelected(bool selected)
 {
-	if (this->isSelected == false && selected == true)
+	if (this->isSelected != selected == true)
 	{
 		for (int i = 0; i < str->GetLength(); i++)
 		{
 			u16 chr = str->GetChar(i);
-			chr += CBMSHIFTEDFONT_INVERT;
-			str->SetChar(i, chr);
-		}
-		return;
-	}
-	if (this->isSelected == true && selected == false)
-	{
-		for (int i = 0; i < str->GetLength(); i++)
-		{
-			u16 chr = str->GetChar(i);
-			chr -= CBMSHIFTEDFONT_INVERT;
+			chr ^= CBMSHIFTEDFONT_INVERT;
 			str->SetChar(i, chr);
 		}
 		return;
@@ -970,6 +1224,11 @@ bool CViewC64MenuItemOption::KeyDown(u32 keyCode)
 	return false;
 }
 
+void CViewC64MenuItemOption::Execute()
+{
+	SwitchToNext();
+}
+
 //
 
 
@@ -1062,4 +1321,8 @@ bool CViewC64MenuItemFloat::KeyDown(u32 keyCode)
 	return false;
 }
 
+void CViewC64MenuItemFloat::Execute()
+{
+	SwitchToNext();
+}
 

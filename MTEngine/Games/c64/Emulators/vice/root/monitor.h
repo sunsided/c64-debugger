@@ -30,7 +30,7 @@
 #define VICE_MONITOR_H
 
 #include "types.h"
-#include "asm.h"	//monitor/
+#include "asm.h"	//monitor/  (c64d)
 
 /** Generic interface.  **/
 #define NUM_MEMSPACES e_invalid_space
@@ -43,19 +43,22 @@ enum mon_int {
 };
 
 enum t_memspace {
-   e_default_space = 0,
-   e_comp_space,
-   e_disk8_space,
-   e_disk9_space,
-   e_disk10_space,
-   e_disk11_space,
-   e_invalid_space
+    e_default_space = 0,
+    e_comp_space,
+    e_disk8_space,
+    e_disk9_space,
+    e_disk10_space,
+    e_disk11_space,
+    e_invalid_space
 };
 typedef enum t_memspace MEMSPACE;
 
 enum CPU_TYPE_s {
     CPU_6502,
+    CPU_WDC65C02,
     CPU_R65C02,
+    CPU_65SC02,
+    CPU_65816,
     CPU_Z80,
     CPU_6502DTV,
     CPU_6809
@@ -76,7 +79,6 @@ struct monitor_cpu_type_s {
     void (*mon_register_print)(int mem);
     const char* (*mon_register_print_ex)(int mem);
     struct mon_reg_list_s *(*mon_register_list_get)(int mem);
-    void (*mon_register_list_set)(struct mon_reg_list_s *mon_reg_list, int mem);
 };
 typedef struct monitor_cpu_type_s monitor_cpu_type_t;
 
@@ -88,6 +90,9 @@ struct monitor_interface_s {
 
     /* Pointer to the registers of the R65C02 CPU. */
     struct R65C02_regs_s *cpu_R65C02_regs;
+
+    /* Pointer to the registers of the 65816/65802 CPU. */
+    struct WDC65816_regs_s *cpu_65816_regs;
 
     /* Pointer to the registers of the Z80 CPU.  */
     struct z80_regs_s *z80_cpu_regs;
@@ -133,8 +138,8 @@ extern unsigned monitor_mask[NUM_MEMSPACES];
 /* Prototypes */
 extern monitor_cpu_type_t* monitor_find_cpu_type_from_string(const char *cpu_type);
 
-extern void monitor_init(monitor_interface_t *maincpu_interface,
-                         monitor_interface_t *drive_interface_init[],
+extern void monitor_init(monitor_interface_t * maincpu_interface,
+                         monitor_interface_t * drive_interface_init[],
                          struct monitor_cpu_type_s **asmarray);
 extern void monitor_shutdown(void);
 extern int monitor_cmdline_options_init(void);
@@ -182,11 +187,12 @@ extern const char *mon_disassemble_to_string(MEMSPACE, unsigned int addr, unsign
 /** Register interface.  */
 extern struct mon_reg_list_s *mon_register_list_get(int mem);
 extern void mon_ioreg_add_list(struct mem_ioreg_list_s **list, const char *name,
-                               int start, int end, void *dump);
+                               int start, int end, void *dump, void *context);
 
 /* Assembler initialization.  */
 extern void asm6502_init(struct monitor_cpu_type_s *monitor_cpu_type);
 extern void asmR65C02_init(struct monitor_cpu_type_s *monitor_cpu_type);
+extern void asm65816_init(struct monitor_cpu_type_s *monitor_cpu_type);
 extern void asm6502dtv_init(struct monitor_cpu_type_s *monitor_cpu_type);
 extern void asm6809_init(struct monitor_cpu_type_s *monitor_cpu_type);
 extern void asmz80_init(struct monitor_cpu_type_s *monitor_cpu_type);
@@ -206,23 +212,26 @@ extern monitor_cartridge_commands_t mon_cart_cmd;
 extern void monitor_cpuhistory_store(unsigned int addr, unsigned int op, unsigned int p1, unsigned int p2,
                                      BYTE reg_a, BYTE reg_x, BYTE reg_y,
                                      BYTE reg_sp, unsigned int reg_st);
+extern void monitor_cpuhistory_fix_p2(unsigned int p2);
 extern void monitor_memmap_store(unsigned int addr, unsigned int type);
 
 /* memmap defines */
-#define MEMMAP_I_O_R 0x80
-#define MEMMAP_I_O_W 0x40
-#define MEMMAP_ROM_R 0x20
-#define MEMMAP_ROM_W 0x10
-#define MEMMAP_ROM_X 0x08
-#define MEMMAP_RAM_R 0x04
-#define MEMMAP_RAM_W 0x02
-#define MEMMAP_RAM_X 0x01
+#define MEMMAP_I_O_R    (1 << 8)
+#define MEMMAP_I_O_W    (1 << 7)
+#define MEMMAP_I_O_X    (1 << 6)
+#define MEMMAP_ROM_R    (1 << 5)
+#define MEMMAP_ROM_W    (1 << 4)
+#define MEMMAP_ROM_X    (1 << 3)
+#define MEMMAP_RAM_R    (1 << 2)
+#define MEMMAP_RAM_W    (1 << 1)
+#define MEMMAP_RAM_X    (1 << 0)
 
 /* HACK to enable fetch/load separation */
 extern BYTE memmap_state;
-#define MEMMAP_STATE_IGNORE 0x04
-#define MEMMAP_STATE_INSTR  0x02
-#define MEMMAP_STATE_OPCODE 0x01
+#define MEMMAP_STATE_OPCODE     0x01
+#define MEMMAP_STATE_INSTR      0x02
+#define MEMMAP_STATE_IGNORE     0x04
+#define MEMMAP_STATE_IN_MONITOR 0x08
 
 /* strtoul replacement for sunos4 */
 #if defined(sun) || defined(__sun)

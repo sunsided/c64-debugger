@@ -66,8 +66,8 @@ bool CViewEmulationState::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isCo
 	return false;
 }
 
-void CViewEmulationState::SetFocus(bool focus)
+bool CViewEmulationState::SetFocus(bool focus)
 {
-	return;
+	return false;
 }
 

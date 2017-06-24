@@ -29,6 +29,9 @@
 
 #include <stdio.h>
 
+
+#define LOG_LEVEL_NONE  0x00
+
 typedef signed int log_t;
 #define LOG_ERR     ((log_t)-1)
 #define LOG_DEFAULT ((log_t)-2)
@@ -42,6 +45,7 @@ extern log_t log_open(const char *id);
 extern int log_close(log_t log);
 extern void log_close_all(void);
 extern void log_enable(int on);
+extern int log_set_silent(int n);
 extern int log_set_verbose(int n);
 extern int log_verbose_init(int argc, char **argv);
 
@@ -62,7 +66,6 @@ extern int log_warning(log_t log, const char *format, ...);
 extern int log_error(log_t log, const char *format, ...);
 extern int log_debug(const char *format, ...);
 extern int log_verbose(const char *format, ...);
-
 #endif
 
 // MT-style logging to not let confuse me (Slajerek) ;)
@@ -74,4 +77,3 @@ void LOGTODO(const char *format, ...);
 void LOGError(const char *format, ...);
 
 #endif
-

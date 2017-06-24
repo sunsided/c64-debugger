@@ -3,7 +3,7 @@
  *
  * Written by
  *  Teemu Rantanen <tvr@cs.hut.fi>
- *  André Fachat <a.fachat@physik.tu-chemnitz.de>
+ *  Andre Fachat <a.fachat@physik.tu-chemnitz.de>
  *  Andreas Boose <viceteam@t-online.de>
  *
  * This file is part of VICE, the Versatile Commodore Emulator.
@@ -44,8 +44,7 @@ struct disk_image_s;
 struct trap_s;
 struct vdrive_s;
 
-typedef struct serial_s
-{
+typedef struct serial_s {
     int inuse;
     int isopen[16]; /* isopen flag for each secondary address */
     struct disk_image_s *image; /* pointer to the disk image data  */
@@ -108,4 +107,3 @@ extern void serial_iec_device_exec(CLOCK clk_value);
 extern void serial_iec_bus_init(void);
 
 #endif
-
