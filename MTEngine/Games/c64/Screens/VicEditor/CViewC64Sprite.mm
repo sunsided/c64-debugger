@@ -1,0 +1,759 @@
+#include "CViewC64Sprite.h"
+#include "SYS_Main.h"
+#include "RES_ResourceManager.h"
+#include "CGuiMain.h"
+#include "CSlrDataAdapter.h"
+#include "CSlrString.h"
+#include "SYS_KeyCodes.h"
+#include "CViewC64.h"
+#include "CViewMemoryMap.h"
+#include "C64Tools.h"
+#include "CViewC64Screen.h"
+#include "C64DebugInterface.h"
+#include "SYS_Threading.h"
+#include "CGuiEditHex.h"
+#include "VID_ImageBinding.h"
+#include "CViewC64.h"
+#include "C64DebugInterfaceVice.h"
+#include "CViewVicEditor.h"
+#include "CViewC64VicDisplay.h"
+#include "CVicEditorLayerVirtualSprites.h"
+#include "SYS_Funct.h"
+#include "C64VicDisplayCanvas.h"
+#include "CVicEditorLayerVirtualSprites.h"
+
+CViewC64Sprite::CViewC64Sprite(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, CViewVicEditor *vicEditor)
+: CGuiView(posX, posY, posZ, sizeX, sizeY)
+{
+	this->name = "CViewC64Sprite";
+	
+	this->vicEditor = vicEditor;
+	
+	viciiState = NULL;
+	
+	viewFrame = new CGuiViewFrame(this, new CSlrString("Sprite"));
+	
+	int w = 32;
+	int h = 32;
+	imageDataSprite = new CImageData(w, h, IMG_TYPE_RGBA);
+	imageDataSprite->AllocImage(false, true);
+	
+	imageSprite = new CSlrImage(true, false);
+	imageSprite->LoadImage(imageDataSprite, RESOURCE_PRIORITY_STATIC, false);
+	imageSprite->resourceType = RESOURCE_TYPE_IMAGE_DYNAMIC;
+	imageSprite->resourcePriority = RESOURCE_PRIORITY_STATIC;
+	VID_PostImageBinding(imageSprite, NULL);
+
+	spriteRasterX = -1;
+	spriteRasterY = -1;
+	
+	//
+	font = viewC64->fontCBMShifted;
+	fontScale = 1;
+	fontWidth = font->GetCharWidth('@', fontScale);
+	fontHeight = font->GetCharHeight('@', fontScale) + 2;
+
+	float buttonSizeX;
+	float buttonSizeY = 10.0f;
+	float px;
+	float py;
+	
+	buttonSizeX = 30.0f;
+	px = posX + 2.5f;
+	py = posY + 5.0f + 28.0f + 3.0f;
+	
+	float gpx = 1.9f;
+	
+	btnIsMultiColor = new CGuiButtonSwitch(NULL, NULL, NULL,
+											  px, py, posZ, buttonSizeX, buttonSizeY,
+											  new CSlrString("Multi"),
+											  FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
+											  font, fontScale,
+											  1.0, 1.0, 1.0, 1.0,
+											  1.0, 1.0, 1.0, 1.0,
+											  0.3, 0.3, 0.3, 1.0,
+											  this);
+	btnIsMultiColor->SetOn(false);
+	this->AddGuiElement(btnIsMultiColor);
+	
+	px += buttonSizeX + gpx;
+	
+	btnIsStretchX = new CGuiButtonSwitch(NULL, NULL, NULL,
+										 px, py, posZ, buttonSizeX, buttonSizeY,
+										 new CSlrString("Horiz"),
+										 FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
+										 font, fontScale,
+										 1.0, 1.0, 1.0, 1.0,
+										 1.0, 1.0, 1.0, 1.0,
+										 0.3, 0.3, 0.3, 1.0,
+										 this);
+	btnIsStretchX->SetOn(false);
+	this->AddGuiElement(btnIsStretchX);
+	
+	px += buttonSizeX + gpx;
+	
+	btnIsStretchY = new CGuiButtonSwitch(NULL, NULL, NULL,
+										 px, py, posZ, buttonSizeX, buttonSizeY,
+										 new CSlrString("Vert"),
+										 FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
+										 font, fontScale,
+										 1.0, 1.0, 1.0, 1.0,
+										 1.0, 1.0, 1.0, 1.0,
+										 0.3, 0.3, 0.3, 1.0,
+										 this);
+	btnIsStretchY->SetOn(false);
+	this->AddGuiElement(btnIsStretchY);
+	
+
+	//
+	buttonSizeX = 25.0f;
+	px = posX + sizeX - buttonSizeX - 3.0f;
+	py += buttonSizeY + 6.0f;
+	btnScanForSprites = new CGuiButtonSwitch(NULL, NULL, NULL,
+											  px, py, posZ, buttonSizeX, buttonSizeY,
+											  new CSlrString("Scan"),
+											  FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
+											  font, fontScale,
+											  1.0, 1.0, 1.0, 1.0,
+											  1.0, 1.0, 1.0, 1.0,
+											  0.3, 0.3, 0.3, 1.0,
+											  this);
+	btnScanForSprites->SetOn(true);
+	this->AddGuiElement(btnScanForSprites);
+	
+	//
+	
+	prevSpriteId = 0;
+	selectedColor = -1;
+	
+	this->AddGuiElement(viewFrame);
+	
+	isSpriteLocked = false;
+}
+
+void CViewC64Sprite::SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY)
+{
+	LOGD("CViewC64Sprite::SetPosition: %f %f", posX, posY);
+	CGuiView::SetPosition(posX, posY, posZ, sizeX, sizeY);
+
+	// TODO: fix this and let guiview manage this
+	float buttonSizeX = 25.0f;
+	float buttonSizeY = 10.0f;
+
+	float px;
+	float py;
+	
+	buttonSizeX = 30.0f;
+	px = posX + 2.5f;
+	py = posY + 5.0f + 28.0f + 3.0f;
+	
+	float gpx = 1.9f;
+
+	this->btnIsMultiColor->SetPosition(px, py);
+	px += buttonSizeX+ gpx;
+	
+	this->btnIsStretchX->SetPosition(px, py);
+	px += buttonSizeX + gpx;
+	
+	this->btnIsStretchY->SetPosition(px, py);
+
+	buttonSizeX = 25.0f;
+	px = posX + sizeX - buttonSizeX - 3.0f;
+	py += buttonSizeY + 6.0f;
+
+	this->btnScanForSprites->SetPosition(px, py);
+	
+
+}
+
+void CViewC64Sprite::DoLogic()
+{
+	CGuiView::DoLogic();
+}
+
+
+void CViewC64Sprite::Render()
+{
+//	LOGD("CViewC64Sprite::Render: pos=%f %f", posX, posY);
+	C64DebugInterface *debugInterface = vicEditor->viewVicDisplayMain->debugInterface;
+
+	
+	BlitFilledRectangle(posX, posY, posZ, sizeX, sizeY, viewFrame->barColorR, viewFrame->barColorG, viewFrame->barColorB, 1);
+
+	float px = posX + 3.0f;
+	float py = posY + 3.0f;
+	
+	const float spriteSizeX = 34.0f;
+	const float spriteSizeY = (21.0f * spriteSizeX) / 24.0f;
+
+	C64Sprite *sprite = vicEditor->layerVirtualSprites->FindSpriteByRasterPos(spriteRasterX, spriteRasterY);
+	
+	int spriteId = 0;
+	
+	int spc = (spriteRasterX + 0x18)/8.0f;
+	int spy = spriteRasterY + 0x32;
+	
+	viciiState = NULL;
+	
+	if (spy >= 0 && spy < 312
+		&& spc >= 0 && spc < 64)
+	{
+		viciiState = c64d_get_vicii_state_for_raster_cycle(spy+2, spc);
+	}
+	
+	if (viciiState != NULL)
+	{
+		paintColorD021	= viciiState->regs[0x21];
+		paintColorD025	= viciiState->regs[0x25];
+		paintColorD026	= viciiState->regs[0x26];
+		
+		if (sprite != NULL)
+		{
+			paintColorSprite = viciiState->regs[0x27 + (sprite->spriteId)];
+			
+			prevSpriteId = sprite->spriteId;
+			
+			spriteId = sprite->spriteId;
+
+			int addr1 = sprite->pointerAddr;
+
+			int v_bank = viciiState->vbank_phi1;
+			int addr2 = v_bank + viciiState->sprite[sprite->spriteId].pointer * 64;
+			
+			float py2 = py + 46;
+			
+			char buf[32];
+			sprintf(buf, "%d %04x (%04x)", spriteId, addr1, addr2);
+			guiMain->fntConsole->BlitText(buf, px, py2, -1, 5);
+
+			int sprx = sprite->posX + 0x18;
+			int spry = sprite->posY + 0x32;
+			
+			py2 += 8.0f;
+			
+			if (sprx < 0)
+				sprx += 504;
+			
+			sprintf(buf, "%3d %3d", sprx, spry);
+			guiMain->fntConsole->BlitText(buf, px, py2, -1, 5);
+			
+			int addr = addr2;
+			
+			uint8 spriteData[63];
+			for (int i = 0; i < 63; i++)
+			{
+				u8 v = debugInterface->GetByteFromRamC64(addr);
+				spriteData[i] = v;
+				addr++;
+			}
+			
+			// sprites are rendered upside down
+			const float spriteTexStartX = 4.0/32.0;
+			const float spriteTexStartY = (32.0-4.0)/32.0;
+			const float spriteTexEndX = (4.0+24.0)/32.0;
+			const float spriteTexEndY = (32.0-(4.0+21.0))/32.0;
+			
+			bool isColor = false;
+			if (viciiState->regs[0x1c] & (1 << (sprite->spriteId)))
+			{
+				isColor = true;
+			}
+			if (isColor == false)
+			{
+				//			if (renderDataWithColors)
+				//			{
+				//				uint8 spriteColor = viciiState->regs[0x27+(sprite->spriteId)];
+				//				ConvertSpriteDataToImage(spriteData, imageData, cD021, spriteColor, this);
+				//			}
+				//			else
+				{
+					ConvertSpriteDataToImage(spriteData, imageDataSprite, 4);
+				}
+			}
+			else
+			{
+				ConvertColorSpriteDataToImage(spriteData, imageDataSprite, paintColorD021, paintColorD025, paintColorD026, paintColorSprite,
+											  debugInterface, 4);
+			}
+			
+			// re-bind image
+			imageSprite->ReplaceImageData(imageDataSprite);
+			
+			float cD021r, cD021g, cD021b;
+			debugInterface->GetFloatCBMColor(paintColorD021, &cD021r, &cD021g, &cD021b);
+
+			BlitFilledRectangle(px, py, posZ, spriteSizeX, spriteSizeY, cD021r, cD021g, cD021b, 1.0f);
+			
+			Blit(imageSprite, px, py, posZ, spriteSizeX, spriteSizeY, spriteTexStartX, spriteTexStartY, spriteTexEndX, spriteTexEndY);
+			
+			// buttons
+			btnIsMultiColor->SetEnabled(true);
+			btnIsStretchX->SetEnabled(true);
+			btnIsStretchY->SetEnabled(true);
+			
+			if ((viciiState->regs[0x1C] >> sprite->spriteId) & 1)
+			{
+				btnIsMultiColor->SetOn(true);
+			}
+			else
+			{
+				btnIsMultiColor->SetOn(false);
+			}
+
+			if ((viciiState->regs[0x1D] >> sprite->spriteId) & 1)
+			{
+				btnIsStretchX->SetOn(true);
+			}
+			else
+			{
+				btnIsStretchX->SetOn(false);
+			}
+
+			if ((viciiState->regs[0x17] >> sprite->spriteId) & 1)
+			{
+				btnIsStretchY->SetOn(true);
+			}
+			else
+			{
+				btnIsStretchY->SetOn(false);
+			}
+		}
+		else
+		{
+			paintColorSprite	= viciiState->regs[0x27 + prevSpriteId];
+			
+			btnIsMultiColor->SetEnabled(false);
+			btnIsStretchX->SetEnabled(false);
+			btnIsStretchY->SetEnabled(false);
+			btnIsMultiColor->SetOn(false);
+			btnIsStretchX->SetOn(false);
+			btnIsStretchY->SetOn(false);
+		}
+
+	}
+	
+	BlitRectangle(px, py, posZ, spriteSizeX, spriteSizeY, 0.0, 0.0, 0.0f, 1.0f);
+
+	// render color leds
+	float fontSize = 5.0f;
+	
+	// render color LEDs
+	char buf[8] = { 'D', '0', '2', '0', 0x00 };
+
+	float ledX = posX + spriteSizeX + 5.0f + 3.0f;
+	float ledY = posY + 2.0f;
+	
+	//char buf[8] = { 'D', '0', '2', '0', 0x00 };
+	float ledSizeX = fontSize*5.0f; //4.0f;
+	float gap = fontSize * 0.1f;
+	float step = fontSize * 0.75f;
+	float ledSizeY = fontSize + gap + gap + 2.0f;
+	
+	px = ledX;
+	py = ledY;
+	float py2 = py + fontSize + gap;
+	
+	bool isSelected;
+	
+	// 0 00 = D021
+	// 1 01 = D025
+	// 2 10 = D027+sprId
+	// 3 11 = D026
+
+	// D021
+	sprintfHexCode4WithoutZeroEnding(&(buf[3]), 0x21);
+	guiMain->fntConsole->BlitText(buf, px, py, posZ, fontSize);
+	
+	isSelected = (selectedColor == 0);
+	RenderColorRectangle(px, py2, ledSizeX, ledSizeY, gap, isSelected, paintColorD021, debugInterface);
+	
+	px += ledSizeX + step;
+	
+	//
+	sprintfHexCode4WithoutZeroEnding(&(buf[3]), 0x25);
+	guiMain->fntConsole->BlitText(buf, px, py, posZ, fontSize);
+	
+	isSelected = (selectedColor == 1);
+	RenderColorRectangle(px, py2, ledSizeX, ledSizeY, gap, isSelected, paintColorD025, debugInterface);
+
+	py += ledSizeY + gap + fontSize + gap + 3.0f;
+	py2 = py + fontSize + gap;
+	px = ledX;
+
+	//
+	sprintfHexCode4WithoutZeroEnding(&(buf[3]), 0x27 + prevSpriteId);
+	guiMain->fntConsole->BlitText(buf, px, py, posZ, fontSize);
+	
+	isSelected = (selectedColor == 2);
+	RenderColorRectangle(px, py2, ledSizeX, ledSizeY, gap, isSelected, paintColorSprite, debugInterface);
+
+	px += ledSizeX + step;
+	
+	//
+	sprintfHexCode4WithoutZeroEnding(&(buf[3]), 0x26);
+	guiMain->fntConsole->BlitText(buf, px, py, posZ, fontSize);
+
+	isSelected = (selectedColor == 3);
+	RenderColorRectangle(px, py2, ledSizeX, ledSizeY, gap, isSelected, paintColorD026, debugInterface);
+	
+	///
+	
+	CGuiView::Render();
+
+	if (isSpriteLocked == false)
+	{
+		BlitRectangle(posX, posY, posZ, sizeX, sizeY, 0, 0, 0, 1, 1);
+	}
+	else
+	{
+		BlitRectangle(posX, posY, posZ, sizeX, sizeY, 0.5f, 0, 0, 1, 1);
+	}
+	
+	
+}
+
+bool CViewC64Sprite::DoTap(GLfloat x, GLfloat y)
+{
+	LOGG("CViewC64Sprite::DoTap: %f %f", x, y);
+
+	if (this->IsInsideView(x, y))
+	{
+		// check tap on colors
+		float px = posX + 5.0f;
+		float py = posY + 5.0f;
+		
+		const float spriteSizeX = 34.0f;
+		const float spriteSizeY = (21.0f * spriteSizeX) / 24.0f;
+
+		// render color leds
+		float fontSize = 5.0f;
+		
+		// render color LEDs
+		float ledX = posX + spriteSizeX + 5.0f + 3.0f;
+		float ledY = posY + 2.0f;
+		
+		//char buf[8] = { 'D', '0', '2', '0', 0x00 };
+		float ledSizeX = fontSize*5.0f; //4.0f;
+		float gap = fontSize * 0.1f;
+		float step = fontSize * 0.75f;
+		float ledSizeY = fontSize + gap + gap + 2.0f;
+		
+		px = ledX;
+		py = ledY;
+		float py2 = py + fontSize + gap;
+		
+		float sy = (ledSizeY + fontSize + step + gap);
+		
+		// 0 00 = D021
+		// 1 01 = D025
+		// 2 10 = D027+sprId
+		// 3 11 = D026
+
+		// D021
+		if (x >= px && x <= px + ledSizeX
+			&& y >= py && y <= py + sy)
+		{
+			LOGD("D021");
+			selectedColor = 0;
+			
+			UpdateSelectedColorInPalette();
+			return true;
+		}
+		
+		px += ledSizeX + step;
+		
+		if (x >= px && x <= px + ledSizeX
+				 && y >= py && y <= py + sy)
+		{
+			LOGD("D025");
+			selectedColor = 1;
+			
+			UpdateSelectedColorInPalette();
+			return true;
+		}
+		
+		py += ledSizeY + gap + fontSize + gap + 3.0f;
+		py2 = py + fontSize + gap;
+		px = ledX;
+
+		if (x >= px && x <= px + ledSizeX
+			&& y >= py && y <= py + sy)
+		{
+			LOGD("D027+spr");
+			selectedColor = 2;
+
+			UpdateSelectedColorInPalette();
+			return true;
+		}
+
+		px += ledSizeX + step;
+
+		if (x >= px && x <= px + ledSizeX
+			&& y >= py && y <= py + sy)
+		{
+			LOGD("D026");
+			selectedColor = 3;
+
+			UpdateSelectedColorInPalette();
+			return true;
+		}
+		
+		selectedColor = -1;
+		return true;
+	}
+	
+	
+	return CGuiView::DoTap(x, y);
+}
+
+bool CViewC64Sprite::DoFinishTap(GLfloat x, GLfloat y)
+{
+	// render thread is updating switch buttons, we need to lock render first
+	guiMain->LockMutex();
+	
+	bool ret = CGuiView::DoFinishTap(x, y);
+	
+	guiMain->UnlockMutex();
+	
+	return ret;
+}
+
+
+
+bool CViewC64Sprite::DoMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat distY, GLfloat diffX, GLfloat diffY)
+{
+	if (this->IsInsideView(x, y))
+		return true;
+	
+	return CGuiView::DoMove(x, y, distX, distY, diffX, diffY);
+}
+
+
+void CViewC64Sprite::UpdateSelectedColorInPalette()
+{
+	if (selectedColor == -1)
+		return;
+
+	C64Sprite *sprite = vicEditor->layerVirtualSprites->FindSpriteByRasterPos(spriteRasterX, spriteRasterY);
+	if (!sprite)
+		return;
+
+	int spc = (spriteRasterX + 0x18)/8.0f;
+	int spy = spriteRasterY + 0x32;
+
+	if (spy >= 0 && spy < 312
+		&& spc >= 0 && spc < 64)
+	{
+		viciiState = c64d_get_vicii_state_for_raster_cycle(spy, spc);
+		
+		// 0 00 = D021
+		// 1 01 = D025
+		// 2 10 = D027+sprId
+		// 3 11 = D026
+
+		if (selectedColor == 0)
+		{
+			vicEditor->viewPalette->SetColorLMB(viciiState->regs[0x21]);
+		}
+		else if (selectedColor == 1)
+		{
+			vicEditor->viewPalette->SetColorLMB(viciiState->regs[0x25]);
+		}
+		else if (selectedColor == 1)
+		{
+			vicEditor->viewPalette->SetColorLMB(viciiState->regs[0x27 + sprite->spriteId]);
+		}
+		else if (selectedColor == 3)
+		{
+			vicEditor->viewPalette->SetColorLMB(viciiState->regs[0x26]);
+		}
+	}
+	
+}
+
+u8 CViewC64Sprite::GetPaintColorByNum(u8 colorNum)
+{
+	switch(colorNum)
+	{
+		case 0:
+			return paintColorD021;
+		case 1:
+			return paintColorD025;
+		case 2:
+			return paintColorSprite;
+		case 3:
+			return paintColorD026;
+	}
+	
+	return paintColorSprite;
+}
+
+bool CViewC64Sprite::DoRightClick(GLfloat x, GLfloat y)
+{
+	LOGI("CViewC64Sprite::DoRightClick: %f %f", x, y);
+	
+	if (this->IsInsideView(x, y))
+		return true;
+	
+	return CGuiView::DoRightClick(x, y);
+}
+
+
+bool CViewC64Sprite::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
+{
+	LOGD("CViewC64Sprite::KeyDown: %d", keyCode);
+	
+	if ((keyCode == '1' && isShift && !isAlt && !isControl)
+		|| keyCode == '!')
+	{
+		selectedColor = 1;
+		return true;
+	}
+	else if ((keyCode == '2' && isShift && !isAlt && !isControl)
+			 || keyCode == '@')
+	{
+		selectedColor = 2;
+		return true;
+	}
+	else if ((keyCode == '3' && isShift && !isAlt && !isControl)
+			 || keyCode == '#')
+	{
+		selectedColor = 3;
+		return true;
+	}
+
+	if (isSpriteLocked)
+	{
+		int step = (guiMain->isShiftPressed ? 4 : 1);
+		
+		if (keyCode == MTKEY_ARROW_LEFT)
+		{
+			MoveSelectedSprite(-step, 0);
+			return true;
+		}
+		else if (keyCode == MTKEY_ARROW_RIGHT)
+		{
+			MoveSelectedSprite(+step, 0);
+			return true;
+		}
+		else if (keyCode == MTKEY_ARROW_UP)
+		{
+			MoveSelectedSprite(0, -step);
+			return true;
+		}
+		else if (keyCode == MTKEY_ARROW_DOWN)
+		{
+			MoveSelectedSprite(0, +step);
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+bool CViewC64Sprite::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl)
+{
+	return false;
+}
+
+bool CViewC64Sprite::SetFocus(bool focus)
+{
+	return true;
+}
+
+void CViewC64Sprite::MoveSelectedSprite(int deltaX, int deltaY)
+{
+	if (isSpriteLocked == false)
+		return;
+	
+	guiMain->LockMutex();
+	C64Sprite *sprite = vicEditor->layerVirtualSprites->FindSpriteByRasterPos(spriteRasterX, spriteRasterY);
+	
+	if (sprite == NULL)
+	{
+		LOGError("CViewC64Sprite::MoveSelectedSprite");
+		guiMain->UnlockMutex();
+		return;
+	}
+	
+	vicEditor->StoreUndo();
+
+	if (deltaX != 0)
+	{
+		int sprx = sprite->posX + 0x18;
+		vicEditor->layerVirtualSprites->ReplacePosX(sprite->posX, sprite->posY, sprite->spriteId, sprx + deltaX);
+		spriteRasterX += deltaX;
+	}
+	
+	if (deltaY != 0)
+	{
+		int spry = sprite->posY + 0x32;
+		vicEditor->layerVirtualSprites->ReplacePosY(sprite->posX, sprite->posY, sprite->spriteId, spry + deltaY);
+		spriteRasterY += deltaY;
+	}
+	guiMain->UnlockMutex();
+}
+
+void CViewC64Sprite::PaletteColorChanged(u8 colorId, u8 newColorValue)
+{
+	LOGD("CViewC64Sprite::PaletteColorChanged");
+	
+	guiMain->LockMutex();
+	if (colorId == VICEDITOR_COLOR_SOURCE_LMB && selectedColor != -1)
+	{
+		C64Sprite *sprite = vicEditor->layerVirtualSprites->FindSpriteByRasterPos(spriteRasterX, spriteRasterY);
+		
+		if (sprite != NULL)
+		{
+			vicEditor->StoreUndo();
+			
+			if (selectedColor == 0)
+			{
+				vicEditor->viewVicDisplayMain->debugInterface->SetByteC64(0xD021, newColorValue);
+				guiMain->UnlockMutex();
+				return;
+			}
+			
+			int paintResult = vicEditor->layerVirtualSprites->ReplaceColor(spriteRasterX, spriteRasterY, sprite->spriteId, selectedColor, newColorValue);
+			
+			if (paintResult == PAINT_RESULT_ERROR)
+			{
+				guiMain->ShowMessage("Error in Sprite replace color");
+			}
+		}
+	}
+	
+	guiMain->UnlockMutex();
+
+}
+
+bool CViewC64Sprite::ButtonSwitchChanged(CGuiButtonSwitch *button)
+{
+	LOGD("CViewC64Sprite::ButtonSwitchChanged");
+	
+	guiMain->LockMutex();
+	C64Sprite *sprite = vicEditor->layerVirtualSprites->FindSpriteByRasterPos(spriteRasterX, spriteRasterY);
+	
+	if (sprite != NULL)
+	{
+		if (button == btnIsMultiColor)
+		{
+			vicEditor->StoreUndo();
+			vicEditor->layerVirtualSprites->ReplaceMultiColor(spriteRasterX, spriteRasterY, sprite->spriteId, btnIsMultiColor->IsOn());
+		}
+		else if (button == btnIsStretchX)
+		{
+			vicEditor->StoreUndo();
+			vicEditor->layerVirtualSprites->ReplaceStretchX(spriteRasterX, spriteRasterY, sprite->spriteId, btnIsStretchX->IsOn());
+		}
+		else if (button == btnIsStretchY)
+		{
+			vicEditor->StoreUndo();
+			vicEditor->layerVirtualSprites->ReplaceStretchY(spriteRasterX, spriteRasterY, sprite->spriteId, btnIsStretchY->IsOn());
+		}
+	}
+	
+	guiMain->UnlockMutex();
+	return true;
+}
+
