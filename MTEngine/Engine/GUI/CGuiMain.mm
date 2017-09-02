@@ -2000,6 +2000,29 @@ void CGuiMain::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 	}
 #endif
 
+	if (messageBox)
+	{
+		messageBox->KeyDown(keyCode, isShift, isAlt, isControl);
+		LOGI("CGuiMain: KeyDown finished");
+		return;
+	}
+	
+	if (windowOnTop)
+	{
+		if (windowOnTop->KeyDown(keyCode, isShift, isAlt, isControl)) {
+			LOGI("CGuiMain: KeyDown finished");
+			return;
+		}
+	}
+	
+	if (viewOnTop)
+	{
+		LOGI("CGuiMain: KeyDown finished");
+		viewOnTop->KeyDown(keyCode, isShift, isAlt, isControl);
+		return;
+	}
+	
+
 	if (this->focusElement)
 	{
 		// consumed?

@@ -197,7 +197,7 @@ void CViewKeyboardShortcuts::OpenDialogExportKeyboardShortcuts()
 	CSlrString *defaultFileName = new CSlrString("shortcuts");
 	
 	CSlrString *windowTitle = new CSlrString("Export keyboard shortcuts");
-	SYS_DialogSaveFile(this, &extKeyboardShortucts, defaultFileName, gUTFPathToDocuments, windowTitle);
+	viewC64->ShowDialogSaveFile(this, &extKeyboardShortucts, defaultFileName, gUTFPathToDocuments, windowTitle);
 	delete windowTitle;
 	delete defaultFileName;
 }
@@ -223,7 +223,7 @@ void CViewKeyboardShortcuts::SystemDialogFileSaveCancelled()
 void CViewKeyboardShortcuts::OpenDialogImportKeyboardShortcuts()
 {
 	CSlrString *windowTitle = new CSlrString("Import keyboard shortcuts");
-	SYS_DialogOpenFile(this, &extKeyboardShortucts, gUTFPathToDocuments, windowTitle);
+	viewC64->ShowDialogOpenFile(this, &extKeyboardShortucts, gUTFPathToDocuments, windowTitle);
 	delete windowTitle;
 }
 

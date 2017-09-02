@@ -33,6 +33,7 @@ char *SYS_GetPathFromFullPath(char *fileNameFull);
 void SYS_PrintMemoryUsed();
 
 bool FUN_IsNumber(char c);
+bool FUN_IsNumber(char *str);
 bool FUN_IsHexNumber(char c);
 
 void sprintfNum(char *pszBuffer, int size, char base, char numDigits, char isSigned, char padchar, i64 n);

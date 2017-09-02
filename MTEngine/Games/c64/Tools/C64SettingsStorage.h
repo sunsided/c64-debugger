@@ -113,6 +113,7 @@ extern float c64SettingsPaintGridShowValuesZoomLevel;
 
 extern bool c64SettingsVicEditorForceReplaceColor;
 
+extern bool c64SettingsUseSystemFileDialogs;
 
 extern int c64SettingsDoubleClickMS;
 

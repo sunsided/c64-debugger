@@ -200,6 +200,11 @@ u8 C64SpriteHires::PutPixelHiresSprite(bool forceColorReplace, int x, int y, u8 
 		spx /= 2;
 	}
 	
+	if (this->isStretchedVertically)
+	{
+		spy /= 2;
+	}
+	
 	if (colorNum == 2)
 		colorNum = 1;
 	

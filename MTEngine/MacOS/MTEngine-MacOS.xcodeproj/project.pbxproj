@@ -244,7 +244,6 @@
 		414535D21CB2D1A300020916 /* menu_vic20cart.c in Sources */ = {isa = PBXBuildFile; fileRef = 414531C91CB2D1A100020916 /* menu_vic20cart.c */; };
 		414535D31CB2D1A300020916 /* menu_vic20hw.c in Sources */ = {isa = PBXBuildFile; fileRef = 414531CB1CB2D1A100020916 /* menu_vic20hw.c */; };
 		414535D41CB2D1A300020916 /* menu_video.c in Sources */ = {isa = PBXBuildFile; fileRef = 414531CD1CB2D1A100020916 /* menu_video.c */; };
-		414535D51CB2D1A300020916 /* mididrv.c in Sources */ = {isa = PBXBuildFile; fileRef = 414531CF1CB2D1A100020916 /* mididrv.c */; };
 		414535D61CB2D1A300020916 /* mousedrv.c in Sources */ = {isa = PBXBuildFile; fileRef = 414531D01CB2D1A100020916 /* mousedrv.c */; };
 		414535D71CB2D1A300020916 /* parsid.c in Sources */ = {isa = PBXBuildFile; fileRef = 414531D21CB2D1A100020916 /* parsid.c */; };
 		414535D81CB2D1A300020916 /* rawnetarch.c in Sources */ = {isa = PBXBuildFile; fileRef = 414531D31CB2D1A100020916 /* rawnetarch.c */; };
@@ -696,6 +695,7 @@
 		419837CD164CFD7900B8C78D /* MenuControllerSettings.mm in Sources */ = {isa = PBXBuildFile; fileRef = 419837CC164CFD7900B8C78D /* MenuControllerSettings.mm */; };
 		41985F9A1615E2B400FA0CD6 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 41985F981615E2B400FA0CD6 /* AudioToolbox.framework */; };
 		41985F9B1615E2B400FA0CD6 /* AudioUnit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 41985F991615E2B400FA0CD6 /* AudioUnit.framework */; };
+		41A286AC1F08ECC500FE0AF7 /* TODO.txt in Resources */ = {isa = PBXBuildFile; fileRef = 41A286AB1F08ECC500FE0AF7 /* TODO.txt */; };
 		41A9AC921CBE3FDE004592CF /* archdep.c in Sources */ = {isa = PBXBuildFile; fileRef = 41A9AC901CBE3FDE004592CF /* archdep.c */; };
 		41B53EA51EE2EFCA0078F9BB /* CViewC64Sprite.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41B53EA31EE2EFCA0078F9BB /* CViewC64Sprite.mm */; };
 		41B53EAB1EE33A330078F9BB /* CViewVicEditorLayers.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41B53EA91EE33A330078F9BB /* CViewVicEditorLayers.mm */; };
@@ -718,6 +718,7 @@
 		41B5C1471E9E9EC200E9C644 /* mon_register65816.c in Sources */ = {isa = PBXBuildFile; fileRef = 41B5C1461E9E9EC200E9C644 /* mon_register65816.c */; };
 		41B5C14B1E9E9F3900E9C644 /* render1x1crt.c in Sources */ = {isa = PBXBuildFile; fileRef = 41B5C1491E9E9F3900E9C644 /* render1x1crt.c */; };
 		41C5B5AD1C73C010003FBC5F /* SYS_KeyCodes.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41C5B5AC1C73C010003FBC5F /* SYS_KeyCodes.mm */; };
+		41CA791A1F3DC0E0004309B8 /* mididrv.c in Sources */ = {isa = PBXBuildFile; fileRef = 41CA79191F3DC0E0004309B8 /* mididrv.c */; };
 		41CF58FE1920E6EA00F43331 /* GFX_WriteImage.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41CF58FD1920E6EA00F43331 /* GFX_WriteImage.mm */; };
 		41CF59051920E77600F43331 /* IMG_Scale.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41CF59001920E77600F43331 /* IMG_Scale.mm */; };
 		41CF59061920E77600F43331 /* resampler.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41CF59031920E77600F43331 /* resampler.mm */; };
@@ -1432,7 +1433,6 @@
 		414531CC1CB2D1A100020916 /* menu_vic20hw.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = menu_vic20hw.h; sourceTree = "<group>"; };
 		414531CD1CB2D1A100020916 /* menu_video.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = menu_video.c; sourceTree = "<group>"; };
 		414531CE1CB2D1A100020916 /* menu_video.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = menu_video.h; sourceTree = "<group>"; };
-		414531CF1CB2D1A100020916 /* mididrv.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mididrv.c; sourceTree = "<group>"; };
 		414531D01CB2D1A100020916 /* mousedrv.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mousedrv.c; sourceTree = "<group>"; };
 		414531D11CB2D1A100020916 /* mousedrv.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mousedrv.h; sourceTree = "<group>"; };
 		414531D21CB2D1A100020916 /* parsid.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = parsid.c; sourceTree = "<group>"; };
@@ -2340,6 +2340,7 @@
 		419837CC164CFD7900B8C78D /* MenuControllerSettings.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = MenuControllerSettings.mm; sourceTree = "<group>"; };
 		41985F981615E2B400FA0CD6 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		41985F991615E2B400FA0CD6 /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = System/Library/Frameworks/AudioUnit.framework; sourceTree = SDKROOT; };
+		41A286AB1F08ECC500FE0AF7 /* TODO.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = TODO.txt; path = ../Games/c64/TODO.txt; sourceTree = "<group>"; };
 		41A9AC8D1CBBFCF6004592CF /* C64DebugTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64DebugTypes.h; path = ../Games/c64/DebugInterface/C64DebugTypes.h; sourceTree = "<group>"; };
 		41A9AC901CBE3FDE004592CF /* archdep.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = archdep.c; sourceTree = "<group>"; };
 		41A9AC911CBE3FDE004592CF /* archdep.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = archdep.h; sourceTree = "<group>"; };
@@ -2384,6 +2385,8 @@
 		41B5C14A1E9E9F3900E9C644 /* render1x1crt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = render1x1crt.h; sourceTree = "<group>"; };
 		41B5C14C1E9E9FBA00E9C644 /* export.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = export.h; sourceTree = "<group>"; };
 		41C5B5AC1C73C010003FBC5F /* SYS_KeyCodes.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SYS_KeyCodes.mm; sourceTree = "<group>"; };
+		41CA79191F3DC0E0004309B8 /* mididrv.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mididrv.c; sourceTree = "<group>"; };
+		41CA791B1F3DC117004309B8 /* mididrv.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mididrv.h; sourceTree = "<group>"; };
 		41CBF0751A8133AD0060A9DD /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
 		41CBF0771A8133AD0060A9DD /* sidconfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sidconfig.h; sourceTree = "<group>"; };
 		41CBF0781A8133AD0060A9DD /* sidint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sidint.h; sourceTree = "<group>"; };
@@ -2866,6 +2869,7 @@
 		390424891868928B00B570B1 /* Games */ = {
 			isa = PBXGroup;
 			children = (
+				41A286AB1F08ECC500FE0AF7 /* TODO.txt */,
 				4152D7201C970FA900EBA9E5 /* CViewC64.mm */,
 				4152D7211C970FA900EBA9E5 /* CViewC64.h */,
 				4171C0CF1EFD124000001770 /* C64D_Version.h */,
@@ -3087,8 +3091,8 @@
 			children = (
 				417ACDB81E69BF31004A15B7 /* CGuiViewWindowsManager.mm */,
 				417ACDB91E69BF31004A15B7 /* CGuiViewWindowsManager.h */,
-				3904274B186892A700B570B1 /* CGuiMain.h */,
 				3904274C186892A700B570B1 /* CGuiMain.mm */,
+				3904274B186892A700B570B1 /* CGuiMain.h */,
 				3904274D186892A700B570B1 /* Controls */,
 				390427B4186892A700B570B1 /* Helpers */,
 			);
@@ -3151,8 +3155,8 @@
 				39042781186892A700B570B1 /* CGuiViewSaveFile.mm */,
 				4138F97A18BDF69600C6C5A9 /* CGuiViewSelectFolder.mm */,
 				4138F97B18BDF69600C6C5A9 /* CGuiViewSelectFolder.h */,
-				39042782186892A700B570B1 /* CGuiViewSelectFile.h */,
 				39042783186892A700B570B1 /* CGuiViewSelectFile.mm */,
+				39042782186892A700B570B1 /* CGuiViewSelectFile.h */,
 				39042784186892A700B570B1 /* CGuiViewSplit4.h */,
 				39042785186892A700B570B1 /* CGuiViewSplit4.mm */,
 				39042786186892A700B570B1 /* CGuiViewVerticalScroll.h */,
@@ -3642,7 +3646,6 @@
 				414531CC1CB2D1A100020916 /* menu_vic20hw.h */,
 				414531CD1CB2D1A100020916 /* menu_video.c */,
 				414531CE1CB2D1A100020916 /* menu_video.h */,
-				414531CF1CB2D1A100020916 /* mididrv.c */,
 				414531D01CB2D1A100020916 /* mousedrv.c */,
 				414531D11CB2D1A100020916 /* mousedrv.h */,
 				414531D21CB2D1A100020916 /* parsid.c */,
@@ -4690,6 +4693,7 @@
 		414538D01CB2E94F00020916 /* root */ = {
 			isa = PBXGroup;
 			children = (
+				41CA791B1F3DC117004309B8 /* mididrv.h */,
 				4109AB5E1EAAEBD1005A25B5 /* vice-crc32.c */,
 				4109AB5F1EAAEBD1005A25B5 /* vice-crc32.h */,
 				4163BAF71E9F980900E3C077 /* vicefeatures.c */,
@@ -5150,6 +5154,7 @@
 		41A9AC8F1CBE3FDE004592CF /* arch */ = {
 			isa = PBXGroup;
 			children = (
+				41CA79191F3DC0E0004309B8 /* mididrv.c */,
 				41A9AC901CBE3FDE004592CF /* archdep.c */,
 				41A9AC911CBE3FDE004592CF /* archdep.h */,
 			);
@@ -5479,6 +5484,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				41A286AC1F08ECC500FE0AF7 /* TODO.txt in Resources */,
 				8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */,
 				4192C6071B05177400D328EF /* Images.xcassets in Resources */,
 				AFBD7716113895850015E685 /* MainMenu.xib in Resources */,
@@ -6286,7 +6292,6 @@
 				414537C61CB2D21400020916 /* fsimage-check.c in Sources */,
 				414537AB1CB2D1CE00020916 /* serial-iec-bus.c in Sources */,
 				414535D91CB2D1A300020916 /* rs232.c in Sources */,
-				414535D51CB2D1A300020916 /* mididrv.c in Sources */,
 				41F2AA6F1E9D0E7900ADE8DF /* c64gluelogic.c in Sources */,
 				414537AF1CB2D1CE00020916 /* serial-realdevice.c in Sources */,
 				410586AE1A30BBD6001B6BCD /* CGuiViewBaseResourceManager.mm in Sources */,
@@ -6302,6 +6307,7 @@
 				414537B11CB2D1CE00020916 /* serial.c in Sources */,
 				414537ED1CB2D27C00020916 /* interface-serial.c in Sources */,
 				41188FDE1E9EBFFB00040048 /* c64-memory-hacks.c in Sources */,
+				41CA791A1F3DC0E0004309B8 /* mididrv.c in Sources */,
 				41925D931B1DD82F00B33B7F /* jdcolor.c in Sources */,
 				41188F851E9EA7FF00040048 /* cardkey.c in Sources */,
 				4145384F1CB2DB9C00020916 /* mc6821core.c in Sources */,

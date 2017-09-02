@@ -71,12 +71,17 @@ CGuiEditBoxText::CGuiEditBoxText(GLfloat posX, GLfloat posY, GLfloat posZ,
 	this->font = textFont;
 	this->fontScale = fontScale;
 
+	cursorGapY = 0;
+
 	float sx = font->GetCharWidth('X', fontScale);
 
 	fontWidth = sx; //sizeX / (float)maxNumChars;
-
+	
 	float sy = font->GetCharHeight('X', fontScale);
 	fontHeight = sy + gapY*2.0f;
+
+	cursorWidth = fontWidth;
+	cursorHeight = fontHeight;
 
 	this->SetSize(sizeX, sy);
 	this->SetPosition(posX, posY, posZ, sizeX, sy);
@@ -141,10 +146,15 @@ void CGuiEditBoxText::SetFont(CSlrFont *font, float fontScale)
 	this->font = font;
 	this->fontScale = fontScale;
 
+	cursorGapY = 0;
+	
 	fontWidth = sizeX / (float)maxNumChars;
 
 	float sy = font->GetCharHeight('X', fontScale);
 	fontHeight = sy;
+	
+	cursorWidth = fontWidth;
+	cursorHeight = fontHeight;
 }
 
 bool CGuiEditBoxText::DoTap(GLfloat x, GLfloat y)
@@ -259,7 +269,7 @@ void CGuiEditBoxText::Render(GLfloat posX, GLfloat posY)
 			if (this->font != NULL)
 			{
 				float w = font->GetTextWidth(textBuffer, fontScale);
-				BlitFilledRectangle(posX + w, posY+gapY, posZ, fontWidth, fontHeight,
+				BlitFilledRectangle(posX + w, posY+gapY+cursorGapY, posZ, cursorWidth, cursorHeight,
 									cursorColorR, cursorColorG, cursorColorB, cursorAlpha);
 			}
 			else
@@ -332,11 +342,10 @@ void CGuiEditBoxText::FocusLost()
 	LOGD("this->editing=%d", this->editing);
 }
 
-#
 
-bool CGuiEditBoxText::KeyPressed(u32 keyCode, bool isShift, bool isAlt, bool isControl)
+bool CGuiEditBoxText::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
-	LOGI("CGuiEditBoxText::KeyPressed: %2.2x '%c'", keyCode, (char)keyCode);
+	LOGI("CGuiEditBoxText::KeyDown: %2.2x '%c'", keyCode, (char)keyCode);
 
 	if (this->editing == false)
 		return false;

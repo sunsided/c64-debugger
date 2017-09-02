@@ -48,7 +48,7 @@ public:
 	
 	virtual uint8 *GetCharRom();
 
-	uint8 machineType;
+	volatile uint8 machineType;
 	virtual uint8 GetC64MachineType();
 
 	virtual int GetC64ScreenSizeX();

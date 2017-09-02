@@ -197,7 +197,18 @@ bool FUN_IsHexNumber(char c)
 	return false;
 }
 
-
+bool FUN_IsNumber(char *str)
+{
+	int l = strlen(str);
+	for (int n = 0; n < l; n++)
+	{
+		if (!isdigit( str[ n ] ))
+		{
+			return false;
+		}
+	}
+	return true;
+}
 
 #if !defined(WIN32) && !defined(ANDROID) && !defined(IPHONE)
 

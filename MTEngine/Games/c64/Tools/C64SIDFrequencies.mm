@@ -121,7 +121,7 @@ const sid_frequency_t *SidValueToNote(uint16 sidValue)
 	{
 		if (sidValue <= sidFrequencies[i].sidValue)
 		{
-			// OK this was tested with keyboard
+			// OK this was tested with my MIDI synth keyboard
 			return &(sidFrequencies[i-1]);
 		}
 	}

@@ -45,10 +45,14 @@ public:
 	std::vector<CGuiButton *> buttonsFavorites;
 	
 	CGuiViewSelectFolderCallback *callback;
+	
+	virtual bool KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl);
+
+	CSlrFont *font;
 
 	UTFString *startDirectoryPath;
 	UTFString *currentDirectoryPath;
-	char displayDirectoryPath[512];
+	char displayDirectoryPath[4096];
 	
 	void UpdateDisplayDirectoryPath();
 
@@ -79,6 +83,8 @@ public:
 	bool ButtonPressed(CGuiButton *button);
 
 	void HttpFileUploadedCallback();
+
+	void SetFont(CSlrFont *font, float fontScale);
 
 private:
 	void DeleteItems();

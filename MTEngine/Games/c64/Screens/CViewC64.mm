@@ -54,6 +54,7 @@ extern "C"{
 #include "C64SharedMemory.h"
 #include "C64SIDFrequencies.h"
 #include "SND_SoundEngine.h"
+#include "CSlrFileFromOS.h"
 
 CViewC64 *viewC64 = NULL;
 
@@ -163,7 +164,16 @@ CViewC64::CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 
 	viewAbout = new CViewAbout(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	guiMain->AddGuiElement(viewAbout);
+	
+	// open/save file dialogs replacement
+	viewSelectFile = new CGuiViewSelectFile(0, 0, posZ, SCREEN_WIDTH-80.0, SCREEN_HEIGHT, false, this);
+	viewSelectFile->SetFont(fontCBMShifted, 2.0f);
+	guiMain->AddGuiElement(viewSelectFile);
 
+	viewSaveFile = new CGuiViewSaveFile(0, 0, posZ, SCREEN_WIDTH-80.0, SCREEN_HEIGHT, this);
+	viewSaveFile->SetFont(fontCBMShifted, 2.0f);
+	guiMain->AddGuiElement(viewSaveFile);
+	
 	//
 	viewVicEditor = new CViewVicEditor(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	guiMain->AddGuiElement(viewVicEditor);
@@ -217,7 +227,7 @@ CViewC64::CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 	C64SetPaletteNum(c64SettingsVicPalette);
 
 	// start
-	ShowMainScreen();
+	ShowMainScreen();	
 }
 
 void CViewC64::ShowMainScreen()
@@ -2196,6 +2206,105 @@ void CViewC64::ShowMouseCursor()
 {
 	VID_ShowMouseCursor();
 }
+
+void CViewC64::ShowDialogOpenFile(CSystemFileDialogCallback *callback, std::list<CSlrString *> *extensions,
+						CSlrString *defaultFolder,
+						CSlrString *windowTitle)
+{
+	if (c64SettingsUseSystemFileDialogs)
+	{
+		SYS_DialogOpenFile(callback, extensions, defaultFolder, windowTitle);
+	}
+	else
+	{
+		fileDialogPreviousView = guiMain->currentView;
+		systemFileDialogCallback = callback;
+		
+		char *cDirectoryPath;
+		if (defaultFolder != NULL)
+		{
+			cDirectoryPath = defaultFolder->GetStdASCII();
+		}
+		else
+		{
+			cDirectoryPath = UTFALLOC("/");
+		}
+		
+		std::list<char *> *cExtensions = new std::list<char *>();
+		for (std::list<CSlrString *>::iterator it = extensions->begin(); it != extensions->end(); it++)
+		{
+			CSlrString *ext = *it;
+			char *cExt = ext->GetStdASCII();
+			cExtensions->push_back(cExt);
+		}
+		
+		viewSelectFile->Init(cDirectoryPath, cExtensions);
+		guiMain->SetView(viewSelectFile);
+	}
+}
+
+void CViewC64::FileSelected(UTFString *filePath)
+{
+	CSlrString *file = new CSlrString(filePath);
+	
+	systemFileDialogCallback->SystemDialogFileOpenSelected(file);
+	guiMain->SetView(fileDialogPreviousView);
+}
+
+void CViewC64::FileSelectionCancelled()
+{
+	systemFileDialogCallback->SystemDialogFileOpenCancelled();
+	guiMain->SetView(fileDialogPreviousView);
+}
+
+void CViewC64::ShowDialogSaveFile(CSystemFileDialogCallback *callback, std::list<CSlrString *> *extensions,
+						CSlrString *defaultFileName, CSlrString *defaultFolder,
+						CSlrString *windowTitle)
+{
+	if (c64SettingsUseSystemFileDialogs)
+	{
+		SYS_DialogSaveFile(callback, extensions, defaultFileName, defaultFolder, windowTitle);
+	}
+	else
+	{
+		fileDialogPreviousView = guiMain->currentView;
+		systemFileDialogCallback = callback;
+	
+		char *cDirectoryPath;
+		if (defaultFolder != NULL)
+		{
+			cDirectoryPath = defaultFolder->GetStdASCII();
+		}
+		else
+		{
+			cDirectoryPath = UTFALLOC("/");
+		}
+		
+		CSlrString *firstExtension = extensions->front();
+		char *cSaveExtension = firstExtension->GetStdASCII();
+		
+		char *cDefaultFileName = defaultFileName->GetStdASCII();
+		
+		viewSaveFile->Init(cDefaultFileName, cSaveExtension, cDirectoryPath);
+		guiMain->SetView(viewSaveFile);
+	}
+}
+
+void CViewC64::SaveFileSelected(UTFString *fullFilePath, char *fileName)
+{
+	CSlrString *file = new CSlrString(fullFilePath);
+	
+	systemFileDialogCallback->SystemDialogFileSaveSelected(file);
+	guiMain->SetView(fileDialogPreviousView);
+
+}
+
+void CViewC64::SaveFileSelectionCancelled()
+{
+	systemFileDialogCallback->SystemDialogFileSaveCancelled();
+	guiMain->SetView(fileDialogPreviousView);
+}
+
 
 C64ScreenLayout::C64ScreenLayout()
 {

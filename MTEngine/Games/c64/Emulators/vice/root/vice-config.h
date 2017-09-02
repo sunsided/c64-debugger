@@ -32,7 +32,7 @@
 /* #undef DATADIRNAME */
 
 /* Enable debugging code */
-#define DEBUG /**/
+/* #define DEBUG */
 
 /* Use debugging of the zfile */
 /* #undef DEBUG_ZFILE */
@@ -356,7 +356,7 @@
 /* #undef HAVE_MIDASDLL_H */
 
 /* Enable MIDI emulation. */
-/* #undef HAVE_MIDI */
+#define HAVE_MIDI
 
 /* Define to 1 if you have the `mkstemp' function. */
 #define HAVE_MKSTEMP 1

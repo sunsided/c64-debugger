@@ -52,8 +52,11 @@ CGuiButton::CGuiButton(CSlrImage *image, GLfloat posX, GLfloat posY, GLfloat pos
 
 	this->gapX = DEFAULT_BUTTON_GAPX;
 	this->gapY = DEFAULT_BUTTON_GAPY;
+	
 
 	this->alignment = alignment;
+	this->centerText = true;
+	this->textOffsetY = 0.0f;
 	this->beingClicked = false;
 	this->clickConsumed = false;
 	this->buttonZoom = DEFAULT_BUTTON_ZOOM;
@@ -104,6 +107,8 @@ CGuiButton::CGuiButton(char *text, GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 	this->gapY = DEFAULT_BUTTON_GAPY;
 
 	this->alignment = alignment;
+	this->centerText = true;
+	this->textOffsetY = 0.0f;
 	this->beingClicked = false;
 	this->clickConsumed = false;
 	this->buttonZoom = DEFAULT_BUTTON_ZOOM;
@@ -161,6 +166,8 @@ CGuiButton::CGuiButton(CSlrImage *bkgImage, CSlrImage *bkgImageDisabled,
 	this->gapY = DEFAULT_BUTTON_GAPY;
 	
 	this->alignment = BUTTON_ALIGNED_CENTER;
+	this->centerText = true;
+	this->textOffsetY = 0.0f;
 	this->beingClicked = false;
 	this->clickConsumed = false;
 	this->buttonZoom = 1.0f;
@@ -272,8 +279,16 @@ void CGuiButton::RecalcTextPosition()
 			float width, height;
 			this->font->GetTextSize(this->text2, this->fontScale, &width, &height);
 			
-			textDrawPosX = (sizeX / 2.0f) - (width / 2.0f);
-			textDrawPosY = (sizeY / 2.0f) - (height / 2.0f);			
+			if (centerText)
+			{
+				textDrawPosX = (sizeX / 2.0f) - (width / 2.0f);
+			}
+			else
+			{
+				textDrawPosX = 0.0f;
+			}
+			
+			textDrawPosY = (sizeY / 2.0f) - (height / 2.0f) + textOffsetY;
 		}
 		else
 		{

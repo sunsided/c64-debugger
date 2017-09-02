@@ -794,11 +794,11 @@ void CViewMonitorConsole::CommandMemorySaveDump()
 		
 		if (memoryDumpAsPRG == false)
 		{
-			SYS_DialogSaveFile(this, &memoryExtensions, defaultFileName, c64SettingsDefaultMemoryDumpFolder, windowTitle);
+			viewC64->ShowDialogSaveFile(this, &memoryExtensions, defaultFileName, c64SettingsDefaultMemoryDumpFolder, windowTitle);
 		}
 		else
 		{
-			SYS_DialogSaveFile(this, &prgExtensions, defaultFileName, c64SettingsDefaultMemoryDumpFolder, windowTitle);
+			viewC64->ShowDialogSaveFile(this, &prgExtensions, defaultFileName, c64SettingsDefaultMemoryDumpFolder, windowTitle);
 		}
 		
 		delete windowTitle;
@@ -968,11 +968,11 @@ void CViewMonitorConsole::CommandMemoryLoadDump()
 		
 		if (memoryDumpAsPRG == false)
 		{
-			SYS_DialogOpenFile(this, NULL, c64SettingsDefaultMemoryDumpFolder, windowTitle);
+			viewC64->ShowDialogOpenFile(this, NULL, c64SettingsDefaultMemoryDumpFolder, windowTitle);
 		}
 		else
 		{
-			SYS_DialogOpenFile(this, &prgExtensions, c64SettingsDefaultMemoryDumpFolder, windowTitle);
+			viewC64->ShowDialogOpenFile(this, &prgExtensions, c64SettingsDefaultMemoryDumpFolder, windowTitle);
 		}
 		
 		delete windowTitle;
@@ -1215,7 +1215,7 @@ void CViewMonitorConsole::CommandDoDisassemble()
 //		
 //		CSlrString *windowTitle = new CSlrString("Disassemble C64 memory");
 //		
-//		SYS_DialogSaveFile(this, &disassembleExtensions, defaultFileName, c64SettingsDefaultMemoryDumpFolder, windowTitle);
+//		viewC64->ShowDialogSaveFile(this, &disassembleExtensions, defaultFileName, c64SettingsDefaultMemoryDumpFolder, windowTitle);
 //		
 //		delete windowTitle;
 //		delete defaultFileName;

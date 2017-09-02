@@ -391,6 +391,11 @@ u8 C64SpriteMulti::GetColorAtPixel(int x, int y)
 		spx /= 2;
 	}
 	
+	if (this->isStretchedVertically)
+	{
+		spy /= 2;
+	}
+	
 	int rasterLine = y + 0x32;
 	int rasterCycle = (x + 0x88)/8;
 	

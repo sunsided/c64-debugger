@@ -140,6 +140,8 @@ float c64SettingsPaintGridShowValuesZoomLevel = 26.0;
 
 bool c64SettingsVicEditorForceReplaceColor = false;
 
+bool c64SettingsUseSystemFileDialogs = true;
+
 int c64SettingsDoubleClickMS = 600;
 
 
@@ -242,9 +244,13 @@ void C64DebuggerStoreSettings()
 	storeSettingBool(byteBuffer, "IsInVicEditor", c64SettingsIsInVicEditor);
 	
 	storeSettingBool(byteBuffer, "DisassembleExecuteAware", c64SettingsRenderDisassembleExecuteAware);
-
+	
 	storeSettingBool(byteBuffer, "WindowAlwaysOnTop", c64SettingsWindowAlwaysOnTop);
-
+	
+#if !defined(WIN32)
+	storeSettingBool(byteBuffer, "UseSystemDialogs", c64SettingsUseSystemFileDialogs);
+#endif
+	
 	storeSettingU8(byteBuffer, "C64Model", c64SettingsC64Model);
 
 	storeSettingBlock(byteBuffer, C64DEBUGGER_BLOCK_POSTLAUNCH);
@@ -548,6 +554,15 @@ void C64DebuggerSetSetting(char *name, void *value)
 		
 		VID_SetWindowAlwaysOnTop(c64SettingsWindowAlwaysOnTop);
 	}
+	
+#if !defined(WIN32)
+	else if (!strcmp(name, "UseSystemDialogs"))
+	{
+		bool v = *((bool*)value);
+		c64SettingsUseSystemFileDialogs = v;
+	}
+#endif
+	
 	else if (!strcmp(name, "VicStateRecording"))
 	{
 		int v = *((int*)value);

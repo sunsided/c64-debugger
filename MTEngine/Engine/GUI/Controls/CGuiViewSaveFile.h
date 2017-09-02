@@ -41,6 +41,8 @@ public:
 	void SetFont(CSlrFont *font);
 	void Render();
 
+	virtual bool KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl);
+
 	CGuiButton *btnCancel;
 	CGuiButton *btnSave;
 
@@ -69,6 +71,10 @@ public:
 
 	virtual void FolderSelected(UTFString *fullFolderPath, UTFString *folderPath);
 	virtual void FolderSelectionCancelled();
+	
+	void SetFont(CSlrFont *font, float fontScale);
+	
+	float offsetX, offsetY;
 	
 private:
 	UTFString *defaultFileName;

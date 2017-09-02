@@ -11,8 +11,9 @@
 #include "CGuiMain.h"
 #include "GuiConsts.h"
 #include "CGuiFolderFavorite.h"
+#include "SYS_KeyCodes.h"
 
-#define TOP_LABEL_FONT_SIZE	12
+#define TOP_LABEL_FONT_SIZE	1.5
 #define TOP_LABEL_SIZEY		(TOP_LABEL_FONT_SIZE)+5
 
 CGuiViewSelectFile::CGuiViewSelectFile(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, bool cancelButton, CGuiViewSelectFileCallback *callback)
@@ -24,8 +25,10 @@ CGuiViewSelectFile::CGuiViewSelectFile(GLfloat posX, GLfloat posY, GLfloat posZ,
 
 	this->callback = callback;
 
+	this->font = guiMain->fntConsole;
+	
 	this->currentDirectoryPath = NULL;
-	this->startDirectoryPath = NULL;
+	this->startDirectoryPath = UTFALLOC("/");
 	
 	CSlrFont *font = guiMain->fntConsole;
 	float fontScale = 17.0f;
@@ -48,14 +51,22 @@ CGuiViewSelectFile::CGuiViewSelectFile(GLfloat posX, GLfloat posY, GLfloat posZ,
 
 	if (cancelButton)
 	{
-		btnDone = new CGuiButton("CANCEL", posEndX - (guiButtonSizeX + guiButtonGapX),
+		btnCancel = new CGuiButton("CANCEL", posEndX - (guiButtonSizeX + guiButtonGapX),
 								 posEndY - (guiButtonSizeY + guiButtonGapY), posZ + 0.04,
 								 guiButtonSizeX, guiButtonSizeY,
 								 BUTTON_ALIGNED_DOWN, this);
-		this->AddGuiElement(btnDone);
+		this->AddGuiElement(btnCancel);
 	}
 
 	httpFileUploadedCallbacks.push_back(this);
+}
+
+void CGuiViewSelectFile::SetFont(CSlrFont *font, float fontScale)
+{
+	this->font = font;
+	this->listBoxFiles->SetFont(font, fontScale);
+	
+	this->listBoxFiles->SetGaps(1.0f, -2.0f);
 }
 
 CGuiViewSelectFile::~CGuiViewSelectFile()
@@ -98,6 +109,17 @@ void CGuiViewSelectFile::InitWithStartPath(UTFString *directoryPath, std::list<U
 
 	this->LockRenderMutex();
 	this->extensions = extensions;
+	
+	if (this->startDirectoryPath != NULL)
+	{
+		UTFRELEASE(this->startDirectoryPath);
+	}
+	
+	if (this->currentDirectoryPath != NULL)
+	{
+		UTFRELEASE(this->currentDirectoryPath);
+	}
+	
 	this->startDirectoryPath = UTFALLOC(directoryPath);		//strdup
 	this->currentDirectoryPath = UTFALLOC(directoryPath);	//strdup
 
@@ -278,7 +300,7 @@ void CGuiViewSelectFile::ListElementSelected(CGuiList *listBox)
 #if defined(WIN32) || defined(LINUX) || defined(ANDROID) || defined(MACOS)
 			char buf[4096];
 			sprintf(buf, "%s", this->currentDirectoryPath);
-			for (int i = strlen(buf)-2; i > 0; i--)
+			for (int i = strlen(buf)-2; i >= 0; i--)
 			{
 				if (buf[i] == '\\' || buf[i] == '/')
 				{
@@ -410,7 +432,7 @@ void CGuiViewSelectFile::SetPath(char *setPath)
 
 bool CGuiViewSelectFile::ButtonPressed(CGuiButton *button)
 {
-	if (button == btnDone)
+	if (button == btnCancel)
 	{
 		this->callback->FileSelectionCancelled();
 		GUI_SetPressConsumed(true);
@@ -442,6 +464,17 @@ void CGuiViewSelectFile::SetCallback(CGuiViewSelectFileCallback *callback)
 	this->callback = callback;
 }
 
+bool CGuiViewSelectFile::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
+{
+	if (keyCode == MTKEY_ESC)
+	{
+		return this->ButtonPressed(btnCancel);
+	}
+	
+	return CGuiView::KeyDown(keyCode, isShift, isAlt, isControl);
+}
+
+
 void CGuiViewSelectFile::Render()
 {
 	this->Render(this->posX, this->posY, this->posZ, this->sizeX, this->sizeY);
@@ -451,14 +484,24 @@ void CGuiViewSelectFile::Render(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloa
 {
 	this->LockRenderMutex();
 
-	BlitFilledRectangle(posX, posY, posZ, sizeX, TOP_LABEL_SIZEY, 0.3f, 0.3f, 0.8f, 1.0f);
+//	float tr = 0.64; //163/255;
+//	float tg = 0.59; //151/255;
+//	float tb = 1.0; //255/255;
+	BlitFilledRectangle(0, 0, -1, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0.3, 1);
+
+	BlitFilledRectangle(posX, posY, posZ, SCREEN_WIDTH, TOP_LABEL_SIZEY, 0.3f, 0.3f, 0.8f, 1.0f);
 	//guiMain->imgBackground->Render(posX, posY, posZ, sizeX, sizeY);
 	
 	CGuiView::Render();
 	
-	guiMain->fntConsole->BlitText(this->displayDirectoryPath, posX, posY, posZ, TOP_LABEL_FONT_SIZE);
+	font->BlitText(this->displayDirectoryPath, posX, posY, posZ, TOP_LABEL_FONT_SIZE);
 
 	this->UnlockRenderMutex();
+}
+
+bool CGuiViewSelectFile::DoScrollWheel(float deltaX, float deltaY)
+{
+	return this->listBoxFiles->DoScrollWheel(deltaX, deltaY);
 }
 
 void CGuiViewSelectFile::LockRenderMutex()

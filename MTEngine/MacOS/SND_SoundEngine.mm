@@ -299,7 +299,7 @@ std::list<CSlrString *> *CSoundEngine::EnumerateAvailableOutputDevices()
 	return audioOutDevices;
 }
 
-void CSoundEngine::SetOutputAudioDevice(CSlrString *deviceName)
+bool CSoundEngine::SetOutputAudioDevice(CSlrString *deviceName)
 {
 	LOGD("CSoundEngine::SetOutputAudioDevice");
 	char *strDeviceName = deviceName->GetStdASCII();
@@ -344,8 +344,33 @@ void CSoundEngine::SetOutputAudioDevice(CSlrString *deviceName)
 	
 	if (!deviceFound)
 	{
-		LOGError("selected device '%s' not found, falling back to default", strDeviceName);
-		deviceOutIndex = Pa_GetDefaultOutputDevice();
+		if (FUN_IsNumber(strDeviceName))
+		{
+			int deviceId = atoi(strDeviceName);
+			LOGD("strDeviceName is number, checking deviceId=%d", deviceId);
+			
+			if (deviceId >= 0 && deviceId < numDevices)
+			{
+				deviceInfo = Pa_GetDeviceInfo( deviceId );
+				LOGD("... device #%d: '%s'", deviceId, deviceInfo->name);
+				outputParameters.device = deviceId;
+				outputParameters.suggestedLatency = deviceInfo->defaultLowOutputLatency;
+				
+				PaError err;
+				err = Pa_IsFormatSupported( NULL, &outputParameters, SOUND_SAMPLE_RATE );
+				if( err == paFormatIsSupported )
+				{
+					deviceFound = true;
+					deviceOutIndex = deviceId;
+				}
+			}
+		}
+		
+		if (!deviceFound)
+		{
+			LOGError("selected device '%s' not found, falling back to default", strDeviceName);
+			deviceOutIndex = Pa_GetDefaultOutputDevice();
+		}
 	}
 	
 	StartAudioUnit(playing, recording, recordFreq);
@@ -353,6 +378,8 @@ void CSoundEngine::SetOutputAudioDevice(CSlrString *deviceName)
 	delete [] strDeviceName;
 	
 	LOGD("CSoundEngine::SetOutputAudioDevice: finished");
+	
+	return deviceFound;
 }
 
 void CSoundEngine::StartAudioUnit(bool isPlayback, bool isRecording, int recordingFrequency)

@@ -38,7 +38,7 @@ public:
 	~CSoundEngine();
 
 	std::list<CSlrString *> *EnumerateAvailableOutputDevices();
-	void SetOutputAudioDevice(CSlrString *deviceName);
+	bool SetOutputAudioDevice(CSlrString *deviceName);
 
 	char deviceOutName[512];
 	int deviceOutIndex;

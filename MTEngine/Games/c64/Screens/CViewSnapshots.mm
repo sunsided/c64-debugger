@@ -277,8 +277,6 @@ void CViewSnapshots::QuickRestoreFullSnapshot(int snapshotId)
 
 void CViewSnapshots::MenuCallbackItemEntered(CGuiViewMenuItem *menuItem)
 {
-	//		void SYS_DialogSaveFile(CSystemFileDialogCallback *callback, std::list<CSlrString *> *extensions, CSlrString *defaultFileName, CSlrString *windowTitle);
-
 	if (menuItem == menuItemSaveSnapshot)
 	{
 		OpenDialogSaveSnapshot();
@@ -318,7 +316,7 @@ void CViewSnapshots::OpenDialogSaveSnapshot()
 	CSlrString *defaultFileName = new CSlrString("snapshot");
 	
 	CSlrString *windowTitle = new CSlrString("Save snapshot");
-	SYS_DialogSaveFile(this, &snapshotExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
+	viewC64->ShowDialogSaveFile(this, &snapshotExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
 	delete windowTitle;
 	delete defaultFileName;
 }
@@ -328,7 +326,7 @@ void CViewSnapshots::OpenDialogLoadSnapshot()
 	openDialogFunction = VIEWC64SNAPSHOTS_LOAD_SNAPSHOT;
 	
 	CSlrString *windowTitle = new CSlrString("Load snapshot");
-	SYS_DialogOpenFile(this, &snapshotExtensions, c64SettingsDefaultSnapshotsFolder, windowTitle);
+	viewC64->ShowDialogOpenFile(this, &snapshotExtensions, c64SettingsDefaultSnapshotsFolder, windowTitle);
 	delete windowTitle;	
 }
 

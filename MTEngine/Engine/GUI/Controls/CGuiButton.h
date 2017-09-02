@@ -154,6 +154,9 @@ class CGuiButton : public CGuiElement
 	bool DoExpandZoom();
 
 	bool imageFlippedX;
+	
+	bool centerText;
+	float textOffsetY;
 };
 
 class CGuiButtonCallback

@@ -417,11 +417,18 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 	menuItemRenderScreenNearest->SetSelectedOption(c64SettingsRenderScreenNearest, false);
 	menuItemSubMenuUI->AddMenuItem(menuItemRenderScreenNearest);
 	
+#if !defined(WIN32)
+	menuItemUseSystemDialogs = new CViewC64MenuItemOption(fontHeight, new CSlrString("Use system dialogs: "),
+																 NULL, tr, tg, tb, optionsYesNo, font, fontScale);
+	menuItemUseSystemDialogs->SetSelectedOption(c64SettingsUseSystemFileDialogs, false);
+	menuItemSubMenuUI->AddMenuItem(menuItemUseSystemDialogs);
+#endif
+	
 	menuItemWindowAlwaysOnTop = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("Window always on top: "),
 																 NULL, tr, tg, tb, optionsYesNo, font, fontScale);
 	menuItemWindowAlwaysOnTop->SetSelectedOption(c64SettingsWindowAlwaysOnTop, false);
 	menuItemSubMenuUI->AddMenuItem(menuItemWindowAlwaysOnTop);
-
+	
 	//
 	menuItemPaintGridShowZoomLevel = new CViewC64MenuItemFloat(fontHeight*2, new CSlrString("Show paint grid zoom level: "),
 															   NULL, tr, tg, tb,
@@ -854,6 +861,11 @@ void CViewSettingsMenu::MenuCallbackItemChanged(CGuiViewMenuItem *menuItem)
 	{
 		bool v = menuItemWindowAlwaysOnTop->selectedOption == 0 ? false : true;
 		C64DebuggerSetSetting("WindowAlwaysOnTop", &(v));
+	}
+	else if (menuItem == menuItemUseSystemDialogs)
+	{
+		bool v = menuItemUseSystemDialogs->selectedOption == 0 ? false : true;
+		C64DebuggerSetSetting("UseSystemDialogs", &(v));
 	}
 	else if (menuItem == menuItemVicStateRecordingMode)
 	{
@@ -1349,7 +1361,7 @@ void CViewSettingsMenu::OpenDialogDumpC64Memory()
 	CSlrString *defaultFileName = new CSlrString("c64memory");
 	
 	CSlrString *windowTitle = new CSlrString("Dump C64 memory");
-	SYS_DialogSaveFile(this, &memoryExtensions, defaultFileName, c64SettingsDefaultMemoryDumpFolder, windowTitle);
+	viewC64->ShowDialogSaveFile(this, &memoryExtensions, defaultFileName, c64SettingsDefaultMemoryDumpFolder, windowTitle);
 	delete windowTitle;
 	delete defaultFileName;
 }
@@ -1361,7 +1373,7 @@ void CViewSettingsMenu::OpenDialogDumpC64MemoryMarkers()
 	CSlrString *defaultFileName = new CSlrString("c64markers");
 	
 	CSlrString *windowTitle = new CSlrString("Dump C64 memory markers");
-	SYS_DialogSaveFile(this, &csvExtensions, defaultFileName, c64SettingsDefaultMemoryDumpFolder, windowTitle);
+	viewC64->ShowDialogSaveFile(this, &csvExtensions, defaultFileName, c64SettingsDefaultMemoryDumpFolder, windowTitle);
 	delete windowTitle;
 	delete defaultFileName;
 }
@@ -1373,7 +1385,7 @@ void CViewSettingsMenu::OpenDialogDumpDrive1541Memory()
 	CSlrString *defaultFileName = new CSlrString("1541memory");
 	
 	CSlrString *windowTitle = new CSlrString("Dump Disk 1541 memory");
-	SYS_DialogSaveFile(this, &memoryExtensions, defaultFileName, c64SettingsDefaultMemoryDumpFolder, windowTitle);
+	viewC64->ShowDialogSaveFile(this, &memoryExtensions, defaultFileName, c64SettingsDefaultMemoryDumpFolder, windowTitle);
 	delete windowTitle;
 	delete defaultFileName;
 }
@@ -1385,7 +1397,7 @@ void CViewSettingsMenu::OpenDialogDumpDrive1541MemoryMarkers()
 	CSlrString *defaultFileName = new CSlrString("1541markers");
 	
 	CSlrString *windowTitle = new CSlrString("Dump Disk 1541 memory markers");
-	SYS_DialogSaveFile(this, &csvExtensions, defaultFileName, c64SettingsDefaultMemoryDumpFolder, windowTitle);
+	viewC64->ShowDialogSaveFile(this, &csvExtensions, defaultFileName, c64SettingsDefaultMemoryDumpFolder, windowTitle);
 	delete windowTitle;
 	delete defaultFileName;
 }
@@ -1398,7 +1410,7 @@ void CViewSettingsMenu::OpenDialogMapC64MemoryToFile()
 	CSlrString *defaultFileName = new CSlrString("c64memory");
 	
 	CSlrString *windowTitle = new CSlrString("Map C64 memory to file");
-	SYS_DialogSaveFile(this, &memoryExtensions, defaultFileName, c64SettingsDefaultMemoryDumpFolder, windowTitle);
+	viewC64->ShowDialogSaveFile(this, &memoryExtensions, defaultFileName, c64SettingsDefaultMemoryDumpFolder, windowTitle);
 	delete windowTitle;
 	delete defaultFileName;
 }

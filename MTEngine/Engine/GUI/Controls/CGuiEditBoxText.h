@@ -77,6 +77,8 @@ public:
 	bool forceCapitals;
 
 	GLfloat gapX, gapY, gapX2, gapY2;
+	float cursorGapY;
+	float cursorWidth, cursorHeight;
 
 	volatile bool readOnly;
 	volatile bool editing;
@@ -94,7 +96,7 @@ public:
 	virtual void FocusReceived();
 	virtual void FocusLost();
 
-	virtual bool KeyPressed(u32 keyCode, bool isShift, bool isAlt, bool isControl);	// repeats
+	virtual bool KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl);	// repeats
 
 	virtual void SetText(char *setText);
 	virtual char *GetText();

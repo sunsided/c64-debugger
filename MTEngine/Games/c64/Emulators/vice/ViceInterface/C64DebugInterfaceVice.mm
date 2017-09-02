@@ -1704,11 +1704,13 @@ void C64DebugInterfaceVice::RenderStateSID(uint16 sidBase, float posX, float pos
 		
 		uint16 freq = (reg_freq_hi << 8) | reg_freq_lo;
 		
-		const sid_frequency_t *sidFrequencyData = SidValueToNote(freq);
 		
 		
 		sprintf(buf, "Voice #%d", (voice+1));
 		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
+
+		//		sprintf(buf, " Frequency  : %04x", freq);
+		const sid_frequency_t *sidFrequencyData = SidValueToNote(freq);
 		sprintf(buf, " Frequency  : %04x %s", freq, sidFrequencyData->name);
 		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 		
@@ -1727,7 +1729,7 @@ void C64DebugInterfaceVice::RenderStateSID(uint16 sidBase, float posX, float pos
 		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 		if (voice == 2)
 		{
-			sprintf(buf, " Filter     : %s  Mute     : %s", reg_res_filter & (1 << voice) ? "On" : "Off", reg_volume & 0x80 ? "Yes" : "No");
+			sprintf(buf, " Filter     : %s  Mute     : %s", reg_res_filter & (1 << voice) ? "On " : "Off", reg_volume & 0x80 ? "Yes" : "No");
 		}
 		else
 		{
@@ -1916,6 +1918,8 @@ static void load_snapshot_trap(WORD addr, void *v)
 			c64d_set_debug_mode(C64_DEBUG_RUNNING);
 		}
 	}
+	
+	c64d_update_c64_model();
 	
 	debugInterfaceVice->SetSidType(c64SettingsSIDEngineModel);
 	debugInterfaceVice->SetSidSamplingMethod(c64SettingsRESIDSamplingMethod);

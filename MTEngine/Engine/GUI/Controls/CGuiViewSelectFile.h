@@ -35,6 +35,8 @@ public:
 	pthread_mutex_t renderMutex;
 	void LockRenderMutex();
 	void UnlockRenderMutex();
+	
+	CSlrFont *font;
 
 	void Init(std::list<UTFString *> *extensions);
 	void Init(UTFString *directoryPath, std::list<UTFString *> *extensions);
@@ -47,10 +49,14 @@ public:
 
 	CGuiViewSelectFileCallback *callback;
 
+	virtual bool KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl);
+
+	virtual bool DoScrollWheel(float deltaX, float deltaY);
+
 	std::list<UTFString *> *extensions;
 	UTFString *startDirectoryPath;
 	UTFString *currentDirectoryPath;
-	char displayDirectoryPath[512];
+	char displayDirectoryPath[4096];
 
 	void UpdateDisplayDirectoryPath();
 
@@ -75,11 +81,13 @@ public:
 	void SetPath(char *setPath);
 	void Refresh();
 
-	CGuiButton *btnDone;
+	CGuiButton *btnCancel;
 //	bool ButtonClicked(CGuiButton *button);
 	bool ButtonPressed(CGuiButton *button);
 
 	void HttpFileUploadedCallback();
+
+	void SetFont(CSlrFont *font, float fontScale);
 
 private:
 	void DeleteItems();

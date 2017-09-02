@@ -66,6 +66,8 @@ public:
 	virtual bool InitZoom();
 	virtual bool DoZoomBy(GLfloat x, GLfloat y, GLfloat zoomValue, GLfloat difference);
 	virtual void MoveView(GLfloat diffX, GLfloat diffY);
+	virtual bool DoScrollWheel(float deltaX, float deltaY);
+
 	virtual void DoLogic();
 	
 	virtual bool DoTap(GLfloat x, GLfloat y);
@@ -111,6 +113,8 @@ public:
 	pthread_mutex_t renderMutex;
 	void LockRenderMutex();
 	void UnlockRenderMutex();
+	
+	virtual void SetFont(CSlrFont *font, float fontSize);
 	
 };
 

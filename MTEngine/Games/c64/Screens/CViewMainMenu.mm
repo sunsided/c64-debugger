@@ -238,8 +238,6 @@ CViewMainMenu::~CViewMainMenu()
 
 void CViewMainMenu::MenuCallbackItemEntered(CGuiViewMenuItem *menuItem)
 {
-	//		void SYS_DialogSaveFile(CSystemFileDialogCallback *callback, std::list<CSlrString *> *extensions, CSlrString *defaultFileName, CSlrString *windowTitle);
-
 	if (menuItem == menuItemInsertD64)
 	{
 		OpenDialogInsertD64();
@@ -295,7 +293,7 @@ void CViewMainMenu::OpenDialogInsertD64()
 
 	CSlrString *windowTitle = new CSlrString("Open D64 disk image");
 	windowTitle->DebugPrint("windowTitle=");
-	SYS_DialogOpenFile(this, &diskExtensions, c64SettingsDefaultD64Folder, windowTitle);
+	viewC64->ShowDialogOpenFile(this, &diskExtensions, c64SettingsDefaultD64Folder, windowTitle);
 	delete windowTitle;
 }
 
@@ -305,7 +303,7 @@ void CViewMainMenu::OpenDialogInsertCartridge()
 	openDialogFunction = VIEWC64SETTINGS_OPEN_CRT;
 	
 	CSlrString *windowTitle = new CSlrString("Open CRT cartridge image");
-	SYS_DialogOpenFile(this, &crtExtensions, c64SettingsDefaultCartridgeFolder, windowTitle);
+	viewC64->ShowDialogOpenFile(this, &crtExtensions, c64SettingsDefaultCartridgeFolder, windowTitle);
 	delete windowTitle;
 }
 
@@ -316,7 +314,7 @@ void CViewMainMenu::OpenDialogLoadPRG()
 	openDialogFunction = VIEWC64SETTINGS_OPEN_PRG;
 	
 	CSlrString *windowTitle = new CSlrString("Open PRG file");
-	SYS_DialogOpenFile(this, &prgExtensions, c64SettingsDefaultPRGFolder, windowTitle);
+	viewC64->ShowDialogOpenFile(this, &prgExtensions, c64SettingsDefaultPRGFolder, windowTitle);
 	delete windowTitle;	
 }
 
@@ -527,7 +525,10 @@ bool CViewMainMenu::LoadPRG(CByteBuffer *byteBuffer, bool autoStart, bool showAd
 	this->loadPrgAutoStart = autoStart;
 	this->loadPrgShowAddressInfo = showAddressInfo;
 	
-	SYS_StartThread(this);
+	if (!this->isRunning)
+	{
+		SYS_StartThread(this);
+	}
 	return true;
 }
 

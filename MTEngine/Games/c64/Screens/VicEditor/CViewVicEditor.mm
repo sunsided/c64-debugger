@@ -1939,7 +1939,7 @@ void CViewVicEditor::OpenDialogImportFile()
 	LOGM("OpenDialogImportFile");
 	CSlrString *windowTitle = new CSlrString("Open image file to import");
 	windowTitle->DebugPrint("windowTitle=");
-	SYS_DialogOpenFile(this, &importFileExtensions, NULL, windowTitle);
+	viewC64->ShowDialogOpenFile(this, &importFileExtensions, NULL, windowTitle);
 	delete windowTitle;
 }
 
@@ -2029,7 +2029,7 @@ void CViewVicEditor::OpenDialogExportFile()
 		exportFileDialogMode = VICEDITOR_EXPORT_HYPER;
 
 		CSlrString *windowTitle = new CSlrString("Export HyperScreen Picture");
-		SYS_DialogSaveFile(this, &exportHyperBitmapFileExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
+		viewC64->ShowDialogSaveFile(this, &exportHyperBitmapFileExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
 		delete windowTitle;
 		delete defaultFileName;
 	}
@@ -2042,7 +2042,7 @@ void CViewVicEditor::OpenDialogExportFile()
 		exportFileDialogMode = VICEDITOR_EXPORT_PNG;
 		
 		CSlrString *windowTitle = new CSlrString("Export screen to PNG");
-		SYS_DialogSaveFile(this, &exportPNGFileExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
+		viewC64->ShowDialogSaveFile(this, &exportPNGFileExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
 		delete windowTitle;
 		delete defaultFileName;
 	}
@@ -2055,7 +2055,7 @@ void CViewVicEditor::OpenDialogExportFile()
 		exportFileDialogMode = VICEDITOR_EXPORT_KOALA;
 
 		CSlrString *windowTitle = new CSlrString("Export Multi-Color KOALA Picture");
-		SYS_DialogSaveFile(this, &exportMultiBitmapFileExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
+		viewC64->ShowDialogSaveFile(this, &exportMultiBitmapFileExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
 		delete windowTitle;
 		delete defaultFileName;
 	}
@@ -2068,7 +2068,7 @@ void CViewVicEditor::OpenDialogExportFile()
 		exportFileDialogMode = VICEDITOR_EXPORT_ART_STUDIO;
 
 		CSlrString *windowTitle = new CSlrString("Export Hires ART STUDIO Picture");
-		SYS_DialogSaveFile(this, &exportHiresBitmapFileExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
+		viewC64->ShowDialogSaveFile(this, &exportHiresBitmapFileExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
 		delete windowTitle;
 		delete defaultFileName;
 	}
@@ -2081,7 +2081,7 @@ void CViewVicEditor::OpenDialogExportFile()
 		exportFileDialogMode = VICEDITOR_EXPORT_RAW_TEXT;
 
 		CSlrString *windowTitle = new CSlrString("Export RAW TEXT Picture");
-		SYS_DialogSaveFile(this, &exportHiresTextFileExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
+		viewC64->ShowDialogSaveFile(this, &exportHiresTextFileExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
 		delete windowTitle;
 		delete defaultFileName;
 	}
@@ -2098,7 +2098,7 @@ void CViewVicEditor::OpenDialogSaveVCE()
 	exportFileDialogMode = VICEDITOR_EXPORT_VCE;
 		
 	CSlrString *windowTitle = new CSlrString("Export VicEditor Picture");
-	SYS_DialogSaveFile(this, &exportVCEFileExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
+	viewC64->ShowDialogSaveFile(this, &exportVCEFileExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
 	delete windowTitle;
 	delete defaultFileName;
 }

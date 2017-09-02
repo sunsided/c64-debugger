@@ -11,8 +11,9 @@
 #include "CGuiMain.h"
 #include "GuiConsts.h"
 #include "CGuiFolderFavorite.h"
+#include "SYS_KeyCodes.h"
 
-#define TOP_LABEL_FONT_SIZE	12
+#define TOP_LABEL_FONT_SIZE	1.5
 #define TOP_LABEL_SIZEY		(TOP_LABEL_FONT_SIZE)+5
 
 CGuiViewSelectFolder::CGuiViewSelectFolder(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, bool cancelButton, CGuiViewSelectFolderCallback *callback)
@@ -23,6 +24,8 @@ CGuiViewSelectFolder::CGuiViewSelectFolder(GLfloat posX, GLfloat posY, GLfloat p
 	this->files = NULL;
 
 	this->callback = callback;
+	
+	this->font = guiMain->fntConsole;
 
 	this->currentDirectoryPath = NULL;
 	this->startDirectoryPath = NULL;
@@ -30,22 +33,25 @@ CGuiViewSelectFolder::CGuiViewSelectFolder(GLfloat posX, GLfloat posY, GLfloat p
 //	this->listBoxFiles = new CGuiList(posX + 10, posY + 13, posZ+0.01, this->sizeX-10, this->sizeY-13, 11.0,
 	this->listBoxFiles = new CGuiList(posX, posY + TOP_LABEL_SIZEY, posZ+0.01, this->sizeX, this->sizeY - TOP_LABEL_SIZEY*2, 17.0,
 									  NULL, 0, false,
-									  guiMain->fntConsole,
+									  font,
 									  guiMain->theme->imgBackground, 1.0f,
 									  this);
 	this->AddGuiElement(this->listBoxFiles);
 
+	const int buttonSizeX = 60;
+	const int buttonSizeY = 25;
+	
 	btnDone = new CGuiButton("SELECT", posEndX - (guiButtonSizeX + guiButtonGapX),
-							   posEndY - (guiButtonSizeY + guiButtonGapY), posZ + 0.04,
-							   guiButtonSizeX, guiButtonSizeY,
+							   posEndY - (buttonSizeY + guiButtonGapY), posZ + 0.04,
+							   buttonSizeX, buttonSizeY,
 							   BUTTON_ALIGNED_DOWN, this);
 	this->AddGuiElement(btnDone);
 
 	if (cancelButton)
 	{
 		btnCancel = new CGuiButton("CANCEL", posEndX - (guiButtonSizeX + guiButtonGapX),
-								 posEndY - (guiButtonSizeY + guiButtonGapY)*2.0f, posZ + 0.04,
-								 guiButtonSizeX, guiButtonSizeY,
+								 posEndY - (buttonSizeY + guiButtonGapY)*1.8f, posZ + 0.04,
+								 buttonSizeX, buttonSizeY,
 								 BUTTON_ALIGNED_DOWN, this);
 		this->AddGuiElement(btnCancel);
 	}
@@ -59,12 +65,25 @@ CGuiViewSelectFolder::~CGuiViewSelectFolder()
 	pthread_mutex_destroy(&renderMutex);
 }
 
+void CGuiViewSelectFolder::SetFont(CSlrFont *font, float fontScale)
+{
+	this->font = font;
+	this->listBoxFiles->SetFont(font, fontScale);
+	
+	this->listBoxFiles->SetGaps(1.0f, -2.0f);
+	
+	this->btnCancel->SetFont(font, fontScale);
+	this->btnDone->SetFont(font, fontScale);
+}
+
+
 void CGuiViewSelectFolder::Init()
 {
 	LOGD("CGuiViewSelectFolder::Init");
 	
 #if !defined(IOS)
-	this->startDirectoryPath = UTFALLOC(gPathToDocuments);		//strdup
+//	this->startDirectoryPath = UTFALLOC(gPathToDocuments);		//strdup
+	this->startDirectoryPath = UTFALLOC("/");		//strdup
 	this->currentDirectoryPath = UTFALLOC("/");	//strdup
 #else
 	LOGTODO("CGuiViewSelectFolder::Init()");
@@ -80,7 +99,8 @@ void CGuiViewSelectFolder::Init(UTFString *directoryPath)
 	LOGD("CGuiViewSelectFolder::Init");
 
 	this->LockRenderMutex();
-	this->startDirectoryPath = UTFALLOC(gPathToDocuments);		//strdup
+//	this->startDirectoryPath = UTFALLOC(gPathToDocuments);		//strdup
+	this->startDirectoryPath = UTFALLOC("/");		//strdup
 	this->currentDirectoryPath = UTFALLOC(directoryPath);	//strdup
 
 	LOGD("startDirectoryPath=");
@@ -188,7 +208,8 @@ void CGuiViewSelectFolder::UpdatePath()
 #if !defined(IOS)
 	if (startDirectoryPath == NULL)
 	{
-		startDirectoryPath = UTFALLOC(gPathToDocuments);
+//		startDirectoryPath = UTFALLOC(gPathToDocuments);
+		startDirectoryPath = UTFALLOC("/");
 	}
 	
 	if (currentDirectoryPath == NULL)
@@ -296,8 +317,10 @@ void CGuiViewSelectFolder::ListElementSelected(CGuiList *listBox)
 
 #if defined(WIN32) || defined(LINUX) || defined(ANDROID) || defined(MACOS)
 			char buf[4096];
+			LOGD("this->currentDirectoryPath=%s", this->currentDirectoryPath);
+			
 			sprintf(buf, "%s", this->currentDirectoryPath);
-			for (int i = strlen(buf)-2; i > 0; i--)
+			for (int i = strlen(buf)-2; i >= 0; i--)
 			{
 				if (buf[i] == '\\' || buf[i] == '/')
 				{
@@ -309,6 +332,9 @@ void CGuiViewSelectFolder::ListElementSelected(CGuiList *listBox)
 
 			UTFString *newPath = strdup(buf);
 			free(this->currentDirectoryPath);
+			
+			LOGD("newPath=%s", newPath);
+			
 #elif defined(IOS)
 			NSString *newPath = [[NSString alloc] initWithFormat:@"%@/", [this->currentDirectoryPath stringByDeletingLastPathComponent]];
 			LOGD("newPath=");
@@ -399,16 +425,18 @@ void CGuiViewSelectFolder::SetPath(char *setPath)
 	GET_CHARBUF(buf);
 
 #if defined(WIN32) || defined(LINUX) || defined(ANDROID) || defined(MACOS)
-	if (setPath[0] == '/' && setPath[1] == 0x00)
-	{
-		sprintf(buf, "%s/", gPathToDocuments);
-	}
-	else
-	{
-		sprintf(buf, "%s%s/", gPathToDocuments, setPath);
-	}
+//	if (setPath[0] == '/' && setPath[1] == 0x00)
+//	{
+//		sprintf(buf, "%s/", gPathToDocuments);
+//	}
+//	else
+//	{
+//		sprintf(buf, "%s%s/", gPathToDocuments, setPath);
+//	}
+//	UTFString *newPath = strdup(buf);
 
-	UTFString *newPath = strdup(buf);
+	UTFString *newPath = strdup(setPath);
+	
 	free(this->currentDirectoryPath);
 #elif defined(IOS)
 	[this->currentDirectoryPath release];
@@ -469,6 +497,17 @@ bool CGuiViewSelectFolder::ButtonPressed(CGuiButton *button)
 	return true;
 }
 
+bool CGuiViewSelectFolder::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
+{
+	if (keyCode == MTKEY_ESC)
+	{
+		return this->ButtonPressed(btnCancel);
+	}
+	
+	return CGuiView::KeyDown(keyCode, isShift, isAlt, isControl);
+}
+
+
 void CGuiViewSelectFolder::HttpFileUploadedCallback()
 {
 	this->Refresh();
@@ -487,13 +526,16 @@ void CGuiViewSelectFolder::Render()
 void CGuiViewSelectFolder::Render(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY)
 {
 	this->LockRenderMutex();
+	
+//	BlitFilledRectangle(posX, posY, posZ, sizeX, sizeY, 0.0f, 0.0f, 0.0f, 1.0f);
+	BlitFilledRectangle(0, 0, -1, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0.3, 1);
 
 	BlitFilledRectangle(posX, posY, posZ, sizeX, TOP_LABEL_SIZEY, 0.3f, 0.3f, 0.8f, 1.0f);
 	//guiMain->imgBackground->Render(posX, posY, posZ, sizeX, sizeY);
 
 	CGuiView::Render();
 	
-	guiMain->fntConsole->BlitText(this->displayDirectoryPath, posX, posY, posZ, TOP_LABEL_FONT_SIZE);
+	font->BlitText(this->displayDirectoryPath, posX, posY, posZ, TOP_LABEL_FONT_SIZE);
 
 	this->UnlockRenderMutex();
 }

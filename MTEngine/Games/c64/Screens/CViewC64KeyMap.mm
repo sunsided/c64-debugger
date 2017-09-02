@@ -379,7 +379,7 @@ void CViewC64KeyMap::SaveAndGoBack()
 void CViewC64KeyMap::OpenDialogImportKeyMap()
 {
 	CSlrString *windowTitle = new CSlrString("Import C64 keyboard mapping");
-	SYS_DialogOpenFile(this, &extKeyMap, gUTFPathToDocuments, windowTitle);
+	viewC64->ShowDialogOpenFile(this, &extKeyMap, gUTFPathToDocuments, windowTitle);
 	delete windowTitle;
 
 }
@@ -417,7 +417,7 @@ void CViewC64KeyMap::OpenDialogExportKeyMap()
 	CSlrString *defaultFileName = new CSlrString("c64keymap");
 	
 	CSlrString *windowTitle = new CSlrString("Export C64 keyboard mapping");
-	SYS_DialogSaveFile(this, &extKeyMap, defaultFileName, gUTFPathToDocuments, windowTitle);
+	viewC64->ShowDialogSaveFile(this, &extKeyMap, defaultFileName, gUTFPathToDocuments, windowTitle);
 	delete windowTitle;
 	delete defaultFileName;
 

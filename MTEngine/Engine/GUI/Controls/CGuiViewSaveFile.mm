@@ -9,53 +9,77 @@
 
 #include "CGuiMain.h"
 #include "CGuiViewSaveFile.h"
+#include "SYS_KeyCodes.h"
 
 CGuiViewSaveFile::CGuiViewSaveFile(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, CGuiViewSaveFileCallback *callback)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
 {
 	this->name = "CGuiViewSaveFile";
 
-	const int buttonGapX = 5;
+	const int buttonGapX = 50;
 	const int buttonGapY = 5;
 	const int buttonSizeX = 60;
-	const int buttonSizeY = 30;
-
+	const int buttonSizeY = 25;
+	
 	this->callback = callback;
 	this->defaultFileName = NULL;
 	this->saveDirectoryPath = NULL;
 	this->saveExtension = NULL;
 
+	this->offsetX = 3.0f;
+	this->offsetY = 100.0f;
+	
 	titleText = strdup("Save file name:");
 
 	this->canceled = false;
 	
 	this->font = guiMain->fntEngineDefault;
 
-	btnCancel = new CGuiButton("CANCEL", posEndX - (buttonSizeX + buttonGapX), posY + SCREEN_EDGE_HEIGHT, posZ,
+	float b = 0.35f;
+	btnCancel = new CGuiButton("CANCEL", SCREEN_WIDTH - (buttonSizeX*2 + buttonGapX) + offsetX, posY + SCREEN_EDGE_HEIGHT + sizeY * b + offsetY, posZ,
 							   buttonSizeX, buttonSizeY, BUTTON_ALIGNED_DOWN, this);
 	this->AddGuiElement(btnCancel);
 
-	btnSave = new CGuiButton("SAVE", posEndX - (buttonSizeX + buttonGapX), posY + SCREEN_EDGE_HEIGHT + buttonSizeY*2, posZ,
+	btnSave = new CGuiButton("SAVE", SCREEN_WIDTH - (buttonSizeX + buttonGapX) + offsetX, posY + SCREEN_EDGE_HEIGHT + sizeY * b + offsetY, posZ,
 							   buttonSizeX, buttonSizeY, BUTTON_ALIGNED_DOWN, this);
 	this->AddGuiElement(btnSave);
+
+	this->btnCancel->textOffsetY = 3.5f;
+	this->btnSave->textOffsetY = 3.5f;
 
 #if defined(IOS)
 	this->editBoxFileName = NULL;
 #else
-	this->editBoxFileName = new CGuiEditBoxText(this->posX + 0.1 * this->sizeX, this->posY + 0.15 * sizeY, posZ,
-												16, 16, NULL, 25, false, this);
+	this->editBoxFileName = new CGuiEditBoxText(this->posX + 0.01 * this->sizeX + offsetX, this->posY + 0.07 * sizeY + offsetY, posZ,
+												16, 16, NULL, 29, false, this);
 	this->AddGuiElement(editBoxFileName);
 #endif
 
-	btnSelectFolder = new CGuiButton("/", this->posX + 0.1 * this->sizeX, this->posY + 0.25 * sizeY, posZ, sizeX * 0.55f, sizeY * 0.07f, BUTTON_ALIGNED_CENTER, this);
+	btnSelectFolder = new CGuiButton("/", this->posX + 0.01 * this->sizeX + offsetX, this->posY + 0.24 * sizeY + offsetY, posZ, sizeX * 1.123f, sizeY * 0.07f, BUTTON_ALIGNED_LEFT, this);
+	btnSelectFolder->centerText = false;
+	btnSelectFolder->textOffsetY = 3.0f;
 	btnSelectFolder->SetFontScale(1.5f);
 	this->AddGuiElement(btnSelectFolder);
 	
-	viewSelectFolder = new CGuiViewSelectFolder(posX, posY, posZ, sizeX, sizeY, true, this);
-	
+	viewSelectFolder = new CGuiViewSelectFolder(0, 0, posZ, SCREEN_WIDTH, SCREEN_HEIGHT, true, this);
+	this->viewSelectFolder->btnCancel->textOffsetY = 3.5f;
+	this->viewSelectFolder->btnDone->textOffsetY = 3.5f;
 	
 	this->fontScale = 2.0f;
 
+}
+
+bool CGuiViewSaveFile::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
+{
+	if (keyCode == MTKEY_ESC)
+	{
+		return this->ButtonPressed(btnCancel);
+	}
+	else if (keyCode == MTKEY_TAB)
+	{
+		return this->ButtonPressed(btnSelectFolder);
+	}
+	return CGuiView::KeyDown(keyCode, isShift, isAlt, isControl);
 }
 
 void CGuiViewSaveFile::Init(UTFString *defaultFileName, UTFString *saveExtension)
@@ -91,6 +115,29 @@ void CGuiViewSaveFile::Init(UTFString *defaultFileName, UTFString *saveExtension
 #endif
 
 }
+
+void CGuiViewSaveFile::SetFont(CSlrFont *font, float fontScale)
+{
+	this->font = font;
+	this->fontScale = fontScale;
+	
+	this->editBoxFileName->SetFont(font, fontScale*1.5f);
+	
+	this->editBoxFileName->cursorGapY = -1.0f;
+	this->editBoxFileName->cursorHeight = this->editBoxFileName->cursorHeight + 1.5f;
+	this->editBoxFileName->cursorWidth = this->editBoxFileName->cursorWidth / 2.0f;
+	
+	this->viewSelectFolder->SetFont(font, fontScale);
+
+	
+	this->btnSelectFolder->SetFont(font, fontScale);
+	
+	this->btnCancel->SetFont(font, fontScale);
+	
+	this->btnSave->SetFont(font, fontScale);
+
+}
+
 
 void CGuiViewSaveFile::InitFavorites(std::list<CGuiFolderFavorite *> favorites)
 {
@@ -141,13 +188,22 @@ void CGuiViewSaveFile::DeactivateView()
 void CGuiViewSaveFile::Render()
 {
 //	LOGD("CGuiViewSaveFile::Render");
-	guiMain->theme->imgBackground->Render(posX, posY, posZ, sizeX, sizeY);
+	if (guiMain->theme && guiMain->theme->imgBackground)
+	{
+		guiMain->theme->imgBackground->Render(posX, posY, posZ, sizeX, sizeY);
+	}
+	else
+	{
+//		BlitFilledRectangle(posX, posY, posZ, sizeX, sizeY, 0.0f, 0.0f, 0.0f, 1.0f);
+		BlitFilledRectangle(0, 0, -1, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0.3, 1);
 
-	this->font->BlitText(this->titleText, posX + 0.01*sizeX, posY + 0.03*sizeY, posZ, fontScale);
+	}
+
+	this->font->BlitText(this->titleText, posX + 0.01*sizeX + offsetX, posY + 0.03*sizeY + offsetY, posZ, fontScale);
 
 	CGuiView::Render();
 
-	this->font->BlitText("Folder:", posX + 0.01*sizeX, posY + 0.20*sizeY, posZ, fontScale);
+	this->font->BlitText("Folder:", posX + 0.01*sizeX + offsetX, posY + 0.20*sizeY + offsetY, posZ, fontScale);
 }
 
 void CGuiViewSaveFile::SysTextFieldEditFinished(UTFString *str)
@@ -203,11 +259,14 @@ bool CGuiViewSaveFile::ButtonPressed(CGuiButton *button)
 		
 #if !defined(IOS)
 		char *buf = SYS_GetCharBuf();
-		sprintf(buf, "%s%s", gPathToDocuments, (saveDirectoryPath+1));
+//		sprintf(buf, "%s%s", gPathToDocuments, (saveDirectoryPath+1));
+
+		strcpy(buf, saveDirectoryPath);
 		
 		LOGD("buf=%s", buf);
 		
-		viewSelectFolder->Init(gPathToDocuments, buf);
+//		viewSelectFolder->Init(gPathToDocuments, buf);
+		viewSelectFolder->Init("/", buf);
 		SYS_ReleaseCharBuf(buf);
 
 #else
@@ -216,6 +275,7 @@ bool CGuiViewSaveFile::ButtonPressed(CGuiButton *button)
 #endif
 				
 		guiMain->SetWindowOnTop(this->viewSelectFolder);
+		guiMain->SetFocus(this->viewSelectFolder);
 		this->viewSelectFolder->ActivateView();
 		GUI_SetPressConsumed(true);
 		return true;
@@ -288,16 +348,18 @@ void CGuiViewSaveFile::FolderSelected(UTFString *fullFolderPath, UTFString *fold
 	btnSelectFolder->SetText((char*)[this->saveDirectoryPath UTF8String]);
 #endif
 
-	guiMain->SetWindowOnTop(this);
-	this->viewSelectFolder->ActivateView();
+	guiMain->SetWindowOnTop(NULL);
+	this->viewSelectFolder->DeactivateView();
 	GUI_SetPressConsumed(true);
+	guiMain->SetFocus(this->editBoxFileName);
 }
 
 void CGuiViewSaveFile::FolderSelectionCancelled()
 {
-	guiMain->SetWindowOnTop(this);
-	this->viewSelectFolder->ActivateView();
+	guiMain->SetWindowOnTop(NULL);
+	this->viewSelectFolder->DeactivateView();
 	GUI_SetPressConsumed(true);
+	guiMain->SetFocus(this->editBoxFileName);
 }
 
 void CGuiViewSaveFileCallback::SaveFileSelected(UTFString *fullFilePath, char *fileName)

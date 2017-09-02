@@ -188,6 +188,8 @@ public:
 	void SetEmulationMaximumSpeed(int maximumSpeed);
 
 	CViewC64MenuItemOption *menuItemWindowAlwaysOnTop;
+	CViewC64MenuItemOption *menuItemUseSystemDialogs;
+	
 	CViewC64MenuItemOption *menuItemVicStateRecordingMode;
 	
 	CViewC64MenuItem *menuItemClearSettings;

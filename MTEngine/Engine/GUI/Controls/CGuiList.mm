@@ -50,23 +50,11 @@ CGuiList::CGuiList(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 	this->startDrawX = 3;
 	this->startDrawY = 0;
 	
-	if (this->font->fontType == FONT_TYPE_PROPORTIONAL)
-	{
-		this->fontScale = fontSize;
-		this->fontSize = this->font->GetLineHeight() * fontScale;
-	}
-	else
-	{
-		this->fontSize  = fontSize; //11;
-	}
+	SetFont(font, fontSize);
 	
-	//this->fontHeight = fontSize;
-	//this->fontWidth = fontSize;
-	//
 	this->startElementsY = listUpGap;
 
 	this->ySpeed = 0.0;
-	this->zoomFontSize = fontSize;
 
 	textOffsetX = 0.0f;
 	textOffsetY = 0.0f;
@@ -79,6 +67,27 @@ CGuiList::CGuiList(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 	this->listElements = NULL;
 	this->Init(elements, numElements, deleteElements);
 	LOGG("CGuiList::CGuiList done");
+}
+
+void CGuiList::SetFont(CSlrFont *font, float fontSize)
+{
+	this->font = font;
+	
+	if (this->font->fontType == FONT_TYPE_PROPORTIONAL)
+	{
+		this->fontScale = fontSize;
+		this->fontSize = this->font->GetLineHeight() * fontScale;
+	}
+	else
+	{
+		this->fontSize  = fontSize; //11;
+	}
+	this->zoomFontSize = fontSize;
+	
+	//this->fontHeight = fontSize;
+	//this->fontWidth = fontSize;
+	//
+
 }
 
 CGuiList::~CGuiList()
@@ -113,6 +122,8 @@ void CGuiList::Init(char **elements, int numElements, bool deleteElements)
 
 	this->selectedElement = -1;
 	this->firstShowElement = 0;
+	this->startElementsY = listUpGap;
+	this->startDrawY = 0.0f;
 	this->numElements = numElements;
 	this->listElements = (void**)elements;
 	if (this->listElements != NULL)
@@ -140,15 +151,29 @@ void CGuiList::UpdateRollUp()
 
 	this->numRollUp = ((sizeY-listUpGap) / fontSize / 2.0);
 
-	if ((this->selectedElement - numRollUp) < 0)
+	if (this->selectedElement == -1)
 	{
 		this->firstShowElement = 0;
 	}
 	else
 	{
-		this->firstShowElement = this->selectedElement - numRollUp;
+		if ((this->selectedElement - numRollUp) < 0)
+		{
+			this->firstShowElement = 0;
+		}
+		else
+		{
+			this->firstShowElement = this->selectedElement - numRollUp;
+		}
 	}
+}
 
+bool CGuiList::DoScrollWheel(float deltaX, float deltaY)
+{
+	moving = true;
+	scrollModified = true;
+	MoveView(deltaX, deltaY*1.3f);
+	return true;
 }
 
 bool CGuiList::DoMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat distY, GLfloat diffX, GLfloat diffY)

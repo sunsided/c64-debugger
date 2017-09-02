@@ -11,6 +11,7 @@
 #include "C64SharedMemory.h"
 #include "CViewVicEditor.h"
 #include "CGuiMain.h"
+#include "SND_SoundEngine.h"
 #include "C64D_Version.h"
 
 #define printLine printf
@@ -25,24 +26,40 @@ void c64ShowCommandLineHelp()
 	printLine("\n");
 	printLine("-help  show this help\n");
 	printLine("\n");
-	printLine("-layout <id> start with layout id <1-%d>\n", C64_SCREEN_LAYOUT_MAX);
-	printLine("-breakpoints <file>  load breakpoints from file\n");
-	printLine("-vicesymbols <file>  load Vice symbols (code labels)");
+	printLine("-layout <id>\n");
+	printLine("     start with layout id <1-%d>\n", C64_SCREEN_LAYOUT_MAX);
+	printLine("-breakpoints <file>\n");
+	printLine("     load breakpoints from file\n");
+	printLine("-vicesymbols <file>\n");
+	printLine("     load Vice symbols (code labels)");
 	printLine("\n");
-	printLine("-wait <ms>   wait before performing tasks\n");
-	printLine("-prg <file>  load PRG file into memory\n");
-	printLine("-d64 <file>  insert D64 disk\n");
-	printLine("-crt <file>  attach cartridge\n");
-	printLine("-jmp <addr>  jmp to address\n");
-	printLine("             for example jmp x1000, jmp $1000 or jmp 4096\n");
-	printLine("-autojmp     automatically jmp to address if basic SYS is detected\n");
-	printLine("-alwaysjmp   always jmp to load address of PRG\n");
-	printLine("-autorundisk automatically load first PRG from inserted disk\n");
-	printLine("-unpause     force code running");
-	printLine("-snapshot <file>  load snapshot from file\n");
+	printLine("-wait <ms>\n");
+	printLine("     wait before performing tasks\n");
+	printLine("-prg <file>\n");
+	printLine("     load PRG file into memory\n");
+	printLine("-d64 <file>\n");
+	printLine("     insert D64 disk\n");
+	printLine("-crt <file>\n");
+	printLine("     attach cartridge\n");
+	printLine("-jmp <addr>\n");
+	printLine("     jmp to address, for example jmp x1000, jmp $1000 or jmp 4096\n");
+	printLine("-autojmp\n");
+	printLine("     automatically jmp to address if basic SYS is detected\n");
+	printLine("-alwaysjmp\n");
+	printLine("     always jmp to load address of PRG\n");
+	printLine("-autorundisk\n");
+	printLine("     automatically load first PRG from inserted disk\n");
+	printLine("-unpause\n");
+	printLine("     force code running\n");
+	printLine("-snapshot <file>\n");
+	printLine("     load snapshot from file\n");
+	printLine("-soundout <\"device name\" | device number>\n");
+	printLine("     set sound out device by name or number\n");
 	printLine("\n");
-	printLine("-clearsettings    clear all config settings\n");
-	printLine("-pass        pass parameters to already running instance\n");
+	printLine("-clearsettings\n");
+	printLine("     clear all config settings\n");
+	printLine("-pass\n");
+	printLine("     pass parameters to already running instance\n");
 	printLine("\n");
 	
 	SYS_CleanExit();
@@ -233,6 +250,7 @@ void C64DebuggerParseCommandLine1()
 }
 
 ///////////
+CSlrString *c64CommandLineAudioOutDevice = NULL;
 
 void c64PerformStartupTasksThreaded()
 {
@@ -317,6 +335,14 @@ void c64PerformStartupTasksThreaded()
 		LOGD("c64SettingsJmpOnStartupAddr=%04x", c64SettingsJmpOnStartupAddr);
 
 		viewC64->debugInterface->MakeJsrC64(c64SettingsJmpOnStartupAddr);
+	}
+	
+	if (c64CommandLineAudioOutDevice != NULL)
+	{
+		if (gSoundEngine->SetOutputAudioDevice(c64CommandLineAudioOutDevice) == false)
+		{
+			printLine("Selected sound out device not found, fall back to default output.\n");
+		}
 	}
 	
 	//
@@ -444,6 +470,12 @@ void C64DebuggerParseCommandLine2()
 		{
 			char *str = c64ParseCommandLineGetArgument();
 			c64SettingsWaitOnStartup = atoi(str);
+		}
+		else if (!strcmp(cmd, "soundout"))
+		{
+			char *str = c64ParseCommandLineGetArgument();
+			LOGD("soundout='%s'", str);
+			c64CommandLineAudioOutDevice = new CSlrString(str);
 		}
 	}
 }
@@ -573,6 +605,13 @@ void C64DebuggerPassConfigToRunningInstance()
 		byteBuffer->putInt(c64SettingsDefaultScreenLayoutId);
 	}
 
+	if (c64CommandLineAudioOutDevice != NULL)
+	{
+		LOGD("c64CommandLineAudioOutDevice");
+		byteBuffer->PutU8(C64D_PASS_CONFIG_DATA_SOUND_DEVICE_OUT);
+		byteBuffer->PutSlrString(c64CommandLineAudioOutDevice);
+	}
+	
 	LOGD("...C64D_PASS_CONFIG_DATA_EOF");
 	
 	byteBuffer->PutU8(C64D_PASS_CONFIG_DATA_EOF);
@@ -715,6 +754,16 @@ void c64PerformNewConfigurationTasksThreaded(CByteBuffer *byteBuffer)
 		{
 			int jmpAddr = byteBuffer->getInt();
 			viewC64->debugInterface->MakeJsrC64(jmpAddr);
+		}
+		else if (t == C64D_PASS_CONFIG_DATA_SOUND_DEVICE_OUT)
+		{
+			CSlrString *str = byteBuffer->GetSlrString();
+			if (gSoundEngine->SetOutputAudioDevice(str) == false)
+			{
+				printLine("Selected sound out device not found, fall back to default output.\n");
+			}
+			
+			delete str;
 		}
 	}
 	

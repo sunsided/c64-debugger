@@ -17,6 +17,8 @@
 #include "CViewMainMenu.h"
 #include "CViewSettingsMenu.h"
 #include "SYS_SharedMemory.h"
+#include "CGuiViewSaveFile.h"
+#include "CGuiViewSelectFile.h"
 
 extern "C"
 {
@@ -196,7 +198,8 @@ public:
 	bool debugOnDrive1541;
 };
 
-class CViewC64 : public CGuiView, CGuiButtonCallback, CSlrThread, CApplicationPauseResumeListener, public CSharedMemorySignalCallback
+class CViewC64 : public CGuiView, CGuiButtonCallback, CSlrThread, CApplicationPauseResumeListener,
+				 public CSharedMemorySignalCallback, public CGuiViewSelectFileCallback, public CGuiViewSaveFileCallback
 {
 public:
 	CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY);
@@ -376,6 +379,27 @@ public:
 
 	//
 	void ShowMainScreen();
+	
+	// open/save dialogs
+	void ShowDialogOpenFile(CSystemFileDialogCallback *callback, std::list<CSlrString *> *extensions,
+							CSlrString *defaultFolder,
+							CSlrString *windowTitle);
+
+	void ShowDialogSaveFile(CSystemFileDialogCallback *callback, std::list<CSlrString *> *extensions,
+							CSlrString *defaultFileName, CSlrString *defaultFolder,
+							CSlrString *windowTitle);
+	
+	CGuiViewSaveFile *viewSaveFile;
+	CGuiViewSelectFile *viewSelectFile;
+	CGuiView *fileDialogPreviousView;
+	CSystemFileDialogCallback *systemFileDialogCallback;
+	
+	virtual void FileSelected(UTFString *filePath);
+	virtual void FileSelectionCancelled();
+	
+	virtual void SaveFileSelected(UTFString *fullFilePath, char *fileName);
+	virtual void SaveFileSelectionCancelled();
+
 };
 
 extern CViewC64 *viewC64;
