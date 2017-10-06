@@ -57,11 +57,16 @@
 
 #include "ViceWrapper.h"
 
+#define DRIVE_CPU
+
+//
+// TODO: the c64 debugger has hardcoded drive context 0 only (drive 8, no multiple drives supported yet).
+//       look at lines such drive_context[0]->via1d1541->c64d_irq_flagged ...
+
 int _c64d_new_drive_pc = -1;
 int _c64d_new_drive_dnr = -1;
 
-
-#define DRIVE_CPU
+//
 
 /* Global clock counters.  */
 CLOCK drive_clk[DRIVE_NUM];
@@ -3702,6 +3707,10 @@ opcode.op.op8[0] = ((o) >> 16) & 0xff; \
 
 /* ------------------------------------------------------------------------- */
 
+void c64d_interrupt_drivecpu_trigger_trap(drive_context_t *drv,
+										  void (*trap_func)(WORD, void *data),
+										  void *data);
+
 void _c64d_set_drive_pc_trap(WORD addr, void *data)
 {
 	WORD newpc = _c64d_new_drive_pc;
@@ -3719,6 +3728,25 @@ void c64d_set_drive_pc(int driveNr, uint16 pc)
 	
 	// TODO: we need a trap on drive cpu
 	//	interrupt_maincpu_trigger_trap(_c64d_set_drive_pc_trap, NULL);
+}
+
+uint8 _c64d_new_drive_register_a;
+
+void _c64d_set_drive_register_a_trap(WORD addr, void *data)
+{
+	drive_context_t *trapDriveContext = (drive_context_t *)data;
+	
+//	drive_context[_c64d_new_drive_dnr]->cpu->cpu_regs.a = _c64d_new_drive_register_a;
+	trapDriveContext->cpu->cpu_regs.a = _c64d_new_drive_register_a;
+
+	_c64d_new_drive_register_a = -1;
+}
+
+void c64d_set_drive_register_a(int driveNr, uint8 a)
+{
+	_c64d_new_drive_register_a = a;
+	
+	c64d_interrupt_drivecpu_trigger_trap(drive_context[driveNr], _c64d_set_drive_register_a_trap, (void*)(drive_context[driveNr]));
 }
 
 

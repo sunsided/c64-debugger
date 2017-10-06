@@ -265,6 +265,7 @@ void CGuiElement::FocusLost()
 
 bool CGuiElement::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
+	LOGI("CGuiElement::KeyDown: %d %s %s %s", keyCode, STRBOOL(isShift), STRBOOL(isAlt), STRBOOL(isControl));
 	return false;
 }
 

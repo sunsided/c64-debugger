@@ -342,7 +342,6 @@ void CGuiEditBoxText::FocusLost()
 	LOGD("this->editing=%d", this->editing);
 }
 
-
 bool CGuiEditBoxText::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
 	LOGI("CGuiEditBoxText::KeyDown: %2.2x '%c'", keyCode, (char)keyCode);

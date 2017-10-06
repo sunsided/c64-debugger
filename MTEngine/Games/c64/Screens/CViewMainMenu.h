@@ -152,6 +152,7 @@ public:
 	bool LoadPRG(CByteBuffer *byteBuffer, bool autoStart, bool showAddressInfo);
 	void LoadPRG(CByteBuffer *byteBuffer, u16 *startAddr, u16 *endAddr);
 	bool LoadPRGNotThreaded(CByteBuffer *byteBuffer, bool autoStart, bool showAddressInfo);
+	void SetBasicEndAddr(int endAddr);
 
 	// LoadPRG threaded
 	CByteBuffer *loadPrgByteBuffer;

@@ -22,6 +22,10 @@
 #include "CGuiMain.h"
 #include "CViewVicEditor.h"
 
+// don't do this at home!
+#include "C64DebugInterfaceVice.h"
+
+
 #define VIEWC64SETTINGS_OPEN_NONE	0
 #define VIEWC64SETTINGS_OPEN_D64	1
 #define VIEWC64SETTINGS_OPEN_CRT	2
@@ -561,6 +565,37 @@ void CViewMainMenu::ThreadRun(void *data)
 	loadPrgByteBuffer = NULL;
 }
 
+void CViewMainMenu::SetBasicEndAddr(int endAddr)
+{
+	// some decrunchers need correct basic pointers
+	
+	// set beginning of BASIC area
+	viewC64->debugInterface->SetByteC64(0x002B, 0x01);
+	viewC64->debugInterface->SetByteC64(0x002C, 0x08);
+	
+	// set beginning of variable/arrays area
+	viewC64->debugInterface->SetByteC64(0x002D, endAddr & 0x00FF);
+	viewC64->debugInterface->SetByteC64(0x002F, endAddr & 0x00FF);
+	viewC64->debugInterface->SetByteC64(0x0031, endAddr & 0x00FF);
+	viewC64->debugInterface->SetByteC64(0x00AE, endAddr & 0x00FF);
+	
+	viewC64->debugInterface->SetByteC64(0x002E, (endAddr >> 8) & 0x00FF);
+	viewC64->debugInterface->SetByteC64(0x0030, (endAddr >> 8) & 0x00FF);
+	viewC64->debugInterface->SetByteC64(0x0032, (endAddr >> 8) & 0x00FF);
+	viewC64->debugInterface->SetByteC64(0x00AF, (endAddr >> 8) & 0x00FF);
+	
+	// set end of BASIC area
+	viewC64->debugInterface->SetByteC64(0x0033, 0x00);
+	viewC64->debugInterface->SetByteC64(0x0037, 0x00);
+	
+	viewC64->debugInterface->SetByteC64(0x0034, 0xA0);
+	viewC64->debugInterface->SetByteC64(0x0038, 0xA0);
+	
+	// stop cursor flash
+	viewC64->debugInterface->SetByteC64(0x00CC, 0x01);
+
+}
+
 bool CViewMainMenu::LoadPRGNotThreaded(CByteBuffer *byteBuffer, bool autoStart, bool showAddressInfo)
 {
 	viewC64->debugInterface->LockMutex();
@@ -572,6 +607,8 @@ bool CViewMainMenu::LoadPRGNotThreaded(CByteBuffer *byteBuffer, bool autoStart, 
 	
 	bool foundBasicSys = false;
 	
+	bool isRunBasicCompatibleMode = true;
+
 	if (autoStart == true)
 	{
 		LOGD("LoadPRG: autostart");
@@ -580,125 +617,124 @@ bool CViewMainMenu::LoadPRGNotThreaded(CByteBuffer *byteBuffer, bool autoStart, 
 		
 		if (startAddr == 0x0801)
 		{
-			// 1001 SYS 2066
-			
-			// hidden SYS:          $0805    1  0  0  1 SYS   B
-			// 0800: 00 10 08 E9 03    00   31 30 30 31  9E  32 30 36 36 00
-			
-			// not hidden SYS:
-			// 0800: 00 0C 08 E9 03 9E      20 32 30 36 36 00
-			
-			int sysNumberAddr = -1;
-			
-			u8 b = viewC64->debugInterface->GetByteC64(0x0805);
-			
-			if (b == 0x9E)
+			if (isRunBasicCompatibleMode)
 			{
-				// regular SYS
-				sysNumberAddr = 0x0806;
-			}
-			else if (b == 0x00)
-			{
-				// hidden SYS, scan for SYS ($9E), hope $0900 is enough :)
-				for (int i = 0x0806; i < 0x0900; i++)
-				{
-					if (viewC64->debugInterface->GetByteC64(i) == 0x9E)
-					{
-						sysNumberAddr = i + 1;
-						break;
-					}
-				}
-			}
-			
-			if (sysNumberAddr != -1)
-			{
-				char *buf = SYS_GetCharBuf();
-				int i = 0;
+				// new "RUN"
+				SetBasicEndAddr(endAddr);
 				
-				u16 addr = sysNumberAddr;
+				viewC64->viewC64MemoryMap->ClearReadWriteMarkers();
+				viewC64->viewDrive1541MemoryMap->ClearReadWriteMarkers();
 				
-				bool isOK = true;
-				
-				while (true)
-				{
-					byte c = viewC64->debugInterface->GetByteC64(addr);
-					
-					LOGD("addr=%4.4x c=%2.2x '%c'", addr, c, c);
-					buf[i] = c;
-					
-					if (c == 0x20)
-					{
-						addr++;
-						continue;
-					}
-					
-					if (c < 0x30 || c > 0x39)
-						break;
-					
-					addr++;
-					i++;
-					
-					if (i == 254)
-					{
-						isOK = false;
-						break;
-					}
-				}
-				
-				if (isOK)
-				{
-					foundBasicSys = true;
-					
-					int startAddr = atoi(buf);
-					
-					// some decrunchers need correct basic pointers
-					
-					// set beginning of BASIC area
-					viewC64->debugInterface->SetByteC64(0x002B, 0x01);
-					viewC64->debugInterface->SetByteC64(0x002C, 0x08);
-					
-					// set beginning of variable/arrays area
-					viewC64->debugInterface->SetByteC64(0x002D, endAddr & 0x00FF);
-					viewC64->debugInterface->SetByteC64(0x002F, endAddr & 0x00FF);
-					viewC64->debugInterface->SetByteC64(0x0031, endAddr & 0x00FF);
-					viewC64->debugInterface->SetByteC64(0x00AE, endAddr & 0x00FF);
-					
-					viewC64->debugInterface->SetByteC64(0x002E, (endAddr >> 8) & 0x00FF);
-					viewC64->debugInterface->SetByteC64(0x0030, (endAddr >> 8) & 0x00FF);
-					viewC64->debugInterface->SetByteC64(0x0032, (endAddr >> 8) & 0x00FF);
-					viewC64->debugInterface->SetByteC64(0x00AF, (endAddr >> 8) & 0x00FF);
-					
-					// set end of BASIC area
-					viewC64->debugInterface->SetByteC64(0x0033, 0x00);
-					viewC64->debugInterface->SetByteC64(0x0037, 0x00);
-					
-					viewC64->debugInterface->SetByteC64(0x0034, 0xA0);
-					viewC64->debugInterface->SetByteC64(0x0038, 0xA0);
-					
-					// stop cursor flash
-					viewC64->debugInterface->SetByteC64(0x00CC, 0x01);
-					
-					LOGD("LoadPRG: ... JMP '%s' (%d)", buf, startAddr);
-					
-					viewC64->viewC64MemoryMap->ClearReadWriteMarkers();
-					viewC64->viewDrive1541MemoryMap->ClearReadWriteMarkers();
-					
-					viewC64->debugInterface->MakeJsrC64(startAddr);
-					
-					viewC64->ShowMainScreen();
+				((C64DebugInterfaceVice*)viewC64->debugInterface)->MakeBasicRunC64();
 
-					if (viewC64->debugInterface->IsCpuJam())
+				viewC64->ShowMainScreen();
+				
+				if (viewC64->debugInterface->IsCpuJam())
+				{
+					viewC64->debugInterface->ForceRunAndUnJamCpu();
+				}
+			}
+			else
+			{
+				// search for SYS
+			
+				// 1001 SYS 2066
+				
+				// hidden SYS:          $0805    1  0  0  1 SYS   B
+				// 0800: 00 10 08 E9 03    00   31 30 30 31  9E  32 30 36 36 00
+				
+				// not hidden SYS:
+				// 0800: 00 0C 08 E9 03 9E      20 32 30 36 36 00
+				
+				int sysNumberAddr = -1;
+				
+				u8 b = viewC64->debugInterface->GetByteC64(0x0805);
+				
+				if (b == 0x9E)
+				{
+					// regular SYS
+					sysNumberAddr = 0x0806;
+				}
+				else if (b == 0x00)
+				{
+					// hidden SYS, scan for SYS ($9E), hope $0900 is enough :)
+					for (int i = 0x0806; i < 0x0900; i++)
 					{
-						viewC64->debugInterface->ForceRunAndUnJamCpu();
+						if (viewC64->debugInterface->GetByteC64(i) == 0x9E)
+						{
+							sysNumberAddr = i + 1;
+							break;
+						}
 					}
 				}
 				
-				SYS_ReleaseCharBuf(buf);
+				if (sysNumberAddr != -1)
+				{
+					char *buf = SYS_GetCharBuf();
+					int i = 0;
+					
+					u16 addr = sysNumberAddr;
+					
+					bool isOK = true;
+					
+					while (true)
+					{
+						byte c = viewC64->debugInterface->GetByteC64(addr);
+						
+						LOGD("addr=%4.4x c=%2.2x '%c'", addr, c, c);
+						buf[i] = c;
+						
+						if (c == 0x20)
+						{
+							addr++;
+							continue;
+						}
+						
+						if (c < 0x30 || c > 0x39)
+							break;
+						
+						addr++;
+						i++;
+						
+						if (i == 254)
+						{
+							isOK = false;
+							break;
+						}
+					}
+					
+					if (isOK)
+					{
+						int startAddr = -1;
+
+						if (isOK)
+						{
+							foundBasicSys = true;
+							startAddr = atoi(buf);
+						}
+
+						SetBasicEndAddr(endAddr);
+
+						viewC64->viewC64MemoryMap->ClearReadWriteMarkers();
+						viewC64->viewDrive1541MemoryMap->ClearReadWriteMarkers();
+						
+						viewC64->debugInterface->MakeJsrC64(startAddr);
+
+						viewC64->ShowMainScreen();
+
+						if (viewC64->debugInterface->IsCpuJam())
+						{
+							viewC64->debugInterface->ForceRunAndUnJamCpu();
+						}
+					}
+					
+					SYS_ReleaseCharBuf(buf);
+				}
 			}
 		}
 	}
 	
-	if (autoStart && c64SettingsAutoJmpAlwaysToLoadedPRGAddress && !foundBasicSys)
+	if (autoStart && c64SettingsAutoJmpAlwaysToLoadedPRGAddress && !foundBasicSys && !isRunBasicCompatibleMode)
 	{
 		LOGD("LoadPRG: c64SettingsAutoJmpAlwaysToLoadedPRGAddress");
 		viewC64->debugInterface->MakeJsrC64(startAddr);

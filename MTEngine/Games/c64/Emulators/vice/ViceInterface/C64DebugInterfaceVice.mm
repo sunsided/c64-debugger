@@ -758,6 +758,7 @@ void C64DebugInterfaceVice::SetVSPBugEmulation(bool isVSPBugEmulation)
 
 extern "C" {
 	void c64d_mem_write_c64(unsigned int addr, unsigned char value);
+	void c64d_mem_write_c64_no_mark(unsigned int addr, unsigned char value);
 	void c64d_mem_ram_write_c64(WORD addr, BYTE value);
 	void c64d_mem_ram_fill_c64(WORD addr, WORD size, BYTE value);
 }
@@ -852,6 +853,124 @@ void C64DebugInterfaceVice::MakeJsrC64(uint16 addr)
 	// TODO:
 	this->MakeJmpC64(addr);
 }
+
+extern "C" {
+	void c64d_maincpu_make_basic_run();
+};
+
+void C64DebugInterfaceVice::MakeBasicRunC64()
+{
+	LOGD("C64DebugInterfaceVice::MakeBasicRunC64");
+	
+	c64d_maincpu_make_basic_run();
+}
+
+
+extern "C" {
+	void c64d_set_maincpu_regs(uint8 *a, uint8 *x, uint8 *y, uint8 *p, uint8 *sp);
+	void c64d_set_maincpu_set_sp(uint8 *sp);
+	void c64d_set_maincpu_set_a(uint8 *a);
+	void c64d_set_maincpu_set_x(uint8 *x);
+	void c64d_set_maincpu_set_y(uint8 *y);
+	void c64d_set_maincpu_set_p(uint8 *p);
+
+}
+
+void C64DebugInterfaceVice::SetStackPointerC64(uint8 val)
+{
+	LOGD("C64DebugInterfaceVice::SetStackPointerC64: val=%x", val);
+	
+	this->LockMutex();
+	
+	uint8 sp = val;
+	c64d_set_maincpu_set_sp(&sp);
+
+	this->UnlockMutex();
+}
+
+void C64DebugInterfaceVice::SetRegisterAC64(uint8 val)
+{
+	LOGD("C64DebugInterfaceVice::SetRegisterAC64: val=%x", val);
+	
+	this->LockMutex();
+	
+	uint8 a = val;
+	c64d_set_maincpu_set_a(&a);
+
+	this->UnlockMutex();
+}
+
+void C64DebugInterfaceVice::SetRegisterXC64(uint8 val)
+{
+	LOGD("C64DebugInterfaceVice::SetRegisterXC64: val=%x", val);
+	
+	this->LockMutex();
+	
+	uint8 x = val;
+	c64d_set_maincpu_set_x(&x);
+	
+	this->UnlockMutex();
+}
+
+void C64DebugInterfaceVice::SetRegisterYC64(uint8 val)
+{
+	LOGD("C64DebugInterfaceVice::SetRegisterYC64: val=%x", val);
+	
+	this->LockMutex();
+	
+	uint8 y = val;
+	c64d_set_maincpu_set_y(&y);
+	
+	this->UnlockMutex();
+}
+
+void C64DebugInterfaceVice::SetRegisterPC64(uint8 val)
+{
+	LOGD("C64DebugInterfaceVice::SetRegisterPC64: val=%x", val);
+	
+	this->LockMutex();
+	
+	uint8 p = val;
+	c64d_set_maincpu_set_p(&p);
+	
+	this->UnlockMutex();
+}
+
+
+void C64DebugInterfaceVice::SetStackPointer1541(uint8 val)
+{
+	
+}
+
+extern "C" {
+	void c64d_set_drive_register_a(int driveNr, uint8 a);
+}
+
+void C64DebugInterfaceVice::SetRegisterA1541(uint8 val)
+{
+	this->LockMutex();
+	
+	uint8 a = val;
+	c64d_set_drive_register_a(0, a);
+	
+	this->UnlockMutex();
+}
+
+void C64DebugInterfaceVice::SetRegisterX1541(uint8 val)
+{
+	
+}
+
+void C64DebugInterfaceVice::SetRegisterY1541(uint8 val)
+{
+	
+}
+
+void C64DebugInterfaceVice::SetRegisterP1541(uint8 val)
+{
+	
+}
+
 
 void C64DebugInterfaceVice::SetByte1541(uint16 addr, uint8 val)
 {

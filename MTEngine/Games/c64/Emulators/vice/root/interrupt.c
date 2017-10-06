@@ -40,6 +40,8 @@
 #include "snapshot.h"
 #include "types.h"
 
+#include "drivetypes.h"
+
 
 /* Initialization.  */
 void interrupt_cpu_status_init(interrupt_cpu_status_t *cs,
@@ -320,6 +322,18 @@ void interrupt_maincpu_trigger_trap(void (*trap_func)(WORD, void *data),
     cs->global_pending_int |= IK_TRAP;
     cs->trap_func = trap_func;
     cs->trap_data = data;
+}
+
+void c64d_interrupt_drivecpu_trigger_trap(drive_context_t *drv,
+										  void (*trap_func)(WORD, void *data),
+										  void *data)
+{
+	drivecpu_context_t *cpu = drv->cpu;
+	interrupt_cpu_status_t *cs = cpu->int_status;
+	
+	cs->global_pending_int |= IK_TRAP;
+	cs->trap_func = trap_func;
+	cs->trap_data = data;
 }
 
 

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="windows-1250"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="MTEngine"
 	ProjectGUID="{18214136-BC49-4BFF-9831-FD2AED46AB3B}"
 	RootNamespace="MTEngine"
@@ -121,7 +121,7 @@
 				Optimization="3"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
-				AdditionalIncludeDirectories="C:\develop\MTEngine\Games\c64\Emulators\vice\video;C:\develop\MTEngine\Games\c64\Emulators\vice\viciisc;C:\develop\MTEngine\Games\c64\Emulators\vice\core;C:\develop\MTEngine\Games\c64\Emulators\vice\ViceInterface;C:\develop\MTEngine\Games\c64\Emulators\vice\vdrive;C:\develop\MTEngine\Games\c64\Emulators\vice\userport;C:\develop\MTEngine\Games\c64\Emulators\vice\tape;C:\develop\MTEngine\Games\c64\Emulators\vice\sounddrv;C:\develop\MTEngine\Games\c64\Emulators\vice\sid;C:\develop\MTEngine\Games\c64\Emulators\vice\serial;C:\develop\MTEngine\Games\c64\Emulators\vice\rtc;C:\develop\MTEngine\Games\c64\Emulators\vice\rs232drv;C:\develop\MTEngine\Games\c64\Emulators\vice\root;&quot;C:\develop\MTEngine\Games\c64\Emulators\vice\resid-fp&quot;;C:\develop\MTEngine\Games\c64\Emulators\vice\resid;C:\develop\MTEngine\Games\c64\Emulators\vice\raster;C:\develop\MTEngine\Games\c64\Emulators\vice\printerdrv;C:\develop\MTEngine\Games\c64\Emulators\vice\platform;C:\develop\MTEngine\Games\c64\Emulators\vice\parallel;C:\develop\MTEngine\Games\c64\Emulators\vice\monitor;C:\develop\MTEngine\Games\c64\Emulators\vice\lib\p64;C:\develop\MTEngine\Games\c64\Emulators\vice\imagecontents;C:\develop\MTEngine\Games\c64\Emulators\vice\iecbus;C:\develop\MTEngine\Games\c64\Emulators\vice\gfxoutputdrv;C:\develop\MTEngine\Games\c64\Emulators\vice\fsdevice;C:\develop\MTEngine\Games\c64\Emulators\vice\fileio;C:\develop\MTEngine\Games\c64\Emulators\vice\drive\libdrive;C:\develop\MTEngine\Games\c64\Emulators\vice\drive\ieee\libdriveieee;C:\develop\MTEngine\Games\c64\Emulators\vice\drive\iecieee\libdriveiecieee;C:\develop\MTEngine\Games\c64\Emulators\vice\drive\iec\libdriveiec;C:\develop\MTEngine\Games\c64\Emulators\vice\drive\iec\c64exp\libdriveiecc64exp;C:\develop\MTEngine\Games\c64\Emulators\vice\drive\iec;C:\develop\MTEngine\Games\c64\Emulators\vice\drive;C:\develop\MTEngine\Games\c64\Emulators\vice\diskimage;C:\develop\MTEngine\Games\c64\Emulators\vice\c64\libc64sc;C:\develop\MTEngine\Games\c64\Emulators\vice\c64\cart\libc64commoncart;C:\develop\MTEngine\Games\c64\Emulators\vice\c64\cart\libc64cartsystem;C:\develop\MTEngine\Games\c64\Emulators\vice\c64\cart\libc64cart;C:\develop\MTEngine\Games\c64\Emulators\vice\c64\cart;C:\develop\MTEngine\Games\c64\Emulators\vice\c64;C:\develop\MTEngine\Games\c64\Emulators\vice\arch;C:\develop\MTEngine\Games\c64\Emulators\vice;C:\develop\MTEngine\Games\c64\Screens;C:\develop\MTEngine\Games\c64\Tools;C:\develop\MTEngine\Games\c64\Views;C:\develop\MTEngine\Games\c64\Emulators\frodo\FrodoInterface;C:\develop\MTEngine\Games\c64\Emulators\frodo;C:\develop\MTEngine\Games\c64\DebugInterface;C:\develop\MTEngine\Games\c64;C:\develop\MTEngine\Engine\GUI\Helpers\ImagePyramid;C:\develop\MTEngine\Engine\lodepng;C:\develop\MTEngine\Engine\Squirrel\sqstdlib;C:\develop\MTEngine\Engine\Squirrel\sqratthread;C:\develop\MTEngine\Engine\Squirrel\sqimport;C:\develop\MTEngine\Engine\Squirrel\squirrel;C:\develop\MTEngine\Engine\Squirrel\include\sqrat;C:\develop\MTEngine\Engine\Squirrel\include;C:\develop\MTEngine\Engine\Squirrel\;C:\develop\MTEngine\Engine\Net\ENet;C:\develop\MTEngine\Engine\Net\Physics;C:\develop\MTEngine\Engine\Net\Chat;C:\develop\MTEngine\Engine\Net;C:\develop\MTEngine\Engine\utf8;C:\develop\MTEngine\Engine\Regional;C:\develop\MTEngine\Engine\GUI\Helpers\LoadingScreen;C:\develop\MTEngine\Win32;C:\develop\MTEngine\Win32\Tracker\Modules.PL;c:\develop\MTEngine\Tracker\SID;C:\develop\MTEngine\Tracker;C:\develop\MTEngine\Games\KidsChristmasTree\decorations;C:\develop\MTEngine\Games\KidsChristmasTree\atlas;C:\develop\MTEngine\Games\KidsChristmasTree;C:\develop\MTEngine\Games\Cars\DataProvider;C:\develop\MTEngine\Games\Cars;C:\develop\MTEngine\Games\FiveInLine;C:\develop\MTEngine\Games\MegaBlast;C:\develop\MTEngine\Games\MultiPlayer;C:\develop\MTEngine\Engine\Core;C:\develop\MTEngine\Engine\Box2D.lib\Box2D\Rope;C:\develop\MTEngine\Engine\Box2D.lib\Box2D\Dynamics\Joints;C:\develop\MTEngine\Engine\Box2D.lib\Box2D\Dynamics\Contacts;C:\develop\MTEngine\Engine\Box2D.lib\Box2D\Dynamics;C:\develop\MTEngine\Engine\Box2D.lib\Box2D\Common;C:\develop\MTEngine\Engine\Box2D.lib\Box2D\Collision\Shapes;C:\develop\MTEngine\Engine\Box2D.lib\Box2D\Particle;C:\develop\MTEngine\Engine\Box2D.lib\Box2D\Collision;C:\develop\MTEngine\Engine\Box2D.lib\Box2D;C:\develop\MTEngine\Engine\Box2D.lib\Contrib;C:\develop\MTEngine\Engine\Box2D.lib\Triangulation;C:\develop\MTEngine\Engine\Box2D.lib;C:\develop\MTEngine\Engine\zlib;C:\develop\MTEngine\Engine\libpng;C:\develop\MTEngine\Engine\mtrand;C:\develop\MTEngine\Engine\FFT;C:\develop\MTEngine\Engine\Audio\WAV;C:\develop\MTEngine\Engine\Audio\stats;C:\develop\MTEngine\Engine\Audio\AudioEffects\smbPitchShift;C:\develop\MTEngine\Engine\Audio\AudioEffects\SimpleDSP;C:\develop\MTEngine\Engine\Audio\AudioEffects\biquad;C:\develop\MTEngine\Engine\Audio\AudioEffects;C:\develop\MTEngine\Engine\Audio\Synth;C:\develop\MTEngine\Engine\Audio\XMPlayer;C:\develop\MTEngine\Engine\Audio\;C:\develop\MTEngine\Engine\Funct\;C:\develop\MTEngine\Engine\Funct\FFT;C:\develop\MTEngine\Engine\Funct\DataTable;&quot;C:\develop\MTEngine\Engine\**&quot;;C:\develop\MTEngine\Engine\poly2tri\sweep;C:\develop\MTEngine\Engine\poly2tri\common;C:\develop\MTEngine\Engine\poly2tri;C:\develop\MTEngine\Engine\libjson\_internal\Source;&quot;C:\develop\MTEngine\Engine\libjson\_internal\Dependencies\mempool++&quot;;&quot;C:\develop\MTEngine\Engine\libjson\_internal\Dependencies\libbase64++&quot;;C:\develop\MTEngine\Engine\libjson\_internal\Dependencies;C:\develop\MTEngine\Engine\libjson\_internal;C:\develop\MTEngine\Engine\libjson;C:\develop\MTEngine\Engine\jpeg;&quot;C:\develop\MTEngine\Engine\jpeg\jpeg-9a&quot;;C:\develop\MTEngine\Engine\Funct\Randomizer;C:\develop\MTEngine\Engine\Funct\ImageProcessing\stb_image;C:\develop\MTEngine\Engine\Funct\ImageProcessing\resampler;C:\develop\MTEngine\Engine\Funct\ImageProcessing;C:\develop\MTEngine\Engine\Funct\Crypto;C:\develop\MTEngine\Engine\Funct\AStar;C:\develop\MTEngine\Engine\Tremor\Ogg;c:\develop\MTEngine\Engine\Pool;C:\develop\MTEngine\Engine\Embedded;C:\develop\MTEngine\Engine\Tremor;C:\develop\MTEngine\Engine\GUI\Animation;C:\develop\MTEngine\Engine\GUI\Editors;C:\develop\MTEngine\Engine\GUI\Effects\explosion;C:\develop\MTEngine\Engine\GUI\Effects\snow;C:\develop\MTEngine\Engine\GUI\Controls;C:\develop\MTEngine\Engine\GUI\HttpServer;C:\develop\MTEngine\Engine\GUI\Helpers\ResourceManager;C:\develop\MTEngine\Engine\GUI\Helpers\HexBoard;C:\develop\MTEngine\Engine\GUI\Helpers\;C:\develop\MTEngine\Engine\GUI\Tests;C:\develop\MTEngine\Engine\GUI;C:\develop\MTEngine\Engine\sidplay4/resid;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/sidtune;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/resid;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/sid6526;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/xsid;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/mos6526;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/mos6510;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/include/sidplay/builders;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/include/sidplay;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/include;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/c64;C:\develop\MTEngine\Engine\sidplay4/libsidplay2;C:\develop\MTEngine\Engine\sidplay4;C:\develop\MTEngine\Win32\sidplay4\libsidplay2\include\sidplay;C:\develop\MTEngine\Win32\sidplay4\libsidplay2\include;C:\develop\MTEngine\Win32\portaudio\common;C:\develop\MTEngine\Win32\portaudio\os;C:\develop\MTEngine\Win32\arch\wpcap\net;C:\develop\MTEngine\Win32\arch\wpcap;C:\develop\MTEngine\Win32\arch;C:\develop\MTEngine\Win32\portaudio;C:\develop\MTEngine\Win32\lib;C:\develop\MTEngine\Engine;&quot;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include&quot;"
+				AdditionalIncludeDirectories="C:\develop\MTEngine\Games\c64\Emulators\vice\video;C:\develop\MTEngine\Games\c64\Emulators\vice\viciisc;C:\develop\MTEngine\Games\c64\Emulators\vice\core;C:\develop\MTEngine\Games\c64\Emulators\vice\ViceInterface;C:\develop\MTEngine\Games\c64\Emulators\vice\vdrive;C:\develop\MTEngine\Games\c64\Emulators\vice\userport;C:\develop\MTEngine\Games\c64\Emulators\vice\tape;C:\develop\MTEngine\Games\c64\Emulators\vice\sounddrv;C:\develop\MTEngine\Games\c64\Emulators\vice\sid;C:\develop\MTEngine\Games\c64\Emulators\vice\tapeport;C:\develop\MTEngine\Games\c64\Emulators\vice\serial;C:\develop\MTEngine\Games\c64\Emulators\vice\rtc;C:\develop\MTEngine\Games\c64\Emulators\vice\rs232drv;C:\develop\MTEngine\Games\c64\Emulators\vice\root;&quot;C:\develop\MTEngine\Games\c64\Emulators\vice\resid-fp&quot;;C:\develop\MTEngine\Games\c64\Emulators\vice\resid;C:\develop\MTEngine\Games\c64\Emulators\vice\raster;C:\develop\MTEngine\Games\c64\Emulators\vice\printerdrv;C:\develop\MTEngine\Games\c64\Emulators\vice\platform;C:\develop\MTEngine\Games\c64\Emulators\vice\parallel;C:\develop\MTEngine\Games\c64\Emulators\vice\monitor;C:\develop\MTEngine\Games\c64\Emulators\vice\lib\p64;C:\develop\MTEngine\Games\c64\Emulators\vice\imagecontents;C:\develop\MTEngine\Games\c64\Emulators\vice\iecbus;C:\develop\MTEngine\Games\c64\Emulators\vice\gfxoutputdrv;C:\develop\MTEngine\Games\c64\Emulators\vice\fsdevice;C:\develop\MTEngine\Games\c64\Emulators\vice\fileio;C:\develop\MTEngine\Games\c64\Emulators\vice\joyport;C:\develop\MTEngine\Games\c64\Emulators\vice\samplerdrv;C:\develop\MTEngine\Games\c64\Emulators\vice\diag;C:\develop\MTEngine\Games\c64\Emulators\vice\drive\;C:\develop\MTEngine\Games\c64\Emulators\vice\drive\tcbm;C:\develop\MTEngine\Games\c64\Emulators\vice\drive\ieee\;C:\develop\MTEngine\Games\c64\Emulators\vice\drive\iecieee\;C:\develop\MTEngine\Games\c64\Emulators\vice\drive\iec\;C:\develop\MTEngine\Games\c64\Emulators\vice\drive\iec\c64exp\;C:\develop\MTEngine\Games\c64\Emulators\vice\drive\iec;C:\develop\MTEngine\Games\c64\Emulators\vice\drive;C:\develop\MTEngine\Games\c64\Emulators\vice\diskimage;C:\develop\MTEngine\Games\c64\Emulators\vice\c64\cart;C:\develop\MTEngine\Games\c64\Emulators\vice\c64;C:\develop\MTEngine\Games\c64\Emulators\vice\arch;C:\develop\MTEngine\Games\c64\Emulators\vice;C:\develop\MTEngine\Games\c64\Screens\VicEditor;C:\develop\MTEngine\Games\c64\Screens;C:\develop\MTEngine\Games\c64\Tools;C:\develop\MTEngine\Games\c64\Views\VicDisplay;C:\develop\MTEngine\Games\c64\Views;C:\develop\MTEngine\Games\c64\Emulators\frodo\FrodoInterface;C:\develop\MTEngine\Games\c64\Emulators\frodo;C:\develop\MTEngine\Games\c64\DebugInterface;C:\develop\MTEngine\Games\c64;C:\develop\MTEngine\Engine\GUI\Helpers\ImagePyramid;C:\develop\MTEngine\Engine\lodepng;C:\develop\MTEngine\Engine\Squirrel\sqstdlib;C:\develop\MTEngine\Engine\Squirrel\sqratthread;C:\develop\MTEngine\Engine\Squirrel\sqimport;C:\develop\MTEngine\Engine\Squirrel\squirrel;C:\develop\MTEngine\Engine\Squirrel\include\sqrat;C:\develop\MTEngine\Engine\Squirrel\include;C:\develop\MTEngine\Engine\Squirrel\;C:\develop\MTEngine\Engine\Net\ENet;C:\develop\MTEngine\Engine\Net\Physics;C:\develop\MTEngine\Engine\Net\Chat;C:\develop\MTEngine\Engine\Net;C:\develop\MTEngine\Engine\utf8;C:\develop\MTEngine\Engine\Regional;C:\develop\MTEngine\Engine\GUI\Helpers\LoadingScreen;C:\develop\MTEngine\Win32;C:\develop\MTEngine\Win32\Tracker\Modules.PL;c:\develop\MTEngine\Tracker\SID;C:\develop\MTEngine\Tracker;C:\develop\MTEngine\Games\KidsChristmasTree\decorations;C:\develop\MTEngine\Games\KidsChristmasTree\atlas;C:\develop\MTEngine\Games\KidsChristmasTree;C:\develop\MTEngine\Games\Cars\DataProvider;C:\develop\MTEngine\Games\Cars;C:\develop\MTEngine\Games\FiveInLine;C:\develop\MTEngine\Games\MegaBlast;C:\develop\MTEngine\Games\MultiPlayer;C:\develop\MTEngine\Engine\Core;C:\develop\MTEngine\Engine\Box2D.lib\Box2D\Rope;C:\develop\MTEngine\Engine\Box2D.lib\Box2D\Dynamics\Joints;C:\develop\MTEngine\Engine\Box2D.lib\Box2D\Dynamics\Contacts;C:\develop\MTEngine\Engine\Box2D.lib\Box2D\Dynamics;C:\develop\MTEngine\Engine\Box2D.lib\Box2D\Common;C:\develop\MTEngine\Engine\Box2D.lib\Box2D\Collision\Shapes;C:\develop\MTEngine\Engine\Box2D.lib\Box2D\Particle;C:\develop\MTEngine\Engine\Box2D.lib\Box2D\Collision;C:\develop\MTEngine\Engine\Box2D.lib\Box2D;C:\develop\MTEngine\Engine\Box2D.lib\Contrib;C:\develop\MTEngine\Engine\Box2D.lib\Triangulation;C:\develop\MTEngine\Engine\Box2D.lib;C:\develop\MTEngine\Engine\zlib;C:\develop\MTEngine\Engine\libpng;C:\develop\MTEngine\Engine\mtrand;C:\develop\MTEngine\Engine\FFT;C:\develop\MTEngine\Engine\Audio\WAV;C:\develop\MTEngine\Engine\Audio\stats;C:\develop\MTEngine\Engine\Audio\AudioEffects\smbPitchShift;C:\develop\MTEngine\Engine\Audio\AudioEffects\SimpleDSP;C:\develop\MTEngine\Engine\Audio\AudioEffects\biquad;C:\develop\MTEngine\Engine\Audio\AudioEffects;C:\develop\MTEngine\Engine\Audio\Synth;C:\develop\MTEngine\Engine\Audio\XMPlayer;C:\develop\MTEngine\Engine\Audio\;C:\develop\MTEngine\Engine\Funct\;C:\develop\MTEngine\Engine\Funct\FFT;C:\develop\MTEngine\Engine\Funct\DataTable;&quot;C:\develop\MTEngine\Engine\**&quot;;C:\develop\MTEngine\Engine\poly2tri\sweep;C:\develop\MTEngine\Engine\poly2tri\common;C:\develop\MTEngine\Engine\poly2tri;C:\develop\MTEngine\Engine\libjson\_internal\Source;&quot;C:\develop\MTEngine\Engine\libjson\_internal\Dependencies\mempool++&quot;;&quot;C:\develop\MTEngine\Engine\libjson\_internal\Dependencies\libbase64++&quot;;C:\develop\MTEngine\Engine\libjson\_internal\Dependencies;C:\develop\MTEngine\Engine\libjson\_internal;C:\develop\MTEngine\Engine\libjson;C:\develop\MTEngine\Engine\jpeg;&quot;C:\develop\MTEngine\Engine\jpeg\jpeg-9a&quot;;C:\develop\MTEngine\Engine\Funct\Randomizer;C:\develop\MTEngine\Engine\Funct\ImageProcessing\stb_image;C:\develop\MTEngine\Engine\Funct\ImageProcessing\resampler;C:\develop\MTEngine\Engine\Funct\ImageProcessing;C:\develop\MTEngine\Engine\Funct\Crypto;C:\develop\MTEngine\Engine\Funct\AStar;C:\develop\MTEngine\Engine\Tremor\Ogg;c:\develop\MTEngine\Engine\Pool;C:\develop\MTEngine\Engine\Embedded;C:\develop\MTEngine\Engine\Tremor;C:\develop\MTEngine\Engine\GUI\Animation;C:\develop\MTEngine\Engine\GUI\Editors;C:\develop\MTEngine\Engine\GUI\Effects\explosion;C:\develop\MTEngine\Engine\GUI\Effects\snow;C:\develop\MTEngine\Engine\GUI\Controls;C:\develop\MTEngine\Engine\GUI\HttpServer;C:\develop\MTEngine\Engine\GUI\Helpers\ResourceManager;C:\develop\MTEngine\Engine\GUI\Helpers\HexBoard;C:\develop\MTEngine\Engine\GUI\Helpers\;C:\develop\MTEngine\Engine\GUI\Tests;C:\develop\MTEngine\Engine\GUI;C:\develop\MTEngine\Engine\sidplay4/resid;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/sidtune;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/resid;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/sid6526;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/xsid;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/mos6526;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/mos6510;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/include/sidplay/builders;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/include/sidplay;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/include;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/c64;C:\develop\MTEngine\Engine\sidplay4/libsidplay2;C:\develop\MTEngine\Engine\sidplay4;C:\develop\MTEngine\Win32\sidplay4\libsidplay2\include\sidplay;C:\develop\MTEngine\Win32\sidplay4\libsidplay2\include;C:\develop\MTEngine\Win32\portaudio\common;C:\develop\MTEngine\Win32\portaudio\os;C:\develop\MTEngine\Win32\arch\wpcap\net;C:\develop\MTEngine\Win32\arch\wpcap;C:\develop\MTEngine\Win32\arch;C:\develop\MTEngine\Win32\portaudio;C:\develop\MTEngine\Win32\lib;C:\develop\MTEngine\Engine;&quot;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;HAVE_MSWINDOWS;inline=__inline;PTW32_STATIC;PTW32_STATIC_LIB"
 				GeneratePreprocessedFile="0"
 				RuntimeLibrary="2"
@@ -142,7 +142,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="GlU32.Lib OpenGL32.Lib freeglut.lib glut32.lib pthreadVC2-static.lib User32.lib ws2_32.lib winmm.lib version.lib"
+				AdditionalDependencies="GlU32.Lib OpenGL32.Lib pthreadVC2-static.lib User32.lib ws2_32.lib winmm.lib version.lib"
 				OutputFile="$(OutDir)\$(ProjectName).exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x86&quot;;C:\develop\MTEngine\Win32\lib"
@@ -375,6 +375,22 @@
 					</File>
 					<File
 						RelativePath=".\Engine\GUI\CGuiMain.mm"
+						>
+					</File>
+					<File
+						RelativePath=".\Engine\GUI\CGuiViewFrame.h"
+						>
+					</File>
+					<File
+						RelativePath=".\Engine\GUI\CGuiViewFrame.mm"
+						>
+					</File>
+					<File
+						RelativePath=".\Engine\GUI\CGuiViewWindowsManager.h"
+						>
+					</File>
+					<File
+						RelativePath=".\Engine\GUI\CGuiViewWindowsManager.mm"
 						>
 					</File>
 					<Filter
@@ -899,102 +915,6 @@
 					</Filter>
 				</Filter>
 				<Filter
-					Name="Funct"
-					>
-					<File
-						RelativePath=".\Engine\Funct\std_membuf.h"
-						>
-					</File>
-					<Filter
-						Name="DataTable"
-						>
-						<File
-							RelativePath=".\Engine\Funct\DataTable\CDataTable.h"
-							>
-						</File>
-						<File
-							RelativePath=".\Engine\Funct\DataTable\CDataTable.mm"
-							>
-						</File>
-						<File
-							RelativePath=".\Engine\Funct\DataTable\CGuiViewDataTable.h"
-							>
-						</File>
-						<File
-							RelativePath=".\Engine\Funct\DataTable\CGuiViewDataTable.mm"
-							>
-						</File>
-						<File
-							RelativePath=".\Engine\Funct\DataTable\FUN_CSVParser.h"
-							>
-						</File>
-						<File
-							RelativePath=".\Engine\Funct\DataTable\FUN_CSVParser.mm"
-							>
-						</File>
-					</Filter>
-					<Filter
-						Name="ImageProcessing"
-						>
-						<File
-							RelativePath=".\Engine\Funct\ImageProcessing\CImageKernel.h"
-							>
-						</File>
-						<File
-							RelativePath=".\Engine\Funct\ImageProcessing\CImageKernel.mm"
-							>
-						</File>
-						<File
-							RelativePath=".\Engine\Funct\ImageProcessing\IMG_Filters.h"
-							>
-						</File>
-						<File
-							RelativePath=".\Engine\Funct\ImageProcessing\IMG_Filters.mm"
-							>
-						</File>
-						<File
-							RelativePath=".\Engine\Funct\ImageProcessing\IMG_HoughLines.h"
-							>
-						</File>
-						<File
-							RelativePath=".\Engine\Funct\ImageProcessing\IMG_HoughLines.mm"
-							>
-						</File>
-						<File
-							RelativePath=".\Engine\Funct\ImageProcessing\IMG_Scale.h"
-							>
-						</File>
-						<File
-							RelativePath=".\Engine\Funct\ImageProcessing\IMG_Scale.mm"
-							>
-						</File>
-						<Filter
-							Name="resampler"
-							>
-							<File
-								RelativePath=".\Engine\Funct\ImageProcessing\resampler\resampler.h"
-								>
-							</File>
-							<File
-								RelativePath=".\Engine\Funct\ImageProcessing\resampler\resampler.mm"
-								>
-							</File>
-						</Filter>
-						<Filter
-							Name="stb_image"
-							>
-							<File
-								RelativePath=".\Engine\Funct\ImageProcessing\stb_image\stb_image.c"
-								>
-							</File>
-							<File
-								RelativePath=".\Engine\Funct\ImageProcessing\stb_image\stb_image.h"
-								>
-							</File>
-						</Filter>
-					</Filter>
-				</Filter>
-				<Filter
 					Name="mtrand"
 					>
 					<File
@@ -1099,6 +1019,10 @@
 					</File>
 					<File
 						RelativePath=".\Engine\Core\CGlobalLogicCallback.h"
+						>
+					</File>
+					<File
+						RelativePath=".\Engine\Core\CGlobalOSWindowChangedCallback.h"
 						>
 					</File>
 					<File
@@ -2090,6 +2014,102 @@
 						>
 					</File>
 				</Filter>
+				<Filter
+					Name="Funct"
+					>
+					<File
+						RelativePath=".\Engine\Funct\std_membuf.h"
+						>
+					</File>
+					<Filter
+						Name="DataTable"
+						>
+						<File
+							RelativePath=".\Engine\Funct\DataTable\CDataTable.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Engine\Funct\DataTable\CDataTable.mm"
+							>
+						</File>
+						<File
+							RelativePath=".\Engine\Funct\DataTable\CGuiViewDataTable.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Engine\Funct\DataTable\CGuiViewDataTable.mm"
+							>
+						</File>
+						<File
+							RelativePath=".\Engine\Funct\DataTable\FUN_CSVParser.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Engine\Funct\DataTable\FUN_CSVParser.mm"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="ImageProcessing"
+						>
+						<File
+							RelativePath=".\Engine\Funct\ImageProcessing\CImageKernel.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Engine\Funct\ImageProcessing\CImageKernel.mm"
+							>
+						</File>
+						<File
+							RelativePath=".\Engine\Funct\ImageProcessing\IMG_Filters.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Engine\Funct\ImageProcessing\IMG_Filters.mm"
+							>
+						</File>
+						<File
+							RelativePath=".\Engine\Funct\ImageProcessing\IMG_HoughLines.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Engine\Funct\ImageProcessing\IMG_HoughLines.mm"
+							>
+						</File>
+						<File
+							RelativePath=".\Engine\Funct\ImageProcessing\IMG_Scale.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Engine\Funct\ImageProcessing\IMG_Scale.mm"
+							>
+						</File>
+						<Filter
+							Name="resampler"
+							>
+							<File
+								RelativePath=".\Engine\Funct\ImageProcessing\resampler\resampler.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Engine\Funct\ImageProcessing\resampler\resampler.mm"
+								>
+							</File>
+						</Filter>
+						<Filter
+							Name="stb_image"
+							>
+							<File
+								RelativePath=".\Engine\Funct\ImageProcessing\stb_image\stb_image.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Engine\Funct\ImageProcessing\stb_image\stb_image.h"
+								>
+							</File>
+						</Filter>
+					</Filter>
+				</Filter>
 			</Filter>
 			<Filter
 				Name="Win32"
@@ -2220,6 +2240,14 @@
 				</File>
 				<File
 					RelativePath=".\Win32\SYS_MiniDump.h"
+					>
+				</File>
+				<File
+					RelativePath=".\Win32\SYS_SharedMemory.h"
+					>
+				</File>
+				<File
+					RelativePath=".\Win32\SYS_SharedMemory.mm"
 					>
 				</File>
 				<File
@@ -2486,6 +2514,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\Win32\arch\mididrv.c"
+						>
+					</File>
+					<File
 						RelativePath=".\Win32\arch\stdint.h"
 						>
 					</File>
@@ -2525,6 +2557,18 @@
 							</File>
 						</Filter>
 					</Filter>
+				</Filter>
+				<Filter
+					Name="lib"
+					>
+					<File
+						RelativePath=".\Win32\lib\mman.c"
+						>
+					</File>
+					<File
+						RelativePath=".\Win32\lib\mman.h"
+						>
+					</File>
 				</Filter>
 			</Filter>
 			<Filter
@@ -2883,10 +2927,6 @@
 									>
 								</File>
 								<File
-									RelativePath=".\Games\c64\Emulators\vice\arch\mididrv.c"
-									>
-								</File>
-								<File
 									RelativePath=".\Games\c64\Emulators\vice\arch\mousedrv.c"
 									>
 								</File>
@@ -3023,10 +3063,6 @@
 									>
 								</File>
 								<File
-									RelativePath=".\Games\c64\Emulators\vice\arch\vsidui.c"
-									>
-								</File>
-								<File
 									RelativePath=".\Games\c64\Emulators\vice\arch\vsidui_sdl.h"
 									>
 								</File>
@@ -3042,851 +3078,955 @@
 							<Filter
 								Name="c64"
 								>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64-cmdline-options.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64-cmdline-options.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64-memory-hacks.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64-memory-hacks.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64-resources.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64-resources.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64-snapshot.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64-snapshot.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64_256k.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64_256k.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64bus.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64cart.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64cia.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64cia1.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64cia2.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64cpusc.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64datasette.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64drive.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64embedded.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64export.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64fastiec.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64fastiec.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64gluelogic.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64gluelogic.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64iec.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64iec.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64io.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64keyboard.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64keyboard.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64mem.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64meminit.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64meminit.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64memlimit.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64memlimit.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64memrom.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64memrom.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64memsc.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64memsnapshot.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64memsnapshot.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64model.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64parallel.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64parallel.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64pla.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64pla.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64printer.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64rom.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64rom.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64romset.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64rsuser.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64rsuser.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64scmodel.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64sound.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\c64video.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\musdrv.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\patchrom.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\patchrom.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\plus256k.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\plus256k.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\plus60k.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\plus60k.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\psid.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\psid.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\psiddrv.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\c64\reloc65.c"
+									>
+								</File>
 								<Filter
 									Name="cart"
 									>
 									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\actionreplay.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\actionreplay.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\actionreplay2.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\actionreplay2.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\actionreplay3.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\actionreplay3.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\actionreplay4.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\actionreplay4.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\atomicpower.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\atomicpower.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\c64-generic.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\c64-generic.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\c64-midi.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\c64-midi.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\c64acia.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\c64acia1.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\c64cart.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\c64carthooks.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\c64cartmem.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\c64cartmem.h"
+										>
+									</File>
+									<File
 										RelativePath=".\Games\c64\Emulators\vice\c64\cart\c64cartsystem.h"
 										>
 									</File>
-									<Filter
-										Name="libc64cart"
-										>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\actionreplay.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\actionreplay.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\actionreplay2.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\actionreplay2.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\actionreplay3.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\actionreplay3.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\actionreplay4.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\actionreplay4.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\atomicpower.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\atomicpower.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\c64-generic.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\c64-generic.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\c64-midi.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\c64-midi.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\c64tpi.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\c64tpi.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\capture.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\capture.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\comal80.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\comal80.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\delaep256.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\delaep256.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\delaep64.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\delaep64.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\delaep7x8.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\delaep7x8.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\diashowmaker.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\diashowmaker.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\dinamic.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\dinamic.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\dqbb.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\dqbb.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\easyflash.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\easyflash.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\epyxfastload.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\epyxfastload.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\exos.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\exos.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\expert.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\expert.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\final.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\final.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\final3.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\final3.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\finalplus.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\finalplus.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\formel64.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\formel64.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\freezeframe.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\freezeframe.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\freezemachine.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\freezemachine.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\funplay.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\funplay.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\gamekiller.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\gamekiller.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\gs.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\gs.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\ide64.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\ide64.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\isepic.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\isepic.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\kcs.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\kcs.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\kingsoft.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\kingsoft.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\mach5.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\mach5.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\magicdesk.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\magicdesk.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\magicformel.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\magicformel.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\magicvoice.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\magicvoice.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\mikroass.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\mikroass.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\mmc64.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\mmc64.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\mmcreplay.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\mmcreplay.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\ocean.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\ocean.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\pagefox.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\pagefox.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\prophet64.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\prophet64.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\ramcart.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\ramcart.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\retroreplay.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\retroreplay.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\reu.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\reu.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\rexep256.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\rexep256.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\rexutility.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\rexutility.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\ross.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\ross.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\silverrock128.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\silverrock128.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\simonsbasic.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\simonsbasic.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\snapshot64.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\snapshot64.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\stardos.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\stardos.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\stb.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\stb.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\superexplode5.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\superexplode5.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\supergames.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\supergames.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\supersnapshot.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\supersnapshot.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\supersnapshot4.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\supersnapshot4.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\warpspeed.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\warpspeed.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\westermann.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\westermann.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\zaxxon.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cart\zaxxon.h"
-											>
-										</File>
-									</Filter>
-									<Filter
-										Name="libc64cartsystem"
-										>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cartsystem\c64cart.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cartsystem\c64carthooks.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cartsystem\c64cartmem.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cartsystem\c64cartmem.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cartsystem\crt.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64cartsystem\crt.h"
-											>
-										</File>
-									</Filter>
-									<Filter
-										Name="libc64commoncart"
-										>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64commoncart\c64acia.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64commoncart\c64acia1.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64commoncart\digimax.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64commoncart\digimax.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64commoncart\ds12c887rtc.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64commoncart\ds12c887rtc.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64commoncart\georam.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64commoncart\georam.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64commoncart\sfx_soundexpander.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64commoncart\sfx_soundexpander.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64commoncart\sfx_soundsampler.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64commoncart\sfx_soundsampler.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64commoncart\tfe.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\c64\cart\libc64commoncart\tfe.h"
-											>
-										</File>
-									</Filter>
-								</Filter>
-								<Filter
-									Name="libc64sc"
-									>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64-cmdline-options.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\c64tpi.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64-cmdline-options.h"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\c64tpi.h"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64-resources.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\capture.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64-resources.h"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\capture.h"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64-snapshot.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\clockport-mp3at64.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64-snapshot.h"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\clockport-mp3at64.h"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\clockport-rrnet.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64.h"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\clockport-rrnet.h"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64_256k.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\clockport.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64_256k.h"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\clockport.h"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64bus.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\comal80.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64cart.h"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\comal80.h"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64cia.h"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\cpmcart.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64cia1.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\cpmcart.h"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64cia2.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\crt.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64cpu.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\crt.h"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64datasette.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\cs8900io.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64drive.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\cs8900io.h"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64embedded.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\daa.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64export.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\daa.h"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64export.h"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\debugcart.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64fastiec.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\debugcart.h"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64fastiec.h"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\delaep256.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64gluelogic.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\delaep256.h"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64gluelogic.h"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\delaep64.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64iec.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\delaep64.h"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64iec.h"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\delaep7x8.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64io.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\delaep7x8.h"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64keyboard.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\diashowmaker.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64keyboard.h"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\diashowmaker.h"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64mem.h"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\digimax.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64meminit.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\digimax.h"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64meminit.h"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\dinamic.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64memlimit.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\dinamic.h"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64memlimit.h"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\dqbb.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64memrom.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\dqbb.h"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64memrom.h"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\ds12c887rtc.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64memsc.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\ds12c887rtc.h"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64memsnapshot.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\easycalc.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64memsnapshot.h"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\easycalc.h"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64model.h"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\easyflash.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64parallel.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\easyflash.h"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64parallel.h"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\epyxfastload.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64pla.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\epyxfastload.h"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64pla.h"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\ethernetcart.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64printer.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\ethernetcart.h"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64rom.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\exos.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64rom.h"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\exos.h"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64romset.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\expert.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64rsuser.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\expert.h"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64rsuser.h"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\final.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64scmodel.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\final.h"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64sound.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\final3.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\c64video.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\final3.h"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\patchrom.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\finalplus.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\patchrom.h"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\finalplus.h"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\plus256k.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\formel64.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\plus256k.h"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\formel64.h"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\plus60k.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\freezeframe.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\plus60k.h"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\freezeframe.h"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\psid.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\freezemachine.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\psid.h"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\freezemachine.h"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\psiddrv.h"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\funplay.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\c64\libc64sc\reloc65.c"
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\funplay.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\gamekiller.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\gamekiller.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\georam.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\georam.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\gmod2.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\gmod2.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\gs.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\gs.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\ide64.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\ide64.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\isepic.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\isepic.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\kcs.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\kcs.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\kingsoft.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\kingsoft.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\mach5.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\mach5.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\magicdesk.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\magicdesk.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\magicformel.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\magicformel.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\magicvoice.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\magicvoice.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\mikroass.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\mikroass.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\mmc64.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\mmc64.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\mmcreplay.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\mmcreplay.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\ocean.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\ocean.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\pagefox.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\pagefox.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\prophet64.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\prophet64.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\ramcart.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\ramcart.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\retroreplay.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\retroreplay.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\reu.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\reu.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\rexep256.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\rexep256.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\rexutility.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\rexutility.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\rgcd.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\rgcd.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\ross.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\ross.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\rrnetmk3.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\rrnetmk3.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\sfx_soundexpander.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\sfx_soundexpander.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\sfx_soundsampler.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\sfx_soundsampler.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\shortbus.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\shortbus.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\shortbus_digimax.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\shortbus_digimax.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\shortbus_etfe.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\shortbus_etfe.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\silverrock128.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\silverrock128.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\simonsbasic.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\simonsbasic.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\snapshot64.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\snapshot64.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\stardos.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\stardos.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\stb.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\stb.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\superexplode5.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\superexplode5.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\supergames.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\supergames.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\supersnapshot.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\supersnapshot.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\supersnapshot4.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\supersnapshot4.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\warpspeed.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\warpspeed.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\westermann.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\westermann.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\zaxxon.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\c64\cart\zaxxon.h"
 										>
 									</File>
 								</Filter>
@@ -3975,6 +4115,118 @@
 								Name="drive"
 								>
 								<File
+									RelativePath=".\Games\c64\Emulators\vice\drive\drive-check.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\drive\drive-check.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\drive\drive-cmdline-options.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\drive\drive-cmdline-options.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\drive\drive-overflow.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\drive\drive-overflow.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\drive\drive-resources.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\drive\drive-resources.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\drive\drive-snapshot.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\drive\drive-snapshot.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\drive\drive-sound.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\drive\drive-sound.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\drive\drive-writeprotect.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\drive\drive-writeprotect.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\drive\drive.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\drive\drive.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\drive\drivecpu.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\drive\drivecpu.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\drive\drivecpu65c02.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\drive\drivecpu65c02.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\drive\driveimage.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\drive\driveimage.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\drive\drivemem.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\drive\drivemem.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\drive\driverom.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\drive\driverom.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\drive\drivesync.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\drive\drivesync.h"
+									>
+								</File>
+								<File
 									RelativePath=".\Games\c64\Emulators\vice\drive\drivetypes.h"
 									>
 								</File>
@@ -3995,6 +4247,14 @@
 									>
 								</File>
 								<File
+									RelativePath=".\Games\c64\Emulators\vice\drive\rotation.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\drive\rotation.h"
+									>
+								</File>
+								<File
 									RelativePath=".\Games\c64\Emulators\vice\drive\viad.h"
 									>
 								</File>
@@ -4002,154 +4262,154 @@
 									Name="iec"
 									>
 									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\iec\cia1571d.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\iec\cia1581d.c"
+										>
+									</File>
+									<File
 										RelativePath=".\Games\c64\Emulators\vice\drive\iec\ciad.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\iec\fdd.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\iec\fdd.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\iec\glue1571.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\iec\glue1571.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\iec\iec-cmdline-options.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\iec\iec-cmdline-options.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\iec\iec-resources.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\iec\iec-resources.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\iec\iec.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\iec\iecrom.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\iec\iecrom.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\iec\memiec.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\iec\memiec.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\iec\pc8477.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\iec\pc8477.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\iec\via1d1541.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\iec\via1d1541.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\iec\via4000.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\iec\via4000.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\iec\wd1770.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\iec\wd1770.h"
 										>
 									</File>
 									<Filter
 										Name="c64exp"
 										>
-										<Filter
-											Name="libdriveiecc64exp"
-											>
-											<File
-												RelativePath=".\Games\c64\Emulators\vice\drive\iec\c64exp\libdriveiecc64exp\c64exp-cmdline-options.c"
-												>
-											</File>
-											<File
-												RelativePath=".\Games\c64\Emulators\vice\drive\iec\c64exp\libdriveiecc64exp\c64exp-cmdline-options.h"
-												>
-											</File>
-											<File
-												RelativePath=".\Games\c64\Emulators\vice\drive\iec\c64exp\libdriveiecc64exp\c64exp-resources.c"
-												>
-											</File>
-											<File
-												RelativePath=".\Games\c64\Emulators\vice\drive\iec\c64exp\libdriveiecc64exp\c64exp-resources.h"
-												>
-											</File>
-											<File
-												RelativePath=".\Games\c64\Emulators\vice\drive\iec\c64exp\libdriveiecc64exp\dolphindos3.c"
-												>
-											</File>
-											<File
-												RelativePath=".\Games\c64\Emulators\vice\drive\iec\c64exp\libdriveiecc64exp\dolphindos3.h"
-												>
-											</File>
-											<File
-												RelativePath=".\Games\c64\Emulators\vice\drive\iec\c64exp\libdriveiecc64exp\iec-c64exp.c"
-												>
-											</File>
-											<File
-												RelativePath=".\Games\c64\Emulators\vice\drive\iec\c64exp\libdriveiecc64exp\profdos.c"
-												>
-											</File>
-											<File
-												RelativePath=".\Games\c64\Emulators\vice\drive\iec\c64exp\libdriveiecc64exp\profdos.h"
-												>
-											</File>
-											<File
-												RelativePath=".\Games\c64\Emulators\vice\drive\iec\c64exp\libdriveiecc64exp\supercard.c"
-												>
-											</File>
-											<File
-												RelativePath=".\Games\c64\Emulators\vice\drive\iec\c64exp\libdriveiecc64exp\supercard.h"
-												>
-											</File>
-										</Filter>
-									</Filter>
-									<Filter
-										Name="libdriveiec"
-										>
 										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\iec\libdriveiec\cia1571d.c"
+											RelativePath=".\Games\c64\Emulators\vice\drive\iec\c64exp\c64exp-cmdline-options.c"
 											>
 										</File>
 										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\iec\libdriveiec\cia1581d.c"
+											RelativePath=".\Games\c64\Emulators\vice\drive\iec\c64exp\c64exp-cmdline-options.h"
 											>
 										</File>
 										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\iec\libdriveiec\fdd.c"
+											RelativePath=".\Games\c64\Emulators\vice\drive\iec\c64exp\c64exp-resources.c"
 											>
 										</File>
 										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\iec\libdriveiec\fdd.h"
+											RelativePath=".\Games\c64\Emulators\vice\drive\iec\c64exp\c64exp-resources.h"
 											>
 										</File>
 										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\iec\libdriveiec\glue1571.c"
+											RelativePath=".\Games\c64\Emulators\vice\drive\iec\c64exp\dolphindos3.c"
 											>
 										</File>
 										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\iec\libdriveiec\glue1571.h"
+											RelativePath=".\Games\c64\Emulators\vice\drive\iec\c64exp\dolphindos3.h"
 											>
 										</File>
 										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\iec\libdriveiec\iec-cmdline-options.c"
+											RelativePath=".\Games\c64\Emulators\vice\drive\iec\c64exp\iec-c64exp.c"
 											>
 										</File>
 										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\iec\libdriveiec\iec-cmdline-options.h"
+											RelativePath=".\Games\c64\Emulators\vice\drive\iec\c64exp\profdos.c"
 											>
 										</File>
 										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\iec\libdriveiec\iec-resources.c"
+											RelativePath=".\Games\c64\Emulators\vice\drive\iec\c64exp\profdos.h"
 											>
 										</File>
 										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\iec\libdriveiec\iec-resources.h"
+											RelativePath=".\Games\c64\Emulators\vice\drive\iec\c64exp\stardos-exp.c"
 											>
 										</File>
 										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\iec\libdriveiec\iec.c"
+											RelativePath=".\Games\c64\Emulators\vice\drive\iec\c64exp\stardos-exp.h"
 											>
 										</File>
 										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\iec\libdriveiec\iecrom.c"
+											RelativePath=".\Games\c64\Emulators\vice\drive\iec\c64exp\supercard.c"
 											>
 										</File>
 										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\iec\libdriveiec\iecrom.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\iec\libdriveiec\memiec.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\iec\libdriveiec\memiec.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\iec\libdriveiec\pc8477.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\iec\libdriveiec\pc8477.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\iec\libdriveiec\via1d1541.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\iec\libdriveiec\via1d1541.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\iec\libdriveiec\via4000.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\iec\libdriveiec\via4000.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\iec\libdriveiec\wd1770.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\iec\libdriveiec\wd1770.h"
+											RelativePath=".\Games\c64\Emulators\vice\drive\iec\c64exp\supercard.h"
 											>
 										</File>
 									</Filter>
@@ -4157,212 +4417,92 @@
 								<Filter
 									Name="iecieee"
 									>
-									<Filter
-										Name="libdriveiecieee"
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\iecieee\iecieee.c"
 										>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\iecieee\libdriveiecieee\iecieee.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\iecieee\libdriveiecieee\via2d.c"
-											>
-										</File>
-									</Filter>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\iecieee\via2d.c"
+										>
+									</File>
 								</Filter>
 								<Filter
 									Name="ieee"
 									>
-									<Filter
-										Name="libdriveieee"
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\ieee\fdc.c"
 										>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\ieee\libdriveieee\fdc.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\ieee\libdriveieee\fdc.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\ieee\libdriveieee\ieee-cmdline-options.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\ieee\libdriveieee\ieee-cmdline-options.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\ieee\libdriveieee\ieee-resources.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\ieee\libdriveieee\ieee-resources.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\ieee\libdriveieee\ieee.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\ieee\libdriveieee\ieeerom.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\ieee\libdriveieee\ieeerom.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\ieee\libdriveieee\memieee.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\ieee\libdriveieee\memieee.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\ieee\libdriveieee\riot1d.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\ieee\libdriveieee\riot2d.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\ieee\libdriveieee\riotd.h"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\ieee\libdriveieee\via1d2031.c"
-											>
-										</File>
-										<File
-											RelativePath=".\Games\c64\Emulators\vice\drive\ieee\libdriveieee\via1d2031.h"
-											>
-										</File>
-									</Filter>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\ieee\fdc.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\ieee\ieee-cmdline-options.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\ieee\ieee-cmdline-options.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\ieee\ieee-resources.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\ieee\ieee-resources.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\ieee\ieee.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\ieee\ieeerom.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\ieee\ieeerom.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\ieee\memieee.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\ieee\memieee.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\ieee\riot1d.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\ieee\riot2d.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\ieee\riotd.h"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\ieee\via1d2031.c"
+										>
+									</File>
+									<File
+										RelativePath=".\Games\c64\Emulators\vice\drive\ieee\via1d2031.h"
+										>
+									</File>
 								</Filter>
 								<Filter
-									Name="libdrive"
+									Name="tcbm"
 									>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\drive\libdrive\drive-check.c"
+										RelativePath=".\Games\c64\Emulators\vice\drive\tcbm\tpid.c"
 										>
 									</File>
 									<File
-										RelativePath=".\Games\c64\Emulators\vice\drive\libdrive\drive-check.h"
-										>
-									</File>
-									<File
-										RelativePath=".\Games\c64\Emulators\vice\drive\libdrive\drive-cmdline-options.c"
-										>
-									</File>
-									<File
-										RelativePath=".\Games\c64\Emulators\vice\drive\libdrive\drive-cmdline-options.h"
-										>
-									</File>
-									<File
-										RelativePath=".\Games\c64\Emulators\vice\drive\libdrive\drive-overflow.c"
-										>
-									</File>
-									<File
-										RelativePath=".\Games\c64\Emulators\vice\drive\libdrive\drive-overflow.h"
-										>
-									</File>
-									<File
-										RelativePath=".\Games\c64\Emulators\vice\drive\libdrive\drive-resources.c"
-										>
-									</File>
-									<File
-										RelativePath=".\Games\c64\Emulators\vice\drive\libdrive\drive-resources.h"
-										>
-									</File>
-									<File
-										RelativePath=".\Games\c64\Emulators\vice\drive\libdrive\drive-snapshot.c"
-										>
-									</File>
-									<File
-										RelativePath=".\Games\c64\Emulators\vice\drive\libdrive\drive-snapshot.h"
-										>
-									</File>
-									<File
-										RelativePath=".\Games\c64\Emulators\vice\drive\libdrive\drive-sound.c"
-										>
-									</File>
-									<File
-										RelativePath=".\Games\c64\Emulators\vice\drive\libdrive\drive-sound.h"
-										>
-									</File>
-									<File
-										RelativePath=".\Games\c64\Emulators\vice\drive\libdrive\drive-writeprotect.c"
-										>
-									</File>
-									<File
-										RelativePath=".\Games\c64\Emulators\vice\drive\libdrive\drive-writeprotect.h"
-										>
-									</File>
-									<File
-										RelativePath=".\Games\c64\Emulators\vice\drive\libdrive\drive.c"
-										>
-									</File>
-									<File
-										RelativePath=".\Games\c64\Emulators\vice\drive\libdrive\drive.h"
-										>
-									</File>
-									<File
-										RelativePath=".\Games\c64\Emulators\vice\drive\libdrive\drivecpu.c"
-										>
-									</File>
-									<File
-										RelativePath=".\Games\c64\Emulators\vice\drive\libdrive\drivecpu.h"
-										>
-									</File>
-									<File
-										RelativePath=".\Games\c64\Emulators\vice\drive\libdrive\drivecpu65c02.c"
-										>
-									</File>
-									<File
-										RelativePath=".\Games\c64\Emulators\vice\drive\libdrive\drivecpu65c02.h"
-										>
-									</File>
-									<File
-										RelativePath=".\Games\c64\Emulators\vice\drive\libdrive\driveimage.c"
-										>
-									</File>
-									<File
-										RelativePath=".\Games\c64\Emulators\vice\drive\libdrive\driveimage.h"
-										>
-									</File>
-									<File
-										RelativePath=".\Games\c64\Emulators\vice\drive\libdrive\drivemem.c"
-										>
-									</File>
-									<File
-										RelativePath=".\Games\c64\Emulators\vice\drive\libdrive\drivemem.h"
-										>
-									</File>
-									<File
-										RelativePath=".\Games\c64\Emulators\vice\drive\libdrive\driverom.c"
-										>
-									</File>
-									<File
-										RelativePath=".\Games\c64\Emulators\vice\drive\libdrive\driverom.h"
-										>
-									</File>
-									<File
-										RelativePath=".\Games\c64\Emulators\vice\drive\libdrive\drivesync.c"
-										>
-									</File>
-									<File
-										RelativePath=".\Games\c64\Emulators\vice\drive\libdrive\drivesync.h"
-										>
-									</File>
-									<File
-										RelativePath=".\Games\c64\Emulators\vice\drive\libdrive\rotation.c"
-										>
-									</File>
-									<File
-										RelativePath=".\Games\c64\Emulators\vice\drive\libdrive\rotation.h"
+										RelativePath=".\Games\c64\Emulators\vice\drive\tcbm\tpid.h"
 										>
 									</File>
 								</Filter>
@@ -4487,6 +4627,14 @@
 									>
 								</File>
 								<File
+									RelativePath=".\Games\c64\Emulators\vice\gfxoutputdrv\godotdrv.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\gfxoutputdrv\godotdrv.h"
+									>
+								</File>
+								<File
 									RelativePath=".\Games\c64\Emulators\vice\gfxoutputdrv\iffdrv.c"
 									>
 								</File>
@@ -4500,6 +4648,18 @@
 								</File>
 								<File
 									RelativePath=".\Games\c64\Emulators\vice\gfxoutputdrv\jpegdrv.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\gfxoutputdrv\koaladrv.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\gfxoutputdrv\nativedrv.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\gfxoutputdrv\nativedrv.h"
 									>
 								</File>
 								<File
@@ -4679,6 +4839,14 @@
 									>
 								</File>
 								<File
+									RelativePath=".\Games\c64\Emulators\vice\monitor\mon_memmap.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\monitor\mon_memmap.h"
+									>
+								</File>
+								<File
 									RelativePath=".\Games\c64\Emulators\vice\monitor\mon_memory.c"
 									>
 								</File>
@@ -4695,6 +4863,10 @@
 									>
 								</File>
 								<File
+									RelativePath=".\Games\c64\Emulators\vice\monitor\mon_register.c"
+									>
+								</File>
+								<File
 									RelativePath=".\Games\c64\Emulators\vice\monitor\mon_register.h"
 									>
 								</File>
@@ -4704,6 +4876,10 @@
 								</File>
 								<File
 									RelativePath=".\Games\c64\Emulators\vice\monitor\mon_register6502dtv.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\monitor\mon_register65816.c"
 									>
 								</File>
 								<File
@@ -4807,6 +4983,10 @@
 									>
 								</File>
 								<File
+									RelativePath=".\Games\c64\Emulators\vice\platform\platform_linux_libc_version.h"
+									>
+								</File>
+								<File
 									RelativePath=".\Games\c64\Emulators\vice\platform\platform_macosx.c"
 									>
 								</File>
@@ -4831,7 +5011,19 @@
 									>
 								</File>
 								<File
+									RelativePath=".\Games\c64\Emulators\vice\platform\platform_x86_gcc_cpuid.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\platform\platform_x86_msvc_cpuid.h"
+									>
+								</File>
+								<File
 									RelativePath=".\Games\c64\Emulators\vice\platform\platform_x86_runtime_cpu.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\platform\platform_x86_runtime_cpu.h"
 									>
 								</File>
 							</Filter>
@@ -4844,6 +5036,14 @@
 								</File>
 								<File
 									RelativePath=".\Games\c64\Emulators\vice\printerdrv\driver-select.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\printerdrv\drv-1520.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\printerdrv\drv-1520.h"
 									>
 								</File>
 								<File
@@ -5403,14 +5603,6 @@
 									>
 								</File>
 								<File
-									RelativePath=".\Games\c64\Emulators\vice\root\crc32.c"
-									>
-								</File>
-								<File
-									RelativePath=".\Games\c64\Emulators\vice\root\crc32.h"
-									>
-								</File>
-								<File
 									RelativePath=".\Games\c64\Emulators\vice\root\datasette.c"
 									>
 								</File>
@@ -5448,6 +5640,10 @@
 								</File>
 								<File
 									RelativePath=".\Games\c64\Emulators\vice\root\drivedos1001.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\root\drivedos1540.h"
 									>
 								</File>
 								<File
@@ -5504,6 +5700,10 @@
 								</File>
 								<File
 									RelativePath=".\Games\c64\Emulators\vice\root\event.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\root\export.h"
 									>
 								</File>
 								<File
@@ -5623,14 +5823,6 @@
 									>
 								</File>
 								<File
-									RelativePath=".\Games\c64\Emulators\vice\root\joystick.c"
-									>
-								</File>
-								<File
-									RelativePath=".\Games\c64\Emulators\vice\root\joystick.h"
-									>
-								</File>
-								<File
 									RelativePath=".\Games\c64\Emulators\vice\root\kbdbuf.c"
 									>
 								</File>
@@ -5660,14 +5852,6 @@
 								</File>
 								<File
 									RelativePath=".\Games\c64\Emulators\vice\root\libm_math.h"
-									>
-								</File>
-								<File
-									RelativePath=".\Games\c64\Emulators\vice\root\lightpen.c"
-									>
-								</File>
-								<File
-									RelativePath=".\Games\c64\Emulators\vice\root\lightpen.h"
 									>
 								</File>
 								<File
@@ -5735,6 +5919,10 @@
 									>
 								</File>
 								<File
+									RelativePath=".\Games\c64\Emulators\vice\root\mididrv.h"
+									>
+								</File>
+								<File
 									RelativePath=".\Games\c64\Emulators\vice\root\monitor.h"
 									>
 								</File>
@@ -5744,14 +5932,6 @@
 								</File>
 								<File
 									RelativePath=".\Games\c64\Emulators\vice\root\mos6510dtv.h"
-									>
-								</File>
-								<File
-									RelativePath=".\Games\c64\Emulators\vice\root\mouse.c"
-									>
-								</File>
-								<File
-									RelativePath=".\Games\c64\Emulators\vice\root\mouse.h"
 									>
 								</File>
 								<File
@@ -5780,6 +5960,10 @@
 								</File>
 								<File
 									RelativePath=".\Games\c64\Emulators\vice\root\parallel.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\root\parsid.h"
 									>
 								</File>
 								<File
@@ -5887,6 +6071,10 @@
 									>
 								</File>
 								<File
+									RelativePath=".\Games\c64\Emulators\vice\root\ssi2001.h"
+									>
+								</File>
+								<File
 									RelativePath=".\Games\c64\Emulators\vice\root\sysfile.c"
 									>
 								</File>
@@ -5967,6 +6155,14 @@
 									>
 								</File>
 								<File
+									RelativePath=".\Games\c64\Emulators\vice\root\vice-crc32.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\root\vice-crc32.h"
+									>
+								</File>
+								<File
 									RelativePath=".\Games\c64\Emulators\vice\root\vice-event.h"
 									>
 								</File>
@@ -5979,6 +6175,14 @@
 									>
 								</File>
 								<File
+									RelativePath=".\Games\c64\Emulators\vice\root\vicefeatures.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\root\vicefeatures.h"
+									>
+								</File>
+								<File
 									RelativePath=".\Games\c64\Emulators\vice\root\vicemaxpath.h"
 									>
 								</File>
@@ -5988,6 +6192,66 @@
 								</File>
 								<File
 									RelativePath=".\Games\c64\Emulators\vice\root\vicii.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\root\vicii_c64hq_vpl.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\root\vicii_c64s_vpl.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\root\vicii_ccs64_vpl.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\root\vicii_community_colors_vpl.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\root\vicii_deekay_vpl.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\root\vicii_frodo_vpl.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\root\vicii_godot_vpl.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\root\vicii_pc64_vpl.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\root\vicii_pepto_ntsc_sony_vpl.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\root\vicii_pepto_ntsc_vpl.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\root\vicii_pepto_pal_vpl.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\root\vicii_pepto_palold_vpl.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\root\vicii_ptoing_vpl.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\root\vicii_rgb_vpl.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\root\vicii_vice_vpl.h"
 									>
 								</File>
 								<File
@@ -6012,6 +6276,10 @@
 								</File>
 								<File
 									RelativePath=".\Games\c64\Emulators\vice\root\vsyncapi.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\root\wdc65816.h"
 									>
 								</File>
 								<File
@@ -6084,6 +6352,30 @@
 								</File>
 								<File
 									RelativePath=".\Games\c64\Emulators\vice\rtc\ds12c887.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\rtc\ds1307.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\rtc\ds1307.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\rtc\ds1602.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\rtc\ds1602.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\rtc\pcf8583.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\rtc\pcf8583.h"
 									>
 								</File>
 								<File
@@ -6571,6 +6863,14 @@
 									>
 								</File>
 								<File
+									RelativePath=".\Games\c64\Emulators\vice\video\render1x1crt.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\video\render1x1crt.h"
+									>
+								</File>
+								<File
 									RelativePath=".\Games\c64\Emulators\vice\video\render1x1ntsc.c"
 									>
 								</File>
@@ -6735,11 +7035,43 @@
 								Name="userport"
 								>
 								<File
+									RelativePath=".\Games\c64\Emulators\vice\userport\userport.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\userport\userport.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\userport\userport_4bit_sampler.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\userport\userport_4bit_sampler.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\userport\userport_8bss.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\userport\userport_8bss.h"
+									>
+								</File>
+								<File
 									RelativePath=".\Games\c64\Emulators\vice\userport\userport_dac.c"
 									>
 								</File>
 								<File
 									RelativePath=".\Games\c64\Emulators\vice\userport\userport_dac.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\userport\userport_diag_586220_harness.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\userport\userport_diag_586220_harness.h"
 									>
 								</File>
 								<File
@@ -6759,11 +7091,19 @@
 									>
 								</File>
 								<File
-									RelativePath=".\Games\c64\Emulators\vice\userport\userport_rtc.c"
+									RelativePath=".\Games\c64\Emulators\vice\userport\userport_rtc_58321a.c"
 									>
 								</File>
 								<File
-									RelativePath=".\Games\c64\Emulators\vice\userport\userport_rtc.h"
+									RelativePath=".\Games\c64\Emulators\vice\userport\userport_rtc_58321a.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\userport\userport_rtc_ds1307.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\userport\userport_rtc_ds1307.h"
 									>
 								</File>
 							</Filter>
@@ -6811,6 +7151,14 @@
 									>
 								</File>
 								<File
+									RelativePath=".\Games\c64\Emulators\vice\core\m93c86.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\core\m93c86.h"
+									>
+								</File>
+								<File
 									RelativePath=".\Games\c64\Emulators\vice\core\mc6821core.c"
 									>
 								</File>
@@ -6855,6 +7203,222 @@
 									>
 								</File>
 							</Filter>
+							<Filter
+								Name="diag"
+								>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\diag\c64_diag_586220_harness.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\diag\c64_diag_586220_harness.h"
+									>
+								</File>
+							</Filter>
+							<Filter
+								Name="joyport"
+								>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\joyport\bbrtc.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\joyport\bbrtc.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\joyport\cardkey.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\joyport\cardkey.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\joyport\coplin_keypad.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\joyport\coplin_keypad.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\joyport\cx21.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\joyport\cx21.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\joyport\cx85.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\joyport\cx85.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\joyport\joyport.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\joyport\joyport.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\joyport\joystick.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\joyport\joystick.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\joyport\lightpen.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\joyport\lightpen.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\joyport\mouse.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\joyport\mouse.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\joyport\paperclip64.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\joyport\paperclip64.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\joyport\rushware_keypad.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\joyport\rushware_keypad.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\joyport\sampler2bit.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\joyport\sampler2bit.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\joyport\sampler4bit.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\joyport\sampler4bit.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\joyport\script64_dongle.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\joyport\script64_dongle.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\joyport\vizawrite64_dongle.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\joyport\vizawrite64_dongle.h"
+									>
+								</File>
+							</Filter>
+							<Filter
+								Name="sampledrv"
+								>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\samplerdrv\file_drv.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\samplerdrv\file_drv.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\samplerdrv\portaudio_drv.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\samplerdrv\portaudio_drv.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\samplerdrv\sampler.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\samplerdrv\sampler.h"
+									>
+								</File>
+							</Filter>
+							<Filter
+								Name="tapeport"
+								>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\tapeport\cp-clockf83.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\tapeport\cp-clockf83.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\tapeport\dtl-basic-dongle.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\tapeport\dtl-basic-dongle.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\tapeport\sense-dongle.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\tapeport\sense-dongle.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\tapeport\tape_diag_586220_harness.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\tapeport\tape_diag_586220_harness.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\tapeport\tapelog.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\tapeport\tapelog.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\tapeport\tapeport.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\vice\tapeport\tapeport.h"
+									>
+								</File>
+							</Filter>
 						</Filter>
 					</Filter>
 					<Filter
@@ -6885,6 +7449,30 @@
 							>
 						</File>
 						<File
+							RelativePath=".\Games\c64\Screens\CViewC64KeyMap.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Screens\CViewC64KeyMap.mm"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Screens\CViewFileD64.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Screens\CViewFileD64.mm"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Screens\CViewKeyboardShortcuts.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Screens\CViewKeyboardShortcuts.mm"
+							>
+						</File>
+						<File
 							RelativePath=".\Games\c64\Screens\CViewMainMenu.h"
 							>
 						</File>
@@ -6908,10 +7496,134 @@
 							RelativePath=".\Games\c64\Screens\CViewSnapshots.mm"
 							>
 						</File>
+						<Filter
+							Name="VicEditor"
+							>
+							<File
+								RelativePath=".\Games\c64\Screens\VicEditor\C64DisplayListCodeGenerator.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Screens\VicEditor\C64DisplayListCodeGenerator.mm"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Screens\VicEditor\CVicEditorLayer.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Screens\VicEditor\CVicEditorLayer.mm"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Screens\VicEditor\CVicEditorLayerC64Canvas.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Screens\VicEditor\CVicEditorLayerC64Canvas.mm"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Screens\VicEditor\CVicEditorLayerC64Screen.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Screens\VicEditor\CVicEditorLayerC64Screen.mm"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Screens\VicEditor\CVicEditorLayerC64Sprites.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Screens\VicEditor\CVicEditorLayerC64Sprites.mm"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Screens\VicEditor\CVicEditorLayerUnrestrictedBitmap.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Screens\VicEditor\CVicEditorLayerUnrestrictedBitmap.mm"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Screens\VicEditor\CVicEditorLayerVirtualSprites.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Screens\VicEditor\CVicEditorLayerVirtualSprites.mm"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Screens\VicEditor\CVicEditorUndoData.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Screens\VicEditor\CVicEditorUndoData.mm"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Screens\VicEditor\CViewC64Charset.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Screens\VicEditor\CViewC64Charset.mm"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Screens\VicEditor\CViewC64Palette.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Screens\VicEditor\CViewC64Palette.mm"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Screens\VicEditor\CViewC64Sprite.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Screens\VicEditor\CViewC64Sprite.mm"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Screens\VicEditor\CViewVicEditor.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Screens\VicEditor\CViewVicEditor.mm"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Screens\VicEditor\CViewVicEditorDisplayPreview.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Screens\VicEditor\CViewVicEditorDisplayPreview.mm"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Screens\VicEditor\CViewVicEditorLayers.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Screens\VicEditor\CViewVicEditorLayers.mm"
+								>
+							</File>
+						</Filter>
 					</Filter>
 					<Filter
 						Name="Tools"
 						>
+						<File
+							RelativePath=".\Games\c64\Tools\C64AsmSource.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Tools\C64AsmSource.mm"
+							>
+						</File>
 						<File
 							RelativePath=".\Games\c64\Tools\C64CommandLine.h"
 							>
@@ -6933,7 +7645,27 @@
 							>
 						</File>
 						<File
+							RelativePath=".\Games\c64\Tools\C64KeyboardShortcuts.mm"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Tools\C64KeyMap.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Tools\C64KeyMap.mm"
+							>
+						</File>
+						<File
 							RelativePath=".\Games\c64\Tools\C64Opcodes.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Tools\C64Palette.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Tools\C64Palette.mm"
 							>
 						</File>
 						<File
@@ -6942,6 +7674,22 @@
 						</File>
 						<File
 							RelativePath=".\Games\c64\Tools\C64SettingsStorage.mm"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Tools\C64SharedMemory.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Tools\C64SharedMemory.mm"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Tools\C64SIDFrequencies.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Tools\C64SIDFrequencies.mm"
 							>
 						</File>
 						<File
@@ -6958,6 +7706,22 @@
 						</File>
 						<File
 							RelativePath=".\Games\c64\Tools\C64Tools.mm"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Tools\CDiskImageD64.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Tools\CDiskImageD64.mm"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Tools\CGuiLockableList.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Tools\CGuiLockableList.mm"
 							>
 						</File>
 					</Filter>
@@ -7044,6 +7808,138 @@
 							RelativePath=".\Games\c64\Views\CViewMonitorConsole.mm"
 							>
 						</File>
+						<Filter
+							Name="VicDisplay"
+							>
+							<File
+								RelativePath=".\Games\c64\Views\VicDisplay\C64Bitmap.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Views\VicDisplay\C64Bitmap.mm"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Views\VicDisplay\C64CharHires.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Views\VicDisplay\C64CharHires.mm"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Views\VicDisplay\C64CharMulti.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Views\VicDisplay\C64CharMulti.mm"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Views\VicDisplay\C64CharsetHires.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Views\VicDisplay\C64CharsetHires.mm"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Views\VicDisplay\C64Sprite.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Views\VicDisplay\C64Sprite.mm"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Views\VicDisplay\C64SpriteHires.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Views\VicDisplay\C64SpriteHires.mm"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Views\VicDisplay\C64SpriteMulti.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Views\VicDisplay\C64SpriteMulti.mm"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Views\VicDisplay\C64VicDisplayCanvas.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Views\VicDisplay\C64VicDisplayCanvas.mm"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Views\VicDisplay\C64VicDisplayCanvasBlank.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Views\VicDisplay\C64VicDisplayCanvasBlank.mm"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Views\VicDisplay\C64VicDisplayCanvasExtendedText.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Views\VicDisplay\C64VicDisplayCanvasExtendedText.mm"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Views\VicDisplay\C64VicDisplayCanvasHiresBitmap.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Views\VicDisplay\C64VicDisplayCanvasHiresBitmap.mm"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Views\VicDisplay\C64VicDisplayCanvasHiresText.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Views\VicDisplay\C64VicDisplayCanvasHiresText.mm"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Views\VicDisplay\C64VicDisplayCanvasMultiBitmap.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Views\VicDisplay\C64VicDisplayCanvasMultiBitmap.mm"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Views\VicDisplay\C64VicDisplayCanvasMultiText.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Views\VicDisplay\C64VicDisplayCanvasMultiText.mm"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Views\VicDisplay\CViewC64VicControl.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Views\VicDisplay\CViewC64VicControl.mm"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Views\VicDisplay\CViewC64VicDisplay.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Views\VicDisplay\CViewC64VicDisplay.mm"
+								>
+							</File>
+						</Filter>
 					</Filter>
 				</Filter>
 			</Filter>

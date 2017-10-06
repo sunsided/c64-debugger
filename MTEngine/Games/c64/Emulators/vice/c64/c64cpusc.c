@@ -846,6 +846,128 @@ void c64d_set_c64_pc(uint16 pc)
 	interrupt_maincpu_trigger_trap(_c64d_set_c64_pc_trap, (void*)&_c64d_new_pc);
 }
 
+////
+uint8 _c64d_maincpu_set_a; uint8 _c64d_maincpu_set_x; uint8 _c64d_maincpu_set_y; uint8 _c64d_maincpu_set_p; uint8 _c64d_maincpu_set_sp;
+
+void _c64d_set_c64_maincpu_set_sp_trap(WORD addr, void *data)
+{
+	LOGD("_c64d_set_c64_maincpu_set_sp_trap: %x", _c64d_maincpu_set_sp);
+	maincpu_regs.sp = _c64d_maincpu_set_sp;
+	
+}
+
+void c64d_set_maincpu_set_sp(uint8 *sp)
+{
+	LOGD("c64d_set_maincpu_set_sp");
+	_c64d_maincpu_set_sp = *sp;
+	interrupt_maincpu_trigger_trap(_c64d_set_c64_maincpu_set_sp_trap, NULL);
+}
+
+void _c64d_set_c64_maincpu_set_a_trap(WORD addr, void *data)
+{
+	LOGD("_c64d_set_c64_maincpu_set_a_trap: %x", _c64d_maincpu_set_a);
+	maincpu_regs.a = _c64d_maincpu_set_a;
+	
+}
+
+void c64d_set_maincpu_set_a(uint8 *a)
+{
+	LOGD("c64d_set_maincpu_set_a");
+	_c64d_maincpu_set_a = *a;
+	interrupt_maincpu_trigger_trap(_c64d_set_c64_maincpu_set_a_trap, NULL);
+}
+
+void _c64d_set_c64_maincpu_set_x_trap(WORD addr, void *data)
+{
+	LOGD("_c64d_set_c64_maincpu_set_x_trap: %x", _c64d_maincpu_set_x);
+	maincpu_regs.a = _c64d_maincpu_set_x;
+	
+}
+
+void c64d_set_maincpu_set_x(uint8 *x)
+{
+	LOGD("c64d_set_maincpu_set_x");
+	_c64d_maincpu_set_x = *x;
+	interrupt_maincpu_trigger_trap(_c64d_set_c64_maincpu_set_x_trap, NULL);
+}
+
+void _c64d_set_c64_maincpu_set_y_trap(WORD addr, void *data)
+{
+	LOGD("_c64d_set_c64_maincpu_set_y_trap: %x", _c64d_maincpu_set_y);
+	maincpu_regs.y = _c64d_maincpu_set_y;
+	
+}
+
+void c64d_set_maincpu_set_y(uint8 *y)
+{
+	LOGD("c64d_set_maincpu_set_y");
+	_c64d_maincpu_set_a = *y;
+	interrupt_maincpu_trigger_trap(_c64d_set_c64_maincpu_set_y_trap, NULL);
+}
+
+void _c64d_set_c64_maincpu_set_p_trap(WORD addr, void *data)
+{
+	LOGD("_c64d_set_c64_maincpu_set_p_trap: %x", _c64d_maincpu_set_p);
+	maincpu_regs.p = _c64d_maincpu_set_p;
+	
+}
+
+void c64d_set_maincpu_set_p(uint8 *p)
+{
+	LOGD("c64d_set_maincpu_set_p");
+	_c64d_maincpu_set_a = *p;
+	interrupt_maincpu_trigger_trap(_c64d_set_c64_maincpu_set_p_trap, NULL);
+}
+
+
+
+void _c64d_set_c64_maincpu_regs_trap(WORD addr, void *data)
+{
+	LOGD("_c64d_set_c64_maincpu_regs_trap: %x %x %x %x %x", _c64d_maincpu_set_a, _c64d_maincpu_set_x, _c64d_maincpu_set_y, _c64d_maincpu_set_p, _c64d_maincpu_set_sp);
+	maincpu_regs.a  = _c64d_maincpu_set_a;
+	maincpu_regs.x  = _c64d_maincpu_set_x;
+	maincpu_regs.y  = _c64d_maincpu_set_y;
+	maincpu_regs.p  = _c64d_maincpu_set_p;
+	maincpu_regs.sp = _c64d_maincpu_set_sp;
+
+}
+
+void c64d_set_maincpu_regs(uint8 *a, uint8 *x, uint8 *y, uint8 *p, uint8 *sp)
+{
+	LOGD("c64d_set_maincpu_regs");
+	_c64d_maincpu_set_a = *a;
+	_c64d_maincpu_set_x = *x;
+	_c64d_maincpu_set_y = *y;
+	_c64d_maincpu_set_p = *p;
+	_c64d_maincpu_set_sp = *sp;
+	interrupt_maincpu_trigger_trap(_c64d_set_c64_maincpu_regs_trap, NULL);
+}
+
+void _c64d_maincpu_make_basic_run_trap(WORD addr, void *data)
+{
+	LOGD("c64d_maincpu_make_basic_run");
+	
+	// cursor off
+	c64d_mem_write_c64_no_mark(0x00CC, 0xFF);
+	
+	// push jsr a659, jsr a533, jmp a7ae to stack
+	// ae a7 33 a5
+	c64d_mem_write_c64_no_mark(0x01FC, 0xAD);	// ret-1
+	c64d_mem_write_c64_no_mark(0x01FD, 0xA7);
+	c64d_mem_write_c64_no_mark(0x01FE, 0x32);		// ret-1
+	c64d_mem_write_c64_no_mark(0x01FF, 0xA5);
+
+	maincpu_regs.sp = 0xFB;
+	maincpu_regs.pc = 0xA659;
+	_c64d_new_pc = -1;
+}
+
+void c64d_maincpu_make_basic_run(uint8 *a, uint8 *x, uint8 *y, uint8 *p, uint8 *sp)
+{
+	LOGD("c64d_maincpu_make_basic_run");
+	interrupt_maincpu_trigger_trap(_c64d_maincpu_make_basic_run_trap, NULL);
+}
+
 void maincpu_mainloop(void)
 {
 	LOGD("maincpu_mainloop");

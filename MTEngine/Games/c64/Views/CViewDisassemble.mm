@@ -360,7 +360,7 @@ void CViewDisassemble::UpdateLocalMemoryCopy(int startAddress, int endAddress)
 // * Count roll up *
 //
 // Idea here is that we iteratively try to find an address from where we can start rendering line by line
-// op by op, that will 'hit' the requested code startAddress, so we *should* get proper roll up. this is
+// op by op, that will 'hit' the requested code startAddress, so we *should* get proper roll up. This is
 // needed to avoid situation if an op just before the startAddress (one line up) contains 3 bytes, and 2 address
 // bytes contain hex data that resembles a correct op.
 //
@@ -583,21 +583,21 @@ void CViewDisassemble::RenderDisassemble(int startAddress, int endAddress)
 			addr = renderAddress;
 			
 			// +0
-			CViewMemoryMapCell *cell0 = memoryMap->memoryCells[addr];	//% memoryLength
+			CViewMemoryMapCell *cell0 = memoryMap->memoryCells[addr];
 			if (cell0->isExecuteCode)
 			{
-				opcode = memory[addr ];	//% memoryLength
+				opcode = memory[addr];
 				renderAddress += RenderDisassembleLine(px, py, renderAddress, op[0], op[1], op[2]);
 				py += fontSize;
 			}
 			else
 			{
 				// +1
-				CViewMemoryMapCell *cell1 = memoryMap->memoryCells[ (addr+1) ];	//% memoryLength
+				CViewMemoryMapCell *cell1 = memoryMap->memoryCells[ (addr+1) ];
 				if (cell1->isExecuteCode)
 				{
 					// check if at addr is 1-length opcode
-					opcode = memory[ (renderAddress) ];	//% memoryLength
+					opcode = memory[ (renderAddress) ];
 					if (opcodes[opcode].addressingLength == 1)
 					{
 						RenderDisassembleLine(px, py, renderAddress, op[0], op[1], op[2]);
@@ -621,18 +621,18 @@ void CViewDisassemble::RenderDisassemble(int startAddress, int endAddress)
 						op[i] = memory[addr];
 					}
 					
-					opcode = memory[ (renderAddress) ];	//% memoryLength
+					opcode = memory[ (renderAddress) ];
 					renderAddress += RenderDisassembleLine(px, py, renderAddress, op[0], op[1], op[2]);
 					py += fontSize;
 				}
 				else
 				{
 					// +2
-					CViewMemoryMapCell *cell2 = memoryMap->memoryCells[ (addr+2) ];	//% memoryLength
+					CViewMemoryMapCell *cell2 = memoryMap->memoryCells[ (addr+2) ];
 					if (cell2->isExecuteCode)
 					{
 						// check if at addr is 2-length opcode
-						opcode = memory[ (renderAddress) ];	//% memoryLength
+						opcode = memory[ (renderAddress) ];
 						if (opcodes[opcode].addressingLength == 2)
 						{
 							renderAddress += RenderDisassembleLine(px, py, renderAddress, op[0], op[1], op[2]);
@@ -660,7 +660,7 @@ void CViewDisassemble::RenderDisassemble(int startAddress, int endAddress)
 							op[i] = memory[addr];
 						}
 
-						opcode = memory[ (renderAddress) ];	//% memoryLength
+						opcode = memory[ (renderAddress) ];
 						renderAddress += RenderDisassembleLine(px, py, renderAddress, op[0], op[1], op[2]);
 						py += fontSize;
 					}
@@ -2002,6 +2002,8 @@ bool CViewDisassemble::DoTap(GLfloat x, GLfloat y)
 
 bool CViewDisassemble::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
+	LOGI("CViewDisassemble::KeyDown: %x %s %s %s", keyCode, STRBOOL(isShift), STRBOOL(isAlt), STRBOOL(isControl));
+
 	if (editCursorPos == EDIT_CURSOR_POS_ADDR
 		|| editCursorPos == EDIT_CURSOR_POS_HEX1 || editCursorPos == EDIT_CURSOR_POS_HEX2
 		|| editCursorPos == EDIT_CURSOR_POS_HEX3 || editCursorPos == EDIT_CURSOR_POS_MNEMONIC)
@@ -2058,7 +2060,7 @@ bool CViewDisassemble::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 				keyCode = toupper(keyCode);
 			}
 			
-			editBoxText->KeyPressed(keyCode, isShift, isAlt, isControl);
+			editBoxText->KeyDown((u32)keyCode, (bool)isShift, (bool)isAlt, (bool)isControl);
 
 			debugInterface->UnlockMutex();
 			guiMain->UnlockMutex();

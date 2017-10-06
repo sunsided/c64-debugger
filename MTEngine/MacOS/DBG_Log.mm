@@ -32,7 +32,7 @@
 //#define LOCAL_DEBUG_OFF
 //#define FULL_LOG
 
-//#define LOG_FILE
+#define LOG_FILE
 
 ///////////////////////////////////////////////////////////////
 
@@ -101,12 +101,12 @@ void LOG_Init(void)
 	LOG_SetLevel(DBGLVL_DEBUG2, true);
 	LOG_SetLevel(DBGLVL_INPUT, false);
 	LOG_SetLevel(DBGLVL_RES, false);
-	LOG_SetLevel(DBGLVL_GUI, false);
+	LOG_SetLevel(DBGLVL_GUI, true);
 	LOG_SetLevel(DBGLVL_MEMORY, false);
 	LOG_SetLevel(DBGLVL_ANIMATION, true);
 	LOG_SetLevel(DBGLVL_LEVEL, true);
 	LOG_SetLevel(DBGLVL_XMPLAYER, false);
-	LOG_SetLevel(DBGLVL_AUDIO, false);
+	LOG_SetLevel(DBGLVL_AUDIO, true);
 	LOG_SetLevel(DBGLVL_TODO, true);
 
 	LOG_SetLevel(DBGLVL_VICE_DEBUG, true);

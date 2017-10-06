@@ -260,17 +260,19 @@ void SYS_FatalExit(const char *fmt, ... )
 
 #ifdef MACOS
 	NSString *str = [NSString stringWithUTF8String:buffer];
-	
-	NSAlert *alert = [[NSAlert alloc] init];
-	[alert addButtonWithTitle:@"OK"];
-	//[alert addButtonWithTitle:@"Cancel"];
-	[alert setMessageText:@"Fatal Error!"];
-	[alert setInformativeText:str];
-	[alert setAlertStyle:NSCriticalAlertStyle];
-	
-	if ([alert runModal] == NSAlertFirstButtonReturn) {
-	}
-	[alert release];
+	dispatch_async(dispatch_get_main_queue(), ^{
+		NSAlert *alert = [[NSAlert alloc] init];
+		[alert addButtonWithTitle:@"OK"];
+		//[alert addButtonWithTitle:@"Cancel"];
+		[alert setMessageText:@"Fatal Error!"];
+		[alert setInformativeText:str];
+		[alert setAlertStyle:NSCriticalAlertStyle];
+		
+		if ([alert runModal] == NSAlertFirstButtonReturn) {
+		}
+		[alert release];
+		
+	});
 #endif
 
 #ifdef LINUX
@@ -304,16 +306,19 @@ void SYS_FatalExit()
 #endif
 	
 #ifdef MACOS
-	NSAlert *alert = [[NSAlert alloc] init];
-	[alert addButtonWithTitle:@"OK"];
-	//[alert addButtonWithTitle:@"Cancel"];
-	[alert setMessageText:@"Fatal Error!"];
-	[alert setInformativeText:@"Fatal error occured and application must close."];
-	[alert setAlertStyle:NSCriticalAlertStyle];
+	dispatch_async(dispatch_get_main_queue(), ^{
+		NSAlert *alert = [[NSAlert alloc] init];
+		[alert addButtonWithTitle:@"OK"];
+		//[alert addButtonWithTitle:@"Cancel"];
+		[alert setMessageText:@"Fatal Error!"];
+		[alert setInformativeText:@"Fatal error occured and application must close."];
+		[alert setAlertStyle:NSCriticalAlertStyle];
+		
+		if ([alert runModal] == NSAlertFirstButtonReturn) {
+		}
+		[alert release];
+	});
 	
-	if ([alert runModal] == NSAlertFirstButtonReturn) {
-	}
-	[alert release];
 #endif
 
 #ifdef LINUX
@@ -344,16 +349,18 @@ void SYS_ShowError(char *fmt, ... )
 #ifdef MACOS
 	NSString *str = [NSString stringWithUTF8String:buffer];
 	
-	NSAlert *alert = [[NSAlert alloc] init];
-	[alert addButtonWithTitle:@"OK"];
-	//[alert addButtonWithTitle:@"Cancel"];
-	[alert setMessageText:str];
-//	[alert setInformativeText:@"Informative text."];
-	[alert setAlertStyle:NSWarningAlertStyle];
-	
-	if ([alert runModal] == NSAlertFirstButtonReturn) {
-	}
-	[alert release];
+	dispatch_async(dispatch_get_main_queue(), ^{
+		NSAlert *alert = [[NSAlert alloc] init];
+		[alert addButtonWithTitle:@"OK"];
+		//[alert addButtonWithTitle:@"Cancel"];
+		[alert setMessageText:str];
+	//	[alert setInformativeText:@"Informative text."];
+		[alert setAlertStyle:NSWarningAlertStyle];
+		
+		if ([alert runModal] == NSAlertFirstButtonReturn) {
+		}
+		[alert release];
+	});
 #endif
 	
 #ifdef LINUX
@@ -382,16 +389,18 @@ void SYS_ShowError(const char *fmt, ... )
 #ifdef MACOS
 	NSString *str = [NSString stringWithUTF8String:buffer];
 	
-	NSAlert *alert = [[NSAlert alloc] init];
-	[alert addButtonWithTitle:@"OK"];
-	//[alert addButtonWithTitle:@"Cancel"];
-	[alert setMessageText:str];
-	//	[alert setInformativeText:@"Informative text."];
-	[alert setAlertStyle:NSWarningAlertStyle];
-	
-	if ([alert runModal] == NSAlertFirstButtonReturn) {
-	}
-	[alert release];
+	dispatch_async(dispatch_get_main_queue(), ^{
+		NSAlert *alert = [[NSAlert alloc] init];
+		[alert addButtonWithTitle:@"OK"];
+		//[alert addButtonWithTitle:@"Cancel"];
+		[alert setMessageText:str];
+		//	[alert setInformativeText:@"Informative text."];
+		[alert setAlertStyle:NSWarningAlertStyle];
+		
+		if ([alert runModal] == NSAlertFirstButtonReturn) {
+		}
+		[alert release];
+	});
 #endif
 	
 #ifdef LINUX

@@ -591,6 +591,7 @@ void CGuiView::FinishTouches()
 
 bool CGuiView::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
+	LOGI("CGuiView::KeyDown: %d %s %s %s", keyCode, STRBOOL(isShift), STRBOOL(isAlt), STRBOOL(isControl));
 	if (focusElement)
 	{
 		if (focusElement->KeyDown(keyCode, isShift, isAlt, isControl))

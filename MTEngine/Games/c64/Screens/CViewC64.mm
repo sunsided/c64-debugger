@@ -1782,6 +1782,9 @@ bool CViewC64::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 //	if (keyCode == MTKEY_F2)
 //	{
 //		LOGD("@");
+//		((C64DebugInterfaceVice *)viewC64->debugInterface)->MakeBasicRunC64();
+////		((C64DebugInterfaceVice *)viewC64->debugInterface)->SetStackPointerC64(0xFF);
+////		((C64DebugInterfaceVice *)viewC64->debugInterface)->SetRegisterA1541(0xFF);
 //	}
 	
 //	// debug only
