@@ -116,9 +116,9 @@ this lib from source code because they provide only dynamic versions.
 Note that you need to compile Pthreads lib from command line, not VS IDE.
 
 In VS2008 C++ you need to set in settings that *.mm files are treated as
-C++ code. Note that some paths may point directly to C:\develop\MTEngine,
-so just remember to put files in that folder.
-
+C++ code (see MTEngine/Win32/config for screenshots how to do that). Note 
+that some paths may point directly to C:\develop\MTEngine, so just 
+remember to put files in that folder.
 
 Of course you can contact me if you have questions how to compile this
 project. It is doable, just a bit clumsy.
