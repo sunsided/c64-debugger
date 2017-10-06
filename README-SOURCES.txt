@@ -9,7 +9,7 @@ This is Commodore 64 code and memory debugger that works in real time.
 It is quick prototyping tool where you can play with Commodore 64 machine
 and its internals.
 
-C64 Debugger embeds VICE v2.4 C64 emulation engine created by The VICE Team.
+C64 Debugger embeds VICE v3.1 C64 emulation engine created by The VICE Team.
 
 
 ** Note to C64 Debugger source files **
