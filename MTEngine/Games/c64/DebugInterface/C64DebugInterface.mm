@@ -372,6 +372,11 @@ void C64DebugInterface::DetachDriveDisk()
 	SYS_FatalExit("C64DebugInterface::DetachDriveDisk");
 }
 
+void C64DebugInterface::MakeBasicRunC64()
+{
+	SYS_FatalExit("C64DebugInterface::MakeBasicRunC64");
+}
+
 bool C64DebugInterface::GetSettingIsWarpSpeed()
 {
 	SYS_FatalExit("C64DebugInterface::GetSettingIsWarpSpeed");

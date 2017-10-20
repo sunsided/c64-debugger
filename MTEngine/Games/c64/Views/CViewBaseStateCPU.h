@@ -5,18 +5,7 @@
 #include "CGuiView.h"
 #include "CGuiEditHex.h"
 
-extern "C"
-{
-#include "ViceWrapper.h"
-};
-
-#include <vector>
-#include <list>
-
 class CSlrFont;
-class CSlrDataAdapter;
-class CViewMemoryMap;
-class CSlrMutex;
 class C64DebugInterface;
 
 enum StateCPURegister : uint8

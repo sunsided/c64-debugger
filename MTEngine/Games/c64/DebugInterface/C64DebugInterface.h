@@ -214,6 +214,9 @@ public:
 	virtual void FillC64Ram(uint16 addr, uint16 size, uint8 value);
 	
 	//
+	virtual void MakeBasicRunC64();
+
+	//
 	virtual void GetVICColors(uint8 *cD021, uint8 *cD022, uint8 *cD023, uint8 *cD025, uint8 *cD026, uint8 *cD027, uint8 *cD800);
 	virtual void GetVICSpriteColors(uint8 *cD021, uint8 *cD025, uint8 *cD026, uint8 *spriteColors);
 	

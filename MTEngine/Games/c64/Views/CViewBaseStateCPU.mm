@@ -1,22 +1,11 @@
 #include "CViewBaseStateCPU.h"
 #include "SYS_Main.h"
-#include "RES_ResourceManager.h"
 #include "CGuiMain.h"
-#include "CSlrDataAdapter.h"
 #include "CSlrString.h"
-#include "SYS_KeyCodes.h"
 #include "CViewC64.h"
-#include "CViewMemoryMap.h"
-#include "CViewDataDump.h"
-#include "C64Tools.h"
-#include "CViewC64Screen.h"
-#include "CViewDataDump.h"
 #include "CViewC64StateVIC.h"
 #include "C64DebugInterface.h"
-#include "SYS_Threading.h"
 #include "CGuiEditHex.h"
-#include "VID_ImageBinding.h"
-#include "C64DebugInterfaceVice.h"
 
 CViewBaseStateCPU::CViewBaseStateCPU(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, C64DebugInterface *debugInterface)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)

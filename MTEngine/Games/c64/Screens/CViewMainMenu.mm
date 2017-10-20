@@ -22,9 +22,6 @@
 #include "CGuiMain.h"
 #include "CViewVicEditor.h"
 
-// don't do this at home!
-#include "C64DebugInterfaceVice.h"
-
 
 #define VIEWC64SETTINGS_OPEN_NONE	0
 #define VIEWC64SETTINGS_OPEN_D64	1
@@ -625,7 +622,7 @@ bool CViewMainMenu::LoadPRGNotThreaded(CByteBuffer *byteBuffer, bool autoStart, 
 				viewC64->viewC64MemoryMap->ClearReadWriteMarkers();
 				viewC64->viewDrive1541MemoryMap->ClearReadWriteMarkers();
 				
-				((C64DebugInterfaceVice*)viewC64->debugInterface)->MakeBasicRunC64();
+				viewC64->debugInterface->MakeBasicRunC64();
 
 				viewC64->ShowMainScreen();
 				
