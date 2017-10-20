@@ -865,7 +865,6 @@ void _c64d_set_c64_maincpu_set_sp_trap(WORD addr, void *data)
 {
 	LOGD("_c64d_set_c64_maincpu_set_sp_trap: %x", _c64d_maincpu_set_sp);
 	maincpu_regs.sp = _c64d_maincpu_set_sp;
-	
 }
 
 void c64d_set_maincpu_set_sp(uint8 *sp)
@@ -879,7 +878,6 @@ void _c64d_set_c64_maincpu_set_a_trap(WORD addr, void *data)
 {
 	LOGD("_c64d_set_c64_maincpu_set_a_trap: %x", _c64d_maincpu_set_a);
 	maincpu_regs.a = _c64d_maincpu_set_a;
-	
 }
 
 void c64d_set_maincpu_set_a(uint8 *a)
@@ -892,7 +890,7 @@ void c64d_set_maincpu_set_a(uint8 *a)
 void _c64d_set_c64_maincpu_set_x_trap(WORD addr, void *data)
 {
 	LOGD("_c64d_set_c64_maincpu_set_x_trap: %x", _c64d_maincpu_set_x);
-	maincpu_regs.a = _c64d_maincpu_set_x;
+	maincpu_regs.x = _c64d_maincpu_set_x;
 	
 }
 
@@ -921,7 +919,6 @@ void _c64d_set_c64_maincpu_set_p_trap(WORD addr, void *data)
 {
 	LOGD("_c64d_set_c64_maincpu_set_p_trap: %x", _c64d_maincpu_set_p);
 	maincpu_regs.p = _c64d_maincpu_set_p;
-	
 }
 
 void c64d_set_maincpu_set_p(uint8 *p)
@@ -930,8 +927,6 @@ void c64d_set_maincpu_set_p(uint8 *p)
 	_c64d_maincpu_set_p = *p;
 	interrupt_maincpu_trigger_trap(_c64d_set_c64_maincpu_set_p_trap, NULL);
 }
-
-
 
 void _c64d_set_c64_maincpu_regs_trap(WORD addr, void *data)
 {
