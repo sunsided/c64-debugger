@@ -44,12 +44,14 @@ class CViewMemoryMap;
 class CViewDataDump;
 class CViewBreakpoints;
 class CViewDisassemble;
+class CViewC64StateCPU;
 class CViewC64StateCIA;
 class CViewC64StateSID;
 class CViewC64StateVIC;
 class CViewC64VicDisplay;
 class CViewC64VicControl;
 class CViewVicEditor;
+class CViewDriveStateCPU;
 class CViewDrive1541State;
 class CViewEmulationState;
 class CViewMonitorConsole;
@@ -97,12 +99,13 @@ public:
 	float c64ScreenZoomedX, c64ScreenZoomedY;
 	float c64ScreenZoomedSizeX, c64ScreenZoomedSizeY;
 	
-	bool c64StateVisible;
-	float c64StateX, c64StateY;
-	float c64StateFontSize;
-	bool drive1541StateVisible;
-	float drive1541StateX, drive1541StateY;
-	float drive1541StateFontSize;
+	bool c64CpuStateVisible;
+	float c64CpuStateX, c64CpuStateY;
+	float c64CpuStateFontSize;
+	bool drive1541CpuStateVisible;
+	float drive1541CpuStateX, drive1541CpuStateY;
+	float drive1541CpuStateFontSize;
+	
 	bool c64DisassembleVisible;
 	float c64DisassembleX, c64DisassembleY;
 	float c64DisassembleSizeX, c64DisassembleSizeY;
@@ -282,6 +285,9 @@ public:
 	CViewC64VicControl *viewC64VicControl;
 
 	CViewMonitorConsole *viewMonitorConsole;
+	
+	CViewC64StateCPU *viewC64StateCPU;
+	CViewDriveStateCPU *viewDriveStateCPU;
 	
 	// VIC Editor
 	CViewVicEditor *viewVicEditor;

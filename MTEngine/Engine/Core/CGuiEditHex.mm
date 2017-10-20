@@ -14,7 +14,18 @@ CGuiEditHex::CGuiEditHex(CGuiEditHexCallback *callback)
 void CGuiEditHex::SetValue(int value, int numDigits)
 {
 	char *buf = SYS_GetCharBuf();
-	if (numDigits == 4)
+	if (numDigits == 8)
+	{
+		if (isCapitalLetters)
+		{
+			sprintf(buf, "%8.8X", value);
+		}
+		else
+		{
+			sprintf(buf, "%8.8x", value);
+		}
+	}
+	else if (numDigits == 4)
 	{
 		if (isCapitalLetters)
 		{
@@ -153,6 +164,10 @@ void CGuiEditHex::KeyDown(u32 keyCode)
 		{
 			cursorPos++;
 		}
+	}
+	else if (keyCode == MTKEY_ESC)
+	{
+		FinalizeEntering(keyCode, true);
 	}
 	
 	UpdateCursor();

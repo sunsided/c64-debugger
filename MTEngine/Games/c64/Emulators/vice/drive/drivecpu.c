@@ -3730,13 +3730,12 @@ void c64d_set_drive_pc(int driveNr, uint16 pc)
 	//	interrupt_maincpu_trigger_trap(_c64d_set_drive_pc_trap, NULL);
 }
 
-uint8 _c64d_new_drive_register_a;
+uint8 _c64d_new_drive_register_a, _c64d_new_drive_register_x, _c64d_new_drive_register_y, _c64d_new_drive_register_p, _c64d_new_drive_register_sp;
 
 void _c64d_set_drive_register_a_trap(WORD addr, void *data)
 {
 	drive_context_t *trapDriveContext = (drive_context_t *)data;
 	
-//	drive_context[_c64d_new_drive_dnr]->cpu->cpu_regs.a = _c64d_new_drive_register_a;
 	trapDriveContext->cpu->cpu_regs.a = _c64d_new_drive_register_a;
 
 	_c64d_new_drive_register_a = -1;
@@ -3749,6 +3748,84 @@ void c64d_set_drive_register_a(int driveNr, uint8 a)
 	c64d_interrupt_drivecpu_trigger_trap(drive_context[driveNr], _c64d_set_drive_register_a_trap, (void*)(drive_context[driveNr]));
 }
 
+void _c64d_set_drive_register_x_trap(WORD addr, void *data)
+{
+	drive_context_t *trapDriveContext = (drive_context_t *)data;
+	
+	trapDriveContext->cpu->cpu_regs.x = _c64d_new_drive_register_x;
+	
+	_c64d_new_drive_register_x = -1;
+}
+
+void c64d_set_drive_register_x(int driveNr, uint8 x)
+{
+	_c64d_new_drive_register_x = x;
+	
+	c64d_interrupt_drivecpu_trigger_trap(drive_context[driveNr], _c64d_set_drive_register_x_trap, (void*)(drive_context[driveNr]));
+}
+
+void _c64d_set_drive_register_y_trap(WORD addr, void *data)
+{
+	drive_context_t *trapDriveContext = (drive_context_t *)data;
+	
+	trapDriveContext->cpu->cpu_regs.y = _c64d_new_drive_register_y;
+	
+	_c64d_new_drive_register_y = -1;
+}
+
+void c64d_set_drive_register_y(int driveNr, uint8 y)
+{
+	_c64d_new_drive_register_y = y;
+	
+	c64d_interrupt_drivecpu_trigger_trap(drive_context[driveNr], _c64d_set_drive_register_y_trap, (void*)(drive_context[driveNr]));
+}
+
+void _c64d_set_drive_register_p_trap(WORD addr, void *data)
+{
+	drive_context_t *trapDriveContext = (drive_context_t *)data;
+	
+	trapDriveContext->cpu->cpu_regs.p = _c64d_new_drive_register_p;
+	
+	_c64d_new_drive_register_p = -1;
+}
+
+void c64d_set_drive_register_p(int driveNr, uint8 p)
+{
+	_c64d_new_drive_register_p = p;
+	
+	c64d_interrupt_drivecpu_trigger_trap(drive_context[driveNr], _c64d_set_drive_register_p_trap, (void*)(drive_context[driveNr]));
+}
+
+void _c64d_set_drive_register_sp_trap(WORD addr, void *data)
+{
+	drive_context_t *trapDriveContext = (drive_context_t *)data;
+	
+	trapDriveContext->cpu->cpu_regs.sp = _c64d_new_drive_register_sp;
+	
+	_c64d_new_drive_register_sp = -1;
+}
+
+void c64d_set_drive_register_sp(int driveNr, uint8 sp)
+{
+	_c64d_new_drive_register_sp = sp;
+	
+	c64d_interrupt_drivecpu_trigger_trap(drive_context[driveNr], _c64d_set_drive_register_sp_trap, (void*)(drive_context[driveNr]));
+}
+
+
+void c64d_set_drivecpu_regs_no_trap(int driveNr, uint8 a, uint8 x, uint8 y, uint8 p, uint8 sp)
+{
+	drive_context[driveNr]->cpu->cpu_regs.a = a;
+	drive_context[driveNr]->cpu->cpu_regs.x = x;
+	drive_context[driveNr]->cpu->cpu_regs.y = y;
+	drive_context[driveNr]->cpu->cpu_regs.p = p;
+	drive_context[driveNr]->cpu->cpu_regs.sp = sp;
+}
+
+void c64d_set_drivecpu_pc_no_trap(int driveNr, uint16 pc)
+{
+	drive_context[driveNr]->cpu->cpu_regs.pc = pc;
+}
 
 static void drivecpu_set_bank_base(void *context)
 {

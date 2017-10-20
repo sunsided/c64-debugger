@@ -177,6 +177,20 @@ public:
 	// make jsr (push PC to stack)
 	virtual void MakeJsrC64(uint16 addr);
 	
+	//
+	virtual void SetStackPointerC64(uint8 val);
+	virtual void SetRegisterAC64(uint8 val);
+	virtual void SetRegisterXC64(uint8 val);
+	virtual void SetRegisterYC64(uint8 val);
+	virtual void SetRegisterPC64(uint8 val);
+	
+	///
+	virtual void SetStackPointer1541(uint8 val);
+	virtual void SetRegisterA1541(uint8 val);
+	virtual void SetRegisterX1541(uint8 val);
+	virtual void SetRegisterY1541(uint8 val);
+	virtual void SetRegisterP1541(uint8 val);
+	
 	virtual void SetByte1541(uint16 addr, uint8 val);
 	virtual void SetByteToRam1541(uint16 addr, uint8 val);
 	virtual uint8 GetByte1541(uint16 addr);

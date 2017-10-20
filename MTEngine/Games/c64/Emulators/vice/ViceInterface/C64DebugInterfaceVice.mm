@@ -936,39 +936,57 @@ void C64DebugInterfaceVice::SetRegisterPC64(uint8 val)
 	this->UnlockMutex();
 }
 
-
-void C64DebugInterfaceVice::SetStackPointer1541(uint8 val)
-{
-	
-}
-
 extern "C" {
 	void c64d_set_drive_register_a(int driveNr, uint8 a);
+	void c64d_set_drive_register_x(int driveNr, uint8 x);
+	void c64d_set_drive_register_y(int driveNr, uint8 y);
+	void c64d_set_drive_register_p(int driveNr, uint8 p);
+	void c64d_set_drive_register_sp(int driveNr, uint8 sp);
 }
 
 void C64DebugInterfaceVice::SetRegisterA1541(uint8 val)
 {
 	this->LockMutex();
 	
-	uint8 a = val;
-	c64d_set_drive_register_a(0, a);
+	c64d_set_drive_register_a(0, val);
 	
 	this->UnlockMutex();
 }
 
 void C64DebugInterfaceVice::SetRegisterX1541(uint8 val)
 {
+	this->LockMutex();
 	
+	c64d_set_drive_register_x(0, val);
+	
+	this->UnlockMutex();
 }
 
 void C64DebugInterfaceVice::SetRegisterY1541(uint8 val)
 {
+	this->LockMutex();
 	
+	c64d_set_drive_register_y(0, val);
+	
+	this->UnlockMutex();
 }
 
 void C64DebugInterfaceVice::SetRegisterP1541(uint8 val)
 {
+	this->LockMutex();
 	
+	c64d_set_drive_register_p(0, val);
+	
+	this->UnlockMutex();
+}
+
+void C64DebugInterfaceVice::SetStackPointer1541(uint8 val)
+{
+	this->LockMutex();
+	
+	c64d_set_drive_register_sp(0, val);
+	
+	this->UnlockMutex();
 }
 
 

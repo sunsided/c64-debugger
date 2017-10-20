@@ -19,10 +19,11 @@
 void SYS_SetQuitKey(int keyCode, bool isShift, bool isAlt, bool isControl);
 
 //extern const char hexTable;
-void Byte2Hex1digitR(byte value, char *bufOut);
-void Byte2Hex2digits(byte value, char *bufOut);
-void Byte2Bits(byte value, char *bufOut);
+void Byte2Hex1digitR(uint8 value, char *bufOut);
+void Byte2Hex2digits(uint8 value, char *bufOut);
+void Byte2Bits(uint8 value, char *bufOut);
 void Byte2BitsWithoutEndingZero(byte value, char *bufOut);
+uint8 Bits2Byte(char *bufIn);
 
 u32 GetHashCode32(char *text);
 u64 GetHashCode64(char *text);

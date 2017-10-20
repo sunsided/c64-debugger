@@ -38,7 +38,7 @@ bool SYS_IsServerMode()
 // signal handler
 static const char *hexTable = "0123456789ABCDEF"; //"0123456789abcdef";
 
-void Byte2Hex1digitR(byte value, char *bufOut)
+void Byte2Hex1digitR(uint8 value, char *bufOut)
 {
 	unsigned char c2;
 
@@ -47,7 +47,7 @@ void Byte2Hex1digitR(byte value, char *bufOut)
 
 }
 
-void Byte2Hex2digits(byte value, char *bufOut)
+void Byte2Hex2digits(uint8 value, char *bufOut)
 {
 	unsigned char c1;
 	unsigned char c2;
@@ -62,9 +62,20 @@ void Byte2Hex2digits(byte value, char *bufOut)
 
 }
 
-void Byte2Bits(byte value, char *bufOut)
+uint8 Bits2Byte(char *bufIn)
 {
-	for (int i = 8 - 1; i >= 0; i -= 1)
+	uint8 value = 0x00;
+	for (int i = 0; i < 8; i++)
+	{
+		uint8 b = bufIn[7-i] == '0' ? 0 : 1;
+		value |= (b << i);
+	}
+	return value;
+}
+
+void Byte2Bits(uint8 value, char *bufOut)
+{
+	for (int i = 7; i >= 0; i -= 1)
 	{
 		bufOut[i] = '0' + (value & 0x01);
 		value >>= 1;
@@ -75,7 +86,7 @@ void Byte2Bits(byte value, char *bufOut)
 
 void Byte2BitsWithoutEndingZero(byte value, char *bufOut)
 {
-	for (int i = 8 - 1; i >= 0; i -= 1)
+	for (int i = 7; i >= 0; i -= 1)
 	{
 		bufOut[i] = '0' + (value & 0x01);
 		value >>= 1;
@@ -647,6 +658,7 @@ void SYS_Free(void **ptr)
 
 }
 
+// get bare key code (e.g. not shifted)
 u32 SYS_GetBareKey(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
 	//LOGD("SYS_GetBareKey: key=%d", keyCode);

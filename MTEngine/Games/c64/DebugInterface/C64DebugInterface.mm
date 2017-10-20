@@ -311,6 +311,57 @@ void C64DebugInterface::GetDrive1541State(C64StateDrive1541 *state)
 	SYS_FatalExit("C64DebugInterface::GetDrive1541State");
 }
 
+//
+void C64DebugInterface::SetStackPointerC64(uint8 val)
+{
+	SYS_FatalExit("C64DebugInterface::SetStackPointerC64");
+}
+
+void C64DebugInterface::SetRegisterAC64(uint8 val)
+{
+	SYS_FatalExit("C64DebugInterface::SetRegisterAC64");
+}
+
+void C64DebugInterface::SetRegisterXC64(uint8 val)
+{
+	SYS_FatalExit("C64DebugInterface::SetRegisterXC64");
+}
+
+void C64DebugInterface::SetRegisterYC64(uint8 val)
+{
+	SYS_FatalExit("C64DebugInterface::SetRegisterYC64");
+}
+
+void C64DebugInterface::SetRegisterPC64(uint8 val)
+{
+	SYS_FatalExit("C64DebugInterface::SetRegisterPC64");
+}
+
+void C64DebugInterface::SetStackPointer1541(uint8 val)
+{
+	SYS_FatalExit("C64DebugInterface::SetStackPointer1541");
+}
+
+void C64DebugInterface::SetRegisterA1541(uint8 val)
+{
+	SYS_FatalExit("C64DebugInterface::SetRegisterA1541");
+}
+
+void C64DebugInterface::SetRegisterX1541(uint8 val)
+{
+	SYS_FatalExit("C64DebugInterface::SetRegisterX1541");
+}
+
+void C64DebugInterface::SetRegisterY1541(uint8 val)
+{
+	SYS_FatalExit("C64DebugInterface::SetRegisterY1541");
+}
+
+void C64DebugInterface::SetRegisterP1541(uint8 val)
+{
+	SYS_FatalExit("C64DebugInterface::SetRegisterP1541");
+}
+
 void C64DebugInterface::InsertD64(CSlrString *path)
 {
 	SYS_FatalExit("C64DebugInterface::InsertD64");

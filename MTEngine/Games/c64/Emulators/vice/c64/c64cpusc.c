@@ -826,6 +826,18 @@ void c64d_get_maincpu_regs(uint8 *a, uint8 *x, uint8 *y, uint8 *p, uint8 *sp, ui
 	*instructionCycle = c64d_c64_instruction_cycle;
 }
 
+void c64d_set_maincpu_regs_no_trap(uint8 a, uint8 x, uint8 y, uint8 p, uint8 sp)
+{
+	reg_a = a;
+	reg_x = x;
+	reg_y = y;
+	
+	reg_p = p;
+	
+	reg_sp = sp;
+}
+
+
 void interrupt_maincpu_trigger_trap(void (*trap_func)(WORD, void *data),
 									void *data);
 
@@ -901,7 +913,7 @@ void _c64d_set_c64_maincpu_set_y_trap(WORD addr, void *data)
 void c64d_set_maincpu_set_y(uint8 *y)
 {
 	LOGD("c64d_set_maincpu_set_y");
-	_c64d_maincpu_set_a = *y;
+	_c64d_maincpu_set_y = *y;
 	interrupt_maincpu_trigger_trap(_c64d_set_c64_maincpu_set_y_trap, NULL);
 }
 
@@ -915,7 +927,7 @@ void _c64d_set_c64_maincpu_set_p_trap(WORD addr, void *data)
 void c64d_set_maincpu_set_p(uint8 *p)
 {
 	LOGD("c64d_set_maincpu_set_p");
-	_c64d_maincpu_set_a = *p;
+	_c64d_maincpu_set_p = *p;
 	interrupt_maincpu_trigger_trap(_c64d_set_c64_maincpu_set_p_trap, NULL);
 }
 

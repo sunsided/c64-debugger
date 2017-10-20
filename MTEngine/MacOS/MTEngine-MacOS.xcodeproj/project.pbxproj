@@ -722,6 +722,8 @@
 		41CF58FE1920E6EA00F43331 /* GFX_WriteImage.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41CF58FD1920E6EA00F43331 /* GFX_WriteImage.mm */; };
 		41CF59051920E77600F43331 /* IMG_Scale.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41CF59001920E77600F43331 /* IMG_Scale.mm */; };
 		41CF59061920E77600F43331 /* resampler.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41CF59031920E77600F43331 /* resampler.mm */; };
+		41CF59D51F975C9E002171B1 /* CViewDriveStateCPU.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41CF59D11F975C9E002171B1 /* CViewDriveStateCPU.mm */; };
+		41CF59D61F975C9E002171B1 /* CViewC64StateCPU.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41CF59D31F975C9E002171B1 /* CViewC64StateCPU.mm */; };
 		41CF97961CA40FD90078DD59 /* Scene.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41CF97941CA40FD90078DD59 /* Scene.mm */; };
 		41DDCABF1D0EF01000C03F39 /* C64KeyboardShortcuts.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41DDCABE1D0EF01000C03F39 /* C64KeyboardShortcuts.mm */; };
 		41DDCAC21D0F19C500C03F39 /* CViewKeyboardShortcuts.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41DDCAC01D0F19C500C03F39 /* CViewKeyboardShortcuts.mm */; };
@@ -907,6 +909,7 @@
 		41F9771C1CB6B93900927516 /* ViceWrapper.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41F9771A1CB6B93900927516 /* ViceWrapper.mm */; };
 		41F9775F1CB90DFD00927516 /* CViceAudioChannel.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41F9775D1CB90DFD00927516 /* CViceAudioChannel.mm */; };
 		41F99C411E641BAE00B46DA7 /* CGuiLockableList.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41F99C3F1E641BAE00B46DA7 /* CGuiLockableList.mm */; };
+		41F99E891F9A4871006E31DC /* CViewBaseStateCPU.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41F99E871F9A4871006E31DC /* CViewBaseStateCPU.mm */; };
 		41FC3CBA1CFEC44F00D598A2 /* CViewAbout.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41FC3CB81CFEC44F00D598A2 /* CViewAbout.mm */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.mm */; settings = {ATTRIBUTES = (); }; };
@@ -2396,6 +2399,10 @@
 		41CF59001920E77600F43331 /* IMG_Scale.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = IMG_Scale.mm; sourceTree = "<group>"; };
 		41CF59021920E77600F43331 /* resampler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = resampler.h; sourceTree = "<group>"; };
 		41CF59031920E77600F43331 /* resampler.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = resampler.mm; sourceTree = "<group>"; };
+		41CF59D11F975C9E002171B1 /* CViewDriveStateCPU.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewDriveStateCPU.mm; path = ../Games/c64/Views/CViewDriveStateCPU.mm; sourceTree = "<group>"; };
+		41CF59D21F975C9E002171B1 /* CViewDriveStateCPU.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewDriveStateCPU.h; path = ../Games/c64/Views/CViewDriveStateCPU.h; sourceTree = "<group>"; };
+		41CF59D31F975C9E002171B1 /* CViewC64StateCPU.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewC64StateCPU.mm; path = ../Games/c64/Views/CViewC64StateCPU.mm; sourceTree = "<group>"; };
+		41CF59D41F975C9E002171B1 /* CViewC64StateCPU.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewC64StateCPU.h; path = ../Games/c64/Views/CViewC64StateCPU.h; sourceTree = "<group>"; };
 		41CF97941CA40FD90078DD59 /* Scene.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = Scene.mm; sourceTree = "<group>"; };
 		41CF97951CA40FD90078DD59 /* Scene.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Scene.h; sourceTree = "<group>"; };
 		41DDCABE1D0EF01000C03F39 /* C64KeyboardShortcuts.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64KeyboardShortcuts.mm; path = ../Games/c64/Tools/C64KeyboardShortcuts.mm; sourceTree = "<group>"; };
@@ -2761,6 +2768,8 @@
 		41F9775E1CB90DFD00927516 /* CViceAudioChannel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CViceAudioChannel.h; sourceTree = "<group>"; };
 		41F99C3F1E641BAE00B46DA7 /* CGuiLockableList.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CGuiLockableList.mm; path = ../Games/c64/Tools/CGuiLockableList.mm; sourceTree = "<group>"; };
 		41F99C401E641BAE00B46DA7 /* CGuiLockableList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CGuiLockableList.h; path = ../Games/c64/Tools/CGuiLockableList.h; sourceTree = "<group>"; };
+		41F99E871F9A4871006E31DC /* CViewBaseStateCPU.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewBaseStateCPU.mm; path = ../Games/c64/Views/CViewBaseStateCPU.mm; sourceTree = "<group>"; };
+		41F99E881F9A4871006E31DC /* CViewBaseStateCPU.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewBaseStateCPU.h; path = ../Games/c64/Views/CViewBaseStateCPU.h; sourceTree = "<group>"; };
 		41FC3CB81CFEC44F00D598A2 /* CViewAbout.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewAbout.mm; path = ../Games/c64/Screens/CViewAbout.mm; sourceTree = "<group>"; };
 		41FC3CB91CFEC44F00D598A2 /* CViewAbout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewAbout.h; path = ../Games/c64/Screens/CViewAbout.h; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* MTEngine-MacOS-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "MTEngine-MacOS-Info.plist"; sourceTree = "<group>"; };
@@ -3402,6 +3411,12 @@
 				4152D7071C970F3E00EBA9E5 /* CViewC64StateSID.h */,
 				4152D6FC1C970F3E00EBA9E5 /* CViewC64StateVIC.mm */,
 				4152D7081C970F3E00EBA9E5 /* CViewC64StateVIC.h */,
+				41F99E871F9A4871006E31DC /* CViewBaseStateCPU.mm */,
+				41F99E881F9A4871006E31DC /* CViewBaseStateCPU.h */,
+				41CF59D31F975C9E002171B1 /* CViewC64StateCPU.mm */,
+				41CF59D41F975C9E002171B1 /* CViewC64StateCPU.h */,
+				41CF59D11F975C9E002171B1 /* CViewDriveStateCPU.mm */,
+				41CF59D21F975C9E002171B1 /* CViewDriveStateCPU.h */,
 				4152D6FD1C970F3E00EBA9E5 /* CViewDrive1541State.mm */,
 				4152D7061C970F3E00EBA9E5 /* CViewDrive1541State.h */,
 				4152D6FA1C970F3E00EBA9E5 /* CViewDataDump.mm */,
@@ -5786,6 +5801,7 @@
 				414538061CB2D2D100020916 /* doodledrv.c in Sources */,
 				414537AE1CB2D1CE00020916 /* serial-iec.c in Sources */,
 				41F2AA1F1E9D0E6B00ADE8DF /* sfx_soundsampler.c in Sources */,
+				41CF59D51F975C9E002171B1 /* CViewDriveStateCPU.mm in Sources */,
 				4177D5B31ED6EE240053D9EE /* CVicEditorLayer.mm in Sources */,
 				414539D91CB3DC1B00020916 /* C64DebugInterfaceVice.mm in Sources */,
 				414537031CB2D1A300020916 /* platform_windows_runtime_os.c in Sources */,
@@ -6231,6 +6247,7 @@
 				39042A2E186892A800B570B1 /* CGuiSlider.mm in Sources */,
 				39042A32186892A800B570B1 /* CGuiViewEditWithTitle.mm in Sources */,
 				3904297A186892A800B570B1 /* CSlrMusicFileOgg.mm in Sources */,
+				41F99E891F9A4871006E31DC /* CViewBaseStateCPU.mm in Sources */,
 				41F2AAD71E9D0EDA00ADE8DF /* drive-sound.c in Sources */,
 				414537901CB2D1A300020916 /* video-render-1x2.c in Sources */,
 				4145378F1CB2D1A300020916 /* video-color.c in Sources */,
@@ -6241,6 +6258,7 @@
 				41925D9A1B1DD82F00B33B7F /* jdmerge.c in Sources */,
 				41F2A9EB1E9D0E6B00ADE8DF /* exos.c in Sources */,
 				41F2AAFF1E9D0F2C00ADE8DF /* iecrom.c in Sources */,
+				41CF59D61F975C9E002171B1 /* CViewC64StateCPU.mm in Sources */,
 				41925DB11B1DD82F00B33B7F /* transupp.c in Sources */,
 				39042978186892A800B570B1 /* CMusicChannel.mm in Sources */,
 				414539C51CB2E94F00020916 /* rawnet.c in Sources */,
