@@ -550,18 +550,6 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 													  NULL, tr, tg, tb, options, font, fontScale);
 	menuItemSubMenuEmulation->AddMenuItem(menuItemJoystickPort);
 	
-	
-	//
-	menuItemSetC64KeyboardMapping = new CViewC64MenuItem(fontHeight, new CSlrString("Set C64 keyboard mapping"),
-													NULL, tr, tg, tb);
-	viewMenu->AddMenuItem(menuItemSetC64KeyboardMapping);
-
-	menuItemSetKeyboardShortcuts = new CViewC64MenuItem(fontHeight*2, new CSlrString("Set keyboard shortcuts"),
-														 NULL, tr, tg, tb);
-	viewMenu->AddMenuItem(menuItemSetKeyboardShortcuts);
-
-
-	//
 	//
 	
 	kbsIsWarpSpeed = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Warp speed", 'p', false, false, true);
@@ -648,6 +636,20 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 															   NULL, tr, tg, tb, options, font, fontScale);
 	menuItemVicStateRecordingMode->SetSelectedOption(c64SettingsVicStateRecordingMode, false);
 	menuItemSubMenuEmulation->AddMenuItem(menuItemVicStateRecordingMode);
+	
+	
+	//
+	menuItemStartJukeboxPlaylist = new CViewC64MenuItem(fontHeight*2, new CSlrString("Start JukeBox playlist"),
+														NULL, tr, tg, tb);
+	viewMenu->AddMenuItem(menuItemStartJukeboxPlaylist);
+	
+	menuItemSetC64KeyboardMapping = new CViewC64MenuItem(fontHeight, new CSlrString("Set C64 keyboard mapping"),
+														 NULL, tr, tg, tb);
+	viewMenu->AddMenuItem(menuItemSetC64KeyboardMapping);
+	
+	menuItemSetKeyboardShortcuts = new CViewC64MenuItem(fontHeight*2, new CSlrString("Set keyboard shortcuts"),
+														NULL, tr, tg, tb);
+	viewMenu->AddMenuItem(menuItemSetKeyboardShortcuts);
 	
 	
 
@@ -1236,7 +1238,7 @@ void CViewSettingsMenu::DetachDiskImage()
 	guiMain->ShowMessage("Detached drive image");
 }
 
-void CViewSettingsMenu::DetachCartridge()
+void CViewSettingsMenu::DetachCartridge(bool showMessage)
 {
 	// detach cartridge
 	viewC64->debugInterface->DetachCartridge();
@@ -1254,7 +1256,10 @@ void CViewSettingsMenu::DetachCartridge()
 	
 	C64DebuggerStoreSettings();
 	
-	guiMain->ShowMessage("Detached cartridge");
+	if (showMessage)
+	{
+		guiMain->ShowMessage("Detached cartridge");
+	}
 }
 
 void CViewSettingsMenu::MenuCallbackItemEntered(CGuiViewMenuItem *menuItem)
@@ -1269,9 +1274,8 @@ void CViewSettingsMenu::MenuCallbackItemEntered(CGuiViewMenuItem *menuItem)
 	}
 	if (menuItem == menuItemDetachCartridge)
 	{
-		DetachCartridge();
+		DetachCartridge(true);
 	}
-
 	else if (menuItem == menuItemDumpC64Memory)
 	{
 		OpenDialogDumpC64Memory();
@@ -1318,6 +1322,10 @@ void CViewSettingsMenu::MenuCallbackItemEntered(CGuiViewMenuItem *menuItem)
 	else if (menuItem == menuItemClearMemoryMarkers)
 	{
 		ClearMemoryMarkers();
+	}
+	else if (menuItem == menuItemStartJukeboxPlaylist)
+	{
+		viewC64->viewC64MainMenu->OpenDialogStartJukeboxPlaylist();
 	}
 	else if (menuItem == menuItemClearSettings)
 	{

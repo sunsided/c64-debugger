@@ -284,20 +284,29 @@ extern "C" {
 	void c64d_joystick_key_up(int key, unsigned int joyport);
 }
 
-#define JOYPAD_FIRE 0x10
-#define JOYPAD_E    0x08
-#define JOYPAD_W    0x04
-#define JOYPAD_S    0x02
-#define JOYPAD_N    0x01
-#define JOYPAD_SW   (JOYPAD_S | JOYPAD_W)
-#define JOYPAD_SE   (JOYPAD_S | JOYPAD_E)
-#define JOYPAD_NW   (JOYPAD_N | JOYPAD_W)
-#define JOYPAD_NE   (JOYPAD_N | JOYPAD_E)
-
-
 void C64DebugInterfaceVice::KeyboardDown(uint32 mtKeyCode)
 {
-	LOGI("C64DebugInterfaceVice::KeyboardDown: %d", mtKeyCode);
+	keyboard_key_pressed((unsigned long)mtKeyCode);
+}
+
+void C64DebugInterfaceVice::KeyboardUp(uint32 mtKeyCode)
+{
+	keyboard_key_released((unsigned long)mtKeyCode);
+}
+
+void C64DebugInterfaceVice::JoystickDown(int port, uint32 axis)
+{
+	c64d_joystick_key_down(axis, port);
+}
+
+void C64DebugInterfaceVice::JoystickUp(int port, uint32 axis)
+{
+	c64d_joystick_key_up(axis, port);
+}
+
+void C64DebugInterfaceVice::KeyboardDownWithJoystickCheck(uint32 mtKeyCode)
+{
+	LOGI("C64DebugInterfaceVice::KeyboardDownWithJoystickCheck: %d", mtKeyCode);
 	if (isJoystickEnabled)
 	{
 		if (mtKeyCode == MTKEY_ARROW_LEFT)
@@ -346,9 +355,9 @@ void C64DebugInterfaceVice::KeyboardDown(uint32 mtKeyCode)
 	keyboard_key_pressed((unsigned long)mtKeyCode);
 }
 
-void C64DebugInterfaceVice::KeyboardUp(uint32 mtKeyCode)
+void C64DebugInterfaceVice::KeyboardUpWithJoystickCheck(uint32 mtKeyCode)
 {
-	LOGI("C64DebugInterfaceVice::KeyboardUp: %d", mtKeyCode);
+	LOGI("C64DebugInterfaceVice::KeyboardUpWithJoystickCheck: %d", mtKeyCode);
 	if (isJoystickEnabled)
 	{
 		if (mtKeyCode == MTKEY_ARROW_LEFT)
@@ -1991,7 +2000,6 @@ void c64d_update_c64_machine_from_model_type(int modelType)
 			debugInterfaceVice->machineType = C64_MACHINE_NTSC;
 			break;
 	}
-	
 }
 
 void c64d_update_c64_screen_height_from_model_type(int modelType)
@@ -2017,7 +2025,6 @@ void c64d_update_c64_screen_height_from_model_type(int modelType)
 			debugInterfaceVice->screenHeight = 259;
 			break;
 	}
-	
 }
 
 static void load_snapshot_trap(WORD addr, void *v)

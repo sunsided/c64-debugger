@@ -744,6 +744,7 @@ void c64d_c64_vicii_start_frame()
 	
 	// TODO: frame counter + breakpoint on defined frame
 	
+	viewC64->EmulationStartFrameCallback();
 }
 
 void c64d_c64_vicii_cycle()

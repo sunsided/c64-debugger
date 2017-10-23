@@ -62,10 +62,10 @@ void CViewFileD64::MenuCallbackItemEntered(CGuiViewMenuItem *menuItem)
 	CViewFileD64EntryItem *fileEntryMenuItem = (CViewFileD64EntryItem *)menuItem;
 	DiskImageFileEntry *fileEntry = fileEntryMenuItem->fileEntry;
 
-	this->StartFileEntry(fileEntry);
+	this->StartFileEntry(fileEntry, true);
 }
 
-void CViewFileD64::StartFileEntry(DiskImageFileEntry *fileEntry)
+void CViewFileD64::StartFileEntry(DiskImageFileEntry *fileEntry, bool showLoadAddressInfo)
 {
 	LOGD("CViewFileD64::StartFileEntry");
 	
@@ -85,7 +85,7 @@ void CViewFileD64::StartFileEntry(DiskImageFileEntry *fileEntry)
 		UpdateDriveDiskID();
 		
 		// load the PRG
-		bool ret = viewC64->viewC64MainMenu->LoadPRG(byteBuffer, true, true);
+		bool ret = viewC64->viewC64MainMenu->LoadPRG(byteBuffer, true, showLoadAddressInfo);
 		
 		if (ret == false)
 		{
@@ -692,9 +692,9 @@ void CViewFileD64::DeactivateView()
 	LOGG("CViewFileD64::DeactivateView()");
 }
 
-void CViewFileD64::StartFirstDiskPRGEntry()
+void CViewFileD64::StartDiskPRGEntry(int entryNum, bool showLoadAddressInfo)
 {
-	LOGD("CViewFileD64::StartFirstDiskPRGEntry");
+	LOGD("CViewFileD64::StartDiskPRGEntry: entryNum=%d", entryNum);
 	
 	this->SetDiskImage(0);
 	
@@ -704,7 +704,7 @@ void CViewFileD64::StartFirstDiskPRGEntry()
 		return;
 	}
 	
-	DiskImageFileEntry *fileEntry = this->diskImage->FindFirstDiskPRGEntry();
+	DiskImageFileEntry *fileEntry = this->diskImage->FindDiskPRGEntry(entryNum);
 	
 	if (fileEntry == NULL)
 	{
@@ -712,7 +712,7 @@ void CViewFileD64::StartFirstDiskPRGEntry()
 		return;
 	}
 	
-	this->StartFileEntry(fileEntry);
+	this->StartFileEntry(fileEntry, showLoadAddressInfo);
 
 }
 

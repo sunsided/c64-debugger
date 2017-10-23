@@ -76,7 +76,7 @@ public:
 	CSlrKeyboardShortcut *kbsDetachEverything;
 	CViewC64MenuItem *menuItemDetachEverything;
 	void DetachEverything();
-	void DetachCartridge();
+	void DetachCartridge(bool showMessage);
 	void DetachDiskImage();
 
 	CSlrKeyboardShortcut *kbsDetachDiskImage;
@@ -94,6 +94,7 @@ public:
 	
 
 	//
+	CViewC64MenuItem *menuItemStartJukeboxPlaylist;
 	
 	CViewC64MenuItem *menuItemSetC64KeyboardMapping;
 	CViewC64MenuItem *menuItemSetKeyboardShortcuts;

@@ -46,13 +46,21 @@ void CDiskImageD64::SetDiskImage(char *fileName)
 	this->ReadImage();
 }
 
-DiskImageFileEntry *CDiskImageD64::FindFirstDiskPRGEntry()
+DiskImageFileEntry *CDiskImageD64::FindDiskPRGEntry(int entryNum)
 {
+	int i = 0;
 	for (std::vector<DiskImageFileEntry *>::iterator it = fileEntries.begin(); it != fileEntries.end(); it++)
 	{
 		DiskImageFileEntry *file = *it;
 		if (file->fileType == 0x02)
-			return file;
+		{
+			if (i == entryNum)
+			{
+				return file;
+			}
+			
+			i++;
+		}
 	}
 	
 	return NULL;
@@ -151,7 +159,7 @@ bool CDiskImageD64::ReadImage()
 				{
 					fileEntry->fileName[i] = sectorData[entryOffset + 5 + i];
 					
-					LOGD("  fileName[%d]=%02x '%c'", i, fileEntry->fileName[i], fileEntry->fileName[i]);
+					//LOGD("  fileName[%d]=%02x '%c'", i, fileEntry->fileName[i], fileEntry->fileName[i]);
 				}
 
 				fileEntry->fileSize = sectorData[entryOffset + 0x1E] + sectorData[entryOffset + 0x1F] * 0x100;

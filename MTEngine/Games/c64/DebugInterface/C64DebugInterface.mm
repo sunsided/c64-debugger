@@ -279,6 +279,27 @@ void C64DebugInterface::KeyboardUp(uint32 mtKeyCode)
 	SYS_FatalExit("C64DebugInterface::KeyboardUp");
 }
 
+void C64DebugInterface::JoystickDown(int port, uint32 axis)
+{
+	SYS_FatalExit("C64DebugInterface::JoystickDown");
+}
+
+void C64DebugInterface::JoystickUp(int port, uint32 axis)
+{
+	SYS_FatalExit("C64DebugInterface::JoystickUp");
+}
+
+
+void C64DebugInterface::KeyboardDownWithJoystickCheck(uint32 mtKeyCode)
+{
+	SYS_FatalExit("C64DebugInterface::KeyboardDownWithJoystickCheck");
+}
+
+void C64DebugInterface::KeyboardUpWithJoystickCheck(uint32 mtKeyCode)
+{
+	SYS_FatalExit("C64DebugInterface::KeyboardUpWithJoystickCheck");
+}
+
 int C64DebugInterface::GetC64CpuPC()
 {
 	SYS_FatalExit("C64DebugInterface::GetC64CpuPC");
@@ -660,11 +681,12 @@ void C64DebugInterface::MarkDrive1541CellWrite(uint16 addr, uint8 value)
 
 //
 
-void C64DebugInterface::UiInsertD64(CSlrString *path)
-{
-	LOGTODO("C64DebugInterface::UiInsertD64: shall we update Folder path to D64?");
-	viewC64->viewC64MainMenu->InsertD64(path, false);
-}
+//void C64DebugInterface::UiInsertD64(CSlrString *path)
+//{
+//	SYS_FatalExit("C64DebugInterface::UiInsertD64");
+////	LOGTODO("C64DebugInterface::UiInsertD64: shall we update Folder path to D64?");
+////	viewC64->viewC64MainMenu->InsertD64(path, false, c64SettingsAutoJmpFromInsertedDiskFirstPrg, 0);
+//}
 
 //
 void C64DebugInterface::SetVicRegister(uint8 registerNum, uint8 value)

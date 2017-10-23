@@ -95,6 +95,8 @@ CSlrString *c64SettingsPathToSymbols = NULL;
 CSlrString *c64SettingsPathToBreakpoints = NULL;
 CSlrString *c64SettingsPathToDebugInfo = NULL;
 
+CSlrString *c64SettingsPathToJukeboxPlaylist = NULL;
+
 CSlrString *c64SettingsAudioOutDevice = NULL;
 
 float c64SettingsScreenGridLinesAlpha = 0.3f;
@@ -118,7 +120,7 @@ u8 c64SettingsVicDisplayBorderType = VIC_DISPLAY_SHOW_BORDER_FULL;
 bool c64SettingsAutoJmp = false;
 bool c64SettingsAutoJmpAlwaysToLoadedPRGAddress = false;	// will jump to loaded address when PRG is loaded from menu
 bool c64SettingsAutoJmpFromInsertedDiskFirstPrg = false;	// will load first PRG from attached disk
-u8 c64SettingsAutoJmpDoReset = AUTOJMP_RESET_NONE;
+u8 c64SettingsAutoJmpDoReset = MACHINE_RESET_NONE;
 int c64SettingsAutoJmpWaitAfterReset = 1300;				// this is to let c64 drive finish reset
 
 bool c64SettingsForceUnpause = false;						// unpause debugger on jmp if code is stopped
@@ -503,7 +505,7 @@ void C64DebuggerSetSetting(char *name, void *value)
 		
 		if (viewC64->isEmulationThreadRunning)
 		{
-			viewC64->viewC64MainMenu->InsertD64(c64SettingsPathToD64, false);
+			viewC64->viewC64MainMenu->InsertD64(c64SettingsPathToD64, false, c64SettingsAutoJmpFromInsertedDiskFirstPrg, 0, true);
 		}
 	}
 	else if (!strcmp(name, "PathPRG"))
@@ -515,7 +517,7 @@ void C64DebuggerSetSetting(char *name, void *value)
 		
 		if (viewC64->isEmulationThreadRunning)
 		{
-			viewC64->viewC64MainMenu->LoadPRG(c64SettingsPathToPRG, false, false);
+			viewC64->viewC64MainMenu->LoadPRG(c64SettingsPathToPRG, false, false, true);
 		}
 	}
 	else if (!strcmp(name, "PathCRT"))

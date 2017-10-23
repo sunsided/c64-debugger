@@ -60,9 +60,17 @@ public:
 	virtual void HardReset();
 	virtual void DiskDriveReset();
 
+	//
 	virtual void KeyboardDown(uint32 mtKeyCode);
 	virtual void KeyboardUp(uint32 mtKeyCode);
+	
+	virtual void JoystickDown(int port, uint32 axis);
+	virtual void JoystickUp(int port, uint32 axis);
+	
+	virtual void KeyboardDownWithJoystickCheck(uint32 mtKeyCode);
+	virtual void KeyboardUpWithJoystickCheck(uint32 mtKeyCode);
 
+	//
 	virtual int GetC64CpuPC();
 	virtual int GetDrive1541PC();
 	virtual void GetC64CpuState(C64StateCPU *state);

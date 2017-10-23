@@ -89,7 +89,7 @@ public:
 	void SetDiskImage(char *fileName);
 	void SetDiskImage(int deviceId);
 	
-	void StartFileEntry(DiskImageFileEntry *fileEntry);
+	void StartFileEntry(DiskImageFileEntry *fileEntry, bool showLoadAddressInfo);
 	
 	void UpdateDriveDiskID();
 	
@@ -98,7 +98,7 @@ public:
 	CDiskImageD64 *diskImage;
 	
 	// like LOAD "*" + RUN
-	void StartFirstDiskPRGEntry();
+	void StartDiskPRGEntry(int entryNum, bool showLoadAddressInfo);
 };
 
 class CViewFileD64EntryItem : public CViewC64MenuItem

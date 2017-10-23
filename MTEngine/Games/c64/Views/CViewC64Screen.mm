@@ -573,7 +573,7 @@ bool CViewC64Screen::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContr
 //		return true;
 	
 	
-	debugInterface->KeyboardDown(keyCode); //bareKey);
+	debugInterface->KeyboardDownWithJoystickCheck(keyCode); //bareKey);
 	debugInterface->UnlockIoMutex();
 	return true;
 	
@@ -608,7 +608,7 @@ bool CViewC64Screen::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl
 
 	LOGI(".........SYS_KeyCodeConvertSpecial converted key is ", keyCode);
 
-	debugInterface->KeyboardUp(keyCode); //bareKey);
+	debugInterface->KeyboardUpWithJoystickCheck(keyCode); //bareKey);
 	debugInterface->UnlockIoMutex();
 	
 	return true;

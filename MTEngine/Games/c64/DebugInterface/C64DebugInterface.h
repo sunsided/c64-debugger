@@ -21,6 +21,16 @@ class CSlrImage;
 class CSlrFont;
 class C64KeyMap;
 
+#define JOYPAD_FIRE 0x10
+#define JOYPAD_E    0x08
+#define JOYPAD_W    0x04
+#define JOYPAD_S    0x02
+#define JOYPAD_N    0x01
+#define JOYPAD_SW   (JOYPAD_S | JOYPAD_W)
+#define JOYPAD_SE   (JOYPAD_S | JOYPAD_E)
+#define JOYPAD_NW   (JOYPAD_N | JOYPAD_W)
+#define JOYPAD_NE   (JOYPAD_N | JOYPAD_E)
+
 // abstract class
 class C64DebugInterface
 {
@@ -102,9 +112,15 @@ public:
 	virtual void HardReset();
 	virtual void DiskDriveReset();
 	
-	// C64 keyboard mapper
+	// C64 keyboard & joystick mapper
 	virtual void KeyboardDown(uint32 mtKeyCode);
 	virtual void KeyboardUp(uint32 mtKeyCode);
+
+	virtual void JoystickDown(int port, uint32 axis);
+	virtual void JoystickUp(int port, uint32 axis);
+
+	virtual void KeyboardDownWithJoystickCheck(uint32 mtKeyCode);
+	virtual void KeyboardUpWithJoystickCheck(uint32 mtKeyCode);	
 	
 	// debugger control
 	virtual void SetDebugOnC64(bool debugOnC64);
@@ -242,7 +258,7 @@ public:
 	virtual void MarkDrive1541CellRead(uint16 addr);
 	virtual void MarkDrive1541CellWrite(uint16 addr, uint8 value);
 	
-	virtual void UiInsertD64(CSlrString *path);
+//	virtual void UiInsertD64(CSlrString *path);
 	
 	virtual bool IsCpuJam();
 	virtual void ForceRunAndUnJamCpu();

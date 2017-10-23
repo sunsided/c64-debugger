@@ -27,6 +27,7 @@
 #define VIEWC64SETTINGS_OPEN_D64	1
 #define VIEWC64SETTINGS_OPEN_CRT	2
 #define VIEWC64SETTINGS_OPEN_PRG	3
+#define VIEWC64SETTINGS_OPEN_JUKEBOX	4
 
 CViewMainMenu::CViewMainMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
@@ -46,6 +47,9 @@ CViewMainMenu::CViewMainMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 
 	crtExtensions.push_back(new CSlrString("crt"));
 
+	jukeboxExtensions.push_back(new CSlrString("c64jukebox"));
+	jukeboxExtensions.push_back(new CSlrString("json"));
+	
 	char *buf = SYS_GetCharBuf();
 	
 	sprintf(buf, "C64 Debugger v%s by Slajerek/Samar", C64DEBUGGER_VERSION_STRING);
@@ -319,6 +323,17 @@ void CViewMainMenu::OpenDialogLoadPRG()
 	delete windowTitle;	
 }
 
+void CViewMainMenu::OpenDialogStartJukeboxPlaylist()
+{
+	LOGM("OpenDialogStartJukeboxPlaylist");
+	openDialogFunction = VIEWC64SETTINGS_OPEN_JUKEBOX;
+	
+	CSlrString *windowTitle = new CSlrString("Start JukeBox playlist");
+	windowTitle->DebugPrint("windowTitle=");
+	viewC64->ShowDialogOpenFile(this, &jukeboxExtensions, c64SettingsDefaultD64Folder, windowTitle);
+	delete windowTitle;
+}
+
 void CViewMainMenu::SystemDialogFileOpenSelected(CSlrString *path)
 {
 	LOGM("CViewMainMenu::SystemDialogFileOpenSelected, path=%x", path);
@@ -326,7 +341,7 @@ void CViewMainMenu::SystemDialogFileOpenSelected(CSlrString *path)
 
 	if (openDialogFunction == VIEWC64SETTINGS_OPEN_D64)
 	{
-		InsertD64(path, true);
+		InsertD64(path, true, c64SettingsAutoJmpFromInsertedDiskFirstPrg, 0, true);
 		C64DebuggerStoreSettings();
 	}
 	else if (openDialogFunction == VIEWC64SETTINGS_OPEN_CRT)
@@ -336,8 +351,13 @@ void CViewMainMenu::SystemDialogFileOpenSelected(CSlrString *path)
 	}
 	else if (openDialogFunction == VIEWC64SETTINGS_OPEN_PRG)
 	{
-		LoadPRG(path, true, true);
+		LoadPRG(path, true, true, true);
 		C64DebuggerStoreSettings();
+	}
+	else if (openDialogFunction == VIEWC64SETTINGS_OPEN_JUKEBOX)
+	{
+		viewC64->InitJukebox(path);
+		//C64DebuggerStoreSettings();
 	}
 	
 	openDialogFunction = VIEWC64SETTINGS_OPEN_NONE;
@@ -345,9 +365,9 @@ void CViewMainMenu::SystemDialogFileOpenSelected(CSlrString *path)
 	delete path;
 }
 
-void CViewMainMenu::InsertD64(CSlrString *path, bool updatePathToD64)
+void CViewMainMenu::InsertD64(CSlrString *path, bool updatePathToD64, bool autoRun, int autoRunEntryNum, bool showLoadAddressInfo)
 {
-	LOGD("CViewMainMenu::InsertD64: path=%x", path);
+	LOGD("CViewMainMenu::InsertD64: path=%x autoRun=%s autoRunEntryNum=%d", path, STRBOOL(autoRun), autoRunEntryNum);
 	
 	if (SYS_FileExists(path) == false)
 	{
@@ -401,9 +421,9 @@ void CViewMainMenu::InsertD64(CSlrString *path, bool updatePathToD64)
 	if (guiMain->currentView == viewC64->viewFileD64)
 		viewC64->viewFileD64->StartSelectedDiskImageBrowsing();
 	
-	if (c64SettingsAutoJmpFromInsertedDiskFirstPrg)
+	if (autoRun)
 	{
-		viewC64->viewFileD64->StartFirstDiskPRGEntry();
+		viewC64->viewFileD64->StartDiskPRGEntry(autoRunEntryNum, showLoadAddressInfo);
 	}
 }
 
@@ -451,7 +471,7 @@ void CViewMainMenu::InsertCartridge(CSlrString *path, bool updatePathToCRT)
 	delete asciiPath;
 }
 
-bool CViewMainMenu::LoadPRG(CSlrString *path, bool autoStart, bool updatePRGFolderPath)
+bool CViewMainMenu::LoadPRG(CSlrString *path, bool autoStart, bool updatePRGFolderPath, bool showAddressInfo)
 {
 	path->DebugPrint("CViewMainMenu::LoadPRG: path=");
 	
@@ -495,7 +515,7 @@ bool CViewMainMenu::LoadPRG(CSlrString *path, bool autoStart, bool updatePRGFold
 	
 	CByteBuffer *byteBuffer = new CByteBuffer(file, false);
 	
-	bool ret = LoadPRG(byteBuffer, autoStart, true);
+	bool ret = LoadPRG(byteBuffer, autoStart, showAddressInfo);
 	
 	if (ret)
 	{
@@ -538,16 +558,16 @@ void CViewMainMenu::ThreadRun(void *data)
 {
 	LOGD("CViewMainMenu::ThreadRun");
 	
-	if (loadPrgAutoStart && c64SettingsAutoJmpDoReset != AUTOJMP_RESET_NONE)
+	if (loadPrgAutoStart && c64SettingsAutoJmpDoReset != MACHINE_RESET_NONE)
 	{
 		viewC64->debugInterface->SetDebugMode(C64_DEBUG_RUNNING);
 		viewC64->debugInterface->SetPatchKernalFastBoot(true);
 
-		if (c64SettingsAutoJmpDoReset == AUTOJMP_RESET_SOFT)
+		if (c64SettingsAutoJmpDoReset == MACHINE_RESET_SOFT)
 		{
 			viewC64->debugInterface->Reset();
 		}
-		else if (c64SettingsAutoJmpDoReset == AUTOJMP_RESET_HARD)
+		else if (c64SettingsAutoJmpDoReset == MACHINE_RESET_HARD)
 		{
 			viewC64->debugInterface->HardReset();
 		}

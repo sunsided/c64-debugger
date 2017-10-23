@@ -72,7 +72,7 @@ public:
 	bool ReadEntry(int entryNum, CByteBuffer *byteBuffer);
 	bool ReadEntry(DiskImageFileEntry *fileEntry, CByteBuffer *byteBuffer);
 	
-	DiskImageFileEntry *FindFirstDiskPRGEntry();
+	DiskImageFileEntry *FindDiskPRGEntry(int entryNum);
 
 };
 

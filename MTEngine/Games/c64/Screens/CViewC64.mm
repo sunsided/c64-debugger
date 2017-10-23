@@ -44,6 +44,8 @@ extern "C"{
 #include "CViewSnapshots.h"
 #include "CViewAbout.h"
 #include "CViewVicEditor.h"
+#include "CViewJukeboxPlaylist.h"
+#include "CJukeboxPlaylist.h"
 #include "C64FileDataAdapter.h"
 #include "C64KeyboardShortcuts.h"
 #include "CSlrString.h"
@@ -207,6 +209,14 @@ CViewC64::CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 
 	c64SettingsIsInVicEditor = isInVicEditor;
 	
+	//////////////////////
+	this->viewJukeboxPlaylist = NULL;
+
+	if (c64SettingsPathToJukeboxPlaylist != NULL)
+	{
+		this->InitJukebox(c64SettingsPathToJukeboxPlaylist);
+	}
+	
 	// finished starting up
 	RES_SetStateIdle();
 	VID_SetFPS(FRAMES_PER_SECOND);
@@ -214,7 +224,6 @@ CViewC64::CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 	// Start emulation thread (emulation should be already initialized, just run the processor)
 	SYS_StartThread(this, NULL);
 
-	
 	// attach disks, cartridges etc
 	C64DebuggerPerformStartupTasks();
 
@@ -229,7 +238,7 @@ CViewC64::CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 	C64SetPaletteNum(c64SettingsVicPalette);
 
 	// start
-	ShowMainScreen();	
+	ShowMainScreen();
 }
 
 void CViewC64::ShowMainScreen()
@@ -256,6 +265,48 @@ void CViewC64::ShowMainScreen()
 
 CViewC64::~CViewC64()
 {
+}
+
+void CViewC64::InitJukebox(CSlrString *jukeboxJsonFilePath)
+{
+	guiMain->LockMutex();
+	
+	if (this->viewJukeboxPlaylist == NULL)
+	{
+		this->viewJukeboxPlaylist = new CViewJukeboxPlaylist(-10, -10, -3.0, 0.1, 0.1); //SCREEN_WIDTH, SCREEN_HEIGHT);
+		this->AddGuiElement(this->viewJukeboxPlaylist);
+	}
+	
+	this->viewJukeboxPlaylist->DeletePlaylist();
+	
+	this->viewJukeboxPlaylist->visible = true;
+
+	// start with black screen
+	this->viewJukeboxPlaylist->fadeState = JUKEBOX_PLAYLIST_FADE_STATE_FADE_OUT;
+	this->viewJukeboxPlaylist->fadeValue = 1.0f;
+	this->viewJukeboxPlaylist->fadeStep = 0.0f;
+	
+	char *str = jukeboxJsonFilePath->GetStdASCII();
+	
+	this->viewJukeboxPlaylist->InitFromFile(str);
+	
+	delete [] str;
+	
+	if (isEmulationThreadRunning)
+	{
+		this->viewJukeboxPlaylist->StartPlaylist();
+	}
+	else
+	{
+		// jukebox will be started by c64PerformStartupTasksThreaded()
+		if (this->viewJukeboxPlaylist->playlist->setLayoutViewNumber >= 0
+			&& this->viewJukeboxPlaylist->playlist->setLayoutViewNumber < C64_SCREEN_LAYOUT_MAX)
+		{
+			viewC64->SwitchToScreenLayout(this->viewJukeboxPlaylist->playlist->setLayoutViewNumber);
+		}
+	}
+	
+	guiMain->UnlockMutex();
 }
 
 void CViewC64::InitViceC64()
@@ -876,8 +927,8 @@ void CViewC64::InitLayouts()
 	screenPositions[m]->c64ScreenZoomedX = ((float)SCREEN_WIDTH-screenPositions[m]->c64ScreenZoomedSizeX)/2.0f;
 	screenPositions[m]->c64ScreenZoomedY = 0.0f;
 
-	
-	frameCounter = 0;
+	emulationFrameCounter = 0;
+	guiRenderFrameCounter = 0;
 	
 	isShowingRasterCross = false;
 	fontDisassemble = guiMain->fntConsole;
@@ -886,6 +937,12 @@ void CViewC64::InitLayouts()
 void CViewC64::SwitchToScreenLayout(int newScreenLayoutId)
 {
 	LOGD("SWITCH to screen layout id #%d", newScreenLayoutId);
+	
+	if (newScreenLayoutId < 0 || newScreenLayoutId >= C64_SCREEN_LAYOUT_MAX)
+	{
+		LOGError("CViewC64::SwitchToScreenLayout: newScreenLayoutId=%d", newScreenLayoutId);
+		return;
+	}
 	
 	guiMain->LockMutex();
 
@@ -1116,7 +1173,7 @@ void CViewC64::Render()
 	}
 	
 
-	frameCounter++;
+	guiRenderFrameCounter++;
 	
 //	if (frameCounter % 2 == 0)
 	{
@@ -1471,7 +1528,7 @@ bool CViewC64::ProcessGlobalKeyboardShortcut(u32 keyCode, bool isShift, bool isA
 		}
 		else if (shortcut == viewC64MainMenu->kbsStartFromDisk)
 		{
-			viewFileD64->StartFirstDiskPRGEntry();
+			viewFileD64->StartDiskPRGEntry(0, true);
 		}
 		else if (shortcut == viewC64MainMenu->kbsSaveScreenImageAsPNG)
 		{
@@ -1483,7 +1540,7 @@ bool CViewC64::ProcessGlobalKeyboardShortcut(u32 keyCode, bool isShift, bool isA
 		}
 		else if (shortcut == viewC64SettingsMenu->kbsDetachCartridge)
 		{
-			viewC64SettingsMenu->DetachCartridge();
+			viewC64SettingsMenu->DetachCartridge(true);
 		}
 		else if (shortcut == viewC64SettingsMenu->kbsDetachDiskImage)
 		{
@@ -2075,6 +2132,17 @@ void CViewC64::CreateFonts()
 }
 
 ///
+void CViewC64::EmulationStartFrameCallback()
+{
+	emulationFrameCounter++;
+	
+	if (viewJukeboxPlaylist != NULL)
+	{
+		viewJukeboxPlaylist->EmulationStartFrame();
+	}
+}
+
+///
 void CViewC64::MapC64MemoryToFile(char *filePath)
 {
 	mappedC64Memory = SYS_MapMemoryToFile(C64_RAM_SIZE, filePath, (void**)&mappedC64MemoryDescriptor);
@@ -2353,7 +2421,7 @@ void C64D_DragDropCallbackPRG(CSlrString *filePath)
 	LOGD("C64D_DragDropCallbackPRG");
 	filePath->DebugPrint("filePath=");
 	
-	viewC64->viewC64MainMenu->LoadPRG(filePath, true, false);
+	viewC64->viewC64MainMenu->LoadPRG(filePath, true, false, true);
 	
 	C64DebuggerStoreSettings();
 }
@@ -2363,7 +2431,7 @@ void C64D_DragDropCallbackD64(CSlrString *filePath)
 	LOGD("C64D_DragDropCallbackD64");
 	filePath->DebugPrint("filePath=");
 	
-	viewC64->viewC64MainMenu->InsertD64(filePath, false);
+	viewC64->viewC64MainMenu->InsertD64(filePath, false, c64SettingsAutoJmpFromInsertedDiskFirstPrg, 0, true);
 	
 	CSlrString *fileName = filePath->GetFileNameComponentFromPath();
 	char *fn = fileName->GetStdASCII();

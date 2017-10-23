@@ -55,6 +55,7 @@ class CViewDriveStateCPU;
 class CViewDrive1541State;
 class CViewEmulationState;
 class CViewMonitorConsole;
+class CViewJukeboxPlaylist;
 class CViewMainMenu;
 class CViewSettingsMenu;
 class CViewFileD64;
@@ -307,18 +308,27 @@ public:
 	int rasterCharToShowX;
 	int rasterCharToShowY;
 	
+	// JukeBox playlist
+	CViewJukeboxPlaylist *viewJukeboxPlaylist;
+	
 	//
 	void InitViceC64();
 
 	void InitViews();
 	void InitLayouts();
 	
+	void InitJukebox(CSlrString *jukeboxJsonFilePath);
+	
 	void ThreadRun(void *data);
 	
 	C64ScreenLayout *screenPositions[C64_SCREEN_LAYOUT_MAX];
 	
-	int frameCounter;
+	int guiRenderFrameCounter;
 //	int nextScreenUpdateFrame;
+	
+	//
+	long emulationFrameCounter;
+	void EmulationStartFrameCallback();
 	
 	//
 	void AddDebugCode();

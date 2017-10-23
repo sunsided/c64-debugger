@@ -11,11 +11,11 @@
 // settings that need to be set when emulation is initialized
 #define C64DEBUGGER_BLOCK_POSTLAUNCH	2
 
-enum autoJmpResetMode : u8
+enum resetMode : u8
 {
-	AUTOJMP_RESET_NONE = 0,
-	AUTOJMP_RESET_SOFT = 1,
-	AUTOJMP_RESET_HARD = 2
+	MACHINE_RESET_NONE = 0,
+	MACHINE_RESET_SOFT = 1,
+	MACHINE_RESET_HARD = 2
 };
 
 // settings
@@ -82,6 +82,8 @@ extern CSlrString *c64SettingsPathToC64MemoryMapFile;
 extern CSlrString *c64SettingsPathToSymbols;
 extern CSlrString *c64SettingsPathToBreakpoints;
 extern CSlrString *c64SettingsPathToDebugInfo;
+
+extern CSlrString *c64SettingsPathToJukeboxPlaylist;
 
 extern CSlrString *c64SettingsAudioOutDevice;
 

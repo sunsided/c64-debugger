@@ -510,7 +510,7 @@ static int set_speed_adjustment_setting(int val, void *param)
     return 0;
 }
 
-static int set_volume(int val, void *param)
+int set_volume(int val, void *param)
 {
     volume = val;
 
@@ -528,6 +528,12 @@ static int set_volume(int val, void *param)
 
     return 0;
 }
+
+void c64d_set_volume(float volume)
+{
+	set_volume((int)(volume*100.0), NULL);
+}
+
 
 static const resource_string_t resources_string[] = {
     { "SoundDeviceName", "", RES_EVENT_NO, NULL,

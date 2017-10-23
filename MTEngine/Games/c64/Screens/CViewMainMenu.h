@@ -142,17 +142,20 @@ public:
 	std::list<CSlrString *> diskExtensions;
 	std::list<CSlrString *> prgExtensions;
 	std::list<CSlrString *> crtExtensions;
+	std::list<CSlrString *> jukeboxExtensions;
 	
 	void OpenDialogInsertD64();
-	void InsertD64(CSlrString *path, bool updatePathToD64);
+	void InsertD64(CSlrString *path, bool updatePathToD64, bool autoRun, int autoRunEntryNum, bool showLoadAddressInfo);
 	void OpenDialogInsertCartridge();
 	void InsertCartridge(CSlrString *path, bool updatePathToCRT);
 	void OpenDialogLoadPRG();
-	bool LoadPRG(CSlrString *path, bool autoStart, bool updatePRGFolderPath);
+	bool LoadPRG(CSlrString *path, bool autoStart, bool updatePRGFolderPath, bool showAddressInfo);
 	bool LoadPRG(CByteBuffer *byteBuffer, bool autoStart, bool showAddressInfo);
 	void LoadPRG(CByteBuffer *byteBuffer, u16 *startAddr, u16 *endAddr);
 	bool LoadPRGNotThreaded(CByteBuffer *byteBuffer, bool autoStart, bool showAddressInfo);
 	void SetBasicEndAddr(int endAddr);
+
+	void OpenDialogStartJukeboxPlaylist();
 
 	// LoadPRG threaded
 	CByteBuffer *loadPrgByteBuffer;

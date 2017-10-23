@@ -12,6 +12,7 @@
 #include "CViewVicEditor.h"
 #include "CGuiMain.h"
 #include "SND_SoundEngine.h"
+#include "CViewJukeboxPlaylist.h"
 #include "C64D_Version.h"
 
 #define printLine printf
@@ -55,6 +56,8 @@ void c64ShowCommandLineHelp()
 	printLine("     load snapshot from file\n");
 	printLine("-soundout <\"device name\" | device number>\n");
 	printLine("     set sound out device by name or number\n");
+	printLine("-playlist <file>\n");
+	printLine("     load and start jukebox playlist from json file\n");
 	printLine("\n");
 	printLine("-clearsettings\n");
 	printLine("     clear all config settings\n");
@@ -256,8 +259,15 @@ void c64PerformStartupTasksThreaded()
 {
 	LOGD("c64PerformStartupTasksThreaded");
 	
-	// load breakpoints & symbols
+	if (c64CommandLineAudioOutDevice != NULL)
+	{
+		if (gSoundEngine->SetOutputAudioDevice(c64CommandLineAudioOutDevice) == false)
+		{
+			printLine("Selected sound out device not found, fall back to default output.\n");
+		}
+	}
 	
+	// load breakpoints & symbols
 	if (c64SettingsPathToBreakpoints != NULL)
 	{
 		viewC64->symbols->ClearBreakpoints(viewC64->debugInterface);
@@ -274,6 +284,18 @@ void c64PerformStartupTasksThreaded()
 	{
 		viewC64->symbols->ClearSourceDebugInfo(viewC64->debugInterface);
 		viewC64->symbols->ParseSourceDebugInfo(c64SettingsPathToDebugInfo, viewC64->debugInterface);
+	}
+	
+	// skip any automatic loading if jukebox is active
+	if (viewC64->viewJukeboxPlaylist != NULL)
+	{
+		if (c64SettingsSIDEngineModel != 0)
+		{
+			viewC64->debugInterface->SetSidType(c64SettingsSIDEngineModel);
+		}
+		
+		viewC64->viewJukeboxPlaylist->StartPlaylist();
+		return;
 	}
 	
 	// process, order is important
@@ -305,7 +327,7 @@ void c64PerformStartupTasksThreaded()
 			{
 				SYS_Sleep(100);
 			}
-			viewC64->viewC64MainMenu->InsertD64(c64SettingsPathToD64, false);
+			viewC64->viewC64MainMenu->InsertD64(c64SettingsPathToD64, false, c64SettingsAutoJmpFromInsertedDiskFirstPrg, 0, true);
 		}
 		
 		if (c64SettingsPathToCartridge != NULL)
@@ -324,7 +346,7 @@ void c64PerformStartupTasksThreaded()
 		// do not load PRG when disk was inserted and started
 		if (!(c64SettingsAutoJmpFromInsertedDiskFirstPrg == true && c64SettingsPathToD64 != NULL))
 		{
-			viewC64->viewC64MainMenu->LoadPRG(c64SettingsPathToPRG, c64SettingsAutoJmp, false);
+			viewC64->viewC64MainMenu->LoadPRG(c64SettingsPathToPRG, c64SettingsAutoJmp, false, true);
 		}
 	}
 	
@@ -336,15 +358,7 @@ void c64PerformStartupTasksThreaded()
 
 		viewC64->debugInterface->MakeJsrC64(c64SettingsJmpOnStartupAddr);
 	}
-	
-	if (c64CommandLineAudioOutDevice != NULL)
-	{
-		if (gSoundEngine->SetOutputAudioDevice(c64CommandLineAudioOutDevice) == false)
-		{
-			printLine("Selected sound out device not found, fall back to default output.\n");
-		}
-	}
-	
+
 	//
 	viewC64->viewVicEditor->RunDebug();
 }
@@ -476,6 +490,12 @@ void C64DebuggerParseCommandLine2()
 			char *str = c64ParseCommandLineGetArgument();
 			LOGD("soundout='%s'", str);
 			c64CommandLineAudioOutDevice = new CSlrString(str);
+		}
+		else if (!strcmp(cmd, "playlist") || !strcmp(cmd, "jukebox"))
+		{
+			char *str = c64ParseCommandLineGetArgument();
+			LOGD("playlist='%s'", str);
+			c64SettingsPathToJukeboxPlaylist = new CSlrString(str);
 		}
 	}
 }
@@ -703,7 +723,7 @@ void c64PerformNewConfigurationTasksThreaded(CByteBuffer *byteBuffer)
 		else if (t == C64D_PASS_CONFIG_DATA_PATH_TO_D64)
 		{
 			CSlrString *str = byteBuffer->GetSlrString();
-			viewC64->viewC64MainMenu->InsertD64(str, false);
+			viewC64->viewC64MainMenu->InsertD64(str, false, c64SettingsAutoJmpFromInsertedDiskFirstPrg, 0, true);
 			delete str;
 		}
 		else if (t == C64D_PASS_CONFIG_DATA_PATH_TO_CRT)
@@ -736,7 +756,7 @@ void c64PerformNewConfigurationTasksThreaded(CByteBuffer *byteBuffer)
 		else if (t == C64D_PASS_CONFIG_DATA_PATH_TO_PRG)
 		{
 			CSlrString *str = byteBuffer->GetSlrString();
-			viewC64->viewC64MainMenu->LoadPRG(str, c64SettingsAutoJmp, false);
+			viewC64->viewC64MainMenu->LoadPRG(str, c64SettingsAutoJmp, false, true);
 			delete str;
 		}
 		else if (t == C64D_PASS_CONFIG_DATA_LAYOUT)
