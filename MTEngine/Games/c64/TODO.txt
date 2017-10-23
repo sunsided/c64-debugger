@@ -1,0 +1,515 @@
+*FIXED* BUG Windows: I've found a little bug in 0.62 which worked in previous versions (not sure in which version it broke), but it's not possible anymore (on Windows) to enter opcodes in the disassembly pane. You can press enter and the cursor gets there, but no text can be entered.
+
+BUGS: ADD CTRL support: I cannot get Ctrl+F10 to step over JSRs, regardless of whether I have "use all F1, F2 etc
+
+
+Add Alex Goldblat tester to readme
+
+
+
+v0.62
+
+Added: MIDI support, the usual -midi* command line flags work as they normally do in VICE itself. Thanks to David Hogans for help
+Added: Select audio out device via command line (-soundout <"device name" | device number>)
+Added: Quick workaround for Linux open/save file dialogs problems on broken GTK, you can select custom open/save file dialogs in Settings/UI (no UTF support yet, sorry!)
+Bug fixed: Loading PRG while waiting after automatic Reset for previous PRG load caused Fatal Error
+Bug fixed: Painting on vertically-stretched sprite caused crash
+
+And other overall tweaks here and there.
+
+
+---------
+
+BUG: w vice: przy zapisie na dyskietke na windows, nie robi sie flush - trzeba poczekac chwile i dopiero wtedy d64 sie uaktualni.
+
+- README changelog
+
+
+VicEditor set VIC regs on import
+
+
+- COMMAND LINE to reset in autoload
+
+- setting TO un-pause debugging code when PRG is loaded
+
+
+- settings: grid settings
+
+
+- colodore settings
+
+
+
+- vic editor: TOOLBAR
+- vic editor INFO view: plus może przydało by się:
+- info jakie kolory są wybrane w 8x8 pod kursorem?
+- info jaka jest pozycja x/y pod kursorem
+- jaka jest wartość tła i border ($d021, $d020) ?
+- przełącznik hires/multi ?
+
+- Flood fill pixels
+
+- save local snapshot as ...
+
+/////////
+
+1. Able to change the background of the tabs especially the Disassembly . black is sometimes not so nice and i prefer whiter themes/ or background selections (from default selections )
+2. option to export disassembler only to text . could very ! handy.
+3. nice easy way to see all the the keys combinations for the multiple views like CTRL+F1 , CRTL+F2, and which tabs they contain (data dump/memory dump
+3. shift+ctrl+0 don't work to unload CARTS when i use AR6
+5. the keyboard the escape for me is always to escape the present screen so i prefer to exlude it from the assign-keys , a bit obstructive cause i want to get out of the screen without ! saving which apparently i can't !   <--- ISILDUR?
+5. to bold the tabs !! they almost unseen with the tick of them.
+6. resize of the window don't always align the small frames , for example: SHIFT+CTRL+F2 when resize to full width , it doesn't change the frames (disassembly) respectively , there gaps of space and its a bit annoying.
+7. on Winvice there is nice option to make SC command to see the screen in petscii layout , could be nice if there feature/option to do it (not like the CTRL+F1 to show the acutall c64 screen) also here
+8. add hinting while moving across over the fields to show added information , like CC , VC panel to display what every field means. just a suggestion , i know its a lot of work to do .
+10. maybe its just me but i can't understand how the memory dump is working , the zooming don't work all the time (i don't know why) and i don't know what it meant for and why the scrolling (page up/down) is not working there but i guess its only me who got troubles on that window. also could be nice to bind the data dump view with the memory view , if i press on hex value for example $1000 , so the memory map will be refeshed. just a suggestion.
+sorry if i was messy Marcin Skoczylas don't take it too hard , i am a software tester so i am very picky and nerdish sometimes. i love your tool very much and encourage others to use it too , cause i believe it powerful tool for C64 usres.
+
+
+Add Memory marker for "DISPLAYED" when VIC accesses data.
+
+
+- show sprites values
+
+- VIC Display zoom
+
+- VIC Editor: support of VIC_DISPLAY_SHOW_BORDER_NONE
+
+
+
+TODO: LINUX UPDATE VIEWPORT
+
+bug: w f4 nie dziala lewy mem zoom
+
+
+
+
+
+
+
+- ustawianie w menu innej palety niz w c64
+
+- periodically store snapshot to rewind demo
+
+
+
+- (test linux), bug remove always on top when dialog open & restore always on top
+
+https://github.com/waskomo/ProjectOne
+
+
+// TODO: create customizable shortcuts for VicEditor
+- VIC EDITOR keyboard shortcuts
+- ADD SHORTCUTS: Change: in Disassembly view a left arrow (address -1) and right arrow (address +1) have been changed to keys [ and ] respectively
+
+
+
+- multi charset render (select with ctrl+k)
+- make Vic EDITOR values nicer
+
+- vic display as replacement for real c64 screen with r-click (c64/zoom/display)
+
+
+- update sid_engine, machnie type in menus (based on write snapshot):     resources_get_int("SidEngine", &sid_engine);
+- resid.cc ->  snapshot zapisuje teraz też state.voice_mask...
+
+
+
+
+
+
+
+2x ctrl+shift+f6 = wchodzi do settings
+
+
+
+
+TODO: vice autoload -d8 bug
+
+
+
+
+
+OK: ctrl+shift+f1 (aka widok 2 = zoom) TODO: remove lines
+OK: freq sida  note recog? TODO: interval tree, add interval tree to readme
+
+
+
+
+
+
+
+bool CViewC64VicDisplay::DoScrollWheel(float deltaX, float deltaY) // remove buttons first return false;
+
+
+
+vic display: dodac key shortcut jako switch c64 screen zoom ,
+
+
+
+
+
+
+bug: jak wlaczasz widok vic display to nie ma priority sprajtow tj. echo sprajt jest wyzej niz
+
+
+
+///
+MOVE MACOS SETTINGS FOLDER TO .C64Debugger
+
+
+
+jak jest cpu jam to reset nie odpauzowuje
+
+
+
+snapszot light
+
+waaataaa siiit? set model type zadziala z wczytywanym snapshotem light
+
+// failed to load snapshot, make a full reset, this will likely crash
+int model = viewC64->debugInterface->GetC64ModelType();
+
+if (model == 0)
+{
+viewC64->debugInterface->SetC64ModelType(1);
+}
+else
+{
+viewC64->debugInterface->SetC64ModelType(0);
+}
+
+SYS_Sleep(200);
+
+viewC64->debugInterface->SetC64ModelType(model);
+
+SYS_Sleep(200);
+
+viewC64->debugInterface->HardReset();
+
+
+//
+xcode plugin: https://github.com/krzysztofzablocki/LinkedConsole
+
+VICE 3.1:
+maincpu.h: extern void maincpu_set_pc(int); extern unsigned int maincpu_get_pc(void); (...)
+palette.c/h: static palette_info_t palettelist[] = {
+uimon: win32?
+ciacore/viacore.c: sprawdzic update BYTE c64d_ciacore_peek(cia_context_t *cia_context, WORD addr)
+
+
+///
+REMOVE DEBUG IN DBG_Log.h
+Opis
+
+shift+f5 - asm view
+
+TODO:
+
+- LINUX drag&drop
+
+
+- adapter to show only what was stored in memory
+
+// BUG: Te komunikaty są już z samego VICE, ja przekierowuje linie komend to silnika emulatora i on "nie rozumie" tych parametrow ktore sa dedykowane tylko do debuggera. To taka niedorobka, w zasadzie maly blad, bo powinienem te parametry linii komend ktore juz "wykorzystalem" nie przesylac dalej do VICE. Fakt, dzieki ze zauwazyles - dorzucam do listy rzeczy do zrobienia.
+
+- ctrl on disassemble address => move cursor to address (podkreslenie na mouse over)
+
+- bug: disassemble jest sterowane z rastra przez set pc, force wyswietlanie zawsze current PC innym kolorem (czerwony jako blocked?)
+
+
+
+// - scroll monitor console
+
+- podpiac monitor VICE
+
+// TODO: click menu items in Settings menus
+
+- show disabled sprite s data grayed out in VIC state (rebuild display & do not concatenate texts...)
+- zeby menu f9 mialo te same kolory co wybrana paleta
+- stały statusbar na dole pod wszystkim z diodami od power/floppy/warp
+
+- http://www.catch22.net/tuts/drag-and-drop-introduction
+- select colodore parameters http://www.colodore.com
+- PAL scan lines
+
+
+
+
+
+
+
+
+
+
+/////////
+
+
+*WINDOWS* dialog click: Przy imporcie, -czasami- pojawiają się randomowe pixele, ok 2-5 szt.
+
+*WINDOWS BUG* Przy zmianie skrótu do warp na Alt+W, DBG zmienia go na ALT+E (przy czym ALT+E nie używałem do niczego)
+
+
+
+
+*OK??* F5 - restart from last JMPed address (+ reboot?)
+
+
+---
+
+EDYTOR:
+
+@slajerek nie wiem, czy dobrze zrozumiałem, ale wydaje mi się, że powinno być: dopóki trzymasz alt to blokuje kolory i stawiasz pixele co drugi (na zmianę kolory) w x i y (w kratkę) i tyle, od następnego naciśnięcia ALT (i przytrzymania) robisz to samo - dither- w miejscu kursora. "Siatka" ditheringu nie może być na "sztywno" jak w P1 na przykład :wink:
+a z tym gridem, to też nie do końca rozumiem, ale na podstawie tego, co pisze Compyx chodzi mu o to, że np. Pixcen wyłącza automatycznie grid przy <400% (co dla mnie akurat jest na plus)... ehhh każdemu nie dogodzisz :smile:
+
+
+jak powinno działać wybieranie koloru w ramach 8x8 w multi
+tzn ok mam paletę, wybieram sobie kolor i chcę postawić pixel
+i co dalej tzn. który kolor powinienem “podmienić”, pewnie “następny wolny”, ale co gdy są wszystkie “zajęte” ?
+
+Aha bardzo fajną opcją jest rysowanie w trybie UNRESTRICTED HIRES/MULTI, czyli bez ograniczeń C64, ale tylko z użyciem kolorów komodorka.
+
+Sprawdź sobie w wolnej chwili z CSDB: "Project One". PIXCEN, MULTIPAINT
+te dwie palety, to tylko tak na test, bo nie wiem, która będzie bardziej funkcjonalna pozioma/pionowa
+
+Dodatkowe info oczywiście, że tak i jak je opisałeś jest super.   ---> + bit order
+Ikonki Hires/Multi już są na wcześniejszym screenshocie.
+
+
+*DONE* Z tymi kolorami jest tak, że w P1 jak wykorzystałeś już  kolory, to masz blokadę ijak chcesz podmienić kolor to robisz to przez CTRL+LMB z nowym kolorem (ta opcja mnie najbardziej pasuje), ale będą na 100% narzekania i to dałbym do wyboru opcje KEEP/REPLACE color.
+
+Teraz najważniejsze skróty klawiszowe:
+*DONE* SHIFT+LMB - pobierz kolor pod kursorem
+*DONE* CTRL+LMB - wypełnij pixele pod kursorem kolorem wybranym z palety
+*DONE* ALT+LMB - dither painting, czyli stawianie na zmianę pixeli z wybranych kolorów foreground/background
+
+*DONE* X - zamiana miejscami kolorów foreground/background (X - nie na obrazku, a tylko w palecie jak w PS)
+*DONE* CTRL+wheel - zoom in/out zarówno w głównym oknie edycji, jak i w podglądzie, przy czym nie płynnie, a skokowo np. 25%, no chyba, że da się lepiej i prościej w wersji płynnej.
+
+*DONE* [     ] -  zmniejszenie/powiększenie brush'a - jak w PS
+
+
+*DONE*
+    Można zrobić wybieranie kolorów z klawiatury 1...0 plus SHIFT+1...0, albo tak jak w wartościach kolorów 1...0  $0b (B), $0A (A) itd.
+	* Na razie zrobilem 12345678qwertyui bo blokuje mi inne potrzebne shortcuty
+
+
+
+
+Wybor koloru:
+*DONE*duży kwadrat na pierwszym planie pokazuje którym kolorem rysujesz LMB i ten na drugim planie kolor rysowany przez RMB (zazwyczaj służy jako ERASE), czarny kwadrat po nimi to kolor tła $D021 i mały kwadrat zamiana miejscami jak w Photoshopie
+
+
+
+	* w sumie może być tylko open/save, a jak będzie się otwierać PNG to wtedy będzie z opcjami, ale to jak chcesz. Zrobię jak Ci wygodniej
+
+*DONE* okno z prv zoom musi być ruchome, żeby odsłaniać tam zasłonięty obszar obrazka i to samo z palette
+
+
+// TODO: addGuiButtons is temporary, it should be avoided and another view just for these buttons must be created
+//       keep CViewC64VicDisplay just a generic display view with callbacks
+
+
+--------------
+
+
+*DONE* upgrade to VICE3
+
+bug with CPU flags --??
+
+
+
+
+/////////
+
+
+TODO: zaznaczanie komórek w memory dump i COPY
+TODO: M <adr1> <adr2> [file name]   - dump memory
+
+
+
+// TODO: mouse zoom? *DONE*skala powiększenia w Ctrl+Shift+F2 w Settings
+// low priority: CTak samo skala celownika
+
+
+
+
+// BUG: opcja on/off timerb z cia wprowadzic spowrotem
+
+
+///
+
+
+// *DONE?* shifted keys do not work on windows
+
+
+// *DONE*zoom in ekranu c64 ?>?<??>??
+
+// "cycling" screen:
+// 1. Fonty (siatka 8x8)
+// 2. Miec co ktorys font (zeby sieczki nie bylo za duzej) z boku legende zeby bylo widac ktory to font na szybko.
+// *DONE* 3. Przy cyklowaniu to jakbym mogl zrobic zooma screena np x4 x8 dookola markera rasterbeam'u. To by byla w ogole baaaajka. A ta siatka wtedy by pozwalala sie nie "zgubic" bo bym wiedzial gdzie jestem.
+
+// !!!!!! Na takim ekranie "do cyklowania" memdump w hexie i sprajty etc sa zbedne. Styknie asm+screen+screen zoom+VIC registers i jest bajka.
+
+
+// go to label z podpowiadaniem
+
+
+// TODO: I'd like to see more control from the command line so project specific actions could be
+// taken such as write the memory to file for a specific set of frames, zoom and view specific
+// memory areas (custom views of this? ;-)).
+
+
+
+// (?) zaznaczanie banku vic na mem map
+
+
+
+// ctrl+f11 run X instructions/lines (selectable in settings)
+
+
+// - Different speeds to automatically step through the code (10-100%?)
+// run multiple instructions/cycles
+
+
+
+// shift+f11 jump to next raster vsync
+
+
+
+
+
+
+
+// // wlaczyc MIDI SUPPORT
+//       1) NIE LEPIEJ COFNAC SIE DO ORYGINALNEGO COMMITA?
+//          // napisac skrypt co robi porzadnego diffa po nazwie pliku - moja wersja vs oryginalna 2.4.0 i listuje pliki.
+//          // musi sam namierzac/znajdowac pliki i katalogi  ---- OK.
+//
+//       2) jesli nie ma roznicy to kopiujemy plik z 2.4.28 do source tree
+//       3) jesli jest roznica to patchujemy recznie
+
+
+
+
+// BUGS:
+
+// On Linux GTK dialogs do not work on some machines (seems this is a problem with GTK itself).
+// Well, on my 64bit linux I cannot open any file dialog, like when trying to open a prg or cardridge.
+//Crash says after trying on open a prg:
+//-------------------------------------------
+//(C64Debugger:1662): GdkPixbuf-WARNING **: Bug! loader 'png' didn't set
+//an error on failure
+//(C64Debugger:1662): GdkPixbuf-WARNING **: Bug! loader 'png' didn't set
+//an error on failure **
+//Gtk:ERROR:/build/gtk+3.0-Ym2tpG/gtk+3.0-3.20.3/./gtk/gtkiconhelper.c:491:ensure_surface_for_gicon:
+//assertion failed: (destination)
+
+//    +yugorin
+
+
+
+// TODO: PAL CRT emulation
+
+
+
+// TODO: upgrade residfp to residfp-1.0
+
+
+
+
+//
+// - ICU64 had an option that you could make a snapshot of memory, and compare it so a later snapshot to see which bytes where changed
+// (comes in handy for making trainers for games), I'd like to see that in C64 Debugger as well.
+// ---> (compare from file monitor command) CF 1000 <file>
+
+
+
+
+
+// BUG: There seems to be a timing issue with some games. I tried Drelbs, and normal Vice 2.4 runs the game fine, whereas in the new debugger there were random level restarts
+
+
+// BUG: w main settings w opcji ladowanie d64 po zaladowaniu snapshota bedzie zla wartosc
+// BUG: loading snapshot na 8580 moze rozwalic przester: ^^^^^ zrobic analogicznie - ustawic na 6581, a pozniej pociagnac ze snapshota i uaktualnic menu setting
+// *FIXED?* BUG: widzialem wlaczony kursor edycji memory dump w lewym gornym rogu ekranu (oops?). confirmed by Isildur
+
+// BUG: 1541 memory map click does not set current value in memory dump
+
+
+
+// IDEAS:
+
+// watch... podglad wybranych komorek pamieci
+
+//> Powiększanie okna z oddziaływaniem na RAM/ROM - popatrz ICU
+
+
+
+// store gfx video with snapshots
+
+// store execute markers with snapshots
+
+// fakt, może widok IO by się też przydał dodatkowo
+
+// *PARTIAL* optimize %2.2x %4.4x to uint8toChar(...
+
+
+//> - dzieją się rzeczy dziwne :) po fullscreenie *sid zaczął grać ... dziwnie ...*
+
+
+//> *DONE* - definitywnie nie masz dobrej obsługi trybu ultimax mode - tak się startuje AR - przesłaniany jest kernel bankiem 0 (pierwsze 8 KB epromu) i startuje się z wektora reset ($FFFC) będącego na pozycji $1ffc w epromie...
+//>
+
+///  *DONE*      ---->   vice 2.4.28??
+
+///Thanks to Scan of House Designs for help in tracking the D64 loader problem with Spindle.
+
+
+
+// TODO: @Slayerek: Would you be able to record some sort of screencast with feature walkthrough? :)   --> riverwash
+
+
+
+////////////////////
+
+
+
+
+
+//czarny ekran
+//napis sei
+//
+//leci kod z kernela c64
+//
+//out -> na prawo przewija
+//
+//c64 sie bootuje wpisujemy load
+//
+//
+//===
+//
+//w trakce pokaz debuggera
+//
+//===
+//
+//
+
+
+
+
+
+//http://www.studiostyle.sk/dmagic/gallery/gfxmodes.htm
+
+//http://unusedino.de/ec64/technical/aay/c64/
+//http://www.ffd2.com/fridge/docs/c64-diss.html
+
+//https://www.c64-wiki.com/index.php/Extended_color_mode
+
+//http://www.mikesenese.com/DOIT/2011/03/twelve-awesome-commodore-64-hacks-and-projects-and-a-gallery-of-classic-c64-game-discs/
+
+
+
+
+
