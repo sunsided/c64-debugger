@@ -97,6 +97,8 @@ public:
 	
 	void DeletePlaylist();
 	
+	void UpdateAudioVolume();
+	
 	virtual void ThreadRun(void *data);
 	CSlrMutex *mutex;
 };

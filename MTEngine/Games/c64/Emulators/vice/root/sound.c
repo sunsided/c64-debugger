@@ -1232,6 +1232,7 @@ void sound_close(void)
 
 int c64d_get_warp_mode();
 extern int c64d_setting_run_sid_when_in_warp;
+extern int c64d_setting_run_sid_emulation;
 
 static int sound_run_sound(void)
 {
@@ -1257,7 +1258,9 @@ static int sound_run_sound(void)
         }
     }
 
-	if (c64d_get_warp_mode() == 1 && c64d_setting_run_sid_when_in_warp == 0)
+	int isWarp = c64d_get_warp_mode();
+	if (c64d_setting_run_sid_emulation == 0
+		|| (isWarp == 1 && c64d_setting_run_sid_when_in_warp == 0))
 	{
 		//LOGD("sound_run_sound: skip SID");
 		
@@ -1266,8 +1269,15 @@ static int sound_run_sound(void)
 
 		snddata.fclk += nr * snddata.clkstep;
 
-		// note we do not need to fill the buffer as we are in silent warp mode anyway
-		//bufferptr = snddata.buffer + snddata.bufptr * snddata.sound_output_channels;
+		if (isWarp == 1)
+		{
+			// note we do not need to fill the buffer as we are in silent warp mode anyway
+		}
+		else
+		{
+			bufferptr = snddata.buffer + snddata.bufptr * snddata.sound_output_channels;
+			memset(bufferptr, 0, nr * snddata.sound_output_channels * sizeof(SWORD));
+		}
 
 		snddata.bufptr += nr;
 		snddata.lastclk = maincpu_clk;

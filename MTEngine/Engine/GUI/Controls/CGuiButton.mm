@@ -258,7 +258,7 @@ void CGuiButton::SetText(char *text)
 	this->clickConsumed = false;
 
 	int len = strlen(text);
-	this->text2 = new char[len];
+	this->text2 = new char[len+1];
 	strcpy(this->text2, text);
 	
 	len++;

@@ -35,7 +35,7 @@ public:
 	void DebugPrint();
 	
 	bool fastBootPatch;
-	float sleepAfterResetMs;
+	float delayAfterResetMs;
 	bool showLoadAddressInfo;
 	bool fadeSoundVolume;
 	
@@ -52,7 +52,7 @@ public:
 	CJukeboxPlaylistAction();
 	~CJukeboxPlaylistAction();
 	
-	float afterTime;
+	float doAfterDelay;
 	int actionType;
 	int code;
 	CSlrString *text;
@@ -67,7 +67,7 @@ public:
 	~CJukeboxPlaylistEntry();
 	
 	CSlrString *name;
-	CSlrString *path;
+	CSlrString *filePath;
 	
 	bool autoRun;
 	int runFileNum;
@@ -81,7 +81,7 @@ public:
 	float fadeColorG;
 	float fadeColorB;
 	
-	float waitAfterResetTime;
+	float delayAfterResetTime;
 	
 	std::vector<CJukeboxPlaylistAction *> actions;
 	

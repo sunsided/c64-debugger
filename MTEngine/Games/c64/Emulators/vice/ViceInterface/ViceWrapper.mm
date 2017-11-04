@@ -29,6 +29,8 @@ volatile int c64d_debug_mode = C64_DEBUG_RUNNING;
 int c64d_patch_kernal_fast_boot_flag = 0;
 int c64d_setting_run_sid_when_in_warp = 1;
 
+int c64d_setting_run_sid_emulation = 1;
+
 uint16 viceCurrentC64PC;
 uint16 viceCurrentDiskPC[4];
 

@@ -246,6 +246,9 @@ public:
 	virtual void SwitchToPrev();
 
 	virtual void Execute();
+	
+	int numLeadingDigits;
+	int numDecimalsDigits;
 
 	float value;
 	virtual void SetValue(float value, bool runCallback);

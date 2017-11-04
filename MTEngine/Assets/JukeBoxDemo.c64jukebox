@@ -1,6 +1,6 @@
 {
 	"FastBootPatch" : true,
-	"WaitAfterResetTime" : 1.0,
+	"DelayAfterReset" : 1.0,
 	"ShowLoadAddress" : false,
 	"FadeAudioVolume" : true,
 	"SetLayout" : 0,
@@ -11,45 +11,45 @@
 	[	
 		{
 			"Name" : "The Shores of Reflection",
-			"Path" : "demos/The_Shores_of_Reflection-Shape/Shape-The_Shores_of_Reflection_side1.d64",
+			"FilePath" : "demos/The_Shores_of_Reflection-Shape/Shape-The_Shores_of_Reflection_side1.d64",
 			"AutoRun" : true,
 			"RunFile" : 1,
-			"Reset" : "hard",
+			"ResetMode" : "hard",
 			"FadeInTime" : 2.0,
 			"FadeOutTime" : 2.0,
 			"WaitTime" : 18.5,
 			"Actions" : 
 			[
 				{
-					"AfterTime" : 0.0,
-					"Warp" : true
+					"DoAfterDelay" : 0.0,
+					"WarpMode" : true
 				},
 
 				{
-					"AfterTime" : 5.0,
-					"Warp" : false
+					"DoAfterDelay" : 5.0,
+					"WarpMode" : false
 				}
 			]
 		},
 
 		{
 			"Name" : "Comaland - The Notefile",
-			"Path" : "demos/Comaland/comaland-1.d64",
+			"FilePath" : "demos/Comaland/comaland-1.d64",
 			"AutoRun" : true,
 			"RunFile" : 50,
-			"Reset" : "hard",
+			"ResetMode" : "hard",
 			"FadeInTime" : 1.0,
 			"FadeOutTime" : 1.0,
 			"WaitTime" : 14.0,
 			"Actions" : 
 			[
 				{
-					"AfterTime" : 9.0,
+					"DoAfterDelay" : 9.0,
 					"KeyDown" : " "
 				},
 
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : " "
 				}
 			]
@@ -58,18 +58,18 @@
 
 		{
 			"Name" : "The Strike Force Intro",
-			"Path" : "games/giana-intro.snap",
+			"FilePath" : "games/giana-intro.snap",
 			"FadeInTime" : 3.0,
 			"WaitTime" : 12.0,
 			"Actions" : 
 			[
 				{
-					"AfterTime" : 8.0,
+					"DoAfterDelay" : 8.0,
 					"KeyDown" : " "
 				},
 
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : " "
 				}
 			]
@@ -77,7 +77,7 @@
 
 		{
 			"Name" : "Plastic Kiss",
-			"Path" : "demos/Plastic_Kiss/plastic-kiss.snap",
+			"FilePath" : "demos/Plastic_Kiss/plastic-kiss.snap",
 			"AutoRun" : "true",
 			"WaitTime" : 6.0,
 			"FadeOutTime" : 1.0
@@ -85,7 +85,7 @@
 
 		{
 			"Name" : "Action Replay",
-			"Path" : "crt/action_replay_7.5.crt",
+			"FilePath" : "crt/action_replay_7.5.crt",
 			"AutoRun" : false,
 			"FadeInTime" : 1.0,
 			"FadeOutTime" : 1.0,
@@ -93,37 +93,37 @@
 			"Actions" : 
 			[
 				{
-					"AfterTime" : 3.0,
+					"DoAfterDelay" : 3.0,
 					"KeyDownCode" : 61670
 				},
 
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUpCode" : 61670
 				},
 
 				{
-					"AfterTime" : 1.0,
+					"DoAfterDelay" : 1.0,
 					"KeyDownCode" : 61670
 				},
 
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUpCode" : 61670
 				},
 
 				{
-					"AfterTime" : 2.0,
+					"DoAfterDelay" : 2.0,
 					"DumpC64Memory" : "c64memory.bin"
 				},
 
 				{
-					"AfterTime" : 1.0,
+					"DoAfterDelay" : 1.0,
 					"DumpDiskMemory" : "diskmemory.bin"
 				},
 
 				{
-					"AfterTime" : 5.7,
+					"DoAfterDelay" : 5.7,
 					"DetachCartridge" : true
 				}
 
@@ -132,30 +132,30 @@
 
 		{
 			"Name" : "Flappy Bird",
-			"Path" : "games/FlappyBird.prg",
+			"FilePath" : "games/FlappyBird.prg",
 			"FadeInTime" : 1.0,
 			"AutoRun" : true,
-			"Reset" : "hard",
-			"WaitAfterResetTime" : 2.0,
+			"ResetMode" : "hard",
+			"DelayAfterReset" : 2.0,
 			"Actions" : 
 			[
 				{
-					"AfterTime" : 8.0,
+					"DoAfterDelay" : 8.0,
 					"Joystick2Down" : "fire"
 				},
 
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"Joystick2Up" : "fire"
 				},
 
 				{
-					"AfterTime" : 2.0,
+					"DoAfterDelay" : 2.0,
 					"Joystick2Down" : "fire"
 				},
 
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"Joystick2Up" : "fire"
 				}
 			],
@@ -166,284 +166,284 @@
 
 		{
 			"Name" : "Artillery",
-			"Reset" : "hard",
-			"Path" : "music/artillery.prg",
+			"ResetMode" : "hard",
+			"FilePath" : "music/artillery.prg",
 			"WaitTime" : 18,
 			"FadeInTime" : 1.5,
 			"FadeOutTime" : 5.0,
 			"Actions" : 
 			[
 				{
-					"AfterTime" : 2.0,
+					"DoAfterDelay" : 2.0,
 					"KeyDown" : "s"
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : "s"
 				},
 				{
-					"AfterTime" : 0.2,
+					"DoAfterDelay" : 0.2,
 					"KeyDown" : "y"
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : "y"
 				},
 				{
-					"AfterTime" : 0.2,
+					"DoAfterDelay" : 0.2,
 					"KeyDown" : "s"
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : "s"
 				},
 				{
-					"AfterTime" : 0.3,
+					"DoAfterDelay" : 0.3,
 					"KeyDown" : " "
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : " "
 				},
 				{
-					"AfterTime" : 0.2,
+					"DoAfterDelay" : 0.2,
 					"KeyDown" : "3"
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : "3"
 				},
 				{
-					"AfterTime" : 0.2,
+					"DoAfterDelay" : 0.2,
 					"KeyDown" : "9"
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : "9"
 				},
 				{
-					"AfterTime" : 0.2,
+					"DoAfterDelay" : 0.2,
 					"KeyDown" : "6"
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : "6"
 				},
 				{
-					"AfterTime" : 0.2,
+					"DoAfterDelay" : 0.2,
 					"KeyDown" : "8"
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : "8"
 				},
 
 				{
-					"AfterTime" : 0.3,
+					"DoAfterDelay" : 0.3,
 					"KeyDownCode" : 13
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUpCode" : 13
 				},
 
 
 				{
-					"AfterTime" : 0.2,
+					"DoAfterDelay" : 0.2,
 					"KeyDown" : "t"
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : "t"
 				},
 				{
-					"AfterTime" : 0.25,
+					"DoAfterDelay" : 0.25,
 					"KeyDown" : "h"
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : "h"
 				},
 				{
-					"AfterTime" : 0.23,
+					"DoAfterDelay" : 0.23,
 					"KeyDown" : "a"
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : "a"
 				},
 				{
-					"AfterTime" : 0.27,
+					"DoAfterDelay" : 0.27,
 					"KeyDown" : "t"
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : "t"
 				},
 				{
-					"AfterTime" : 0.23,
+					"DoAfterDelay" : 0.23,
 					"KeyDown" : "&"
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : "&"
 				},
 				{
-					"AfterTime" : 0.23,
+					"DoAfterDelay" : 0.23,
 					"KeyDown" : "s"
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : "s"
 				},
 				{
-					"AfterTime" : 0.3,
+					"DoAfterDelay" : 0.3,
 					"KeyDown" : " "
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : " "
 				},
 				{
-					"AfterTime" : 0.23,
+					"DoAfterDelay" : 0.23,
 					"KeyDown" : "a"
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : "a"
 				},
 				{
-					"AfterTime" : 0.23,
+					"DoAfterDelay" : 0.23,
 					"KeyDown" : "l"
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : "l"
 				},
 				{
-					"AfterTime" : 0.23,
+					"DoAfterDelay" : 0.23,
 					"KeyDown" : "l"
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : "l"
 				},
 				{
-					"AfterTime" : 0.3,
+					"DoAfterDelay" : 0.3,
 					"KeyDown" : " "
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : " "
 				},
 				{
-					"AfterTime" : 0.3,
+					"DoAfterDelay" : 0.3,
 					"KeyDown" : "f"
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : "f"
 				},
 				{
-					"AfterTime" : 0.3,
+					"DoAfterDelay" : 0.3,
 					"KeyDown" : "o"
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : "o"
 				},
 				{
-					"AfterTime" : 0.3,
+					"DoAfterDelay" : 0.3,
 					"KeyDown" : "l"
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : "l"
 				},
 				{
-					"AfterTime" : 0.3,
+					"DoAfterDelay" : 0.3,
 					"KeyDown" : "k"
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : "k"
 				},
 				{
-					"AfterTime" : 0.3,
+					"DoAfterDelay" : 0.3,
 					"KeyDown" : "s"
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : "s"
 				},
 				{
-					"AfterTime" : 0.3,
+					"DoAfterDelay" : 0.3,
 					"KeyDown" : "!"
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : "!"
 				},
 
 				{
-					"AfterTime" : 0.3,
+					"DoAfterDelay" : 0.3,
 					"KeyDown" : " "
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : " "
 				},
 
 
 				{
-					"AfterTime" : 3.0,
+					"DoAfterDelay" : 3.0,
 					"KeyDown" : "b"
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : "b"
 				},
 
 				{
-					"AfterTime" : 0.7,
+					"DoAfterDelay" : 0.7,
 					"KeyDown" : "y"
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : "y"
 				},
 
 				{
-					"AfterTime" : 0.7,
+					"DoAfterDelay" : 0.7,
 					"KeyDown" : "e"
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : "e"
 				},
 
 				{
-					"AfterTime" : 0.7,
+					"DoAfterDelay" : 0.7,
 					"KeyDown" : "!"
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : "!"
 				},
 				{
-					"AfterTime" : 0.3,
+					"DoAfterDelay" : 0.3,
 					"KeyDown" : "!"
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : "!"
 				},
 				{
-					"AfterTime" : 0.3,
+					"DoAfterDelay" : 0.3,
 					"KeyDown" : "!"
 				},
 				{
-					"AfterTime" : 0.1,
+					"DoAfterDelay" : 0.1,
 					"KeyUp" : "!"
 				}
 			]

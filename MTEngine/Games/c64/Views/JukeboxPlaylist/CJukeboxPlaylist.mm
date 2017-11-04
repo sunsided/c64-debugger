@@ -10,7 +10,7 @@
 CJukeboxPlaylist::CJukeboxPlaylist(char *json)
 {
 	fastBootPatch = true;
-	sleepAfterResetMs = 1000;
+	delayAfterResetMs = 1000;
 	showLoadAddressInfo = false;
 	fadeSoundVolume = true;
 	setLayoutViewNumber = -1; //C64_SCREEN_LAYOUT_C64_ONLY;
@@ -53,10 +53,10 @@ void CJukeboxPlaylist::InitFromJSON(char *json)
 			fastBootPatch = it->as_bool();
 			LOGD("   FastBootPatch=%s", STRBOOL(fastBootPatch));
 		}
-		else if (nodeName == "WaitAfterResetTime")
+		else if (nodeName == "DelayAfterReset")
 		{
-			sleepAfterResetMs = it->as_float() * 1000.0f;
-			LOGD("   WaitAfterResetTime=%fms", sleepAfterResetMs);
+			delayAfterResetMs = it->as_float() * 1000.0f;
+			LOGD("   DelayAfterReset=%fms", delayAfterResetMs);
 		}
 		else if (nodeName == "ShowLoadAddress")
 		{
@@ -111,13 +111,13 @@ void CJukeboxPlaylist::InitFromJSON(char *json)
 						playlistEntry->name = new CSlrString(buf);
 						LOGD("                        Name = %s", buf);
 					}
-					else if (nodeName == "Path")
+					else if (nodeName == "FilePath")
 					{
 						char *buf = (char*)(itEntry->as_string().c_str());
-						playlistEntry->path = new CSlrString(buf);
-						LOGD("                        Path = %s", buf);
+						playlistEntry->filePath = new CSlrString(buf);
+						LOGD("                     FilePath = %s", buf);
 					}
-					else if (nodeName == "Reset")
+					else if (nodeName == "ResetMode")
 					{
 						char *buf = (char*)(itEntry->as_string().c_str());
 						if (!strcmp(buf, "hard"))
@@ -145,10 +145,10 @@ void CJukeboxPlaylist::InitFromJSON(char *json)
 						playlistEntry->waitTime = itEntry->as_float();
 						LOGD("                    WaitTime = %f", playlistEntry->waitTime);
 					}
-					else if (nodeName == "WaitAfterResetTime")
+					else if (nodeName == "DelayAfterReset")
 					{
-						playlistEntry->waitAfterResetTime = itEntry->as_float() * 1000.0f;
-						LOGD("          WaitAfterResetTime = %fms", playlistEntry->waitAfterResetTime);
+						playlistEntry->delayAfterResetTime = itEntry->as_float() * 1000.0f;
+						LOGD("          DelayAfterReset = %fms", playlistEntry->delayAfterResetTime);
 					}
 					else if (nodeName == "FadeInTime")
 					{
@@ -187,10 +187,10 @@ void CJukeboxPlaylist::InitFromJSON(char *json)
 								nodeName = itAction->name();
 								LOGD("action node='%s'", nodeName.c_str());
 								
-								if (nodeName == "AfterTime")
+								if (nodeName == "DoAfterDelay")
 								{
-									playlistAction->afterTime = itAction->as_float();
-									LOGD("  action afterTime=%f", playlistAction->afterTime);
+									playlistAction->doAfterDelay = itAction->as_float();
+									LOGD("  action doAfterDelay=%f", playlistAction->doAfterDelay);
 								}
 								else if (nodeName == "KeyDown")
 								{
@@ -287,14 +287,14 @@ void CJukeboxPlaylist::InitFromJSON(char *json)
 									
 									LOGD("  action joystick=%d %x", playlistAction->actionType, playlistAction->code);
 								}
-								else if (nodeName == "Warp")
+								else if (nodeName == "WarpMode")
 								{
 									playlistAction->actionType = JUKEBOX_ACTION_SET_WARP;
 									playlistAction->code = (itAction->as_bool() ? 1 : 0);
 									
-									if (playlistAction->afterTime < 0.01f)
+									if (playlistAction->doAfterDelay < 0.01f)
 									{
-										playlistAction->afterTime = 0.01f;
+										playlistAction->doAfterDelay = 0.01f;
 									}
 									LOGD("  action warp=%d", playlistAction->code);
 								}
@@ -339,7 +339,7 @@ void CJukeboxPlaylist::InitFromJSON(char *json)
 CJukeboxPlaylistEntry::CJukeboxPlaylistEntry()
 {
 	name = NULL;
-	path = NULL;
+	filePath = NULL;
 	
 	autoRun = false;
 	runFileNum = 0;
@@ -353,7 +353,7 @@ CJukeboxPlaylistEntry::CJukeboxPlaylistEntry()
 	fadeColorG = 0.0f;
 	fadeColorB = 0.0f;
 	
-	waitAfterResetTime = -1;
+	delayAfterResetTime = -1;
 }
 
 CJukeboxPlaylistEntry::~CJukeboxPlaylistEntry()
@@ -392,9 +392,9 @@ void CJukeboxPlaylistEntry::DebugPrint()
 		LOGD("         Name NULL");
 	}
 
-	if (path != NULL)
+	if (filePath != NULL)
 	{
-		path->DebugPrint("         Path=");
+		filePath->DebugPrint("     FilePath=");
 	}
 	else
 	{
@@ -419,7 +419,7 @@ void CJukeboxPlaylistEntry::DebugPrint()
 
 CJukeboxPlaylistAction::CJukeboxPlaylistAction()
 {
-	afterTime = -1;
+	doAfterDelay = -1;
 	actionType = JUKEBOX_ACTION_NONE;
 	code = -1;
 	text = NULL;
@@ -434,6 +434,6 @@ CJukeboxPlaylistAction::~CJukeboxPlaylistAction()
 void CJukeboxPlaylistAction::DebugPrint()
 {
 	LOGD("         ActionType=%d", actionType);
-	LOGD("          AfterTime=%-8.2f", afterTime);
+	LOGD("       DoAfterDelay=%-8.2f", doAfterDelay);
 	LOGD("               Code=0x%x", code);
 }

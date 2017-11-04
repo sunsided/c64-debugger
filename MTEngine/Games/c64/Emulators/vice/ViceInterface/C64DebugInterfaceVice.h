@@ -206,6 +206,10 @@ public:
 	
 	virtual void SetPatchKernalFastBoot(bool isPatchKernal);
 	virtual void SetRunSIDWhenInWarp(bool isRunningSIDInWarp);
+	
+	//
+	virtual void SetRunSIDEmulation(bool isSIDEmulationOn);
+	virtual void SetAudioVolume(float volume);
 };
 
 extern C64DebugInterfaceVice *debugInterfaceVice;

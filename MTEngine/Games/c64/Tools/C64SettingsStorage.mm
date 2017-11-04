@@ -68,8 +68,12 @@ bool c64SettingsRESIDEmulateFilters = true;
 uint32 c64SettingsRESIDPassBand = 90;
 uint32 c64SettingsRESIDFilterBias = 500;
 
-
 bool c64SettingsMuteSIDOnPause = false;
+
+int c64SettingsAudioVolume = 100;				// percentage
+bool c64SettingsRunSIDEmulation = true;
+uint8 c64SettingsMuteSIDMode = MUTE_SID_MODE_ZERO_VOLUME;
+
 
 uint16 c64SettingsVicPalette = 0;
 
@@ -254,7 +258,7 @@ void C64DebuggerStoreSettings()
 #endif
 	
 	storeSettingU8(byteBuffer, "C64Model", c64SettingsC64Model);
-
+	
 	storeSettingBlock(byteBuffer, C64DEBUGGER_BLOCK_POSTLAUNCH);
 	storeSettingU8(byteBuffer, "JoystickPort", c64SettingsJoystickPort);
 	storeSettingU8(byteBuffer, "MemoryValuesStyle", c64SettingsMemoryValuesStyle);
@@ -268,6 +272,10 @@ void C64DebuggerStoreSettings()
 
 	storeSettingBool(byteBuffer, "MuteSIDOnPause", c64SettingsMuteSIDOnPause);
 	storeSettingBool(byteBuffer, "RunSIDWhenWarp", c64SettingsRunSIDWhenInWarp);
+
+	storeSettingU16(byteBuffer, "AudioVolume", c64SettingsAudioVolume);
+	storeSettingBool(byteBuffer, "RunSIDEmulation", c64SettingsRunSIDEmulation);
+	storeSettingU8(byteBuffer, "MuteSIDMode", c64SettingsMuteSIDMode);
 
 	storeSettingU8(byteBuffer, "VicStateRecording", c64SettingsVicStateRecordingMode);
 	storeSettingU16(byteBuffer, "VicPalette", c64SettingsVicPalette);
@@ -707,9 +715,37 @@ void C64DebuggerSetSetting(char *name, void *value)
 			c64SettingsRunSIDWhenInWarp = false;
 		}
 		viewC64->debugInterface->SetRunSIDWhenInWarp(c64SettingsRunSIDWhenInWarp);
-
 	}
-
+	else if (!strcmp(name, "AudioVolume"))
+	{
+		u16 v = *((u16*)value);
+		c64SettingsAudioVolume = v;
+		viewC64->viewC64SettingsMenu->menuItemAudioVolume->SetValue(v, false);
+		viewC64->debugInterface->SetAudioVolume((float)(c64SettingsAudioVolume) / 100.0f);
+	}
+	else if (!strcmp(name, "RunSIDEmulation"))
+	{
+		bool v = *((bool*)value);
+		
+		if (v)
+		{
+			viewC64->viewC64SettingsMenu->menuItemRunSIDEmulation->SetSelectedOption(1, false);
+			c64SettingsRunSIDEmulation = true;
+		}
+		else
+		{
+			viewC64->viewC64SettingsMenu->menuItemRunSIDEmulation->SetSelectedOption(0, false);
+			c64SettingsRunSIDEmulation = false;
+		}
+		viewC64->debugInterface->SetRunSIDEmulation(c64SettingsRunSIDEmulation);
+	}
+	else if (!strcmp(name, "MuteSIDMode"))
+	{
+		u8 v = *((u8*)value);
+		c64SettingsMuteSIDMode = v;
+		viewC64->viewC64SettingsMenu->menuItemMuteSIDMode->SetSelectedOption(v, false);
+		viewC64->UpdateSIDMute();
+	}
 	else if (!strcmp(name, "AudioOutDevice"))
 	{
 		if (c64SettingsAudioOutDevice != NULL)

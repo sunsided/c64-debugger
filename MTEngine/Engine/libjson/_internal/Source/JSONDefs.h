@@ -13,6 +13,9 @@
 #include "JSONDefs/Visual_C.h"
 #include "JSONDefs/Strings_Defs.h"
 
+/// c64d
+//#define JSON_NO_EXCEPTIONS
+
 #define __LIBJSON_MAJOR__ 7
 #define __LIBJSON_MINOR__ 6
 #define __LIBJSON_PATCH__ 1

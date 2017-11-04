@@ -18,6 +18,12 @@ enum resetMode : u8
 	MACHINE_RESET_HARD = 2
 };
 
+enum muteSIDMode : u8
+{
+	MUTE_SID_MODE_ZERO_VOLUME		= 0,
+	MUTE_SID_MODE_SKIP_EMULATION	= 1
+};
+
 // settings
 extern bool c64SettingsSkipConfig;
 extern bool c64SettingsPassConfigToRunningInstance;
@@ -42,6 +48,10 @@ extern uint32 c64SettingsRESIDPassBand;
 extern uint32 c64SettingsRESIDFilterBias;
 
 extern bool c64SettingsMuteSIDOnPause;
+
+extern int c64SettingsAudioVolume;
+extern bool c64SettingsRunSIDEmulation;
+extern uint8 c64SettingsMuteSIDMode;
 
 extern bool c64SettingsEmulateVSPBug;
 

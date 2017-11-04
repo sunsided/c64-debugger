@@ -263,6 +263,11 @@ bool CByteBuffer::isEof()
 	return (index == this->length);
 }
 
+void CByteBuffer::ForwardToEnd()
+{
+	index = this->length;
+}
+
 void CByteBuffer::putByte(uint8 b)
 {
 #ifdef PRINT_BUFFER_OPS

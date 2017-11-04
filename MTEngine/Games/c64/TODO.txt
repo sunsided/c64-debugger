@@ -1,21 +1,17 @@
-*FIXED* BUG Windows: I've found a little bug in 0.62 which worked in previous versions (not sure in which version it broke), but it's not possible anymore (on Windows) to enter opcodes in the disassembly pane. You can press enter and the cursor gets there, but no text can be entered.
+v0.64
 
-BUGS: ADD CTRL support: I cannot get Ctrl+F10 to step over JSRs, regardless of whether I have "use all F1, F2 etc
+Added: JukeBox playlist feature! Allows to: play your favourite demos from playlist with transitions, automate tests of your games, run your productions in Warp and then dump memory after selected time, and more!
+Added: BASIC-compatible automatic code auto run
+Added: Switch off SID emulation in Settings.
+Added: Mute audio using Ctrl+T shortcut, also switch mute mode between just muting the volume, or also switching SID emulation when muted, selectable in Settings (thanks to Mojzesh/Arise and Wegi/Elysium for the idea and help)
+Bug fixed: On Windows it was not possible to enter opcodes in the disassembly pane due to keycodes mismatch (thanks to Scan/House for bug report)
+
+TODO: Add Alex Goldblat tester to readme
+TODO BUG: ADD CMD/ExtraKey support: I cannot get Ctrl+F10 to step over JSRs, regardless of whether I have "use all F1, F2 etc
 
 
-Add Alex Goldblat tester to readme
 
 
-
-v0.62
-
-Added: MIDI support, the usual -midi* command line flags work as they normally do in VICE itself. Thanks to David Hogans for help
-Added: Select audio out device via command line (-soundout <"device name" | device number>)
-Added: Quick workaround for Linux open/save file dialogs problems on broken GTK, you can select custom open/save file dialogs in Settings/UI (no UTF support yet, sorry!)
-Bug fixed: Loading PRG while waiting after automatic Reset for previous PRG load caused Fatal Error
-Bug fixed: Painting on vertically-stretched sprite caused crash
-
-And other overall tweaks here and there.
 
 
 ---------

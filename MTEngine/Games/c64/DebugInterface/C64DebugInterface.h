@@ -292,6 +292,10 @@ public:
 	virtual void SetPatchKernalFastBoot(bool isPatchKernal);
 	virtual void SetRunSIDWhenInWarp(bool isRunningSIDInWarp);
 	
+	//
+	virtual void SetRunSIDEmulation(bool isSIDEmulationOn);
+	virtual void SetAudioVolume(float volume);
+	
 private:
 	volatile int debugMode;
 

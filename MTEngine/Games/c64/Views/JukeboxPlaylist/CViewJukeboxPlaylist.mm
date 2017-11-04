@@ -10,15 +10,6 @@
 #include "C64SettingsStorage.h"
 #include "CViewC64Screen.h"
 
-#include "CViceAudioChannel.h"
-#include "C64DebugInterfaceVice.h"
-
-extern "C"
-{
-	void c64d_set_volume(float volume);
-}
-
-
 CViewJukeboxPlaylist::CViewJukeboxPlaylist(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
 {
@@ -232,20 +223,14 @@ void CViewJukeboxPlaylist::InitEntry(int newIndex)
 		fadeStep = 1.0f / (currentEntry->fadeInTime * emulationFPS);
 		fadeState = JUKEBOX_PLAYLIST_FADE_STATE_FADE_IN;
 		
-		if (playlist->fadeSoundVolume)
-		{
-			c64d_set_volume(1.0f - fadeValue);
-		}
+		UpdateAudioVolume();
 	}
 	else
 	{
 		fadeState = JUKEBOX_PLAYLIST_FADE_STATE_NO_FADE;
 		fadeValue = 0.0f;
 		
-		if (playlist->fadeSoundVolume)
-		{
-			c64d_set_volume(1.0f - fadeValue);
-		}
+		UpdateAudioVolume();
 		
 		StartTextFadeIn();
 	}
@@ -279,54 +264,54 @@ void CViewJukeboxPlaylist::ThreadRun(void *data)
 	{
 		viewC64->debugInterface->HardReset();
 		
-		if (entry->waitAfterResetTime < 0)
+		if (entry->delayAfterResetTime < 0)
 		{
-			SYS_Sleep(this->playlist->sleepAfterResetMs);
+			SYS_Sleep(this->playlist->delayAfterResetMs);
 		}
 		else
 		{
-			SYS_Sleep(entry->waitAfterResetTime);
+			SYS_Sleep(entry->delayAfterResetTime);
 		}
 	}
 	else if (entry->resetMode == MACHINE_RESET_SOFT)
 	{
 		viewC64->debugInterface->Reset();
 		
-		if (entry->waitAfterResetTime < 0)
+		if (entry->delayAfterResetTime < 0)
 		{
-			SYS_Sleep(this->playlist->sleepAfterResetMs);
+			SYS_Sleep(this->playlist->delayAfterResetMs);
 		}
 		else
 		{
-			SYS_Sleep(entry->waitAfterResetTime);
+			SYS_Sleep(entry->delayAfterResetTime);
 		}
 	}
 	
 	guiMain->LockMutex();
 
-	if (entry->path != NULL)
+	if (entry->filePath != NULL)
 	{
-		entry->path->DebugPrint("  action path=");
+		entry->filePath->DebugPrint("  action filePath=");
 		
-		CSlrString *ext = entry->path->GetFileExtensionComponentFromPath();
+		CSlrString *ext = entry->filePath->GetFileExtensionComponentFromPath();
 		if (ext->CompareWith("prg") || ext->CompareWith("PRG"))
 		{
-			viewC64->viewC64MainMenu->LoadPRG(entry->path, currentEntry->autoRun, false, this->playlist->showLoadAddressInfo);
+			viewC64->viewC64MainMenu->LoadPRG(entry->filePath, currentEntry->autoRun, false, this->playlist->showLoadAddressInfo);
 		}
 		else if (ext->CompareWith("d64") || ext->CompareWith("D64"))
 		{
-			viewC64->viewC64MainMenu->InsertD64(entry->path, false,
+			viewC64->viewC64MainMenu->InsertD64(entry->filePath, false,
 												currentEntry->autoRun, currentEntry->runFileNum-1,
 												this->playlist->showLoadAddressInfo);
 		}
 		else if (ext->CompareWith("crt") || ext->CompareWith("CRT"))
 		{
-			viewC64->viewC64MainMenu->InsertCartridge(entry->path, false);
+			viewC64->viewC64MainMenu->InsertCartridge(entry->filePath, false);
 		}
 		else if (ext->CompareWith("snap") || ext->CompareWith("SNAP")
 				 || ext->CompareWith("vsf") || ext->CompareWith("VSF"))
 		{
-			viewC64->viewC64Snapshots->LoadSnapshot(entry->path, false);
+			viewC64->viewC64Snapshots->LoadSnapshot(entry->filePath, false);
 		}
 		
 		delete ext;
@@ -348,7 +333,7 @@ void CViewJukeboxPlaylist::InitAction(int newIndex)
 
 	currentAction = currentEntry->actions[actionIndex];
 	
-	actionTime = emulationTime + currentAction->afterTime;
+	actionTime = emulationTime + currentAction->doAfterDelay;
 	
 	guiMain->UnlockMutex();
 	viewC64->debugInterface->UnlockMutex();
@@ -526,10 +511,7 @@ void CViewJukeboxPlaylist::EmulationStartFrame()
 			fadeState = JUKEBOX_PLAYLIST_FADE_STATE_NO_FADE;
 			fadeValue = 0.0f;
 			
-			if (playlist->fadeSoundVolume)
-			{
-				c64d_set_volume(1.0f - fadeValue);
-			}
+			UpdateAudioVolume();
 
 			StartTextFadeIn();
 		}
@@ -537,10 +519,7 @@ void CViewJukeboxPlaylist::EmulationStartFrame()
 		{
 			fadeValue = newFade;
 
-			if (playlist->fadeSoundVolume)
-			{
-				c64d_set_volume(1.0f - fadeValue);
-			}
+			UpdateAudioVolume();
 		}
 	}
 	
@@ -551,10 +530,7 @@ void CViewJukeboxPlaylist::EmulationStartFrame()
 		{
 			fadeValue = 1.0f;
 			
-			if (playlist->fadeSoundVolume)
-			{
-				c64d_set_volume(1.0f - fadeValue);
-			}
+			UpdateAudioVolume();
 
 			AdvanceEntry();
 		}
@@ -562,10 +538,7 @@ void CViewJukeboxPlaylist::EmulationStartFrame()
 		{
 			fadeValue = newFade;
 
-			if (playlist->fadeSoundVolume)
-			{
-				c64d_set_volume(1.0f - fadeValue);
-			}
+			UpdateAudioVolume();
 		}
 	}
 	else
@@ -577,11 +550,8 @@ void CViewJukeboxPlaylist::EmulationStartFrame()
 				fadeValue = 0.0f;
 				fadeStep = 1.0f / (currentEntry->fadeOutTime * emulationFPS);
 				fadeState = JUKEBOX_PLAYLIST_FADE_STATE_FADE_OUT;
-				
-				if (playlist->fadeSoundVolume)
-				{
-					c64d_set_volume(1.0f - fadeValue);
-				}
+
+				UpdateAudioVolume();
 			}
 			else
 			{
@@ -591,5 +561,13 @@ void CViewJukeboxPlaylist::EmulationStartFrame()
 	}
 	
 	UpdateTextFade();
+}
+
+void CViewJukeboxPlaylist::UpdateAudioVolume()
+{
+	if (playlist->fadeSoundVolume)
+	{
+		viewC64->debugInterface->SetAudioVolume(1.0f - fadeValue);
+	}
 }
 

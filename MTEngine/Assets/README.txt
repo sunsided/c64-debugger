@@ -29,6 +29,10 @@ On Linux you need GTK3 libraries.
 If you like this tool and you feel that you would like to share with me
 some beers, then you can use this link: http://tinyurl.com/C64Debugger-PayPal
 
+Or send me some Bitcoins using this address: 1G3ZRT7j27QycHnkoo176t9j5a2J49fsXc
+
+Donations will help me in development, thanks!
+
 
 * Facebook page
 
@@ -304,7 +308,8 @@ click on the mode and change it to other mode (Raster / Screen / Bitmap / Colour
 VIC Display records state of VIC each cycle in the frame and with the mouse cursor you
 can see what is in the frame. The X key changes what we "look" at: where was the code 
 in a given cycle (Raster mode) or where the code saved the pixel in memory (Raster / 
-Screen / Bitmap / Colour). 
+Screen / Bitmap / Colour). For Screen / Bitmap / Colour modes the memory
+view under C64 screen will be moved to address that holds the value at cursor.
 
 You can Right-Click on C64 Screen in right top to replace it to a zoomed raster view. 
 
@@ -591,23 +596,41 @@ Note, that label name's leading dot is skipped.
 * Command line options
 
 -help  show help
--layout <id> start with layout id #
--breakpoints <file>  load breakpoints from file
--vicesymbols <file>  load Vice symbols (code labels)
--wait <ms>   wait before performing tasks
--prg <file>  load PRG file into memory
--d64 <file>  insert D64 disk
--crt <file>  attach cartridge
--jmp <addr>  jmp to address on startup ($ signifies hex value),
-             for example jmp $1000, jmp x1000 or jmp 4096
--autojmp     automatically jmp to address if basic SYS is detected
--alwaysjmp   always jmp to loaded address of PRG even if no basic SYS is detected
--autorundisk automatically load first PRG from inserted disk
--unpause     force code running and un-pause
--snapshot <file>  load snapshot from file
--clearsettings    skip auto loading of settings stored in config
--pass        pass parameters to already running instance
-             if instance is not running a new one will be spawned
+
+-layout <id>
+     start with layout id <1-12>
+-breakpoints <file>
+     load breakpoints from file
+-vicesymbols <file>
+     load Vice symbols (code labels)
+-wait <ms>
+     wait before performing tasks
+-prg <file>
+     load PRG file into memory
+-d64 <file>
+     insert D64 disk
+-crt <file>
+     attach cartridge
+-jmp <addr>
+     jmp to address, for example jmp x1000, jmp $1000 or jmp 4096
+-autojmp
+     automatically jmp to address if basic SYS is detected
+-alwaysjmp
+     always jmp to load address of PRG
+-autorundisk
+     automatically load first PRG from inserted disk
+-unpause
+     force code running
+-snapshot <file>
+     load snapshot from file
+-soundout <"device name" | device number>
+     set sound out device by name or number
+
+-clearsettings
+     clear all config settings
+-pass
+     pass parameters to already running instance
+     if instance is not running a new one will be spawned
 
 Other command line options are the same as selected emulation engine (thus
 see Vice documentation for additional command line options).
@@ -669,6 +692,7 @@ Don Kichote/Samar
 Isildur/Samar
 Yugorin/Samar
 Scan/House
+Dr.J/Delysid
 Brush/Elysium
 64 bites
 
@@ -810,6 +834,21 @@ libclipboard
 *
 * Change log
 *
+
+v0.62 (2017/08/02), released at Riverwash demo party
+
+Added: MIDI support, the usual -midi* command line flags work as they normally 
+       do in VICE itself. Thanks to David Hogans for help
+Added: Select audio out device via command line (-soundout <"device name" | device number>)
+Added: Quick workaround for Linux open/save file dialogs problems on broken GTK, 
+       you can select custom open/save file dialogs in Settings/UI 
+       (no UTF support yet, sorry!)
+Bug fixed: Loading PRG while waiting after automatic Reset for previous PRG load 
+           caused Fatal Error
+Bug fixed: Painting on vertically-stretched sprite caused crash
+
+And other overall tweaks here and there.
+
 
 v0.60 (2017/06/23), released at Silesia 8 demo party
 

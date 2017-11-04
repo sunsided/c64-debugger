@@ -1296,6 +1296,10 @@ CViewC64MenuItemFloat::CViewC64MenuItemFloat(float height, CSlrString *str, CSlr
 	
 	textStr = NULL;
 	
+	numLeadingDigits = 5;
+	numDecimalsDigits = 2;
+
+	
 	// update display string
 	this->SetString(str);
 }
@@ -1324,9 +1328,14 @@ void CViewC64MenuItemFloat::SetString(CSlrString *str)
 void CViewC64MenuItemFloat::UpdateDisplayString()
 {
 	char *buf = SYS_GetCharBuf();
-	sprintf(buf, "%-5.2f", value);
+	char *bufFormat = SYS_GetCharBuf();
+
+	sprintf(bufFormat, "%%-%d.%df", numLeadingDigits, numDecimalsDigits);
+	sprintf(buf, bufFormat, value);
 	CSlrString *valStr = new CSlrString(buf);
+	
 	SYS_ReleaseCharBuf(buf);
+	SYS_ReleaseCharBuf(bufFormat);
 	
 	CSlrString *newStr = new CSlrString(this->textStr);
 	newStr->Concatenate(valStr);

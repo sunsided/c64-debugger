@@ -415,7 +415,11 @@ public:
 	
 	virtual void SaveFileSelected(UTFString *fullFilePath, char *fileName);
 	virtual void SaveFileSelectionCancelled();
-
+	
+	bool isSoundMuted;
+	void ToggleSoundMute();
+	void SetSoundMute(bool isMuted);
+	void UpdateSIDMute();
 };
 
 extern CViewC64 *viewC64;

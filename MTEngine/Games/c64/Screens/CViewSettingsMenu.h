@@ -166,11 +166,17 @@ public:
 	CViewC64MenuItemFloat *menuItemRESIDPassBand;
 	CViewC64MenuItemFloat *menuItemRESIDFilterBias;
 
-	
 	CViewC64MenuItemOption *menuItemMuteSIDOnPause;
 	CViewC64MenuItemOption *menuItemRunSIDWhenInWarp;
 	CViewC64MenuItemOption *menuItemAudioOutDevice;
 	void UpdateAudioOutDevices();
+
+	CViewC64MenuItemOption *menuItemRunSIDEmulation;
+	CViewC64MenuItemFloat *menuItemAudioVolume;
+	CViewC64MenuItemOption *menuItemMuteSIDMode;
+	
+	CSlrKeyboardShortcut *kbsSwitchSoundOnOff;  // mojzesh
+	
 	
 	CViewC64MenuItemOption *menuItemC64Model;
 	CViewC64MenuItemOption *menuItemFastBootKernalPatch;

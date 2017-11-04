@@ -952,7 +952,7 @@ void c64d_set_maincpu_regs(uint8 *a, uint8 *x, uint8 *y, uint8 *p, uint8 *sp)
 
 void _c64d_maincpu_make_basic_run_trap(WORD addr, void *data)
 {
-	LOGD("c64d_maincpu_make_basic_run");
+	LOGD("_c64d_maincpu_make_basic_run_trap");
 	
 	// cursor off
 	c64d_mem_write_c64_no_mark(0x00CC, 0xFF);

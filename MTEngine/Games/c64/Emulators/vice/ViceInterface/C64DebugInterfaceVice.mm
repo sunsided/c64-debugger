@@ -153,6 +153,21 @@ void C64DebugInterfaceVice::SetRunSIDWhenInWarp(bool isRunningSIDInWarp)
 	c64d_setting_run_sid_when_in_warp = isRunningSIDInWarp ? 1 : 0;
 }
 
+void C64DebugInterfaceVice::SetRunSIDEmulation(bool isSIDEmulationOn)
+{
+	// this does not stop sound via playback_enable, but just skips the SID emulation
+	// thus, the CPU emulation will be in correct sync
+	
+	LOGD("C64DebugInterfaceVice::SetRunSIDEmulation: %s", STRBOOL(isSIDEmulationOn));
+	c64d_setting_run_sid_emulation = isSIDEmulationOn ? 1 : 0;
+}
+
+void C64DebugInterfaceVice::SetAudioVolume(float volume)
+{
+	LOGD("C64DebugInterfaceVice::SetAudioVolume: %f", volume);
+	c64d_set_volume(volume);
+}
+
 int C64DebugInterfaceVice::GetEmulatorType()
 {
 	return C64_EMULATOR_VICE;
@@ -258,6 +273,7 @@ void C64DebugInterfaceVice::Reset()
 
 void C64DebugInterfaceVice::HardReset()
 {
+	LOGD("C64DebugInterfaceVice::HardReset");
 	vsync_suspend_speed_eval();
 	
 	keyboard_clear_keymatrix();

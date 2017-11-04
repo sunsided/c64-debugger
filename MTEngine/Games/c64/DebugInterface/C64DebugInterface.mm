@@ -784,4 +784,13 @@ void C64DebugInterface::SetPalette(uint8 *palette)
 	SYS_FatalExit("C64DebugInterface::SetPalette");
 }
 
+void C64DebugInterface::SetRunSIDEmulation(bool isSIDEmulationOn)
+{
+	SYS_FatalExit("C64DebugInterface::SetRunSIDEmulation");
+}
+
+void C64DebugInterface::SetAudioVolume(float volume)
+{
+	SYS_FatalExit("C64DebugInterface::SetAudioVolume");
+}
 

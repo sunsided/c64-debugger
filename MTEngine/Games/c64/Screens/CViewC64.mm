@@ -105,6 +105,8 @@ CViewC64::CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 	mappedC64Memory = NULL;
 	mappedC64MemoryDescriptor = NULL;
 	
+	isSoundMuted = false;
+	
 	keyboardShortcuts = new C64KeyboardShortcuts();
 
 	// load breakpoints and symbols
@@ -1550,6 +1552,10 @@ bool CViewC64::ProcessGlobalKeyboardShortcut(u32 keyCode, bool isShift, bool isA
 		{
 			viewC64SettingsMenu->ToggleAutoLoadFromInsertedDisk();
 		}
+		else if (shortcut == viewC64SettingsMenu->kbsSwitchSoundOnOff)
+		{
+			this->ToggleSoundMute();
+		}
 		
 		return true;
 	}
@@ -2165,6 +2171,39 @@ void CViewC64::InitRasterColors()
 	viewC64VicDisplay->InitRasterColorsFromScheme();
 	viewC64Screen->InitRasterColorsFromScheme();
 	viewVicEditor->viewVicDisplayMain->InitGridLinesColorFromSettings();
+}
+
+void CViewC64::ToggleSoundMute()
+{
+	this->SetSoundMute(!this->isSoundMuted);
+}
+
+void CViewC64::SetSoundMute(bool isMuted)
+{
+	this->isSoundMuted = isMuted;
+	UpdateSIDMute();
+}
+
+void CViewC64::UpdateSIDMute()
+{
+	LOGD("CViewC64::UpdateSIDMute: isSoundMuted=%s", STRBOOL(isSoundMuted));
+	
+	// logic to control "only mute volume" or "skip SID emulation"
+	if (this->isSoundMuted == false)
+	{
+		// start sound
+		debugInterface->SetAudioVolume((float)(c64SettingsAudioVolume) / 100.0f);
+		debugInterface->SetRunSIDEmulation(c64SettingsRunSIDEmulation);
+	}
+	else
+	{
+		// stop sound
+		debugInterface->SetAudioVolume(0.0f);
+		if (c64SettingsMuteSIDMode == MUTE_SID_MODE_SKIP_EMULATION)
+		{
+			debugInterface->SetRunSIDEmulation(false);
+		}
+	}
 }
 
 void CViewC64::CheckMouseCursorVisibility()

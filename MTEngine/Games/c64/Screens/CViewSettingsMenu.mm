@@ -136,7 +136,10 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 	
 	//
 	std::vector<CSlrString *> *options = NULL;
-	std::vector<CSlrString *> *optionsYesNo = NULL;
+	std::vector<CSlrString *> *optionsYesNo = new std::vector<CSlrString *>();
+	optionsYesNo->push_back(new CSlrString("No"));
+	optionsYesNo->push_back(new CSlrString("Yes"));
+
 	
 	//
 	kbsDetachEverything = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Detach Everything", 'd', true, false, true);
@@ -203,15 +206,37 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 	menuItemSubMenuAudio->AddMenuItem(menuItemAudioOutDevice);
 	
 	//
-	optionsYesNo = new std::vector<CSlrString *>();
-	optionsYesNo->push_back(new CSlrString("No"));
-	optionsYesNo->push_back(new CSlrString("Yes"));
+	menuItemAudioVolume = new CViewC64MenuItemFloat(fontHeight, new CSlrString("Audio volume: "),
+																	NULL, tr, tg, tb,
+																	0.0f, 100.0f, 1.0f, font, fontScale);
+	menuItemAudioVolume->numDecimalsDigits = 0;
+	menuItemAudioVolume->SetValue(100.0f, false);
+	menuItemSubMenuAudio->AddMenuItem(menuItemAudioVolume);
 	
+	//
 	menuItemMuteSIDOnPause = new CViewC64MenuItemOption(fontHeight, new CSlrString("Mute SID on pause: "),
 														NULL, tr, tg, tb, optionsYesNo, font, fontScale);
 	menuItemMuteSIDOnPause->SetSelectedOption(c64SettingsMuteSIDOnPause ? 1 : 0, false);
 	menuItemSubMenuAudio->AddMenuItem(menuItemMuteSIDOnPause);
+	
+	//
+	options = new std::vector<CSlrString *>();
+	options->push_back(new CSlrString("Zero volume"));
+	options->push_back(new CSlrString("Stop SID emulation"));
 
+	menuItemMuteSIDMode = new CViewC64MenuItemOption(fontHeight, new CSlrString("Mute SID mode: "),
+														NULL, tr, tg, tb, options, font, fontScale);
+	menuItemMuteSIDMode->SetSelectedOption(c64SettingsMuteSIDMode, false);
+	menuItemSubMenuAudio->AddMenuItem(menuItemMuteSIDMode);
+
+	//
+	menuItemRunSIDEmulation = new CViewC64MenuItemOption(fontHeight, new CSlrString("Run SID emulation: "),
+											NULL, tr, tg, tb, optionsYesNo, font, fontScale);
+	menuItemRunSIDEmulation->SetSelectedOption(c64SettingsRunSIDEmulation ? 1 : 0, false);
+	menuItemSubMenuAudio->AddMenuItem(menuItemRunSIDEmulation);
+	
+	//
+	
 	menuItemRunSIDWhenInWarp = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("Run SID emulation in warp: "),
 														NULL, tr, tg, tb, optionsYesNo, font, fontScale);
 	menuItemRunSIDWhenInWarp->SetSelectedOption(c64SettingsRunSIDWhenInWarp ? 1 : 0, false);
@@ -248,7 +273,10 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 	menuItemRESIDFilterBias->SetValue(c64SettingsRESIDFilterBias, false);
 	menuItemSubMenuAudio->AddMenuItem(menuItemRESIDFilterBias);
 
-
+	//
+	kbsSwitchSoundOnOff = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Switch sound mute On/Off", 't', false, false, true);
+	viewC64->keyboardShortcuts->AddShortcut(kbsSwitchSoundOnOff);
+	
 	//
 	options = new std::vector<CSlrString *>();
 	options->push_back(new CSlrString("RGB"));
@@ -816,6 +844,22 @@ void CViewSettingsMenu::MenuCallbackItemChanged(CGuiViewMenuItem *menuItem)
 	{
 		bool v = menuItemRunSIDWhenInWarp->selectedOption == 0 ? false : true;
 		C64DebuggerSetSetting("RunSIDWhenWarp", &(v));
+	}
+	else if (menuItem == menuItemAudioVolume)
+	{
+		float v = menuItemAudioVolume->value;
+		u16 vu16 = ((u16)v);
+		C64DebuggerSetSetting("AudioVolume", &(vu16));
+	}
+	else if (menuItem == menuItemRunSIDEmulation)
+	{
+		bool v = menuItemRunSIDEmulation->selectedOption == 0 ? false : true;
+		C64DebuggerSetSetting("RunSIDEmulation", &(v));
+	}
+	else if (menuItem == menuItemMuteSIDMode)
+	{
+		int v = menuItemMuteSIDMode->selectedOption;
+		C64DebuggerSetSetting("MuteSIDMode", &(v));
 	}
 	else if (menuItem == menuItemFastBootKernalPatch)
 	{

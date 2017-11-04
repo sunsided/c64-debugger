@@ -150,6 +150,7 @@ void c64d_show_message(char *message);
 extern int c64d_is_receive_channels_data;
 void c64d_sid_receive_channels_data(int isOn);
 void c64d_sid_channels_data(int v1, int v2, int v3, short mix);
+void c64d_set_volume(float volume);
 
 // VIC
 void c64d_set_color_register(uint8 colorRegisterNum, uint8 value);
@@ -159,6 +160,10 @@ extern int c64d_patch_kernal_fast_boot_flag;
 
 // run SID when in warp mode?
 extern int c64d_setting_run_sid_when_in_warp;
+
+// run SID emulation at all or always skip?
+extern int c64d_setting_run_sid_emulation;
+
 
 #endif
 
