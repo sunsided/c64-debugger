@@ -1241,6 +1241,7 @@ static int sound_run_sound(void)
     int nr = 0, i;
     int delta_t = 0;
     SWORD *bufferptr;
+	int isWarp;
 	
     static int overflow_warning_count = 0;
 
@@ -1258,7 +1259,7 @@ static int sound_run_sound(void)
         }
     }
 
-	int isWarp = c64d_get_warp_mode();
+	isWarp = c64d_get_warp_mode();
 	if (c64d_setting_run_sid_emulation == 0
 		|| (isWarp == 1 && c64d_setting_run_sid_when_in_warp == 0))
 	{

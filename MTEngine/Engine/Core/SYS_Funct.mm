@@ -345,6 +345,26 @@ char *SYS_GetPathFromFullPath(char *fileNameFull)
 
 }
 
+char *FUN_SafeConvertStdStringToCharArray(std::string inString)
+{
+//	LOGD("FUN_SafeConvertStdStringToCharArray");
+	int len = inString.length();
+	
+//	LOGD("   len=%d", len);
+	char *buf = new char[len+1];
+	
+	for (int i = 0; i < len; i++)
+	{
+		char c = inString[i];
+//		LOGD("    [%d]=%x '%c'", i, c, c);
+		buf[i] = c;
+	}
+	
+	buf[len] = 0x00;
+	
+	return buf;
+}
+
 const char hexTableSmall[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 const char hexTableSmallNoZero[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 

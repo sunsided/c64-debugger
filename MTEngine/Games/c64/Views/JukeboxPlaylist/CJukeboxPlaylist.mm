@@ -107,19 +107,24 @@ void CJukeboxPlaylist::InitFromJSON(char *json)
 					nodeName = itEntry->name();
 					if (nodeName == "Name")
 					{
-						char *buf = (char*)(itEntry->as_string().c_str());
+						std::string str = itEntry->as_string();
+						char *buf = FUN_SafeConvertStdStringToCharArray(str);
 						playlistEntry->name = new CSlrString(buf);
 						LOGD("                        Name = %s", buf);
+						delete [] buf;
 					}
 					else if (nodeName == "FilePath")
 					{
-						char *buf = (char*)(itEntry->as_string().c_str());
+						std::string str = itEntry->as_string();
+						char *buf = FUN_SafeConvertStdStringToCharArray(str);
 						playlistEntry->filePath = new CSlrString(buf);
 						LOGD("                     FilePath = %s", buf);
+						delete [] buf;
 					}
 					else if (nodeName == "ResetMode")
 					{
-						char *buf = (char*)(itEntry->as_string().c_str());
+						std::string str = itEntry->as_string();
+						char *buf = FUN_SafeConvertStdStringToCharArray(str);
 						if (!strcmp(buf, "hard"))
 						{
 							playlistEntry->resetMode = MACHINE_RESET_HARD;
@@ -129,6 +134,7 @@ void CJukeboxPlaylist::InitFromJSON(char *json)
 							playlistEntry->resetMode = MACHINE_RESET_SOFT;
 						}
 						LOGD("                       Reset = %d", playlistEntry->resetMode);
+						delete [] buf;
 					}
 					else if (nodeName == "AutoRun")
 					{
@@ -195,24 +201,30 @@ void CJukeboxPlaylist::InitFromJSON(char *json)
 								else if (nodeName == "KeyDown")
 								{
 									playlistAction->actionType = JUKEBOX_ACTION_KEY_DOWN;
-									char *buf = (char*)(itAction->as_string().c_str());
+									
+									std::string str = itAction->as_string();
+									char *buf = FUN_SafeConvertStdStringToCharArray(str);
 									if (strlen(buf) < 1)
 									{
 										SYS_FatalExit("Parsing Jukebox JSON: KeyDown action empty");
 									}
 									playlistAction->code = buf[0];
 									LOGD("  action keyDown=%x", playlistAction->code);
+									delete [] buf;
 								}
 								else if (nodeName == "KeyUp")
 								{
 									playlistAction->actionType = JUKEBOX_ACTION_KEY_UP;
-									char *buf = (char*)(itAction->as_string().c_str());
+
+									std::string str = itAction->as_string();
+									char *buf = FUN_SafeConvertStdStringToCharArray(str);
 									if (strlen(buf) < 1)
 									{
 										SYS_FatalExit("Parsing Jukebox JSON: KeyDown action empty");
 									}
 									playlistAction->code = buf[0];
 									LOGD("  action keyUp=%x", playlistAction->code);
+									delete [] buf;
 								}
 								else if (nodeName == "KeyDownCode")
 								{
@@ -301,14 +313,24 @@ void CJukeboxPlaylist::InitFromJSON(char *json)
 								else if (nodeName == "DumpC64Memory")
 								{
 									playlistAction->actionType = JUKEBOX_ACTION_DUMP_C64_MEMORY;
-									char *buf = (char*)(itAction->as_string().c_str());
+									
+									std::string str = itEntry->as_string();
+									char *buf = FUN_SafeConvertStdStringToCharArray(str);
+									
 									playlistAction->text = new CSlrString(buf);
+									
+									delete [] buf;
 								}
 								else if (nodeName == "DumpDiskMemory")
 								{
 									playlistAction->actionType = JUKEBOX_ACTION_DUMP_DISK_MEMORY;
-									char *buf = (char*)(itAction->as_string().c_str());
+									
+									std::string str = itEntry->as_string();
+									char *buf = FUN_SafeConvertStdStringToCharArray(str);
+
 									playlistAction->text = new CSlrString(buf);
+									
+									delete [] buf;
 								}
 								else if (nodeName == "DetachCartridge")
 								{

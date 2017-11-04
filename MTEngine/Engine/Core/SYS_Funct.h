@@ -36,6 +36,8 @@ bool FUN_IsNumber(char c);
 bool FUN_IsNumber(char *str);
 bool FUN_IsHexNumber(char c);
 
+char *FUN_SafeConvertStdStringToCharArray(std::string inString);
+
 void sprintfNum(char *pszBuffer, int size, char base, char numDigits, char isSigned, char padchar, i64 n);
 void sprintfUnsignedNum(char *pszBuffer, int size, char base, char numDigits, char padchar, u64 n);
 void sprintfHexCode4(char *pszBuffer, uint8 value);
