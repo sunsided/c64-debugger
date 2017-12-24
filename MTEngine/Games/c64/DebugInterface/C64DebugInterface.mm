@@ -449,6 +449,21 @@ void C64DebugInterface::SetSidFilterBias(int filterBias)
 	SYS_FatalExit("C64DebugInterface::SetSidFilterBias");
 }
 
+void C64DebugInterface::SetSidStereo(int stereoMode)
+{
+	SYS_FatalExit("C64DebugInterface::SetSidStereo");
+}
+
+void C64DebugInterface::SetSidStereoAddress(uint16 sidAddress)
+{
+	SYS_FatalExit("C64DebugInterface::SetSidStereoAddress");
+}
+
+void C64DebugInterface::SetSidTripleAddress(uint16 sidAddress)
+{
+	SYS_FatalExit("C64DebugInterface::SetSidTripleAddress");
+}
+
 void C64DebugInterface::GetC64ModelTypes(std::vector<CSlrString *> *modelTypeNames, std::vector<int> *modelTypeIds)
 {
 	SYS_FatalExit("C64DebugInterface::GetC64ModelTypes");
@@ -730,14 +745,9 @@ void C64DebugInterface::SetSIDMuteChannels(bool mute1, bool mute2, bool mute3, b
 	SYS_FatalExit("C64DebugInterface::SetSIDMuteChannels");
 }
 
-void C64DebugInterface::SetSIDReceiveChannelsData(bool isReceiving)
+void C64DebugInterface::SetSIDReceiveChannelsData(int sidNumber, bool isReceiving)
 {
 	SYS_FatalExit("C64DebugInterface::SetSIDReceiveChannelsData");
-}
-
-void C64DebugInterface::AddSIDWaveformData(int v1, int v2, int v3, short mix)
-{
-	this->viewC64->viewC64StateSID->AddWaveformData(v1, v2, v3, mix);
 }
 
 void C64DebugInterface::SetVicRecordStateMode(uint8 recordMode)
@@ -748,6 +758,7 @@ void C64DebugInterface::SetVicRecordStateMode(uint8 recordMode)
 bool C64DebugInterface::IsCpuJam()
 {
 	SYS_FatalExit("C64DebugInterface::IsCpuJam");
+	return false;
 }
 
 void C64DebugInterface::ForceRunAndUnJamCpu()

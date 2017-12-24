@@ -361,7 +361,7 @@ CSlrString *CSlrString::GetWord(u32 startPos, u32 *retPos, std::list<u16> stopCh
 		{
 			u16 stopChr = *it;
 
-			//LOGD("chr=%d stopChr=%d", chr, stopChr);
+//			LOGD("chr=%d stopChr=%d", chr, stopChr);
 
 			if (chr == stopChr)
 			{

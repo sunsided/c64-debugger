@@ -376,7 +376,6 @@ void CGuiTheme::InitDefaultValues()
 	imgSliderGauge = NULL;
 	
 	// button
-	buttonShadeAmount = 0.4f;
 	if (gPlatformType == PLATFORM_TYPE_TABLET || gPlatformType == PLATFORM_TYPE_DESKTOP)
 	{
 		buttonShadeDistance = 1.0f;
@@ -387,6 +386,8 @@ void CGuiTheme::InitDefaultValues()
 	}
 	buttonShadeDistance2 = 	buttonShadeDistance *2.0f;
 	
+	buttonShadeAmount = 0.4f;
+
 	buttonEnabledColorR = 39 / 255.0;
 	buttonEnabledColorG = 88  / 255.0; //165
 	buttonEnabledColorB = 177 / 255.0;
@@ -423,6 +424,19 @@ void CGuiTheme::InitDefaultValues()
 	buttonSwitchOnColor2B = buttonSwitchOnColorB * buttonShadeAmount;
 	buttonSwitchOnColor2A = buttonSwitchOnColorA;
 	
+	buttonOnTextColorR = 1.0f;
+	buttonOnTextColorG = 1.0f;
+	buttonOnTextColorB = 1.0f;
+	
+	buttonOffTextColorR = 1.0f;
+	buttonOffTextColorG = 1.0f;
+	buttonOffTextColorB = 1.0f;
+	
+	buttonDisabledTextColorR = 0.3f;
+	buttonDisabledTextColorG = 0.3f;
+	buttonDisabledTextColorB = 0.3f;
+
+	//
 	textBoxColorR = 26  / 255.0f;
 	textBoxColorG = 26  / 255.0f;
 	textBoxColorB = 230 / 255.0f;
@@ -437,7 +451,14 @@ void CGuiTheme::InitDefaultValues()
 	cursorColorB = 77  / 255.0f;
 	cursorColorA = 1.0f;
 	textBoxCursorBlinkSpeed = 0.15f;
+	
+	focusBorderLineWidth = 0.7f;
 }
+
+void CThemeChangeListener::UpdateTheme()
+{
+}
+
 
 /*
 void CGuiTheme::ClearImages()

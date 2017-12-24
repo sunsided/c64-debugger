@@ -715,15 +715,15 @@ CViewC64VicControl::~CViewC64VicControl()
 
 void CViewC64VicControl::SetSwitchButtonDefaultColors(CGuiButtonSwitch *btn)
 {
-	btn->buttonEnabledColorR = 0.0f;
-	btn->buttonEnabledColorG = 0.0f;
-	btn->buttonEnabledColorB = 0.0f;
-	btn->buttonEnabledColorA = 1.0f;
+	btn->buttonSwitchOffColorR = 0.0f;
+	btn->buttonSwitchOffColorG = 0.0f;
+	btn->buttonSwitchOffColorB = 0.0f;
+	btn->buttonSwitchOffColorA = 1.0f;
 	
-	btn->buttonEnabledColor2R = 0.3f;
-	btn->buttonEnabledColor2G = 0.3f;
-	btn->buttonEnabledColor2B = 0.3f;
-	btn->buttonEnabledColor2A = 1.0f;
+	btn->buttonSwitchOffColor2R = 0.3f;
+	btn->buttonSwitchOffColor2G = 0.3f;
+	btn->buttonSwitchOffColor2B = 0.3f;
+	btn->buttonSwitchOffColor2A = 1.0f;
 	
 	btn->buttonSwitchOnColorR = 0.0f;
 	btn->buttonSwitchOnColorG = 0.7f;
@@ -739,15 +739,15 @@ void CViewC64VicControl::SetSwitchButtonDefaultColors(CGuiButtonSwitch *btn)
 
 void CViewC64VicControl::SetLockableButtonDefaultColors(CGuiButtonSwitch *btn)
 {
-	btn->buttonEnabledColorR = 0.0f;
-	btn->buttonEnabledColorG = 0.0f;
-	btn->buttonEnabledColorB = 0.0f;
-	btn->buttonEnabledColorA = 1.0f;
+	btn->buttonSwitchOffColorR = 0.0f;
+	btn->buttonSwitchOffColorG = 0.0f;
+	btn->buttonSwitchOffColorB = 0.0f;
+	btn->buttonSwitchOffColorA = 1.0f;
 	
-	btn->buttonEnabledColor2R = 0.3f;
-	btn->buttonEnabledColor2G = 0.3f;
-	btn->buttonEnabledColor2B = 0.3f;
-	btn->buttonEnabledColor2A = 1.0f;
+	btn->buttonSwitchOffColor2R = 0.3f;
+	btn->buttonSwitchOffColor2G = 0.3f;
+	btn->buttonSwitchOffColor2B = 0.3f;
+	btn->buttonSwitchOffColor2A = 1.0f;
 	
 	btn->buttonSwitchOnColorR = 0.7f;
 	btn->buttonSwitchOnColorG = 0.0f;
@@ -766,17 +766,17 @@ void CViewC64VicControl::SetButtonState(CGuiButtonSwitch *btn, bool isSet)
 {
 	if (isSet)
 	{
-		btn->buttonEnabledColorR = 0.0f;
-		btn->buttonEnabledColorG = 0.7f;
-		btn->buttonEnabledColorB = 0.0f;
-		btn->buttonEnabledColorA = 1.0f;
+		btn->buttonSwitchOffColorR = 0.0f;
+		btn->buttonSwitchOffColorG = 0.7f;
+		btn->buttonSwitchOffColorB = 0.0f;
+		btn->buttonSwitchOffColorA = 1.0f;
 	}
 	else
 	{
-		btn->buttonEnabledColorR = 0.0f;
-		btn->buttonEnabledColorG = 0.0f;
-		btn->buttonEnabledColorB = 0.0f;
-		btn->buttonEnabledColorA = 1.0f;
+		btn->buttonSwitchOffColorR = 0.0f;
+		btn->buttonSwitchOffColorG = 0.0f;
+		btn->buttonSwitchOffColorB = 0.0f;
+		btn->buttonSwitchOffColorA = 1.0f;
 	}
 	
 	

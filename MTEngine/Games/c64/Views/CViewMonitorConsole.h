@@ -50,6 +50,8 @@ public:
 	void CommandDisassemble();
 	void CommandDoDisassemble();
 	
+	int saveFileType;
+	
 	bool memoryDumpAsPRG;
 
 	bool DoMemoryDumpToFile(int addrStart, int addrEnd, bool isPRG, CSlrString *filePath);

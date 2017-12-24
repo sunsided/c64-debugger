@@ -1,4 +1,5 @@
 #include "CViewDisassemble.h"
+#include "CColorsTheme.h"
 #include "VID_GLViewController.h"
 #include "CGuiMain.h"
 #include "CSlrDataAdapter.h"
@@ -28,16 +29,6 @@ enum editCursorPositions
 	EDIT_CURSOR_POS_MNEMONIC,
 	EDIT_CURSOR_POS_END
 };
-
-float colorNotExecuteR = 0.75f;
-float colorNotExecuteG = 0.75f;
-float colorNotExecuteB = 0.75f;
-float colorNotExecuteA = 1.0f;
-
-float colorExecuteR = 1.0f;
-float colorExecuteG = 1.0f;
-float colorExecuteB = 1.0f;
-float colorExecuteA = 1.0f;
 
 #define NUM_MULTIPLY_LINES_FOR_DISASSEMBLE	3
 
@@ -892,6 +883,14 @@ int CViewDisassemble::RenderDisassembleLine(float px, float py, int addr, uint8 
 {
 //	LOGD("adr=%4.4x op=%2.2x", adr, op);
 	
+	float colorExecuteR, colorExecuteG, colorExecuteB;
+	float colorExecuteA = 1.0f;
+	float colorNonExecuteR, colorNonExecuteG, colorNonExecuteB;
+	float colorNonExecuteA = 1.0f;
+	
+	GetColorsFromScheme(c64SettingsDisassemblyExecuteColor, &colorExecuteR, &colorExecuteG, &colorExecuteB);
+	GetColorsFromScheme(c64SettingsDisassemblyNonExecuteColor, &colorNonExecuteR, &colorNonExecuteG, &colorNonExecuteB);
+	
 	char buf[128];
 	char buf1[16];
 	char buf2[2] = {0};
@@ -913,11 +912,17 @@ int CViewDisassemble::RenderDisassembleLine(float px, float py, int addr, uint8 
 	
 	if (cell->isExecuteCode)
 	{
-		cr = colorExecuteR; cg = colorExecuteG; cb = colorExecuteB; ca = colorExecuteA;
+		cr = colorExecuteR;
+		cg = colorExecuteG;
+		cb = colorExecuteB;
+		ca = colorExecuteA;
 	}
 	else
 	{
-		cr = colorNotExecuteR; cg = colorNotExecuteG; cb = colorNotExecuteB; ca = colorNotExecuteA;
+		cr = colorNonExecuteR;
+		cg = colorNonExecuteG;
+		cb = colorNonExecuteB;
+		ca = colorNonExecuteA;
 	}
 	
 	length = opcodes[op].addressingLength;
@@ -1184,12 +1189,21 @@ int CViewDisassemble::RenderDisassembleLine(float px, float py, int addr, uint8 
 		{
 			if (editBoxText->textBuffer[0] == 0x00)
 			{
-				fontDisassemble->BlitTextColor(strCodeLine, px, py, -1, fontSize, colorExecuteR, colorExecuteG, colorExecuteB, colorExecuteA);
+				fontDisassemble->BlitTextColor(strCodeLine, px, py, -1, fontSize,
+											   colorExecuteR,
+											   colorExecuteG,
+											   colorExecuteB,
+											   colorExecuteA);
 				fontDisassemble->BlitTextColor(buf, px, py, -1, fontSize, cr*0.5f, cg*0.5f, cb*0.5f, ca*0.5f);
 			}
 			else
 			{
-				fontDisassemble->BlitTextColor(strCodeLine, px, py, -1, fontSize, colorExecuteR, colorExecuteG, colorExecuteB, colorExecuteA);
+				fontDisassemble->BlitTextColor(strCodeLine, px, py, -1, fontSize,
+											   colorExecuteR,
+											   colorExecuteG,
+											   colorExecuteB,
+											   colorExecuteA);
+
 			}
 		}
 		else
@@ -1239,6 +1253,13 @@ void CViewDisassemble::RenderHexLine(float px, float py, int addr)
 		return;
 	}
 
+	float colorExecuteR, colorExecuteG, colorExecuteB;
+	float colorExecuteA = 1.0f;
+	float colorNonExecuteR, colorNonExecuteG, colorNonExecuteB;
+	float colorNonExecuteA = 1.0f;
+	
+	GetColorsFromScheme(c64SettingsDisassemblyExecuteColor, &colorExecuteR, &colorExecuteG, &colorExecuteB);
+	GetColorsFromScheme(c64SettingsDisassemblyNonExecuteColor, &colorNonExecuteR, &colorNonExecuteG, &colorNonExecuteB);
 	
 	char buf[128];
 	char buf1[16];
@@ -1256,11 +1277,17 @@ void CViewDisassemble::RenderHexLine(float px, float py, int addr)
 	
 	if (cell->isExecuteCode)
 	{
-		cr = colorExecuteR; cg = colorExecuteG; cb = colorExecuteB; ca = colorExecuteA;
+		cr = colorExecuteR;
+		cg = colorExecuteG;
+		cb = colorExecuteB;
+		ca = colorExecuteA;
 	}
 	else
 	{
-		cr = colorNotExecuteR; cg = colorNotExecuteG; cb = colorNotExecuteB; ca = colorNotExecuteA;
+		cr = colorNonExecuteR;
+		cg = colorNonExecuteG;
+		cb = colorNonExecuteB;
+		ca = colorNonExecuteA;
 	}
 	
 	
@@ -1336,7 +1363,11 @@ void CViewDisassemble::RenderHexLine(float px, float py, int addr)
 		{
 			if (editBoxText->textBuffer[0] == 0x00)
 			{
-				fontDisassemble->BlitTextColor(strCodeLine, px, py, -1, fontSize, colorExecuteR, colorExecuteG, colorExecuteB, colorExecuteA);
+				fontDisassemble->BlitTextColor(strCodeLine, px, py, -1, fontSize,
+											   colorExecuteR,
+											   colorExecuteG,
+											   colorExecuteB,
+											   colorExecuteA);
 				
 				if (showHexCodes)
 				{
@@ -1350,7 +1381,11 @@ void CViewDisassemble::RenderHexLine(float px, float py, int addr)
 			}
 			else
 			{
-				fontDisassemble->BlitTextColor(strCodeLine, px, py, -1, fontSize, colorExecuteR, colorExecuteG, colorExecuteB, colorExecuteA);
+				fontDisassemble->BlitTextColor(strCodeLine, px, py, -1, fontSize,
+											   colorExecuteR,
+											   colorExecuteG,
+											   colorExecuteB,
+											   colorExecuteA);
 			}
 		}
 		else
@@ -1902,6 +1937,13 @@ void CViewDisassemble::Render()
 //		return;
 	
 	this->renderBreakpointsMutex->Lock();
+	
+	float colorBackgroundR, colorBackgroundG, colorBackgroundB;
+	float colorBackgroundA = 1.0f;
+	
+	GetColorsFromScheme(c64SettingsDisassemblyBackgroundColor, &colorBackgroundR, &colorBackgroundG, &colorBackgroundB);
+
+	BlitFilledRectangle(this->posX, this->posY, -1, this->sizeX, this->sizeY, colorBackgroundR, colorBackgroundG, colorBackgroundB, colorBackgroundA);
 	
 	if (isTrackingPC)
 	{

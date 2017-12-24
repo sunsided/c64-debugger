@@ -166,6 +166,10 @@ public:
 	virtual void SetSidPassBand(int passband);
 	// filterBias: -500 500
 	virtual void SetSidFilterBias(int filterBias);
+	// 0=none, 1=stereo, 2=triple
+	virtual void SetSidStereo(int stereoMode);
+	virtual void SetSidStereoAddress(uint16 sidAddress);
+	virtual void SetSidTripleAddress(uint16 sidAddress);
 
 	//
 	virtual void GetC64ModelTypes(std::vector<CSlrString *> *modelTypeNames, std::vector<int> *modelTypeIds);
@@ -281,8 +285,7 @@ public:
 
 	// SID
 	virtual void SetSIDMuteChannels(bool mute1, bool mute2, bool mute3, bool muteExt);
-	virtual void SetSIDReceiveChannelsData(bool isReceiving);
-	void AddSIDWaveformData(int v1, int v2, int v3, short mix);
+	virtual void SetSIDReceiveChannelsData(int sidNumber, bool isReceiving);
 	
 	// drive leds
 	float ledState[C64_NUM_DRIVES];

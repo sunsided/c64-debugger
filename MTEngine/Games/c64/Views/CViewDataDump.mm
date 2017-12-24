@@ -279,7 +279,7 @@ void CViewDataDump::Render()
 		for (int dx = 0; dx < numberOfBytesPerLine; dx++)
 		{
 			bool isAvailable;
-			byte value;
+			uint8 value;
 			dataAdapter->AdapterReadByte(a, &value, &isAvailable);
 			if (isAvailable)
 			{

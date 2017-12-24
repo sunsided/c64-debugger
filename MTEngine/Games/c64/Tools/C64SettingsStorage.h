@@ -24,6 +24,7 @@ enum muteSIDMode : u8
 	MUTE_SID_MODE_SKIP_EMULATION	= 1
 };
 
+
 // settings
 extern bool c64SettingsSkipConfig;
 extern bool c64SettingsPassConfigToRunningInstance;
@@ -46,6 +47,10 @@ extern uint8 c64SettingsRESIDSamplingMethod;
 extern bool c64SettingsRESIDEmulateFilters;
 extern uint32 c64SettingsRESIDPassBand;
 extern uint32 c64SettingsRESIDFilterBias;
+
+extern uint8 c64SettingsSIDStereo;			// "SidStereo" 0=none, 1=stereo, 2=triple
+extern uint16 c64SettingsSIDStereoAddress;	// "SidStereoAddressStart"
+extern uint16 c64SettingsSIDTripleAddress;	// "SidTripleAddressStart"
 
 extern bool c64SettingsMuteSIDOnPause;
 
@@ -90,6 +95,7 @@ extern CSlrString *c64SettingsDefaultMemoryDumpFolder;
 extern CSlrString *c64SettingsPathToC64MemoryMapFile;
 
 extern CSlrString *c64SettingsPathToSymbols;
+extern CSlrString *c64SettingsPathToWatches;
 extern CSlrString *c64SettingsPathToBreakpoints;
 extern CSlrString *c64SettingsPathToDebugInfo;
 
@@ -123,11 +129,22 @@ extern float c64SettingsPaintGridPixelsColorA;
 extern float c64SettingsPaintGridShowZoomLevel;
 extern float c64SettingsPaintGridShowValuesZoomLevel;
 
+extern float c64SettingsFocusBorderLineWidth;
+
 extern bool c64SettingsVicEditorForceReplaceColor;
+
+extern int c64SettingsDisassemblyBackgroundColor;
+extern int c64SettingsDisassemblyExecuteColor;
+extern int c64SettingsDisassemblyNonExecuteColor;
+
+extern int c64SettingsMenusColorTheme;
 
 extern bool c64SettingsUseSystemFileDialogs;
 
 extern int c64SettingsDoubleClickMS;
+
+extern bool c64SettingsLoadViceLabels;
+extern bool c64SettingsLoadWatches;
 
 void C64DebuggerSetSettingInt(char *settingName, int param);
 void C64DebuggerSetSettingString(char *settingName, CSlrString *param);
@@ -141,6 +158,5 @@ void C64DebuggerReadSettingCustom(char *name, CByteBuffer *byteBuffer);
 
 // set setting
 void C64DebuggerSetSetting(char *name, void *value);
-
 
 #endif

@@ -194,7 +194,10 @@ typedef struct voice_s {
 struct sound_s {
     /* speed factor */
     int factor;
-
+	
+	/* chip number (c64d) */
+	int chipNo;
+	
     /* number of voices */
     voice_t v[3];
     /* SID registers */
@@ -784,12 +787,13 @@ static SWORD fastsid_calculate_single_sample(sound_t *psid, int i)
 	
 	returnValue = (SWORD)(((SDWORD)((o0 + o1 + o2) >> 20) - 0x600) * psid->vol);
 
-	if (c64d_is_receive_channels_data)
+	if (c64d_is_receive_channels_data[psid->chipNo])
 	{
 #define OSHIFT 19
 #define OSUB	0x300
 		
-		c64d_sid_channels_data(((o0 >> OSHIFT) - OSUB) * psid->vol,
+		c64d_sid_channels_data(psid->chipNo,
+							   ((o0 >> OSHIFT) - OSUB) * psid->vol,
 							   ((o1 >> OSHIFT) - OSUB) * psid->vol,
 							   ((o2 >> OSHIFT) - OSUB) * psid->vol, returnValue);
 	}
@@ -893,13 +897,14 @@ static void init_filter(sound_t *psid, int freq)
 }
 
 /* SID initialization routine */
-static sound_t *fastsid_open(BYTE *sidstate)
+static sound_t *fastsid_open(BYTE *sidstate, int chipNo)
 {
     sound_t *psid;
 
     psid = lib_calloc(1, sizeof(sound_t));
 
     memcpy(psid->d, sidstate, 32);
+	psid->chipNo = chipNo;
 
     return psid;
 }

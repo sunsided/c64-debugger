@@ -124,7 +124,8 @@ class CGuiButton : public CGuiElement
 	
 	CSlrImage *bkgImage;
 	CSlrString *textUTF;
-
+	void SetText(CSlrString *textUTF);
+	
 	GLfloat buttonPosX;
 	GLfloat buttonPosY;
 	GLfloat buttonSizeX;
@@ -157,6 +158,8 @@ class CGuiButton : public CGuiElement
 	
 	bool centerText;
 	float textOffsetY;
+	
+	virtual void UpdateTheme();
 };
 
 class CGuiButtonCallback

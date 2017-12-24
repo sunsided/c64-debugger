@@ -17,6 +17,7 @@
 #include "C64DebugInterfaceVice.h"
 #include "CViewVicEditor.h"
 #include "CViewC64VicDisplay.h"
+#include "CViewDataDump.h"
 
 CViewC64Charset::CViewC64Charset(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, CViewVicEditor *vicEditor)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
@@ -81,8 +82,14 @@ void CViewC64Charset::Render()
 	
 	vicEditor->viewVicDisplayMain->GetViciiPointers(viciiState, &screen_ptr, &color_ram_ptr, &chargen_ptr, &bitmap_low_ptr, &bitmap_high_ptr, colors);
 
-	
-	CopyHiresCharsetToImage(chargen_ptr, imageDataCharset, 32, 0, 1, viewC64->debugInterface);
+	if (viewC64->viewC64VicDisplay->backupRenderDataWithColors)
+	{
+		CopyMultiCharsetToImage(chargen_ptr, imageDataCharset, 32, colors[1], colors[2], colors[3], viewC64->colorToShowD800, viewC64->debugInterface);
+	}
+	else
+	{
+		CopyHiresCharsetToImage(chargen_ptr, imageDataCharset, 32, 0, 1, viewC64->debugInterface);
+	}
 
 	imageCharset->ReplaceImageData(imageDataCharset);
 

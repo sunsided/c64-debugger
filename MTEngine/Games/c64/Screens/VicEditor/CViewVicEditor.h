@@ -219,6 +219,9 @@ public:
 	bool ExportRawText(CSlrString *path);
 	bool ExportHyper(CSlrString *path);
 
+	bool ExportCharset(CSlrString *path);
+	bool ExportSpritesData(CSlrString *path);
+	
 	void SaveScreenshotAsPNG();
 
 	bool ExportPNG(CSlrString *path);

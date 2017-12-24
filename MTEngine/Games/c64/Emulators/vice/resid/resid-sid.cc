@@ -75,6 +75,15 @@ void SID::set_chip_model(chip_model model)
   filter.set_chip_model(model);
 }
 
+	
+// ----------------------------------------------------------------------------
+// Set chip number (c64d).
+// ----------------------------------------------------------------------------
+void SID::set_chip_number(int chipNo)
+{
+	this->chipNo = chipNo;
+	filter.set_chip_number(chipNo);
+}
 
 // ----------------------------------------------------------------------------
 // SID reset.

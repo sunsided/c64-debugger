@@ -4,6 +4,7 @@ extern "C" {
 
 #include "SND_SoundEngine.h"
 #include "CViewC64.h"
+#include "CColorsTheme.h"
 #include "CViewSnapshots.h"
 #include "VID_GLViewController.h"
 #include "CGuiMain.h"
@@ -45,9 +46,9 @@ CViewSnapshots::CViewSnapshots(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	
 	strHeader = new CSlrString("Snapshots");
 	
-	tr = 0.64;
-	tg = 0.59;
-	tb = 1.0;
+	tr = viewC64->colorsTheme->colorTextR;
+	tg = viewC64->colorsTheme->colorTextG;
+	tb = viewC64->colorsTheme->colorTextB;
 	
 	snapshotBuffer = NULL;
 	
@@ -514,16 +515,19 @@ void CViewSnapshots::Render()
 {
 //	guiMain->fntConsole->BlitText("CViewSnapshots", 0, 0, 0, 11, 1.0);
 
-	BlitFilledRectangle(0, 0, -1, sizeX, sizeY, 0.5, 0.5, 1.0, 1.0);
+	BlitFilledRectangle(0, 0, -1, sizeX, sizeY,
+						viewC64->colorsTheme->colorBackgroundFrameR,
+						viewC64->colorsTheme->colorBackgroundFrameG,
+						viewC64->colorsTheme->colorBackgroundFrameB, 1.0);
 	
 	float sb = 20;
 	float gap = 15;
 	
 	float lSizeY = 3;
 
-	float lr = 0.64;
-	float lg = 0.65;
-	float lb = 0.65;
+	float lr = viewC64->colorsTheme->colorHeaderLineR;
+	float lg = viewC64->colorsTheme->colorHeaderLineG;
+	float lb = viewC64->colorsTheme->colorHeaderLineB;
 	float lSize = 3;
 	
 	float scrx = sb;
@@ -532,7 +536,10 @@ void CViewSnapshots::Render()
 	float scrsy = sizeY - sb*2.0f;
 	float cx = scrsx/2.0f + sb;
 	
-	BlitFilledRectangle(scrx, scry, -1, scrsx, scrsy, 0, 0, 1.0, 1.0);
+	BlitFilledRectangle(scrx, scry, -1, scrsx, scrsy,
+						viewC64->colorsTheme->colorBackgroundR,
+						viewC64->colorsTheme->colorBackgroundG,
+						viewC64->colorsTheme->colorBackgroundB, 1.0);
 	
 	
 	float px = scrx + gap;

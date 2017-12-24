@@ -18,15 +18,16 @@
 #include <map>
 #include "GuiConsts.h"
 #include "COneTouchData.h"
+#include "CGuiTheme.h"
 
 #define ELEMENT_ALIGNED_NONE	BV00
 #define ELEMENT_ALIGNED_CENTER	BV01
 #define ELEMENT_ALIGNED_UP		BV02
-#define ELEMENT_ALIGNED_DOWN		BV03
-#define ELEMENT_ALIGNED_LEFT		BV04
+#define ELEMENT_ALIGNED_DOWN	BV03
+#define ELEMENT_ALIGNED_LEFT	BV04
 #define ELEMENT_ALIGNED_RIGHT	BV05
 
-class CGuiElement
+class CGuiElement : public CThemeChangeListener
 {
 public:
 	CGuiElement(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY);

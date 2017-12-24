@@ -34,14 +34,19 @@ CJukeboxPlaylist::~CJukeboxPlaylist()
 
 void CJukeboxPlaylist::InitFromJSON(char *json)
 {
-	LOGD("CJukeboxPlaylist::InitFromJSON: json=\n>>\"%s\"<<", json);
+	LOGD("CJukeboxPlaylist::InitFromJSON");
+//	LOGD("CJukeboxPlaylist::InitFromJSON: json=\n>>\"%s\"<<", json);
 	
 	LOGTODO("windows: jeszcze taka mysl luzna... pamietaj ze w pliku JSON na windows sciezki musisz escapowac \
 			bo znak \ jest nielegalnym znakiem JSON \
 			musi byc \\");
+
+	LOGD("CJukeboxPlaylist: parse...");
 	
 	JSONNode n = libjson::parse(json);
-	
+
+	LOGD("CJukeboxPlaylist: iterate...");
+
 	JSONNode::iterator it = n.begin();
 	while(it != n.end())
 	{

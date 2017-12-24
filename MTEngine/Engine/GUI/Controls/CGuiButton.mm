@@ -10,6 +10,7 @@
 #include "CGuiButton.h"
 #include "VID_GLViewController.h"
 #include "CGuiMain.h"
+#include "CSlrString.h"
 
 static float buttonZ = -2.0;
 
@@ -191,7 +192,7 @@ CGuiButton::CGuiButton(CSlrImage *bkgImage, CSlrImage *bkgImageDisabled,
 	this->textColorDisabledB = textColorDisabledB;
 	this->textColorDisabledA = textColorDisabledA;
 	
-	this->textUTF = textUTF;
+	this->textUTF = new CSlrString(textUTF);
 	this->textAlignment = textAlignment;
 	this->textDrawPosX = textOffsetX;
 	this->textDrawPosY = textOffsetY;
@@ -199,6 +200,13 @@ CGuiButton::CGuiButton(CSlrImage *bkgImage, CSlrImage *bkgImageDisabled,
 	this->imageFlippedX = false;
 	
 	InitBackgroundColors();
+}
+
+void CGuiButton::SetText(CSlrString *textUTF)
+{
+	if (this->textUTF != NULL)
+		delete this->textUTF;
+	this->textUTF = new CSlrString(textUTF);
 }
 
 void CGuiButton::InitBackgroundColors()
@@ -225,6 +233,19 @@ void CGuiButton::InitBackgroundColors()
 	buttonDisabledColor2B = guiMain->theme->buttonDisabledColor2B;
 	buttonDisabledColor2A = guiMain->theme->buttonDisabledColor2A;
 
+	textColorR = guiMain->theme->buttonOffTextColorR;
+	textColorG = guiMain->theme->buttonOffTextColorG;
+	textColorB = guiMain->theme->buttonOffTextColorB;
+	
+	textColorDisabledR = guiMain->theme->buttonDisabledTextColorR;
+	textColorDisabledG = guiMain->theme->buttonDisabledTextColorG;
+	textColorDisabledB = guiMain->theme->buttonDisabledTextColorB;
+
+}
+
+void CGuiButton::UpdateTheme()
+{
+	InitBackgroundColors();
 }
 
 void CGuiButton::SetFont(CSlrFont *font, float fontScale)

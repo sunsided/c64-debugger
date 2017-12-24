@@ -201,6 +201,7 @@
 		413B5F381DC213B300852EA4 /* SYS_SharedMemory.mm in Sources */ = {isa = PBXBuildFile; fileRef = 413B5F371DC213B300852EA4 /* SYS_SharedMemory.mm */; };
 		413D68F71DE06D3E0034BF7E /* C64Palette.mm in Sources */ = {isa = PBXBuildFile; fileRef = 413D68F61DE06D3E0034BF7E /* C64Palette.mm */; };
 		4140E6341A9C91F1002FC265 /* CGuiViewDummy.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4140E6331A9C91F1002FC265 /* CGuiViewDummy.mm */; };
+		414187CA1FDC506400D94506 /* CViewDataWatch.mm in Sources */ = {isa = PBXBuildFile; fileRef = 414187C81FDC506400D94506 /* CViewDataWatch.mm */; };
 		41428A9619F966F300D2F7C9 /* stb_image.c in Sources */ = {isa = PBXBuildFile; fileRef = 41428A9419F966F300D2F7C9 /* stb_image.c */; };
 		414535AB1CB2D1A300020916 /* blockdev.c in Sources */ = {isa = PBXBuildFile; fileRef = 414531801CB2D1A100020916 /* blockdev.c */; };
 		414535AC1CB2D1A300020916 /* catweaselmkiii.c in Sources */ = {isa = PBXBuildFile; fileRef = 414531811CB2D1A100020916 /* catweaselmkiii.c */; };
@@ -545,6 +546,7 @@
 		41474DCF1D08607300F1B83F /* C64KeyMap.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41474DCE1D08607300F1B83F /* C64KeyMap.mm */; };
 		41474DD21D08B15900F1B83F /* CViewC64KeyMap.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41474DD01D08B15900F1B83F /* CViewC64KeyMap.mm */; };
 		414A324D1EB9D41500EA5142 /* FUN_IntervalTree.mm in Sources */ = {isa = PBXBuildFile; fileRef = 414A324C1EB9D41500EA5142 /* FUN_IntervalTree.mm */; };
+		414C3E391FCF11420000CB3F /* CColorsTheme.mm in Sources */ = {isa = PBXBuildFile; fileRef = 414C3E371FCF11420000CB3F /* CColorsTheme.mm */; };
 		415206621C985A3000EBA9E5 /* C64FileDataAdapter.mm in Sources */ = {isa = PBXBuildFile; fileRef = 415206611C985A3000EBA9E5 /* C64FileDataAdapter.mm */; };
 		4152B6A71EDF1782003BC232 /* CVicEditorLayerC64Screen.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152B6A61EDF1782003BC232 /* CVicEditorLayerC64Screen.mm */; };
 		4152B6AA1EDF42D2003BC232 /* C64Sprite.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152B6A91EDF42D2003BC232 /* C64Sprite.mm */; };
@@ -569,6 +571,8 @@
 		4152D71C1C970F7900EBA9E5 /* CViewSnapshots.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D7121C970F7900EBA9E5 /* CViewSnapshots.mm */; };
 		4152D71E1C970F7900EBA9E5 /* CViewBreakpoints.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D7141C970F7900EBA9E5 /* CViewBreakpoints.mm */; };
 		4152D7221C970FA900EBA9E5 /* CViewC64.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D7201C970FA900EBA9E5 /* CViewC64.mm */; };
+		41579F4C1FD70C4300234FBB /* CViewColodore.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41579F4B1FD70C4300234FBB /* CViewColodore.mm */; };
+		41579F4F1FD715CF00234FBB /* C64ColodoreScreen.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41579F4E1FD715CF00234FBB /* C64ColodoreScreen.mm */; };
 		415838571DC9E89100A56E0E /* C64AsmSource.mm in Sources */ = {isa = PBXBuildFile; fileRef = 415838551DC9E89100A56E0E /* C64AsmSource.mm */; };
 		4159DE0117A7E5390016187E /* SYS_Memory.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4159DE0017A7E5390016187E /* SYS_Memory.mm */; };
 		415B4B2719848A0700B13FFF /* CSlrImageContainer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 415B4B2519848A0700B13FFF /* CSlrImageContainer.mm */; };
@@ -589,6 +593,8 @@
 		4163FA9A1EC1FD23008BBBFD /* C64VicDisplayCanvasBlank.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4163FA941EC1FD23008BBBFD /* C64VicDisplayCanvasBlank.mm */; };
 		41646C0E1C8DE93E006BBE25 /* SYS_CommandLine.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41646C0C1C8DE93E006BBE25 /* SYS_CommandLine.mm */; };
 		416AF7801CC8D68700E56DDC /* CSlrTextParser.mm in Sources */ = {isa = PBXBuildFile; fileRef = 416AF77F1CC8D68700E56DDC /* CSlrTextParser.mm */; };
+		41706DBA1F9A71EA00B1B2BA /* CViewJukeboxPlaylist.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41706DB91F9A71EA00B1B2BA /* CViewJukeboxPlaylist.mm */; };
+		41706DBD1F9A726F00B1B2BA /* CJukeboxPlaylist.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41706DBB1F9A726F00B1B2BA /* CJukeboxPlaylist.mm */; };
 		4177D5AA1ED6EB250053D9EE /* CVicEditorUndoData.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4177D5A21ED6EB250053D9EE /* CVicEditorUndoData.mm */; };
 		4177D5AB1ED6EB250053D9EE /* CViewVicEditor.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4177D5A41ED6EB250053D9EE /* CViewVicEditor.mm */; };
 		4177D5AC1ED6EB250053D9EE /* CViewC64Charset.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4177D5A51ED6EB250053D9EE /* CViewC64Charset.mm */; };
@@ -697,6 +703,7 @@
 		41985F9B1615E2B400FA0CD6 /* AudioUnit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 41985F991615E2B400FA0CD6 /* AudioUnit.framework */; };
 		41A286AC1F08ECC500FE0AF7 /* TODO.txt in Resources */ = {isa = PBXBuildFile; fileRef = 41A286AB1F08ECC500FE0AF7 /* TODO.txt */; };
 		41A9AC921CBE3FDE004592CF /* archdep.c in Sources */ = {isa = PBXBuildFile; fileRef = 41A9AC901CBE3FDE004592CF /* archdep.c */; };
+		41B3CC0E1FE65EAA00216BA8 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 41B3CC0D1FE65EAA00216BA8 /* Carbon.framework */; };
 		41B53EA51EE2EFCA0078F9BB /* CViewC64Sprite.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41B53EA31EE2EFCA0078F9BB /* CViewC64Sprite.mm */; };
 		41B53EAB1EE33A330078F9BB /* CViewVicEditorLayers.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41B53EA91EE33A330078F9BB /* CViewVicEditorLayers.mm */; };
 		41B5C1181E9E9E4800E9C644 /* c64cpusc.c in Sources */ = {isa = PBXBuildFile; fileRef = 41B5C1171E9E9E4800E9C644 /* c64cpusc.c */; };
@@ -1354,6 +1361,8 @@
 		413D68F61DE06D3E0034BF7E /* C64Palette.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64Palette.mm; path = ../Games/c64/Tools/C64Palette.mm; sourceTree = "<group>"; };
 		4140E6321A9C91F1002FC265 /* CGuiViewDummy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CGuiViewDummy.h; sourceTree = "<group>"; };
 		4140E6331A9C91F1002FC265 /* CGuiViewDummy.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CGuiViewDummy.mm; sourceTree = "<group>"; };
+		414187C81FDC506400D94506 /* CViewDataWatch.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewDataWatch.mm; path = ../Games/c64/Views/CViewDataWatch.mm; sourceTree = "<group>"; };
+		414187C91FDC506400D94506 /* CViewDataWatch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewDataWatch.h; path = ../Games/c64/Views/CViewDataWatch.h; sourceTree = "<group>"; };
 		41428A9419F966F300D2F7C9 /* stb_image.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stb_image.c; sourceTree = "<group>"; };
 		41428A9519F966F300D2F7C9 /* stb_image.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stb_image.h; sourceTree = "<group>"; };
 		4145317F1CB2D1A100020916 /* archdep_unix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = archdep_unix.h; sourceTree = "<group>"; };
@@ -2088,6 +2097,8 @@
 		41474DD11D08B15900F1B83F /* CViewC64KeyMap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewC64KeyMap.h; path = ../Games/c64/Screens/CViewC64KeyMap.h; sourceTree = "<group>"; };
 		414A324B1EB9D3EA00EA5142 /* FUN_IntervalTree.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FUN_IntervalTree.h; sourceTree = "<group>"; };
 		414A324C1EB9D41500EA5142 /* FUN_IntervalTree.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FUN_IntervalTree.mm; sourceTree = "<group>"; };
+		414C3E371FCF11420000CB3F /* CColorsTheme.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CColorsTheme.mm; path = ../Games/c64/Layout/CColorsTheme.mm; sourceTree = "<group>"; };
+		414C3E381FCF11420000CB3F /* CColorsTheme.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CColorsTheme.h; path = ../Games/c64/Layout/CColorsTheme.h; sourceTree = "<group>"; };
 		415206601C985A3000EBA9E5 /* C64FileDataAdapter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64FileDataAdapter.h; path = ../Games/c64/Tools/C64FileDataAdapter.h; sourceTree = "<group>"; };
 		415206611C985A3000EBA9E5 /* C64FileDataAdapter.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64FileDataAdapter.mm; path = ../Games/c64/Tools/C64FileDataAdapter.mm; sourceTree = "<group>"; };
 		4152B6A51EDF1782003BC232 /* CVicEditorLayerC64Screen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CVicEditorLayerC64Screen.h; path = ../Games/c64/Screens/VicEditor/CVicEditorLayerC64Screen.h; sourceTree = "<group>"; };
@@ -2137,6 +2148,10 @@
 		4152D71A1C970F7900EBA9E5 /* CViewSnapshots.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewSnapshots.h; path = ../Games/c64/Screens/CViewSnapshots.h; sourceTree = "<group>"; };
 		4152D7201C970FA900EBA9E5 /* CViewC64.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewC64.mm; path = ../Games/c64/Screens/CViewC64.mm; sourceTree = "<group>"; };
 		4152D7211C970FA900EBA9E5 /* CViewC64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewC64.h; path = ../Games/c64/Screens/CViewC64.h; sourceTree = "<group>"; };
+		41579F4A1FD70C4300234FBB /* CViewColodore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewColodore.h; path = ../Games/c64/Screens/CViewColodore.h; sourceTree = "<group>"; };
+		41579F4B1FD70C4300234FBB /* CViewColodore.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewColodore.mm; path = ../Games/c64/Screens/CViewColodore.mm; sourceTree = "<group>"; };
+		41579F4D1FD715CF00234FBB /* C64ColodoreScreen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64ColodoreScreen.h; path = ../Games/c64/Tools/C64ColodoreScreen.h; sourceTree = "<group>"; };
+		41579F4E1FD715CF00234FBB /* C64ColodoreScreen.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64ColodoreScreen.mm; path = ../Games/c64/Tools/C64ColodoreScreen.mm; sourceTree = "<group>"; };
 		415838551DC9E89100A56E0E /* C64AsmSource.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64AsmSource.mm; path = ../Games/c64/Tools/C64AsmSource.mm; sourceTree = "<group>"; };
 		415838561DC9E89100A56E0E /* C64AsmSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64AsmSource.h; path = ../Games/c64/Tools/C64AsmSource.h; sourceTree = "<group>"; };
 		4159DDFF17A7E5390016187E /* SYS_Memory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SYS_Memory.h; sourceTree = "<group>"; };
@@ -2174,6 +2189,10 @@
 		416AF77D1CC7D52100E56DDC /* C64Opcodes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64Opcodes.h; path = ../Games/c64/Tools/C64Opcodes.h; sourceTree = "<group>"; };
 		416AF77E1CC8D68700E56DDC /* CSlrTextParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CSlrTextParser.h; sourceTree = "<group>"; };
 		416AF77F1CC8D68700E56DDC /* CSlrTextParser.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CSlrTextParser.mm; sourceTree = "<group>"; };
+		41706DB81F9A71EA00B1B2BA /* CViewJukeboxPlaylist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewJukeboxPlaylist.h; path = ../Games/c64/Views/JukeboxPlaylist/CViewJukeboxPlaylist.h; sourceTree = "<group>"; };
+		41706DB91F9A71EA00B1B2BA /* CViewJukeboxPlaylist.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewJukeboxPlaylist.mm; path = ../Games/c64/Views/JukeboxPlaylist/CViewJukeboxPlaylist.mm; sourceTree = "<group>"; };
+		41706DBB1F9A726F00B1B2BA /* CJukeboxPlaylist.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CJukeboxPlaylist.mm; path = ../Games/c64/Views/JukeboxPlaylist/CJukeboxPlaylist.mm; sourceTree = "<group>"; };
+		41706DBC1F9A726F00B1B2BA /* CJukeboxPlaylist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CJukeboxPlaylist.h; path = ../Games/c64/Views/JukeboxPlaylist/CJukeboxPlaylist.h; sourceTree = "<group>"; };
 		4171C0CF1EFD124000001770 /* C64D_Version.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64D_Version.h; path = ../Games/c64/C64D_Version.h; sourceTree = "<group>"; };
 		4177D5A11ED6D8260053D9EE /* CGlobalOSWindowChangedCallback.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CGlobalOSWindowChangedCallback.h; sourceTree = "<group>"; };
 		4177D5A21ED6EB250053D9EE /* CVicEditorUndoData.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CVicEditorUndoData.mm; path = ../Games/c64/Screens/VicEditor/CVicEditorUndoData.mm; sourceTree = "<group>"; };
@@ -2347,6 +2366,7 @@
 		41A9AC8D1CBBFCF6004592CF /* C64DebugTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64DebugTypes.h; path = ../Games/c64/DebugInterface/C64DebugTypes.h; sourceTree = "<group>"; };
 		41A9AC901CBE3FDE004592CF /* archdep.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = archdep.c; sourceTree = "<group>"; };
 		41A9AC911CBE3FDE004592CF /* archdep.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = archdep.h; sourceTree = "<group>"; };
+		41B3CC0D1FE65EAA00216BA8 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
 		41B53EA31EE2EFCA0078F9BB /* CViewC64Sprite.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewC64Sprite.mm; path = ../Games/c64/Screens/VicEditor/CViewC64Sprite.mm; sourceTree = "<group>"; };
 		41B53EA41EE2EFCA0078F9BB /* CViewC64Sprite.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewC64Sprite.h; path = ../Games/c64/Screens/VicEditor/CViewC64Sprite.h; sourceTree = "<group>"; };
 		41B53EA91EE33A330078F9BB /* CViewVicEditorLayers.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewVicEditorLayers.mm; path = ../Games/c64/Screens/VicEditor/CViewVicEditorLayers.mm; sourceTree = "<group>"; };
@@ -2786,6 +2806,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				41B3CC0E1FE65EAA00216BA8 /* Carbon.framework in Frameworks */,
 				410910C31B25AFCF00F2EDC5 /* CoreMIDI.framework in Frameworks */,
 				4195B30F173BBD540034680E /* CoreAudio.framework in Frameworks */,
 				41985F9A1615E2B400FA0CD6 /* AudioToolbox.framework in Frameworks */,
@@ -2862,6 +2883,7 @@
 		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				41B3CC0D1FE65EAA00216BA8 /* Carbon.framework */,
 				410910C21B25AFCF00F2EDC5 /* CoreMIDI.framework */,
 				4195B30E173BBD540034680E /* CoreAudio.framework */,
 				41985F981615E2B400FA0CD6 /* AudioToolbox.framework */,
@@ -2883,6 +2905,7 @@
 				4152D7211C970FA900EBA9E5 /* CViewC64.h */,
 				4171C0CF1EFD124000001770 /* C64D_Version.h */,
 				41646C051C8DAAF2006BBE25 /* Tools */,
+				414C3E361FCF112C0000CB3F /* Layout */,
 				4114BB1D1C89CB8A00E5F0A1 /* Views */,
 				4114BB1B1C84B88200E5F0A1 /* Screens */,
 				4152D6BD1C96C90B00EBA9E5 /* DebugInterface */,
@@ -2997,8 +3020,8 @@
 				390426A2186892A700B570B1 /* CCutImage.h */,
 				390426A3186892A700B570B1 /* CGlobalKeyboardCallback.h */,
 				390426A4186892A700B570B1 /* CGlobalLogicCallback.h */,
-				390426A5186892A700B570B1 /* CImageData.h */,
 				390426A6186892A700B570B1 /* CImageData.mm */,
+				390426A5186892A700B570B1 /* CImageData.h */,
 				390426A7186892A700B570B1 /* ConstantsAndMacros.h */,
 				390426A8186892A700B570B1 /* CSlrAnimation.h */,
 				390426A9186892A700B570B1 /* CSlrAnimation.mm */,
@@ -3374,6 +3397,8 @@
 		4114BB1B1C84B88200E5F0A1 /* Screens */ = {
 			isa = PBXGroup;
 			children = (
+				41579F4B1FD70C4300234FBB /* CViewColodore.mm */,
+				41579F4A1FD70C4300234FBB /* CViewColodore.h */,
 				41EB74F01E8F8EEB00492B27 /* CDiskImageD64.mm */,
 				41EB74F11E8F8EEB00492B27 /* CDiskImageD64.h */,
 				41EB74ED1E8F8A4400492B27 /* CViewFileD64.mm */,
@@ -3399,10 +3424,11 @@
 		4114BB1D1C89CB8A00E5F0A1 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				41706DB71F9A71BB00B1B2BA /* JukeboxPlaylist */,
 				41F8106E1EC1A97D00E2F9AD /* VicDisplay */,
 				41C2EFE91E7060C200E8779A /* VicEditor */,
-				410250A61CF5A89F00F6681D /* CViewEmulationState.h */,
 				410250A71CF5A89F00F6681D /* CViewEmulationState.mm */,
+				410250A61CF5A89F00F6681D /* CViewEmulationState.h */,
 				4160B20D1CEB1FC400EAD217 /* CViewMonitorConsole.mm */,
 				4160B20E1CEB1FC400EAD217 /* CViewMonitorConsole.h */,
 				4152D6F91C970F3E00EBA9E5 /* CViewC64StateCIA.mm */,
@@ -3425,6 +3451,8 @@
 				4152D7021C970F3E00EBA9E5 /* CViewC64Screen.h */,
 				4152D6FF1C970F3E00EBA9E5 /* CViewMemoryMap.mm */,
 				4152D7001C970F3E00EBA9E5 /* CViewMemoryMap.h */,
+				414187C81FDC506400D94506 /* CViewDataWatch.mm */,
+				414187C91FDC506400D94506 /* CViewDataWatch.h */,
 				4152D7031C970F3E00EBA9E5 /* CViewDisassemble.mm */,
 				4152D7041C970F3E00EBA9E5 /* CViewDisassemble.h */,
 			);
@@ -4947,6 +4975,15 @@
 			path = ViceInterface;
 			sourceTree = "<group>";
 		};
+		414C3E361FCF112C0000CB3F /* Layout */ = {
+			isa = PBXGroup;
+			children = (
+				414C3E371FCF11420000CB3F /* CColorsTheme.mm */,
+				414C3E381FCF11420000CB3F /* CColorsTheme.h */,
+			);
+			name = Layout;
+			sourceTree = "<group>";
+		};
 		4152D6BD1C96C90B00EBA9E5 /* DebugInterface */ = {
 			isa = PBXGroup;
 			children = (
@@ -4970,18 +5007,20 @@
 		41646C051C8DAAF2006BBE25 /* Tools */ = {
 			isa = PBXGroup;
 			children = (
-				41E907B01EB72C430036CE0C /* C64SIDFrequencies.h */,
+				41579F4E1FD715CF00234FBB /* C64ColodoreScreen.mm */,
+				41579F4D1FD715CF00234FBB /* C64ColodoreScreen.h */,
 				41E907B11EB72C430036CE0C /* C64SIDFrequencies.mm */,
+				41E907B01EB72C430036CE0C /* C64SIDFrequencies.h */,
 				41F99C3F1E641BAE00B46DA7 /* CGuiLockableList.mm */,
 				41F99C401E641BAE00B46DA7 /* CGuiLockableList.h */,
-				413D68F51DE06D3E0034BF7E /* C64Palette.h */,
 				413D68F61DE06D3E0034BF7E /* C64Palette.mm */,
+				413D68F51DE06D3E0034BF7E /* C64Palette.h */,
 				415838551DC9E89100A56E0E /* C64AsmSource.mm */,
 				415838561DC9E89100A56E0E /* C64AsmSource.h */,
 				4128D0AF1DC0F4D6007A5CFF /* C64SharedMemory.mm */,
 				4128D0B01DC0F4D6007A5CFF /* C64SharedMemory.h */,
-				41474DCD1D08607300F1B83F /* C64KeyMap.h */,
 				41474DCE1D08607300F1B83F /* C64KeyMap.mm */,
+				41474DCD1D08607300F1B83F /* C64KeyMap.h */,
 				41EC74FE1CE1E51F00D0E99F /* C64SettingsStorage.mm */,
 				41EC74FF1CE1E51F00D0E99F /* C64SettingsStorage.h */,
 				416AF77D1CC7D52100E56DDC /* C64Opcodes.h */,
@@ -4997,6 +5036,17 @@
 				4152D6F41C970F0800EBA9E5 /* C64Symbols.h */,
 			);
 			name = Tools;
+			sourceTree = "<group>";
+		};
+		41706DB71F9A71BB00B1B2BA /* JukeboxPlaylist */ = {
+			isa = PBXGroup;
+			children = (
+				41706DBB1F9A726F00B1B2BA /* CJukeboxPlaylist.mm */,
+				41706DBC1F9A726F00B1B2BA /* CJukeboxPlaylist.h */,
+				41706DB91F9A71EA00B1B2BA /* CViewJukeboxPlaylist.mm */,
+				41706DB81F9A71EA00B1B2BA /* CViewJukeboxPlaylist.h */,
+			);
+			name = JukeboxPlaylist;
 			sourceTree = "<group>";
 		};
 		4180557E18DC676300F6EE8F /* ImageProcessing */ = {
@@ -5641,6 +5691,7 @@
 				4145376D1CB2D1A300020916 /* vdrive-internal.c in Sources */,
 				414537251CB2D1A300020916 /* resid-filter.cc in Sources */,
 				419737F8173B9A37007654BD /* pa_front.c in Sources */,
+				41706DBA1F9A71EA00B1B2BA /* CViewJukeboxPlaylist.mm in Sources */,
 				39042A6A186892A800B570B1 /* pngwutil.c in Sources */,
 				41F2A9F81E9D0E6B00ADE8DF /* kcs.c in Sources */,
 				414535E11CB2D1A300020916 /* uihotkey.c in Sources */,
@@ -5672,6 +5723,7 @@
 				414537731CB2D1A300020916 /* vicii-color.c in Sources */,
 				41F2AAD91E9D0EDA00ADE8DF /* drive.c in Sources */,
 				41F2AA7D1E9D0E7900ADE8DF /* c64rsuser.c in Sources */,
+				414C3E391FCF11420000CB3F /* CColorsTheme.mm in Sources */,
 				414536C71CB2D1A300020916 /* tapecontents.c in Sources */,
 				4197380D173B9A93007654BD /* pa_mac_core_blocking.c in Sources */,
 				41B5C1401E9E9E5900E9C644 /* gmod2.c in Sources */,
@@ -5804,6 +5856,7 @@
 				41CF59D51F975C9E002171B1 /* CViewDriveStateCPU.mm in Sources */,
 				4177D5B31ED6EE240053D9EE /* CVicEditorLayer.mm in Sources */,
 				414539D91CB3DC1B00020916 /* C64DebugInterfaceVice.mm in Sources */,
+				41579F4C1FD70C4300234FBB /* CViewColodore.mm in Sources */,
 				414537031CB2D1A300020916 /* platform_windows_runtime_os.c in Sources */,
 				41F2AA7C1E9D0E7900ADE8DF /* c64romset.c in Sources */,
 				414537C81CB2D21400020916 /* fsimage-dxx.c in Sources */,
@@ -5991,6 +6044,7 @@
 				4191A8E51E9EA1F5004AC6E0 /* userport_rtc_ds1307.c in Sources */,
 				41F2A9E91E9D0E6B00ADE8DF /* easyflash.c in Sources */,
 				39042A28186892A800B570B1 /* CGuiElement.mm in Sources */,
+				414187CA1FDC506400D94506 /* CViewDataWatch.mm in Sources */,
 				414539CA1CB2E94F00020916 /* socket.c in Sources */,
 				41F2A9DC1E9D0E6B00ADE8DF /* actionreplay4.c in Sources */,
 				4145378D1CB2D1A300020916 /* video-canvas.c in Sources */,
@@ -6189,6 +6243,7 @@
 				414538AE1CB2DC3300020916 /* sid-snapshot.c in Sources */,
 				4145371D1CB2D1A300020916 /* raster-sprite-status.c in Sources */,
 				414535AE1CB2D1A300020916 /* coproc.c in Sources */,
+				41706DBD1F9A726F00B1B2BA /* CJukeboxPlaylist.mm in Sources */,
 				41F2AA041E9D0E6B00ADE8DF /* ramcart.c in Sources */,
 				41F2AA961E9D0E9D00ADE8DF /* supercard.c in Sources */,
 				4163FA8B1EC1ED04008BBBFD /* C64VicDisplayCanvasMultiBitmap.mm in Sources */,
@@ -6262,6 +6317,7 @@
 				41925DB11B1DD82F00B33B7F /* transupp.c in Sources */,
 				39042978186892A800B570B1 /* CMusicChannel.mm in Sources */,
 				414539C51CB2E94F00020916 /* rawnet.c in Sources */,
+				41579F4F1FD715CF00234FBB /* C64ColodoreScreen.mm in Sources */,
 				41474DCF1D08607300F1B83F /* C64KeyMap.mm in Sources */,
 				414538331CB2D96600020916 /* residfp-convolve-sse.cc in Sources */,
 				414539C21CB2E94F00020916 /* palette.c in Sources */,

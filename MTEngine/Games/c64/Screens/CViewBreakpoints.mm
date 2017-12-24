@@ -1,4 +1,5 @@
 #include "CViewC64.h"
+#include "CColorsTheme.h"
 #include "CViewBreakpoints.h"
 #include "CViewDisassemble.h"
 #include "VID_GLViewController.h"
@@ -56,11 +57,10 @@ CViewBreakpoints::CViewBreakpoints(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 	
 	strHeader = new CSlrString("Breakpoints");
 
-	tr = 0.64;
-	tg = 0.59;
-	tb = 1.0;
+	tr = viewC64->colorsTheme->colorTextR;
+	tg = viewC64->colorsTheme->colorTextG;
+	tb = viewC64->colorsTheme->colorTextB;
 	
-
 	float px = 22.0f;
 	float py = 32.0f;
 	
@@ -79,11 +79,6 @@ CViewBreakpoints::CViewBreakpoints(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 	lbl1541Drive->image = NULL;
 	this->AddGuiElement(lbl1541Drive);
 
-	
-	tr = 0.64; //163/255;
-	tg = 0.59; //151/255;
-	tb = 1.0; //255/255;
-
 	float startX = 30;
 	float startY = 50;
 	
@@ -91,10 +86,6 @@ CViewBreakpoints::CViewBreakpoints(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 	py = startY;
 	float buttonSizeX = 73.0f;
 	float buttonSizeY = fontHeight + 4;
-	
-	float br = 0.15;
-	float bg = 0.35;
-	float bb = 0.69;
 	
 //	px += 120;
 	
@@ -314,12 +305,32 @@ CViewBreakpoints::CViewBreakpoints(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 	editingBreakpoint = NULL;
 	
 	UpdateCursor();
+	
+	UpdateTheme();
+	
+	viewC64->colorsTheme->AddThemeChangeListener(this);
 }
 
 CViewBreakpoints::~CViewBreakpoints()
 {
 }
 
+void CViewBreakpoints::UpdateTheme()
+{
+	tr = viewC64->colorsTheme->colorTextR;
+	tg = viewC64->colorsTheme->colorTextG;
+	tb = viewC64->colorsTheme->colorTextB;
+	
+	lblCommodore64->textColorR = tr;
+	lblCommodore64->textColorG = tg;
+	lblCommodore64->textColorB = tb;
+
+	lbl1541Drive->textColorR = tr;
+	lbl1541Drive->textColorG = tg;
+	lbl1541Drive->textColorB = tb;
+	
+	CGuiView::UpdateTheme();
+}
 
 bool CViewBreakpoints::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
@@ -1248,15 +1259,14 @@ void CViewBreakpoints::DoLogic()
 // this is really shity code... refactor this immediately!
 void CViewBreakpoints::Render()
 {
-	BlitFilledRectangle(0, 0, -1, sizeX, sizeY, 0.5, 0.5, 1.0, 1.0);
+	
+	float fr_r = viewC64->colorsTheme->colorBackgroundFrameR;
+	float fr_g = viewC64->colorsTheme->colorBackgroundFrameG;
+	float fr_b = viewC64->colorsTheme->colorBackgroundFrameB;
+	BlitFilledRectangle(0, 0, -1, sizeX, sizeY, fr_r, fr_g, fr_b, 1.0);
+
 	
 	float sb = 20;
-	
-	
-	float lr = 0.64;
-	float lg = 0.65;
-	float lb = 0.65;
-	float lSize = 3;
 	
 	float scrx = sb;
 	float scry = sb;
@@ -1265,21 +1275,37 @@ void CViewBreakpoints::Render()
 	float cx = scrsx/2.0f + sb;
 
 	// light blue interior
-	BlitFilledRectangle(scrx, scry, -1, scrsx, scrsy, 0, 0, 1.0, 1.0);
+	float bg_r = viewC64->colorsTheme->colorBackgroundR;
+	float bg_g = viewC64->colorsTheme->colorBackgroundG;
+	float bg_b = viewC64->colorsTheme->colorBackgroundB;
+	BlitFilledRectangle(scrx, scry, -1, scrsx, scrsy, bg_r, bg_g, bg_b, 1.0);
 	
 	
 	float py = scry + 5;// + gap;
 	
 	// "Breakpoints" header
-	font->BlitTextColor(strHeader, cx, py, -1, 3.0f, tr, tg, tb, 1, FONT_ALIGN_CENTER);
+	float brh_r = viewC64->colorsTheme->colorTextHeaderR;
+	float brh_g = viewC64->colorsTheme->colorTextHeaderG;
+	float brh_b = viewC64->colorsTheme->colorTextHeaderB;
+	font->BlitTextColor(strHeader, cx, py, -1, 3.0f, brh_r, brh_g, brh_b, 1, FONT_ALIGN_CENTER);
+
 	py += fontHeight;
 	py += 6.0f;
 	
+	float lr = viewC64->colorsTheme->colorHeaderLineR;
+	float lg = viewC64->colorsTheme->colorHeaderLineG;
+	float lb = viewC64->colorsTheme->colorHeaderLineB;
+	float lSize = 3;
+
 	// horizontal line
 	BlitFilledRectangle(scrx, py, -1, scrsx, lSize, lr, lg, lb, 1);
 
 	py += lSize;
 	
+	lr = viewC64->colorsTheme->colorVerticalLineR;
+	lg = viewC64->colorsTheme->colorVerticalLineG;
+	lb = viewC64->colorsTheme->colorVerticalLineB;
+
 	// vertical line
 	BlitFilledRectangle(cx-1.5f, py, -1, lSize, scrsy-fontHeight-lSize-11.0f, lr, lg, lb, 1.0);
 

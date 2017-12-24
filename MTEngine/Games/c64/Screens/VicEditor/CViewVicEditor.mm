@@ -1721,6 +1721,8 @@ bool CViewVicEditor::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContr
 					
 					viewC64->debugInterface->SetVicRegister(0x21, color);
 					viewPalette->colorD021 = color;
+					viewC64->debugInterface->SetVicRegister(0x20, color);
+					viewPalette->colorD020 = color;
 				}
 				
 				return true;
@@ -1741,6 +1743,8 @@ bool CViewVicEditor::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContr
 			
 			viewC64->debugInterface->SetVicRegister(0x21, color);
 			viewPalette->colorD021 = color;
+			viewC64->debugInterface->SetVicRegister(0x20, color);
+			viewPalette->colorD020 = color;
 			return true;
 
 		}
@@ -2115,22 +2119,28 @@ void CViewVicEditor::SystemDialogFileSaveSelected(CSlrString *path)
 	else if (exportFileDialogMode == VICEDITOR_EXPORT_HYPER)
 	{
 		ExportHyper(path);
+		ExportSpritesData(path);
 	}
 	else if (exportFileDialogMode == VICEDITOR_EXPORT_KOALA)
 	{
 		ExportKoala(path);
+		ExportSpritesData(path);
 	}
 	else if (exportFileDialogMode == VICEDITOR_EXPORT_ART_STUDIO)
 	{
 		ExportArtStudio(path);
+		ExportSpritesData(path);
 	}
 	else if (exportFileDialogMode == VICEDITOR_EXPORT_RAW_TEXT)
 	{
 		ExportRawText(path);
+		ExportSpritesData(path);
+		ExportCharset(path);
 	}
 	else if (exportFileDialogMode == VICEDITOR_EXPORT_HYPER)
 	{
 		ExportHyper(path);
+		ExportSpritesData(path);
 	}
 	else if (exportFileDialogMode == VICEDITOR_EXPORT_PNG)
 	{
@@ -2753,6 +2763,55 @@ bool CViewVicEditor::ExportRawText(CSlrString *path)
 
 }
 
+bool CViewVicEditor::ExportCharset(CSlrString *path)
+{
+	LOGM("CViewVicEditor::ExportCharset");
+	
+	guiMain->LockMutex();
+	
+	char *cPath;
+	
+	//
+	CSlrString *pathNoExt = path->GetFilePathWithoutExtension();
+	pathNoExt->DebugPrint("pathNoExt=");
+	
+	CSlrString *pathCharset = new CSlrString(pathNoExt);
+	char buf[64];
+	sprintf(buf, "-charset.data");
+	
+	pathCharset->Concatenate(buf);
+	cPath = pathCharset->GetStdASCII();
+	LOGD(" ..... cPath='%s'", cPath);
+	
+	
+	CSlrFileFromOS *file = new CSlrFileFromOS(cPath, SLR_FILE_MODE_WRITE);
+	delete [] cPath;
+	delete pathCharset;
+	delete pathNoExt;
+
+	u8 *screen_ptr;
+	u8 *color_ram_ptr;
+	u8 *chargen_ptr;
+	u8 *bitmap_low_ptr;
+	u8 *bitmap_high_ptr;
+	u8 d020colors[0x0F];
+	
+	viewVicDisplayMain->GetViciiPointers(&(viewC64->viciiStateToShow),
+										 &screen_ptr, &color_ram_ptr, &chargen_ptr, &bitmap_low_ptr, &bitmap_high_ptr, d020colors);
+	
+	//
+	file->Write(chargen_ptr, 0x0800);
+	
+	file->Close();
+	
+	guiMain->UnlockMutex();
+	
+	LOGM("CViewVicEditor::ExportCharset: file saved");
+	
+	return true;
+	
+}
+
 bool CViewVicEditor::ExportHyper(CSlrString *path)
 {
 	guiMain->LockMutex();
@@ -3085,7 +3144,24 @@ bool CViewVicEditor::ExportPNG(CSlrString *path)
 			delete [] cPath;
 			delete pathSprite;
 			delete imageDataSprite;
+
+			// export raw data
+			pathSprite = new CSlrString(pathNoExt);
+			sprintf(buf, "-sprite-%03d-%03d-%d.data", sprx, spry, sprite->spriteId);
 			
+			pathSprite->Concatenate(buf);
+			cPath = pathSprite->GetStdASCII();
+			LOGD(" ..... cPath='%s'", cPath);
+			
+			FILE *fp = fopen(cPath, "wb");
+			if (fp)
+			{
+				fwrite(spriteData, 64, 1, fp);
+				fclose(fp);
+			}
+			delete [] cPath;
+			delete pathSprite;
+
 		}
 		
 	}
@@ -3104,6 +3180,90 @@ bool CViewVicEditor::ExportPNG(CSlrString *path)
 }
 
 //
+bool CViewVicEditor::ExportSpritesData(CSlrString *path)
+{
+	LOGD("CViewVicEditor::ExportSpritesData");
+	
+	guiMain->LockMutex();
+	viewC64->debugInterface->LockRenderScreenMutex();
+	
+	// refresh texture of C64's screen
+	layerVirtualSprites->SimpleScanSpritesInThisFrame();
+	
+	char *cPath;
+	
+	//
+	CSlrString *pathNoExt = path->GetFilePathWithoutExtension();
+	pathNoExt->DebugPrint("pathNoExt=");
+	
+	// export sprites
+	for (std::list<C64Sprite *>::iterator it = this->layerVirtualSprites->sprites.begin();
+		 it != this->layerVirtualSprites->sprites.end(); it++)
+	{
+		C64Sprite *sprite = *it;
+		
+		int spc = (sprite->posX + 0x18)/8.0f;
+		int spy = sprite->posY + 0x32;
+		
+		vicii_cycle_state_t *viciiState = NULL;
+		
+		if (spy >= 0 && spy < 312
+			&& spc >= 0 && spc < 64)
+		{
+			viciiState = c64d_get_vicii_state_for_raster_cycle(spy+2, spc);
+		}
+		
+		if (viciiState != NULL)
+		{
+			int v_bank = viciiState->vbank_phi1;
+			int addr2 = v_bank + viciiState->sprite[sprite->spriteId].pointer * 64;
+			
+			int sprx = sprite->posX + 0x18;
+			int spry = sprite->posY + 0x32;
+			
+			if (sprx < 0)
+				sprx += 504;
+			
+			int addr = addr2;
+			
+			uint8 spriteData[63];
+			for (int i = 0; i < 63; i++)
+			{
+				u8 v = viewVicDisplayMain->debugInterface->GetByteFromRamC64(addr);
+				spriteData[i] = v;
+				addr++;
+			}
+			
+			CSlrString *pathSprite = new CSlrString(pathNoExt);
+			char buf[64];
+			sprintf(buf, "-sprite-%03d-%03d-%d.data", sprx, spry, sprite->spriteId);
+			
+			pathSprite->Concatenate(buf);
+			cPath = pathSprite->GetStdASCII();
+			LOGD(" ..... cPath='%s'", cPath);
+			
+			FILE *fp = fopen(cPath, "wb");
+			if (fp)
+			{
+				fwrite(spriteData, 64, 1, fp);
+				fclose(fp);
+			}
+			delete [] cPath;
+			delete pathSprite;
+		}
+		
+	}
+	
+	
+	
+	//
+	viewC64->debugInterface->UnlockRenderScreenMutex();
+	guiMain->UnlockMutex();
+	
+	LOGM("CViewVicEditor::ExportSpritesData: file saved");
+	
+	return true;
+}
 
 void CViewVicEditor::ResetSmallDisplayScale(double newRealScale)
 {

@@ -1,5 +1,6 @@
 #include "CViewC64.h"
 #include "CViewFileD64.h"
+#include "CColorsTheme.h"
 #include "VID_GLViewController.h"
 #include "CGuiMain.h"
 #include "CSlrString.h"
@@ -34,7 +35,7 @@ CViewFileD64::CViewFileD64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat siz
 	this->diskImage = NULL;
 	
 	/// menu
-	viewMenu = NULL; //new CGuiViewMenu(35, 76, -1, sizeX-70, sizeY-76, this);
+	viewMenu = new CGuiViewMenu(35, 56, -1, sizeX-70, sizeY-76, this);
 
 	
 //	kbsMainMenuScreen = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Main menu screen", MTKEY_F9, false, false, false);
@@ -149,34 +150,35 @@ void CViewFileD64::Render()
 {
 	//LOGD("CViewFileD64::Render");
 	
-	guiMain->fntConsole->BlitText("CViewFileD64", 0, 0, 0, 11, 1.0);
+//	guiMain->fntConsole->BlitText("CViewFileD64", 0, 0, 0, 11, 1.0);
 
-	BlitFilledRectangle(0, 0, -1, sizeX, sizeY, 0.5, 0.5, 1.0, 1.0);
+	BlitFilledRectangle(0, 0, -1, sizeX, sizeY,
+						viewC64->colorsTheme->colorBackgroundFrameR,
+						viewC64->colorsTheme->colorBackgroundFrameG,
+						viewC64->colorsTheme->colorBackgroundFrameB, 1.0);
 		
 	float sb = 20;
 	float gap = 10;
 	
-	float tr = 0.64; //163/255;
-	float tg = 0.59; //151/255;
-	float tb = 1.0; //255/255;
+	float tr = viewC64->colorsTheme->colorTextR;
+	float tg = viewC64->colorsTheme->colorTextG;
+	float tb = viewC64->colorsTheme->colorTextB;
 	
-	float lr = 0.64;
-	float lg = 0.65;
-	float lb = 0.65;
+	float lr = viewC64->colorsTheme->colorHeaderLineR;
+	float lg = viewC64->colorsTheme->colorHeaderLineG;
+	float lb = viewC64->colorsTheme->colorHeaderLineB;
 	float lSizeY = 3;
-	
-	float ar = lr;
-	float ag = lg;
-	float ab = lb;
 	
 	float scrx = sb;
 	float scry = sb;
 	float scrsx = sizeX - sb*2.0f;
 	float scrsy = sizeY - sb*2.0f;
 	float cx = scrsx/2.0f + sb;
-	float ax = scrx + scrsx - sb;
 	
-	BlitFilledRectangle(scrx, scry, -1, scrsx, scrsy, 0, 0, 1.0, 1.0);
+	BlitFilledRectangle(scrx, scry, -1, scrsx, scrsy,
+						viewC64->colorsTheme->colorBackgroundR,
+						viewC64->colorsTheme->colorBackgroundG,
+						viewC64->colorsTheme->colorBackgroundB, 1.0);
 	
 	float px = scrx + gap;
 	float py = scry + gap;
@@ -379,9 +381,9 @@ void CViewFileD64::RefreshDiskImageMenu()
 	
 	//
 	/// colors
-	tr = 0.64; //163/255;
-	tg = 0.59; //151/255;
-	tb = 1.0; //255/255;
+	tr = viewC64->colorsTheme->colorTextR;
+	tg = viewC64->colorsTheme->colorTextG;
+	tb = viewC64->colorsTheme->colorTextB;
 	
 
 	

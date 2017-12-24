@@ -80,6 +80,9 @@ struct sound_s
 {
     /* speed factor */
     int factor;
+	
+	/* chip number (c64d) */
+	int chipNo;
 
     /* resid sid implementation */
     reSID::SID *sid;
@@ -104,7 +107,7 @@ static SWORD *getbuf(int len)
     return buf;
 }
 
-static sound_t *resid_open(BYTE *sidstate)
+static sound_t *resid_open(BYTE *sidstate, int chipNo)
 {
     sound_t *psid;
     int i;
@@ -116,6 +119,8 @@ static sound_t *resid_open(BYTE *sidstate)
         psid->sid->write(i, sidstate[i]);
     }
 
+	psid->chipNo = chipNo;
+	
     return psid;
 }
 
@@ -155,6 +160,7 @@ static int resid_init(sound_t *psid, int speed, int cycles_per_sec, int factor)
     gain = gain_percentage / 100.0;
 
     psid->factor = factor;
+	psid->sid->set_chip_number(psid->chipNo);
 
     switch (model) {
       default:

@@ -56,6 +56,7 @@ public:
 	CImageData(char *fileName);
 	CImageData(CByteBuffer *byteBuffer);
 	CImageData(int width, int height, byte type);
+	CImageData(int width, int height, byte type, bool allocTemp, bool allocResult);
 	CImageData(int width, int height, byte type, void *data);
 	CImageData(CImageData *src);
 	~CImageData();
@@ -135,6 +136,10 @@ public:
 	void ConvertToShort();
 	void ConvertToRGBA();
 
+	uint8 *GetResultDataAsRGBA();
+	
+	void DrawImage(CImageData *drawImage, int x, int y, int width, int height, float alpha);
+	
 	int GetDataLength();
 	void Save(char *fileName);
 	void SaveScaled(char *fileName, short int min, short int max);

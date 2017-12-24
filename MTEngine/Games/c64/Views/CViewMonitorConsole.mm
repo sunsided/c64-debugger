@@ -16,6 +16,12 @@
 #define C64MONITOR_DEVICE_C64			1
 #define C64MONITOR_DEVICE_DISK1541_8	2
 
+enum monitorSaveFileType
+{
+	MONITOR_SAVE_FILE_MEMORY_DUMP,
+	MONITOR_SAVE_FILE_DISASSEMBLE
+};
+
 CViewMonitorConsole::CViewMonitorConsole(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, C64DebugInterface *debugInterface)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
 {
@@ -792,6 +798,8 @@ void CViewMonitorConsole::CommandMemorySaveDump()
 		
 		CSlrString *windowTitle = new CSlrString("Dump C64 memory");
 		
+		saveFileType = MONITOR_SAVE_FILE_MEMORY_DUMP;
+		
 		if (memoryDumpAsPRG == false)
 		{
 			viewC64->ShowDialogSaveFile(this, &memoryExtensions, defaultFileName, c64SettingsDefaultMemoryDumpFolder, windowTitle);
@@ -830,14 +838,22 @@ void CViewMonitorConsole::CommandMemorySaveDump()
 
 void CViewMonitorConsole::SystemDialogFileSaveSelected(CSlrString *filePath)
 {
-	if (DoMemoryDumpToFile(addrStart, addrEnd, memoryDumpAsPRG, filePath) == false)
+	if (saveFileType == MONITOR_SAVE_FILE_MEMORY_DUMP)
 	{
-		char *cPath = filePath->GetStdASCII();
-		this->viewConsole->PrintLine("Save memory dump failed to file %s", cPath);
-		delete [] cPath;
+		if (DoMemoryDumpToFile(addrStart, addrEnd, memoryDumpAsPRG, filePath) == false)
+		{
+			char *cPath = filePath->GetStdASCII();
+			this->viewConsole->PrintLine("Save memory dump failed to file %s", cPath);
+			delete [] cPath;
+		}
+		
+		delete filePath;
 	}
-	
-	delete filePath;
+	else if (saveFileType == MONITOR_SAVE_FILE_DISASSEMBLE)
+	{
+		
+	}
+
 }
 
 void CViewMonitorConsole::SystemDialogFileSaveCancelled()

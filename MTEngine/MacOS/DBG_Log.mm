@@ -87,7 +87,7 @@ void LOG_Init(void)
 	time ( &rawtime );
 	timeinfo = localtime ( &rawtime );
 
-    NSString *path = [NSString stringWithFormat:@"%@/MTEngine-%02d%02d%02d-%02d%02d.txt",
+    NSString *path = [NSString stringWithFormat:@"%@/C64Debugger-%02d%02d%02d-%02d%02d.txt",
                       [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0],
                       (timeinfo->tm_year-100), (timeinfo->tm_mon+1), timeinfo->tm_mday, timeinfo->tm_hour, timeinfo->tm_min];
 
@@ -101,7 +101,7 @@ void LOG_Init(void)
 	LOG_SetLevel(DBGLVL_DEBUG2, true);
 	LOG_SetLevel(DBGLVL_INPUT, true);
 	LOG_SetLevel(DBGLVL_RES, false);
-	LOG_SetLevel(DBGLVL_GUI, true);
+	LOG_SetLevel(DBGLVL_GUI, false);
 	LOG_SetLevel(DBGLVL_MEMORY, false);
 	LOG_SetLevel(DBGLVL_ANIMATION, true);
 	LOG_SetLevel(DBGLVL_LEVEL, true);

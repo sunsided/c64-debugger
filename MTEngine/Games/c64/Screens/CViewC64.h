@@ -42,6 +42,7 @@ class C64Symbols;
 class CViewC64Screen;
 class CViewMemoryMap;
 class CViewDataDump;
+class CViewDataWatch;
 class CViewBreakpoints;
 class CViewDisassemble;
 class CViewC64StateCPU;
@@ -62,7 +63,10 @@ class CViewFileD64;
 class CViewC64KeyMap;
 class CViewKeyboardShortcuts;
 class CViewSnapshots;
+class CViewColodore;
 class CViewAbout;
+
+class CColorsTheme;
 
 class C64DebugInterface;
 
@@ -246,6 +250,8 @@ public:
 	
 	C64DebugInterface *debugInterface;
 	
+	CColorsTheme *colorsTheme;
+	
 	CGuiButton *btnDone;
 	bool ButtonClicked(CGuiButton *button);
 	bool ButtonPressed(CGuiButton *button);
@@ -258,6 +264,7 @@ public:
 	CViewKeyboardShortcuts *viewKeyboardShortcuts;
 	CViewBreakpoints *viewC64Breakpoints;
 	CViewSnapshots *viewC64Snapshots;
+	CViewColodore *viewColodore;
 	CViewAbout *viewAbout;
 
 	int currentScreenLayoutId;
@@ -270,7 +277,9 @@ public:
 	CViewMemoryMap *viewDrive1541MemoryMap;
 	
 	CViewDataDump *viewC64MemoryDataDump;
+	CViewDataWatch *viewC64MemoryDataWatch;
 	CViewDataDump *viewDrive1541MemoryDataDump;
+	CViewDataWatch *viewDrive1541MemoryDataWatch;
 	
 	CViewDisassemble *viewC64Disassemble;
 	CViewDisassemble *viewDrive1541Disassemble;
@@ -307,6 +316,8 @@ public:
 	int rasterToShowY;
 	int rasterCharToShowX;
 	int rasterCharToShowY;
+	
+	void UpdateViciiColors();
 	
 	// JukeBox playlist
 	CViewJukeboxPlaylist *viewJukeboxPlaylist;
@@ -420,6 +431,13 @@ public:
 	void ToggleSoundMute();
 	void SetSoundMute(bool isMuted);
 	void UpdateSIDMute();
+	
+	//
+	volatile bool isVisibleWatch;
+	void SetWatchVisible(bool isVisibleWatch);
+	void UpdateWatchVisible();
+	
+	
 };
 
 extern CViewC64 *viewC64;

@@ -1,4 +1,5 @@
 #include "CViewC64.h"
+#include "CColorsTheme.h"
 #include "CViewSettingsMenu.h"
 #include "VID_GLViewController.h"
 #include "CGuiMain.h"
@@ -18,6 +19,7 @@
 #include "MTH_Random.h"
 #include "C64Palette.h"
 
+#include "CViewC64StateSID.h"
 #include "CViewMemoryMap.h"
 
 #include "CGuiMain.h"
@@ -45,9 +47,9 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 	csvExtensions.push_back(new CSlrString("csv"));
 
 	/// colors
-	tr = 0.64; //163/255;
-	tg = 0.59; //151/255;
-	tb = 1.0; //255/255;
+	tr = viewC64->colorsTheme->colorTextR;
+	tg = viewC64->colorsTheme->colorTextG;
+	tb = viewC64->colorsTheme->colorTextB;
 
 	float sb = 20;
 
@@ -119,10 +121,11 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 												 NULL, tr, tg, tb, viewMenu);
 	viewMenu->AddMenuItem(menuItemSubMenuUI);
 	
-	menuItemSubMenuMemory->DebugPrint();
+	menuItemSubMenuUI->DebugPrint();
 	
 	
-	menuItemBackSubMenu = new CViewC64MenuItem(fontHeight*2.0f, new CSlrString("<< BACK to Settings"),
+	CSlrString *str = new CSlrString("<< BACK to Settings");
+	menuItemBackSubMenu = new CViewC64MenuItem(fontHeight*2.0f, str,
 											   NULL, tr, tg, tb);
 	menuItemBackSubMenu->subMenu = viewMenu;
 	menuItemSubMenuUI->subMenu->AddMenuItem(menuItemBackSubMenu);
@@ -139,6 +142,18 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 	std::vector<CSlrString *> *optionsYesNo = new std::vector<CSlrString *>();
 	optionsYesNo->push_back(new CSlrString("No"));
 	optionsYesNo->push_back(new CSlrString("Yes"));
+
+	std::vector<CSlrString *> *optionsColors = new std::vector<CSlrString *>();
+	optionsColors->push_back(new CSlrString("red"));
+	optionsColors->push_back(new CSlrString("green"));
+	optionsColors->push_back(new CSlrString("blue"));
+	optionsColors->push_back(new CSlrString("black"));
+	optionsColors->push_back(new CSlrString("dark gray"));
+	optionsColors->push_back(new CSlrString("light gray"));
+	optionsColors->push_back(new CSlrString("white"));
+	optionsColors->push_back(new CSlrString("yellow"));
+	optionsColors->push_back(new CSlrString("cyan"));
+	optionsColors->push_back(new CSlrString("magenta"));
 
 	
 	//
@@ -267,11 +282,37 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 	menuItemRESIDPassBand->SetValue(c64SettingsRESIDPassBand, false);
 	menuItemSubMenuAudio->AddMenuItem(menuItemRESIDPassBand);
 
-	menuItemRESIDFilterBias = new CViewC64MenuItemFloat(fontHeight, new CSlrString("RESID Filter Bias: "),
+	menuItemRESIDFilterBias = new CViewC64MenuItemFloat(fontHeight*2, new CSlrString("RESID Filter Bias: "),
 																	NULL, tr, tg, tb,
 																	-500.0f, 500.0f, 1.00f, font, fontScale);
 	menuItemRESIDFilterBias->SetValue(c64SettingsRESIDFilterBias, false);
 	menuItemSubMenuAudio->AddMenuItem(menuItemRESIDFilterBias);
+
+	//
+	options = new std::vector<CSlrString *>();
+	options->push_back(new CSlrString("None"));
+	options->push_back(new CSlrString("One"));
+	options->push_back(new CSlrString("Two"));
+	menuItemSIDStereo = new CViewC64MenuItemOption(fontHeight, new CSlrString("SID stereo: "),
+												  NULL, tr, tg, tb, options, font, fontScale);
+	menuItemSIDStereo->SetSelectedOption(c64SettingsSIDStereo, false);
+	menuItemSubMenuAudio->AddMenuItem(menuItemSIDStereo);
+
+	options = GetSidAddressOptions();
+	
+	menuItemSIDStereoAddress = new CViewC64MenuItemOption(fontHeight, new CSlrString("SID #1 address: "),
+												   NULL, tr, tg, tb, options, font, fontScale);
+	int optNum = GetOptionNumFromSidAddress(c64SettingsSIDStereoAddress);
+	menuItemSIDStereoAddress->SetSelectedOption(optNum, false);
+	menuItemSubMenuAudio->AddMenuItem(menuItemSIDStereoAddress);
+
+	menuItemSIDTripleAddress = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("SID #2 address: "),
+														  NULL, tr, tg, tb, options, font, fontScale);
+	optNum = GetOptionNumFromSidAddress(c64SettingsSIDTripleAddress);
+	menuItemSIDTripleAddress->SetSelectedOption(optNum, false);
+	menuItemSubMenuAudio->AddMenuItem(menuItemSIDTripleAddress);
+	
+
 
 	//
 	kbsSwitchSoundOnOff = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Switch sound mute On/Off", 't', false, false, true);
@@ -358,13 +399,20 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 	menuItemSubMenuMemory->AddMenuItem(menuItemMultiTouchMemoryMap);
 #endif
 	
-	
+
 	//
+	menuItemWindowAlwaysOnTop = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("Window always on top: "),
+																 NULL, tr, tg, tb, optionsYesNo, font, fontScale);
+	menuItemWindowAlwaysOnTop->SetSelectedOption(c64SettingsWindowAlwaysOnTop, false);
+	menuItemSubMenuUI->AddMenuItem(menuItemWindowAlwaysOnTop);
+	
+
 	menuItemScreenRasterViewfinderScale = new CViewC64MenuItemFloat(fontHeight, new CSlrString("Screen viewfinder scale: "),
 																	NULL, tr, tg, tb,
 																	0.05f, 25.0f, 0.05f, font, fontScale);
 	menuItemScreenRasterViewfinderScale->SetValue(1.5f, false);
 	menuItemSubMenuUI->AddMenuItem(menuItemScreenRasterViewfinderScale);
+
 	
 	menuItemScreenGridLinesAlpha = new CViewC64MenuItemFloat(fontHeight, new CSlrString("Screen grid lines alpha: "),
 															 NULL, tr, tg, tb,
@@ -372,17 +420,10 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 	menuItemScreenGridLinesAlpha->SetValue(0.35f, false);
 	menuItemSubMenuUI->AddMenuItem(menuItemScreenGridLinesAlpha);
 
-	options = new std::vector<CSlrString *>();
-	options->push_back(new CSlrString("red"));
-	options->push_back(new CSlrString("green"));
-	options->push_back(new CSlrString("blue"));
-	options->push_back(new CSlrString("black"));
-	options->push_back(new CSlrString("dark gray"));
-	options->push_back(new CSlrString("light gray"));
-	options->push_back(new CSlrString("white"));
+///////
 	
 	menuItemScreenGridLinesColorScheme = new CViewC64MenuItemOption(fontHeight*2.0f, new CSlrString("Grid lines: "),
-																			  NULL, tr, tg, tb, options, font, fontScale);
+																			  NULL, tr, tg, tb, optionsColors, font, fontScale);
 	menuItemScreenGridLinesColorScheme->SetSelectedOption(0, false);
 	menuItemSubMenuUI->AddMenuItem(menuItemScreenGridLinesColorScheme);
 
@@ -393,7 +434,7 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 	menuItemSubMenuUI->AddMenuItem(menuItemScreenRasterCrossLinesAlpha);
 	
 	menuItemScreenRasterCrossLinesColorScheme = new CViewC64MenuItemOption(fontHeight, new CSlrString("Raster cross lines: "),
-																		   NULL, tr, tg, tb, options, font, fontScale);
+																		   NULL, tr, tg, tb, optionsColors, font, fontScale);
 	menuItemScreenRasterCrossLinesColorScheme->SetSelectedOption(6, false);
 	menuItemSubMenuUI->AddMenuItem(menuItemScreenRasterCrossLinesColorScheme);
 	
@@ -405,22 +446,21 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 	menuItemSubMenuUI->AddMenuItem(menuItemScreenRasterCrossAlpha);
 	
 	menuItemScreenRasterCrossInteriorColorScheme = new CViewC64MenuItemOption(fontHeight, new CSlrString("Raster cross interior: "),
-																			  NULL, tr, tg, tb, options, font, fontScale);
+																			  NULL, tr, tg, tb, optionsColors, font, fontScale);
 	menuItemScreenRasterCrossInteriorColorScheme->SetSelectedOption(4, false);
 	menuItemSubMenuUI->AddMenuItem(menuItemScreenRasterCrossInteriorColorScheme);
 	
-	menuItemScreenRasterCrossExteriorColorScheme = new CViewC64MenuItemOption(fontHeight, new CSlrString("Raster cross exterior: "),
-																			  NULL, tr, tg, tb, options, font, fontScale);
+	menuItemScreenRasterCrossExteriorColorScheme = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("Raster cross exterior: "),
+																			  NULL, tr, tg, tb, optionsColors, font, fontScale);
 	menuItemScreenRasterCrossExteriorColorScheme->SetSelectedOption(0, false);
 	menuItemSubMenuUI->AddMenuItem(menuItemScreenRasterCrossExteriorColorScheme);
 	
 	menuItemScreenRasterCrossTipColorScheme = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("Raster cross tip: "),
-																		 NULL, tr, tg, tb, options, font, fontScale);
+																		 NULL, tr, tg, tb, optionsColors, font, fontScale);
 	menuItemScreenRasterCrossTipColorScheme->SetSelectedOption(3, false);
 	menuItemSubMenuUI->AddMenuItem(menuItemScreenRasterCrossTipColorScheme);
 	
 	//
-
 	menuItemVicEditorForceReplaceColor = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("Vic Editor always replace color: "),
 																	NULL, tr, tg, tb, optionsYesNo, font, fontScale);
 	menuItemVicEditorForceReplaceColor->SetSelectedOption(c64SettingsVicEditorForceReplaceColor, false);
@@ -428,6 +468,22 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 	//menuItemSubMenuVicEditor
 	
 
+	//
+	menuItemDisassemblyExecuteColor = new CViewC64MenuItemOption(fontHeight, new CSlrString("Disassembly execute color: "),
+																	NULL, tr, tg, tb, optionsColors, font, fontScale);
+	menuItemDisassemblyExecuteColor->SetSelectedOption(C64D_COLOR_WHITE, false);
+	menuItemSubMenuUI->AddMenuItem(menuItemDisassemblyExecuteColor);
+	
+	menuItemDisassemblyNonExecuteColor = new CViewC64MenuItemOption(fontHeight, new CSlrString("Disassembly non execute color: "),
+																	NULL, tr, tg, tb, optionsColors, font, fontScale);
+	menuItemDisassemblyNonExecuteColor->SetSelectedOption(C64D_COLOR_LIGHT_GRAY, false);
+	menuItemSubMenuUI->AddMenuItem(menuItemDisassemblyNonExecuteColor);
+
+	menuItemDisassemblyBackgroundColor = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("Disassembly background color: "),
+																	NULL, tr, tg, tb, optionsColors, font, fontScale);
+	menuItemDisassemblyBackgroundColor->SetSelectedOption(C64D_COLOR_BLACK, false);
+	menuItemSubMenuUI->AddMenuItem(menuItemDisassemblyBackgroundColor);
+	
 	//
 	options = new std::vector<CSlrString *>();
 	C64GetAvailablePalettes(options);
@@ -446,19 +502,28 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 	menuItemSubMenuUI->AddMenuItem(menuItemRenderScreenNearest);
 	
 #if !defined(WIN32)
-	menuItemUseSystemDialogs = new CViewC64MenuItemOption(fontHeight, new CSlrString("Use system dialogs: "),
+	menuItemUseSystemDialogs = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("Use system dialogs: "),
 																 NULL, tr, tg, tb, optionsYesNo, font, fontScale);
 	menuItemUseSystemDialogs->SetSelectedOption(c64SettingsUseSystemFileDialogs, false);
 	menuItemSubMenuUI->AddMenuItem(menuItemUseSystemDialogs);
 #endif
 	
-	menuItemWindowAlwaysOnTop = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("Window always on top: "),
-																 NULL, tr, tg, tb, optionsYesNo, font, fontScale);
-	menuItemWindowAlwaysOnTop->SetSelectedOption(c64SettingsWindowAlwaysOnTop, false);
-	menuItemSubMenuUI->AddMenuItem(menuItemWindowAlwaysOnTop);
+	std::vector<CSlrString *> *colorThemeOptions = viewC64->colorsTheme->GetAvailableColorThemes();
+	menuItemMenusColorTheme = new CViewC64MenuItemOption(fontHeight, new CSlrString("Menus color theme: "),
+														 NULL, tr, tg, tb, colorThemeOptions, font, fontScale);
+	menuItemMenusColorTheme->SetSelectedOption(c64SettingsMenusColorTheme, false);
+	menuItemSubMenuUI->AddMenuItem(menuItemMenusColorTheme);
 	
 	//
-	menuItemPaintGridShowZoomLevel = new CViewC64MenuItemFloat(fontHeight*2, new CSlrString("Show paint grid zoom level: "),
+	menuItemFocusBorderLineWidth = new CViewC64MenuItemFloat(fontHeight*2, new CSlrString("Focus border line width: "),
+															 NULL, tr, tg, tb,
+															 0.0f, 5.0f, 0.05f, font, fontScale);
+	menuItemFocusBorderLineWidth->SetValue(0.7f, false);
+	menuItemSubMenuUI->AddMenuItem(menuItemFocusBorderLineWidth);
+
+
+	//
+	menuItemPaintGridShowZoomLevel = new CViewC64MenuItemFloat(fontHeight*2, new CSlrString("Show paint grid from zoom level: "),
 															   NULL, tr, tg, tb,
 															   1.0f, 50.0f, 0.05f, font, fontScale);
 	menuItemPaintGridShowZoomLevel->SetValue(c64SettingsPaintGridShowZoomLevel, false);
@@ -835,6 +900,20 @@ void CViewSettingsMenu::MenuCallbackItemChanged(CGuiViewMenuItem *menuItem)
 		i32 v = (i32)(menuItemRESIDFilterBias->value);
 		C64DebuggerSetSetting("RESIDFilterBias", &v);
 	}
+	else if (menuItem == menuItemSIDStereo)
+	{
+		C64DebuggerSetSetting("SIDStereo", &(menuItemSIDStereo->selectedOption));
+	}
+	else if (menuItem == menuItemSIDStereoAddress)
+	{
+		uint16 addr = GetSidAddressFromOptionNum(menuItemSIDStereoAddress->selectedOption);
+		C64DebuggerSetSetting("SIDStereoAddress", &addr);
+	}
+	else if (menuItem == menuItemSIDTripleAddress)
+	{
+		uint16 addr = GetSidAddressFromOptionNum(menuItemSIDTripleAddress->selectedOption);
+		C64DebuggerSetSetting("SIDTripleAddress", &addr);
+	}
 	else if (menuItem == menuItemMuteSIDOnPause)
 	{
 		bool v = menuItemMuteSIDOnPause->selectedOption == 0 ? false : true;
@@ -902,6 +981,26 @@ void CViewSettingsMenu::MenuCallbackItemChanged(CGuiViewMenuItem *menuItem)
 	{
 		bool v = menuItemDisassembleExecuteAware->selectedOption == 0 ? false : true;
 		C64DebuggerSetSetting("DisassembleExecuteAware", &(v));
+	}
+	else if (menuItem == menuItemDisassemblyBackgroundColor)
+	{
+		int v = menuItemDisassemblyBackgroundColor->selectedOption;
+		C64DebuggerSetSetting("DisassemblyBackgroundColor", &v);
+	}
+	else if (menuItem == menuItemDisassemblyExecuteColor)
+	{
+		int v = menuItemDisassemblyExecuteColor->selectedOption;
+		C64DebuggerSetSetting("DisassemblyExecuteColor", &v);
+	}
+	else if (menuItem == menuItemDisassemblyNonExecuteColor)
+	{
+		int v = menuItemDisassemblyNonExecuteColor->selectedOption;
+		C64DebuggerSetSetting("DisassemblyNonExecuteColor", &v);
+	}
+	else if (menuItem == menuItemMenusColorTheme)
+	{
+		int v = menuItemMenusColorTheme->selectedOption;
+		C64DebuggerSetSetting("MenusColorTheme", &v);
 	}
 	else if (menuItem == menuItemWindowAlwaysOnTop)
 	{
@@ -977,6 +1076,11 @@ void CViewSettingsMenu::MenuCallbackItemChanged(CGuiViewMenuItem *menuItem)
 			int v = 20;
 			C64DebuggerSetSetting("MemMapRefresh", &v);
 		}
+	}
+	else if (menuItem == menuItemFocusBorderLineWidth)
+	{
+		float v = menuItemFocusBorderLineWidth->value;
+		C64DebuggerSetSetting("FocusBorderWidth", &v);
 	}
 	else if (menuItem == menuItemScreenGridLinesAlpha)
 	{
@@ -1739,18 +1843,21 @@ void CViewSettingsMenu::Render()
 {
 //	guiMain->fntConsole->BlitText("CViewSettingsMenu", 0, 0, 0, 11, 1.0);
 
-	BlitFilledRectangle(0, 0, -1, sizeX, sizeY, 0.5, 0.5, 1.0, 1.0);
+	BlitFilledRectangle(0, 0, -1, sizeX, sizeY,
+						viewC64->colorsTheme->colorBackgroundFrameR,
+						viewC64->colorsTheme->colorBackgroundFrameG,
+						viewC64->colorsTheme->colorBackgroundFrameB, 1.0);
 		
 	float sb = 20;
 	float gap = 4;
 	
-	float tr = 0.64; //163/255;
-	float tg = 0.59; //151/255;
-	float tb = 1.0; //255/255;
+	float tr = viewC64->colorsTheme->colorTextR;
+	float tg = viewC64->colorsTheme->colorTextG;
+	float tb = viewC64->colorsTheme->colorTextB;
 	
-	float lr = 0.64;
-	float lg = 0.65;
-	float lb = 0.65;
+	float lr = viewC64->colorsTheme->colorHeaderLineR;
+	float lg = viewC64->colorsTheme->colorHeaderLineG;
+	float lb = viewC64->colorsTheme->colorHeaderLineB;
 	float lSizeY = 3;
 	
 	float ar = lr;
@@ -1764,7 +1871,10 @@ void CViewSettingsMenu::Render()
 	float cx = scrsx/2.0f + sb;
 	float ax = scrx + scrsx - sb;
 	
-	BlitFilledRectangle(scrx, scry, -1, scrsx, scrsy, 0, 0, 1.0, 1.0);
+	BlitFilledRectangle(scrx, scry, -1, scrsx, scrsy,
+						viewC64->colorsTheme->colorBackgroundR,
+						viewC64->colorsTheme->colorBackgroundG,
+						viewC64->colorsTheme->colorBackgroundB, 1.0);
 	
 	float px = scrx + gap;
 	float py = scry + gap;
@@ -1971,4 +2081,141 @@ void CViewSettingsMenu::SetOptionC64ModelType(int modelTypeId)
 	
 	LOGError("CViewSettingsMenu::SetOptionC64ModelType: modelTypeId=%d not found", modelTypeId);
 }
+
+std::vector<CSlrString *> *CViewSettingsMenu::GetSidAddressOptions()
+{
+	std::vector<CSlrString *> *opts = new std::vector<CSlrString *>();
+	
+	char *buf = SYS_GetCharBuf();
+
+	for (uint16 j = 0x0020; j < 0x0100; j += 0x0020)
+	{
+		uint16 addr = 0xD400 + j;
+		sprintf(buf, "$%04X", addr);
+		CSlrString *str = new CSlrString(buf);
+		opts->push_back(str);
+	}
+
+	for (uint16 i = 0xD500; i < 0xD800; i += 0x0100)
+	{
+		for (uint16 j = 0x0000; j < 0x0100; j += 0x0020)
+		{
+			uint16 addr = i + j;
+			sprintf(buf, "$%04X", addr);
+			CSlrString *str = new CSlrString(buf);
+			opts->push_back(str);
+		}
+	}
+
+	for (uint16 i = 0xDE00; i < 0xE000; i += 0x0100)
+	{
+		for (uint16 j = 0x0000; j < 0x0100; j += 0x0020)
+		{
+			uint16 addr = i + j;
+			sprintf(buf, "$%04X", addr);
+			CSlrString *str = new CSlrString(buf);
+			opts->push_back(str);
+		}
+	}
+	
+	SYS_ReleaseCharBuf(buf);
+	
+	return opts;
+}
+
+uint16 CViewSettingsMenu::GetSidAddressFromOptionNum(int optionNum)
+{
+	int o = 0;
+	
+	for (uint16 j = 0x0020; j < 0x0100; j += 0x0020)
+	{
+		uint16 addr = 0xD400 + j;
+		
+		if (o == optionNum)
+			return addr;
+		
+		o++;
+	}
+	
+	for (uint16 i = 0xD500; i < 0xD800; i += 0x0100)
+	{
+		for (uint16 j = 0x0000; j < 0x0100; j += 0x0020)
+		{
+			uint16 addr = i + j;
+			if (o == optionNum)
+				return addr;
+			
+			o++;
+		}
+	}
+	
+	for (uint16 i = 0xDE00; i < 0xE000; i += 0x0100)
+	{
+		for (uint16 j = 0x0000; j < 0x0100; j += 0x0020)
+		{
+			uint16 addr = i + j;
+			if (o == optionNum)
+				return addr;
+			
+			o++;
+		}
+	}
+	
+	LOGError("CViewSettingsMenu::GetSidAddressFromOptionNum: sid address not correct, option num=%d", optionNum);
+	return 0xD420;
+}
+
+int CViewSettingsMenu::GetOptionNumFromSidAddress(uint16 sidAddress)
+{
+	int o = 0;
+	
+	for (uint16 j = 0x0020; j < 0x0100; j += 0x0020)
+	{
+		uint16 addr = 0xD400 + j;
+		if (sidAddress == addr)
+			return o;
+		
+		o++;
+	}
+	
+	for (uint16 i = 0xD500; i < 0xD800; i += 0x0100)
+	{
+		for (uint16 j = 0x0000; j < 0x0100; j += 0x0020)
+		{
+			uint16 addr = i + j;
+			if (sidAddress == addr)
+				return o;
+			
+			o++;
+		}
+	}
+	
+	for (uint16 i = 0xDE00; i < 0xE000; i += 0x0100)
+	{
+		for (uint16 j = 0x0000; j < 0x0100; j += 0x0020)
+		{
+			uint16 addr = i + j;
+			if (sidAddress == addr)
+				return o;
+			
+			o++;
+		}
+	}
+	
+	LOGError("CViewSettingsMenu::GetSidAddressFromOptionNum: sid address not correct, sidAddress=%04x", sidAddress);
+	return 0;
+}
+
+void CViewSettingsMenu::UpdateSidSettings()
+{
+	int optNum = GetOptionNumFromSidAddress(c64SettingsSIDStereoAddress);
+	menuItemSIDStereoAddress->SetSelectedOption(optNum, false);
+
+	optNum = GetOptionNumFromSidAddress(c64SettingsSIDTripleAddress);
+	menuItemSIDTripleAddress->SetSelectedOption(optNum, false);
+	
+	viewC64->viewC64StateSID->UpdateSidButtonsState();
+	
+}
+
 

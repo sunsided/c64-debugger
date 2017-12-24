@@ -9,6 +9,7 @@
 #include "CViewDisassemble.h"
 #include "CViewBreakpoints.h"
 #include "C64AsmSource.h"
+#include "CViewDataWatch.h"
 
 #include <fstream>
 #include <iostream>
@@ -28,6 +29,9 @@ C64Symbols::~C64Symbols()
 void C64Symbols::ParseSymbols(CSlrString *fileName, C64DebugInterface *debugInterface)
 {
 	char *fname = fileName->GetStdASCII();
+	
+	LOGD("C64Symbols::ParseSymbols: %s", fname);
+	
 	CSlrFileFromOS *file = new CSlrFileFromOS(fname);
 	
 	if (file->Exists() == false)
@@ -37,13 +41,19 @@ void C64Symbols::ParseSymbols(CSlrString *fileName, C64DebugInterface *debugInte
 		return;
 	}
 	delete [] fname;
-	
+
+	ParseSymbols(file, debugInterface);
+
+	delete file;
+}
+
+void C64Symbols::ParseSymbols(CSlrFile *file, C64DebugInterface *debugInterface)
+{
 	CByteBuffer *byteBuffer = new CByteBuffer(file, false);
 	
 	ParseSymbols(byteBuffer, debugInterface);
 	
 	delete byteBuffer;
-	delete file;
 }
 
 void C64Symbols::ClearSymbols(C64DebugInterface *debugInterface)
@@ -73,6 +83,8 @@ void C64Symbols::ParseSymbols(CByteBuffer *byteBuffer, C64DebugInterface *debugI
 	
 	std::list<u16> splitChars;
 	splitChars.push_back(' ');
+	splitChars.push_back('\t');
+	splitChars.push_back('=');
 	
 	// Play with all the lines in the file
 	while (getline(reader, line))
@@ -93,8 +105,9 @@ void C64Symbols::ParseSymbols(CByteBuffer *byteBuffer, C64DebugInterface *debugI
 		std::vector<unsigned short> utf16line;
 		utf8::utf8to16(line.begin(), end_it, back_inserter(utf16line));
 		
+//		LOGD("LINE #%d", lineNum);
 		CSlrString *str = new CSlrString(utf16line);
-		//str->DebugPrint("str=");
+//		str->DebugPrint("str=");
 		
 		std::vector<CSlrString *> *words = str->SplitWithChars(splitChars);
 		
@@ -115,20 +128,18 @@ void C64Symbols::ParseSymbols(CByteBuffer *byteBuffer, C64DebugInterface *debugI
 			continue;
 		}
 		
-		command->ConvertToLowerCase();
-		
-		if (command->Equals("al"))
+		if (words->size() >= 5 && (command->Equals("al") || command->Equals("AL")))
 		{
-			if (words->size() < 5)
-			{
-				LOGError("ParseSymbols: error in line %d", lineNum);
-				break;
-			}
+//			if (words->size() < 5)
+//			{
+//				LOGError("ParseSymbols: error in line %d", lineNum);
+//				break;
+//			}
 			
 			CSlrString *deviceAndAddr = (*words)[2];
 			CSlrString *labelName = (*words)[4];
 			
-			deviceAndAddr->DebugPrint("deviceAndAddr=");
+//			deviceAndAddr->DebugPrint("deviceAndAddr=");
 			int deviceId = 0;
 			
 			char deviceIdChar = deviceAndAddr->GetChar(0);
@@ -157,7 +168,7 @@ void C64Symbols::ParseSymbols(CByteBuffer *byteBuffer, C64DebugInterface *debugI
 			int addr;
 			sscanf(addrStr, "%x", &addr);
 
-			LOGD("addr=%x", addr);
+//			LOGD("addr=%x", addr);
 			
 			// remove leading dot
 			if (labelName->GetChar(0) == '.')
@@ -165,10 +176,12 @@ void C64Symbols::ParseSymbols(CByteBuffer *byteBuffer, C64DebugInterface *debugI
 				labelName->RemoveCharAt(0);
 			}
 			
-			labelName->DebugPrint("labelName=");
+//			labelName->DebugPrint("labelName=");
 
 			char *labelNameStr = labelName->GetStdASCII();
 			
+			LOGD("labelNameStr=%s  addr=%04x", labelNameStr, addr);
+
 			if (deviceId == C64_SYMBOL_DEVICE_COMMODORE)
 			{
 				viewC64->viewC64Disassemble->AddCodeLabel(addr, labelNameStr);
@@ -176,6 +189,51 @@ void C64Symbols::ParseSymbols(CByteBuffer *byteBuffer, C64DebugInterface *debugI
 			else if (deviceId == C64_SYMBOL_DEVICE_DRIVE1541)
 			{
 				viewC64->viewDrive1541Disassemble->AddCodeLabel(addr, labelNameStr);
+			}
+		}
+		else if (words->size() > 3)
+		{
+			// assume tass64 label
+			// example: DRIVERDONE      = $0c48
+			
+			//			LOGD("words->size=%d", words->size());
+
+			int index = 0;
+			CSlrString *labelName = (*words)[index++];
+			CSlrString *equals = (*words)[words->size()-3];
+//			equals->DebugPrint("equals=");
+			if (equals->GetChar(0)== '=')
+			{
+				CSlrString *labelName = (*words)[0];
+				char *labelNameStr = labelName->GetStdASCII();
+
+//				LOGD("labelNameStr='%s'", labelNameStr);
+				
+				CSlrString *addrSlrStr = (*words)[words->size()-1];
+				char *addrStr = addrSlrStr->GetStdASCII();
+
+//				addrSlrStr->DebugPrint("addrStr=");
+				
+				int addr;
+				if (addrStr[0] == '$')
+				{
+					sscanf((addrStr+1), "%x", &addr);
+				}
+				else
+				{
+					sscanf(addrStr, "%d", &addr);
+				}
+				
+				LOGD("labelNameStr=%s  addr=%04x", labelNameStr, addr);
+				viewC64->viewC64Disassemble->AddCodeLabel(addr, labelNameStr);
+				
+				delete []addrStr;
+//				delete []labelNameStr;	TODO: AddCodeLabel does not allocate own string
+			}
+			else
+			{
+				LOGError("ParseSymbols: error in line %d (unknown label type)", lineNum);
+				break;
 			}
 		}
 		else
@@ -515,6 +573,279 @@ void C64Symbols::ParseBreakpoints(CByteBuffer *byteBuffer, C64DebugInterface *de
 	viewC64->viewC64Breakpoints->UpdateRenderBreakpoints();
 	
 	LOGD("C64Symbols::ParseBreakpoints: done");
+}
+
+///
+void C64Symbols::ClearWatches(C64DebugInterface *debugInterface)
+{
+	viewC64->debugInterface->LockMutex();
+	viewC64->viewC64MemoryDataWatch->ClearWatches();
+	viewC64->viewDrive1541MemoryDataWatch->ClearWatches();
+	viewC64->debugInterface->UnlockMutex();
+}
+
+void C64Symbols::ParseWatches(CSlrString *fileName, C64DebugInterface *debugInterface)
+{
+	char *fname = fileName->GetStdASCII();
+	
+	LOGD("C64Symbols::ParseWatches: %s", fname);
+	
+	CSlrFileFromOS *file = new CSlrFileFromOS(fname);
+	
+	if (file->Exists() == false)
+	{
+		LOGError("C64Symbols::ParseWatches: file %s does not exist", fname);
+		delete [] fname;
+		return;
+	}
+	delete [] fname;
+	
+	ParseWatches(file, debugInterface);
+	
+	delete file;
+}
+
+void C64Symbols::ParseWatches(CSlrFile *file, C64DebugInterface *debugInterface)
+{
+	CByteBuffer *byteBuffer = new CByteBuffer(file, false);
+	
+	ParseWatches(byteBuffer, debugInterface);
+	
+	delete byteBuffer;
+}
+
+
+void C64Symbols::ParseWatches(CByteBuffer *byteBuffer, C64DebugInterface *debugInterface)
+{
+	LOGM("C64Symbols::ParseWatches");
+	
+	debugInterface->LockMutex();
+	
+	byteBuffer->removeCRLFinQuotations();
+	
+	std_membuf mb(byteBuffer->data, byteBuffer->length);
+	std::istream reader(&mb);
+	
+	unsigned lineNum = 1;
+	std::string line;
+	line.clear();
+	
+	std::list<u16> splitChars;
+	splitChars.push_back(' ');
+	splitChars.push_back('\t');
+	splitChars.push_back('=');
+
+	std::list<u16> splitCharsComma;
+	splitCharsComma.push_back(',');
+
+	// Play with all the lines in the file
+	while (getline(reader, line))
+	{
+		//LOGD(".. line=%d", lineNum);
+		// check for invalid utf-8 (for a simple yes/no check, there is also utf8::is_valid function)
+		std::string::iterator end_it = utf8::find_invalid(line.begin(), line.end());
+		if (end_it != line.end())
+		{
+			LOGError("Invalid UTF-8 encoding detected at line %d", lineNum);
+		}
+		
+		// Get the line length (at least for the valid part)
+		//int length = utf8::distance(line.begin(), end_it);
+		//LOGD("========================= Length of line %d is %d", lineNum, length);
+		
+		// Convert it to utf-16
+		std::vector<unsigned short> utf16line;
+		utf8::utf8to16(line.begin(), end_it, back_inserter(utf16line));
+		
+		CSlrString *str = new CSlrString(utf16line);
+		str->DebugPrint("str=");
+		
+		std::vector<CSlrString *> *words = str->SplitWithChars(splitChars);
+		
+//		for (int i = 0; i < words->size(); i++)
+//		{
+//			LOGD("...words[%d]", i);
+//			(*words)[i]->DebugPrint("...=");
+//		}
+		
+		if (words->size() < 3)
+		{
+			lineNum++;
+			continue;
+		}
+		
+		LOGD("words->size=%d", words->size());
+		
+		CSlrString *dataSlrStr = (*words)[0];
+		
+		// comment?
+		if (dataSlrStr->GetChar(0) == '#')
+		{
+			lineNum++;
+			continue;
+		}
+		
+		
+		if (words->size() == 3)
+		{
+			// addr 0
+			// watch name 2
+			
+			CSlrString *watchName = (*words)[2];
+			watchName->DebugPrint("watchName=");
+
+			char *watchNameStr = watchName->GetStdASCII();
+			
+			std::vector<CSlrString *> *dataWords = dataSlrStr->SplitWithChars(splitCharsComma);
+			
+//			for (int i = 0; i < dataWords->size(); i++)
+//			{
+//				LOGD("...dataWords[%d]", i);
+//				(*dataWords)[i]->DebugPrint("...=");
+//			}
+
+			CSlrString *addrSlrStr = dataSlrStr; //(*dataWords)[0];
+			char *addrStr = addrSlrStr->GetStdASCII();
+			LOGD("addrStr='%s'", addrStr);
+			
+			int addr;
+			sscanf((addrStr+1), "%x", &addr);
+			
+			// Not finished / TODO:
+//			int representation = WATCH_REPRESENTATION_HEX;
+//			int numberOfValues = 1;
+//			int bits = WATCH_BITS_8;
+//			
+//			if (dataWords->size() > 2)
+//			{
+//				CSlrString *repStr = (*dataWords)[2];
+//				repStr->DebugPrint("repStr=");
+//				
+//				if (repStr->CompareWith("hex") || repStr->CompareWith("HEX"))
+//				{
+//					representation = WATCH_REPRESENTATION_HEX;
+//				}
+//				else if (repStr->CompareWith("bin") || repStr->CompareWith("BIN"))
+//				{
+//					representation = WATCH_REPRESENTATION_BIN;
+//				}
+//				else if (repStr->CompareWith("dec") || repStr->CompareWith("DEC"))
+//				{
+//					representation = WATCH_REPRESENTATION_UNSIGNED_DEC;
+//				}
+//				else if (repStr->CompareWith("sdec") || repStr->CompareWith("SDEC") || repStr->CompareWith("signed"))
+//				{
+//					representation = WATCH_REPRESENTATION_SIGNED_DEC;
+//				}
+//				else if (repStr->CompareWith("text") || repStr->CompareWith("TEXT"))
+//				{
+//					representation = WATCH_REPRESENTATION_TEXT;
+//				}
+//			}
+//			
+//			if (dataWords->size() > 4)
+//			{
+//				CSlrString *nrValsStr = (*dataWords)[4];
+//				numberOfValues = nrValsStr->ToInt();
+//			}
+//			
+//			if (dataWords->size() > 6)
+//			{
+//				CSlrString *bitsStr = (*dataWords)[6];
+//				if (bitsStr->CompareWith("8"))
+//				{
+//					bits = WATCH_BITS_8;
+//				}
+//				else if (bitsStr->CompareWith("16"))
+//				{
+//					bits = WATCH_BITS_16;
+//				}
+//				else if (bitsStr->CompareWith("32"))
+//				{
+//					bits = WATCH_BITS_32;
+//				}
+//			}
+			
+			viewC64->viewC64MemoryDataWatch->AddWatch(watchNameStr, addr); //, representation, numberOfValues, bits);
+			
+			delete [] watchNameStr;
+			delete [] addrStr;
+
+		}
+		else if (words->size() > 3)
+		{
+			// assume tass64 label
+			// example: DRIVERDONE      = $0c48
+			
+						LOGD("words->size=%d", words->size());
+			
+			int index = 0;
+			CSlrString *labelName = (*words)[index++];
+			CSlrString *equals = (*words)[words->size()-3];
+						equals->DebugPrint("equals=");
+			if (equals->GetChar(0)== '=')
+			{
+				CSlrString *labelName = (*words)[0];
+				char *labelNameStr = labelName->GetStdASCII();
+				
+								LOGD("labelNameStr='%s'", labelNameStr);
+				
+				CSlrString *addrSlrStr = (*words)[words->size()-1];
+				char *addrStr = addrSlrStr->GetStdASCII();
+				
+								addrSlrStr->DebugPrint("addrStr=");
+				
+				int addr;
+				if (addrStr[0] == '$')
+				{
+					sscanf((addrStr+1), "%x", &addr);
+				}
+				else
+				{
+					sscanf(addrStr, "%d", &addr);
+				}
+				
+				LOGD("watchNameStr=%s  addr=%04x", labelNameStr, addr);
+				
+				//				LOGTODO("!!!!!!!!!!!!!!!!!! REMOVE ME!!!!!!!!!!!!");
+				//				if (addr >= 0x0900 && addr < 0x0B60)
+				//				{
+				//					viewC64->viewC64MemoryDataWatch->AddWatch(labelNameStr, addr);
+				//				}
+				
+
+				viewC64->viewC64MemoryDataWatch->AddWatch(labelNameStr, addr);
+				
+				delete []addrStr;
+				delete []labelNameStr;
+			}
+			else
+			{
+				LOGError("ParseSymbols: error in line %d (unknown label type)", lineNum);
+				break;
+			}
+		}
+		else
+		{
+			LOGError("ParseWatches: error in line %d (unknown watch format)", lineNum);
+			break;
+		}
+		
+		delete str;
+		for (int i = 0; i < words->size(); i++)
+		{
+			delete (*words)[i];
+		}
+		delete  words;
+		
+		lineNum++;
+	}
+	
+	//LOGTODO("update watches max length for display");
+	
+	debugInterface->UnlockMutex();
+	
+	LOGD("C64Symbols::Watches: done");
 }
 
 ///

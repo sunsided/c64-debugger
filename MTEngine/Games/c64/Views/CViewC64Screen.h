@@ -6,6 +6,8 @@
 
 class CSlrMutex;
 class C64DebugInterface;
+class C64ColodoreScreen;
+
 
 class CViewC64Screen : public CGuiView
 {
@@ -44,11 +46,19 @@ public:
 	virtual void ActivateView();
 	virtual void DeactivateView();
 
-	CImageData *imageDataScreen;
 	CSlrImage *imageScreen;
-	
+
+	CImageData *imageDataScreenDefault;
+	CSlrImage *imageScreenDefault;
+
 	void RefreshScreen();
 
+	CSlrImage *imageScreenColodore;
+	
+	void SetupScreenColodore();
+	C64ColodoreScreen *colodoreScreen;
+	void RefreshScreenColodore();
+	
 	float screenTexEndX, screenTexEndY;
 	
 	void KeyUpModifierKeys(bool isShift, bool isAlt, bool isControl);
@@ -105,9 +115,7 @@ public:
 	float rasterCrossInteriorB;
 	float rasterCrossInteriorA;
 
-	// TODO: move this to Tools
 	void InitRasterColorsFromScheme();
-	void GetRasterColorScheme(int schemeNum, float splitAmount, float *r, float *g, float *b);
 	
 	void RenderRaster(int rasterX, int rasterY);
 	

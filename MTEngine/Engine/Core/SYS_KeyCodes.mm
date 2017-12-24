@@ -5,13 +5,16 @@
 
 CSlrString *SYS_KeyName(u32 keyCode)
 {
+//	LOGD("SYS_KeyName: keyCode=%04x");
 	switch(keyCode)
 	{
 		case ' ': return new CSlrString("SPACE");
+		case MTKEY_UMLAUT: return new CSlrString("UMLAUT");
 		case MTKEY_BACKSPACE: return new CSlrString("BACKSPACE");
 		case MTKEY_TAB: return new CSlrString("TAB");
 		case MTKEY_ENTER: return new CSlrString("ENTER");
 		case MTKEY_LEFT_APOSTROPHE: return new CSlrString("APOSTROPHE");
+		case MTKEY_RIGHT_APOSTROPHE: return new CSlrString("R-APOSTROPHE");
 		case MTKEY_ARROW_LEFT: return new CSlrString("LEFT");
 		case MTKEY_ARROW_RIGHT: return new CSlrString("RIGHT");
 		case MTKEY_ARROW_UP: return new CSlrString("UP");
@@ -211,6 +214,7 @@ u32 SYS_KeyCodeConvertSpecial(u32 keyCode, bool isShift, bool isAlt, bool isCont
 					keyCode |= MTKEY_SPECIAL_CONTROL;
 				}
 				
+				LOGI("SYS_KeyCodeConvertSpecial: keyCode=%d is index=%d", keyCode);
 				return keyCode;
 			}
 		}
@@ -223,6 +227,7 @@ u32 SYS_KeyCodeConvertSpecial(u32 keyCode, bool isShift, bool isAlt, bool isCont
 	}
 #endif
 
+	LOGI("SYS_KeyCodeConvertSpecial: keyCode=%d not found for convert", keyCode);
 	return keyCode;
 }
 

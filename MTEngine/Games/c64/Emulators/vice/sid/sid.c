@@ -324,7 +324,7 @@ sound_t *sid_sound_machine_open(int chipno)
     }
 #endif
 
-    return sid_engine.open(siddata[chipno]);
+    return sid_engine.open(siddata[chipno], chipno);
 }
 
 /* manage temporary buffers. if the requested size is smaller or equal to the

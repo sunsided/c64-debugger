@@ -12,6 +12,7 @@
 #include "CViewC64Screen.h"
 #include "SYS_Threading.h"
 #include "CGuiEditHex.h"
+#include "C64SettingsStorage.h"
 #include "VID_ImageBinding.h"
 
 #define SID_WAVEFORM_LENGTH 1024
@@ -60,94 +61,243 @@ CViewC64StateSID::CViewC64StateSID(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 {
 	this->name = "CViewC64StateSID";
 	
-	this->sidBase = 0xD400;
-	
 	this->debugInterface = debugInterface;
-	fontSize = 5.0f;
+	
 	fontBytes = guiMain->fntConsole;
+	fontBytesSize = 5.0f;
+	
+	selectedSidNumber = 0;
 	
 	// waveforms
 	waveformPos = 0;
 
-	for (int i = 0; i < 3; i++)
+	font = viewC64->fontCBMShifted;
+	fontScale = 0.8;
+	fontHeight = font->GetCharHeight('@', fontScale) + 2;
+	
+	buttonSizeX = 25.0f;
+	buttonSizeY = 8.0f;
+	
+	for (int sidNum = 0; sidNum < MAX_NUM_SIDS; sidNum++)
 	{
-		sidChannelWaveform[i] = new CViewC64StateSIDWaveform(0, 0, 0, 0, 0);
-	}
-	sidMixWaveform = new CViewC64StateSIDWaveform(0, 0, 0, 0, 0);
+		for (int i = 0; i < 3; i++)
+		{
+			sidChannelWaveform[sidNum][i] = new CViewC64StateSIDWaveform(0, 0, 0, 0, 0);
+		}
+		sidMixWaveform[sidNum] = new CViewC64StateSIDWaveform(0, 0, 0, 0, 0);
+		
+		// button
+		btnsSelectSID[sidNum] = new CGuiButtonSwitch(NULL, NULL, NULL,
+											   0, 0, posZ, buttonSizeX, buttonSizeY,
+											   new CSlrString("D400"),
+											   FONT_ALIGN_CENTER, buttonSizeX/2, 2.5,
+											   font, fontScale,
+											   1.0, 1.0, 1.0, 1.0,
+											   1.0, 1.0, 1.0, 1.0,
+											   0.3, 0.3, 0.3, 1.0,
+											   this);
+		btnsSelectSID[sidNum]->SetOn(false);
+		
+		btnsSelectSID[sidNum]->buttonSwitchOffColorR = 0.0f;
+		btnsSelectSID[sidNum]->buttonSwitchOffColorG = 0.0f;
+		btnsSelectSID[sidNum]->buttonSwitchOffColorB = 0.0f;
+		btnsSelectSID[sidNum]->buttonSwitchOffColorA = 1.0f;
 
+		btnsSelectSID[sidNum]->buttonSwitchOffColor2R = 0.3f;
+		btnsSelectSID[sidNum]->buttonSwitchOffColor2G = 0.3f;
+		btnsSelectSID[sidNum]->buttonSwitchOffColor2B = 0.3f;
+		btnsSelectSID[sidNum]->buttonSwitchOffColor2A = 1.0f;
+
+		btnsSelectSID[sidNum]->buttonSwitchOnColorR = 0.0f;
+		btnsSelectSID[sidNum]->buttonSwitchOnColorG = 0.0f;
+		btnsSelectSID[sidNum]->buttonSwitchOnColorB = 0.7f;
+		btnsSelectSID[sidNum]->buttonSwitchOnColorA = 1.0f;
+
+		btnsSelectSID[sidNum]->buttonSwitchOnColor2R = 0.3f;
+		btnsSelectSID[sidNum]->buttonSwitchOnColor2G = 0.3f;
+		btnsSelectSID[sidNum]->buttonSwitchOnColor2B = 0.3f;
+		btnsSelectSID[sidNum]->buttonSwitchOnColor2A = 1.0f;
+
+		this->AddGuiElement(btnsSelectSID[sidNum]);
+	}
+	
+	buttonSizeY = 10.0f;
+	
 	this->SetPosition(posX, posY, posZ, sizeX, sizeY);
 	
+	this->SelectSid(0);
+	
+}
+
+void CViewC64StateSID::SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY)
+{
+	sizeX = fontBytesSize*38.0f;
+	sizeY = fontBytesSize*32.0f;
+	
+	CGuiView::SetPosition(posX, posY, posZ, sizeX, sizeY);
+	
+	// waveforms
+	float wsx = fontBytesSize*10.0f;
+	float wsy = fontBytesSize*3.5f;
+	float wgx = fontBytesSize*23.0f;
+	float wgy = fontBytesSize*9.0f;
+	
+	float px = posX;
+	float py = posY;
+	
+	for (int sidNum = 0; sidNum < MAX_NUM_SIDS; sidNum++)
+	{
+		btnsSelectSID[sidNum]->SetPosition(px, py);
+		
+		px += buttonSizeX + 5.0f;
+	}
+	
+	px = posX + wgx;
+	py += buttonSizeY;
+	
+	for (int chanNum = 0; chanNum < 3; chanNum++)
+	{
+		for (int sidNum = 0; sidNum < MAX_NUM_SIDS; sidNum++)
+		{
+			sidChannelWaveform[sidNum][chanNum]->SetPosition(px, py, posZ, wsx, wsy);
+		}
+		py += wgy;
+	}
+	
+	py += fontBytesSize*1;
+	
+	for (int sidNum = 0; sidNum < MAX_NUM_SIDS; sidNum++)
+	{
+		sidMixWaveform[sidNum]->SetPosition(px, py, posZ, wsx, wsy);
+	}
 }
 
 void CViewC64StateSID::SetVisible(bool isVisible)
 {
 	CGuiElement::SetVisible(isVisible);
 	
-	viewC64->debugInterface->SetSIDReceiveChannelsData(isVisible);
+	viewC64->debugInterface->SetSIDReceiveChannelsData(selectedSidNumber, isVisible);
 }
 
-void CViewC64StateSID::SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY)
+void CViewC64StateSID::UpdateSidButtonsState()
 {
-	sizeX = fontSize*38.0f;
-	sizeY = fontSize*32.0f;
+	guiMain->LockMutex();
 	
-	CGuiView::SetPosition(posX, posY, posZ, sizeX, sizeY);
-
-	// waveforms
-	float wsx = fontSize*10.0f;
-	float wsy = fontSize*3.5f;
-	float wgx = fontSize*23.0f;
-	float wgy = fontSize*9.0f;
-
-	float px = posX + wgx;
-	float py = posY;
-	for (int i = 0; i < 3; i++)
+	for (int sidNum = 0; sidNum < MAX_NUM_SIDS; sidNum++)
 	{
-		sidChannelWaveform[i]->SetPosition(px, py, posZ, wsx, wsy);
-		py += wgy;
+		btnsSelectSID[sidNum]->visible = false;
 	}
 	
-	py += fontSize*1;
-	sidMixWaveform->SetPosition(px, py, posZ, wsx, wsy);
+	if (c64SettingsSIDStereo >= 1)
+	{
+		char *buf = SYS_GetCharBuf();
+		sprintf(buf, "%04X", c64SettingsSIDStereoAddress);
+		
+		CSlrString *str = new CSlrString(buf);
+		btnsSelectSID[1]->SetText(str);
+		delete str;
+		SYS_ReleaseCharBuf(buf);
+		
+		btnsSelectSID[0]->visible = true;
+		btnsSelectSID[1]->visible = true;
+	}
+	
+	if (c64SettingsSIDStereo >= 2)
+	{
+		char *buf = SYS_GetCharBuf();
+		sprintf(buf, "%04X", c64SettingsSIDTripleAddress);
+		
+		CSlrString *str = new CSlrString(buf);
+		btnsSelectSID[2]->SetText(str);
+		delete str;
+		SYS_ReleaseCharBuf(buf);
+
+		btnsSelectSID[2]->visible = true;
+	}
+	
+	if (selectedSidNumber > c64SettingsSIDStereo)
+	{
+		SelectSid(0);
+	}
+	
+	guiMain->UnlockMutex();
 }
 
+void CViewC64StateSID::SelectSid(int sidNum)
+{
+	guiMain->LockMutex();
+	
+	if (this->visible)
+	{
+		viewC64->debugInterface->SetSIDReceiveChannelsData(this->selectedSidNumber, false);
+		viewC64->debugInterface->SetSIDReceiveChannelsData(sidNum, true);
+	}
+	
+	this->selectedSidNumber = sidNum;
+	
+	for (int i = 0; i < MAX_NUM_SIDS; i++)
+	{
+		btnsSelectSID[i]->SetOn(false);
+	}
+
+	btnsSelectSID[this->selectedSidNumber]->SetOn(true);
+
+	guiMain->UnlockMutex();
+}
+
+bool CViewC64StateSID::ButtonSwitchChanged(CGuiButtonSwitch *button)
+{
+	for (int sidNum = 0; sidNum < MAX_NUM_SIDS; sidNum++)
+	{
+		if (button == btnsSelectSID[sidNum])
+		{
+			SelectSid(sidNum);
+			return true;
+		}
+	}
+	
+	return false;
+}
 
 void CViewC64StateSID::Render()
 {
 //	if (viewC64->debugInterface->GetSettingIsWarpSpeed() == true)
 //		return;
-	
-	viewC64->debugInterface->RenderStateSID(sidBase, posX, posY, posZ, fontBytes, fontSize);
+
+	uint16 sidBase = GetSidAddressByChipNum(selectedSidNumber);
+	viewC64->debugInterface->RenderStateSID(sidBase, posX, posY + buttonSizeY, posZ, fontBytes, fontBytesSize);
 	
 	for (int i = 0; i < 3; i++)
 	{
-		sidChannelWaveform[i]->Render();
+		sidChannelWaveform[selectedSidNumber][i]->Render();
 	}
 	
-	sidMixWaveform->Render();
+	sidMixWaveform[selectedSidNumber]->Render();
+	
+	CGuiView::Render();
 }
 
-void CViewC64StateSID::AddWaveformData(int v1, int v2, int v3, short mix)
+void CViewC64StateSID::AddWaveformData(int sidNumber, int v1, int v2, int v3, short mix)
 {
-	//LOGD("CViewC64StateSID::AddWaveformData: %d %d %d %d", v1, v2, v3, mix);
+//	LOGD("CViewC64StateSID::AddWaveformData: sid#%d, %d %d %d %d", sidNumber, v1, v2, v3, mix);
 
 	// sid channels
-	sidChannelWaveform[0]->waveformData[waveformPos] = v1;
-	sidChannelWaveform[1]->waveformData[waveformPos] = v2;
-	sidChannelWaveform[2]->waveformData[waveformPos] = v3;
+	sidChannelWaveform[sidNumber][0]->waveformData[waveformPos] = v1;
+	sidChannelWaveform[sidNumber][1]->waveformData[waveformPos] = v2;
+	sidChannelWaveform[sidNumber][2]->waveformData[waveformPos] = v3;
 
-	
 	// mix channel
-	sidMixWaveform->waveformData[waveformPos] = mix;
+	sidMixWaveform[sidNumber]->waveformData[waveformPos] = mix;
+
 	waveformPos++;
 	
 	if (waveformPos == SID_WAVEFORM_LENGTH)
 	{
 		guiMain->LockRenderMutex();
-		sidChannelWaveform[0]->CalculateWaveform();
-		sidChannelWaveform[1]->CalculateWaveform();
-		sidChannelWaveform[2]->CalculateWaveform();
-		sidMixWaveform->CalculateWaveform();
+		sidChannelWaveform[sidNumber][0]->CalculateWaveform();
+		sidChannelWaveform[sidNumber][1]->CalculateWaveform();
+		sidChannelWaveform[sidNumber][2]->CalculateWaveform();
+		sidMixWaveform[sidNumber]->CalculateWaveform();
 		guiMain->UnlockRenderMutex();
 		
 		waveformPos = 0;
@@ -162,40 +312,40 @@ bool CViewC64StateSID::DoTap(GLfloat x, GLfloat y)
 {
 	for (int i = 0; i < 3; i++)
 	{
-		if (sidChannelWaveform[i]->IsInside(x, y))
+		if (sidChannelWaveform[selectedSidNumber][i]->IsInside(x, y))
 		{
-			sidChannelWaveform[i]->isMuted = !sidChannelWaveform[i]->isMuted;
+			sidChannelWaveform[selectedSidNumber][i]->isMuted = !sidChannelWaveform[selectedSidNumber][i]->isMuted;
 			
-			viewC64->debugInterface->SetSIDMuteChannels(sidChannelWaveform[0]->isMuted,
-														sidChannelWaveform[1]->isMuted,
-														sidChannelWaveform[2]->isMuted, false);
+			viewC64->debugInterface->SetSIDMuteChannels(sidChannelWaveform[selectedSidNumber][0]->isMuted,
+														sidChannelWaveform[selectedSidNumber][1]->isMuted,
+														sidChannelWaveform[selectedSidNumber][2]->isMuted, false);
 
-			if (sidChannelWaveform[0]->isMuted
-				&& sidChannelWaveform[1]->isMuted
-				&& sidChannelWaveform[2]->isMuted)
+			if (sidChannelWaveform[selectedSidNumber][0]->isMuted
+				&& sidChannelWaveform[selectedSidNumber][1]->isMuted
+				&& sidChannelWaveform[selectedSidNumber][2]->isMuted)
 			{
-				sidMixWaveform->isMuted = true;
+				sidMixWaveform[selectedSidNumber]->isMuted = true;
 			}
-			else if (!sidChannelWaveform[0]->isMuted
-					 || !sidChannelWaveform[1]->isMuted
-					 || !sidChannelWaveform[2]->isMuted)
+			else if (!sidChannelWaveform[selectedSidNumber][0]->isMuted
+					 || !sidChannelWaveform[selectedSidNumber][1]->isMuted
+					 || !sidChannelWaveform[selectedSidNumber][2]->isMuted)
 			{
-				sidMixWaveform->isMuted = false;
+				sidMixWaveform[selectedSidNumber]->isMuted = false;
 			}
 			return true;
 		}
 	}
 
-	if (sidMixWaveform->IsInside(x,y))
+	if (sidMixWaveform[selectedSidNumber]->IsInside(x,y))
 	{
-		sidMixWaveform->isMuted = !sidMixWaveform->isMuted;
-		sidChannelWaveform[0]->isMuted = sidMixWaveform->isMuted;
-		sidChannelWaveform[1]->isMuted = sidMixWaveform->isMuted;
-		sidChannelWaveform[2]->isMuted = sidMixWaveform->isMuted;
+		sidMixWaveform[selectedSidNumber]->isMuted = !sidMixWaveform[selectedSidNumber]->isMuted;
+		sidChannelWaveform[selectedSidNumber][0]->isMuted = sidMixWaveform[selectedSidNumber]->isMuted;
+		sidChannelWaveform[selectedSidNumber][1]->isMuted = sidMixWaveform[selectedSidNumber]->isMuted;
+		sidChannelWaveform[selectedSidNumber][2]->isMuted = sidMixWaveform[selectedSidNumber]->isMuted;
 
-		viewC64->debugInterface->SetSIDMuteChannels(sidChannelWaveform[0]->isMuted,
-													sidChannelWaveform[1]->isMuted,
-													sidChannelWaveform[2]->isMuted, false);
+		viewC64->debugInterface->SetSIDMuteChannels(sidChannelWaveform[selectedSidNumber][0]->isMuted,
+													sidChannelWaveform[selectedSidNumber][1]->isMuted,
+													sidChannelWaveform[selectedSidNumber][2]->isMuted, false);
 	}
 
 	

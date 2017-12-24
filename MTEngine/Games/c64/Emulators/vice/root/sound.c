@@ -253,10 +253,17 @@ static void sound_machine_close(sound_t *psid)
     mixed (unless SID is enabled) resulting in looping and distorted sound. As
     a quick bandaid the memset was added below. This should be really cleaned
     up someday.
+ 
+	soc = sound output channels
+	scc = sound chip channels
+ 
+	mono:	soc=1 scc=1
+	stereo:	soc=2 scc=2
+	triple:	soc=2 scc=3
 */
 static int sound_machine_calculate_samples(sound_t **psid, SWORD *pbuf, int nr, int soc, int scc, int *delta_t)
 {
-	//LOGD("sound_machine_calculate_samples");
+//	LOGD("sound_machine_calculate_samples, output channels=%d chip channels=%d", soc, scc);
 	
     int i;
     int temp;
@@ -1612,7 +1619,7 @@ double sound_flush(int isPaused)
             /* Fresh start for vsync. */
            //if (drained_warning_count < 25)
 		   {
-                log_warning(sound_log, "Audio Buffer drained");
+                log_warning(sound_log, "Audio Buffer drained: used=%d < fragsize=%d", used, snddata.fragsize);
                 drained_warning_count++;
 		   }
 //		   else

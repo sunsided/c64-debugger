@@ -1,4 +1,5 @@
 #include "CViewC64.h"
+#include "CColorsTheme.h"
 #include "CViewMainMenu.h"
 #include "VID_GLViewController.h"
 #include "CGuiMain.h"
@@ -8,7 +9,7 @@
 #include "CSlrKeyboardShortcuts.h"
 #include "CSlrFileFromOS.h"
 #include "C64D_Version.h"
-
+#include "C64Symbols.h"
 #include "C64KeyboardShortcuts.h"
 #include "CViewBreakpoints.h"
 #include "CViewSnapshots.h"
@@ -16,6 +17,7 @@
 #include "C64DebugInterface.h"
 #include "CViewMemoryMap.h"
 #include "CViewFileD64.h"
+#include "CViewKeyboardShortcuts.h"
 
 #include "C64SettingsStorage.h"
 
@@ -60,9 +62,9 @@ CViewMainMenu::CViewMainMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 	strHeader2 = viewC64->debugInterface->GetEmulatorVersionString();
 	
 	/// colors
-	tr = 0.64; //163/255;
-	tg = 0.59; //151/255;
-	tb = 1.0; //255/255;
+	tr = viewC64->colorsTheme->colorTextR;
+	tg = viewC64->colorsTheme->colorTextG;
+	tb = viewC64->colorsTheme->colorTextB;
 	
 	/// menu
 	viewMenu = new CGuiViewMenu(35, 76, -1, sizeX-70, sizeY-76, this);
@@ -235,6 +237,10 @@ CViewMainMenu::CViewMainMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 	
 
 	loadPrgByteBuffer = NULL;
+	
+	//
+	
+	viewC64->colorsTheme->AddThemeChangeListener(this);
 }
 
 CViewMainMenu::~CViewMainMenu()
@@ -528,6 +534,9 @@ bool CViewMainMenu::LoadPRG(CSlrString *path, bool autoStart, bool updatePRGFold
 		
 		menuItemLoadPRG->str2 = new CSlrString(fname);
 		delete fname;
+
+		LoadLabelsAndWatches(path);
+
 		guiMain->UnlockMutex();
 	}
 	
@@ -537,6 +546,52 @@ bool CViewMainMenu::LoadPRG(CSlrString *path, bool autoStart, bool updatePRGFold
 	delete byteBuffer;
 	
 	return ret;
+}
+
+void CViewMainMenu::LoadLabelsAndWatches(CSlrString *pathToPRG)
+{
+	CSlrString *fPath = pathToPRG->GetFilePathWithoutExtension();
+	char *noExtPath = fPath->GetStdASCII();
+	char *buf = SYS_GetCharBuf();
+	
+	// check for labels
+	if (c64SettingsLoadViceLabels)
+	{
+		char *buf = SYS_GetCharBuf();
+		sprintf(buf, "%s.labels", noExtPath);
+		
+		LOGD("...searching for labels: %s", buf);
+		
+		CSlrFileFromOS *file = new CSlrFileFromOS(buf);
+		if (file->Exists())
+		{
+			viewC64->symbols->ClearSymbols(viewC64->debugInterface);
+			viewC64->symbols->ParseSymbols(file, viewC64->debugInterface);
+		}
+		
+		delete file;
+	}
+	
+	// check for watches
+	if (c64SettingsLoadWatches)
+	{
+		sprintf(buf, "%s.watch", noExtPath);
+		
+		LOGD("...searching for watches: %s", buf);
+		
+		CSlrFileFromOS *file = new CSlrFileFromOS(buf);
+		if (file->Exists())
+		{
+			viewC64->symbols->ClearWatches(viewC64->debugInterface);
+			viewC64->symbols->ParseWatches(file, viewC64->debugInterface);
+		}
+		
+		delete file;
+	}
+	
+	SYS_ReleaseCharBuf(buf);
+	delete [] noExtPath;
+	delete fPath;
 }
 
 bool CViewMainMenu::LoadPRG(CByteBuffer *byteBuffer, bool autoStart, bool showAddressInfo)
@@ -844,6 +899,8 @@ void CViewMainMenu::ReloadAndRestartPRG()
 		
 		delete byteBuffer;
 		
+		LoadLabelsAndWatches(c64SettingsPathToPRG);
+		
 		return;
 	}
 	else
@@ -869,32 +926,33 @@ void CViewMainMenu::Render()
 	
 //	guiMain->fntConsole->BlitText("CViewMainMenu", 0, 0, 0, 11, 1.0);
 
-	BlitFilledRectangle(0, 0, -1, sizeX, sizeY, 0.5, 0.5, 1.0, 1.0);
+	BlitFilledRectangle(0, 0, -1, sizeX, sizeY,
+						viewC64->colorsTheme->colorBackgroundFrameR,
+						viewC64->colorsTheme->colorBackgroundFrameG,
+						viewC64->colorsTheme->colorBackgroundFrameB, 1.0);
 		
 	float sb = 20;
 	float gap = 10;
 	
-	float tr = 0.64; //163/255;
-	float tg = 0.59; //151/255;
-	float tb = 1.0; //255/255;
+	float tr = viewC64->colorsTheme->colorTextR;
+	float tg = viewC64->colorsTheme->colorTextG;
+	float tb = viewC64->colorsTheme->colorTextB;
 	
-	float lr = 0.64;
-	float lg = 0.65;
-	float lb = 0.65;
+	float lr = viewC64->colorsTheme->colorHeaderLineR;
+	float lg = viewC64->colorsTheme->colorHeaderLineG;
+	float lb = viewC64->colorsTheme->colorHeaderLineB;
 	float lSizeY = 3;
-	
-	float ar = lr;
-	float ag = lg;
-	float ab = lb;
 	
 	float scrx = sb;
 	float scry = sb;
 	float scrsx = sizeX - sb*2.0f;
 	float scrsy = sizeY - sb*2.0f;
 	float cx = scrsx/2.0f + sb;
-	float ax = scrx + scrsx - sb;
 	
-	BlitFilledRectangle(scrx, scry, -1, scrsx, scrsy, 0, 0, 1.0, 1.0);
+	BlitFilledRectangle(scrx, scry, -1, scrsx, scrsy,
+						viewC64->colorsTheme->colorBackgroundR,
+						viewC64->colorsTheme->colorBackgroundG,
+						viewC64->colorsTheme->colorBackgroundB, 1.0);
 	
 	float px = scrx + gap;
 	float py = scry + gap;
@@ -1076,7 +1134,37 @@ void CViewMainMenu::DeactivateView()
 	LOGG("CViewMainMenu::DeactivateView()");
 }
 
-CViewC64MenuItem::CViewC64MenuItem(float height, CSlrString *str, CSlrKeyboardShortcut *shortcut, float r, float g, float b)
+void CViewMainMenu::ApplyColorsToMenu(CGuiViewMenu *menu)
+{
+	float r = viewC64->colorsTheme->colorTextR;
+	float g = viewC64->colorsTheme->colorTextG;
+	float b = viewC64->colorsTheme->colorTextB;
+	
+	for (std::list<CGuiViewMenuItem *>::iterator it = menu->menuItems.begin(); it != menu->menuItems.end(); it++)
+	{
+		CGuiViewMenuItem *menuItem = *it;
+		CViewC64MenuItem *menuItemC64 = (CViewC64MenuItem*)menuItem;
+		menuItemC64->r = r;
+		menuItemC64->g = g;
+		menuItemC64->b = b;		
+	}
+}
+
+void CViewMainMenu::UpdateTheme()
+{
+	ApplyColorsToMenu(this->viewMenu);
+	ApplyColorsToMenu(viewC64->viewFileD64->viewMenu);
+	ApplyColorsToMenu(viewC64->viewC64SettingsMenu->viewMenu);
+	ApplyColorsToMenu(viewC64->viewC64SettingsMenu->menuItemSubMenuEmulation->subMenu);
+	ApplyColorsToMenu(viewC64->viewC64SettingsMenu->menuItemSubMenuAudio->subMenu);
+	ApplyColorsToMenu(viewC64->viewC64SettingsMenu->menuItemSubMenuMemory->subMenu);
+	ApplyColorsToMenu(viewC64->viewC64SettingsMenu->menuItemSubMenuUI->subMenu);
+	ApplyColorsToMenu(viewC64->viewKeyboardShortcuts->viewMenu);
+	
+	CGuiView::UpdateTheme();
+}
+
+CViewC64MenuItem::CViewC64MenuItem(float height, CSlrString *strIn, CSlrKeyboardShortcut *shortcut, float r, float g, float b)
 : CGuiViewMenuItem(height)
 {
 	this->str = NULL;
@@ -1086,8 +1174,10 @@ CViewC64MenuItem::CViewC64MenuItem(float height, CSlrString *str, CSlrKeyboardSh
 	this->g = g;
 	this->b = b;
 	
-	if (str != NULL)
-		this->SetString(str);
+	if (strIn != NULL)
+	{
+		this->SetString(strIn);
+	}
 }
 
 // sub item
@@ -1109,7 +1199,9 @@ CViewC64MenuItem::CViewC64MenuItem(float height, CSlrString *str, CSlrKeyboardSh
 void CViewC64MenuItem::SetString(CSlrString *str)
 {
 	if (this->str != NULL)
+	{
 		delete this->str;
+	}
 	this->str = str;
 	if (this->isSelected)
 	{
@@ -1125,12 +1217,13 @@ void CViewC64MenuItem::Execute()
 
 void CViewC64MenuItem::DebugPrint()
 {
-	LOGD("CGuiViewMenuItem: %x menu=%x subMenu=%x", this, this->menu, this->subMenu);
+	LOGD("CGuiViewMenuItem: %x menu=%x subMenu=%x str=%x", this, this->menu, this->subMenu, this->str);
 
-	if (this->str != NULL)
-	{
-		this->str->DebugPrint("menu item str=");
-	}
+//	if (this->str != NULL)
+//	{
+//		this->str->DebugPrint("menu item str=");
+//		LOGD("color=%f %f %f", r, g, b);
+//	}
 }
 
 void CViewC64MenuItem::SetSelected(bool selected)
@@ -1155,7 +1248,11 @@ void CViewC64MenuItem::RenderItem(float px, float py, float pz)
 	if (shortcut != NULL && shortcut->str != NULL)
 	{
 		viewC64->viewC64MainMenu->font->BlitTextColor(shortcut->str, px + 510, py, pz,
-													  viewC64->viewC64MainMenu->fontScale, 0.5, 0.5, 0.5, 1, FONT_ALIGN_RIGHT);
+													  viewC64->viewC64MainMenu->fontScale,
+													  viewC64->colorsTheme->colorTextKeyShortcutR,
+													  viewC64->colorsTheme->colorTextKeyShortcutG,
+													  viewC64->colorsTheme->colorTextKeyShortcutB, 1,
+													  FONT_ALIGN_RIGHT);
 	}
 	
 	if (str2 != NULL)

@@ -99,7 +99,8 @@ CImageData *IMG_Scale(CImageData *imgIn, int destWidth, int destHeight)
 	Resampler* resamplers[max_components];
 	std::vector<float> samples[max_components];
 
-	resamplers[0] = new Resampler(src_width, src_height, dst_width, dst_height, Resampler::BOUNDARY_CLAMP, 0.0f, 1.0f, pFilter, NULL, NULL, filter_scale, filter_scale);
+	resamplers[0] = new Resampler(src_width, src_height, dst_width, dst_height,
+								  Resampler::BOUNDARY_CLAMP, 0.0f, 1.0f, pFilter, NULL, NULL, filter_scale, filter_scale);
 	samples[0].resize(src_width);
 	for (int i = 1; i < n; i++)
 	{
@@ -235,5 +236,73 @@ CImageData *IMG_Scale(CImageData *imgIn, int destWidth, int destHeight)
 	*/
 
 	return imgDest;
+}
+
+/// imgOut is imgIn width/2
+void IMG_ScaleShrinkHalfWidth(CImageData *imgIn, CImageData *imgOut)
+{
+	for (int py = 0; py < imgIn->height; py++)
+	{
+		unsigned int offsetIn = py * imgIn->width * 4;
+		uint8 *data_in = imgIn->GetResultDataAsRGBA();
+		
+		unsigned int offsetOut = py * imgOut->width * 4;
+		uint8 *data_out = imgOut->GetResultDataAsRGBA();
+		
+		for (int px = 0; px < imgIn->width; px++)
+		{
+			uint8 r1,g1,b1,a1;
+			uint8 r2,g2,b2,a2;
+			
+			r1 = data_in[offsetIn++];
+			g1 = data_in[offsetIn++];
+			b1 = data_in[offsetIn++];
+			a1 = data_in[offsetIn++];
+			
+			r2 = data_in[offsetIn++];
+			g2 = data_in[offsetIn++];
+			b2 = data_in[offsetIn++];
+			a2 = data_in[offsetIn++];
+			
+			data_out[offsetOut++] = (r1 + r2) / 2;
+			data_out[offsetOut++] = (g1 + g2) / 2;
+			data_out[offsetOut++] = (b1 + b2) / 2;
+			data_out[offsetOut++] = (a1 + a2) / 2;
+		}
+	}
+}
+
+/// imgOut is imgIn width*2
+void IMG_ScaleExpandTwiceWidth(CImageData *imgIn, CImageData *imgOut)
+{
+	for (int py = 0; py < imgIn->height; py++)
+	{
+		unsigned int offsetIn = py * imgIn->width * 4;
+		uint8 *data_in = imgIn->GetResultDataAsRGBA();
+		
+		unsigned int offsetOut = py * imgOut->width * 4;
+		uint8 *data_out = imgOut->GetResultDataAsRGBA();
+		
+		for (int px = 0; px < imgIn->width; px++)
+		{
+			uint8 r,g,b,a;
+			
+			r = data_in[offsetIn++];
+			g = data_in[offsetIn++];
+			b = data_in[offsetIn++];
+			a = data_in[offsetIn++];
+			
+			data_out[offsetOut++] = r;
+			data_out[offsetOut++] = g;
+			data_out[offsetOut++] = b;
+			data_out[offsetOut++] = a;
+			
+			data_out[offsetOut++] = r;
+			data_out[offsetOut++] = g;
+			data_out[offsetOut++] = b;
+			data_out[offsetOut++] = a;
+
+		}
+	}
 }
 

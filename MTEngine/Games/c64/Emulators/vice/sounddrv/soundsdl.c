@@ -55,52 +55,51 @@ int sidNumChannels = 0;
 
 void sdl_callback(void *userdata, uint8 *stream, int numSamples)
 {
-	//LOGD("sdl sound callback: numSamples=%d", numSamples);
+//	LOGD("sdl sound callback: numSamples=%d numChannels=%d", numSamples, sidNumChannels);
+	uint8 *dest;
+	uint8 *src;
+	int i;
 
-	int len = numSamples * sizeof(SWORD);
-	
-    int	amount, total;
-    total = 0;
-
-//  while (total < len/sizeof(SWORD))
-	while (total < numSamples)
+	if (sidNumChannels == 1)
 	{
-        amount = sdl_inptr - sdl_outptr;
-        if (amount <= 0)
+		// mono
+		int len = numSamples * sizeof(SWORD);
+		
+		int	amount, total;
+		total = 0;
+		
+		//  while (total < len/sizeof(SWORD))
+		while (total < numSamples)
 		{
-            amount = sdl_len - sdl_outptr;
-        }
+			amount = sdl_inptr - sdl_outptr;
+			if (amount <= 0)
+			{
+				amount = sdl_len - sdl_outptr;
+			}
+			
+			//      if (amount + total > len/sizeof(SWORD))
+			if (amount + total > numSamples)
+			{
+				//          amount = len/sizeof(SWORD) - total;
+				amount = numSamples - total;
+			}
+			
+			sdl_full = 0;
+			
+			if (!amount)
+			{
+				LOGError("sdl_callback: amount=%d", amount);
+				memset(stream + total*sizeof(SWORD), 0, len - total*sizeof(SWORD));
+				return;
+			}
 
-//      if (amount + total > len/sizeof(SWORD))
-		if (amount + total > numSamples)
-		{
-//          amount = len/sizeof(SWORD) - total;
-			amount = numSamples - total;
-        }
-
-        sdl_full = 0;
-
-        if (!amount)
-		{
-            memset(stream + total*sizeof(SWORD), 0, len - total*sizeof(SWORD));
-            return;
-        }
-
-		if (sidNumChannels == 2)
-		{
-			memcpy(stream + total*sizeof(SWORD), sdl_buf + sdl_outptr,
-				   amount*sizeof(SWORD));
-		}
-		else
-		{
-			uint8 *dest = stream + total*sizeof(SWORD);
-			uint8 *src = (uint8*) (sdl_buf + sdl_outptr);
-			int i;
-
+			dest = stream + total*sizeof(SWORD);
+			src = (uint8*) (sdl_buf + sdl_outptr);
+			
 			for (i = 0; i < amount; i++)
 			{
 				uint8 s1, s2;
-
+				
 				s1 = *src;
 				src++;
 				s2 = *src;
@@ -118,16 +117,64 @@ void sdl_callback(void *userdata, uint8 *stream, int numSamples)
 				*dest = s2;
 				dest++;
 			}
+			
+			total += amount;
+			sdl_outptr += amount;
+			
+			if (sdl_outptr == sdl_len)
+			{
+				sdl_outptr = 0;
+			}
 		}
+	}
+	else if (sidNumChannels == 2)
+	{
+		// stereo
 		
-		total += amount;
-        sdl_outptr += amount;
-
-        if (sdl_outptr == sdl_len)
+		int len = numSamples * sizeof(SWORD) * 2;
+		
+		int	amount, total;
+		total = 0;
+		
+		//  while (total < len/sizeof(SWORD))
+		while (total < numSamples)
 		{
-	        sdl_outptr = 0;
-        }
-    }
+			amount = (sdl_inptr - sdl_outptr) / 2;
+			if (amount <= 0)
+			{
+				amount = (sdl_len - sdl_outptr) / 2;
+			}
+			
+			//      if (amount + total > len/sizeof(SWORD))
+			if (amount + total > numSamples)
+			{
+				//          amount = len/sizeof(SWORD) - total;
+				amount = numSamples - total;
+			}
+			
+			sdl_full = 0;
+			
+			if (!amount)
+			{
+				LOGError("sdl_callback: amount=%d", amount);
+				memset(stream + total*sizeof(SWORD)*2, 0, len - total*sizeof(SWORD)*2);
+				return;
+			}
+			
+			memcpy(stream + total*sizeof(SWORD)*2, sdl_buf + sdl_outptr,
+				   amount*sizeof(SWORD)*2);
+
+			total += amount;
+			sdl_outptr += amount*2;
+			
+			if (sdl_outptr == sdl_len)
+			{
+				sdl_outptr = 0;
+			}
+		}
+	}
+	
+
 }
 
 static int sdl_init(const char *param, int *speed,
@@ -236,7 +283,7 @@ void swab(void *src, void *dst, size_t length)
 
 static int sdl_write(SWORD *pbuf, size_t nr)
 {
-	//LOGD("soundsdl: sdl_write");
+//	LOGD("soundsdl: sdl_write, nr=%d");
 	
     int total, amount;
     total = 0;
@@ -292,20 +339,29 @@ static int sdl_bufferspace(void)
 	int amount;
 	int ret;
 
-    if (sdl_full) {
+    if (sdl_full)
+	{
         amount = sdl_len;
-    } else {
+    }
+	else
+	{
         amount = sdl_inptr - sdl_outptr;
     }
 
-    if (amount < 0) {
+    if (amount < 0)
+	{
         amount += sdl_len;
     }
 	
 	ret = sdl_len - amount;
 
-	//LOGD("sdl_bufferspace ret=%d", ret);
-	
+	if (sidNumChannels == 2)
+	{
+		ret /= 2;
+	}
+
+	//	LOGD("sdl_bufferspace ret=%d", ret);
+
     return ret;
 }
 

@@ -4,6 +4,8 @@
 #include "SYS_Defs.h"
 #include "CGuiView.h"
 #include "CGuiEditHex.h"
+#include "ViceWrapper.h"
+#include "CGuiButtonSwitch.h"
 #include <vector>
 #include <list>
 
@@ -28,7 +30,7 @@ public:
 	void Render();
 };
 
-class CViewC64StateSID : public CGuiView, CGuiEditHexCallback
+class CViewC64StateSID : public CGuiView, CGuiEditHexCallback, CGuiButtonSwitchCallback
 {
 public:
 	CViewC64StateSID(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, C64DebugInterface *debugInterface);
@@ -38,9 +40,12 @@ public:
 	
 	virtual bool DoTap(GLfloat x, GLfloat y);
 	
-	CSlrFont *fontBytes;
+	CSlrFont *font;
+	float fontScale;
+	float fontHeight;
 	
-	float fontSize;
+	CSlrFont *fontBytes;
+	float fontBytesSize;
 	
 	virtual void SetVisible(bool isVisible);
 	virtual void SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY);
@@ -48,19 +53,29 @@ public:
 	virtual void Render();
 	virtual void DoLogic();
 	
-	uint16 sidBase;
-	
 	C64DebugInterface *debugInterface;
 	
 	void DumpSidWaveform(uint8 wave, char *buf);
 	
 	virtual bool SetFocus(bool focus);
 
-	CViewC64StateSIDWaveform *sidChannelWaveform[3];
-	CViewC64StateSIDWaveform *sidMixWaveform;
+	// [sid num][channel num]
+	CViewC64StateSIDWaveform *sidChannelWaveform[MAX_NUM_SIDS][3];
+	CViewC64StateSIDWaveform *sidMixWaveform[MAX_NUM_SIDS];
+	
+	int selectedSidNumber;
+	
+	CGuiButtonSwitch *btnsSelectSID[MAX_NUM_SIDS];
+	virtual bool ButtonSwitchChanged(CGuiButtonSwitch *button);
+	float buttonSizeX;
+	float buttonSizeY;
+
+	void SelectSid(int sidNum);
+	
+	void UpdateSidButtonsState();
 	
 	int waveformPos;
-	void AddWaveformData(int v1, int v2, int v3, short mix);
+	void AddWaveformData(int sidNumber, int v1, int v2, int v3, short mix);
 };
 
 

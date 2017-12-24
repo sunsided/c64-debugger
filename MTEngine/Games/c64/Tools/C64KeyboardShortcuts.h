@@ -47,6 +47,9 @@ public:
 	CSlrKeyboardShortcut *kbsVicEditorToggleSpriteFrames;
 
 	CSlrKeyboardShortcut *kbsVicEditorSelectNextLayer;
+	
+	//
+	CSlrKeyboardShortcut *kbsShowWatch;
 };
 
 #endif

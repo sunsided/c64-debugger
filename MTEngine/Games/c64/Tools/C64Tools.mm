@@ -6,6 +6,8 @@
 #include "CSlrString.h"
 #include "C64DebugInterface.h"
 #include "C64SIDFrequencies.h"
+#include "C64SettingsStorage.h"
+#include "CColorsTheme.h"
 #include <float.h>
 
 u8 ConvertPetsciiToSreenCode(u8 chr)
@@ -846,6 +848,125 @@ void CopyHiresCharsetToImage(u8 *charsetData, CImageData *imageData, int numColu
 
 }
 
+
+void CopyMultiCharsetToImage(u8 *charsetData, CImageData *imageData, int numColumns,
+							 u8 colorD021, u8 colorD022, u8 colorD023, u8 colorD800, C64DebugInterface *debugInterface)
+{
+	//	int numRows = 256 / numColumns;
+	int cols = numColumns * 8;
+	
+	u8 cD021r, cD021g, cD021b;
+	u8 cD022r, cD022g, cD022b;
+	u8 cD023r, cD023g, cD023b;
+	u8 cD800r, cD800g, cD800b;
+	
+	debugInterface->GetCBMColor(colorD021, &cD021r, &cD021g, &cD021b);
+	debugInterface->GetCBMColor(colorD022, &cD022r, &cD022g, &cD022b);
+	debugInterface->GetCBMColor(colorD023, &cD023r, &cD023g, &cD023b);
+	debugInterface->GetCBMColor(colorD800, &cD800r, &cD800g, &cD800b);
+	
+	imageData->EraseContent(cD021r, cD021g, cD021b, 255);
+	
+	int chx = 0;
+	int chy = 0;
+	
+	for (int charId = 0; charId < 256; charId++)
+	{
+		u8 *chd = charsetData + 8*charId;
+		u8 v;
+		
+		for (int y = 0; y < 8; y++)
+		{
+			v = (*chd & 0x03);
+			if (v == 0x01)
+			{
+				imageData->SetPixelResultRGBA(chx + 7, chy + y, cD022r, cD022g, cD022b, 255);
+				imageData->SetPixelResultRGBA(chx + 6, chy + y, cD022r, cD022g, cD022b, 255);
+			}
+			else if (v == 0x02)
+			{
+				imageData->SetPixelResultRGBA(chx + 7, chy + y, cD023r, cD023g, cD023b, 255);
+				imageData->SetPixelResultRGBA(chx + 6, chy + y, cD023r, cD023g, cD023b, 255);
+			}
+			else if (v == 0x03)
+			{
+				imageData->SetPixelResultRGBA(chx + 7, chy + y, cD800r, cD800g, cD800b, 255);
+				imageData->SetPixelResultRGBA(chx + 6, chy + y, cD800r, cD800g, cD800b, 255);
+			}
+			
+			// 00001100
+			v = (*chd & 0x0C);
+			if (v == 0x04)
+			{
+				imageData->SetPixelResultRGBA(chx + 5, chy + y, cD022r, cD022g, cD022b, 255);
+				imageData->SetPixelResultRGBA(chx + 4, chy + y, cD022r, cD022g, cD022b, 255);
+			}
+			else if (v == 0x08)
+			{
+				imageData->SetPixelResultRGBA(chx + 5, chy + y, cD023r, cD023g, cD023b, 255);
+				imageData->SetPixelResultRGBA(chx + 4, chy + y, cD023r, cD023g, cD023b, 255);
+			}
+			else if (v == 0x0C)
+			{
+				imageData->SetPixelResultRGBA(chx + 5, chy + y, cD800r, cD800g, cD800b, 255);
+				imageData->SetPixelResultRGBA(chx + 4, chy + y, cD800r, cD800g, cD800b, 255);
+			}
+			
+			// 00110000
+			v = (*chd & 0x30);
+			if (v == 0x10)
+			{
+				imageData->SetPixelResultRGBA(chx + 3, chy + y, cD022r, cD022g, cD022b, 255);
+				imageData->SetPixelResultRGBA(chx + 2, chy + y, cD022r, cD022g, cD022b, 255);
+			}
+			else if (v == 0x20)
+			{
+				imageData->SetPixelResultRGBA(chx + 3, chy + y, cD023r, cD023g, cD023b, 255);
+				imageData->SetPixelResultRGBA(chx + 2, chy + y, cD023r, cD023g, cD023b, 255);
+			}
+			else if (v == 0x30)
+			{
+				imageData->SetPixelResultRGBA(chx + 3, chy + y, cD800r, cD800g, cD800b, 255);
+				imageData->SetPixelResultRGBA(chx + 2, chy + y, cD800r, cD800g, cD800b, 255);
+			}
+			
+			// 11000000
+			v = (*chd & 0xC0);
+			if (v == 0x40)
+			{
+				imageData->SetPixelResultRGBA(chx + 1, chy + y, cD022r, cD022g, cD022b, 255);
+				imageData->SetPixelResultRGBA(chx    , chy + y, cD022r, cD022g, cD022b, 255);
+			}
+			else if (v == 0x80)
+			{
+				imageData->SetPixelResultRGBA(chx + 1, chy + y, cD023r, cD023g, cD023b, 255);
+				imageData->SetPixelResultRGBA(chx    , chy + y, cD023r, cD023g, cD023b, 255);
+			}
+			else if (v == 0xC0)
+			{
+				imageData->SetPixelResultRGBA(chx + 1, chy + y, cD800r, cD800g, cD800b, 255);
+				imageData->SetPixelResultRGBA(chx    , chy + y, cD800r, cD800g, cD800b, 255);
+			}
+
+			chd++;
+		}
+		
+		chx += 8;
+		
+		if (chx == cols)
+		{
+			chx = 0;
+			chy += 8;
+		}
+	}
+	
+	// don't ask me why - there's a bug in macos engine part waiting to be fixed
+	//#if !defined(WIN32) && !defined(LINUX)
+	imageData->FlipVertically();
+	//#endif
+	
+}
+
 u8 FindC64Color(u8 r, u8 g, u8 b, C64DebugInterface *debugInterface)
 {
 	//LOGD("FindC64Color: %d %d %d", r, g, b);
@@ -916,5 +1037,20 @@ void RenderColorRectangle(float px, float py, float ledSizeX, float ledSizeY, fl
 	BlitRectangle(px, py - gap, -1, ledSizeX, ledSizeY,
 				  colorR, colorG, colorB, 1.0f, gap);
 	
+}
+
+uint16 GetSidAddressByChipNum(int chipNum)
+{
+	if (chipNum == 1)
+	{
+		return c64SettingsSIDStereoAddress;
+	}
+
+	if (chipNum == 2)
+	{
+		return c64SettingsSIDTripleAddress;
+	}
+
+	return 0xD400;
 }
 

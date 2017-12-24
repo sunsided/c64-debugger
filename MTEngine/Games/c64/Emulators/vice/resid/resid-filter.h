@@ -355,6 +355,7 @@ public:
   void enable_filter(bool enable);
   void adjust_filter_bias(double dac_bias);
   void set_chip_model(chip_model model);
+  void set_chip_number(int chipNo);
   void set_voice_mask(reg4 mask);
 
   void clock(int voice1, int voice2, int voice3);
@@ -372,7 +373,7 @@ public:
 
   // SID audio output (16 bits).
   short output();
-
+	
 protected:
   void set_sum_mix();
   void set_w0();
@@ -425,6 +426,7 @@ protected:
   int _1024_div_Q;
 
   chip_model sid_model;
+  int chipNo;
 
   typedef struct {
     int vo_N16;  // Fixed point scaling for 16 bit op-amp output.
@@ -1281,7 +1283,7 @@ for my $mix (0..2**@i-1) {
   {
     returnValue = (short)(f.gain[vol][f.mixer[offset + Vi]] - (1 << 15));
 	  
-	  if (c64d_is_receive_channels_data)
+	  if (c64d_is_receive_channels_data[chipNo])
 	  {
 		  // 6581 correction factors for waveform display
 		  // ohh thats purely empirical
@@ -1291,7 +1293,7 @@ for my $mix (0..2**@i-1) {
 		  int vn2 = (v2 - d) << s;
 		  int vn3 = (v3 - d) << s;
 		  
-		  c64d_sid_channels_data(vn1, vn2, vn3, returnValue);
+		  c64d_sid_channels_data(chipNo, vn1, vn2, vn3, returnValue);
 	  }
 
   }
@@ -1304,14 +1306,14 @@ for my $mix (0..2**@i-1) {
 	  
 	 returnValue = (((Vi>>1)*vol) >> 4);
 	  
-	  if (c64d_is_receive_channels_data)
+	  if (c64d_is_receive_channels_data[chipNo])
 	  {
 		  const int s = 2;
 		  int vn1 = v1 << s;
 		  int vn2 = v2 << s;
 		  int vn3 = v3 << s;
 		  
-		  c64d_sid_channels_data(vn1, vn2, vn3, returnValue);
+		  c64d_sid_channels_data(chipNo, vn1, vn2, vn3, returnValue);
 	  }
 
   }

@@ -3,6 +3,10 @@
 
 // http://stackoverflow.com/questions/15604724/detect-multi-touch-gestures-or-drags-with-mouse-in-mac-os-x-app
 
+#include <ApplicationServices/ApplicationServices.h>
+#include <Carbon/Carbon.h>
+#include <Foundation/Foundation.h>
+
 #import "GLViewController.h"
 #import "GLView.h"
 #include "MenuControllerSettings.h"
@@ -12,7 +16,6 @@
 #include "SYS_PauseResume.h"
 #include "SND_SoundEngine.h"
 #include "SYS_Defs.h"
-
 
 @implementation GLViewController
 
@@ -345,10 +348,37 @@
 	[openGLView setWindowAlwaysOnTop:isAlwaysOnTop];
 }
 
-u32 mapKey(int c)
+u32 mapKey(int c, int keyCodeBare, bool isShift)
 {
-	LOGI("mapKey c=%d (%4.4x)", c, c);
+	LOGI("mapKey c=%d (%04x), keyCodeBare=%d (%04x) isShift=%d", c, c, keyCodeBare, keyCodeBare, isShift);
 	
+	// spanish keyboard workaround
+	if (c == 0x27 && keyCodeBare == 0)	//39
+	{
+		if (isShift)
+		{
+			return MTKEY_UMLAUT;
+		}
+		else
+		{
+			return MTKEY_RIGHT_APOSTROPHE;
+		}
+	}
+
+	// spanish keyboard workaround
+	if (c == 0x21 && keyCodeBare == 0)	//33
+	{
+		if (isShift)
+		{
+			return MTKEY_TILDE;
+		}
+		else
+		{
+			return '[';
+		}
+	}
+	
+
 	if (c == 53)
 		return MTKEY_ESC;
 	else if (c == 123)
@@ -393,6 +423,21 @@ u32 mapKey(int c)
 		return MTKEY_PAGE_UP;
 	else if (c == 0x0079)
 		return MTKEY_PAGE_DOWN;
+	else if (c == 0x0027)				// workaround for spanish keyboard
+		return '\'';
+	else if (c == 0x0021)
+		return '[';
+	else if (c == 0x0032)
+	{
+		if (isShift)
+		{
+			return MTKEY_TILDE;
+		}
+		else
+		{
+			return MTKEY_LEFT_APOSTROPHE;
+		}
+	}
 	else
 	{
 		//LOGD("mapKey: %d", c);
@@ -419,9 +464,60 @@ void SYS_DoFastQuit()
 	
 }
 
+- (int) characterWithoutModifierKeysIncludingShift:(NSEvent *)event
+{
+	CFDataRef currentLayoutData;
+	TISInputSourceRef currentKeyboard = TISCopyCurrentKeyboardInputSource();
+	
+	if(currentKeyboard == NULL)
+	{
+		LOGError("Could not find keyboard layout\n");
+		return 0;
+	}
+	
+	currentLayoutData = (CFDataRef)TISGetInputSourceProperty(currentKeyboard,
+															 kTISPropertyUnicodeKeyLayoutData);
+	CFRelease(currentKeyboard);
+	if(currentLayoutData == NULL)
+	{
+		LOGError("Could not find layout data\n");
+		return 0;
+	}
+	
+	const UCKeyboardLayout* keyboardLayout = (const UCKeyboardLayout*)CFDataGetBytePtr(currentLayoutData);
+	
+	const UniCharCount maxStrLen = 4;
+	UniChar strBuff[maxStrLen];
+	UniCharCount actualLength = 0;
+	UInt32 deadKeyState = 0;
+	
+	OSStatus status = UCKeyTranslate(keyboardLayout, [event keyCode],
+									 kUCKeyActionDown, ((event.modifierFlags) >> 8), LMGetKbdType(),
+									 kUCKeyTranslateNoDeadKeysBit, &deadKeyState, maxStrLen, &actualLength,
+									 strBuff);
+//	LOGI("...characterWithoutModifierKeysIncludingShift status=%d, actualLength=%d", status, actualLength);
+	
+	if (actualLength == 0)
+		return 0;
+	
+	int character = strBuff[0];
+	
+	return character;
+}
+
+bool wasKeyDownShift = false;
+bool wasKeyDownAlt = false;
+bool wasKeyDownControl = false;
+
 - (void) keyDown:(NSEvent *)event
 {
-	LOGI("GLViewController: keyDown event");
+	// https://stackoverflow.com/questions/3202629/where-can-i-find-a-list-of-mac-virtual-key-codes
+
+	LOGI(">>>>> GLViewController: keyDown event, keyCode=%d", [event keyCode]);
+	
+	int keyCodeBare = [self characterWithoutModifierKeysIncludingShift:event];
+
+	LOGI("                        keyDown keyCodeBare=%d (%x) %c", keyCodeBare, keyCodeBare, keyCodeBare);
 	
 	bool isShift = false;
 	bool isAlt = false;
@@ -440,62 +536,18 @@ void SYS_DoFastQuit()
 		isControl = true;
     }
 	
-    unichar c = [[event charactersIgnoringModifiers] characterAtIndex:0];
-    switch (c)
-	{
-			
-#if !defined(FINAL_RELEASE)
-		// [Esc] exits full-screen mode
-        case 27:
-			if (isInFullScreenMode)
-			{
-				[self goWindow];
-			}
-			else
-			{
-				LOGM("ESC pressed. QUIT.");
-				gSoundEngine->StopAudioUnit();
-				[self stopAnimation];
-				//exit(0);
-				//_Exit(0);
-				_exit(0);
-			}
-			return;
-#endif
-			
-		case 13:
-			if (isAlt)
-			{
-				if (isInFullScreenMode)
-				{
-					[self goWindow];
-				}
-				else
-				{
-					[self goFullScreen:self];
-				}
-				return;
-			}
-			break;
-		// [space] toggles rotation of the globe
-//        case 32:
-//            [self toggleAnimation];
-//            break;
-//			
-//		// [W] toggles wireframe rendering
-//        case 'w':
-//        case 'W':
-//            [scene toggleWireframe];
-//            break;
-		default:
-			break;
-    }
+	wasKeyDownShift = isShift;
+	wasKeyDownAlt = isAlt;
+	wasKeyDownControl = isControl;
 	
-	c = [event keyCode];
 	
-	u32 key = mapKey(c);
+	//  kVK_ANSI_Quote,  kVK_ANSI_LeftBracket
+	unichar c = [event keyCode];
+	
+	u32 key = mapKey(c, keyCodeBare, isShift);
 	if (key != 0)
 	{
+		LOGI("     ... mapped keydown=%d %04x %c", key, key, key);
 		guiMain->KeyDown(key, isShift, isAlt, isControl);
 		
 		if (key == quitKeyCode && isShift == quitIsShift && isAlt == quitIsAlt && isControl == quitIsControl)
@@ -510,9 +562,13 @@ void SYS_DoFastQuit()
 	}
 	else
 	{
-		unichar c = [[event charactersIgnoringModifiers] characterAtIndex:0];
+		LOGI("     ... not mapped keydown=%d (%04x) isShift=%d isAlt=%d isCtrl=%d", key, key, isShift, isAlt, isControl);
+		// BUG: does not include shift! unichar c = [[event charactersIgnoringModifiers] characterAtIndex:0];
+		unichar keyCode = [[event charactersIgnoringModifiers] characterAtIndex:0];
 
-		if (c == quitKeyCode && isShift == quitIsShift && isAlt == quitIsAlt && isControl == quitIsControl)
+		LOGI("          converted keydown keyCode=%d (%04x) [%c] isShift=%d isAlt=%d isCtrl=%d", keyCode, keyCode, keyCode, isShift, isAlt, isControl);
+
+		if (keyCode == quitKeyCode && isShift == quitIsShift && isAlt == quitIsAlt && isControl == quitIsControl)
 		{
 			LOGM("QUIT.");
 			gSoundEngine->StopAudioUnit();
@@ -521,28 +577,53 @@ void SYS_DoFastQuit()
 			//_Exit(0);
 			_exit(0);
 		}
-
-		guiMain->KeyDown(c, isShift, isAlt, isControl);
+		
+		int keyCodeBare = [self characterWithoutModifierKeysIncludingShift:event];
+		
+//		keyCode = 33;
+		
+		LOGI("keyDown not mapped, keyCodeM=%d (%04x) [%c] keyCodeBare=%d (%04x) [%c] isShift=%d isAlt=%d isCtrl=%d",
+			 keyCode, keyCode, keyCode, keyCodeBare, keyCodeBare, keyCodeBare, isShift, isAlt, isControl);
+		guiMain->KeyDown(keyCode, isShift, isAlt, isControl);
 	}
 }
 
 - (void) keyUp:(NSEvent *)event
 {
-	bool isShift = false;
-	bool isAlt = false;
-	bool isControl = false;
+	LOGI(">>>>> GLViewController: keyUp event, keyCode=%d", [event keyCode]);
+
+	int keyCodeBare = [self characterWithoutModifierKeysIncludingShift:event];
+
+	LOGI("                        keyUp keyCodeBare=%d (%x) %c", keyCodeBare, keyCodeBare, keyCodeBare);
+
+	bool isShift = wasKeyDownShift;
+	bool isAlt = wasKeyDownAlt;
+	bool isControl = wasKeyDownControl;
 	
 //    unichar c = [[event charactersIgnoringModifiers] characterAtIndex:0];
 	unichar c = [event keyCode];
-	u32 key = mapKey(c);
+	
+	u32 key = mapKey(c, keyCodeBare, isShift);
+	
 	if (key != 0)
 	{
+		LOGI("     ... mapped keyup=%d (%04x) [%c] isShift=%d isAlt=%d isCtrl=%d", key, key, key, isShift, isAlt, isControl);
 		guiMain->KeyUp(key, isShift, isAlt, isControl);
 	}
 	else
 	{
-		unichar c = [[event charactersIgnoringModifiers] characterAtIndex:0];
-		guiMain->KeyUp(c, isShift, isAlt, isControl);
+		LOGI("     ... not mapped keyup=%d (%04x) [%c] isShift=%d isAlt=%d isCtrl=%d", key, key, key, isShift, isAlt, isControl);
+
+		unichar keyCode = [[event charactersIgnoringModifiers] characterAtIndex:0];
+		int keyCodeBare = [self characterWithoutModifierKeysIncludingShift:event];
+
+		LOGI("          converted keyup keyCode=%d (%04x) [%c] isShift=%d isAlt=%d isCtrl=%d", keyCode, keyCode, keyCode, isShift, isAlt, isControl);
+
+//		keyCode = 33;
+
+		LOGI("keyUp not mapped, keyCodeM=%d (%04x) [%c] keyCodeBare=%d (%04x) [%c] isShift=%d isAlt=%d isCtrl=%d",
+			 keyCode, keyCode, keyCode, keyCodeBare, keyCodeBare, keyCodeBare, isShift, isAlt, isControl);
+		guiMain->KeyUp(keyCode, isShift, isAlt, isControl);
 	}
 }
 
@@ -702,7 +783,7 @@ void SYS_DoFastQuit()
 
 -(void)flagsChanged:(NSEvent*)event
 {
-//	NSLog(@"flagsChanged: event=%@", event);
+	LOGI(">>>>>>>>>> flagsChanged");
 
 	bool isShift = false;
 	bool isAlt = false;
@@ -731,10 +812,12 @@ void SYS_DoFastQuit()
 			isShiftKeyDown = true;
 			if ([event keyCode] == 56)
 			{
+				LOGI("     flagsChanged: key down LSHIFT");
 				guiMain->KeyDown(MTKEY_LSHIFT, isShift, isAlt, isControl);
 			}
 			else if ([event keyCode] == 60)
 			{
+				LOGI("     flagsChanged: key down RSHIFT");
 				guiMain->KeyDown(MTKEY_RSHIFT, isShift, isAlt, isControl);
 			}
 		}
@@ -746,10 +829,12 @@ void SYS_DoFastQuit()
 			isShiftKeyDown = false;
 			if ([event keyCode] == 56)
 			{
+				LOGI("     flagsChanged: key up LSHIFT");
 				guiMain->KeyUp(MTKEY_LSHIFT, isShift, isAlt, isControl);
 			}
 			else if ([event keyCode] == 60)
 			{
+				LOGI("     flagsChanged: key up RSHIFT");
 				guiMain->KeyUp(MTKEY_RSHIFT, isShift, isAlt, isControl);
 			}
 		}
@@ -763,10 +848,12 @@ void SYS_DoFastQuit()
 			
 			if ([event keyCode] == 58)
 			{
+				LOGI("     flagsChanged: key down LALT");
 				guiMain->KeyDown(MTKEY_LALT, isShift, isAlt, isControl);
 			}
 			else if ([event keyCode] == 61)
 			{
+				LOGI("     flagsChanged: key down RALT");
 				guiMain->KeyDown(MTKEY_RALT, isShift, isAlt, isControl);
 			}
 		}
@@ -778,10 +865,12 @@ void SYS_DoFastQuit()
 			isAltKeyDown = false;
 			if ([event keyCode] == 58)
 			{
+				LOGI("     flagsChanged: key up LALT");
 				guiMain->KeyUp(MTKEY_LALT, isShift, isAlt, isControl);
 			}
 			else if ([event keyCode] == 61)
 			{
+				LOGI("     flagsChanged: key up RALT");
 				guiMain->KeyUp(MTKEY_RALT, isShift, isAlt, isControl);
 			}
 		}
@@ -794,10 +883,12 @@ void SYS_DoFastQuit()
 			isControlKeyDown = true;
 			if ([event keyCode] == 55)
 			{
+				LOGI("     flagsChanged: key down LCTRL");
 				guiMain->KeyDown(MTKEY_LCONTROL, isShift, isAlt, isControl);
 			}
 			else if ([event keyCode] == 54)
 			{
+				LOGI("     flagsChanged: key down RCTRL");
 				guiMain->KeyDown(MTKEY_RCONTROL, isShift, isAlt, isControl);
 			}
 		}
@@ -809,10 +900,12 @@ void SYS_DoFastQuit()
 			isControlKeyDown = false;
 			if ([event keyCode] == 55)
 			{
+				LOGI("     flagsChanged: key up LCTRL");
 				guiMain->KeyUp(MTKEY_LCONTROL, isShift, isAlt, isControl);
 			}
 			else if ([event keyCode] == 54)
 			{
+				LOGI("     flagsChanged: key up RCTRL");
 				guiMain->KeyUp(MTKEY_RCONTROL, isShift, isAlt, isControl);
 			}
 		}

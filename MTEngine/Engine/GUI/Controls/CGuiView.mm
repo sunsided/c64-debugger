@@ -830,8 +830,18 @@ void CGuiView::RenderFocusBorder()
 	}
 	else
 	{
-		const float lineWidth = 0.7f;
-		BlitRectangle(this->posX, this->posY, this->posZ, this->sizeX, this->sizeY, 1.0f, 0.0f, 0.0f, 0.5f, lineWidth);		
+		BlitRectangle(this->posX, this->posY, this->posZ, this->sizeX, this->sizeY, 1.0f, 0.0f, 0.0f, 0.5f, guiMain->theme->focusBorderLineWidth);
+	}
+}
+
+void CGuiView::UpdateTheme()
+{
+	for (std::map<float, CGuiElement *, compareZupwards>::iterator enumGuiElems = guiElementsUpwards.begin();
+		 enumGuiElems != guiElementsUpwards.end(); enumGuiElems++)
+	{
+		CGuiElement *guiElement = (*enumGuiElems).second;
+		
+		guiElement->UpdateTheme();
 	}
 }
 

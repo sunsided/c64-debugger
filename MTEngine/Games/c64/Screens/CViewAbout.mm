@@ -7,6 +7,7 @@
 #include "SYS_KeyCodes.h"
 #include "CSlrKeyboardShortcuts.h"
 #include "CSlrFileFromOS.h"
+#include "CColorsTheme.h"
 #include "C64SettingsStorage.h"
 
 #include "C64KeyboardShortcuts.h"
@@ -29,11 +30,6 @@ CViewAbout::CViewAbout(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, 
 	fontHeight = font->GetCharHeight('@', fontScale) + 2;
 	
 	strHeader = new CSlrString("About C64 Debugger");
-	
-	/// colors
-	tr = 0.64; //163/255;
-	tg = 0.59; //151/255;
-	tb = 1.0; //255/255;
 }
 
 CViewAbout::~CViewAbout()
@@ -47,18 +43,22 @@ void CViewAbout::DoLogic()
 
 void CViewAbout::Render()
 {
-	BlitFilledRectangle(0, 0, -1, sizeX, sizeY, 0.5, 0.5, 1.0, 1.0);
+	BlitFilledRectangle(0, 0, -1, sizeX, sizeY,
+						viewC64->colorsTheme->colorBackgroundFrameR,
+						viewC64->colorsTheme->colorBackgroundFrameG,
+						viewC64->colorsTheme->colorBackgroundFrameB,
+						1.0);
 	
 	float sb = 20;
 	float gap = 4;
 	
-	float tr = 0.64; //163/255;
-	float tg = 0.59; //151/255;
-	float tb = 1.0; //255/255;
+	float tr = viewC64->colorsTheme->colorTextR;
+	float tg = viewC64->colorsTheme->colorTextG;
+	float tb = viewC64->colorsTheme->colorTextB;
 	
-	float lr = 0.64;
-	float lg = 0.65;
-	float lb = 0.65;
+	float lr = viewC64->colorsTheme->colorHeaderLineR;
+	float lg = viewC64->colorsTheme->colorHeaderLineG;
+	float lb = viewC64->colorsTheme->colorHeaderLineB;
 	float lSizeY = 3;
 	
 	float scrx = sb;
@@ -67,7 +67,11 @@ void CViewAbout::Render()
 	float scrsy = sizeY - sb*2.0f;
 	float cx = scrsx/2.0f + sb;
 	
-	BlitFilledRectangle(scrx, scry, -1, scrsx, scrsy, 0, 0, 1.0, 1.0);
+	float bg_r = viewC64->colorsTheme->colorBackgroundR;
+	float bg_g = viewC64->colorsTheme->colorBackgroundG;
+	float bg_b = viewC64->colorsTheme->colorBackgroundB;
+	
+	BlitFilledRectangle(scrx, scry, -1, scrsx, scrsy, bg_r, bg_g, bg_b, 1.0);
 	
 	float px = scrx + gap;
 	float py = scry + gap;
@@ -75,7 +79,11 @@ void CViewAbout::Render()
 	fontScale = 3.0f;
 	fontHeight = font->GetCharHeight('@', fontScale) + 1;
 
-	font->BlitTextColor(strHeader, cx, py, -1, fontScale, tr, tg, tb, 1, FONT_ALIGN_CENTER);
+	float htr = viewC64->colorsTheme->colorTextHeaderR;
+	float htg = viewC64->colorsTheme->colorTextHeaderG;
+	float htb = viewC64->colorsTheme->colorTextHeaderB;
+	font->BlitTextColor(strHeader, cx, py, -1, fontScale, htr, htg, htb, 1, FONT_ALIGN_CENTER);
+
 	py += fontHeight;
 	//	font->BlitTextColor(strHeader2, cx, py, -1, fontScale, tr, tg, tb, 1, FONT_ALIGN_CENTER);
 	//	py += fontHeight;

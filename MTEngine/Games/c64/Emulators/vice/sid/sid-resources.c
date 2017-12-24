@@ -595,8 +595,21 @@ void c64d_sid_set_filter_bias(int filterBias)
 	resources_set_int("SidResidFilterBias", filterBias);
 }
 
+// stereo: 0=none, 1=stereo, 2=triple
+void c64d_sid_set_stereo(int stereoMode)
+{
+	resources_set_int("SidStereo", stereoMode);
+}
 
+void c64d_sid_set_stereo_address(int sidAddress)
+{
+	resources_set_int("SidStereoAddressStart", sidAddress);
+}
 
+void c64d_sid_set_triple_address(int sidAddress)
+{
+	resources_set_int("SidTripleAddressStart", sidAddress);
+}
 
 // sets directly (immediate)
 void c64d_sid_set_engine_model_direct(int engine, int model)

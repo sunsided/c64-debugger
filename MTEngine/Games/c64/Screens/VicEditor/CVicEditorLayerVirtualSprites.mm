@@ -579,7 +579,7 @@ void CVicEditorLayerVirtualSprites::SimpleScanSpritesInThisFrame()
 	
 	vicii_cycle_state_t *viciiState = NULL;
 	
-	for (int y = 0; y < 312; y++)
+	for (int y = 0; y < 311; y++)
 	{
 		for (int cycle = 0; cycle < 63; cycle++)
 		{

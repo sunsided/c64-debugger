@@ -6,6 +6,7 @@
 #include "CGuiViewMenu.h"
 #include "SYS_CFileSystem.h"
 #include "SYS_Threading.h"
+#include "CColorsTheme.h"
 #include <list>
 
 class CSlrKeyboardShortcut;
@@ -153,6 +154,7 @@ public:
 	bool LoadPRG(CByteBuffer *byteBuffer, bool autoStart, bool showAddressInfo);
 	void LoadPRG(CByteBuffer *byteBuffer, u16 *startAddr, u16 *endAddr);
 	bool LoadPRGNotThreaded(CByteBuffer *byteBuffer, bool autoStart, bool showAddressInfo);
+	void LoadLabelsAndWatches(CSlrString *pathToPRG);
 	void SetBasicEndAddr(int endAddr);
 
 	void OpenDialogStartJukeboxPlaylist();
@@ -175,6 +177,8 @@ public:
 	
 	void SwitchMainMenuScreen();
 	
+	void ApplyColorsToMenu(CGuiViewMenu *menu);
+	virtual void UpdateTheme();
 };
 
 class CViewC64MenuItem : public CGuiViewMenuItem

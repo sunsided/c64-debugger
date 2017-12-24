@@ -60,11 +60,14 @@ struct sound_s
 {
     /* resid sid implementation */
     SIDFP *sid;
+	
+	/* chip number (c64d) */
+	int chipNo;
 };
 
 typedef struct sound_s sound_t;
 
-static sound_t *residfp_open(BYTE *sidstate)
+static sound_t *residfp_open(BYTE *sidstate, int chipNo)
 {
     sound_t *psid;
     int i;
@@ -75,6 +78,8 @@ static sound_t *residfp_open(BYTE *sidstate)
     for (i = 0x00; i <= 0x18; i++) {
         psid->sid->write(i, sidstate[i]);
     }
+	
+	psid->chipNo = chipNo;
 
     return psid;
 }
@@ -104,6 +109,8 @@ static int residfp_init(sound_t *psid, int speed, int cycles_per_sec, int factor
  
     /* Some mostly-common settings for all modes abstracted here. */
     psid->sid->input(0);
+
+	psid->sid->set_chip_number(psid->chipNo);
 
     /* Model numbers 8-15 are reserved for distorted 6581s. */
     if (model < 8 || model > 15) {

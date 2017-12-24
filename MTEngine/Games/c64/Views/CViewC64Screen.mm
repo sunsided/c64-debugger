@@ -1,4 +1,5 @@
 #include "CViewC64Screen.h"
+#include "CColorsTheme.h"
 #include "VID_GLViewController.h"
 #include "CGuiMain.h"
 #include "VID_ImageBinding.h"
@@ -6,6 +7,7 @@
 #include "SYS_KeyCodes.h"
 #include "C64DebugInterface.h"
 #include "C64SettingsStorage.h"
+#include "C64ColodoreScreen.h"
 
 CViewC64Screen::CViewC64Screen(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, C64DebugInterface *debugInterface)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
@@ -16,8 +18,8 @@ CViewC64Screen::CViewC64Screen(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	
 	int w = 512;
 	int h = 512;
-	imageDataScreen = new CImageData(w, h, IMG_TYPE_RGBA);
-	imageDataScreen->AllocImage(false, true);
+	imageDataScreenDefault = new CImageData(w, h, IMG_TYPE_RGBA);
+	imageDataScreenDefault->AllocImage(false, true);
 	
 	//	for (int x = 0; x < w; x++)
 	//	{
@@ -28,17 +30,20 @@ CViewC64Screen::CViewC64Screen(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	//	}
 	
 	
-	imageScreen = new CSlrImage(true, true);
-	imageScreen->LoadImage(imageDataScreen, RESOURCE_PRIORITY_STATIC, false);
-	imageScreen->resourceType = RESOURCE_TYPE_IMAGE_DYNAMIC;
-	imageScreen->resourcePriority = RESOURCE_PRIORITY_STATIC;
-	VID_PostImageBinding(imageScreen, NULL);
+	imageScreenDefault = new CSlrImage(true, true);
+	imageScreenDefault->LoadImage(imageDataScreenDefault, RESOURCE_PRIORITY_STATIC, false);
+	imageScreenDefault->resourceType = RESOURCE_TYPE_IMAGE_DYNAMIC;
+	imageScreenDefault->resourcePriority = RESOURCE_PRIORITY_STATIC;
+	VID_PostImageBinding(imageScreenDefault, NULL);
 	
+	imageScreen = imageScreenDefault;
 	
 	// c64 screen texture boundaries
 	screenTexEndX = (float)debugInterface->GetC64ScreenSizeX() / 512.0f;
 	screenTexEndY = 1.0f - (float)debugInterface->GetC64ScreenSizeY() / 512.0f;
 
+	this->colodoreScreen = NULL;
+	
 	// zoomed screen
 	this->zoomedScreenLevel = c64SettingsScreenRasterViewfinderScale;
 	this->showZoomedScreen = false;
@@ -61,86 +66,48 @@ CViewC64Screen::~CViewC64Screen()
 {
 }
 
-// TODO: move this to Tools (copy in CViewC64VideoCharacterMode)
-void CViewC64Screen::GetRasterColorScheme(int schemeNum, float splitAmount, float *r, float *g, float *b)
+void CViewC64Screen::SetupScreenColodore()
 {
-	switch(schemeNum)
-	{
-		default:
-			// red
-			*r = 1.0f - splitAmount;
-			*g = splitAmount;
-			*b = 0.0f;
-			break;
-		case 1:
-			// green
-			*r = splitAmount;
-			*g = 1.0f - splitAmount;
-			*b = 0.0f;
-			break;
-		case 2:
-			// blue
-			*r = splitAmount;
-			*g = 0.0f;
-			*b = 1.0f - splitAmount;
-			break;
-		case 3:
-			// black
-			*r = 0.0f;
-			*g = 0.0f;
-			*b = 0.0f;
-			break;
-		case 4:
-			// dark gray
-			*r = 0.25f;
-			*g = 0.25f;
-			*b = 0.25f;
-			break;
-		case 5:
-			// light gray
-			*r = 0.70f;
-			*g = 0.70f;
-			*b = 0.70f;
-			break;
-		case 6:
-			// white
-			*r = 1.0f;
-			*g = 1.0f;
-			*b = 1.0f;
-			break;
-	}
+	this->colodoreScreen = new C64ColodoreScreen(this->debugInterface);
+	
+	imageScreenColodore = new CSlrImage(true, true);
+	imageScreenColodore->LoadImage(this->colodoreScreen->imageDataColodoreScreen, RESOURCE_PRIORITY_STATIC, false);
+	imageScreenColodore->resourceType = RESOURCE_TYPE_IMAGE_DYNAMIC;
+	imageScreenColodore->resourcePriority = RESOURCE_PRIORITY_STATIC;
+	VID_PostImageBinding(imageScreenColodore, NULL);
 
+	imageScreen = imageScreenColodore;
 }
 
 void CViewC64Screen::InitRasterColorsFromScheme()
 {
 	// grid lines
-	GetRasterColorScheme(c64SettingsScreenGridLinesColorScheme, 0.0f,
+	GetColorsFromScheme(c64SettingsScreenGridLinesColorScheme, 0.0f,
 						 &gridLinesColorR, &gridLinesColorG, &gridLinesColorB);
 	
 	gridLinesColorA = c64SettingsScreenGridLinesAlpha;
 
 	// raster long screen line
-	GetRasterColorScheme(c64SettingsScreenRasterCrossLinesColorScheme, 0.0f,
+	GetColorsFromScheme(c64SettingsScreenRasterCrossLinesColorScheme, 0.0f,
 						 &rasterLongScrenLineR, &rasterLongScrenLineG, &rasterLongScrenLineB);
 	rasterLongScrenLineA = c64SettingsScreenRasterCrossLinesAlpha;
 	
 	//c64SettingsScreenRasterCrossAlpha = 0.85
 
 	// exterior
-	GetRasterColorScheme(c64SettingsScreenRasterCrossExteriorColorScheme, 0.1f,
+	GetColorsFromScheme(c64SettingsScreenRasterCrossExteriorColorScheme, 0.1f,
 						 &rasterCrossExteriorR, &rasterCrossExteriorG, &rasterCrossExteriorB);
 	
 	rasterCrossExteriorA = 0.8235f * c64SettingsScreenRasterCrossAlpha;		// 0.7
 	
 	// tip
-	GetRasterColorScheme(c64SettingsScreenRasterCrossTipColorScheme, 0.1f,
+	GetColorsFromScheme(c64SettingsScreenRasterCrossTipColorScheme, 0.1f,
 						 &rasterCrossEndingTipR, &rasterCrossEndingTipG, &rasterCrossEndingTipB);
 	
 	rasterCrossEndingTipA = 0.1765f * c64SettingsScreenRasterCrossAlpha;	// 0.15
 	
 	// white interior cross
-	GetRasterColorScheme(c64SettingsScreenRasterCrossInteriorColorScheme, 0.1f,
+	GetColorsFromScheme(c64SettingsScreenRasterCrossInteriorColorScheme, 0.1f,
 						 &rasterCrossInteriorR, &rasterCrossInteriorG, &rasterCrossInteriorB);
 
 	rasterCrossInteriorA = c64SettingsScreenRasterCrossAlpha;	// 0.85
@@ -178,6 +145,12 @@ void CViewC64Screen::RefreshScreen()
 {
 	//LOGD("CViewC64Screen::RefreshScreen");
 	
+	if (this->colodoreScreen)
+	{
+		RefreshScreenColodore();
+		return;
+	}
+	
 	debugInterface->LockRenderScreenMutex();
 	
 	// refresh texture of C64's screen
@@ -199,6 +172,25 @@ void CViewC64Screen::RefreshScreen()
 	
 	debugInterface->UnlockRenderScreenMutex();
 }
+
+void CViewC64Screen::RefreshScreenColodore()
+{
+	//LOGD("CViewC64Screen::RefreshScreen");
+	
+	debugInterface->LockRenderScreenMutex();
+	
+	// refresh texture of C64's screen
+	CImageData *screen = debugInterface->GetC64ScreenImageData();
+	colodoreScreen->RefreshColodoreScreen(screen);
+	
+	imageScreen->Deallocate();
+	imageScreen->SetLoadImageData(colodoreScreen->imageDataColodoreScreen);
+	imageScreen->BindImage();
+	imageScreen->loadImageData = NULL;
+	
+	debugInterface->UnlockRenderScreenMutex();
+}
+
 
 void CViewC64Screen::Render()
 {
@@ -345,7 +337,10 @@ void CViewC64Screen::RenderZoomedScreen(int rasterX, int rasterY)
 		 0.0f, 1.0f, screenTexEndX, screenTexEndY);
 	
 	// clipping
-	BlitRectangle(zoomedScreenPosX, zoomedScreenPosY, -1, zoomedScreenSizeX, zoomedScreenSizeY, 0.0f, 1.0f, 1.0f, 1.0f);
+	if (viewC64->currentScreenLayoutId != C64_SCREEN_LAYOUT_FULL_SCREEN_ZOOM)
+	{
+		BlitRectangle(zoomedScreenPosX, zoomedScreenPosY, -1, zoomedScreenSizeX, zoomedScreenSizeY, 0.0f, 1.0f, 1.0f, 1.0f);
+	}
 	
 	
 	float rs = 0.3f;

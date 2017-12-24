@@ -6,6 +6,7 @@
 #include "CGuiButtonSwitch.h"
 #include "CGuiLabel.h"
 #include "CGuiEditHex.h"
+#include "CColorsTheme.h"
 
 class C64AddrBreakpoint;
 class C64MemoryBreakpoint;
@@ -142,6 +143,8 @@ public:
 	void DeleteSelectedMemoryBreakpoint(std::map<uint16, C64MemoryBreakpoint *> *breakpointsMap);
 	
 	CGuiView *prevView;
+	
+	virtual void UpdateTheme();
 };
 
 #endif //_VIEW_C64BREAKPOINTS_

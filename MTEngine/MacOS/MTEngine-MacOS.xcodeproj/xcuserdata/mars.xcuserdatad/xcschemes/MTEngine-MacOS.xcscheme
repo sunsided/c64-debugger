@@ -181,6 +181,14 @@
             argument = "/Users/mars/develop/MTEngine/tools/_other/c64/stein/flash.prg"
             isEnabled = "NO">
          </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-playlist"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "&quot;/Users/mars/Desktop/JukeBox Demo/JukeBoxDemo.c64jukebox&quot;"
+            isEnabled = "NO">
+         </CommandLineArgument>
       </CommandLineArguments>
       <EnvironmentVariables>
          <EnvironmentVariable

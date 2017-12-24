@@ -128,6 +128,8 @@ public:
 	
 //	float mousePosX, mousePosY;
 	
+	virtual void UpdateTheme();
+
 private:
 	float previousZ;
 	float previousFrontZ;

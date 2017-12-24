@@ -3,6 +3,7 @@ extern "C"{
 }
 
 #include "CViewC64.h"
+#include "CColorsTheme.h"
 #include "CViewC64KeyMap.h"
 #include "VID_GLViewController.h"
 #include "CGuiMain.h"
@@ -326,6 +327,9 @@ CViewC64KeyMap::CViewC64KeyMap(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	UpdateFromKeyMap(keyMap);
 
 	SelectKey(NULL);
+	
+	//
+	viewC64->colorsTheme->AddThemeChangeListener(this);
 }
 
 CViewC64KeyMap::~CViewC64KeyMap()
@@ -386,11 +390,23 @@ void CViewC64KeyMap::OpenDialogImportKeyMap()
 
 void CViewC64KeyMap::SystemDialogFileOpenSelected(CSlrString *path)
 {
+	guiMain->LockMutex();
+	viewC64->debugInterface->LockMutex();
+	
 	if (C64KeyMapLoadFromFile(path))
 	{
+		C64KeyMap *keyMap = C64KeyMapGetDefault();
+		UpdateFromKeyMap(keyMap);
+
+		viewC64->debugInterface->UnlockMutex();
+		guiMain->UnlockMutex();
+		
 		guiMain->ShowMessage("C64 Key map loaded");
 		return;
 	}
+
+	viewC64->debugInterface->UnlockMutex();
+	guiMain->UnlockMutex();
 
 	guiMain->ShowMessage("C64 Key map loading failed");
 }
@@ -454,18 +470,21 @@ CViewC64KeyMapKeyData *CViewC64KeyMap::AddButtonKey(char *keyName1, char *keyNam
 void CViewC64KeyMap::Render()
 {
 	
-	BlitFilledRectangle(0, 0, -1, sizeX, sizeY, 0.5, 0.5, 1.0, 1.0);
+	BlitFilledRectangle(0, 0, -1, sizeX, sizeY,
+						viewC64->colorsTheme->colorBackgroundFrameR,
+						viewC64->colorsTheme->colorBackgroundFrameG,
+						viewC64->colorsTheme->colorBackgroundFrameB, 1.0);
 	
 	float sb = 20;
 	float gap = 4;
 	
-	float tr = 0.64; //163/255;
-	float tg = 0.59; //151/255;
-	float tb = 1.0; //255/255;
+	float tr = viewC64->colorsTheme->colorTextR;
+	float tg = viewC64->colorsTheme->colorTextG;
+	float tb = viewC64->colorsTheme->colorTextR;
 	
-	float lr = 0.64;
-	float lg = 0.65;
-	float lb = 0.65;
+	float lr = viewC64->colorsTheme->colorHeaderLineR;
+	float lg = viewC64->colorsTheme->colorHeaderLineG;
+	float lb = viewC64->colorsTheme->colorHeaderLineB;
 	float lSizeY = 3;
 	
 	float scrx = sb;
@@ -474,7 +493,10 @@ void CViewC64KeyMap::Render()
 	float scrsy = sizeY - sb*2.0f;
 	float cx = scrsx/4.0f + sb*2;
 	
-	BlitFilledRectangle(scrx, scry, -1, scrsx, scrsy, 0, 0, 1.0, 1.0);
+	BlitFilledRectangle(scrx, scry, -1, scrsx, scrsy,
+						viewC64->colorsTheme->colorBackgroundR,
+						viewC64->colorsTheme->colorBackgroundG,
+						viewC64->colorsTheme->colorBackgroundB, 1.0);
 	
 	float px = scrx + gap;
 	float py = scry + gap;
@@ -510,9 +532,9 @@ void CViewC64KeyMap::Render()
 	float fu2  = fu*2;
 	float fh2 = fontHeight * 2.60f;
 	
-	float lineR = 1.0f;
-	float lineG = 1.0f;
-	float lineB = 1.0f;
+	float lineR = viewC64->colorsTheme->colorVerticalLineR;
+	float lineG = viewC64->colorsTheme->colorVerticalLineG;
+	float lineB = viewC64->colorsTheme->colorVerticalLineB;
 	float lineA = 1.0f;
 	
 	// check shifts
@@ -928,6 +950,8 @@ void CViewC64KeyMap::ClearKeys()
 		CViewC64KeyMapKeyData *keyData = it->second;
 		keyData->keyCodes.clear();
 	}
+	
+	SelectKey(NULL);
 }
 
 void CViewC64KeyMap::UpdateFromKeyMap(C64KeyMap *keyMap)
@@ -985,6 +1009,7 @@ void CViewC64KeyMap::AssignKey()
 
 void CViewC64KeyMap::AssignKey(u32 keyCode)
 {
+	LOGI("CViewC64KeyMap::AssignKey: keyCode=%d", keyCode);
 	guiMain->LockMutex();
 	isAssigningKey = false;
 	
@@ -1006,6 +1031,7 @@ void CViewC64KeyMap::AssignKey(u32 keyCode)
 		
 		SelectKeyCode(keyCode);
 		
+		LOGI("CViewC64KeyMap::AssignKey: keyCode=%d is already assigned", keyCode);
 		guiMain->UnlockMutex();
 		return;
 	}
@@ -1024,6 +1050,8 @@ void CViewC64KeyMap::AssignKey(u32 keyCode)
 		{
 			key->shift |= LEFT_SHIFT;
 		}
+		
+		LOGD("CViewC64KeyMap::AssignKey: assigned keyCode=%d col=%d row=%d shift=%d", key->keyCode, key->matrixCol, key->matrixRow, key->shift);
 		
 		keyMap->AddKeyCode(key);
 		selectedKeyData->keyCodes.push_back(key);
@@ -1088,7 +1116,13 @@ void CViewC64KeyMap::RemoveSelectedKey()
 
 bool CViewC64KeyMap::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
-	LOGM("CViewC64KeyMap::KeyDown: keyCode=%d %d %d %d", keyCode, isShift, isAlt, isControl);
+	///
+//	keyCode = 33;
+//	isShift = false;
+//	isAlt = false;
+//	isControl = false;
+	
+	LOGI("CViewC64KeyMap::KeyDown: keyCode=%d %d %d %d", keyCode, isShift, isAlt, isControl);
 
 	// block repeats first
 	std::map<u32, bool>::iterator it = pressedKeyCodes.find(keyCode);
@@ -1108,6 +1142,7 @@ bool CViewC64KeyMap::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContr
 	
 	if (isAssigningKey)
 	{
+		LOGD("...isAssigningKey...");
 #if !defined(WIN32)
 		if (keyCode == MTKEY_LALT || keyCode == MTKEY_RALT || keyCode == MTKEY_LCONTROL || keyCode == MTKEY_RCONTROL
 			|| keyCode == MTKEY_LSHIFT || keyCode == MTKEY_RSHIFT)
@@ -1256,7 +1291,7 @@ void CViewC64KeyMap::SwitchScreen()
 
 bool CViewC64KeyMap::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
-	LOGM("CViewC64KeyMap::KeyUp: keyCode=%d %d %d %d", keyCode, isShift, isAlt, isControl);
+	LOGI("CViewC64KeyMap::KeyUp: keyCode=%d %d %d %d", keyCode, isShift, isAlt, isControl);
 
 	std::map<u32, bool>::iterator it = pressedKeyCodes.find(keyCode);
 	

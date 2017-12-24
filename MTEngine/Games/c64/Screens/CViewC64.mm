@@ -23,6 +23,7 @@ extern "C"{
 #include "SYS_KeyCodes.h"
 #include "C64SettingsStorage.h"
 #include "CViewDataDump.h"
+#include "CViewDataWatch.h"
 #include "CViewMemoryMap.h"
 #include "CViewDisassemble.h"
 #include "CViewC64StateCIA.h"
@@ -42,6 +43,7 @@ extern "C"{
 #include "CViewKeyboardShortcuts.h"
 #include "CViewMonitorConsole.h"
 #include "CViewSnapshots.h"
+#include "CViewColodore.h"
 #include "CViewAbout.h"
 #include "CViewVicEditor.h"
 #include "CViewJukeboxPlaylist.h"
@@ -59,6 +61,7 @@ extern "C"{
 #include "C64SIDFrequencies.h"
 #include "SND_SoundEngine.h"
 #include "CSlrFileFromOS.h"
+#include "CColorsTheme.h"
 
 CViewC64 *viewC64 = NULL;
 
@@ -121,6 +124,8 @@ CViewC64::CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 	{
 		C64KeyMapCreateDefault();
 	}
+	
+	this->colorsTheme = new CColorsTheme(0);
 
 	// init the Commodore 64 object
 	this->InitViceC64();
@@ -168,6 +173,9 @@ CViewC64::CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 	viewKeyboardShortcuts = new CViewKeyboardShortcuts(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	guiMain->AddGuiElement(viewKeyboardShortcuts);
 
+	viewColodore = new CViewColodore(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT);
+	guiMain->AddGuiElement(viewColodore);
+
 	viewAbout = new CViewAbout(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	guiMain->AddGuiElement(viewAbout);
 	
@@ -199,6 +207,8 @@ CViewC64::CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 
 	bool isInVicEditor = c64SettingsIsInVicEditor;
 	
+	this->isVisibleWatch = false;
+
 	LOGD("... after parsing c64SettingsDefaultScreenLayoutId=%d", c64SettingsDefaultScreenLayoutId);
 	if (c64SettingsDefaultScreenLayoutId >= C64_SCREEN_LAYOUT_MAX)
 	{
@@ -255,12 +265,13 @@ void CViewC64::ShowMainScreen()
 	}
 
 	//	guiMain->SetView(viewKeyboardShortcuts);
-	//	guiMain->SetView(viewC64KeyMap);
+//		guiMain->SetView(viewC64KeyMap);
 	//	guiMain->SetView(viewAbout);
 	//	guiMain->SetView(viewC64SettingsMenu);
 	//	guiMain->SetView(viewC64MainMenu);
 	//	guiMain->SetView(viewC64Breakpoints);
 	//	guiMain->SetView(viewVicEditor);
+//	guiMain->SetView(this->viewColodore);
 
 	CheckMouseCursorVisibility();
 }
@@ -365,15 +376,33 @@ void CViewC64::InitViews()
 													&(debugInterface->breakpointsDrive1541PC), debugInterface);
 	this->AddGuiElement(viewDrive1541Disassemble);
 
+	//
 	
 	viewC64MemoryDataDump = new CViewDataDump(10, 10, -1, 300, 300,
 											  debugInterface->dataAdapterC64, viewC64MemoryMap, viewC64Disassemble, debugInterface);
 	this->AddGuiElement(viewC64MemoryDataDump);
+
+	viewC64MemoryDataWatch = new CViewDataWatch(10, 10, -1, 300, 300,
+												debugInterface->dataAdapterC64, viewC64MemoryMap, debugInterface);
+	this->AddGuiElement(viewC64MemoryDataWatch);
+	viewC64MemoryDataWatch->visible = false;
+	
+
+	
 	viewDrive1541MemoryDataDump = new CViewDataDump(10, 10, -1, 300, 300,
 													debugInterface->dataAdapterDrive1541, viewDrive1541MemoryMap, viewDrive1541Disassemble,
 													debugInterface);
 	this->AddGuiElement(viewDrive1541MemoryDataDump);
 	
+	viewDrive1541MemoryDataWatch = new CViewDataWatch(10, 10, -1, 300, 300,
+												debugInterface->dataAdapterDrive1541, viewDrive1541MemoryMap, debugInterface);
+	this->AddGuiElement(viewDrive1541MemoryDataWatch);
+	viewDrive1541MemoryDataWatch->visible = false;
+	
+	
+	//
+	
+	//
 	
 	viewC64StateCIA = new CViewC64StateCIA(0, 0, posZ, SCREEN_WIDTH, SCREEN_HEIGHT, debugInterface);
 	this->AddGuiElement(viewC64StateCIA);
@@ -653,7 +682,7 @@ void CViewC64::InitLayouts()
 	screenPositions[m]->c64StateSIDVisible = true;
 	screenPositions[m]->c64StateSIDFontSize = 5.0f;
 	screenPositions[m]->c64StateSIDX = 0.0f;
-	screenPositions[m]->c64StateSIDY = 195.0f;
+	screenPositions[m]->c64StateSIDY = 190.0f;//195.0f;
 
 	screenPositions[m]->c64StateCIAVisible = true;
 	screenPositions[m]->c64StateCIAFontSize = 5.0f;
@@ -1059,7 +1088,7 @@ void CViewC64::SwitchToScreenLayout(int newScreenLayoutId)
 
 	viewC64StateSID->SetVisible(screenLayout->c64StateSIDVisible);
 	viewC64StateSID->SetPosition(screenLayout->c64StateSIDX, screenLayout->c64StateSIDY, posZ, 100, 100);
-	viewC64StateSID->fontSize = screenLayout->c64StateSIDFontSize;
+	viewC64StateSID->fontBytesSize = screenLayout->c64StateSIDFontSize;
 
 	viewC64StateVIC->SetVisible(screenLayout->c64StateVICVisible);
 	viewC64StateVIC->SetPosition(screenLayout->c64StateVICX, screenLayout->c64StateVICY);
@@ -1107,9 +1136,18 @@ void CViewC64::SwitchToScreenLayout(int newScreenLayoutId)
 	//
 	// bunch of workarounds must be here, as always
 	//
-	
-//	SetFocus(viewMonitorConsole);
-	SetFocus(viewC64Screen);
+
+	if (newScreenLayoutId == C64_SCREEN_LAYOUT_MONITOR_CONSOLE)
+	{
+		SetFocus(viewMonitorConsole);
+	}
+	else
+	{
+		if (focusElement && focusElement->visible == false)
+		{
+			SetFocus(viewC64Screen);
+		}
+	}
 	
 	if (newScreenLayoutId == C64_SCREEN_LAYOUT_VIC_DISPLAY)
 	{
@@ -1118,8 +1156,10 @@ void CViewC64::SwitchToScreenLayout(int newScreenLayoutId)
 	
 	CheckMouseCursorVisibility();
 	
-	// end of workarounds
+	UpdateWatchVisible();
 
+	// end of workarounds
+	
 	if (guiMain->currentView != this)
 		guiMain->SetView(this);
 	
@@ -1191,66 +1231,8 @@ void CViewC64::Render()
 	c64d_vicii_copy_state(&(this->currentViciiState));
 
 	viewC64VicDisplay->UpdateViciiState();
-	
-	int rasterX = viciiStateToShow.raster_cycle*8;
-	int rasterY = viciiStateToShow.raster_line;
-	
-	// update current colors for rendering states
-	
-	this->rasterToShowX = rasterX;
-	this->rasterToShowY = rasterY;
-	this->rasterCharToShowX = (viewC64->viciiStateToShow.raster_cycle - 0x11);
-	this->rasterCharToShowY = (viewC64->viciiStateToShow.raster_line - 0x32) / 8;
-	
-	//LOGD("       |   rasterCharToShowX=%3d rasterCharToShowY=%3d", rasterCharToShowX, rasterCharToShowY);
-	
-	if (rasterCharToShowX < 0)
-	{
-		rasterCharToShowX = 0;
-	}
-	else if (rasterCharToShowX > 39)
-	{
-		rasterCharToShowX = 39;
-	}
-	
-	if (rasterCharToShowY < 0)
-	{
-		rasterCharToShowY = 0;
-	}
-	else if (rasterCharToShowY > 24)
-	{
-		rasterCharToShowY = 24;
-	}
-	
-	// get current VIC State's pointers and colors
-	u8 *screen_ptr;
-	u8 *color_ram_ptr;
-	u8 *chargen_ptr;
-	u8 *bitmap_low_ptr;
-	u8 *bitmap_high_ptr;
-	
-	viewC64->viewC64VicDisplay->GetViciiPointers(&(viewC64->viciiStateToShow),
-												 &screen_ptr, &color_ram_ptr, &chargen_ptr, &bitmap_low_ptr, &bitmap_high_ptr,
-												 this->colorsToShow);
 
-	if (viewC64StateVIC->forceColorD800 == -1)
-	{
-		this->colorToShowD800 = color_ram_ptr[ rasterCharToShowY * 40 + rasterCharToShowX ] & 0x0F;
-	}
-	else
-	{
-		this->colorToShowD800 = viewC64StateVIC->forceColorD800;
-	}
-
-	// force D020-D02E colors?
-	for (int i = 0; i < 0x0F; i++)
-	{
-		if (viewC64StateVIC->forceColors[i] != -1)
-		{
-			colorsToShow[i] = viewC64StateVIC->forceColors[i];
-			viewC64->viciiStateToShow.regs[0x20 + i] = viewC64StateVIC->forceColors[i];
-		}
-	}
+	this->UpdateViciiColors();
 	
 	//////////
 	
@@ -1282,12 +1264,12 @@ void CViewC64::Render()
 	
 	if (isShowingRasterCross && viewC64->viewC64Screen->visible)
 	{
-		viewC64Screen->RenderRaster(rasterX, rasterY);
+		viewC64Screen->RenderRaster(rasterToShowX, rasterToShowY);
 	}
 	
 	if (viewC64Screen->showZoomedScreen)
 	{
-		viewC64Screen->RenderZoomedScreen(rasterX, rasterY);
+		viewC64Screen->RenderZoomedScreen(rasterToShowX, rasterToShowY);
 	}
 
 	// render focus border
@@ -1307,8 +1289,69 @@ void CViewC64::Render()
 
 ///////////////
 
+void CViewC64::UpdateViciiColors()
+{
+	int rasterX = viciiStateToShow.raster_cycle*8;
+	int rasterY = viciiStateToShow.raster_line;
+	
+	// update current colors for rendering states
+	
+	this->rasterToShowX = rasterX;
+	this->rasterToShowY = rasterY;
+	this->rasterCharToShowX = (viewC64->viciiStateToShow.raster_cycle - 0x11);
+	this->rasterCharToShowY = (viewC64->viciiStateToShow.raster_line - 0x32) / 8;
+	
+	//LOGD("       |   rasterCharToShowX=%3d rasterCharToShowY=%3d", rasterCharToShowX, rasterCharToShowY);
+	
+	if (rasterCharToShowX < 0)
+	{
+		rasterCharToShowX = 0;
+	}
+	else if (rasterCharToShowX > 39)
+	{
+		rasterCharToShowX = 39;
+	}
+	
+	if (rasterCharToShowY < 0)
+	{
+		rasterCharToShowY = 0;
+	}
+	else if (rasterCharToShowY > 24)
+	{
+		rasterCharToShowY = 24;
+	}
 
-
+	
+	// get current VIC State's pointers and colors
+	u8 *screen_ptr;
+	u8 *color_ram_ptr;
+	u8 *chargen_ptr;
+	u8 *bitmap_low_ptr;
+	u8 *bitmap_high_ptr;
+	
+	viewC64->viewC64VicDisplay->GetViciiPointers(&(viewC64->viciiStateToShow),
+												 &screen_ptr, &color_ram_ptr, &chargen_ptr, &bitmap_low_ptr, &bitmap_high_ptr,
+												 this->colorsToShow);
+	
+	if (viewC64StateVIC->forceColorD800 == -1)
+	{
+		this->colorToShowD800 = color_ram_ptr[ rasterCharToShowY * 40 + rasterCharToShowX ] & 0x0F;
+	}
+	else
+	{
+		this->colorToShowD800 = viewC64StateVIC->forceColorD800;
+	}
+	
+	// force D020-D02E colors?
+	for (int i = 0; i < 0x0F; i++)
+	{
+		if (viewC64StateVIC->forceColors[i] != -1)
+		{
+			colorsToShow[i] = viewC64StateVIC->forceColors[i];
+			viewC64->viciiStateToShow.regs[0x20 + i] = viewC64StateVIC->forceColors[i];
+		}
+	}
+}
 
 
 void CViewC64::Render(GLfloat posX, GLfloat posY)
@@ -1536,6 +1579,11 @@ bool CViewC64::ProcessGlobalKeyboardShortcut(u32 keyCode, bool isShift, bool isA
 		{
 			viewVicEditor->SaveScreenshotAsPNG();
 		}
+		else if (shortcut == viewC64->keyboardShortcuts->kbsVicEditorExportFile)
+		{
+			viewVicEditor->exportMode = VICEDITOR_EXPORT_UNKNOWN;
+			viewVicEditor->OpenDialogExportFile();
+		}
 		else if (shortcut == viewC64SettingsMenu->kbsDetachEverything)
 		{
 			viewC64SettingsMenu->DetachEverything();
@@ -1556,6 +1604,20 @@ bool CViewC64::ProcessGlobalKeyboardShortcut(u32 keyCode, bool isShift, bool isA
 		{
 			this->ToggleSoundMute();
 		}
+		else if (shortcut == keyboardShortcuts->kbsShowWatch)
+		{
+			if (viewC64MemoryDataDump->visible == true)
+			{
+				SetWatchVisible(true);
+			}
+			else
+			{
+				SetWatchVisible(false);
+			}
+			
+			return true;
+		}
+		
 		
 		return true;
 	}
@@ -1565,7 +1627,16 @@ bool CViewC64::ProcessGlobalKeyboardShortcut(u32 keyCode, bool isShift, bool isA
 
 void CViewC64::SwitchIsMulticolorDataDump()
 {
-	viewC64MemoryDataDump->renderDataWithColors = !viewC64MemoryDataDump->renderDataWithColors;
+	if (viewC64->viewC64VicDisplay->visible
+		|| viewC64->viewVicEditor->visible)
+	{
+		viewC64->viewC64VicDisplay->backupRenderDataWithColors = !viewC64->viewC64VicDisplay->backupRenderDataWithColors;
+	}
+	else
+	{
+		viewC64MemoryDataDump->renderDataWithColors = !viewC64MemoryDataDump->renderDataWithColors;
+		viewC64->viewC64VicDisplay->backupRenderDataWithColors = viewC64MemoryDataDump->renderDataWithColors;
+	}
 }
 
 void CViewC64::SwitchIsShowRasterBeam()
@@ -2223,6 +2294,65 @@ void CViewC64::CheckMouseCursorVisibility()
 void CViewC64::ShowMouseCursor()
 {
 	VID_ShowMouseCursor();
+}
+
+void CViewC64::UpdateWatchVisible()
+{
+	guiMain->LockMutex();
+	
+	if (screenPositions[currentScreenLayoutId]->c64DataDumpVisible)
+	{
+		if (this->isVisibleWatch)
+		{
+			viewC64MemoryDataWatch->SetPosition(viewC64MemoryDataDump->posX, viewC64MemoryDataDump->posY, viewC64MemoryDataDump->posZ,
+												viewC64MemoryDataDump->sizeX, viewC64MemoryDataDump->sizeY);
+			
+			viewC64MemoryDataWatch->SetVisible(true);
+			viewC64MemoryDataDump->SetVisible(false);
+		}
+		else
+		{
+			viewC64MemoryDataWatch->SetVisible(false);
+			viewC64MemoryDataDump->SetVisible(true);
+		}
+	}
+	else
+	{
+		viewC64MemoryDataWatch->SetVisible(false);
+		viewC64MemoryDataDump->SetVisible(false);
+	}
+
+	//
+	if (screenPositions[currentScreenLayoutId]->drive1541DataDumpVisible)
+	{
+		if (this->isVisibleWatch)
+		{
+			viewDrive1541MemoryDataWatch->SetPosition(viewDrive1541MemoryDataDump->posX, viewDrive1541MemoryDataDump->posY, viewDrive1541MemoryDataDump->posZ,
+												viewDrive1541MemoryDataDump->sizeX, viewDrive1541MemoryDataDump->sizeY);
+			
+			viewDrive1541MemoryDataWatch->SetVisible(true);
+			viewDrive1541MemoryDataDump->SetVisible(false);
+		}
+		else
+		{
+			viewDrive1541MemoryDataWatch->SetVisible(false);
+			viewDrive1541MemoryDataDump->SetVisible(true);
+		}
+	}
+	else
+	{
+		viewDrive1541MemoryDataWatch->SetVisible(false);
+		viewDrive1541MemoryDataDump->SetVisible(false);
+	}
+	
+
+	guiMain->UnlockMutex();
+}
+
+void CViewC64::SetWatchVisible(bool isVisibleWatch)
+{
+	this->isVisibleWatch = isVisibleWatch;
+	UpdateWatchVisible();
 }
 
 void CViewC64::ShowDialogOpenFile(CSystemFileDialogCallback *callback, std::list<CSlrString *> *extensions,

@@ -54,5 +54,9 @@ extern void c64d_sid_set_sampling_method(int samplingMethod);
 extern void c64d_sid_set_emulate_filters(int emulateFilters);
 extern void c64d_sid_set_passband(int passband);
 extern void c64d_sid_set_filter_bias(int filterBias);
+extern void c64d_sid_set_stereo(int stereoMode);
+extern void c64d_sid_set_stereo_address(int sidAddress);
+extern void c64d_sid_set_triple_address(int sidAddress);
+
 
 #endif

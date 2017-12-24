@@ -1151,7 +1151,8 @@ vicii_cycle_state_t *CViewC64VicDisplay::UpdateViciiStateNonVisible(float rx, fl
 		viewC64->viewC64StateVIC->isLockedState = false;
 	}
 	
-
+	viewC64->UpdateViciiColors();
+	
 	return viciiState;
 }
 
@@ -1760,7 +1761,7 @@ void CViewC64VicDisplay::Render(GLfloat posX, GLfloat posY)
 
 bool CViewC64VicDisplay::ScrollMemoryAndDisassembleToRasterPosition(float rx, float ry, bool isForced)
 {
-	LOGD("ScrollMemoryAndDisassembleToRasterPosition: %f %f %d", rx, ry, isForced);
+//	LOGD("ScrollMemoryAndDisassembleToRasterPosition: %f %f %d", rx, ry, isForced);
 
 	// check if outside
 	int addr = -1;

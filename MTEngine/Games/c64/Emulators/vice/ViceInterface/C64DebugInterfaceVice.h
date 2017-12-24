@@ -100,6 +100,11 @@ public:
 	// filterBias: -500 500
 	virtual void SetSidFilterBias(int filterBias);
 
+	// 0=none, 1=stereo, 2=triple
+	virtual void SetSidStereo(int stereoMode);
+	virtual void SetSidStereoAddress(uint16 sidAddress);
+	virtual void SetSidTripleAddress(uint16 sidAddress);
+
 	virtual void GetC64ModelTypes(std::vector<CSlrString *> *modelTypeNames, std::vector<int> *modelTypeIds);
 	virtual void SetC64ModelType(int modelType);
 	virtual void SetEmulationMaximumSpeed(int maximumSpeed);
@@ -199,7 +204,7 @@ public:
 	
 	// SID
 	virtual void SetSIDMuteChannels(bool mute1, bool mute2, bool mute3, bool muteExt);
-	virtual void SetSIDReceiveChannelsData(bool isReceiving);
+	virtual void SetSIDReceiveChannelsData(int sidNumber, bool isReceiving);
 
 	// memory
 	uint8 *c64memory;

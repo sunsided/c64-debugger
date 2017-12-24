@@ -31,8 +31,10 @@ void c64ShowCommandLineHelp()
 	printLine("     start with layout id <1-%d>\n", C64_SCREEN_LAYOUT_MAX);
 	printLine("-breakpoints <file>\n");
 	printLine("     load breakpoints from file\n");
-	printLine("-vicesymbols <file>\n");
-	printLine("     load Vice symbols (code labels)");
+	printLine("-symbols <file>\n");
+	printLine("     load symbols (code labels)");
+	printLine("-watch <file>\n");
+	printLine("     load watches");
 	printLine("\n");
 	printLine("-wait <ms>\n");
 	printLine("     wait before performing tasks\n");
@@ -280,6 +282,12 @@ void c64PerformStartupTasksThreaded()
 		viewC64->symbols->ParseSymbols(c64SettingsPathToSymbols, viewC64->debugInterface);
 	}
 	
+	if (c64SettingsPathToWatches != NULL)
+	{
+		viewC64->symbols->ClearWatches(viewC64->debugInterface);
+		viewC64->symbols->ParseWatches(c64SettingsPathToWatches, viewC64->debugInterface);
+	}
+	
 	if (c64SettingsPathToDebugInfo != NULL)
 	{
 		viewC64->symbols->ClearSourceDebugInfo(viewC64->debugInterface);
@@ -316,11 +324,13 @@ void c64PerformStartupTasksThreaded()
 //			viewC64->debugInterface->SetC64ModelType(c64SettingsC64Model);
 		}
 		
+		// setup SID
 		if (c64SettingsSIDEngineModel != 0)
 		{
 			viewC64->debugInterface->SetSidType(c64SettingsSIDEngineModel);
 		}
 		
+		//
 		if (c64SettingsPathToD64 != NULL)
 		{
 			if (c64SettingsAutoJmpFromInsertedDiskFirstPrg)
@@ -407,10 +417,15 @@ void C64DebuggerParseCommandLine2()
 			char *arg = c64ParseCommandLineGetArgument();
 			c64SettingsPathToBreakpoints = new CSlrString(arg);
 		}
-		else if (!strcmp(cmd, "vicesymbols") || !strcmp(cmd, "vs"))
+		else if (!strcmp(cmd, "symbols") || !strcmp(cmd, "vicesymbols") || !strcmp(cmd, "vs"))
 		{
 			char *arg = c64ParseCommandLineGetArgument();
 			c64SettingsPathToSymbols = new CSlrString(arg);
+		}
+		else if (!strcmp(cmd, "watch") || !strcmp(cmd, "w"))
+		{
+			char *arg = c64ParseCommandLineGetArgument();
+			c64SettingsPathToWatches = new CSlrString(arg);
 		}
 		else if (!strcmp(cmd, "debuginfo"))
 		{
@@ -553,6 +568,14 @@ void C64DebuggerPassConfigToRunningInstance()
 		c64SettingsPathToSymbols->DebugPrint("c64SettingsPathToSymbols=");
 		byteBuffer->PutU8(C64D_PASS_CONFIG_DATA_SYMBOLS_FILE);
 		byteBuffer->PutSlrString(c64SettingsPathToSymbols);
+	}
+	
+	if (c64SettingsPathToWatches)
+	{
+		LOGD("c64SettingsPathToWatches");
+		c64SettingsPathToWatches->DebugPrint("c64SettingsPathToWatches=");
+		byteBuffer->PutU8(C64D_PASS_CONFIG_DATA_WATCHES_FILE);
+		byteBuffer->PutSlrString(c64SettingsPathToWatches);
 	}
 	
 	if (c64SettingsPathToDebugInfo)
@@ -706,6 +729,13 @@ void c64PerformNewConfigurationTasksThreaded(CByteBuffer *byteBuffer)
 			CSlrString *str = byteBuffer->GetSlrString();
 			viewC64->symbols->ClearSymbols(viewC64->debugInterface);
 			viewC64->symbols->ParseSymbols(str, viewC64->debugInterface);
+			delete str;
+		}
+		else if (t == C64D_PASS_CONFIG_DATA_WATCHES_FILE)
+		{
+			CSlrString *str = byteBuffer->GetSlrString();
+			viewC64->symbols->ClearWatches(viewC64->debugInterface);
+			viewC64->symbols->ParseWatches(str, viewC64->debugInterface);
 			delete str;
 		}
 		else if (t == C64D_PASS_CONFIG_DATA_DEBUG_INFO)

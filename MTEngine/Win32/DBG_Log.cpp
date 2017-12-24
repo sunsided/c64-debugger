@@ -66,18 +66,18 @@ bool logThisLevel(int level)
 
 bool logThisLevel(int level)
 {
-		return true;
+//		return true;
 	if (level == DBGLVL_MAIN) return true; 
 	if (level == DBGLVL_DEBUG) return true;
 	if (level == DBGLVL_RES) return false;
-	if (level == DBGLVL_GUI) return true; //	true	false
+	if (level == DBGLVL_GUI) return false; //	true	false
 	if (level == DBGLVL_HTTP) return false;
 	if (level == DBGLVL_XMPLAYER) return false;
 	if (level == DBGLVL_AUDIO) return false;
 	if (level == DBGLVL_XML) return true;
 	if (level == DBGLVL_SQL) return true;
 	if (level == DBGLVL_ERROR) return true;	// always
-	if (level == DBGLVL_TODO) return false;
+	if (level == DBGLVL_TODO) return true;
 	if (level == DBGLVL_ANIMATION) return false;
 	if (level == DBGLVL_NET) return true;
 	if (level == DBGLVL_NET_SERVER) return true;

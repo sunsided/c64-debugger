@@ -38,6 +38,7 @@ public:
   static float kinked_dac(const int x, const float nonlinearity, const int bits);
   bool sse_enabled() { return can_use_sse; }
 
+  void set_chip_number(int chipNo);
   void set_chip_model(chip_model model);
   FilterFP& get_filter() { return filter; }
   void enable_filter(bool enable);
@@ -53,6 +54,8 @@ public:
   reg8 read(reg8 offset);
   void write(reg8 offset, reg8 value);
 
+  int chipNo;
+	
   // Read/write state.
   class State
   {

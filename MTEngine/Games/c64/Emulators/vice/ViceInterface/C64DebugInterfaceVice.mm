@@ -41,6 +41,8 @@ extern "C" {
 #include "C64KeyMap.h"
 #include "C64SettingsStorage.h"
 #include "C64SIDFrequencies.h"
+#include "CViewC64.h"
+#include "CViewC64StateSID.h"
 
 extern "C" {
 	void vsync_suspend_speed_eval(void);
@@ -53,6 +55,8 @@ extern "C" {
 	void c64d_set_debug_mode(int newMode);
 	void c64d_patch_kernal_fast_boot();
 	void c64d_init_memory(uint8 *c64memory);
+	
+	int resources_get_int(const char *name, int *value_return);
 }
 
 void c64d_update_c64_model();
@@ -636,6 +640,23 @@ void C64DebugInterfaceVice::SetSidFilterBias(int filterBias)
 {
 	c64d_sid_set_filter_bias(filterBias);
 }
+
+// 0=none, 1=stereo, 2=triple
+void C64DebugInterfaceVice::SetSidStereo(int stereoMode)
+{
+	c64d_sid_set_stereo(stereoMode);
+}
+
+void C64DebugInterfaceVice::SetSidStereoAddress(uint16 sidAddress)
+{
+	c64d_sid_set_stereo_address(sidAddress);
+}
+
+void C64DebugInterfaceVice::SetSidTripleAddress(uint16 sidAddress)
+{
+	c64d_sid_set_triple_address(sidAddress);
+}
+
 
 
 ///// c64model.c
@@ -1959,15 +1980,15 @@ void C64DebugInterfaceVice::SetSIDMuteChannels(bool mute1, bool mute2, bool mute
 
 }
 
-void C64DebugInterfaceVice::SetSIDReceiveChannelsData(bool isReceiving)
+void C64DebugInterfaceVice::SetSIDReceiveChannelsData(int sidNumber, bool isReceiving)
 {
 	if (isReceiving)
 	{
-		c64d_sid_receive_channels_data(1);
+		c64d_sid_receive_channels_data(sidNumber, 1);
 	}
 	else
 	{
-		c64d_sid_receive_channels_data(0);
+		c64d_sid_receive_channels_data(sidNumber, 0);
 	}
 }
 
@@ -2043,6 +2064,7 @@ void c64d_update_c64_screen_height_from_model_type(int modelType)
 	}
 }
 
+
 static void load_snapshot_trap(WORD addr, void *v)
 {
 	LOGD("load_snapshot_trap");
@@ -2086,10 +2108,22 @@ static void load_snapshot_trap(WORD addr, void *v)
 	debugInterfaceVice->SetSidEmulateFilters(c64SettingsRESIDEmulateFilters);
 	debugInterfaceVice->SetSidPassBand(c64SettingsRESIDPassBand);
 	debugInterfaceVice->SetSidFilterBias(c64SettingsRESIDFilterBias);
+	
+	int val;
+	resources_get_int("SidStereo", &val);
+	c64SettingsSIDStereo = val;
+
+	resources_get_int("SidStereoAddressStart", &val);
+	c64SettingsSIDStereoAddress = val;
+
+	resources_get_int("SidTripleAddressStart", &val);
+	c64SettingsSIDTripleAddress = val;
 
 	gSoundEngine->UnlockMutex("load_snapshot_trap");
 	
 	SYS_ReleaseCharBuf(filePath);
+	
+	viewC64->viewC64SettingsMenu->UpdateSidSettings();
 }
 
 

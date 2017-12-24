@@ -104,9 +104,12 @@ void CGuiButtonSwitch::InitBackgroundColors()
 	buttonSwitchOffColor2G = guiMain->theme->buttonSwitchOffColor2G;
 	buttonSwitchOffColor2B = guiMain->theme->buttonSwitchOffColor2B;
 	buttonSwitchOffColor2A = guiMain->theme->buttonDisabledColor2A;
-	
-}
 
+
+	textColorOffR = guiMain->theme->buttonOffTextColorR;
+	textColorOffG = guiMain->theme->buttonOffTextColorG;
+	textColorOffB = guiMain->theme->buttonOffTextColorB;
+}
 
 void CGuiButtonSwitch::InitWithText(char *text)
 {
@@ -209,13 +212,13 @@ void CGuiButtonSwitch::RenderUTFButton(GLfloat posX, GLfloat posY)
 			else
 			{
 				BlitFilledRectangle(posX, posY, posZ, this->sizeX, this->sizeY,
-									this->buttonEnabledColor2R, this->buttonEnabledColor2G, this->buttonEnabledColor2B,
-									this->buttonEnabledColor2A);
+									this->buttonSwitchOffColor2R, this->buttonSwitchOffColor2G, this->buttonSwitchOffColor2B,
+									this->buttonSwitchOffColor2A);
 				
 				BlitFilledRectangle(posX + this->buttonShadeDistance, posY + this->buttonShadeDistance, posZ,
 									this->sizeX - this->buttonShadeDistance2, this->sizeY - this->buttonShadeDistance2,
-									this->buttonEnabledColorR, this->buttonEnabledColorG, this->buttonEnabledColorB,
-									this->buttonEnabledColorA);
+									this->buttonSwitchOffColorR, this->buttonSwitchOffColorG, this->buttonSwitchOffColorB,
+									this->buttonSwitchOffColorA);
 			}
 		}
 		else
@@ -311,8 +314,8 @@ void CGuiButtonSwitch::Render(GLfloat posX, GLfloat posY)
 
 					BlitFilledRectangle(posX + this->buttonShadeDistance, posY + this->buttonShadeDistance, posZ,
 										sizeX - this->buttonShadeDistance2, sizeY - this->buttonShadeDistance2,
-										this->buttonEnabledColorR, this->buttonEnabledColorG, this->buttonEnabledColorB,
-										this->buttonEnabledColorA);
+										this->buttonSwitchOffColorR, this->buttonSwitchOffColorG, this->buttonSwitchOffColorB,
+										this->buttonSwitchOffColorA);
 				}
 			}
 		}

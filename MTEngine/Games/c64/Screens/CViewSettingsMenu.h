@@ -145,7 +145,8 @@ public:
 	CViewC64MenuItemOption *menuItemScreenRasterCrossExteriorColorScheme;
 	CViewC64MenuItemOption *menuItemScreenRasterCrossTipColorScheme;
 	
-
+	CViewC64MenuItemOption *menuItemMenusColorTheme;
+	
 	CViewC64MenuItemFloat *menuItemPaintGridCharactersColorR;
 	CViewC64MenuItemFloat *menuItemPaintGridCharactersColorG;
 	CViewC64MenuItemFloat *menuItemPaintGridCharactersColorB;
@@ -166,6 +167,10 @@ public:
 	CViewC64MenuItemFloat *menuItemRESIDPassBand;
 	CViewC64MenuItemFloat *menuItemRESIDFilterBias;
 
+	CViewC64MenuItemOption *menuItemSIDStereo;
+	CViewC64MenuItemOption *menuItemSIDStereoAddress;
+	CViewC64MenuItemOption *menuItemSIDTripleAddress;
+
 	CViewC64MenuItemOption *menuItemMuteSIDOnPause;
 	CViewC64MenuItemOption *menuItemRunSIDWhenInWarp;
 	CViewC64MenuItemOption *menuItemAudioOutDevice;
@@ -182,8 +187,14 @@ public:
 	CViewC64MenuItemOption *menuItemFastBootKernalPatch;
 	CViewC64MenuItemOption *menuItemEmulateVSPBug;
 	
+	CViewC64MenuItemFloat *menuItemFocusBorderLineWidth;
+
 	CViewC64MenuItemOption *menuItemDisassembleExecuteAware;
 	
+	CViewC64MenuItemOption *menuItemDisassemblyBackgroundColor;
+	CViewC64MenuItemOption *menuItemDisassemblyExecuteColor;
+	CViewC64MenuItemOption *menuItemDisassemblyNonExecuteColor;
+
 	CViewC64MenuItemOption *menuItemVicPalette;
 	CViewC64MenuItemOption *menuItemRenderScreenNearest;
 	
@@ -229,6 +240,11 @@ public:
 	std::vector<int> *c64ModelTypeIds;
 	
 	void SetOptionC64ModelType(int modelTypeId);
+	
+	std::vector<CSlrString *> *GetSidAddressOptions();
+	uint16 GetSidAddressFromOptionNum(int optionNum);
+	int GetOptionNumFromSidAddress(uint16 sidAddress);
+	void UpdateSidSettings();
 	
 };
 

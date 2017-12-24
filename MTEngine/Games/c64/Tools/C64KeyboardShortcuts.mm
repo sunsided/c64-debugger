@@ -35,7 +35,7 @@ C64KeyboardShortcuts::C64KeyboardShortcuts()
 	kbsVicEditorOpenFile = new CSlrKeyboardShortcut(KBZONE_VIC_EDITOR, "Open file", 'o', false, false, true);
 	AddShortcut(kbsVicEditorOpenFile);
 	
-	kbsVicEditorExportFile = new CSlrKeyboardShortcut(KBZONE_VIC_EDITOR, "Export file", 'e', true, false, true);
+	kbsVicEditorExportFile = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Export screen to file", 'e', true, false, true);
 	AddShortcut(kbsVicEditorExportFile);
 	
 	kbsVicEditorSaveVCE = new CSlrKeyboardShortcut(KBZONE_VIC_EDITOR, "Save as VCE", 's', false, false, true);
@@ -85,4 +85,8 @@ C64KeyboardShortcuts::C64KeyboardShortcuts()
 	kbsVicEditorSelectNextLayer = new CSlrKeyboardShortcut(KBZONE_VIC_EDITOR, "Select next layer", '`', false, false, false);
 	AddShortcut(kbsVicEditorSelectNextLayer);
 	
+	//
+	kbsShowWatch = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Show watch", 'w', false, false, true);
+	AddShortcut(kbsShowWatch);
+
 };

@@ -21,6 +21,12 @@ public:
 	void ReloadThemeCallback(CConfigStorage *themeData);
 };
 
+class CThemeChangeListener
+{
+public:
+	virtual void UpdateTheme();
+};
+
 class CGuiTheme
 {
 public:
@@ -96,6 +102,19 @@ public:
 	float buttonSwitchOffColor2B;
 	float buttonSwitchOffColor2A;
 
+	float buttonOnTextColorR;
+	float buttonOnTextColorG;
+	float buttonOnTextColorB;
+	
+	float buttonOffTextColorR;
+	float buttonOffTextColorG;
+	float buttonOffTextColorB;
+	
+	float buttonDisabledTextColorR;
+	float buttonDisabledTextColorG;
+	float buttonDisabledTextColorB;
+	
+
 	// text box
 	float textBoxColorR;
 	float textBoxColorG;
@@ -110,6 +129,8 @@ public:
 	float cursorColorG;
 	float cursorColorB;
 	float cursorColorA;
+	
+	float focusBorderLineWidth;
 	
 	// for gui progressbar:
 	float currentThemeLoadPercentage;

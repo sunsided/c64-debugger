@@ -7,6 +7,7 @@
 #include "lodepng.h"
 #include "RES_ResourceManager.h"
 #include "CByteBuffer.h"
+#include "IMG_Scale.h"
 
 #if defined(ANDROID)
 #include "SYS_ApkManager.h"
@@ -82,6 +83,29 @@ CImageData::CImageData(int width, int height, byte type)
 
 	//LOGD("pool test CImageData: %d", ++poolTestCImageData);
 }
+
+CImageData::CImageData(int width, int height, byte type, bool allocTemp, bool allocResult)
+{
+	this->width = width;
+	this->height = height;
+	//this->originalHeight = height;
+	//this->originalWidth = width;
+	//this->origData = NULL;
+	this->tempData = NULL;
+	this->resultData = NULL;
+	this->row_pointers = NULL;
+	this->type = type;
+	this->mask = NULL;
+	
+#ifdef USE_BUFFER_OFFSETS
+	this->bufferOffsets = IMG_GetBufferOffsets(this->type, this->height, this->width);
+#endif
+	
+	//LOGD("pool test CImageData: %d", ++poolTestCImageData);
+	
+	this->AllocImage(allocTemp, allocResult);
+}
+
 
 CImageData::CImageData(int width, int height, byte type, void *data)
 {
@@ -197,6 +221,11 @@ CImageData::~CImageData()
 		row_pointers = NULL;
 	}
 	// TODO: DeallocBufferOffsets (!)
+}
+
+uint8 *CImageData::GetResultDataAsRGBA()
+{
+	return (uint8*)this->resultData;
 }
 
 void CImageData::copyTemporaryToResult()
@@ -3254,6 +3283,66 @@ void CImageData::debugPrint()
 
 	}
 }
+
+void CImageData::DrawImage(CImageData *drawImage, int x, int y, int width, int height, float alpha)
+{
+	if (this->type != IMG_TYPE_RGBA)
+	{
+		SYS_FatalExit("CImageData::DrawImage: image type %d not supported", this->type);
+	}
+	
+	CImageData *image = drawImage;
+	if (width != drawImage->width || height != drawImage->height)
+	{
+		// rescale
+		image = IMG_Scale(drawImage, width, height);
+	}
+
+	uint8 *imageData = (uint8 *)this->resultData;
+	uint8 *imageDataDraw = (uint8 *)image->resultData;
+
+	for (int py = 0; py < height; py++)
+	{
+		if (py + y >= this->height)
+			break;
+		
+		unsigned int offset = (y + py) * this->width * 4 + x * 4;
+		unsigned int offsetDraw = py * image->width * 4;
+		
+		for (int px = 0; px < width; px++)
+		{
+			if (x + px >= this->width)
+				break;
+			
+			uint8 r1,g1,b1,a1;
+			r1 = imageData[offset    ];
+			g1 = imageData[offset + 1];
+			b1 = imageData[offset + 2];
+			a1 = imageData[offset + 3];
+			
+			uint8 r2,g2,b2,a2;
+			r2 = imageDataDraw[offsetDraw    ];
+			g2 = imageDataDraw[offsetDraw + 1];
+			b2 = imageDataDraw[offsetDraw + 2];
+			a2 = imageDataDraw[offsetDraw + 3];
+
+			float drawAlpha1 = 1.0f - (((float)a2)/255.0f * alpha);
+			float drawAlpha2 = ((float)a2)/255.0f * alpha;
+			
+			imageData[offset    ] = (uint8)  ( (float)r1 * drawAlpha1 + (float)r2 * drawAlpha2 );
+			imageData[offset + 1] = (uint8)  ( (float)g1 * drawAlpha1 + (float)g2 * drawAlpha2 );
+			imageData[offset + 2] = (uint8)  ( (float)b1 * drawAlpha1 + (float)b2 * drawAlpha2 );
+			imageData[offset + 3] = a1;
+			
+			offset += 4;
+			offsetDraw += 4;
+		}
+	}
+	
+	if (image != drawImage)
+		delete image;
+}
+
 
 /* debug:
  *

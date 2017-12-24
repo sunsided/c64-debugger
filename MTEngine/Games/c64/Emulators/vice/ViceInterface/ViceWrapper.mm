@@ -23,6 +23,7 @@ extern "C" {
 #include "CGuiMain.h"
 #include "CViewC64.h"
 #include "CViewMemoryMap.h"
+#include "CViewC64StateSID.h"
 
 volatile int c64d_debug_mode = C64_DEBUG_RUNNING;
 
@@ -878,17 +879,17 @@ void c64d_debug_pause_check()
 ////////////
 
 // sid
-int c64d_is_receive_channels_data = 0;
+int c64d_is_receive_channels_data[MAX_NUM_SIDS] = { 0, 0, 0 };
 
-void c64d_sid_receive_channels_data(int isOn)
+void c64d_sid_receive_channels_data(int sidNum, int isOn)
 {
-	c64d_is_receive_channels_data = isOn;
+	c64d_is_receive_channels_data[sidNum] = isOn;
 }
 
-void c64d_sid_channels_data(int v1, int v2, int v3, short mix)
+void c64d_sid_channels_data(int sidNumber, int v1, int v2, int v3, short mix)
 {
-//	LOGD("c64d_sid_channels_data: %d %d %d %d", v1, v2, v3, mix);
+//	LOGD("c64d_sid_channels_data: sid#%d, %d %d %d %d", sidNumber, v1, v2, v3, mix);
 	
-	debugInterfaceVice->AddSIDWaveformData(v1, v2, v3, mix);
+	viewC64->viewC64StateSID->AddWaveformData(sidNumber, v1, v2, v3, mix);
 }
 

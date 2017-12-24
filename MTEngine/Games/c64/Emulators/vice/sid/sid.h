@@ -114,7 +114,7 @@ extern void sid_state_write(unsigned int channel,
                             struct sid_snapshot_state_s *sid_state);
 
 struct sid_engine_s {
-    struct sound_s *(*open)(BYTE *sidstate);
+    struct sound_s *(*open)(BYTE *sidstate, int chipNo);
     int (*init)(struct sound_s *psid, int speed, int cycles_per_sec, int factor);
     void (*close)(struct sound_s *psid);
     BYTE (*read)(struct sound_s *psid, WORD addr);

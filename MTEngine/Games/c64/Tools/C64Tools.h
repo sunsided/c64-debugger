@@ -33,6 +33,8 @@ u8 ConvertPetsciiToSreenCode(u8 chr);
 void CopyHiresCharsetToImage(u8 *charsetData, CImageData *imageData, int numColumns,
 							 u8 colorBackground, u8 colorForeground, C64DebugInterface *debugInterface);
 
+void CopyMultiCharsetToImage(u8 *charsetData, CImageData *imageData, int numColumns,
+							 u8 colorD021, u8 colorD022, u8 colorD023, u8 colorD800, C64DebugInterface *debugInterface);
 
 // returns color number from palette that is nearest to rgb
 u8 FindC64Color(u8 r, u8 g, u8 b, C64DebugInterface *debugInterface);
@@ -40,5 +42,8 @@ float GetC64ColorDistance(u8 color1, u8 color2, C64DebugInterface *debugInterfac
 
 //
 void RenderColorRectangle(float px, float py, float ledSizeX, float ledSizeY, float gap, bool isLocked, u8 color, C64DebugInterface *debugInterface);
+
+//
+uint16 GetSidAddressByChipNum(int chipNum);
 
 #endif

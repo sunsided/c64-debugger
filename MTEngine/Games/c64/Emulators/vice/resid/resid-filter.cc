@@ -451,6 +451,10 @@ void Filter::set_chip_model(chip_model model)
   Vlp = Vlp_x = Vlp_vc = 0;
 }
 
+void Filter::set_chip_number(int chipNo)
+{
+	this->chipNo = chipNo;
+}
 
 // ----------------------------------------------------------------------------
 // Mask for voices routed into the filter / audio output stage.

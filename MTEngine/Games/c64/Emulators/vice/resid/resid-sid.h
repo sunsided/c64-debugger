@@ -36,9 +36,10 @@ class SID
 public:
   SID();
   ~SID();
-
+	
   void set_chip_model(chip_model model);
   void set_voice_mask(reg4 mask);
+  void set_chip_number(int chipNo);
   void enable_filter(bool enable);
   void adjust_filter_bias(double dac_bias);
   void enable_external_filter(bool enable);
@@ -96,6 +97,8 @@ public:
   // 16-bit output (AUDIO OUT).
   short output();
 
+	int chipNo;
+	
  protected:
   static double I0(double x);
   int clock_fast(cycle_count& delta_t, short* buf, int n, int interleave);

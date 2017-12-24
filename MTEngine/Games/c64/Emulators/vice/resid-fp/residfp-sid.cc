@@ -258,6 +258,11 @@ void SIDFP::set_chip_model(chip_model model)
 	}
 }
 
+void SIDFP::set_chip_number(int chipNo)
+{
+	this->chipNo = chipNo;
+}
+
 // ----------------------------------------------------------------------------
 // SID reset.
 // ----------------------------------------------------------------------------
@@ -300,10 +305,11 @@ float SIDFP::output()
 
 	// correct for display only
 	
-		if (c64d_is_receive_channels_data)
+		if (c64d_is_receive_channels_data[chipNo])
 		{
 			float div = ((2047.f * 255.f / range) * c64d_wave_attenuation);
-			c64d_sid_channels_data( ((voice[0].c64d_output / div) - c64d_wave_shift),
+			c64d_sid_channels_data(chipNo,
+								    ((voice[0].c64d_output / div) - c64d_wave_shift),
 								    ((voice[1].c64d_output / div) - c64d_wave_shift),
 								    ((voice[2].c64d_output / div) - c64d_wave_shift),
 								     (signed short)output);
