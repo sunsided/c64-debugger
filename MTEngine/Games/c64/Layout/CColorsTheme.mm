@@ -529,7 +529,6 @@ void CColorThemeData::AddColor(char *name, uint32 colorData)
 	}
 	else if (!strcmp(name, "buttonEnabledTextColor"))
 	{
-		LOGTODO("check me");
 		this->buttonOnTextColorR = colorR; this->buttonOnTextColorG = colorG; this->buttonOnTextColorB = colorB;
 	}
 	else if (!strcmp(name, "buttonEnabledColor"))

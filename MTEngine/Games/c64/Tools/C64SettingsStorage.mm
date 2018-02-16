@@ -165,6 +165,7 @@ float c64SettingsPaintGridShowValuesZoomLevel = 26.0;
 bool c64SettingsVicEditorForceReplaceColor = false;
 
 bool c64SettingsUseSystemFileDialogs = true;
+bool c64SettingsUseOnlyFirstCPU = true;
 
 int c64SettingsDoubleClickMS = 600;
 
@@ -279,6 +280,11 @@ void C64DebuggerStoreSettings()
 #if !defined(WIN32)
 	storeSettingBool(byteBuffer, "UseSystemDialogs", c64SettingsUseSystemFileDialogs);
 #endif
+
+#if defined(WIN32)
+	storeSettingBool(byteBuffer, "UseOnlyFirstCPU", c64SettingsUseOnlyFirstCPU);
+#endif
+	
 	
 	storeSettingU8(byteBuffer, "C64Model", c64SettingsC64Model);
 	
@@ -404,6 +410,8 @@ void C64DebuggerRestoreSettings(uint8 settingsBlockType)
 
 void C64DebuggerReadSettingsValues(CByteBuffer *byteBuffer, uint8 settingsBlockType)
 {
+	LOGM("------------- C64DebuggerReadSettingsValues, blockType=%d", settingsBlockType);
+	
 	u8 blockType = 0xFF;
 	
 	int valueInt;
@@ -612,6 +620,14 @@ void C64DebuggerSetSetting(char *name, void *value)
 	}
 #endif
 	
+#if defined(WIN32)
+	else if (!strcmp(name, "UseOnlyFirstCPU"))
+	{
+		bool v = *((bool*)value);
+		c64SettingsUseOnlyFirstCPU = v;
+	}
+#endif
+
 	else if (!strcmp(name, "VicStateRecording"))
 	{
 		int v = *((int*)value);

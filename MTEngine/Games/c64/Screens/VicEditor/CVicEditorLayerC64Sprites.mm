@@ -53,8 +53,10 @@ bool CVicEditorLayerC64Sprites::GetColorAtPixel(int x, int y, u8 *color)
 
 void CVicEditorLayerC64Sprites::Serialise(CByteBuffer *byteBuffer)
 {
+	CVicEditorLayer::Serialise(byteBuffer);
 }
 
-void CVicEditorLayerC64Sprites::Deserialise(CByteBuffer *byteBuffer)
+void CVicEditorLayerC64Sprites::Deserialise(CByteBuffer *byteBuffer, int version)
 {
+	CVicEditorLayer::Deserialise(byteBuffer, version);
 }

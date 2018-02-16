@@ -19,7 +19,7 @@ class CVicEditorLayerC64Sprites : public CVicEditorLayer
 	virtual bool GetColorAtPixel(int x, int y, u8 *color);
 
 	virtual void Serialise(CByteBuffer *byteBuffer);
-	virtual void Deserialise(CByteBuffer *byteBuffer);
+	virtual void Deserialise(CByteBuffer *byteBuffer, int version);
 };
 
 #endif

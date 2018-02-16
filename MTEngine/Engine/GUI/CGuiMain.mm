@@ -1633,6 +1633,10 @@ void CGuiMain::SetView(CGuiView *element)
 #endif
 
 	LOGD("CGuiMain::SetView: view=%s", element->name);
+	
+	LOGD("CGuiMain::SetView: LockMutex");
+	guiMain->LockMutex();
+	
 	bool found = false;
 	for (std::map<float, CGuiElement *, compareZupwards>::iterator enumGuiElems =
 			guiElementsUpwards.begin();
@@ -1659,6 +1663,11 @@ void CGuiMain::SetView(CGuiView *element)
 	{
 		SYS_FatalExit("CGuiMain::SetView: view not found (%s)", element->name);
 	}
+	
+	LOGD("CGuiMain::SetView: UnlockMutex");
+	guiMain->UnlockMutex();
+	
+	LOGD("CGuiMain::SetView: finished");
 }
 
 void CGuiMain::ShowMessage(char *showMessage)
@@ -1676,10 +1685,12 @@ void CGuiMain::ShowMessage(char *showMessage, GLfloat showMessageColorR,
 {
 	LOGM("CGuiMain::ShowMessage");
 
+	LOGD("CGuiMain::ShowMessage: LockMutex");
 	guiMain->LockMutex();
 	this->ShowMessageAsync(showMessage, showMessageColorR, showMessageColorG,
 			showMessageColorB);
 	guiMain->UnlockMutex();
+	LOGD("CGuiMain::ShowMessage: UnlockMutex");
 }
 
 void CGuiMain::ShowMessageAsync(char *showMessage, GLfloat showMessageColorR,

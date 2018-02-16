@@ -167,15 +167,17 @@ void LOG_Init(void)
 	SYSTEMTIME tmeCurrent;
 	GetLocalTime(&tmeCurrent);
 
-	sprintf(logBuf, "./log/MTEngine-%04d%02d%02d-%02d%02d%02d.txt", tmeCurrent.wYear, tmeCurrent.wMonth, tmeCurrent.wDay,
-		tmeCurrent.wHour, tmeCurrent.wMinute, tmeCurrent.wSecond);
+	DWORD processId = GetCurrentProcessId();
+
+	sprintf(logBuf, "./log/MTEngine-%04d%02d%02d-%02d%02d%02d-%d.txt", tmeCurrent.wYear, tmeCurrent.wMonth, tmeCurrent.wDay,
+		tmeCurrent.wHour, tmeCurrent.wMinute, tmeCurrent.wSecond, processId);
 
 	fpLog = fopen(logBuf, "wb");
 
 	if (fpLog == NULL)
 	{
-		sprintf(logBuf, "MTEngine-%04d%02d%02d-%02d%02d%02d.txt", tmeCurrent.wYear, tmeCurrent.wMonth, tmeCurrent.wDay,
-			tmeCurrent.wHour, tmeCurrent.wMinute, tmeCurrent.wSecond);
+		sprintf(logBuf, "MTEngine-%04d%02d%02d-%02d%02d%02d-%d.txt", tmeCurrent.wYear, tmeCurrent.wMonth, tmeCurrent.wDay,
+			tmeCurrent.wHour, tmeCurrent.wMinute, tmeCurrent.wSecond, processId);
 
 		fpLog = fopen(logBuf, "wb");
 	}
@@ -186,7 +188,7 @@ void LOG_Init(void)
 #endif
 
 #ifdef LOG_CONSOLE
-	DWORD processId = GetCurrentProcessId();
+//	DWORD processId = GetCurrentProcessId();
 
 #ifdef WIN_CONSOLE
 	m_Log << "processId=" << processId << std::endl;

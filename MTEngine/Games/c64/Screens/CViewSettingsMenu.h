@@ -208,6 +208,8 @@ public:
 	CViewC64MenuItemOption *menuItemWindowAlwaysOnTop;
 	CViewC64MenuItemOption *menuItemUseSystemDialogs;
 	
+	CViewC64MenuItemOption *menuItemUseOnlyFirstCPU;
+	
 	CViewC64MenuItemOption *menuItemVicStateRecordingMode;
 	
 	CViewC64MenuItem *menuItemClearSettings;

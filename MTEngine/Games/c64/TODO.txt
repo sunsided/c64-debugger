@@ -1,3 +1,87 @@
+Added: PALette palette.
+
+----
+
+
+
+v0.64.2
+
+Bug fixed: VIC Sequencer state was displayed reversed (thanks to Mattias Weidhagen for bug reporting)
+Bug fixed: Muting a channel in Stereo/Triple SID state view did not work correctly
+Bug fixed: Automatic loading of *.watch file sometimes caused lock of the debugger (thanks to Yugorin/Samar for bug reporting)
+Bug fixed: Automatic focus for C64 screen was not triggered (thanks to Isildur/Samar for bug reporting)
+Bug fixed: Crash when ReSID emulation was selected and Run SID emulation option was set to No (thanks to Isildur/Samar for bug reporting)
+Bug fixed: When PRG was selected from command line and disk was attached with autorun set then the file entry from D64 was started instead of PRG (thanks to Isildur/Samar for bug reporting)
+Added: Saving VIC Display state with VCE file (thanks to Isildur/Samar for suggestion)
+
+
+------
+la-style> In Monitor i always have to select a range of atleast 2 Bytes to fill a memory Location. You are not able to fill just 1 byte. It always has to be atleast F 1000 1001 31, I cant do F 1000 1000 31
+
+autorundisk entry num
+
+TODO: redirect monitor output to file
+TODO: scroll monitor console
+
+
+robi se zooma i wciska enter na memory map na zoomie i pisze wartosci ramu!
+
+TODO: ViewVicEditor proper Deserialise
+	a dwa - to i tak nie zadziala dla wiekszej liczby rejestrow ($d011/$d016/$d020/$d021..)
+
+
+moze chodzi o ustawienie z ctrl+shift+f5 ?
+
+isildur 11:05 PM
+tak
+
+slajerek 11:05 PM
+ah ok
+
+@isildur chyba zrobie to inaczej, bo te ctrl+shift+f5 jest ustawienie pod ten vic display, tj. w zasadzie to glownie do debuga tymczasowe
+zrobie kontroler podobny w vic editorze
+ale on bedzie juz w comodorku zmieniac
+
+isildur 11:09 PM
+super 😃
+
+slajerek 11:09 PM
+bedzie lepiej, bo tak sie myla pojecia ze tak powiem
+moze to wreszcie polacze wlasnie odrazu z jakims dialogiem "NEW PICTURE" 😃 😃
+
+
+
+TODO: isildur: da się zapisać/odtworzyć jakie layersy są włączone?
+
+
+
+?musze zrobic callback cos w stylu 'zainicjalizuj VIC' z VCE
+?dorzucam do TODO, thx for report 🙂
+???	viewC64->debugInterface->SetVicRegister(0x20, colorD020);
+???	SYS_Sleep(100);
+???	viewC64->debugInterface->SetVicRegister(0x21, colorD021);
+
+
+# printing the current speed (as native Vice does; x% emulation speed and Y frames per second)
+
+
+BUG: I am not able to zoom in on memory map on .64 release. (?)
+
+
+# Any progress in the more flexible window handling and adding a menu system? A menu system replacing the F9 screen would make it so much more accessible.
+
+x# In-app, context-aware, help would also be great. Standing on the hex view and selecting help giving the info what this is and the keys that works here.
+
+# Getting the native Vice monitor would also be most appreciated. The monitor is really the weak part. If so you might have a little look at the monitor as such an possibly submit a few improvements to the native Vice monitor. Features I would be dearly looking at would be:
+
+* Printing to file:
+- Commands such as CHIS is great but you can only get what you can fit on screen as there is no scroll buffer and you cannot print to file. Making a "CHIS 500 >file.txt" would seem very logical, giving you a file with a 500 row computer history.
+
+# printing the current speed (as native Vice does; x% emulation speed and Y frames per second)
+
+
+
+
 v0.64
 
 Added: JukeBox playlist feature! Allows to play your favourite demos from playlist with transitions, run automated tests of your games and programs with keystrokes and joystick movements, run your productions in Warp mode and then do a memory dump after selected time... and more!

@@ -193,7 +193,6 @@ CViewC64::CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 	guiMain->AddGuiElement(viewVicEditor);
 
 	SYS_AddApplicationPauseResumeListener(this);
-
 	
 	// settings that need to be set when emulation is initialized
 	C64DebuggerRestoreSettings(C64DEBUGGER_BLOCK_POSTLAUNCH);
@@ -1143,7 +1142,7 @@ void CViewC64::SwitchToScreenLayout(int newScreenLayoutId)
 	}
 	else
 	{
-		if (focusElement && focusElement->visible == false)
+		if (focusElement == NULL || (focusElement && focusElement->visible == false))
 		{
 			SetFocus(viewC64Screen);
 		}

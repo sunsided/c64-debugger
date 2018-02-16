@@ -87,7 +87,9 @@ void CVicEditorLayerC64Canvas::ClearScreen(u8 charValue, u8 colorValue)
 void CVicEditorLayerC64Canvas::Serialise(CByteBuffer *byteBuffer)
 {
 	LOGD("CVicEditorLayerC64Canvas::Serialise");
-	
+
+	CVicEditorLayer::Serialise(byteBuffer);
+
 	// simple store current canvas
 	vicii_cycle_state_t *viciiState = vicEditor->viewVicDisplayMain->currentCanvas->viciiState;
 	
@@ -107,10 +109,12 @@ void CVicEditorLayerC64Canvas::Serialise(CByteBuffer *byteBuffer)
 	byteBuffer->PutBytes(bitmap_high_ptr, 0x0F40);
 }
 
-void CVicEditorLayerC64Canvas::Deserialise(CByteBuffer *byteBuffer)
+void CVicEditorLayerC64Canvas::Deserialise(CByteBuffer *byteBuffer, int version)
 {
 	LOGD("CVicEditorLayerC64Canvas::Deserialise");
 	
+	CVicEditorLayer::Deserialise(byteBuffer, version);
+
 	u16 screenPtr = vicEditor->viewVicDisplayMain->screenAddress;
 	u16 colorPtr = 0xD800;
 	u16 bitmapPtr = vicEditor->viewVicDisplayMain->bitmapAddress;

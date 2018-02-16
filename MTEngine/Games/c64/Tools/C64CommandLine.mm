@@ -19,6 +19,11 @@
 #define C64D_PASS_CONFIG_DATA_MARKER	0x029A
 #define C64D_PASS_CONFIG_DATA_VERSION	0x0002
 
+bool isPRGInCommandLine = false;
+bool isD64InCommandLine = false;
+bool isSNAPInCommandLine = false;
+bool isCRTInCommandLine = false;
+
 void C64DebuggerPassConfigToRunningInstance();
 
 void c64ShowCommandLineHelp()
@@ -111,6 +116,8 @@ void C64DebuggerParseCommandLine0()
 
 			if (ext->CompareWith("prg") || ext->CompareWith("PRG"))
 			{
+				isPRGInCommandLine = true;
+				
 				char *path = sysCommandLineArguments[0];
 				sysCommandLineArguments.clear();
 				sysCommandLineArguments.push_back("-pass");
@@ -140,6 +147,8 @@ void C64DebuggerParseCommandLine0()
 			}
 			else if (ext->CompareWith("d64") || ext->CompareWith("D64"))
 			{
+				isD64InCommandLine = true;
+				
 				char *path = sysCommandLineArguments[0];
 
 				sysCommandLineArguments.clear();
@@ -160,6 +169,8 @@ void C64DebuggerParseCommandLine0()
 			}
 			else if (ext->CompareWith("crt") || ext->CompareWith("CRT"))
 			{
+				isCRTInCommandLine = true;
+				
 				char *path = sysCommandLineArguments[0];
 
 				sysCommandLineArguments.clear();
@@ -181,6 +192,8 @@ void C64DebuggerParseCommandLine0()
 			else if (ext->CompareWith("snap") || ext->CompareWith("SNAP")
 					 || ext->CompareWith("vsf") || ext->CompareWith("VSF"))
 			{
+				isSNAPInCommandLine = true;
+				
 				char *path = sysCommandLineArguments[0];
 
 				sysCommandLineArguments.clear();
@@ -259,7 +272,7 @@ CSlrString *c64CommandLineAudioOutDevice = NULL;
 
 void c64PerformStartupTasksThreaded()
 {
-	LOGD("c64PerformStartupTasksThreaded");
+	LOGM("START c64PerformStartupTasksThreaded");
 	
 	if (c64CommandLineAudioOutDevice != NULL)
 	{
@@ -333,11 +346,22 @@ void c64PerformStartupTasksThreaded()
 		//
 		if (c64SettingsPathToD64 != NULL)
 		{
-			if (c64SettingsAutoJmpFromInsertedDiskFirstPrg)
+			LOGD("isPRGInCommandLine=%s", STRBOOL(isPRGInCommandLine));
+			if (isPRGInCommandLine == false && isD64InCommandLine == true)
 			{
-				SYS_Sleep(100);
+				// start disk based on settings
+				if (c64SettingsAutoJmpFromInsertedDiskFirstPrg)
+				{
+					SYS_Sleep(100);
+				}
+				viewC64->viewC64MainMenu->InsertD64(c64SettingsPathToD64, false, c64SettingsAutoJmpFromInsertedDiskFirstPrg, 0, true);
 			}
-			viewC64->viewC64MainMenu->InsertD64(c64SettingsPathToD64, false, c64SettingsAutoJmpFromInsertedDiskFirstPrg, 0, true);
+			else
+			{
+				// just load disk, do not start, we will start PRG instead
+				viewC64->viewC64MainMenu->InsertD64(c64SettingsPathToD64, false, false, 0, false);
+			}
+			
 		}
 		
 		if (c64SettingsPathToCartridge != NULL)
@@ -351,10 +375,14 @@ void c64PerformStartupTasksThreaded()
 	
 	if (c64SettingsPathToPRG != NULL)
 	{
-		//LOGD("c64SettingsPathToPRG='%s'", c64SettingsPathToPRG);
+		LOGD("c64PerformStartupTasksThreaded: loading PRG, isPRGInCommandLine=%s isD64InCommandLine=%s", STRBOOL(isPRGInCommandLine), STRBOOL(isD64InCommandLine));
+		c64SettingsPathToPRG->DebugPrint("c64SettingsPathToPRG=");
 		
-		// do not load PRG when disk was inserted and started
-		if (!(c64SettingsAutoJmpFromInsertedDiskFirstPrg == true && c64SettingsPathToD64 != NULL))
+		if ((isPRGInCommandLine == false) && (isD64InCommandLine == true) && c64SettingsAutoJmpFromInsertedDiskFirstPrg)
+		{
+			// do not load prg when disk inserted from command line and autostart
+		}
+		else //if (isPRGInCommandLine == true)
 		{
 			viewC64->viewC64MainMenu->LoadPRG(c64SettingsPathToPRG, c64SettingsAutoJmp, false, true);
 		}
@@ -364,7 +392,7 @@ void c64PerformStartupTasksThreaded()
 	{
 		//SYS_Sleep(150);
 		
-		LOGD("c64SettingsJmpOnStartupAddr=%04x", c64SettingsJmpOnStartupAddr);
+		LOGD("c64PerformStartupTasksThreaded: c64SettingsJmpOnStartupAddr=%04x", c64SettingsJmpOnStartupAddr);
 
 		viewC64->debugInterface->MakeJsrC64(c64SettingsJmpOnStartupAddr);
 	}
@@ -377,6 +405,7 @@ class C64PerformStartupTasksThread : public CSlrThread
 {
 	virtual void ThreadRun(void *data)
 	{
+		LOGM("C64PerformStartupTasksThread: ThreadRun");
 		if (c64SettingsPathToSnapshot != NULL && c64SettingsWaitOnStartup < 150)
 			c64SettingsWaitOnStartup = 150;
 		
@@ -456,6 +485,7 @@ void C64DebuggerParseCommandLine2()
 		else if (!strcmp(cmd, "prg"))
 		{
 			char *arg = c64ParseCommandLineGetArgument();
+			LOGD("C64DebuggerParseCommandLine2: set c64SettingsPathToPRG=%s", arg);
 			c64SettingsPathToPRG = new CSlrString(arg);
 		}
 		else if (!strcmp(cmd, "cartridge"))
@@ -517,6 +547,7 @@ void C64DebuggerParseCommandLine2()
 
 void C64DebuggerPerformStartupTasks()
 {
+	LOGM("C64DebuggerPerformStartupTasks()");
 	C64PerformStartupTasksThread *thread = new C64PerformStartupTasksThread();
 	SYS_StartThread(thread, NULL);
 }

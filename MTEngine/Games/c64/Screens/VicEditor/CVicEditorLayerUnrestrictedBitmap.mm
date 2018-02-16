@@ -286,10 +286,14 @@ void CVicEditorLayerUnrestrictedBitmap::UpdateBitmapFromMap()
 
 void CVicEditorLayerUnrestrictedBitmap::Serialise(CByteBuffer *byteBuffer)
 {
+	CVicEditorLayer::Serialise(byteBuffer);
+
 	byteBuffer->PutBytes(map, 384*272);
 }
 
-void CVicEditorLayerUnrestrictedBitmap::Deserialise(CByteBuffer *byteBuffer)
+void CVicEditorLayerUnrestrictedBitmap::Deserialise(CByteBuffer *byteBuffer, int version)
 {
+	CVicEditorLayer::Deserialise(byteBuffer, version);
+
 	byteBuffer->GetBytes(map, 384*272);
 }

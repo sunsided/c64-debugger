@@ -967,6 +967,8 @@ void _c64d_maincpu_make_basic_run_trap(WORD addr, void *data)
 	maincpu_regs.sp = 0xFB;
 	maincpu_regs.pc = 0xA659;
 	_c64d_new_pc = -1;
+
+	LOGD("_c64d_maincpu_make_basic_run_trap done");
 }
 
 void c64d_maincpu_make_basic_run(uint8 *a, uint8 *x, uint8 *y, uint8 *p, uint8 *sp)

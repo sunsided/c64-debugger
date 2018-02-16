@@ -284,7 +284,7 @@ public:
 	virtual u8 GetVicRegister(uint8 registerNum);
 
 	// SID
-	virtual void SetSIDMuteChannels(bool mute1, bool mute2, bool mute3, bool muteExt);
+	virtual void SetSIDMuteChannels(int sidNumber, bool mute1, bool mute2, bool mute3, bool muteExt);
 	virtual void SetSIDReceiveChannelsData(int sidNumber, bool isReceiving);
 	
 	// drive leds

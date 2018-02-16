@@ -1,10 +1,8 @@
 /*
  *  DBG_Log.h
  Created by Marcin Skoczylas on 2009-11-19.
- Copyright 2009 M
+ Copyright 2009 Marcin Skoczylas
  
- 
- Marcin Skoczylas
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
  in the Software without restriction, including without limitation the rights

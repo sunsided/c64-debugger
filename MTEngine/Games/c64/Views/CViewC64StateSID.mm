@@ -316,7 +316,8 @@ bool CViewC64StateSID::DoTap(GLfloat x, GLfloat y)
 		{
 			sidChannelWaveform[selectedSidNumber][i]->isMuted = !sidChannelWaveform[selectedSidNumber][i]->isMuted;
 			
-			viewC64->debugInterface->SetSIDMuteChannels(sidChannelWaveform[selectedSidNumber][0]->isMuted,
+			viewC64->debugInterface->SetSIDMuteChannels(selectedSidNumber,
+														sidChannelWaveform[selectedSidNumber][0]->isMuted,
 														sidChannelWaveform[selectedSidNumber][1]->isMuted,
 														sidChannelWaveform[selectedSidNumber][2]->isMuted, false);
 
@@ -343,7 +344,8 @@ bool CViewC64StateSID::DoTap(GLfloat x, GLfloat y)
 		sidChannelWaveform[selectedSidNumber][1]->isMuted = sidMixWaveform[selectedSidNumber]->isMuted;
 		sidChannelWaveform[selectedSidNumber][2]->isMuted = sidMixWaveform[selectedSidNumber]->isMuted;
 
-		viewC64->debugInterface->SetSIDMuteChannels(sidChannelWaveform[selectedSidNumber][0]->isMuted,
+		viewC64->debugInterface->SetSIDMuteChannels(selectedSidNumber,
+													sidChannelWaveform[selectedSidNumber][0]->isMuted,
 													sidChannelWaveform[selectedSidNumber][1]->isMuted,
 													sidChannelWaveform[selectedSidNumber][2]->isMuted, false);
 	}

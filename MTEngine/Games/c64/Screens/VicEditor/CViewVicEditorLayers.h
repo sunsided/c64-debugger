@@ -50,6 +50,7 @@ public:
 	std::vector<CGuiButtonSwitch *> btnsVisible;
 	
 	void RefreshLayers();
+	void UpdateVisibleSwitchButtons();
 	
 	CSlrFont *font;
 	float fontScale;

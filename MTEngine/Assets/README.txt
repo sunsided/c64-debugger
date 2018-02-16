@@ -1,4 +1,4 @@
-C64 Debugger by SLAJEREK/SAMAR
+﻿C64 Debugger by SLAJEREK/SAMAR
 ------------------------------
 
 C64 Debugger (C) 2016-2017 Marcin Skoczylas
@@ -82,6 +82,10 @@ Ctrl+B
 	Show Breakpoints screen
 Ctrl+Shift+S
 	Show Snapshots screen
+Ctrl+T
+	Mute sound On/Off
+Ctrl+W
+	Replace memory dump view with watches view
 Ctrl+8
 	Insert D64 file
 Ctrl+Shift+8
@@ -135,6 +139,8 @@ Ctrl+U
 	Dump C64's memory to file
 Ctrl+Shift+U
 	Dump 1541 Drive's memory to file
+Ctrl+Shift+E
+	Save current screen data to file
 Ctrl+BACKSPACE
 	Clear memory markers
 Ctrl+Shift+P
@@ -582,17 +588,6 @@ All entries are not case sensitive. Please check KickAssembler documentation,
 section 9.5: Writing to User Defined Files.
 
 
-* Code labels
-
-Code labels are supported using Vice style format:
-al C:<addr> .<label>
-
-for example:
-al C:C000 .codeStart
-
-Note, that label name's leading dot is skipped.
-
-
 * Command line options
 
 -help  show help
@@ -601,8 +596,10 @@ Note, that label name's leading dot is skipped.
      start with layout id <1-12>
 -breakpoints <file>
      load breakpoints from file
--vicesymbols <file>
-     load Vice symbols (code labels)
+-symbols <file>
+     load symbols (code labels)
+-watch <file>
+     load watches
 -wait <ms>
      wait before performing tasks
 -prg <file>
@@ -625,7 +622,9 @@ Note, that label name's leading dot is skipped.
      load snapshot from file
 -soundout <"device name" | device number>
      set sound out device by name or number
-
+-playlist <file>
+     load and start jukebox playlist from json file
+-
 -clearsettings
      clear all config settings
 -pass
@@ -634,6 +633,179 @@ Note, that label name's leading dot is skipped.
 
 Other command line options are the same as selected emulation engine (thus
 see Vice documentation for additional command line options).
+
+
+* Code labels (symbols)
+
+You can load a symbols file wit code lables via -symbols <file> command line
+option. Also, if near loaded PRG a file with "labels" file extension is found
+then it is loaded automatically. Two file formats are accepted, a standard
+Vice code labels format and 64Tass compatible file format.
+
+Vice code labels file format example:
+al C:d019 .vic2_int_reg
+
+Note, that label name's leading dot is skipped.
+
+64Tass labels file format example:
+vic2_int_reg          = $D019
+
+
+* Watches
+
+Watches view is a simple way to display selected values in memory with a label.
+You can replace the memory dump view by watches view with Ctrl+W key. The feature
+is simple display of hex value stored in associated memory address, but this will
+be expanded in future to allow also different data representations.
+
+To add watches you can do that only via external file that you can load from 
+a command line.
+
+The format of file is simple, and there are two formats accepted.
+
+Simple watches format example:
+d019   vic2_int_reg
+
+64Tass-labels compatible format example:
+vic2_int_reg          = $D019
+
+For example watches file please refer to:
+https://sourceforge.net/p/c64-debugger/code/ci/master/tree/Examples/example.watch
+
+
+* JukeBox playlist and automated tests
+
+JukeBox playlist is a way to automate things in the C64 Debugger. The idea is that
+you can write a JSON file in which actions and settings for the jukebox are set.
+Examples of usage include:
+- simply playing demos from a playlist, with fade out/fade in transitions, good for
+the big screen!
+- set warp speed on, load demo, set warp off, automatically press space on notes, 
+  then dump memory in selected frames.
+- load game, automatically move joystick, etc.
+
+Note, that all timings selected are in seconds or milliseconds, but are re-calculated 
+to VIC synchronization frames, so the timings will be always exact and synced to VIC
+refresh. The frame number depends on selected system (PAL, NTSC). Calls to move on
+with transitions, dumping memory and other actions are always synchronized to VIC and
+are performed at end of each VIC frame.
+
+JSON format is as follows:
+1. All "global" settings, such as if fast boot kernal patch should be included.
+2. Entries for each file load.
+3. Each entry has its own settings (such as file path) and actions (such as key strokes,
+   joystick movements, memory dumps, etc).
+
+For example file please refer to:
+https://sourceforge.net/p/c64-debugger/code/ci/master/tree/Examples/jukebox-win32.json
+
+
+Global settings variables:
+
+FastBootPatch=true/false
+	should kernal be patched with fast boot patch
+
+DelayAfterReset=real number
+	pauses all actions after machine reset for selected number of milliseconds
+
+ShowLoadAddress=true/false
+	shall the load address be displayed on screen?
+
+FadeAudioVolume=true/false
+	should the audio be faded out/in on transitions?
+
+SetLayout=integer number
+	set layout number on start
+
+ShowPopup=true/false
+	should popup with demo details be displayed on transition?
+
+PopupFadeTime=real number
+	duration time of fade out/in popup
+
+PopupVisibleTime
+	duration time of popup visibility
+
+Playlist=[]
+	array of playlist entries
+
+
+In Playlist array there are entries of files that will be loaded, in order. Each entry
+has its own seetings and actions.
+
+Playlist Entry variables:
+
+Name=string
+	name of demo/program to be displayed in popup
+
+FilePath=string
+	path to a file to be loaded (can be d64, prg, crt or snap)
+
+ResetMode=hard/soft
+	which reset mode should be used before loading this file
+
+AutoRun=true/false
+	should file be auto run (auto run means: perform reset, load file and run)
+
+RunFile=integer number
+	which entry from D64 directory should be loaded
+
+WaitTime=real number
+	for how long this entry should be played, wait time before transition to next entry
+
+DelayAfterReset=real number
+	pauses all actions after machine reset for selected number of milliseconds
+
+FadeInTime=real number
+	time of fade in transition at start of this entry
+
+FadeOutTime=real number
+	time of fade out transition at end of this entry
+
+Actions=[]
+	array of actions to be performed during this entry
+
+
+In Actions array there are actions that will be performed during playing of this entry.
+
+Action object variables:
+
+DoAfterDelay=real number
+	Wait selected number of seconds and perform action.
+
+KeyDown=string (one ASCII character)
+	Push and hold key on C64 keyboard. The key is ASCII character.
+
+KeyUp=string (one ASCII character)
+	Key up and do not hold anymore a key on C64 keyboard. The key is ASCII character.
+
+KeyDownCode=integer number
+	Push and hold key on C64 keyboard. The key is selected by its ASCII code. For list 
+	of special scan codes refer to: https://sourceforge.net/p/c64-debugger/code/ci/master/tree/MTEngine/Engine/Core/SYS_KeyCodes.h
+
+KeyUpCode=integer number
+	Key up and do not hold anymore a key on C64 keyboard. The key is selected by its 
+	ASCII code. 
+
+Joystick1Down=string
+or Joystick1Up=string
+or Joystick2Down=string
+or Joystick2Up=string
+	Push selected joystick axis (Down) or release joystick axis (Up). The axis name is
+	a string of these values: fire, up, down, left, right, sw, nw, se, sw
+
+WarpMode=true/false
+	Set warp mode On/Off
+
+DumpC64Memory=string
+	Dump C64 Memory to a file specified by path
+
+DumpDiskMemory=string
+	Dump Disk drive Memory to a file specified by path
+
+DetachCartridge=true/false
+	Detach (remove) cartridge from slot
+
 
 * Other notes
 
@@ -694,6 +866,7 @@ Yugorin/Samar
 Scan/House
 Dr.J/Delysid
 Brush/Elysium
+Ruben Aparicio
 64 bites
 
 
@@ -834,6 +1007,61 @@ libclipboard
 *
 * Change log
 *
+
+v0.64.2
+
+Bug fixed: VIC Sequencer state was displayed reversed 
+           (thanks to Mattias Weidhagen for bug reporting)
+Bug fixed: Muting a channel in Stereo/Triple SID state view did not work correctly
+Bug fixed: Automatic loading of *.watch file sometimes caused lock of the debugger 
+           (thanks to Yugorin/Samar for bug reporting)
+Bug fixed: Automatic focus for C64 screen was not triggered 
+           (thanks to Isildur/Samar for bug reporting)
+Bug fixed: Crash when ReSID emulation was selected and Run SID emulation 
+           option was set to No (thanks to Isildur/Samar for bug reporting)
+Bug fixed: When PRG was selected from command line and disk was attached with
+           autorun set then the file entry from D64 was started instead of PRG 
+           (thanks to Isildur/Samar for bug reporting)
+Added: Saving VIC Display state with VCE file 
+       (thanks to Isildur/Samar for suggestion)
+
+
+v0.64 (2017/12/24), X-Mas release!
+
+Added: JukeBox playlist feature! Allows to play your favourite demos from playlist 
+       with transitions, run automated tests of your games and programs with keystrokes 
+       and joystick movements, run your productions in Warp mode and then do a memory 
+       dump after selected time... and more!
+Added: BASIC-compatible auto run
+Added: Setting CPU registers value in registers view
+Added: Setting for Stereo and Triple SID, showing registers of additional SIDs in 
+       SID state view
+Added: Switch off SID emulation in Settings
+Added: Mute audio using Ctrl+T shortcut, also select switch mute mode between just 
+       muting the volume, or switching SID emulation off when muted, selectable in 
+       Settings (thanks to Mojzesh/Arise and Wegi/Elysium for the help and idea)
+Added: Support of 64tass code labels
+Added: Automatically load Vice code labels if file with *.labels extension is found 
+       near loaded PRG
+Added: Watch selected memory locations (Ctrl+W), automatically load *.watch file 
+       with PRG. Simple for now, update soon!
+Added: Change menus colour theme and disassembly colour theme, new menus colour themes 
+       by Mojzesh/Arise and Isildur/Samar
+Added: Export sprite raw data with screen save
+Added: Show multi-colour charset in Vic Editor
+Added: Setting to adjust focus border width
+Change: You can now save current screen using Ctrl+Shift+E keyboard shortcut in any 
+        view, not only Vic Editor
+Change: Saving current screen to file also exports sprites data and charset data
+Change: Shift+0 in Vic Editor sets both $D020 and $D021 colors
+Bug fixed: On Windows it was not possible to enter opcodes in the disassembly pane 
+           due to keycodes mismatch (thanks to Scan/House for bug report)
+Bug fixed: On MacOS accent keys that needed double keystroke on ISO keyboards were not 
+           recognised (thanks to Ruben Aparicio for bug report and great help 
+           with fixing)
+Bug fixed: Importing key map from file caused corruption in key map editor 
+           (thanks to Ruben Aparicio for bug report)
+
 
 v0.62 (2017/08/02), released at Riverwash demo party
 

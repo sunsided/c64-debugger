@@ -15,7 +15,7 @@ class CVicEditorLayerUnrestrictedBitmap : public CVicEditorLayer
 	virtual void RenderPreview(vicii_cycle_state_t *viciiState);
 
 	virtual void Serialise(CByteBuffer *byteBuffer);
-	virtual void Deserialise(CByteBuffer *byteBuffer);
+	virtual void Deserialise(CByteBuffer *byteBuffer, int version);
 	
 	void RefreshImage();
 	CImageData *imageDataUnrestricted;

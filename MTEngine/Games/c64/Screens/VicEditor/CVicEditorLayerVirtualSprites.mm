@@ -1514,6 +1514,9 @@ void CVicEditorLayerVirtualSprites::ClearScreen(u8 charValue, u8 colorValue)
 void CVicEditorLayerVirtualSprites::Serialise(CByteBuffer *byteBuffer)
 {
 	guiMain->LockMutex();
+
+	CVicEditorLayer::Serialise(byteBuffer);
+
 	SimpleScanSpritesInThisFrame();
 	
 	int numSprites = this->sprites.size();
@@ -1539,8 +1542,10 @@ void CVicEditorLayerVirtualSprites::Serialise(CByteBuffer *byteBuffer)
 	guiMain->UnlockMutex();
 }
 
-void CVicEditorLayerVirtualSprites::Deserialise(CByteBuffer *byteBuffer)
+void CVicEditorLayerVirtualSprites::Deserialise(CByteBuffer *byteBuffer, int version)
 {
+	CVicEditorLayer::Deserialise(byteBuffer, version);
+
 	ClearSprites();
 
 	int numSprites = byteBuffer->GetI32();

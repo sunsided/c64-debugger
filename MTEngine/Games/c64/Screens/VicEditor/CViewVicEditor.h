@@ -179,7 +179,7 @@ public:
 	void StoreUndo();
 	void DoUndo();
 	void DoRedo();
-	void Serialise(CByteBuffer *byteBuffer, bool storeVicRegisters, bool storeC64Memory);
+	void Serialise(CByteBuffer *byteBuffer, bool storeVicRegisters, bool storeC64Memory, bool storeVicDisplayControlState);
 	void Deserialise(CByteBuffer *byteBuffer, int version);
 	
 	// import / export

@@ -1272,24 +1272,39 @@ static int sound_run_sound(void)
 	{
 		//LOGD("sound_run_sound: skip SID");
 		
-		nr = (int)((SOUNDCLK_CONSTANT(maincpu_clk) - snddata.fclk)
-				   / snddata.clkstep);
-
-		snddata.fclk += nr * snddata.clkstep;
-
-		if (isWarp == 1)
+		if (cycle_based)
 		{
-			// note we do not need to fill the buffer as we are in silent warp mode anyway
+			int soc;
+			bufferptr = snddata.buffer + snddata.bufptr * snddata.sound_output_channels;
+			nr = SOUND_BUFSIZE - snddata.bufptr;
+			soc = snddata.sound_output_channels;
+			memset(bufferptr, 0, nr * sizeof(SWORD) * soc);
+			
+			snddata.bufptr += nr;
+			
+			snddata.fclk = maincpu_clk;
 		}
 		else
 		{
-			bufferptr = snddata.buffer + snddata.bufptr * snddata.sound_output_channels;
-			memset(bufferptr, 0, nr * snddata.sound_output_channels * sizeof(SWORD));
+			nr = (int)((SOUNDCLK_CONSTANT(maincpu_clk) - snddata.fclk)
+					   / snddata.clkstep);
+
+			snddata.fclk += nr * snddata.clkstep;
+			
+			if (isWarp == 1)
+			{
+				// note we do not need to fill the buffer as we are in silent warp mode anyway
+			}
+			else
+			{
+				bufferptr = snddata.buffer + snddata.bufptr * snddata.sound_output_channels;
+				memset(bufferptr, 0, nr * snddata.sound_output_channels * sizeof(SWORD));
+			}
+
+			snddata.bufptr += nr;
 		}
 
-		snddata.bufptr += nr;
 		snddata.lastclk = maincpu_clk;
-
 		return 0;
 	}
 	
@@ -1542,7 +1557,6 @@ double sound_flush(int isPaused)
 		}
 	}
 	
-
     if (sid_state_changed) {
         if (sid_init() != 0) {
             return 0;
@@ -1556,7 +1570,12 @@ double sound_flush(int isPaused)
     }
     sound_resume();
 	
-    if (snddata.playdev->flush) {
+	if (!snddata.playdev) {
+		return 0;
+	}
+	
+    if (snddata.playdev->flush)
+	{
         state = sound_machine_dump_state(snddata.psid[0]);
         i = snddata.playdev->flush(state);
         lib_free(state);
@@ -1890,6 +1909,11 @@ void sound_store(WORD addr, BYTE val, int chipno)
 
     sound_machine_store(snddata.psid[chipno], addr, val);
 
+	if (!snddata.playdev)
+	{
+		return;
+	}
+	
     if (!snddata.playdev->dump) {
         return;
     }

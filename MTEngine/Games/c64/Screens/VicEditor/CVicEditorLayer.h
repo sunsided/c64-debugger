@@ -34,7 +34,7 @@ public:
 	virtual void ClearScreen(u8 charValue, u8 colorValue);
 
 	virtual void Serialise(CByteBuffer *byteBuffer);
-	virtual void Deserialise(CByteBuffer *byteBuffer);
+	virtual void Deserialise(CByteBuffer *byteBuffer, int version);
 	
 	//CGuiButtonSwitch *btnVisible;
 	

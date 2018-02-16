@@ -154,6 +154,18 @@ void CViewVicEditorLayers::SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ,
 	}
 }
 
+void CViewVicEditorLayers::UpdateVisibleSwitchButtons()
+{
+	for (std::vector<CGuiButtonSwitch *>::iterator it = this->btnsVisible.begin();
+		 it != this->btnsVisible.end(); it++)
+	{
+		CGuiButtonSwitch *btnVisible = *it;
+		CVicEditorLayer *layer = (CVicEditorLayer *)btnVisible->userData;
+		
+		btnVisible->SetOn(layer->isVisible);
+	}
+
+}
 
 bool CViewVicEditorLayers::ButtonSwitchChanged(CGuiButtonSwitch *button)
 {

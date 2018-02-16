@@ -71,11 +71,13 @@ uint8 *C64DebugInterface::GetCharRom()
 
 void C64DebugInterface::LockMutex()
 {
+	LOGD("C64DebugInterface::LockMutex");
 	breakpointsMutex->Lock();
 }
 
 void C64DebugInterface::UnlockMutex()
 {
+	LOGD("C64DebugInterface::UnlockMutex");
 	breakpointsMutex->Unlock();
 }
 
@@ -740,7 +742,7 @@ void C64DebugInterface::RenderStateSID(uint16 sidBase, float posX, float posY, f
 	SYS_FatalExit("C64DebugInterface::RenderStateSID");	
 }
 
-void C64DebugInterface::SetSIDMuteChannels(bool mute1, bool mute2, bool mute3, bool muteExt)
+void C64DebugInterface::SetSIDMuteChannels(int sidNumber, bool mute1, bool mute2, bool mute3, bool muteExt)
 {
 	SYS_FatalExit("C64DebugInterface::SetSIDMuteChannels");
 }

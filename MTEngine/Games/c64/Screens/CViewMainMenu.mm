@@ -519,33 +519,29 @@ bool CViewMainMenu::LoadPRG(CSlrString *path, bool autoStart, bool updatePRGFold
 		return false;
 	}
 	
+	// display file name in menu
+	char *fname = SYS_GetFileNameFromFullPath(asciiPath);
+	
+	guiMain->LockMutex();
+	if (menuItemLoadPRG->str2 != NULL)
+		delete menuItemLoadPRG->str2;
+	
+	menuItemLoadPRG->str2 = new CSlrString(fname);
+	delete fname;
+	
+	LoadLabelsAndWatches(path);
+	guiMain->UnlockMutex();
+
+	//
 	CByteBuffer *byteBuffer = new CByteBuffer(file, false);
-	
-	bool ret = LoadPRG(byteBuffer, autoStart, showAddressInfo);
-	
-	if (ret)
-	{
-		// display file name in menu
-		char *fname = SYS_GetFileNameFromFullPath(asciiPath);
-		
-		guiMain->LockMutex();
-		if (menuItemLoadPRG->str2 != NULL)
-			delete menuItemLoadPRG->str2;
-		
-		menuItemLoadPRG->str2 = new CSlrString(fname);
-		delete fname;
-
-		LoadLabelsAndWatches(path);
-
-		guiMain->UnlockMutex();
-	}
+	LoadPRG(byteBuffer, autoStart, showAddressInfo);
 	
 	delete asciiPath;
 	delete file;
 
 	delete byteBuffer;
 	
-	return ret;
+	return true;
 }
 
 void CViewMainMenu::LoadLabelsAndWatches(CSlrString *pathToPRG)
@@ -890,16 +886,17 @@ void CViewMainMenu::ReloadAndRestartPRG()
 			return;
 		}
 		
+		guiMain->LockMutex();
+		LoadLabelsAndWatches(c64SettingsPathToPRG);
+		guiMain->UnlockMutex();
+
 		CByteBuffer *byteBuffer = new CByteBuffer(file, false);
-		
-		bool ret = LoadPRG(byteBuffer, true, false);
+		LoadPRG(byteBuffer, true, false);
 		
 		delete asciiPath;
 		delete file;
 		
 		delete byteBuffer;
-		
-		LoadLabelsAndWatches(c64SettingsPathToPRG);
 		
 		return;
 	}

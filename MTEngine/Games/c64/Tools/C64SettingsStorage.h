@@ -140,6 +140,7 @@ extern int c64SettingsDisassemblyNonExecuteColor;
 extern int c64SettingsMenusColorTheme;
 
 extern bool c64SettingsUseSystemFileDialogs;
+extern bool c64SettingsUseOnlyFirstCPU;
 
 extern int c64SettingsDoubleClickMS;
 

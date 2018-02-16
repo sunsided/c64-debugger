@@ -243,7 +243,7 @@ static int playCallback( const void *inputBuffer, void *outputBuffer,
 void CSoundEngine::AllocateInputBuffers(UInt32 inNumberFrames)
 {
     LOGD("CSoundEngine::AllocateInputBuffers: inNumberFrames = %d\n", inNumberFrames);
-    
+	
 	this->recordedNumberFrames = inNumberFrames;
 	int bufferSizeInBytes = inNumberFrames * 4;
     

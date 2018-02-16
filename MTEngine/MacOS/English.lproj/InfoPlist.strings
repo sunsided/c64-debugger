@@ -1,4 +1,4 @@
 /* Localized versions of Info.plist keys */
 
-CFBundleGetInfoString = "v0.60, Copyright 2017, Samar Productions";
-NSHumanReadableCopyright = "Copyright © 2017, Samar Productions";
+CFBundleGetInfoString = "Commodore 64 Debugger, Copyright 2018, Samar Productions";
+NSHumanReadableCopyright = "Copyright © 2018, Samar Productions";

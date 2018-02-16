@@ -60,10 +60,17 @@ bool CVicEditorLayer::GetColorAtPixel(int x, int y, u8 *color)
 
 void CVicEditorLayer::Serialise(CByteBuffer *byteBuffer)
 {
-	SYS_FatalExit("CVicEditorLayer::Serialise");
+	LOGD("isVisible=%s", STRBOOL(this->isVisible));
+	byteBuffer->PutBool(this->isVisible);
 }
 
-void CVicEditorLayer::Deserialise(CByteBuffer *byteBuffer)
+void CVicEditorLayer::Deserialise(CByteBuffer *byteBuffer, int version)
 {
-	SYS_FatalExit("CVicEditorLayer::Deserialise");
+	if (version >= 2)
+	{
+		this->isVisible = byteBuffer->GetBool();
+		
+		LOGD("isVisible=%s", STRBOOL(this->isVisible));
+	}
 }
+

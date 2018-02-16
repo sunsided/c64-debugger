@@ -25,6 +25,12 @@
 #include "CGuiMain.h"
 #include "SND_SoundEngine.h"
 
+#if defined(WIN32)
+extern "C" {
+	int uilib_cpu_is_smp(void);
+	int set_single_cpu(int val, void *param);	// 1=set to first CPU, 0=set to all CPUs
+}
+#endif
 
 #define VIEWC64SETTINGS_DUMP_C64_MEMORY					1
 #define VIEWC64SETTINGS_DUMP_C64_MEMORY_MARKERS			2
@@ -507,6 +513,17 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 	menuItemUseSystemDialogs->SetSelectedOption(c64SettingsUseSystemFileDialogs, false);
 	menuItemSubMenuUI->AddMenuItem(menuItemUseSystemDialogs);
 #endif
+	
+#if defined(WIN32)
+	menuItemUseOnlyFirstCPU = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("Use only first CPU: "),
+																 NULL, tr, tg, tb, optionsYesNo, font, fontScale);
+	menuItemUseOnlyFirstCPU->SetSelectedOption(c64SettingsUseOnlyFirstCPU, false);
+	if (uilib_cpu_is_smp() == 1)
+	{
+		menuItemSubMenuUI->AddMenuItem(menuItemUseOnlyFirstCPU);
+	}
+#endif
+	
 	
 	std::vector<CSlrString *> *colorThemeOptions = viewC64->colorsTheme->GetAvailableColorThemes();
 	menuItemMenusColorTheme = new CViewC64MenuItemOption(fontHeight, new CSlrString("Menus color theme: "),
@@ -1011,6 +1028,12 @@ void CViewSettingsMenu::MenuCallbackItemChanged(CGuiViewMenuItem *menuItem)
 	{
 		bool v = menuItemUseSystemDialogs->selectedOption == 0 ? false : true;
 		C64DebuggerSetSetting("UseSystemDialogs", &(v));
+	}
+	else if (menuItem == menuItemUseOnlyFirstCPU)
+	{
+		bool v = menuItemUseOnlyFirstCPU->selectedOption == 0 ? false : true;
+		C64DebuggerSetSetting("UseOnlyFirstCPU", &(v));
+		guiMain->ShowMessage("Please restart C64 Debugger to apply configuration.");
 	}
 	else if (menuItem == menuItemVicStateRecordingMode)
 	{

@@ -48,7 +48,7 @@ extern "C" {
 }
 
 #define VIC_EDITOR_FILE_MAGIC	0x56434500
-#define VIC_EDITOR_FILE_VERSION	0x00000001
+#define VIC_EDITOR_FILE_VERSION	0x00000002
 
 #define NUMBER_OF_UNDO_LEVELS	100
 #define ZOOMING_SPEED_FACTOR_QUICK	15
@@ -2871,136 +2871,6 @@ bool CViewVicEditor::ExportHyper(CSlrString *path)
 }
 
 //
-bool CViewVicEditor::ExportVCE(CSlrString *path)
-{
-	LOGD("CViewVicEditor::ExportVCE");
-	
-	guiMain->LockMutex();
-	
-	char *cPath = path->GetStdASCII();
-	LOGD(" ..... cPath='%s'", cPath);
-	
-	CSlrFileFromOS *file = new CSlrFileFromOS(cPath, SLR_FILE_MODE_WRITE);
-	delete [] cPath;
-	
-	//
-	
-	CByteBuffer *byteBuffer = new CByteBuffer();
-	
-	byteBuffer->PutU32(VIC_EDITOR_FILE_MAGIC);
-	byteBuffer->PutU32(VIC_EDITOR_FILE_VERSION);
-	
-	CByteBuffer *serialiseBuffer = new CByteBuffer();
-	this->Serialise(serialiseBuffer, true, true);
-	
-	// uncompressed size
-	byteBuffer->PutU32(serialiseBuffer->length);
-	
-	// compress
-	uLong outBufferSize = compressBound(serialiseBuffer->length);
-	byte *outBuffer = new byte[outBufferSize];
-	
-	int result = compress2(outBuffer, &outBufferSize, serialiseBuffer->data, serialiseBuffer->length, 9);
-	
-	if (result != Z_OK)
-	{
-		LOGError("zlib error: %d", result);
-		guiMain->ShowMessage("zlib error");
-		delete [] outBuffer;
-		delete serialiseBuffer;
-		delete byteBuffer;
-		delete file;
-		return false;
-	}
-	
-	u32 outSize = (u32)outBufferSize;
-	
-	LOGD("..original size=%d compressed=%d", serialiseBuffer->length, outSize);
-	
-	//byteBuffer->putU32(outSize);
-	byteBuffer->putBytes(outBuffer, outSize);
-	
-	//
-	byteBuffer->storeToFileNoHeader(file);
-	
-	file->Close();
-	
-	delete [] outBuffer;
-	delete serialiseBuffer;
-	delete byteBuffer;
-	delete file;
-	
-	guiMain->UnlockMutex();
-	
-	guiMain->ShowMessage("Picture saved");
-	
-	LOGM("CViewVicEditor::ExportKoala: file saved");
-	
-	return true;
-}
-
-bool CViewVicEditor::ImportVCE(CSlrString *path)
-{
-	LOGD("CViewVicEditor::ImportVCE");
-	
-	char *cPath = path->GetStdASCII();
-	CSlrFileFromOS *file = new CSlrFileFromOS(cPath);
-	delete [] cPath;
-	
-	if (!file->Exists())
-	{
-		delete file;
-		guiMain->ShowMessage("File not found");
-		return false;
-	}
-	
-	guiMain->LockMutex();
-	
-	u32 magic = file->ReadUnsignedInt();
-	if (magic != VIC_EDITOR_FILE_MAGIC)
-	{
-		guiMain->ShowMessage("VCE format error");
-		delete file;
-		return false;
-	}
-
-	u32 fileVersion = file->ReadUnsignedInt();
-	if (fileVersion > VIC_EDITOR_FILE_VERSION)
-	{
-		char *buf = SYS_GetCharBuf();
-		sprintf(buf, "File v%d higher than supported %d.", fileVersion, VIC_EDITOR_FILE_VERSION);
-		guiMain->ShowMessage(buf);
-		SYS_ReleaseCharBuf(buf);
-		delete file;
-		return false;
-	}
-	
-	// load
-	u32 uncompressedSize = file->ReadUnsignedInt();
-	u8 *uncompressedData = new u8[uncompressedSize];
-	
-	CSlrFileZlib *fileZlib = new CSlrFileZlib(file);
-	fileZlib->Read(uncompressedData, uncompressedSize);
-	
-	delete fileZlib;
-	
-	LOGD("... uncompressedSize=%d", uncompressedSize);
-	
-	CByteBuffer *serialiseBuffer = new CByteBuffer(uncompressedData, uncompressedSize);
-	this->Deserialise(serialiseBuffer, fileVersion);
-	
-	delete serialiseBuffer;
-	
-	delete file;
-
-	guiMain->UnlockMutex();
-	
-	guiMain->ShowMessage("VCE file loaded");
-	
-	return true;
-}
-
-//
 bool CViewVicEditor::ExportPNG(CSlrString *path)
 {
 	LOGD("CViewVicEditor::ExportPNG");
@@ -3359,7 +3229,7 @@ void CViewVicEditor::StoreUndo()
 	
 	buffer->Reset();
 	
-	this->Serialise(buffer, true, true);
+	this->Serialise(buffer, true, true, true);
 	
 	undoList.push_back(buffer);
 
@@ -3412,7 +3282,7 @@ void CViewVicEditor::DoUndo()
 	
 	buffer->Reset();
 	
-	this->Serialise(buffer, true, true);
+	this->Serialise(buffer, true, true, true);
 	
 	redoList.push_back(buffer);
 
@@ -3477,7 +3347,7 @@ void CViewVicEditor::DoRedo()
 	
 	buffer->Reset();
 	
-	this->Serialise(buffer, true, true);
+	this->Serialise(buffer, true, true, true);
 	
 	undoList.push_back(buffer);
 
@@ -3499,9 +3369,147 @@ void CViewVicEditor::DoRedo()
 	poolList.push_back(buffer);
 }
 
+////////////
+
+bool CViewVicEditor::ExportVCE(CSlrString *path)
+{
+	LOGD("CViewVicEditor::ExportVCE");
+	
+	guiMain->LockMutex();
+	
+	char *cPath = path->GetStdASCII();
+	LOGD(" ..... cPath='%s'", cPath);
+	
+	CSlrFileFromOS *file = new CSlrFileFromOS(cPath, SLR_FILE_MODE_WRITE);
+	delete [] cPath;
+	
+	//
+	
+	CByteBuffer *byteBuffer = new CByteBuffer();
+	
+	byteBuffer->PutU32(VIC_EDITOR_FILE_MAGIC);
+	byteBuffer->PutU32(VIC_EDITOR_FILE_VERSION);
+	
+	CByteBuffer *serialiseBuffer = new CByteBuffer();
+	this->Serialise(serialiseBuffer, true, true, true);
+	
+	// uncompressed size
+	byteBuffer->PutU32(serialiseBuffer->length);
+	
+	// compress
+	uLong outBufferSize = compressBound(serialiseBuffer->length);
+	byte *outBuffer = new byte[outBufferSize];
+	
+	int result = compress2(outBuffer, &outBufferSize, serialiseBuffer->data, serialiseBuffer->length, 9);
+	
+	if (result != Z_OK)
+	{
+		guiMain->UnlockMutex();
+
+		LOGError("zlib error: %d", result);
+		guiMain->ShowMessage("zlib error");
+		delete [] outBuffer;
+		delete serialiseBuffer;
+		delete byteBuffer;
+		delete file;
+		return false;
+	}
+	
+	u32 outSize = (u32)outBufferSize;
+	
+	LOGD("..original size=%d compressed=%d", serialiseBuffer->length, outSize);
+	
+	//byteBuffer->putU32(outSize);
+	byteBuffer->putBytes(outBuffer, outSize);
+	
+	//
+	byteBuffer->storeToFileNoHeader(file);
+	
+	file->Close();
+	
+	delete [] outBuffer;
+	delete serialiseBuffer;
+	delete byteBuffer;
+	delete file;
+	
+	guiMain->UnlockMutex();
+	
+	guiMain->ShowMessage("Picture saved");
+	
+	LOGM("CViewVicEditor::ExportKoala: file saved");
+	
+	return true;
+}
+
+bool CViewVicEditor::ImportVCE(CSlrString *path)
+{
+	LOGD("CViewVicEditor::ImportVCE");
+	
+	char *cPath = path->GetStdASCII();
+	CSlrFileFromOS *file = new CSlrFileFromOS(cPath);
+	delete [] cPath;
+	
+	if (!file->Exists())
+	{
+		guiMain->UnlockMutex();
+
+		delete file;
+		guiMain->ShowMessage("File not found");
+		return false;
+	}
+	
+	guiMain->LockMutex();
+	
+	u32 magic = file->ReadUnsignedInt();
+	if (magic != VIC_EDITOR_FILE_MAGIC)
+	{
+		guiMain->UnlockMutex();
+
+		guiMain->ShowMessage("VCE format error");
+		delete file;
+		return false;
+	}
+	
+	u32 fileVersion = file->ReadUnsignedInt();
+	if (fileVersion > VIC_EDITOR_FILE_VERSION)
+	{
+		guiMain->UnlockMutex();
+
+		char *buf = SYS_GetCharBuf();
+		sprintf(buf, "File v%d higher than supported %d.", fileVersion, VIC_EDITOR_FILE_VERSION);
+		guiMain->ShowMessage(buf);
+		SYS_ReleaseCharBuf(buf);
+		delete file;
+		return false;
+	}
+	
+	// load
+	u32 uncompressedSize = file->ReadUnsignedInt();
+	u8 *uncompressedData = new u8[uncompressedSize];
+	
+	CSlrFileZlib *fileZlib = new CSlrFileZlib(file);
+	fileZlib->Read(uncompressedData, uncompressedSize);
+	
+	delete fileZlib;
+	
+	LOGD("... uncompressedSize=%d", uncompressedSize);
+	
+	CByteBuffer *serialiseBuffer = new CByteBuffer(uncompressedData, uncompressedSize);
+	this->Deserialise(serialiseBuffer, fileVersion);
+	
+	delete serialiseBuffer;
+	
+	delete file;
+	
+	guiMain->UnlockMutex();
+	
+	guiMain->ShowMessage("VCE file loaded");
+	
+	return true;
+}
 
 
-void CViewVicEditor::Serialise(CByteBuffer *byteBuffer, bool storeVicRegisters, bool storeC64Memory)
+void CViewVicEditor::Serialise(CByteBuffer *byteBuffer, bool storeVicRegisters, bool storeC64Memory, bool storeVicDisplayControlState)
 {
 	vicii_cycle_state_t *viciiState = &(viewC64->viciiStateToShow);
 	
@@ -3537,8 +3545,6 @@ void CViewVicEditor::Serialise(CByteBuffer *byteBuffer, bool storeVicRegisters, 
 	int bitmap_addr = charset_addr & 0xe000;
 
 	viewC64->viewC64VicControl->SetViciiPointersFromUI(&screen_addr, &charset_addr, &bitmap_addr);
-	
-
 
 	// store current VIC Display mode
 	byteBuffer->PutBool(isBitmap);
@@ -3603,6 +3609,45 @@ void CViewVicEditor::Serialise(CByteBuffer *byteBuffer, bool storeVicRegisters, 
 		byteBuffer->PutBool(false);
 	}
 
+	if (storeVicDisplayControlState)
+	{
+		// VicDisplayControlState was not intended originally to be stored in VCE file
+		// but Isildur/Samar is using it to set correct VIC registers for his images
+		// this *should* be replaced in the future by a NEW PICTURE dialog that
+		// will prepare VIC registers to mode selected by the user
+		byteBuffer->PutBool(true);
+		
+		byteBuffer->PutBool(viewC64->viewC64VicControl->btnModeText->IsOn());
+		byteBuffer->PutBool(viewC64->viewC64VicControl->btnModeBitmap->IsOn());
+		byteBuffer->PutBool(viewC64->viewC64VicControl->btnModeHires->IsOn());
+		byteBuffer->PutBool(viewC64->viewC64VicControl->btnModeMulti->IsOn());
+		byteBuffer->PutBool(viewC64->viewC64VicControl->btnModeStandard->IsOn());
+		byteBuffer->PutBool(viewC64->viewC64VicControl->btnModeExtended->IsOn());
+		
+		byteBuffer->PutBool(viewC64->viewC64VicControl->lstScreenAddresses->isLocked);
+		if (viewC64->viewC64VicControl->lstScreenAddresses->isLocked)
+		{
+			byteBuffer->PutI16(viewC64->viewC64VicControl->lstScreenAddresses->selectedElement);
+		}
+		
+		byteBuffer->PutBool(viewC64->viewC64VicControl->lstCharsetAddresses->isLocked);
+		if (viewC64->viewC64VicControl->lstCharsetAddresses->isLocked)
+		{
+			byteBuffer->PutI16(viewC64->viewC64VicControl->lstCharsetAddresses->selectedElement);
+		}
+
+		byteBuffer->PutBool(viewC64->viewC64VicControl->lstBitmapAddresses->isLocked);
+		if (viewC64->viewC64VicControl->lstBitmapAddresses->isLocked)
+		{
+			byteBuffer->PutI16(viewC64->viewC64VicControl->lstBitmapAddresses->selectedElement);
+		}
+
+	}
+	else
+	{
+		byteBuffer->PutBool(false);
+	}
+	
 }
 
 void CViewVicEditor::Deserialise(CByteBuffer *byteBuffer, int version)
@@ -3643,10 +3688,12 @@ void CViewVicEditor::Deserialise(CByteBuffer *byteBuffer, int version)
 	SetVicAddresses(vbank, screenAddr, charsetAddr, bitmapAddr);
 	
 	//
-	
-	
+		
 	u8 colorD020 = byteBuffer->GetU8();
+	viewC64->debugInterface->SetVicRegister(0x20, colorD020);
+
 	u8 colorD021 = byteBuffer->GetU8();
+	viewC64->debugInterface->SetVicRegister(0x21, colorD021);
 	
 	LOGD(" ......... deserialising layers, index=%d", byteBuffer->index);
 
@@ -3658,7 +3705,7 @@ void CViewVicEditor::Deserialise(CByteBuffer *byteBuffer, int version)
 		
 		LOGD(" ......... deserialising layer '%s', index=%d", layer->layerName, byteBuffer->index);
 
-		layer->Deserialise(byteBuffer);
+		layer->Deserialise(byteBuffer, version);
 	}
 	
 	LOGD(" ..... deserialising sprite pointers, index=%d", byteBuffer->index);
@@ -3684,6 +3731,8 @@ void CViewVicEditor::Deserialise(CByteBuffer *byteBuffer, int version)
 		}
 	}
 	
+	//////////
+	
 	bool restoreC64Memory = byteBuffer->GetBool();
 	if (restoreC64Memory)
 	{
@@ -3691,17 +3740,65 @@ void CViewVicEditor::Deserialise(CByteBuffer *byteBuffer, int version)
 		u8 *c64memory = new u8[0x10000];
 		byteBuffer->getBytes(c64memory, 0x10000);
 		
-		// leave zero page as-is
+		// leave zero pages as-is
 		for (int i = 0x0400; i < 0xFFF0; i++)
 		{
 			viewC64->debugInterface->SetByteToRamC64(i, c64memory[i]);
 		}
 		delete [] c64memory;
 	}
+	
+	if (version < 2)
+	{
+		// no more fields in version 1
+		return;
+	}
 
-	viewC64->debugInterface->SetVicRegister(0x20, colorD020);
-	SYS_Sleep(100);
-	viewC64->debugInterface->SetVicRegister(0x21, colorD021);
+	bool restoreVicDisplayControlState = byteBuffer->GetBool();
+	if (restoreVicDisplayControlState)
+	{
+		LOGD("...restoreVicDisplayControlState");
+		
+		viewC64->viewC64VicControl->btnModeText->SetOn(byteBuffer->GetBool());
+		viewC64->viewC64VicControl->btnModeBitmap->SetOn(byteBuffer->GetBool());
+		viewC64->viewC64VicControl->btnModeHires->SetOn(byteBuffer->GetBool());
+		viewC64->viewC64VicControl->btnModeMulti->SetOn(byteBuffer->GetBool());
+		viewC64->viewC64VicControl->btnModeStandard->SetOn(byteBuffer->GetBool());
+		viewC64->viewC64VicControl->btnModeExtended->SetOn(byteBuffer->GetBool());
+		
+		if (byteBuffer->GetBool())
+		{
+			viewC64->viewC64VicControl->lstScreenAddresses->SetListLocked(true);
+			viewC64->viewC64VicControl->lstScreenAddresses->SetElement(byteBuffer->GetI16(), true, true);
+		}
+		else
+		{
+			viewC64->viewC64VicControl->lstScreenAddresses->SetListLocked(false);
+		}
+		
+		if (byteBuffer->GetBool())
+		{
+			viewC64->viewC64VicControl->lstCharsetAddresses->SetListLocked(true);
+			viewC64->viewC64VicControl->lstCharsetAddresses->SetElement(byteBuffer->GetI16(), true, true);
+		}
+		else
+		{
+			viewC64->viewC64VicControl->lstCharsetAddresses->SetListLocked(false);
+		}
+		
+		if (byteBuffer->GetBool())
+		{
+			viewC64->viewC64VicControl->lstBitmapAddresses->SetListLocked(true);
+			viewC64->viewC64VicControl->lstBitmapAddresses->SetElement(byteBuffer->GetI16(), true, true);
+		}
+		else
+		{
+			viewC64->viewC64VicControl->lstBitmapAddresses->SetListLocked(false);
+		}
+	}
+	
+	//
+	this->viewLayers->UpdateVisibleSwitchButtons();
 }
 
 

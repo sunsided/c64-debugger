@@ -187,9 +187,27 @@ CSlrString *C64DebugInterfaceVice::GetEmulatorVersionString()
 	return versionString;
 }
 
+#if defined(WIN32)
+extern "C" {
+	int uilib_cpu_is_smp(void);
+	int set_single_cpu(int val, void *param);	// 1=set to first CPU, 0=set to all CPUs
+}
+#endif
+
 void C64DebugInterfaceVice::RunEmulationThread()
 {
 	LOGM("C64DebugInterfaceVice::RunEmulationThread");
+
+#if defined(WIN32)
+	if (c64SettingsUseOnlyFirstCPU)
+	{
+		if (uilib_cpu_is_smp() == 1)
+		{
+			LOGD("C64DebugInterfaceVice: set UseOnlyFirstCPU");
+			set_single_cpu(1, NULL);
+		}
+	}
+#endif
 	
 	vice_main_loop_run();
 	
@@ -1354,7 +1372,7 @@ void C64DebugInterfaceVice::RenderStateVIC(vicii_cycle_state_t *viciiState,
 //	sprintf(buf, "Mode: %s (ECM/BMM/MCM=%d/%d/%d)", mode_name[video_mode], m_ecm, m_bmm, m_mcm);
 //	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 
-	sprintf(buf, "Sequencer state   : %s", viciiState->idle_state ? "Display" : "Idle");
+	sprintf(buf, "Sequencer state   : %s", viciiState->idle_state ? "Idle" : "Display");
 	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 
 	sprintf(buf, "Row counter       : %d", viciiState->rc);
@@ -1955,7 +1973,7 @@ void C64DebugInterfaceVice::PrintSidWaveform(uint8 wave, char *buf)
 		strcat(buf, "None");
 }
 
-void C64DebugInterfaceVice::SetSIDMuteChannels(bool mute1, bool mute2, bool mute3, bool muteExt)
+void C64DebugInterfaceVice::SetSIDMuteChannels(int sidNumber, bool mute1, bool mute2, bool mute3, bool muteExt)
 {
 	uint8 sidVoiceMask = 0xF0;
 	
@@ -1976,7 +1994,7 @@ void C64DebugInterfaceVice::SetSIDMuteChannels(bool mute1, bool mute2, bool mute
 		sidVoiceMask |= 0x08;
 	}
 
-	sid_set_voice_mask(0, sidVoiceMask);
+	sid_set_voice_mask(sidNumber, sidVoiceMask);
 
 }
 

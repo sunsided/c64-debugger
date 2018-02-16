@@ -22,7 +22,7 @@ class CVicEditorLayerVirtualSprites : public CVicEditorLayer
 	void RenderGrid(vicii_cycle_state_t *viciiState, CViewC64VicDisplay *vicDisplay);
 	
 	virtual void Serialise(CByteBuffer *byteBuffer);
-	virtual void Deserialise(CByteBuffer *byteBuffer);
+	virtual void Deserialise(CByteBuffer *byteBuffer, int version);
 	
 	//
 	std::list<C64Sprite *> sprites;
