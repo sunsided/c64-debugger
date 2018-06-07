@@ -1,9 +1,8 @@
-C64 Debugger by SLAJEREK/SAMAR
-------------------------------
+# C64 Debugger by SLAJEREK/SAMAR
 
 C64 Debugger (C) 2016-2017 Marcin Skoczylas
-Vice (C) 1993-2016 The VICE Team
 
+Vice (C) 1993-2016 The VICE Team
 
 This is Commodore 64 code and memory debugger that works in real time.
 It is quick prototyping tool where you can play with Commodore 64 machine
@@ -11,8 +10,7 @@ and its internals.
 
 C64 Debugger embeds VICE v3.1 C64 emulation engine created by The VICE Team.
 
-
-** Note to C64 Debugger source files **
+#### Note to C64 Debugger source files
 
 So, you would like to step into this entertainment coding mystery of C64
 Debugger source code? Beware that it is not going to be that easy as you
@@ -46,8 +44,7 @@ Why I hadn't selected SDL or other engines? Simply speaking, I know my
 engine quite well and did not have time to sit and re-implement things in
 SDL from scratch. But you're welcome and can do this yourself.
 
-
-* How to compile sources
+## How to compile sources
 
 What's the biggest pain in the ass is a fact that this project does not
 have Makefiles. Simply speaking, because in year 2009 I was not able to
@@ -71,16 +68,18 @@ coding at sunrise after Saturday's crazy parties :)
 
 I really look forward to get help and create proper Makefiles for the C64
 Debugger. I tried this once with CMake but I was stuck with problems how
-to handle *.mm files as C++ source code.
+to handle `*.mm` files as C++ source code.
 
 Okay, let's go through platforms first.
 
-MacOS: 
+### MacOS
+
 This is my main development machine. Just start Xcode, compile and run.
 Should work as-is without troubles. Just put files into
-~/develop/MTEngine folder.
+`~/develop/MTEngine` folder.
 
-Linux: 
+### Linux
+
 I use a tool from hell to compile the project that is called Eclipse CDT.
 It is crap and you can find my stupid posts on Eclipse support forums
 showing why I think so. Devs of Eclipse have never released a stable
@@ -91,14 +90,15 @@ something. I was able to compile the project on Ubuntu 12.04 recently.
 You need to install these libs: gcc, g++, libgtk-3-dev, libasound2-dev,
 mesa-common-dev, libglu1-mesa-dev, libglib2.0-dev
 
-Then go to Eclipse settings and make *.mm files compile as C++ source
-code: Window/Properties/File types: *.mm as C++ source 
+Then go to Eclipse settings and make `*.mm` files compile as C++ source
+code: Window/Properties/File types: `*.mm` as C++ source.
 
 Some of includes can point to ~/develop/MTEngine folder directly, so it's
 better that you put the source files there. Note, that project adds
 includes to all folders with code.
 
-Windows: 
+### Windows
+
 Code is compatible only with Visual Studio 2008 C++. I was not able to
 port the code to newest VS due to bugs and issues in VS itself. Maybe you
 know the solution and can help here... the problem is that new VS is not
@@ -106,25 +106,23 @@ able to compile *.mm files as C++ code. You can find people that are
 moaning about this on StackOverflow, discussing some workarounds, but all
 workarounds described there did not work for me. So we are stuck with
 Visual Studio 2008 for now due to this. One of solutions is to rename all
-*.mm files to *.cpp and remove ObjC dependencies in MacOS part of code.
+`*.mm` files to `*.cpp` and remove ObjC dependencies in MacOS part of code.
 
 Remember to have glext.h handy and OpenGL libs. The engine uses also
-Pthreads lib that can be got from here: 
-https://www.sourceware.org/pthreads-win32/   
-a static version of library is being used, so you will need to compile
+Pthreads lib that can be got from here: https://www.sourceware.org/pthreads-win32/
+A static version of library is being used, so you will need to compile
 this lib from source code because they provide only dynamic versions.
 Note that you need to compile Pthreads lib from command line, not VS IDE.
 
-In VS2008 C++ you need to set in settings that *.mm files are treated as
-C++ code (see MTEngine/Win32/config for screenshots how to do that). Note 
-that some paths may point directly to C:\develop\MTEngine, so just 
+In VS2008 C++ you need to set in settings that `*.mm` files are treated as
+C++ code (see MTEngine/Win32/config for screenshots how to do that). Note
+that some paths may point directly to `C:\develop\MTEngine`, so just
 remember to put files in that folder.
 
 Of course you can contact me if you have questions how to compile this
 project. It is doable, just a bit clumsy.
 
-
-* Source code files
+## Source code files
 
 The project itself is divided into Engine, platforms-related and Game
 folders. It is a bit messy, but this is due to the fact that some IDEs
@@ -156,7 +154,6 @@ Vice is still there, just mostly commented out. I left the original SDL
 code for now temporarily to not jump between projects too much when I do
 research how things are done in Vice. If you'd like to learn yourself, a
 Game/c64/Emulators/vice/ViceInterface/ folder is a good starting point.
-
 
 Okay. Happy fighting with the code. Feel free to contact me if you need
 assistance.
