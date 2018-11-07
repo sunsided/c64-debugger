@@ -1125,6 +1125,11 @@ mman-32
 libclipboard
 	Copyright (c) 2016 Jeremy Tan
 	https://github.com/jtanx/libclipboard
+	
+pugixml
+	Light-weight, simple and fast XML parser for C++ with XPath support
+	https://pugixml.org
+	
 
 *
 * Change log
