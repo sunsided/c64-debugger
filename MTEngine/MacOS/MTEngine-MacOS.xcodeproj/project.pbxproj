@@ -140,6 +140,8 @@
 		39042B05186892A800B570B1 /* trees.c in Sources */ = {isa = PBXBuildFile; fileRef = 39042953186892A800B570B1 /* trees.c */; };
 		39042B06186892A800B570B1 /* uncompr.c in Sources */ = {isa = PBXBuildFile; fileRef = 39042955186892A800B570B1 /* uncompr.c */; };
 		39042B07186892A800B570B1 /* zutil.c in Sources */ = {isa = PBXBuildFile; fileRef = 39042958186892A800B570B1 /* zutil.c */; };
+		4101B24F20F91DA500A3C8C6 /* CVicEditorLayerImage.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4101B24D20F91DA500A3C8C6 /* CVicEditorLayerImage.mm */; };
+		4101B25220FA1DAF00A3C8C6 /* CViewVicEditorCreateNewPicture.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4101B25020FA1DAF00A3C8C6 /* CViewVicEditorCreateNewPicture.mm */; };
 		410250A81CF5A89F00F6681D /* CViewEmulationState.mm in Sources */ = {isa = PBXBuildFile; fileRef = 410250A71CF5A89F00F6681D /* CViewEmulationState.mm */; };
 		410586A61A30B713001B6BCD /* CGuiViewBaseLoadingScreen.mm in Sources */ = {isa = PBXBuildFile; fileRef = 410586A41A30B713001B6BCD /* CGuiViewBaseLoadingScreen.mm */; };
 		410586AE1A30BBD6001B6BCD /* CGuiViewBaseResourceManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 410586AC1A30BBD6001B6BCD /* CGuiViewBaseResourceManager.mm */; };
@@ -185,6 +187,8 @@
 		411A4EB91A1524E90095EBF9 /* CAudioChannelMusicPlayer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 411A4EB71A1524E90095EBF9 /* CAudioChannelMusicPlayer.mm */; };
 		411AE397191BB9000047026E /* GUI_Debug.mm in Sources */ = {isa = PBXBuildFile; fileRef = 411AE396191BB9000047026E /* GUI_Debug.mm */; };
 		411C1FE119F97F3600E51709 /* CSlrFileZlib.mm in Sources */ = {isa = PBXBuildFile; fileRef = 411C1FDF19F97F3600E51709 /* CSlrFileZlib.mm */; };
+		411C93EE208AB1170037F28B /* AtariWrapper.mm in Sources */ = {isa = PBXBuildFile; fileRef = 411C93ED208AB1170037F28B /* AtariWrapper.mm */; };
+		411C93F1208AB30B0037F28B /* AtariDebugInterface.mm in Sources */ = {isa = PBXBuildFile; fileRef = 411C93F0208AB30B0037F28B /* AtariDebugInterface.mm */; };
 		4128D0B11DC0F4D6007A5CFF /* C64SharedMemory.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4128D0AF1DC0F4D6007A5CFF /* C64SharedMemory.mm */; };
 		412BB9A31614AB6800533AD3 /* CSlrFileFromDocuments.mm in Sources */ = {isa = PBXBuildFile; fileRef = 412BB98C1614AB6800533AD3 /* CSlrFileFromDocuments.mm */; };
 		412BB9A41614AB6800533AD3 /* CSlrFileFromResources.mm in Sources */ = {isa = PBXBuildFile; fileRef = 412BB98E1614AB6800533AD3 /* CSlrFileFromResources.mm */; };
@@ -203,6 +207,11 @@
 		4140E6341A9C91F1002FC265 /* CGuiViewDummy.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4140E6331A9C91F1002FC265 /* CGuiViewDummy.mm */; };
 		414187CA1FDC506400D94506 /* CViewDataWatch.mm in Sources */ = {isa = PBXBuildFile; fileRef = 414187C81FDC506400D94506 /* CViewDataWatch.mm */; };
 		41428A9619F966F300D2F7C9 /* stb_image.c in Sources */ = {isa = PBXBuildFile; fileRef = 41428A9419F966F300D2F7C9 /* stb_image.c */; };
+		41430FC221650EA500D003AA /* CGuiViewToolBox.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41430FBA21650EA500D003AA /* CGuiViewToolBox.mm */; };
+		41430FC321650EA600D003AA /* CGuiWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41430FBC21650EA500D003AA /* CGuiWindow.mm */; };
+		41430FC421650EA600D003AA /* CGuiEditHex.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41430FBF21650EA500D003AA /* CGuiEditHex.mm */; };
+		41430FC521650EA600D003AA /* CGuiViewMenu.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41430FC121650EA500D003AA /* CGuiViewMenu.mm */; };
+		41430FC8216510D600D003AA /* CGuiViewFrame.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41430FC7216510D600D003AA /* CGuiViewFrame.mm */; };
 		414535AB1CB2D1A300020916 /* blockdev.c in Sources */ = {isa = PBXBuildFile; fileRef = 414531801CB2D1A100020916 /* blockdev.c */; };
 		414535AC1CB2D1A300020916 /* catweaselmkiii.c in Sources */ = {isa = PBXBuildFile; fileRef = 414531811CB2D1A100020916 /* catweaselmkiii.c */; };
 		414535AD1CB2D1A300020916 /* console.c in Sources */ = {isa = PBXBuildFile; fileRef = 414531821CB2D1A100020916 /* console.c */; };
@@ -545,15 +554,15 @@
 		414539DD1CB3F2B400020916 /* ViceLogWrapper.mm in Sources */ = {isa = PBXBuildFile; fileRef = 414539DC1CB3F2B400020916 /* ViceLogWrapper.mm */; };
 		41474DCF1D08607300F1B83F /* C64KeyMap.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41474DCE1D08607300F1B83F /* C64KeyMap.mm */; };
 		41474DD21D08B15900F1B83F /* CViewC64KeyMap.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41474DD01D08B15900F1B83F /* CViewC64KeyMap.mm */; };
+		41493196216CBBDA00750D82 /* CGuiViewWindowsManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41493194216CBBDA00750D82 /* CGuiViewWindowsManager.mm */; };
 		414A324D1EB9D41500EA5142 /* FUN_IntervalTree.mm in Sources */ = {isa = PBXBuildFile; fileRef = 414A324C1EB9D41500EA5142 /* FUN_IntervalTree.mm */; };
 		414C3E391FCF11420000CB3F /* CColorsTheme.mm in Sources */ = {isa = PBXBuildFile; fileRef = 414C3E371FCF11420000CB3F /* CColorsTheme.mm */; };
 		415206621C985A3000EBA9E5 /* C64FileDataAdapter.mm in Sources */ = {isa = PBXBuildFile; fileRef = 415206611C985A3000EBA9E5 /* C64FileDataAdapter.mm */; };
+		41521FBD20C6BC7C00205456 /* CViewSourceCode.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41521FBB20C6BC7C00205456 /* CViewSourceCode.mm */; };
 		4152B6A71EDF1782003BC232 /* CVicEditorLayerC64Screen.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152B6A61EDF1782003BC232 /* CVicEditorLayerC64Screen.mm */; };
 		4152B6AA1EDF42D2003BC232 /* C64Sprite.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152B6A91EDF42D2003BC232 /* C64Sprite.mm */; };
 		4152D6E01C96F73300EBA9E5 /* C64DebugInterface.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D6DB1C96F73300EBA9E5 /* C64DebugInterface.mm */; };
-		4152D6E21C96F73300EBA9E5 /* C64DebugData.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D6DF1C96F73300EBA9E5 /* C64DebugData.mm */; };
-		4152D6EB1C96F86F00EBA9E5 /* CGuiEditHex.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D6E41C96F86F00EBA9E5 /* CGuiEditHex.mm */; };
-		4152D6EC1C96F86F00EBA9E5 /* CGuiViewMenu.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D6E61C96F86F00EBA9E5 /* CGuiViewMenu.mm */; };
+		4152D6E21C96F73300EBA9E5 /* CDebuggerBreakpoints.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D6DF1C96F73300EBA9E5 /* CDebuggerBreakpoints.mm */; };
 		4152D6ED1C96F86F00EBA9E5 /* CSlrDataAdapter.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D6E81C96F86F00EBA9E5 /* CSlrDataAdapter.mm */; };
 		4152D6EE1C96F86F00EBA9E5 /* CSlrKeyboardShortcuts.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D6EA1C96F86F00EBA9E5 /* CSlrKeyboardShortcuts.mm */; };
 		4152D6F61C970F0800EBA9E5 /* C64Tools.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D6EF1C970F0800EBA9E5 /* C64Tools.mm */; };
@@ -563,7 +572,7 @@
 		4152D70A1C970F3E00EBA9E5 /* CViewDataDump.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D6FA1C970F3E00EBA9E5 /* CViewDataDump.mm */; };
 		4152D70B1C970F3E00EBA9E5 /* CViewC64StateSID.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D6FB1C970F3E00EBA9E5 /* CViewC64StateSID.mm */; };
 		4152D70C1C970F3E00EBA9E5 /* CViewC64StateVIC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D6FC1C970F3E00EBA9E5 /* CViewC64StateVIC.mm */; };
-		4152D70D1C970F3E00EBA9E5 /* CViewDrive1541State.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D6FD1C970F3E00EBA9E5 /* CViewDrive1541State.mm */; };
+		4152D70D1C970F3E00EBA9E5 /* CViewDrive1541StateVIA.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D6FD1C970F3E00EBA9E5 /* CViewDrive1541StateVIA.mm */; };
 		4152D70E1C970F3E00EBA9E5 /* CViewC64Screen.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D6FE1C970F3E00EBA9E5 /* CViewC64Screen.mm */; };
 		4152D70F1C970F3E00EBA9E5 /* CViewMemoryMap.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D6FF1C970F3E00EBA9E5 /* CViewMemoryMap.mm */; };
 		4152D7101C970F3E00EBA9E5 /* CViewDisassemble.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D7031C970F3E00EBA9E5 /* CViewDisassemble.mm */; };
@@ -573,7 +582,7 @@
 		4152D7221C970FA900EBA9E5 /* CViewC64.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D7201C970FA900EBA9E5 /* CViewC64.mm */; };
 		41579F4C1FD70C4300234FBB /* CViewColodore.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41579F4B1FD70C4300234FBB /* CViewColodore.mm */; };
 		41579F4F1FD715CF00234FBB /* C64ColodoreScreen.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41579F4E1FD715CF00234FBB /* C64ColodoreScreen.mm */; };
-		415838571DC9E89100A56E0E /* C64AsmSource.mm in Sources */ = {isa = PBXBuildFile; fileRef = 415838551DC9E89100A56E0E /* C64AsmSource.mm */; };
+		415838571DC9E89100A56E0E /* C64AsmSourceSymbols.mm in Sources */ = {isa = PBXBuildFile; fileRef = 415838551DC9E89100A56E0E /* C64AsmSourceSymbols.mm */; };
 		4159DE0117A7E5390016187E /* SYS_Memory.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4159DE0017A7E5390016187E /* SYS_Memory.mm */; };
 		415B4B2719848A0700B13FFF /* CSlrImageContainer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 415B4B2519848A0700B13FFF /* CSlrImageContainer.mm */; };
 		4160B20C1CEB16AB00EAD217 /* CGuiViewConsole.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4160B20A1CEB16AB00EAD217 /* CGuiViewConsole.mm */; };
@@ -593,6 +602,72 @@
 		4163FA9A1EC1FD23008BBBFD /* C64VicDisplayCanvasBlank.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4163FA941EC1FD23008BBBFD /* C64VicDisplayCanvasBlank.mm */; };
 		41646C0E1C8DE93E006BBE25 /* SYS_CommandLine.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41646C0C1C8DE93E006BBE25 /* SYS_CommandLine.mm */; };
 		416AF7801CC8D68700E56DDC /* CSlrTextParser.mm in Sources */ = {isa = PBXBuildFile; fileRef = 416AF77F1CC8D68700E56DDC /* CSlrTextParser.mm */; };
+		416D2E76208A87CC005235BD /* a-cartridge.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2DE4208A87CC005235BD /* a-cartridge.c */; };
+		416D2E77208A87CC005235BD /* a-log.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2DE6208A87CC005235BD /* a-log.c */; };
+		416D2E78208A87CC005235BD /* a-monitor.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2DE8208A87CC005235BD /* a-monitor.c */; };
+		416D2E79208A87CC005235BD /* a-sound.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2DEA208A87CC005235BD /* a-sound.c */; };
+		416D2E7A208A87CC005235BD /* a-ui.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2DEC208A87CC005235BD /* a-ui.c */; };
+		416D2E7B208A87CC005235BD /* a-util.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2DEE208A87CC005235BD /* a-util.c */; };
+		416D2E7C208A87CC005235BD /* af80.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2DF0208A87CC005235BD /* af80.c */; };
+		416D2E7D208A87CC005235BD /* afile.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2DF2208A87CC005235BD /* afile.c */; };
+		416D2E7E208A87CC005235BD /* antic.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2DF5208A87CC005235BD /* antic.c */; };
+		416D2E7F208A87CC005235BD /* artifact.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2DF7208A87CC005235BD /* artifact.c */; };
+		416D2E86208A87CC005235BD /* atari.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E00208A87CC005235BD /* atari.c */; };
+		416D2E87208A87CC005235BD /* binload.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E02208A87CC005235BD /* binload.c */; };
+		416D2E88208A87CC005235BD /* bit3.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E04208A87CC005235BD /* bit3.c */; };
+		416D2E89208A87CC005235BD /* cassette.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E06208A87CC005235BD /* cassette.c */; };
+		416D2E8A208A87CC005235BD /* cfg.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E08208A87CC005235BD /* cfg.c */; };
+		416D2E8B208A87CC005235BD /* colours_external.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E0A208A87CC005235BD /* colours_external.c */; };
+		416D2E8C208A87CC005235BD /* colours_ntsc.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E0C208A87CC005235BD /* colours_ntsc.c */; };
+		416D2E8D208A87CC005235BD /* colours_pal.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E0E208A87CC005235BD /* colours_pal.c */; };
+		416D2E8E208A87CC005235BD /* colours.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E10208A87CC005235BD /* colours.c */; };
+		416D2E8F208A87CC005235BD /* compfile.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E12208A87CC005235BD /* compfile.c */; };
+		416D2E90208A87CC005235BD /* cpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E14208A87CC005235BD /* cpu.c */; };
+		416D2E91208A87CC005235BD /* a-crc32.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E16208A87CC005235BD /* a-crc32.c */; };
+		416D2E92208A87CC005235BD /* cycle_map.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E18208A87CC005235BD /* cycle_map.c */; };
+		416D2E93208A87CC005235BD /* devices.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E1A208A87CC005235BD /* devices.c */; };
+		416D2E94208A87CC005235BD /* emuos.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E1C208A87CC005235BD /* emuos.c */; };
+		416D2E95208A87CC005235BD /* esc.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E1E208A87CC005235BD /* esc.c */; };
+		416D2E96208A87CC005235BD /* filter_ntsc.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E20208A87CC005235BD /* filter_ntsc.c */; };
+		416D2E97208A87CC005235BD /* gtia.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E22208A87CC005235BD /* gtia.c */; };
+		416D2E98208A87CC005235BD /* ide.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E25208A87CC005235BD /* ide.c */; };
+		416D2E99208A87CC005235BD /* img_tape.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E27208A87CC005235BD /* img_tape.c */; };
+		416D2E9A208A87CC005235BD /* input.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E29208A87CC005235BD /* input.c */; };
+		416D2E9C208A87CC005235BD /* memory.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E2C208A87CC005235BD /* memory.c */; };
+		416D2E9E208A87CC005235BD /* mzpokeysnd.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E2F208A87CC005235BD /* mzpokeysnd.c */; };
+		416D2E9F208A87CC005235BD /* pal_blending.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E31208A87CC005235BD /* pal_blending.c */; };
+		416D2EA0208A87CC005235BD /* pbi_bb.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E33208A87CC005235BD /* pbi_bb.c */; };
+		416D2EA1208A87CC005235BD /* pbi_mio.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E35208A87CC005235BD /* pbi_mio.c */; };
+		416D2EA2208A87CC005235BD /* pbi_proto80.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E37208A87CC005235BD /* pbi_proto80.c */; };
+		416D2EA3208A87CC005235BD /* pbi_scsi.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E39208A87CC005235BD /* pbi_scsi.c */; };
+		416D2EA4208A87CC005235BD /* pbi_xld.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E3B208A87CC005235BD /* pbi_xld.c */; };
+		416D2EA5208A87CC005235BD /* pbi.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E3D208A87CC005235BD /* pbi.c */; };
+		416D2EA6208A87CC005235BD /* pia.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E40208A87CC005235BD /* pia.c */; };
+		416D2EA7208A87CC005235BD /* pokey.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E43208A87CC005235BD /* pokey.c */; };
+		416D2EA8208A87CC005235BD /* pokeysnd.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E45208A87CC005235BD /* pokeysnd.c */; };
+		416D2EAA208A87CC005235BD /* remez.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E49208A87CC005235BD /* remez.c */; };
+		416D2EAB208A87CC005235BD /* rtime.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E4B208A87CC005235BD /* rtime.c */; };
+		416D2EAC208A87CC005235BD /* screen.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E4D208A87CC005235BD /* screen.c */; };
+		416D2EB5208A87CC005235BD /* sio.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E5E208A87CC005235BD /* sio.c */; };
+		416D2EB6208A87CC005235BD /* sndsave.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E60208A87CC005235BD /* sndsave.c */; };
+		416D2EB9208A87CC005235BD /* statesav.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E64208A87CC005235BD /* statesav.c */; };
+		416D2EBA208A87CC005235BD /* sysrom.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E66208A87CC005235BD /* sysrom.c */; };
+		416D2EBB208A87CC005235BD /* ui_basic.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E68208A87CC005235BD /* ui_basic.c */; };
+		416D2EBC208A87CC005235BD /* videomode.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E6A208A87CC005235BD /* videomode.c */; };
+		416D2EBD208A87CC005235BD /* voicebox.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E6C208A87CC005235BD /* voicebox.c */; };
+		416D2EBE208A87CC005235BD /* votrax.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E6E208A87CC005235BD /* votrax.c */; };
+		416D2EBF208A87CC005235BD /* votraxsnd.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E70208A87CC005235BD /* votraxsnd.c */; };
+		416D2EC0208A87CC005235BD /* xep80_fonts.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E72208A87CC005235BD /* xep80_fonts.c */; };
+		416D2EC1208A87CC005235BD /* xep80.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2E74208A87CC005235BD /* xep80.c */; };
+		416D2EC3208A8A00005235BD /* vtxsmpls.inc in Sources */ = {isa = PBXBuildFile; fileRef = 416D2EC2208A8A00005235BD /* vtxsmpls.inc */; };
+		416D2ED2208A8B4F005235BD /* a-init.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2EC4208A8B4F005235BD /* a-init.c */; };
+		416D2ED3208A8B4F005235BD /* a-input.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2EC6208A8B4F005235BD /* a-input.c */; };
+		416D2ED4208A8B4F005235BD /* a-main.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2EC8208A8B4F005235BD /* a-main.c */; };
+		416D2ED5208A8B4F005235BD /* a-palette.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2EC9208A8B4F005235BD /* a-palette.c */; };
+		416D2ED7208A8B4F005235BD /* a-video_gl.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2ECC208A8B4F005235BD /* a-video_gl.c */; };
+		416D2ED8208A8B4F005235BD /* a-video_sw.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2ECE208A8B4F005235BD /* a-video_sw.c */; };
+		416D2ED9208A8B4F005235BD /* a-video.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2ED0208A8B4F005235BD /* a-video.c */; };
+		416D2EE0208A8C40005235BD /* atari_ntsc.c in Sources */ = {isa = PBXBuildFile; fileRef = 416D2EDD208A8C40005235BD /* atari_ntsc.c */; };
 		41706DBA1F9A71EA00B1B2BA /* CViewJukeboxPlaylist.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41706DB91F9A71EA00B1B2BA /* CViewJukeboxPlaylist.mm */; };
 		41706DBD1F9A726F00B1B2BA /* CJukeboxPlaylist.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41706DBB1F9A726F00B1B2BA /* CJukeboxPlaylist.mm */; };
 		4177D5AA1ED6EB250053D9EE /* CVicEditorUndoData.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4177D5A21ED6EB250053D9EE /* CVicEditorUndoData.mm */; };
@@ -605,8 +680,11 @@
 		4177D5B91ED710320053D9EE /* CVicEditorLayerC64Sprites.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4177D5B61ED710320053D9EE /* CVicEditorLayerC64Sprites.mm */; };
 		4177D5BC1ED714280053D9EE /* CVicEditorLayerVirtualSprites.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4177D5BA1ED714280053D9EE /* CVicEditorLayerVirtualSprites.mm */; };
 		4179EF9519893A5100CCD344 /* CContinuousParamSinHalf.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4179EF9319893A5100CCD344 /* CContinuousParamSinHalf.mm */; };
-		417ACDBC1E69BF31004A15B7 /* CGuiViewWindowsManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 417ACDB81E69BF31004A15B7 /* CGuiViewWindowsManager.mm */; };
-		417ACDBD1E69BF31004A15B7 /* CGuiViewFrame.mm in Sources */ = {isa = PBXBuildFile; fileRef = 417ACDBA1E69BF31004A15B7 /* CGuiViewFrame.mm */; };
+		417F8F4F208AD17A004C6A1F /* AtariDataAdapters.mm in Sources */ = {isa = PBXBuildFile; fileRef = 417F8F4E208AD17A004C6A1F /* AtariDataAdapters.mm */; };
+		417F8F52208BBF8B004C6A1F /* CViewAtariScreen.mm in Sources */ = {isa = PBXBuildFile; fileRef = 417F8F50208BBF8B004C6A1F /* CViewAtariScreen.mm */; };
+		417F8F55208BC565004C6A1F /* CDebugInterface.mm in Sources */ = {isa = PBXBuildFile; fileRef = 417F8F53208BC565004C6A1F /* CDebugInterface.mm */; };
+		417F8F58208BCD75004C6A1F /* CViewAtariStateCPU.mm in Sources */ = {isa = PBXBuildFile; fileRef = 417F8F56208BCD75004C6A1F /* CViewAtariStateCPU.mm */; };
+		417F8F5B208D151E004C6A1F /* CAtariAudioChannel.mm in Sources */ = {isa = PBXBuildFile; fileRef = 417F8F5A208D151E004C6A1F /* CAtariAudioChannel.mm */; };
 		418006211C6E177900527CAE /* CSlrFileFromOS.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4180061F1C6E177900527CAE /* CSlrFileFromOS.mm */; };
 		4180558318DC676300F6EE8F /* IMG_Filters.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4180557F18DC676300F6EE8F /* IMG_Filters.mm */; };
 		4180558418DC676300F6EE8F /* IMG_HoughLines.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4180558118DC676300F6EE8F /* IMG_HoughLines.mm */; };
@@ -701,8 +779,10 @@
 		419837CD164CFD7900B8C78D /* MenuControllerSettings.mm in Sources */ = {isa = PBXBuildFile; fileRef = 419837CC164CFD7900B8C78D /* MenuControllerSettings.mm */; };
 		41985F9A1615E2B400FA0CD6 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 41985F981615E2B400FA0CD6 /* AudioToolbox.framework */; };
 		41985F9B1615E2B400FA0CD6 /* AudioUnit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 41985F991615E2B400FA0CD6 /* AudioUnit.framework */; };
+		4199CD2A20ADD6CD00B909C9 /* a-sdl-sound.c in Sources */ = {isa = PBXBuildFile; fileRef = 4199CD2920ADD6CD00B909C9 /* a-sdl-sound.c */; };
 		41A286AC1F08ECC500FE0AF7 /* TODO.txt in Resources */ = {isa = PBXBuildFile; fileRef = 41A286AB1F08ECC500FE0AF7 /* TODO.txt */; };
 		41A9AC921CBE3FDE004592CF /* archdep.c in Sources */ = {isa = PBXBuildFile; fileRef = 41A9AC901CBE3FDE004592CF /* archdep.c */; };
+		41AC92C621771AE900522362 /* CVicEditorTool.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41AC92C421771AE900522362 /* CVicEditorTool.mm */; };
 		41B3CC0E1FE65EAA00216BA8 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 41B3CC0D1FE65EAA00216BA8 /* Carbon.framework */; };
 		41B53EA51EE2EFCA0078F9BB /* CViewC64Sprite.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41B53EA31EE2EFCA0078F9BB /* CViewC64Sprite.mm */; };
 		41B53EAB1EE33A330078F9BB /* CViewVicEditorLayers.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41B53EA91EE33A330078F9BB /* CViewVicEditorLayers.mm */; };
@@ -725,6 +805,7 @@
 		41B5C1471E9E9EC200E9C644 /* mon_register65816.c in Sources */ = {isa = PBXBuildFile; fileRef = 41B5C1461E9E9EC200E9C644 /* mon_register65816.c */; };
 		41B5C14B1E9E9F3900E9C644 /* render1x1crt.c in Sources */ = {isa = PBXBuildFile; fileRef = 41B5C1491E9E9F3900E9C644 /* render1x1crt.c */; };
 		41C5B5AD1C73C010003FBC5F /* SYS_KeyCodes.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41C5B5AC1C73C010003FBC5F /* SYS_KeyCodes.mm */; };
+		41C9BCC02181D5DB00C2F7AF /* pugixml.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 41C9BCBE2181D5DB00C2F7AF /* pugixml.cpp */; };
 		41CA791A1F3DC0E0004309B8 /* mididrv.c in Sources */ = {isa = PBXBuildFile; fileRef = 41CA79191F3DC0E0004309B8 /* mididrv.c */; };
 		41CF58FE1920E6EA00F43331 /* GFX_WriteImage.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41CF58FD1920E6EA00F43331 /* GFX_WriteImage.mm */; };
 		41CF59051920E77600F43331 /* IMG_Scale.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41CF59001920E77600F43331 /* IMG_Scale.mm */; };
@@ -1213,8 +1294,14 @@
 		39042957186892A800B570B1 /* zlib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = zlib.h; sourceTree = "<group>"; };
 		39042958186892A800B570B1 /* zutil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = zutil.c; sourceTree = "<group>"; };
 		39042959186892A800B570B1 /* zutil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = zutil.h; sourceTree = "<group>"; };
+		4101B24D20F91DA500A3C8C6 /* CVicEditorLayerImage.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CVicEditorLayerImage.mm; path = ../Games/c64/Screens/VicEditor/CVicEditorLayerImage.mm; sourceTree = "<group>"; };
+		4101B24E20F91DA500A3C8C6 /* CVicEditorLayerImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CVicEditorLayerImage.h; path = ../Games/c64/Screens/VicEditor/CVicEditorLayerImage.h; sourceTree = "<group>"; };
+		4101B25020FA1DAF00A3C8C6 /* CViewVicEditorCreateNewPicture.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewVicEditorCreateNewPicture.mm; path = ../Games/c64/Screens/VicEditor/CViewVicEditorCreateNewPicture.mm; sourceTree = "<group>"; };
+		4101B25120FA1DAF00A3C8C6 /* CViewVicEditorCreateNewPicture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewVicEditorCreateNewPicture.h; path = ../Games/c64/Screens/VicEditor/CViewVicEditorCreateNewPicture.h; sourceTree = "<group>"; };
 		410250A61CF5A89F00F6681D /* CViewEmulationState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewEmulationState.h; path = ../Games/c64/Views/CViewEmulationState.h; sourceTree = "<group>"; };
 		410250A71CF5A89F00F6681D /* CViewEmulationState.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewEmulationState.mm; path = ../Games/c64/Views/CViewEmulationState.mm; sourceTree = "<group>"; };
+		4104B30F2152593E001C14D1 /* icon_small_import_gfx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = icon_small_import_gfx.h; path = ../Games/c64/Data/icon_small_import_gfx.h; sourceTree = "<group>"; };
+		4104B3102152593E001C14D1 /* icon_small_export_gfx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = icon_small_export_gfx.h; path = ../Games/c64/Data/icon_small_export_gfx.h; sourceTree = "<group>"; };
 		410586A41A30B713001B6BCD /* CGuiViewBaseLoadingScreen.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CGuiViewBaseLoadingScreen.mm; sourceTree = "<group>"; };
 		410586A51A30B713001B6BCD /* CGuiViewBaseLoadingScreen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CGuiViewBaseLoadingScreen.h; sourceTree = "<group>"; };
 		410586AC1A30BBD6001B6BCD /* CGuiViewBaseResourceManager.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CGuiViewBaseResourceManager.mm; sourceTree = "<group>"; };
@@ -1225,6 +1312,7 @@
 		4109AB5F1EAAEBD1005A25B5 /* vice-crc32.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "vice-crc32.h"; sourceTree = "<group>"; };
 		410AF5671ECF40C70062CD22 /* C64CharsetHires.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64CharsetHires.mm; path = ../Games/c64/Views/VicDisplay/C64CharsetHires.mm; sourceTree = "<group>"; };
 		410AF5681ECF40C70062CD22 /* C64CharsetHires.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64CharsetHires.h; path = ../Games/c64/Views/VicDisplay/C64CharsetHires.h; sourceTree = "<group>"; };
+		411221842107A9A700B75295 /* icon_clear_gfx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = icon_clear_gfx.h; path = ../Games/c64/Data/icon_clear_gfx.h; sourceTree = "<group>"; };
 		411606AA19DF23F1008B3E74 /* COneTouchData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = COneTouchData.h; sourceTree = "<group>"; };
 		411606AB19DF23F1008B3E74 /* COneTouchData.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = COneTouchData.mm; sourceTree = "<group>"; };
 		41188F631E9EA44400040048 /* wdc65816.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wdc65816.h; sourceTree = "<group>"; };
@@ -1326,6 +1414,10 @@
 		411AE396191BB9000047026E /* GUI_Debug.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = GUI_Debug.mm; sourceTree = "<group>"; };
 		411C1FDF19F97F3600E51709 /* CSlrFileZlib.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CSlrFileZlib.mm; sourceTree = "<group>"; };
 		411C1FE019F97F3600E51709 /* CSlrFileZlib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CSlrFileZlib.h; sourceTree = "<group>"; };
+		411C93EC208AB1170037F28B /* AtariWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AtariWrapper.h; path = ../Games/c64/Emulators/atari800/AtariInterface/AtariWrapper.h; sourceTree = "<group>"; };
+		411C93ED208AB1170037F28B /* AtariWrapper.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AtariWrapper.mm; path = ../Games/c64/Emulators/atari800/AtariInterface/AtariWrapper.mm; sourceTree = "<group>"; };
+		411C93EF208AB30B0037F28B /* AtariDebugInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AtariDebugInterface.h; path = ../Games/c64/Emulators/atari800/AtariInterface/AtariDebugInterface.h; sourceTree = "<group>"; };
+		411C93F0208AB30B0037F28B /* AtariDebugInterface.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AtariDebugInterface.mm; path = ../Games/c64/Emulators/atari800/AtariInterface/AtariDebugInterface.mm; sourceTree = "<group>"; };
 		4128D0AF1DC0F4D6007A5CFF /* C64SharedMemory.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64SharedMemory.mm; path = ../Games/c64/Tools/C64SharedMemory.mm; sourceTree = "<group>"; };
 		4128D0B01DC0F4D6007A5CFF /* C64SharedMemory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64SharedMemory.h; path = ../Games/c64/Tools/C64SharedMemory.h; sourceTree = "<group>"; };
 		412BB98B1614AB6800533AD3 /* CSlrFileFromDocuments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CSlrFileFromDocuments.h; sourceTree = "<group>"; };
@@ -1365,6 +1457,16 @@
 		414187C91FDC506400D94506 /* CViewDataWatch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewDataWatch.h; path = ../Games/c64/Views/CViewDataWatch.h; sourceTree = "<group>"; };
 		41428A9419F966F300D2F7C9 /* stb_image.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stb_image.c; sourceTree = "<group>"; };
 		41428A9519F966F300D2F7C9 /* stb_image.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stb_image.h; sourceTree = "<group>"; };
+		41430FBA21650EA500D003AA /* CGuiViewToolBox.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CGuiViewToolBox.mm; sourceTree = "<group>"; };
+		41430FBB21650EA500D003AA /* CGuiViewToolBox.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CGuiViewToolBox.h; sourceTree = "<group>"; };
+		41430FBC21650EA500D003AA /* CGuiWindow.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CGuiWindow.mm; sourceTree = "<group>"; };
+		41430FBD21650EA500D003AA /* CGuiWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CGuiWindow.h; sourceTree = "<group>"; };
+		41430FBE21650EA500D003AA /* CGuiEditHex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CGuiEditHex.h; sourceTree = "<group>"; };
+		41430FBF21650EA500D003AA /* CGuiEditHex.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CGuiEditHex.mm; sourceTree = "<group>"; };
+		41430FC021650EA500D003AA /* CGuiViewMenu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CGuiViewMenu.h; sourceTree = "<group>"; };
+		41430FC121650EA500D003AA /* CGuiViewMenu.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CGuiViewMenu.mm; sourceTree = "<group>"; };
+		41430FC6216510D600D003AA /* CGuiViewFrame.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CGuiViewFrame.h; sourceTree = "<group>"; };
+		41430FC7216510D600D003AA /* CGuiViewFrame.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CGuiViewFrame.mm; sourceTree = "<group>"; };
 		4145317F1CB2D1A100020916 /* archdep_unix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = archdep_unix.h; sourceTree = "<group>"; };
 		414531801CB2D1A100020916 /* blockdev.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = blockdev.c; sourceTree = "<group>"; };
 		414531811CB2D1A100020916 /* catweaselmkiii.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = catweaselmkiii.c; sourceTree = "<group>"; };
@@ -2095,24 +2197,24 @@
 		41474DCE1D08607300F1B83F /* C64KeyMap.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64KeyMap.mm; path = ../Games/c64/Tools/C64KeyMap.mm; sourceTree = "<group>"; };
 		41474DD01D08B15900F1B83F /* CViewC64KeyMap.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewC64KeyMap.mm; path = ../Games/c64/Screens/CViewC64KeyMap.mm; sourceTree = "<group>"; };
 		41474DD11D08B15900F1B83F /* CViewC64KeyMap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewC64KeyMap.h; path = ../Games/c64/Screens/CViewC64KeyMap.h; sourceTree = "<group>"; };
+		41493194216CBBDA00750D82 /* CGuiViewWindowsManager.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CGuiViewWindowsManager.mm; sourceTree = "<group>"; };
+		41493195216CBBDA00750D82 /* CGuiViewWindowsManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CGuiViewWindowsManager.h; sourceTree = "<group>"; };
 		414A324B1EB9D3EA00EA5142 /* FUN_IntervalTree.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FUN_IntervalTree.h; sourceTree = "<group>"; };
 		414A324C1EB9D41500EA5142 /* FUN_IntervalTree.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FUN_IntervalTree.mm; sourceTree = "<group>"; };
 		414C3E371FCF11420000CB3F /* CColorsTheme.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CColorsTheme.mm; path = ../Games/c64/Layout/CColorsTheme.mm; sourceTree = "<group>"; };
 		414C3E381FCF11420000CB3F /* CColorsTheme.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CColorsTheme.h; path = ../Games/c64/Layout/CColorsTheme.h; sourceTree = "<group>"; };
 		415206601C985A3000EBA9E5 /* C64FileDataAdapter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64FileDataAdapter.h; path = ../Games/c64/Tools/C64FileDataAdapter.h; sourceTree = "<group>"; };
 		415206611C985A3000EBA9E5 /* C64FileDataAdapter.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64FileDataAdapter.mm; path = ../Games/c64/Tools/C64FileDataAdapter.mm; sourceTree = "<group>"; };
+		41521FBB20C6BC7C00205456 /* CViewSourceCode.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewSourceCode.mm; path = ../Games/c64/Views/CViewSourceCode.mm; sourceTree = "<group>"; };
+		41521FBC20C6BC7C00205456 /* CViewSourceCode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewSourceCode.h; path = ../Games/c64/Views/CViewSourceCode.h; sourceTree = "<group>"; };
 		4152B6A51EDF1782003BC232 /* CVicEditorLayerC64Screen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CVicEditorLayerC64Screen.h; path = ../Games/c64/Screens/VicEditor/CVicEditorLayerC64Screen.h; sourceTree = "<group>"; };
 		4152B6A61EDF1782003BC232 /* CVicEditorLayerC64Screen.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CVicEditorLayerC64Screen.mm; path = ../Games/c64/Screens/VicEditor/CVicEditorLayerC64Screen.mm; sourceTree = "<group>"; };
 		4152B6A81EDF42D2003BC232 /* C64Sprite.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64Sprite.h; path = ../Games/c64/Views/VicDisplay/C64Sprite.h; sourceTree = "<group>"; };
 		4152B6A91EDF42D2003BC232 /* C64Sprite.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64Sprite.mm; path = ../Games/c64/Views/VicDisplay/C64Sprite.mm; sourceTree = "<group>"; };
 		4152D6DA1C96F73300EBA9E5 /* C64DebugInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64DebugInterface.h; path = ../Games/c64/DebugInterface/C64DebugInterface.h; sourceTree = "<group>"; };
 		4152D6DB1C96F73300EBA9E5 /* C64DebugInterface.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64DebugInterface.mm; path = ../Games/c64/DebugInterface/C64DebugInterface.mm; sourceTree = "<group>"; };
-		4152D6DE1C96F73300EBA9E5 /* C64DebugData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64DebugData.h; path = ../Games/c64/DebugInterface/C64DebugData.h; sourceTree = "<group>"; };
-		4152D6DF1C96F73300EBA9E5 /* C64DebugData.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64DebugData.mm; path = ../Games/c64/DebugInterface/C64DebugData.mm; sourceTree = "<group>"; };
-		4152D6E31C96F86F00EBA9E5 /* CGuiEditHex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CGuiEditHex.h; sourceTree = "<group>"; };
-		4152D6E41C96F86F00EBA9E5 /* CGuiEditHex.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CGuiEditHex.mm; sourceTree = "<group>"; };
-		4152D6E51C96F86F00EBA9E5 /* CGuiViewMenu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CGuiViewMenu.h; sourceTree = "<group>"; };
-		4152D6E61C96F86F00EBA9E5 /* CGuiViewMenu.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CGuiViewMenu.mm; sourceTree = "<group>"; };
+		4152D6DE1C96F73300EBA9E5 /* CDebuggerBreakpoints.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CDebuggerBreakpoints.h; path = ../Games/c64/DebugInterface/CDebuggerBreakpoints.h; sourceTree = "<group>"; };
+		4152D6DF1C96F73300EBA9E5 /* CDebuggerBreakpoints.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CDebuggerBreakpoints.mm; path = ../Games/c64/DebugInterface/CDebuggerBreakpoints.mm; sourceTree = "<group>"; };
 		4152D6E71C96F86F00EBA9E5 /* CSlrDataAdapter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CSlrDataAdapter.h; sourceTree = "<group>"; };
 		4152D6E81C96F86F00EBA9E5 /* CSlrDataAdapter.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CSlrDataAdapter.mm; sourceTree = "<group>"; };
 		4152D6E91C96F86F00EBA9E5 /* CSlrKeyboardShortcuts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CSlrKeyboardShortcuts.h; sourceTree = "<group>"; };
@@ -2128,7 +2230,7 @@
 		4152D6FA1C970F3E00EBA9E5 /* CViewDataDump.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewDataDump.mm; path = ../Games/c64/Views/CViewDataDump.mm; sourceTree = "<group>"; };
 		4152D6FB1C970F3E00EBA9E5 /* CViewC64StateSID.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewC64StateSID.mm; path = ../Games/c64/Views/CViewC64StateSID.mm; sourceTree = "<group>"; };
 		4152D6FC1C970F3E00EBA9E5 /* CViewC64StateVIC.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewC64StateVIC.mm; path = ../Games/c64/Views/CViewC64StateVIC.mm; sourceTree = "<group>"; };
-		4152D6FD1C970F3E00EBA9E5 /* CViewDrive1541State.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewDrive1541State.mm; path = ../Games/c64/Views/CViewDrive1541State.mm; sourceTree = "<group>"; };
+		4152D6FD1C970F3E00EBA9E5 /* CViewDrive1541StateVIA.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewDrive1541StateVIA.mm; path = ../Games/c64/Views/CViewDrive1541StateVIA.mm; sourceTree = "<group>"; };
 		4152D6FE1C970F3E00EBA9E5 /* CViewC64Screen.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewC64Screen.mm; path = ../Games/c64/Views/CViewC64Screen.mm; sourceTree = "<group>"; };
 		4152D6FF1C970F3E00EBA9E5 /* CViewMemoryMap.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewMemoryMap.mm; path = ../Games/c64/Views/CViewMemoryMap.mm; sourceTree = "<group>"; };
 		4152D7001C970F3E00EBA9E5 /* CViewMemoryMap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewMemoryMap.h; path = ../Games/c64/Views/CViewMemoryMap.h; sourceTree = "<group>"; };
@@ -2137,7 +2239,7 @@
 		4152D7031C970F3E00EBA9E5 /* CViewDisassemble.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewDisassemble.mm; path = ../Games/c64/Views/CViewDisassemble.mm; sourceTree = "<group>"; };
 		4152D7041C970F3E00EBA9E5 /* CViewDisassemble.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewDisassemble.h; path = ../Games/c64/Views/CViewDisassemble.h; sourceTree = "<group>"; };
 		4152D7051C970F3E00EBA9E5 /* CViewC64StateCIA.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewC64StateCIA.h; path = ../Games/c64/Views/CViewC64StateCIA.h; sourceTree = "<group>"; };
-		4152D7061C970F3E00EBA9E5 /* CViewDrive1541State.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewDrive1541State.h; path = ../Games/c64/Views/CViewDrive1541State.h; sourceTree = "<group>"; };
+		4152D7061C970F3E00EBA9E5 /* CViewDrive1541StateVIA.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewDrive1541StateVIA.h; path = ../Games/c64/Views/CViewDrive1541StateVIA.h; sourceTree = "<group>"; };
 		4152D7071C970F3E00EBA9E5 /* CViewC64StateSID.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewC64StateSID.h; path = ../Games/c64/Views/CViewC64StateSID.h; sourceTree = "<group>"; };
 		4152D7081C970F3E00EBA9E5 /* CViewC64StateVIC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewC64StateVIC.h; path = ../Games/c64/Views/CViewC64StateVIC.h; sourceTree = "<group>"; };
 		4152D7111C970F7900EBA9E5 /* CViewSettingsMenu.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewSettingsMenu.mm; path = ../Games/c64/Screens/CViewSettingsMenu.mm; sourceTree = "<group>"; };
@@ -2152,8 +2254,8 @@
 		41579F4B1FD70C4300234FBB /* CViewColodore.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewColodore.mm; path = ../Games/c64/Screens/CViewColodore.mm; sourceTree = "<group>"; };
 		41579F4D1FD715CF00234FBB /* C64ColodoreScreen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64ColodoreScreen.h; path = ../Games/c64/Tools/C64ColodoreScreen.h; sourceTree = "<group>"; };
 		41579F4E1FD715CF00234FBB /* C64ColodoreScreen.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64ColodoreScreen.mm; path = ../Games/c64/Tools/C64ColodoreScreen.mm; sourceTree = "<group>"; };
-		415838551DC9E89100A56E0E /* C64AsmSource.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64AsmSource.mm; path = ../Games/c64/Tools/C64AsmSource.mm; sourceTree = "<group>"; };
-		415838561DC9E89100A56E0E /* C64AsmSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64AsmSource.h; path = ../Games/c64/Tools/C64AsmSource.h; sourceTree = "<group>"; };
+		415838551DC9E89100A56E0E /* C64AsmSourceSymbols.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64AsmSourceSymbols.mm; path = ../Games/c64/Tools/C64AsmSourceSymbols.mm; sourceTree = "<group>"; };
+		415838561DC9E89100A56E0E /* C64AsmSourceSymbols.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64AsmSourceSymbols.h; path = ../Games/c64/Tools/C64AsmSourceSymbols.h; sourceTree = "<group>"; };
 		4159DDFF17A7E5390016187E /* SYS_Memory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SYS_Memory.h; sourceTree = "<group>"; };
 		4159DE0017A7E5390016187E /* SYS_Memory.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SYS_Memory.mm; sourceTree = "<group>"; };
 		415B4B2519848A0700B13FFF /* CSlrImageContainer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CSlrImageContainer.mm; sourceTree = "<group>"; };
@@ -2186,9 +2288,147 @@
 		4163FA951EC1FD23008BBBFD /* C64VicDisplayCanvasBlank.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64VicDisplayCanvasBlank.h; path = ../Games/c64/Views/VicDisplay/C64VicDisplayCanvasBlank.h; sourceTree = "<group>"; };
 		41646C0C1C8DE93E006BBE25 /* SYS_CommandLine.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SYS_CommandLine.mm; sourceTree = "<group>"; };
 		41646C0D1C8DE93E006BBE25 /* SYS_CommandLine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SYS_CommandLine.h; sourceTree = "<group>"; };
+		41674802210790A1005C8D8A /* icon_new_gfx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = icon_new_gfx.h; path = ../Games/c64/Data/icon_new_gfx.h; sourceTree = "<group>"; };
 		416AF77D1CC7D52100E56DDC /* C64Opcodes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64Opcodes.h; path = ../Games/c64/Tools/C64Opcodes.h; sourceTree = "<group>"; };
 		416AF77E1CC8D68700E56DDC /* CSlrTextParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CSlrTextParser.h; sourceTree = "<group>"; };
 		416AF77F1CC8D68700E56DDC /* CSlrTextParser.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CSlrTextParser.mm; sourceTree = "<group>"; };
+		416D2DE4208A87CC005235BD /* a-cartridge.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "a-cartridge.c"; path = "../Games/c64/Emulators/atari800/a-cartridge.c"; sourceTree = "<group>"; };
+		416D2DE5208A87CC005235BD /* a-cartridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "a-cartridge.h"; path = "../Games/c64/Emulators/atari800/a-cartridge.h"; sourceTree = "<group>"; };
+		416D2DE6208A87CC005235BD /* a-log.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "a-log.c"; path = "../Games/c64/Emulators/atari800/a-log.c"; sourceTree = "<group>"; };
+		416D2DE7208A87CC005235BD /* a-log.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "a-log.h"; path = "../Games/c64/Emulators/atari800/a-log.h"; sourceTree = "<group>"; };
+		416D2DE8208A87CC005235BD /* a-monitor.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "a-monitor.c"; path = "../Games/c64/Emulators/atari800/a-monitor.c"; sourceTree = "<group>"; };
+		416D2DE9208A87CC005235BD /* a-monitor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "a-monitor.h"; path = "../Games/c64/Emulators/atari800/a-monitor.h"; sourceTree = "<group>"; };
+		416D2DEA208A87CC005235BD /* a-sound.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "a-sound.c"; path = "../Games/c64/Emulators/atari800/a-sound.c"; sourceTree = "<group>"; };
+		416D2DEB208A87CC005235BD /* a-sound.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "a-sound.h"; path = "../Games/c64/Emulators/atari800/a-sound.h"; sourceTree = "<group>"; };
+		416D2DEC208A87CC005235BD /* a-ui.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "a-ui.c"; path = "../Games/c64/Emulators/atari800/a-ui.c"; sourceTree = "<group>"; };
+		416D2DED208A87CC005235BD /* a-ui.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "a-ui.h"; path = "../Games/c64/Emulators/atari800/a-ui.h"; sourceTree = "<group>"; };
+		416D2DEE208A87CC005235BD /* a-util.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "a-util.c"; path = "../Games/c64/Emulators/atari800/a-util.c"; sourceTree = "<group>"; };
+		416D2DEF208A87CC005235BD /* a-util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "a-util.h"; path = "../Games/c64/Emulators/atari800/a-util.h"; sourceTree = "<group>"; };
+		416D2DF0208A87CC005235BD /* af80.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = af80.c; path = ../Games/c64/Emulators/atari800/af80.c; sourceTree = "<group>"; };
+		416D2DF1208A87CC005235BD /* af80.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = af80.h; path = ../Games/c64/Emulators/atari800/af80.h; sourceTree = "<group>"; };
+		416D2DF2208A87CC005235BD /* afile.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = afile.c; path = ../Games/c64/Emulators/atari800/afile.c; sourceTree = "<group>"; };
+		416D2DF3208A87CC005235BD /* afile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = afile.h; path = ../Games/c64/Emulators/atari800/afile.h; sourceTree = "<group>"; };
+		416D2DF4208A87CC005235BD /* akey.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = akey.h; path = ../Games/c64/Emulators/atari800/akey.h; sourceTree = "<group>"; };
+		416D2DF5208A87CC005235BD /* antic.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = antic.c; path = ../Games/c64/Emulators/atari800/antic.c; sourceTree = "<group>"; };
+		416D2DF6208A87CC005235BD /* antic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = antic.h; path = ../Games/c64/Emulators/atari800/antic.h; sourceTree = "<group>"; };
+		416D2DF7208A87CC005235BD /* artifact.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = artifact.c; path = ../Games/c64/Emulators/atari800/artifact.c; sourceTree = "<group>"; };
+		416D2DF8208A87CC005235BD /* artifact.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = artifact.h; path = ../Games/c64/Emulators/atari800/artifact.h; sourceTree = "<group>"; };
+		416D2DFF208A87CC005235BD /* atari-config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "atari-config.h"; path = "../Games/c64/Emulators/atari800/atari-config.h"; sourceTree = "<group>"; };
+		416D2E00208A87CC005235BD /* atari.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = atari.c; path = ../Games/c64/Emulators/atari800/atari.c; sourceTree = "<group>"; };
+		416D2E01208A87CC005235BD /* atari.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = atari.h; path = ../Games/c64/Emulators/atari800/atari.h; sourceTree = "<group>"; };
+		416D2E02208A87CC005235BD /* binload.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = binload.c; path = ../Games/c64/Emulators/atari800/binload.c; sourceTree = "<group>"; };
+		416D2E03208A87CC005235BD /* binload.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = binload.h; path = ../Games/c64/Emulators/atari800/binload.h; sourceTree = "<group>"; };
+		416D2E04208A87CC005235BD /* bit3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = bit3.c; path = ../Games/c64/Emulators/atari800/bit3.c; sourceTree = "<group>"; };
+		416D2E05208A87CC005235BD /* bit3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bit3.h; path = ../Games/c64/Emulators/atari800/bit3.h; sourceTree = "<group>"; };
+		416D2E06208A87CC005235BD /* cassette.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cassette.c; path = ../Games/c64/Emulators/atari800/cassette.c; sourceTree = "<group>"; };
+		416D2E07208A87CC005235BD /* cassette.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cassette.h; path = ../Games/c64/Emulators/atari800/cassette.h; sourceTree = "<group>"; };
+		416D2E08208A87CC005235BD /* cfg.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cfg.c; path = ../Games/c64/Emulators/atari800/cfg.c; sourceTree = "<group>"; };
+		416D2E09208A87CC005235BD /* cfg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cfg.h; path = ../Games/c64/Emulators/atari800/cfg.h; sourceTree = "<group>"; };
+		416D2E0A208A87CC005235BD /* colours_external.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = colours_external.c; path = ../Games/c64/Emulators/atari800/colours_external.c; sourceTree = "<group>"; };
+		416D2E0B208A87CC005235BD /* colours_external.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = colours_external.h; path = ../Games/c64/Emulators/atari800/colours_external.h; sourceTree = "<group>"; };
+		416D2E0C208A87CC005235BD /* colours_ntsc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = colours_ntsc.c; path = ../Games/c64/Emulators/atari800/colours_ntsc.c; sourceTree = "<group>"; };
+		416D2E0D208A87CC005235BD /* colours_ntsc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = colours_ntsc.h; path = ../Games/c64/Emulators/atari800/colours_ntsc.h; sourceTree = "<group>"; };
+		416D2E0E208A87CC005235BD /* colours_pal.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = colours_pal.c; path = ../Games/c64/Emulators/atari800/colours_pal.c; sourceTree = "<group>"; };
+		416D2E0F208A87CC005235BD /* colours_pal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = colours_pal.h; path = ../Games/c64/Emulators/atari800/colours_pal.h; sourceTree = "<group>"; };
+		416D2E10208A87CC005235BD /* colours.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = colours.c; path = ../Games/c64/Emulators/atari800/colours.c; sourceTree = "<group>"; };
+		416D2E11208A87CC005235BD /* colours.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = colours.h; path = ../Games/c64/Emulators/atari800/colours.h; sourceTree = "<group>"; };
+		416D2E12208A87CC005235BD /* compfile.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = compfile.c; path = ../Games/c64/Emulators/atari800/compfile.c; sourceTree = "<group>"; };
+		416D2E13208A87CC005235BD /* compfile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = compfile.h; path = ../Games/c64/Emulators/atari800/compfile.h; sourceTree = "<group>"; };
+		416D2E14208A87CC005235BD /* cpu.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cpu.c; path = ../Games/c64/Emulators/atari800/cpu.c; sourceTree = "<group>"; };
+		416D2E15208A87CC005235BD /* cpu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cpu.h; path = ../Games/c64/Emulators/atari800/cpu.h; sourceTree = "<group>"; };
+		416D2E16208A87CC005235BD /* a-crc32.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "a-crc32.c"; path = "../Games/c64/Emulators/atari800/a-crc32.c"; sourceTree = "<group>"; };
+		416D2E17208A87CC005235BD /* a-crc32.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "a-crc32.h"; path = "../Games/c64/Emulators/atari800/a-crc32.h"; sourceTree = "<group>"; };
+		416D2E18208A87CC005235BD /* cycle_map.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cycle_map.c; path = ../Games/c64/Emulators/atari800/cycle_map.c; sourceTree = "<group>"; };
+		416D2E19208A87CC005235BD /* cycle_map.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cycle_map.h; path = ../Games/c64/Emulators/atari800/cycle_map.h; sourceTree = "<group>"; };
+		416D2E1A208A87CC005235BD /* devices.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = devices.c; path = ../Games/c64/Emulators/atari800/devices.c; sourceTree = "<group>"; };
+		416D2E1B208A87CC005235BD /* devices.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = devices.h; path = ../Games/c64/Emulators/atari800/devices.h; sourceTree = "<group>"; };
+		416D2E1C208A87CC005235BD /* emuos.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = emuos.c; path = ../Games/c64/Emulators/atari800/emuos.c; sourceTree = "<group>"; };
+		416D2E1D208A87CC005235BD /* emuos.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = emuos.h; path = ../Games/c64/Emulators/atari800/emuos.h; sourceTree = "<group>"; };
+		416D2E1E208A87CC005235BD /* esc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = esc.c; path = ../Games/c64/Emulators/atari800/esc.c; sourceTree = "<group>"; };
+		416D2E1F208A87CC005235BD /* esc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = esc.h; path = ../Games/c64/Emulators/atari800/esc.h; sourceTree = "<group>"; };
+		416D2E20208A87CC005235BD /* filter_ntsc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = filter_ntsc.c; path = ../Games/c64/Emulators/atari800/filter_ntsc.c; sourceTree = "<group>"; };
+		416D2E21208A87CC005235BD /* filter_ntsc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = filter_ntsc.h; path = ../Games/c64/Emulators/atari800/filter_ntsc.h; sourceTree = "<group>"; };
+		416D2E22208A87CC005235BD /* gtia.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = gtia.c; path = ../Games/c64/Emulators/atari800/gtia.c; sourceTree = "<group>"; };
+		416D2E23208A87CC005235BD /* gtia.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = gtia.h; path = ../Games/c64/Emulators/atari800/gtia.h; sourceTree = "<group>"; };
+		416D2E24208A87CC005235BD /* ide_internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ide_internal.h; path = ../Games/c64/Emulators/atari800/ide_internal.h; sourceTree = "<group>"; };
+		416D2E25208A87CC005235BD /* ide.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ide.c; path = ../Games/c64/Emulators/atari800/ide.c; sourceTree = "<group>"; };
+		416D2E26208A87CC005235BD /* ide.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ide.h; path = ../Games/c64/Emulators/atari800/ide.h; sourceTree = "<group>"; };
+		416D2E27208A87CC005235BD /* img_tape.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = img_tape.c; path = ../Games/c64/Emulators/atari800/img_tape.c; sourceTree = "<group>"; };
+		416D2E28208A87CC005235BD /* img_tape.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = img_tape.h; path = ../Games/c64/Emulators/atari800/img_tape.h; sourceTree = "<group>"; };
+		416D2E29208A87CC005235BD /* input.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = input.c; path = ../Games/c64/Emulators/atari800/input.c; sourceTree = "<group>"; };
+		416D2E2A208A87CC005235BD /* input.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = input.h; path = ../Games/c64/Emulators/atari800/input.h; sourceTree = "<group>"; };
+		416D2E2C208A87CC005235BD /* memory.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = memory.c; path = ../Games/c64/Emulators/atari800/memory.c; sourceTree = "<group>"; };
+		416D2E2D208A87CC005235BD /* memory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = memory.h; path = ../Games/c64/Emulators/atari800/memory.h; sourceTree = "<group>"; };
+		416D2E2F208A87CC005235BD /* mzpokeysnd.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = mzpokeysnd.c; path = ../Games/c64/Emulators/atari800/mzpokeysnd.c; sourceTree = "<group>"; };
+		416D2E30208A87CC005235BD /* mzpokeysnd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mzpokeysnd.h; path = ../Games/c64/Emulators/atari800/mzpokeysnd.h; sourceTree = "<group>"; };
+		416D2E31208A87CC005235BD /* pal_blending.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pal_blending.c; path = ../Games/c64/Emulators/atari800/pal_blending.c; sourceTree = "<group>"; };
+		416D2E32208A87CC005235BD /* pal_blending.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pal_blending.h; path = ../Games/c64/Emulators/atari800/pal_blending.h; sourceTree = "<group>"; };
+		416D2E33208A87CC005235BD /* pbi_bb.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pbi_bb.c; path = ../Games/c64/Emulators/atari800/pbi_bb.c; sourceTree = "<group>"; };
+		416D2E34208A87CC005235BD /* pbi_bb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pbi_bb.h; path = ../Games/c64/Emulators/atari800/pbi_bb.h; sourceTree = "<group>"; };
+		416D2E35208A87CC005235BD /* pbi_mio.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pbi_mio.c; path = ../Games/c64/Emulators/atari800/pbi_mio.c; sourceTree = "<group>"; };
+		416D2E36208A87CC005235BD /* pbi_mio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pbi_mio.h; path = ../Games/c64/Emulators/atari800/pbi_mio.h; sourceTree = "<group>"; };
+		416D2E37208A87CC005235BD /* pbi_proto80.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pbi_proto80.c; path = ../Games/c64/Emulators/atari800/pbi_proto80.c; sourceTree = "<group>"; };
+		416D2E38208A87CC005235BD /* pbi_proto80.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pbi_proto80.h; path = ../Games/c64/Emulators/atari800/pbi_proto80.h; sourceTree = "<group>"; };
+		416D2E39208A87CC005235BD /* pbi_scsi.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pbi_scsi.c; path = ../Games/c64/Emulators/atari800/pbi_scsi.c; sourceTree = "<group>"; };
+		416D2E3A208A87CC005235BD /* pbi_scsi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pbi_scsi.h; path = ../Games/c64/Emulators/atari800/pbi_scsi.h; sourceTree = "<group>"; };
+		416D2E3B208A87CC005235BD /* pbi_xld.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pbi_xld.c; path = ../Games/c64/Emulators/atari800/pbi_xld.c; sourceTree = "<group>"; };
+		416D2E3C208A87CC005235BD /* pbi_xld.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pbi_xld.h; path = ../Games/c64/Emulators/atari800/pbi_xld.h; sourceTree = "<group>"; };
+		416D2E3D208A87CC005235BD /* pbi.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pbi.c; path = ../Games/c64/Emulators/atari800/pbi.c; sourceTree = "<group>"; };
+		416D2E3E208A87CC005235BD /* pbi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pbi.h; path = ../Games/c64/Emulators/atari800/pbi.h; sourceTree = "<group>"; };
+		416D2E3F208A87CC005235BD /* pcjoy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pcjoy.h; path = ../Games/c64/Emulators/atari800/pcjoy.h; sourceTree = "<group>"; };
+		416D2E40208A87CC005235BD /* pia.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pia.c; path = ../Games/c64/Emulators/atari800/pia.c; sourceTree = "<group>"; };
+		416D2E41208A87CC005235BD /* pia.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pia.h; path = ../Games/c64/Emulators/atari800/pia.h; sourceTree = "<group>"; };
+		416D2E43208A87CC005235BD /* pokey.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pokey.c; path = ../Games/c64/Emulators/atari800/pokey.c; sourceTree = "<group>"; };
+		416D2E44208A87CC005235BD /* pokey.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pokey.h; path = ../Games/c64/Emulators/atari800/pokey.h; sourceTree = "<group>"; };
+		416D2E45208A87CC005235BD /* pokeysnd.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pokeysnd.c; path = ../Games/c64/Emulators/atari800/pokeysnd.c; sourceTree = "<group>"; };
+		416D2E46208A87CC005235BD /* pokeysnd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pokeysnd.h; path = ../Games/c64/Emulators/atari800/pokeysnd.h; sourceTree = "<group>"; };
+		416D2E49208A87CC005235BD /* remez.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = remez.c; path = ../Games/c64/Emulators/atari800/remez.c; sourceTree = "<group>"; };
+		416D2E4A208A87CC005235BD /* remez.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = remez.h; path = ../Games/c64/Emulators/atari800/remez.h; sourceTree = "<group>"; };
+		416D2E4B208A87CC005235BD /* rtime.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = rtime.c; path = ../Games/c64/Emulators/atari800/rtime.c; sourceTree = "<group>"; };
+		416D2E4C208A87CC005235BD /* rtime.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = rtime.h; path = ../Games/c64/Emulators/atari800/rtime.h; sourceTree = "<group>"; };
+		416D2E4D208A87CC005235BD /* screen.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = screen.c; path = ../Games/c64/Emulators/atari800/screen.c; sourceTree = "<group>"; };
+		416D2E4E208A87CC005235BD /* screen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = screen.h; path = ../Games/c64/Emulators/atari800/screen.h; sourceTree = "<group>"; };
+		416D2E5E208A87CC005235BD /* sio.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sio.c; path = ../Games/c64/Emulators/atari800/sio.c; sourceTree = "<group>"; };
+		416D2E5F208A87CC005235BD /* sio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sio.h; path = ../Games/c64/Emulators/atari800/sio.h; sourceTree = "<group>"; };
+		416D2E60208A87CC005235BD /* sndsave.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sndsave.c; path = ../Games/c64/Emulators/atari800/sndsave.c; sourceTree = "<group>"; };
+		416D2E61208A87CC005235BD /* sndsave.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sndsave.h; path = ../Games/c64/Emulators/atari800/sndsave.h; sourceTree = "<group>"; };
+		416D2E64208A87CC005235BD /* statesav.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = statesav.c; path = ../Games/c64/Emulators/atari800/statesav.c; sourceTree = "<group>"; };
+		416D2E65208A87CC005235BD /* statesav.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = statesav.h; path = ../Games/c64/Emulators/atari800/statesav.h; sourceTree = "<group>"; };
+		416D2E66208A87CC005235BD /* sysrom.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sysrom.c; path = ../Games/c64/Emulators/atari800/sysrom.c; sourceTree = "<group>"; };
+		416D2E67208A87CC005235BD /* sysrom.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sysrom.h; path = ../Games/c64/Emulators/atari800/sysrom.h; sourceTree = "<group>"; };
+		416D2E68208A87CC005235BD /* ui_basic.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ui_basic.c; path = ../Games/c64/Emulators/atari800/ui_basic.c; sourceTree = "<group>"; };
+		416D2E69208A87CC005235BD /* ui_basic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ui_basic.h; path = ../Games/c64/Emulators/atari800/ui_basic.h; sourceTree = "<group>"; };
+		416D2E6A208A87CC005235BD /* videomode.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = videomode.c; path = ../Games/c64/Emulators/atari800/videomode.c; sourceTree = "<group>"; };
+		416D2E6B208A87CC005235BD /* videomode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = videomode.h; path = ../Games/c64/Emulators/atari800/videomode.h; sourceTree = "<group>"; };
+		416D2E6C208A87CC005235BD /* voicebox.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = voicebox.c; path = ../Games/c64/Emulators/atari800/voicebox.c; sourceTree = "<group>"; };
+		416D2E6D208A87CC005235BD /* voicebox.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = voicebox.h; path = ../Games/c64/Emulators/atari800/voicebox.h; sourceTree = "<group>"; };
+		416D2E6E208A87CC005235BD /* votrax.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = votrax.c; path = ../Games/c64/Emulators/atari800/votrax.c; sourceTree = "<group>"; };
+		416D2E6F208A87CC005235BD /* votrax.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = votrax.h; path = ../Games/c64/Emulators/atari800/votrax.h; sourceTree = "<group>"; };
+		416D2E70208A87CC005235BD /* votraxsnd.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = votraxsnd.c; path = ../Games/c64/Emulators/atari800/votraxsnd.c; sourceTree = "<group>"; };
+		416D2E71208A87CC005235BD /* votraxsnd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = votraxsnd.h; path = ../Games/c64/Emulators/atari800/votraxsnd.h; sourceTree = "<group>"; };
+		416D2E72208A87CC005235BD /* xep80_fonts.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = xep80_fonts.c; path = ../Games/c64/Emulators/atari800/xep80_fonts.c; sourceTree = "<group>"; };
+		416D2E73208A87CC005235BD /* xep80_fonts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = xep80_fonts.h; path = ../Games/c64/Emulators/atari800/xep80_fonts.h; sourceTree = "<group>"; };
+		416D2E74208A87CC005235BD /* xep80.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = xep80.c; path = ../Games/c64/Emulators/atari800/xep80.c; sourceTree = "<group>"; };
+		416D2E75208A87CC005235BD /* xep80.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = xep80.h; path = ../Games/c64/Emulators/atari800/xep80.h; sourceTree = "<group>"; };
+		416D2EC2208A8A00005235BD /* vtxsmpls.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; name = vtxsmpls.inc; path = ../Games/c64/Emulators/atari800/vtxsmpls.inc; sourceTree = "<group>"; };
+		416D2EC4208A8B4F005235BD /* a-init.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "a-init.c"; sourceTree = "<group>"; };
+		416D2EC5208A8B4F005235BD /* a-init.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "a-init.h"; sourceTree = "<group>"; };
+		416D2EC6208A8B4F005235BD /* a-input.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "a-input.c"; sourceTree = "<group>"; };
+		416D2EC7208A8B4F005235BD /* a-input.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "a-input.h"; sourceTree = "<group>"; };
+		416D2EC8208A8B4F005235BD /* a-main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "a-main.c"; sourceTree = "<group>"; };
+		416D2EC9208A8B4F005235BD /* a-palette.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "a-palette.c"; sourceTree = "<group>"; };
+		416D2ECA208A8B4F005235BD /* a-palette.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "a-palette.h"; sourceTree = "<group>"; };
+		416D2ECC208A8B4F005235BD /* a-video_gl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "a-video_gl.c"; sourceTree = "<group>"; };
+		416D2ECD208A8B4F005235BD /* a-video_gl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "a-video_gl.h"; sourceTree = "<group>"; };
+		416D2ECE208A8B4F005235BD /* a-video_sw.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "a-video_sw.c"; sourceTree = "<group>"; };
+		416D2ECF208A8B4F005235BD /* a-video_sw.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "a-video_sw.h"; sourceTree = "<group>"; };
+		416D2ED0208A8B4F005235BD /* a-video.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "a-video.c"; sourceTree = "<group>"; };
+		416D2ED1208A8B4F005235BD /* a-video.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "a-video.h"; sourceTree = "<group>"; };
+		416D2EDB208A8C40005235BD /* atari_ntsc_config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = atari_ntsc_config.h; path = ../Games/c64/Emulators/atari800/atari_ntsc/atari_ntsc_config.h; sourceTree = "<group>"; };
+		416D2EDC208A8C40005235BD /* atari_ntsc_impl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = atari_ntsc_impl.h; path = ../Games/c64/Emulators/atari800/atari_ntsc/atari_ntsc_impl.h; sourceTree = "<group>"; };
+		416D2EDD208A8C40005235BD /* atari_ntsc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = atari_ntsc.c; path = ../Games/c64/Emulators/atari800/atari_ntsc/atari_ntsc.c; sourceTree = "<group>"; };
+		416D2EDE208A8C40005235BD /* atari_ntsc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = atari_ntsc.h; path = ../Games/c64/Emulators/atari800/atari_ntsc/atari_ntsc.h; sourceTree = "<group>"; };
+		416D2EE2208A8F2E005235BD /* a-platform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "a-platform.h"; path = "../Games/c64/Emulators/atari800/a-platform.h"; sourceTree = "<group>"; };
 		41706DB81F9A71EA00B1B2BA /* CViewJukeboxPlaylist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewJukeboxPlaylist.h; path = ../Games/c64/Views/JukeboxPlaylist/CViewJukeboxPlaylist.h; sourceTree = "<group>"; };
 		41706DB91F9A71EA00B1B2BA /* CViewJukeboxPlaylist.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewJukeboxPlaylist.mm; path = ../Games/c64/Views/JukeboxPlaylist/CViewJukeboxPlaylist.mm; sourceTree = "<group>"; };
 		41706DBB1F9A726F00B1B2BA /* CJukeboxPlaylist.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CJukeboxPlaylist.mm; path = ../Games/c64/Views/JukeboxPlaylist/CJukeboxPlaylist.mm; sourceTree = "<group>"; };
@@ -2215,10 +2455,16 @@
 		4177D5BB1ED714280053D9EE /* CVicEditorLayerVirtualSprites.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CVicEditorLayerVirtualSprites.h; path = ../Games/c64/Screens/VicEditor/CVicEditorLayerVirtualSprites.h; sourceTree = "<group>"; };
 		4179EF9319893A5100CCD344 /* CContinuousParamSinHalf.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CContinuousParamSinHalf.mm; sourceTree = "<group>"; };
 		4179EF9419893A5100CCD344 /* CContinuousParamSinHalf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CContinuousParamSinHalf.h; sourceTree = "<group>"; };
-		417ACDB81E69BF31004A15B7 /* CGuiViewWindowsManager.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CGuiViewWindowsManager.mm; sourceTree = "<group>"; };
-		417ACDB91E69BF31004A15B7 /* CGuiViewWindowsManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CGuiViewWindowsManager.h; sourceTree = "<group>"; };
-		417ACDBA1E69BF31004A15B7 /* CGuiViewFrame.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CGuiViewFrame.mm; path = ../Engine/GUI/CGuiViewFrame.mm; sourceTree = "<group>"; };
-		417ACDBB1E69BF31004A15B7 /* CGuiViewFrame.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CGuiViewFrame.h; path = ../Engine/GUI/CGuiViewFrame.h; sourceTree = "<group>"; };
+		417F8F4D208AD17A004C6A1F /* AtariDataAdapters.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AtariDataAdapters.h; path = ../Games/c64/Emulators/atari800/AtariInterface/AtariDataAdapters.h; sourceTree = "<group>"; };
+		417F8F4E208AD17A004C6A1F /* AtariDataAdapters.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AtariDataAdapters.mm; path = ../Games/c64/Emulators/atari800/AtariInterface/AtariDataAdapters.mm; sourceTree = "<group>"; };
+		417F8F50208BBF8B004C6A1F /* CViewAtariScreen.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewAtariScreen.mm; path = ../Games/c64/Views/CViewAtariScreen.mm; sourceTree = "<group>"; };
+		417F8F51208BBF8B004C6A1F /* CViewAtariScreen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewAtariScreen.h; path = ../Games/c64/Views/CViewAtariScreen.h; sourceTree = "<group>"; };
+		417F8F53208BC565004C6A1F /* CDebugInterface.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CDebugInterface.mm; path = ../Games/c64/DebugInterface/CDebugInterface.mm; sourceTree = "<group>"; };
+		417F8F54208BC565004C6A1F /* CDebugInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CDebugInterface.h; path = ../Games/c64/DebugInterface/CDebugInterface.h; sourceTree = "<group>"; };
+		417F8F56208BCD75004C6A1F /* CViewAtariStateCPU.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewAtariStateCPU.mm; path = ../Games/c64/Views/CViewAtariStateCPU.mm; sourceTree = "<group>"; };
+		417F8F57208BCD75004C6A1F /* CViewAtariStateCPU.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewAtariStateCPU.h; path = ../Games/c64/Views/CViewAtariStateCPU.h; sourceTree = "<group>"; };
+		417F8F59208D151E004C6A1F /* CAtariAudioChannel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CAtariAudioChannel.h; path = ../Games/c64/Emulators/atari800/AtariInterface/CAtariAudioChannel.h; sourceTree = "<group>"; };
+		417F8F5A208D151E004C6A1F /* CAtariAudioChannel.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CAtariAudioChannel.mm; path = ../Games/c64/Emulators/atari800/AtariInterface/CAtariAudioChannel.mm; sourceTree = "<group>"; };
 		4180061F1C6E177900527CAE /* CSlrFileFromOS.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CSlrFileFromOS.mm; sourceTree = "<group>"; };
 		418006201C6E177900527CAE /* CSlrFileFromOS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CSlrFileFromOS.h; sourceTree = "<group>"; };
 		4180557F18DC676300F6EE8F /* IMG_Filters.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = IMG_Filters.mm; sourceTree = "<group>"; };
@@ -2362,10 +2608,18 @@
 		419837CC164CFD7900B8C78D /* MenuControllerSettings.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = MenuControllerSettings.mm; sourceTree = "<group>"; };
 		41985F981615E2B400FA0CD6 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		41985F991615E2B400FA0CD6 /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = System/Library/Frameworks/AudioUnit.framework; sourceTree = SDKROOT; };
+		4199CD2920ADD6CD00B909C9 /* a-sdl-sound.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "a-sdl-sound.c"; sourceTree = "<group>"; };
 		41A286AB1F08ECC500FE0AF7 /* TODO.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = TODO.txt; path = ../Games/c64/TODO.txt; sourceTree = "<group>"; };
-		41A9AC8D1CBBFCF6004592CF /* C64DebugTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64DebugTypes.h; path = ../Games/c64/DebugInterface/C64DebugTypes.h; sourceTree = "<group>"; };
+		41A9AC8D1CBBFCF6004592CF /* DebuggerDefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DebuggerDefs.h; path = ../Games/c64/DebugInterface/DebuggerDefs.h; sourceTree = "<group>"; };
 		41A9AC901CBE3FDE004592CF /* archdep.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = archdep.c; sourceTree = "<group>"; };
 		41A9AC911CBE3FDE004592CF /* archdep.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = archdep.h; sourceTree = "<group>"; };
+		41AC92C421771AE900522362 /* CVicEditorTool.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CVicEditorTool.mm; path = ../Games/c64/Screens/VicEditor/CVicEditorTool.mm; sourceTree = "<group>"; };
+		41AC92C521771AE900522362 /* CVicEditorTool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CVicEditorTool.h; path = ../Games/c64/Screens/VicEditor/CVicEditorTool.h; sourceTree = "<group>"; };
+		41ADF3C221725091002E1D20 /* icon_close_gfx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = icon_close_gfx.h; path = ../Games/c64/Data/icon_close_gfx.h; sourceTree = "<group>"; };
+		41ADF3C321725393002E1D20 /* icon_toolbox_export_gfx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = icon_toolbox_export_gfx.h; path = ../Games/c64/Data/icon_toolbox_export_gfx.h; sourceTree = "<group>"; };
+		41ADF3C421725393002E1D20 /* icon_toolbox_import_gfx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = icon_toolbox_import_gfx.h; path = ../Games/c64/Data/icon_toolbox_import_gfx.h; sourceTree = "<group>"; };
+		41ADF3C52172550D002E1D20 /* icon_raw_import_gfx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = icon_raw_import_gfx.h; path = ../Games/c64/Data/icon_raw_import_gfx.h; sourceTree = "<group>"; };
+		41ADF3C62172550D002E1D20 /* icon_raw_export_gfx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = icon_raw_export_gfx.h; path = ../Games/c64/Data/icon_raw_export_gfx.h; sourceTree = "<group>"; };
 		41B3CC0D1FE65EAA00216BA8 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
 		41B53EA31EE2EFCA0078F9BB /* CViewC64Sprite.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewC64Sprite.mm; path = ../Games/c64/Screens/VicEditor/CViewC64Sprite.mm; sourceTree = "<group>"; };
 		41B53EA41EE2EFCA0078F9BB /* CViewC64Sprite.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewC64Sprite.h; path = ../Games/c64/Screens/VicEditor/CViewC64Sprite.h; sourceTree = "<group>"; };
@@ -2407,7 +2661,23 @@
 		41B5C1491E9E9F3900E9C644 /* render1x1crt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = render1x1crt.c; sourceTree = "<group>"; };
 		41B5C14A1E9E9F3900E9C644 /* render1x1crt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = render1x1crt.h; sourceTree = "<group>"; };
 		41B5C14C1E9E9FBA00E9C644 /* export.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = export.h; sourceTree = "<group>"; };
+		41C1A96621396AD00062D97F /* icon_open_gfx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = icon_open_gfx.h; path = ../Games/c64/Data/icon_open_gfx.h; sourceTree = "<group>"; };
+		41C1A96721396B9E0062D97F /* icon_export_gfx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = icon_export_gfx.h; path = ../Games/c64/Data/icon_export_gfx.h; sourceTree = "<group>"; };
+		41C1A96821396B9E0062D97F /* icon_import_gfx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = icon_import_gfx.h; path = ../Games/c64/Data/icon_import_gfx.h; sourceTree = "<group>"; };
+		41C1A96921396B9E0062D97F /* icon_tool_rectangle_gfx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = icon_tool_rectangle_gfx.h; path = ../Games/c64/Data/icon_tool_rectangle_gfx.h; sourceTree = "<group>"; };
+		41C1A96A21396B9E0062D97F /* icon_tool_pen_gfx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = icon_tool_pen_gfx.h; path = ../Games/c64/Data/icon_tool_pen_gfx.h; sourceTree = "<group>"; };
+		41C1A96B21396B9E0062D97F /* icon_tool_line_gfx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = icon_tool_line_gfx.h; path = ../Games/c64/Data/icon_tool_line_gfx.h; sourceTree = "<group>"; };
+		41C1A96C21396B9E0062D97F /* icon_tool_fill_gfx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = icon_tool_fill_gfx.h; path = ../Games/c64/Data/icon_tool_fill_gfx.h; sourceTree = "<group>"; };
+		41C1A96D21396B9E0062D97F /* icon_tool_dither_gfx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = icon_tool_dither_gfx.h; path = ../Games/c64/Data/icon_tool_dither_gfx.h; sourceTree = "<group>"; };
+		41C1A96E21396B9E0062D97F /* icon_tool_circle_gfx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = icon_tool_circle_gfx.h; path = ../Games/c64/Data/icon_tool_circle_gfx.h; sourceTree = "<group>"; };
+		41C1A96F21396B9E0062D97F /* icon_tool_brush_square_gfx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = icon_tool_brush_square_gfx.h; path = ../Games/c64/Data/icon_tool_brush_square_gfx.h; sourceTree = "<group>"; };
+		41C1A97021396B9E0062D97F /* icon_tool_brush_circle_gfx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = icon_tool_brush_circle_gfx.h; path = ../Games/c64/Data/icon_tool_brush_circle_gfx.h; sourceTree = "<group>"; };
+		41C1A97121396B9E0062D97F /* icon_settings_gfx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = icon_settings_gfx.h; path = ../Games/c64/Data/icon_settings_gfx.h; sourceTree = "<group>"; };
+		41C1A97221396B9E0062D97F /* icon_save_gfx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = icon_save_gfx.h; path = ../Games/c64/Data/icon_save_gfx.h; sourceTree = "<group>"; };
 		41C5B5AC1C73C010003FBC5F /* SYS_KeyCodes.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SYS_KeyCodes.mm; sourceTree = "<group>"; };
+		41C9BCBD2181D5DB00C2F7AF /* pugiconfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pugiconfig.h; path = pugixml/pugiconfig.h; sourceTree = "<group>"; };
+		41C9BCBE2181D5DB00C2F7AF /* pugixml.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = pugixml.cpp; path = pugixml/pugixml.cpp; sourceTree = "<group>"; };
+		41C9BCBF2181D5DB00C2F7AF /* pugixml.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pugixml.h; path = pugixml/pugixml.h; sourceTree = "<group>"; };
 		41CA79191F3DC0E0004309B8 /* mididrv.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mididrv.c; sourceTree = "<group>"; };
 		41CA791B1F3DC117004309B8 /* mididrv.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mididrv.h; sourceTree = "<group>"; };
 		41CBF0751A8133AD0060A9DD /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
@@ -2468,9 +2738,9 @@
 		41E0AC3A18AC2F740065DCAD /* libjson.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = libjson.h; sourceTree = "<group>"; };
 		41E0AC4C18AC30030065DCAD /* libbase64++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "libbase64++.h"; sourceTree = "<group>"; };
 		41E0AC4E18AC30030065DCAD /* mempool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mempool.h; sourceTree = "<group>"; };
-		41E0F4A81CCE546100CE367D /* console-plain-gfx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "console-plain-gfx.h"; path = "Embedded/console-plain-gfx.h"; sourceTree = "<group>"; };
-		41E0F4A91CCE546100CE367D /* default-font-fnt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "default-font-fnt.h"; path = "Embedded/default-font-fnt.h"; sourceTree = "<group>"; };
-		41E0F4AA1CCE546100CE367D /* default-font-gfx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "default-font-gfx.h"; path = "Embedded/default-font-gfx.h"; sourceTree = "<group>"; };
+		41E0F4A81CCE546100CE367D /* console_plain_gfx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = console_plain_gfx.h; path = Embedded/console_plain_gfx.h; sourceTree = "<group>"; };
+		41E0F4A91CCE546100CE367D /* default_font_fnt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = default_font_fnt.h; path = Embedded/default_font_fnt.h; sourceTree = "<group>"; };
+		41E0F4AA1CCE546100CE367D /* default_font_gfx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = default_font_gfx.h; path = Embedded/default_font_gfx.h; sourceTree = "<group>"; };
 		41E0F4AB1CCE547900CE367D /* RES_Embedded.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = RES_Embedded.mm; path = Embedded/RES_Embedded.mm; sourceTree = "<group>"; };
 		41E0F4AC1CCE547900CE367D /* RES_Embedded.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RES_Embedded.h; path = Embedded/RES_Embedded.h; sourceTree = "<group>"; };
 		41E0F4AE1CCE584D00CE367D /* CSlrFileFromMemory.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CSlrFileFromMemory.mm; sourceTree = "<group>"; };
@@ -2931,6 +3201,7 @@
 				3904283C186892A800B570B1 /* Pool */,
 				39042917186892A800B570B1 /* Tremor */,
 				3904293A186892A800B570B1 /* utf8 */,
+				41C9BCBC2181D5C800C2F7AF /* pugixml */,
 				3904293F186892A800B570B1 /* zlib */,
 			);
 			name = Engine;
@@ -2942,8 +3213,8 @@
 			children = (
 				411A4EB71A1524E90095EBF9 /* CAudioChannelMusicPlayer.mm */,
 				411A4EB81A1524E90095EBF9 /* CAudioChannelMusicPlayer.h */,
-				390425D0186892A700B570B1 /* CAudioChannel.h */,
 				390425D1186892A700B570B1 /* CAudioChannel.mm */,
+				390425D0186892A700B570B1 /* CAudioChannel.h */,
 				390425D2186892A700B570B1 /* CAudioChannelBusFloat.h */,
 				390425D3186892A700B570B1 /* CAudioChannelBusFloat.mm */,
 				390425D4186892A700B570B1 /* CAudioChannelBusInt.h */,
@@ -2979,14 +3250,10 @@
 				41E0F4AE1CCE584D00CE367D /* CSlrFileFromMemory.mm */,
 				41E0F4AF1CCE584D00CE367D /* CSlrFileFromMemory.h */,
 				414539DE1CB3FF1D00020916 /* SYS_Types.h */,
-				4152D6E31C96F86F00EBA9E5 /* CGuiEditHex.h */,
-				4152D6E41C96F86F00EBA9E5 /* CGuiEditHex.mm */,
-				4152D6E61C96F86F00EBA9E5 /* CGuiViewMenu.mm */,
-				4152D6E51C96F86F00EBA9E5 /* CGuiViewMenu.h */,
 				4152D6E71C96F86F00EBA9E5 /* CSlrDataAdapter.h */,
 				4152D6E81C96F86F00EBA9E5 /* CSlrDataAdapter.mm */,
-				4152D6E91C96F86F00EBA9E5 /* CSlrKeyboardShortcuts.h */,
 				4152D6EA1C96F86F00EBA9E5 /* CSlrKeyboardShortcuts.mm */,
+				4152D6E91C96F86F00EBA9E5 /* CSlrKeyboardShortcuts.h */,
 				41646C0C1C8DE93E006BBE25 /* SYS_CommandLine.mm */,
 				41646C0D1C8DE93E006BBE25 /* SYS_CommandLine.h */,
 				411C1FDF19F97F3600E51709 /* CSlrFileZlib.mm */,
@@ -3045,8 +3312,8 @@
 				390426BF186892A700B570B1 /* CSlrImageTexture.mm */,
 				390426C0186892A700B570B1 /* CSlrResourceBase.h */,
 				390426C1186892A700B570B1 /* CSlrResourceBase.mm */,
-				390426C4186892A700B570B1 /* CSlrString.h */,
 				390426C5186892A700B570B1 /* CSlrString.mm */,
+				390426C4186892A700B570B1 /* CSlrString.h */,
 				390426C6186892A700B570B1 /* CSlrTagsParser.h */,
 				390426C7186892A700B570B1 /* CSlrTexture.h */,
 				390426C8186892A700B570B1 /* CSlrTexture.mm */,
@@ -3121,8 +3388,6 @@
 		39042703186892A700B570B1 /* GUI */ = {
 			isa = PBXGroup;
 			children = (
-				417ACDB81E69BF31004A15B7 /* CGuiViewWindowsManager.mm */,
-				417ACDB91E69BF31004A15B7 /* CGuiViewWindowsManager.h */,
 				3904274C186892A700B570B1 /* CGuiMain.mm */,
 				3904274B186892A700B570B1 /* CGuiMain.h */,
 				3904274D186892A700B570B1 /* Controls */,
@@ -3134,45 +3399,57 @@
 		3904274D186892A700B570B1 /* Controls */ = {
 			isa = PBXGroup;
 			children = (
+				41493194216CBBDA00750D82 /* CGuiViewWindowsManager.mm */,
+				41493195216CBBDA00750D82 /* CGuiViewWindowsManager.h */,
+				41430FC7216510D600D003AA /* CGuiViewFrame.mm */,
+				41430FC6216510D600D003AA /* CGuiViewFrame.h */,
+				39042771186892A700B570B1 /* CGuiView.mm */,
+				39042770186892A700B570B1 /* CGuiView.h */,
+				41430FBA21650EA500D003AA /* CGuiViewToolBox.mm */,
+				41430FBB21650EA500D003AA /* CGuiViewToolBox.h */,
+				41430FBC21650EA500D003AA /* CGuiWindow.mm */,
+				41430FBD21650EA500D003AA /* CGuiWindow.h */,
+				41430FBF21650EA500D003AA /* CGuiEditHex.mm */,
+				41430FBE21650EA500D003AA /* CGuiEditHex.h */,
+				41430FC121650EA500D003AA /* CGuiViewMenu.mm */,
+				41430FC021650EA500D003AA /* CGuiViewMenu.h */,
 				4106E33D19473F3D003DB487 /* CGuiFolderFavorite.h */,
 				3904274E186892A700B570B1 /* CGuiBackground.h */,
 				3904274F186892A700B570B1 /* CGuiBackground.mm */,
-				39042750186892A700B570B1 /* CGuiButton.h */,
 				39042751186892A700B570B1 /* CGuiButton.mm */,
-				39042752186892A700B570B1 /* CGuiButtonMenu.h */,
+				39042750186892A700B570B1 /* CGuiButton.h */,
 				39042753186892A700B570B1 /* CGuiButtonMenu.mm */,
-				39042754186892A700B570B1 /* CGuiButtonSwitch.h */,
+				39042752186892A700B570B1 /* CGuiButtonMenu.h */,
 				39042755186892A700B570B1 /* CGuiButtonSwitch.mm */,
-				39042756186892A700B570B1 /* CGuiButtonText.h */,
+				39042754186892A700B570B1 /* CGuiButtonSwitch.h */,
 				39042757186892A700B570B1 /* CGuiButtonText.mm */,
-				39042758186892A700B570B1 /* CGuiEditBoxFloat.h */,
+				39042756186892A700B570B1 /* CGuiButtonText.h */,
 				39042759186892A700B570B1 /* CGuiEditBoxFloat.mm */,
-				3904275A186892A700B570B1 /* CGuiEditBoxHex.h */,
+				39042758186892A700B570B1 /* CGuiEditBoxFloat.h */,
 				3904275B186892A700B570B1 /* CGuiEditBoxHex.mm */,
-				3904275C186892A700B570B1 /* CGuiEditBoxInt.h */,
+				3904275A186892A700B570B1 /* CGuiEditBoxHex.h */,
 				3904275D186892A700B570B1 /* CGuiEditBoxInt.mm */,
-				3904275E186892A700B570B1 /* CGuiEditBoxText.h */,
+				3904275C186892A700B570B1 /* CGuiEditBoxInt.h */,
 				3904275F186892A700B570B1 /* CGuiEditBoxText.mm */,
-				39042760186892A700B570B1 /* CGuiElement.h */,
+				3904275E186892A700B570B1 /* CGuiEditBoxText.h */,
 				39042761186892A700B570B1 /* CGuiElement.mm */,
-				39042762186892A700B570B1 /* CGuiLabel.h */,
+				39042760186892A700B570B1 /* CGuiElement.h */,
 				39042763186892A700B570B1 /* CGuiLabel.mm */,
+				39042762186892A700B570B1 /* CGuiLabel.h */,
 				39042765186892A700B570B1 /* CGuiList.mm */,
 				39042764186892A700B570B1 /* CGuiList.h */,
-				39042766186892A700B570B1 /* CGuiListTree.h */,
 				39042767186892A700B570B1 /* CGuiListTree.mm */,
-				39042768186892A700B570B1 /* CGuiRadio.h */,
+				39042766186892A700B570B1 /* CGuiListTree.h */,
 				39042769186892A700B570B1 /* CGuiRadio.mm */,
-				3904276A186892A700B570B1 /* CGuiRichTextLabel.h */,
+				39042768186892A700B570B1 /* CGuiRadio.h */,
 				3904276B186892A700B570B1 /* CGuiRichTextLabel.mm */,
-				3904276C186892A700B570B1 /* CGuiSlider.h */,
+				3904276A186892A700B570B1 /* CGuiRichTextLabel.h */,
 				3904276D186892A700B570B1 /* CGuiSlider.mm */,
-				3904276E186892A700B570B1 /* CGuiTheme.h */,
+				3904276C186892A700B570B1 /* CGuiSlider.h */,
 				3904276F186892A700B570B1 /* CGuiTheme.mm */,
-				39042770186892A700B570B1 /* CGuiView.h */,
-				39042771186892A700B570B1 /* CGuiView.mm */,
-				39042774186892A700B570B1 /* CGuiViewEditWithTitle.h */,
+				3904276E186892A700B570B1 /* CGuiTheme.h */,
 				39042775186892A700B570B1 /* CGuiViewEditWithTitle.mm */,
+				39042774186892A700B570B1 /* CGuiViewEditWithTitle.h */,
 				39042776186892A700B570B1 /* CGuiViewFade.h */,
 				39042777186892A700B570B1 /* CGuiViewFade.mm */,
 				39042778186892A700B570B1 /* CGuiViewHorizontalScroll.h */,
@@ -3443,8 +3720,8 @@
 				41CF59D41F975C9E002171B1 /* CViewC64StateCPU.h */,
 				41CF59D11F975C9E002171B1 /* CViewDriveStateCPU.mm */,
 				41CF59D21F975C9E002171B1 /* CViewDriveStateCPU.h */,
-				4152D6FD1C970F3E00EBA9E5 /* CViewDrive1541State.mm */,
-				4152D7061C970F3E00EBA9E5 /* CViewDrive1541State.h */,
+				4152D6FD1C970F3E00EBA9E5 /* CViewDrive1541StateVIA.mm */,
+				4152D7061C970F3E00EBA9E5 /* CViewDrive1541StateVIA.h */,
 				4152D6FA1C970F3E00EBA9E5 /* CViewDataDump.mm */,
 				4152D7011C970F3E00EBA9E5 /* CViewDataDump.h */,
 				4152D6FE1C970F3E00EBA9E5 /* CViewC64Screen.mm */,
@@ -3455,6 +3732,12 @@
 				414187C91FDC506400D94506 /* CViewDataWatch.h */,
 				4152D7031C970F3E00EBA9E5 /* CViewDisassemble.mm */,
 				4152D7041C970F3E00EBA9E5 /* CViewDisassemble.h */,
+				41521FBB20C6BC7C00205456 /* CViewSourceCode.mm */,
+				41521FBC20C6BC7C00205456 /* CViewSourceCode.h */,
+				417F8F50208BBF8B004C6A1F /* CViewAtariScreen.mm */,
+				417F8F51208BBF8B004C6A1F /* CViewAtariScreen.h */,
+				417F8F56208BCD75004C6A1F /* CViewAtariStateCPU.mm */,
+				417F8F57208BCD75004C6A1F /* CViewAtariStateCPU.h */,
 			);
 			name = Views;
 			sourceTree = "<group>";
@@ -3544,6 +3827,21 @@
 				41188FE41E9EC26C00040048 /* tpid.h */,
 			);
 			path = tcbm;
+			sourceTree = "<group>";
+		};
+		411C93EB208AB0FA0037F28B /* AtariInterface */ = {
+			isa = PBXGroup;
+			children = (
+				417F8F5A208D151E004C6A1F /* CAtariAudioChannel.mm */,
+				417F8F59208D151E004C6A1F /* CAtariAudioChannel.h */,
+				417F8F4E208AD17A004C6A1F /* AtariDataAdapters.mm */,
+				417F8F4D208AD17A004C6A1F /* AtariDataAdapters.h */,
+				411C93F0208AB30B0037F28B /* AtariDebugInterface.mm */,
+				411C93EF208AB30B0037F28B /* AtariDebugInterface.h */,
+				411C93ED208AB1170037F28B /* AtariWrapper.mm */,
+				411C93EC208AB1170037F28B /* AtariWrapper.h */,
+			);
+			name = AtariInterface;
 			sourceTree = "<group>";
 		};
 		4132CC0E19AE145200E7C3B0 /* lodepng */ = {
@@ -4987,11 +5285,13 @@
 		4152D6BD1C96C90B00EBA9E5 /* DebugInterface */ = {
 			isa = PBXGroup;
 			children = (
-				41A9AC8D1CBBFCF6004592CF /* C64DebugTypes.h */,
+				417F8F53208BC565004C6A1F /* CDebugInterface.mm */,
+				417F8F54208BC565004C6A1F /* CDebugInterface.h */,
+				41A9AC8D1CBBFCF6004592CF /* DebuggerDefs.h */,
 				4152D6DB1C96F73300EBA9E5 /* C64DebugInterface.mm */,
 				4152D6DA1C96F73300EBA9E5 /* C64DebugInterface.h */,
-				4152D6DF1C96F73300EBA9E5 /* C64DebugData.mm */,
-				4152D6DE1C96F73300EBA9E5 /* C64DebugData.h */,
+				4152D6DF1C96F73300EBA9E5 /* CDebuggerBreakpoints.mm */,
+				4152D6DE1C96F73300EBA9E5 /* CDebuggerBreakpoints.h */,
 			);
 			name = DebugInterface;
 			sourceTree = "<group>";
@@ -4999,6 +5299,7 @@
 		4152D7231C970FB100EBA9E5 /* Emulators */ = {
 			isa = PBXGroup;
 			children = (
+				416D2DE3208A87B5005235BD /* atari800 */,
 				414531771CB2D1A100020916 /* vice */,
 			);
 			name = Emulators;
@@ -5015,8 +5316,8 @@
 				41F99C401E641BAE00B46DA7 /* CGuiLockableList.h */,
 				413D68F61DE06D3E0034BF7E /* C64Palette.mm */,
 				413D68F51DE06D3E0034BF7E /* C64Palette.h */,
-				415838551DC9E89100A56E0E /* C64AsmSource.mm */,
-				415838561DC9E89100A56E0E /* C64AsmSource.h */,
+				415838551DC9E89100A56E0E /* C64AsmSourceSymbols.mm */,
+				415838561DC9E89100A56E0E /* C64AsmSourceSymbols.h */,
 				4128D0AF1DC0F4D6007A5CFF /* C64SharedMemory.mm */,
 				4128D0B01DC0F4D6007A5CFF /* C64SharedMemory.h */,
 				41474DCE1D08607300F1B83F /* C64KeyMap.mm */,
@@ -5036,6 +5337,198 @@
 				4152D6F41C970F0800EBA9E5 /* C64Symbols.h */,
 			);
 			name = Tools;
+			sourceTree = "<group>";
+		};
+		416748012107908C005C8D8A /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				41ADF3C52172550D002E1D20 /* icon_raw_import_gfx.h */,
+				41ADF3C62172550D002E1D20 /* icon_raw_export_gfx.h */,
+				41ADF3C321725393002E1D20 /* icon_toolbox_export_gfx.h */,
+				41ADF3C421725393002E1D20 /* icon_toolbox_import_gfx.h */,
+				41ADF3C221725091002E1D20 /* icon_close_gfx.h */,
+				4104B30F2152593E001C14D1 /* icon_small_import_gfx.h */,
+				4104B3102152593E001C14D1 /* icon_small_export_gfx.h */,
+				41C1A96721396B9E0062D97F /* icon_export_gfx.h */,
+				41C1A96821396B9E0062D97F /* icon_import_gfx.h */,
+				41C1A96921396B9E0062D97F /* icon_tool_rectangle_gfx.h */,
+				41C1A96A21396B9E0062D97F /* icon_tool_pen_gfx.h */,
+				41C1A96B21396B9E0062D97F /* icon_tool_line_gfx.h */,
+				41C1A96C21396B9E0062D97F /* icon_tool_fill_gfx.h */,
+				41C1A96D21396B9E0062D97F /* icon_tool_dither_gfx.h */,
+				41C1A96E21396B9E0062D97F /* icon_tool_circle_gfx.h */,
+				41C1A96F21396B9E0062D97F /* icon_tool_brush_square_gfx.h */,
+				41C1A97021396B9E0062D97F /* icon_tool_brush_circle_gfx.h */,
+				41C1A97121396B9E0062D97F /* icon_settings_gfx.h */,
+				41C1A97221396B9E0062D97F /* icon_save_gfx.h */,
+				41C1A96621396AD00062D97F /* icon_open_gfx.h */,
+				411221842107A9A700B75295 /* icon_clear_gfx.h */,
+				41674802210790A1005C8D8A /* icon_new_gfx.h */,
+			);
+			name = Data;
+			sourceTree = "<group>";
+		};
+		416D2DE3208A87B5005235BD /* atari800 */ = {
+			isa = PBXGroup;
+			children = (
+				411C93EB208AB0FA0037F28B /* AtariInterface */,
+				416D2EE2208A8F2E005235BD /* a-platform.h */,
+				416D2EDA208A8C2E005235BD /* atari_ntsc */,
+				416D2EC2208A8A00005235BD /* vtxsmpls.inc */,
+				416D2DE4208A87CC005235BD /* a-cartridge.c */,
+				416D2DE5208A87CC005235BD /* a-cartridge.h */,
+				416D2DE6208A87CC005235BD /* a-log.c */,
+				416D2DE7208A87CC005235BD /* a-log.h */,
+				416D2DE8208A87CC005235BD /* a-monitor.c */,
+				416D2DE9208A87CC005235BD /* a-monitor.h */,
+				416D2DEA208A87CC005235BD /* a-sound.c */,
+				416D2DEB208A87CC005235BD /* a-sound.h */,
+				416D2DEC208A87CC005235BD /* a-ui.c */,
+				416D2DED208A87CC005235BD /* a-ui.h */,
+				416D2DEE208A87CC005235BD /* a-util.c */,
+				416D2DEF208A87CC005235BD /* a-util.h */,
+				416D2DF0208A87CC005235BD /* af80.c */,
+				416D2DF1208A87CC005235BD /* af80.h */,
+				416D2DF2208A87CC005235BD /* afile.c */,
+				416D2DF3208A87CC005235BD /* afile.h */,
+				416D2DF4208A87CC005235BD /* akey.h */,
+				416D2DF5208A87CC005235BD /* antic.c */,
+				416D2DF6208A87CC005235BD /* antic.h */,
+				416D2DF7208A87CC005235BD /* artifact.c */,
+				416D2DF8208A87CC005235BD /* artifact.h */,
+				416D2DFF208A87CC005235BD /* atari-config.h */,
+				416D2E00208A87CC005235BD /* atari.c */,
+				416D2E01208A87CC005235BD /* atari.h */,
+				416D2E02208A87CC005235BD /* binload.c */,
+				416D2E03208A87CC005235BD /* binload.h */,
+				416D2E04208A87CC005235BD /* bit3.c */,
+				416D2E05208A87CC005235BD /* bit3.h */,
+				416D2E06208A87CC005235BD /* cassette.c */,
+				416D2E07208A87CC005235BD /* cassette.h */,
+				416D2E08208A87CC005235BD /* cfg.c */,
+				416D2E09208A87CC005235BD /* cfg.h */,
+				416D2E0A208A87CC005235BD /* colours_external.c */,
+				416D2E0B208A87CC005235BD /* colours_external.h */,
+				416D2E0C208A87CC005235BD /* colours_ntsc.c */,
+				416D2E0D208A87CC005235BD /* colours_ntsc.h */,
+				416D2E0E208A87CC005235BD /* colours_pal.c */,
+				416D2E0F208A87CC005235BD /* colours_pal.h */,
+				416D2E10208A87CC005235BD /* colours.c */,
+				416D2E11208A87CC005235BD /* colours.h */,
+				416D2E12208A87CC005235BD /* compfile.c */,
+				416D2E13208A87CC005235BD /* compfile.h */,
+				416D2E14208A87CC005235BD /* cpu.c */,
+				416D2E15208A87CC005235BD /* cpu.h */,
+				416D2E16208A87CC005235BD /* a-crc32.c */,
+				416D2E17208A87CC005235BD /* a-crc32.h */,
+				416D2E18208A87CC005235BD /* cycle_map.c */,
+				416D2E19208A87CC005235BD /* cycle_map.h */,
+				416D2E1A208A87CC005235BD /* devices.c */,
+				416D2E1B208A87CC005235BD /* devices.h */,
+				416D2E1C208A87CC005235BD /* emuos.c */,
+				416D2E1D208A87CC005235BD /* emuos.h */,
+				416D2E1E208A87CC005235BD /* esc.c */,
+				416D2E1F208A87CC005235BD /* esc.h */,
+				416D2E20208A87CC005235BD /* filter_ntsc.c */,
+				416D2E21208A87CC005235BD /* filter_ntsc.h */,
+				416D2E22208A87CC005235BD /* gtia.c */,
+				416D2E23208A87CC005235BD /* gtia.h */,
+				416D2E24208A87CC005235BD /* ide_internal.h */,
+				416D2E25208A87CC005235BD /* ide.c */,
+				416D2E26208A87CC005235BD /* ide.h */,
+				416D2E27208A87CC005235BD /* img_tape.c */,
+				416D2E28208A87CC005235BD /* img_tape.h */,
+				416D2E29208A87CC005235BD /* input.c */,
+				416D2E2A208A87CC005235BD /* input.h */,
+				416D2E2C208A87CC005235BD /* memory.c */,
+				416D2E2D208A87CC005235BD /* memory.h */,
+				416D2E2F208A87CC005235BD /* mzpokeysnd.c */,
+				416D2E30208A87CC005235BD /* mzpokeysnd.h */,
+				416D2E31208A87CC005235BD /* pal_blending.c */,
+				416D2E32208A87CC005235BD /* pal_blending.h */,
+				416D2E33208A87CC005235BD /* pbi_bb.c */,
+				416D2E34208A87CC005235BD /* pbi_bb.h */,
+				416D2E35208A87CC005235BD /* pbi_mio.c */,
+				416D2E36208A87CC005235BD /* pbi_mio.h */,
+				416D2E37208A87CC005235BD /* pbi_proto80.c */,
+				416D2E38208A87CC005235BD /* pbi_proto80.h */,
+				416D2E39208A87CC005235BD /* pbi_scsi.c */,
+				416D2E3A208A87CC005235BD /* pbi_scsi.h */,
+				416D2E3B208A87CC005235BD /* pbi_xld.c */,
+				416D2E3C208A87CC005235BD /* pbi_xld.h */,
+				416D2E3D208A87CC005235BD /* pbi.c */,
+				416D2E3E208A87CC005235BD /* pbi.h */,
+				416D2E3F208A87CC005235BD /* pcjoy.h */,
+				416D2E40208A87CC005235BD /* pia.c */,
+				416D2E41208A87CC005235BD /* pia.h */,
+				416D2E43208A87CC005235BD /* pokey.c */,
+				416D2E44208A87CC005235BD /* pokey.h */,
+				416D2E45208A87CC005235BD /* pokeysnd.c */,
+				416D2E46208A87CC005235BD /* pokeysnd.h */,
+				416D2E49208A87CC005235BD /* remez.c */,
+				416D2E4A208A87CC005235BD /* remez.h */,
+				416D2E4B208A87CC005235BD /* rtime.c */,
+				416D2E4C208A87CC005235BD /* rtime.h */,
+				416D2E4D208A87CC005235BD /* screen.c */,
+				416D2E4E208A87CC005235BD /* screen.h */,
+				416D2E4F208A87CC005235BD /* sdl */,
+				416D2E5E208A87CC005235BD /* sio.c */,
+				416D2E5F208A87CC005235BD /* sio.h */,
+				416D2E60208A87CC005235BD /* sndsave.c */,
+				416D2E61208A87CC005235BD /* sndsave.h */,
+				416D2E64208A87CC005235BD /* statesav.c */,
+				416D2E65208A87CC005235BD /* statesav.h */,
+				416D2E66208A87CC005235BD /* sysrom.c */,
+				416D2E67208A87CC005235BD /* sysrom.h */,
+				416D2E68208A87CC005235BD /* ui_basic.c */,
+				416D2E69208A87CC005235BD /* ui_basic.h */,
+				416D2E6A208A87CC005235BD /* videomode.c */,
+				416D2E6B208A87CC005235BD /* videomode.h */,
+				416D2E6C208A87CC005235BD /* voicebox.c */,
+				416D2E6D208A87CC005235BD /* voicebox.h */,
+				416D2E6E208A87CC005235BD /* votrax.c */,
+				416D2E6F208A87CC005235BD /* votrax.h */,
+				416D2E70208A87CC005235BD /* votraxsnd.c */,
+				416D2E71208A87CC005235BD /* votraxsnd.h */,
+				416D2E72208A87CC005235BD /* xep80_fonts.c */,
+				416D2E73208A87CC005235BD /* xep80_fonts.h */,
+				416D2E74208A87CC005235BD /* xep80.c */,
+				416D2E75208A87CC005235BD /* xep80.h */,
+			);
+			name = atari800;
+			sourceTree = "<group>";
+		};
+		416D2E4F208A87CC005235BD /* sdl */ = {
+			isa = PBXGroup;
+			children = (
+				4199CD2920ADD6CD00B909C9 /* a-sdl-sound.c */,
+				416D2EC4208A8B4F005235BD /* a-init.c */,
+				416D2EC5208A8B4F005235BD /* a-init.h */,
+				416D2EC6208A8B4F005235BD /* a-input.c */,
+				416D2EC7208A8B4F005235BD /* a-input.h */,
+				416D2EC8208A8B4F005235BD /* a-main.c */,
+				416D2EC9208A8B4F005235BD /* a-palette.c */,
+				416D2ECA208A8B4F005235BD /* a-palette.h */,
+				416D2ECC208A8B4F005235BD /* a-video_gl.c */,
+				416D2ECD208A8B4F005235BD /* a-video_gl.h */,
+				416D2ECE208A8B4F005235BD /* a-video_sw.c */,
+				416D2ECF208A8B4F005235BD /* a-video_sw.h */,
+				416D2ED0208A8B4F005235BD /* a-video.c */,
+				416D2ED1208A8B4F005235BD /* a-video.h */,
+			);
+			name = sdl;
+			path = ../Games/c64/Emulators/atari800/sdl;
+			sourceTree = "<group>";
+		};
+		416D2EDA208A8C2E005235BD /* atari_ntsc */ = {
+			isa = PBXGroup;
+			children = (
+				416D2EDB208A8C40005235BD /* atari_ntsc_config.h */,
+				416D2EDC208A8C40005235BD /* atari_ntsc_impl.h */,
+				416D2EDD208A8C40005235BD /* atari_ntsc.c */,
+				416D2EDE208A8C40005235BD /* atari_ntsc.h */,
+			);
+			name = atari_ntsc;
 			sourceTree = "<group>";
 		};
 		41706DB71F9A71BB00B1B2BA /* JukeboxPlaylist */ = {
@@ -5231,6 +5724,10 @@
 			children = (
 				4177D5A41ED6EB250053D9EE /* CViewVicEditor.mm */,
 				4177D5A61ED6EB250053D9EE /* CViewVicEditor.h */,
+				41AC92C421771AE900522362 /* CVicEditorTool.mm */,
+				41AC92C521771AE900522362 /* CVicEditorTool.h */,
+				4101B25020FA1DAF00A3C8C6 /* CViewVicEditorCreateNewPicture.mm */,
+				4101B25120FA1DAF00A3C8C6 /* CViewVicEditorCreateNewPicture.h */,
 				419445A91EEC363800180F80 /* CViewVicEditorDisplayPreview.mm */,
 				419445AA1EEC363800180F80 /* CViewVicEditorDisplayPreview.h */,
 				41B53EA91EE33A330078F9BB /* CViewVicEditorLayers.mm */,
@@ -5243,6 +5740,8 @@
 				4177D5A81ED6EB250053D9EE /* CViewC64Palette.h */,
 				41E37A9D1ED86C6000BEA858 /* C64DisplayListCodeGenerator.mm */,
 				41E37A9E1ED86C6000BEA858 /* C64DisplayListCodeGenerator.h */,
+				4101B24D20F91DA500A3C8C6 /* CVicEditorLayerImage.mm */,
+				4101B24E20F91DA500A3C8C6 /* CVicEditorLayerImage.h */,
 				4177D5B41ED710320053D9EE /* CVicEditorLayerUnrestrictedBitmap.mm */,
 				4177D5B51ED710320053D9EE /* CVicEditorLayerUnrestrictedBitmap.h */,
 				4177D5AE1ED6EE240053D9EE /* CVicEditorLayerC64Canvas.mm */,
@@ -5257,10 +5756,18 @@
 				4177D5B11ED6EE240053D9EE /* CVicEditorLayer.h */,
 				4177D5A21ED6EB250053D9EE /* CVicEditorUndoData.mm */,
 				4177D5A31ED6EB250053D9EE /* CVicEditorUndoData.h */,
-				417ACDBA1E69BF31004A15B7 /* CGuiViewFrame.mm */,
-				417ACDBB1E69BF31004A15B7 /* CGuiViewFrame.h */,
 			);
 			name = VicEditor;
+			sourceTree = "<group>";
+		};
+		41C9BCBC2181D5C800C2F7AF /* pugixml */ = {
+			isa = PBXGroup;
+			children = (
+				41C9BCBD2181D5DB00C2F7AF /* pugiconfig.h */,
+				41C9BCBE2181D5DB00C2F7AF /* pugixml.cpp */,
+				41C9BCBF2181D5DB00C2F7AF /* pugixml.h */,
+			);
+			name = pugixml;
 			sourceTree = "<group>";
 		};
 		41CBF0731A8133AD0060A9DD /* libsidplay2 */ = {
@@ -5328,8 +5835,8 @@
 				412BB99C1614AB6800533AD3 /* SYS_Accelerometer.mm */,
 				412BB99D1614AB6800533AD3 /* SYS_CFileSystem.h */,
 				412BB99E1614AB6800533AD3 /* SYS_CFileSystem.mm */,
-				413B5F361DC213B300852EA4 /* SYS_SharedMemory.h */,
 				413B5F371DC213B300852EA4 /* SYS_SharedMemory.mm */,
+				413B5F361DC213B300852EA4 /* SYS_SharedMemory.h */,
 				412BB99F1614AB6800533AD3 /* VID_Blits.h */,
 				412BB9A01614AB6800533AD3 /* VID_Blits.mm */,
 				412BB9A11614AB6800533AD3 /* VID_GLViewController.h */,
@@ -5444,11 +5951,12 @@
 		41E0F4A71CCE545200CE367D /* Embedded */ = {
 			isa = PBXGroup;
 			children = (
+				416748012107908C005C8D8A /* Data */,
 				41E0F4AB1CCE547900CE367D /* RES_Embedded.mm */,
 				41E0F4AC1CCE547900CE367D /* RES_Embedded.h */,
-				41E0F4A81CCE546100CE367D /* console-plain-gfx.h */,
-				41E0F4A91CCE546100CE367D /* default-font-fnt.h */,
-				41E0F4AA1CCE546100CE367D /* default-font-gfx.h */,
+				41E0F4A81CCE546100CE367D /* console_plain_gfx.h */,
+				41E0F4A91CCE546100CE367D /* default_font_fnt.h */,
+				41E0F4AA1CCE546100CE367D /* default_font_gfx.h */,
 			);
 			name = Embedded;
 			sourceTree = "<group>";
@@ -5534,6 +6042,7 @@
 				Japanese,
 				French,
 				German,
+				Base,
 			);
 			mainGroup = 29B97314FDCFA39411CA2CEA /* GLFullScreen */;
 			projectDirPath = "";
@@ -5614,13 +6123,16 @@
 				414538721CB2DBC200020916 /* fsdevice-read.c in Sources */,
 				39042AF8186892A800B570B1 /* window.c in Sources */,
 				414536F31CB2D1A300020916 /* monitor_network.c in Sources */,
+				41430FC521650EA600D003AA /* CGuiViewMenu.mm in Sources */,
 				412BB9AC1614AB6800533AD3 /* SYS_CFileSystem.mm in Sources */,
 				414537EF1CB2D27C00020916 /* output-graphics.c in Sources */,
+				416D2E7B208A87CC005235BD /* a-util.c in Sources */,
 				39042AF7186892A800B570B1 /* vorbisfile.c in Sources */,
 				414535D11CB2D1A300020916 /* menu_tfe.c in Sources */,
 				414539C91CB2E94F00020916 /* snapshot.c in Sources */,
 				390429E6186892A800B570B1 /* CSlrTexture.mm in Sources */,
 				414539CE1CB2E94F00020916 /* traps.c in Sources */,
+				416D2ED8208A8B4F005235BD /* a-video_sw.c in Sources */,
 				414537151CB2D1A300020916 /* raster-changes.c in Sources */,
 				412BB9AD1614AB6800533AD3 /* VID_Blits.mm in Sources */,
 				414537831CB2D1A300020916 /* render1x2.c in Sources */,
@@ -5631,6 +6143,7 @@
 				41F2A9ED1E9D0E6B00ADE8DF /* final.c in Sources */,
 				412BB9AE1614AB6800533AD3 /* VID_GLViewController.mm in Sources */,
 				41E0F4AD1CCE547900CE367D /* RES_Embedded.mm in Sources */,
+				416D2E86208A87CC005235BD /* atari.c in Sources */,
 				4145375E1CB2D1A300020916 /* tape-internal.c in Sources */,
 				414535BB1CB2D1A300020916 /* menu_debug.c in Sources */,
 				390429E9186892A800B570B1 /* MTH_FastMath.mm in Sources */,
@@ -5662,6 +6175,7 @@
 				414535AC1CB2D1A300020916 /* catweaselmkiii.c in Sources */,
 				414537E91CB2D27C00020916 /* drv-ascii.c in Sources */,
 				4145377D1CB2D1A300020916 /* vicii-snapshot.c in Sources */,
+				416D2E99208A87CC005235BD /* img_tape.c in Sources */,
 				414539CD1CB2E94F00020916 /* translate.c in Sources */,
 				414537141CB2D1A300020916 /* raster-canvas.c in Sources */,
 				419737F5173B9A37007654BD /* pa_cpuload.c in Sources */,
@@ -5669,14 +6183,16 @@
 				419737F6173B9A37007654BD /* pa_debugprint.c in Sources */,
 				41B5C13D1E9E9E5900E9C644 /* debugcart.c in Sources */,
 				41E0AC4718AC2F740065DCAD /* JSONWriter.mm in Sources */,
-				4152D6EC1C96F86F00EBA9E5 /* CGuiViewMenu.mm in Sources */,
+				416D2EC0208A87CC005235BD /* xep80_fonts.c in Sources */,
 				41F2AA801E9D0E7900ADE8DF /* c64video.c in Sources */,
 				41188F911E9EA7FF00040048 /* script64_dongle.c in Sources */,
 				419737F7173B9A37007654BD /* pa_dither.c in Sources */,
 				4145375D1CB2D1A300020916 /* tap.c in Sources */,
 				414537911CB2D1A300020916 /* video-render-2x2.c in Sources */,
+				416D2E77208A87CC005235BD /* a-log.c in Sources */,
 				4177D5AA1ED6EB250053D9EE /* CVicEditorUndoData.mm in Sources */,
 				414538861CB2DC0E00020916 /* rsuser.c in Sources */,
+				416D2EBA208A87CC005235BD /* sysrom.c in Sources */,
 				41188F871E9EA7FF00040048 /* cx21.c in Sources */,
 				41925D801B1DD82F00B33B7F /* jccoefct.c in Sources */,
 				41925D951B1DD82F00B33B7F /* jdhuff.c in Sources */,
@@ -5695,6 +6211,7 @@
 				39042A6A186892A800B570B1 /* pngwutil.c in Sources */,
 				41F2A9F81E9D0E6B00ADE8DF /* kcs.c in Sources */,
 				414535E11CB2D1A300020916 /* uihotkey.c in Sources */,
+				417F8F55208BC565004C6A1F /* CDebugInterface.mm in Sources */,
 				414537EB1CB2D27C00020916 /* drv-nl10.c in Sources */,
 				41B5C1371E9E9E5900E9C644 /* clockport-mp3at64.c in Sources */,
 				390429CE186892A800B570B1 /* CBitBuffer.mm in Sources */,
@@ -5707,6 +6224,7 @@
 				419737FA173B9A37007654BD /* pa_ringbuffer.c in Sources */,
 				4145380A1CB2D2D100020916 /* jpegdrv.c in Sources */,
 				41925DB51B1DD82F00B33B7F /* wrrle.c in Sources */,
+				416D2EA6208A87CC005235BD /* pia.c in Sources */,
 				414538811CB2DBF900020916 /* parallel.c in Sources */,
 				419737FB173B9A37007654BD /* pa_stream.c in Sources */,
 				414537961CB2D1A300020916 /* video-sound.c in Sources */,
@@ -5715,6 +6233,7 @@
 				414536F11CB2D1A300020916 /* mon_util.c in Sources */,
 				4197380C173B9A93007654BD /* pa_mac_core.c in Sources */,
 				414538741CB2DBC200020916 /* fsdevice-write.c in Sources */,
+				416D2EBE208A87CC005235BD /* votrax.c in Sources */,
 				414537711CB2D1A300020916 /* vicii-chip-model.c in Sources */,
 				414538711CB2DBC200020916 /* fsdevice-open.c in Sources */,
 				41F2AA671E9D0E7900ADE8DF /* c64cia1.c in Sources */,
@@ -5723,6 +6242,7 @@
 				414537731CB2D1A300020916 /* vicii-color.c in Sources */,
 				41F2AAD91E9D0EDA00ADE8DF /* drive.c in Sources */,
 				41F2AA7D1E9D0E7900ADE8DF /* c64rsuser.c in Sources */,
+				41430FC321650EA600D003AA /* CGuiWindow.mm in Sources */,
 				414C3E391FCF11420000CB3F /* CColorsTheme.mm in Sources */,
 				414536C71CB2D1A300020916 /* tapecontents.c in Sources */,
 				4197380D173B9A93007654BD /* pa_mac_core_blocking.c in Sources */,
@@ -5730,14 +6250,15 @@
 				390429D9186892A800B570B1 /* CSlrDate.mm in Sources */,
 				414537271CB2D1A300020916 /* resid-sid.cc in Sources */,
 				4145377B1CB2D1A300020916 /* vicii-phi1.c in Sources */,
-				417ACDBC1E69BF31004A15B7 /* CGuiViewWindowsManager.mm in Sources */,
 				41925DA51B1DD82F00B33B7F /* jmemansi.c in Sources */,
 				41F2A9F21E9D0E6B00ADE8DF /* freezemachine.c in Sources */,
+				417F8F5B208D151E004C6A1F /* CAtariAudioChannel.mm in Sources */,
 				41F2AA851E9D0E7900ADE8DF /* reloc65.c in Sources */,
 				39042A8F186892A800B570B1 /* SYS_Pool.mm in Sources */,
 				4197380E173B9A93007654BD /* pa_mac_core_utilities.c in Sources */,
 				41925DB81B1DD82F00B33B7F /* JPEGWriter.cpp in Sources */,
 				41F2A9DF1E9D0E6B00ADE8DF /* c64-midi.c in Sources */,
+				41C9BCC02181D5DB00C2F7AF /* pugixml.cpp in Sources */,
 				41188FE51E9EC26C00040048 /* tpid.c in Sources */,
 				41925D7D1B1DD82F00B33B7F /* jcapimin.c in Sources */,
 				41F2AA101E9D0E6B00ADE8DF /* supergames.c in Sources */,
@@ -5750,9 +6271,11 @@
 				414535B11CB2D1A300020916 /* hardsid.c in Sources */,
 				414535BC1CB2D1A300020916 /* menu_drive.c in Sources */,
 				41925DAC1B1DD82F00B33B7F /* rdgif.c in Sources */,
+				416D2E7E208A87CC005235BD /* antic.c in Sources */,
 				41F2A9DD1E9D0E6B00ADE8DF /* atomicpower.c in Sources */,
 				414535CD1CB2D1A300020916 /* menu_snapshot.c in Sources */,
 				414538521CB2DB9C00020916 /* spi-sdcard.c in Sources */,
+				416D2EAA208A87CC005235BD /* remez.c in Sources */,
 				41F2AA0D1E9D0E6B00ADE8DF /* stardos.c in Sources */,
 				414539B71CB2E94F00020916 /* lib.c in Sources */,
 				41F2AA7E1E9D0E7900ADE8DF /* c64scmodel.c in Sources */,
@@ -5780,8 +6303,10 @@
 				4159DE0117A7E5390016187E /* SYS_Memory.mm in Sources */,
 				41E0AC4518AC2F740065DCAD /* JSONValidator.mm in Sources */,
 				41F2A9E11E9D0E6B00ADE8DF /* capture.c in Sources */,
+				416D2EA7208A87CC005235BD /* pokey.c in Sources */,
 				414538751CB2DBC200020916 /* fsdevice.c in Sources */,
 				414536DC1CB2D1A300020916 /* asmR65C02.c in Sources */,
+				416D2EA2208A87CC005235BD /* pbi_proto80.c in Sources */,
 				39042AEA186892A800B570B1 /* block.c in Sources */,
 				414539A91CB2E94F00020916 /* embedded.c in Sources */,
 				41474DD21D08B15900F1B83F /* CViewC64KeyMap.mm in Sources */,
@@ -5818,6 +6343,7 @@
 				414538301CB2D91600020916 /* residfp-voice.cc in Sources */,
 				39042AFA186892A800B570B1 /* compress.c in Sources */,
 				41F2AAF81E9D0F2C00ADE8DF /* cia1571d.c in Sources */,
+				416D2E88208A87CC005235BD /* bit3.c in Sources */,
 				414538CD1CB2DC5600020916 /* userport_joystick.c in Sources */,
 				39042AEE186892A800B570B1 /* info.c in Sources */,
 				414538051CB2D2D100020916 /* bmpdrv.c in Sources */,
@@ -5842,15 +6368,18 @@
 				390429D8186892A800B570B1 /* CSlrAnimationState.mm in Sources */,
 				414536FB1CB2D1A300020916 /* platform_amigaos3_runtime_os.c in Sources */,
 				4145399E1CB2E94F00020916 /* cbmdos.c in Sources */,
+				416D2EB9208A87CC005235BD /* statesav.c in Sources */,
 				39042B00186892A800B570B1 /* gzwrite.c in Sources */,
 				414537701CB2D1A300020916 /* vdrive.c in Sources */,
 				414539C71CB2E94F00020916 /* romset.c in Sources */,
 				414535AD1CB2D1A300020916 /* console.c in Sources */,
+				416D2E89208A87CC005235BD /* cassette.c in Sources */,
 				41F2A9DE1E9D0E6B00ADE8DF /* c64-generic.c in Sources */,
 				390429DF186892A800B570B1 /* CSlrImageBase.mm in Sources */,
 				39042A34186892A800B570B1 /* CGuiViewHorizontalScroll.mm in Sources */,
 				41E0AC3F18AC2F740065DCAD /* JSONIterators.mm in Sources */,
 				414538061CB2D2D100020916 /* doodledrv.c in Sources */,
+				416D2E8E208A87CC005235BD /* colours.c in Sources */,
 				414537AE1CB2D1CE00020916 /* serial-iec.c in Sources */,
 				41F2AA1F1E9D0E6B00ADE8DF /* sfx_soundsampler.c in Sources */,
 				41CF59D51F975C9E002171B1 /* CViewDriveStateCPU.mm in Sources */,
@@ -5862,6 +6391,7 @@
 				414537C81CB2D21400020916 /* fsimage-dxx.c in Sources */,
 				41925D891B1DD82F00B33B7F /* jcparam.c in Sources */,
 				41925D901B1DD82F00B33B7F /* jdatadst.c in Sources */,
+				416D2EB6208A87CC005235BD /* sndsave.c in Sources */,
 				41925D811B1DD82F00B33B7F /* jccolor.c in Sources */,
 				4152D70F1C970F3E00EBA9E5 /* CViewMemoryMap.mm in Sources */,
 				39042A25186892A800B570B1 /* CGuiEditBoxHex.mm in Sources */,
@@ -5885,6 +6415,7 @@
 				41F2A9E51E9D0E6B00ADE8DF /* delaep256.c in Sources */,
 				414535E61CB2D1A300020916 /* uipoll.c in Sources */,
 				41925D991B1DD82F00B33B7F /* jdmaster.c in Sources */,
+				416D2ED3208A8B4F005235BD /* a-input.c in Sources */,
 				41F2AB001E9D0F2C00ADE8DF /* memiec.c in Sources */,
 				414538981CB2DC2000020916 /* rtc.c in Sources */,
 				414535B21CB2D1A300020916 /* joy.c in Sources */,
@@ -5900,23 +6431,27 @@
 				414539A81CB2E94F00020916 /* dma.c in Sources */,
 				414538AA1CB2DC3300020916 /* resid-fp.cc in Sources */,
 				39042A30186892A800B570B1 /* CGuiView.mm in Sources */,
-				4152D70D1C970F3E00EBA9E5 /* CViewDrive1541State.mm in Sources */,
+				4152D70D1C970F3E00EBA9E5 /* CViewDrive1541StateVIA.mm in Sources */,
 				414539AA1CB2E94F00020916 /* event.c in Sources */,
 				39042986186892A800B570B1 /* SND_WavReader.mm in Sources */,
 				414535CC1CB2D1A300020916 /* menu_sid.c in Sources */,
 				4145376B1CB2D1A300020916 /* vdrive-dir.c in Sources */,
 				414538731CB2DBC200020916 /* fsdevice-resources.c in Sources */,
+				416D2E98208A87CC005235BD /* ide.c in Sources */,
 				414536E01CB2D1A300020916 /* mon_assembleR65C02.c in Sources */,
 				41F2AA141E9D0E6B00ADE8DF /* westermann.c in Sources */,
 				414539C41CB2E94F00020916 /* rawfile.c in Sources */,
+				411C93EE208AB1170037F28B /* AtariWrapper.mm in Sources */,
 				41F2AA681E9D0E7900ADE8DF /* c64cia2.c in Sources */,
 				41925DB61B1DD82F00B33B7F /* wrtarga.c in Sources */,
 				414535EC1CB2D1A300020916 /* x64sc_ui.c in Sources */,
 				414536DE1CB2D1A300020916 /* mon_assemble6502.c in Sources */,
+				416D2E95208A87CC005235BD /* esc.c in Sources */,
 				41925D7E1B1DD82F00B33B7F /* jcapistd.c in Sources */,
 				415206621C985A3000EBA9E5 /* C64FileDataAdapter.mm in Sources */,
 				41925D881B1DD82F00B33B7F /* jcomapi.c in Sources */,
 				39042AFB186892A800B570B1 /* crc32.c in Sources */,
+				416D2EBC208A87CC005235BD /* videomode.c in Sources */,
 				39042A6D186892A800B570B1 /* unzip.c in Sources */,
 				39042B01186892A800B570B1 /* infback.c in Sources */,
 				414536FD1CB2D1A300020916 /* platform_aros_runtime_os.c in Sources */,
@@ -5965,6 +6500,7 @@
 				39042A5F186892A800B570B1 /* pngmem.c in Sources */,
 				4145378C1CB2D1A300020916 /* renderyuv.c in Sources */,
 				41F9771C1CB6B93900927516 /* ViceWrapper.mm in Sources */,
+				4101B24F20F91DA500A3C8C6 /* CVicEditorLayerImage.mm in Sources */,
 				4163BAF41E9F8EAF00E3C077 /* c64export.c in Sources */,
 				414539AF1CB2E94F00020916 /* info.c in Sources */,
 				4145377C1CB2D1A300020916 /* vicii-resources.c in Sources */,
@@ -5972,6 +6508,7 @@
 				4152B6A71EDF1782003BC232 /* CVicEditorLayerC64Screen.mm in Sources */,
 				41F2AAFB1E9D0F2C00ADE8DF /* glue1571.c in Sources */,
 				414535EB1CB2D1A300020916 /* vsyncarch.c in Sources */,
+				417F8F58208BCD75004C6A1F /* CViewAtariStateCPU.mm in Sources */,
 				414535E01CB2D1A300020916 /* uifilereq.c in Sources */,
 				390429F4186892A800B570B1 /* CDataTable.mm in Sources */,
 				414537601CB2D1A300020916 /* tape.c in Sources */,
@@ -5979,6 +6516,7 @@
 				414537851CB2D1A300020916 /* render2x2.c in Sources */,
 				414536ED1CB2D1A300020916 /* mon_register6809.c in Sources */,
 				41F2AA811E9D0E7900ADE8DF /* patchrom.c in Sources */,
+				416D2EB5208A87CC005235BD /* sio.c in Sources */,
 				390429E2186892A800B570B1 /* CSlrImageTexture.mm in Sources */,
 				414535DA1CB2D1A300020916 /* rs232dev.c in Sources */,
 				41925D7F1B1DD82F00B33B7F /* jcarith.c in Sources */,
@@ -5986,13 +6524,16 @@
 				41925D911B1DD82F00B33B7F /* jdatasrc.c in Sources */,
 				41CF59051920E77600F43331 /* IMG_Scale.mm in Sources */,
 				41F2AA0C1E9D0E6B00ADE8DF /* snapshot64.c in Sources */,
+				416D2EAC208A87CC005235BD /* screen.c in Sources */,
 				4145384E1CB2DB9C00020916 /* fmopl.c in Sources */,
+				416D2EC1208A87CC005235BD /* xep80.c in Sources */,
 				41925DAF1B1DD82F00B33B7F /* rdswitch.c in Sources */,
 				39042A21186892A800B570B1 /* CGuiButtonMenu.mm in Sources */,
 				4132CC1119AE145200E7C3B0 /* lodepng.cpp in Sources */,
 				414536E61CB2D1A300020916 /* mon_file.c in Sources */,
 				4145386F1CB2DBC200020916 /* fsdevice-cmdline-options.c in Sources */,
 				414539C01CB2E94F00020916 /* network.c in Sources */,
+				416D2E97208A87CC005235BD /* gtia.c in Sources */,
 				414539A41CB2E94F00020916 /* color.c in Sources */,
 				4145385B1CB2DBB100020916 /* cbmfile.c in Sources */,
 				4145382E1CB2D91600020916 /* residfp-pot.cc in Sources */,
@@ -6003,12 +6544,14 @@
 				414537691CB2D1A300020916 /* vdrive-bam.c in Sources */,
 				4163FA971EC1FD23008BBBFD /* C64VicDisplayCanvasMultiText.mm in Sources */,
 				414535D31CB2D1A300020916 /* menu_vic20hw.c in Sources */,
+				416D2E94208A87CC005235BD /* emuos.c in Sources */,
 				39042A26186892A800B570B1 /* CGuiEditBoxInt.mm in Sources */,
 				414536C41CB2D1A300020916 /* diskcontents-iec.c in Sources */,
 				390429D1186892A800B570B1 /* CConfigStorage.mm in Sources */,
 				41F2AA951E9D0E9D00ADE8DF /* profdos.c in Sources */,
 				39042A6B186892A800B570B1 /* ioapi.c in Sources */,
 				414539DD1CB3F2B400020916 /* ViceLogWrapper.mm in Sources */,
+				416D2E96208A87CC005235BD /* filter_ntsc.c in Sources */,
 				41F2AAD81E9D0EDA00ADE8DF /* drive-writeprotect.c in Sources */,
 				39042975186892A800B570B1 /* CAudioChannel.mm in Sources */,
 				39042A65186892A800B570B1 /* pngset.c in Sources */,
@@ -6045,11 +6588,14 @@
 				41F2A9E91E9D0E6B00ADE8DF /* easyflash.c in Sources */,
 				39042A28186892A800B570B1 /* CGuiElement.mm in Sources */,
 				414187CA1FDC506400D94506 /* CViewDataWatch.mm in Sources */,
+				41AC92C621771AE900522362 /* CVicEditorTool.mm in Sources */,
 				414539CA1CB2E94F00020916 /* socket.c in Sources */,
 				41F2A9DC1E9D0E6B00ADE8DF /* actionreplay4.c in Sources */,
 				4145378D1CB2D1A300020916 /* video-canvas.c in Sources */,
 				41188F891E9EA7FF00040048 /* joyport.c in Sources */,
 				414538081CB2D2D100020916 /* gifdrv.c in Sources */,
+				416D2EA0208A87CC005235BD /* pbi_bb.c in Sources */,
+				41430FC421650EA600D003AA /* CGuiEditHex.mm in Sources */,
 				39042AF6186892A800B570B1 /* synthesis.c in Sources */,
 				414536FA1CB2D1A300020916 /* platform.c in Sources */,
 				4145376A1CB2D1A300020916 /* vdrive-command.c in Sources */,
@@ -6070,19 +6616,23 @@
 				41F2A9DA1E9D0E6B00ADE8DF /* actionreplay2.c in Sources */,
 				4145399A1CB2E94F00020916 /* alarm.c in Sources */,
 				39042A3A186892A800B570B1 /* CGuiViewSplit4.mm in Sources */,
+				416D2ED2208A8B4F005235BD /* a-init.c in Sources */,
 				41F2AA0A1E9D0E6B00ADE8DF /* silverrock128.c in Sources */,
 				41F2AA021E9D0E6B00ADE8DF /* pagefox.c in Sources */,
 				414539BE1CB2E94F00020916 /* midi.c in Sources */,
 				41F810741EC1A98D00E2F9AD /* CViewC64VicDisplay.mm in Sources */,
 				41F2AA631E9D0E7900ADE8DF /* c64-resources.c in Sources */,
 				39042A35186892A800B570B1 /* CGuiViewList.mm in Sources */,
+				41493196216CBBDA00750D82 /* CGuiViewWindowsManager.mm in Sources */,
 				414539BA1CB2E94F00020916 /* log.c in Sources */,
 				41B5C1421E9E9E5900E9C644 /* rrnetmk3.c in Sources */,
 				41F2AA1B1E9D0E6B00ADE8DF /* digimax.c in Sources */,
+				416D2E8B208A87CC005235BD /* colours_external.c in Sources */,
 				41A9AC921CBE3FDE004592CF /* archdep.c in Sources */,
 				414537191CB2D1A300020916 /* raster-line.c in Sources */,
 				39042A1F186892A800B570B1 /* CGuiBackground.mm in Sources */,
 				41925D821B1DD82F00B33B7F /* jcdctmgr.c in Sources */,
+				416D2E8F208A87CC005235BD /* compfile.c in Sources */,
 				419445AB1EEC363800180F80 /* CViewVicEditorDisplayPreview.mm in Sources */,
 				41F810731EC1A98D00E2F9AD /* CViewC64VicControl.mm in Sources */,
 				4145384B1CB2DB9C00020916 /* ciatimer.c in Sources */,
@@ -6099,6 +6649,7 @@
 				41F9775F1CB90DFD00927516 /* CViceAudioChannel.mm in Sources */,
 				414537CD1CB2D21400020916 /* rawimage.c in Sources */,
 				414537AA1CB2D1CE00020916 /* serial-device.c in Sources */,
+				416D2E9F208A87CC005235BD /* pal_blending.c in Sources */,
 				414537951CB2D1A300020916 /* video-resources.c in Sources */,
 				41F2AA191E9D0E6B00ADE8DF /* crt.c in Sources */,
 				414538531CB2DB9C00020916 /* t6721.c in Sources */,
@@ -6127,11 +6678,14 @@
 				414536E71CB2D1A300020916 /* mon_lex.c in Sources */,
 				414536DB1CB2D1A300020916 /* asm6809.c in Sources */,
 				414539AB1CB2E94F00020916 /* findpath.c in Sources */,
+				416D2EA4208A87CC005235BD /* pbi_xld.c in Sources */,
 				41E907B21EB72C430036CE0C /* C64SIDFrequencies.mm in Sources */,
 				39042AEB186892A800B570B1 /* codebook.c in Sources */,
 				4145371C1CB2D1A300020916 /* raster-sprite-cache.c in Sources */,
 				41F2A9F61E9D0E6B00ADE8DF /* ide64.c in Sources */,
 				414537C91CB2D21400020916 /* fsimage-gcr.c in Sources */,
+				4101B25220FA1DAF00A3C8C6 /* CViewVicEditorCreateNewPicture.mm in Sources */,
+				416D2E7A208A87CC005235BD /* a-ui.c in Sources */,
 				4140E6341A9C91F1002FC265 /* CGuiViewDummy.mm in Sources */,
 				4180558418DC676300F6EE8F /* IMG_HoughLines.mm in Sources */,
 				390429F2186892A800B570B1 /* SYS_Threading.mm in Sources */,
@@ -6147,9 +6701,12 @@
 				41F2AAB01E9D0EAC00ADE8DF /* memieee.c in Sources */,
 				41188FC21E9EB91800040048 /* c64_diag_586220_harness.c in Sources */,
 				41925DB21B1DD82F00B33B7F /* wrbmp.c in Sources */,
-				4152D6E21C96F73300EBA9E5 /* C64DebugData.mm in Sources */,
+				4152D6E21C96F73300EBA9E5 /* CDebuggerBreakpoints.mm in Sources */,
+				416D2EA5208A87CC005235BD /* pbi.c in Sources */,
 				41F2AB021E9D0F2C00ADE8DF /* via1d1541.c in Sources */,
 				414539B21CB2E94F00020916 /* interrupt.c in Sources */,
+				416D2E8C208A87CC005235BD /* colours_ntsc.c in Sources */,
+				416D2E76208A87CC005235BD /* a-cartridge.c in Sources */,
 				390429EB186892A800B570B1 /* MTH_Random.mm in Sources */,
 				41B5C14B1E9E9F3900E9C644 /* render1x1crt.c in Sources */,
 				41188FBC1E9EAF3300040048 /* nativedrv.c in Sources */,
@@ -6159,6 +6716,7 @@
 				414537891CB2D1A300020916 /* render2x4.c in Sources */,
 				414537021CB2D1A300020916 /* platform_syllable_runtime_os.c in Sources */,
 				41EC74FD1CDB22CA00D0E99F /* CViewMainMenu.mm in Sources */,
+				416D2E78208A87CC005235BD /* a-monitor.c in Sources */,
 				41F2AA731E9D0E7900ADE8DF /* c64meminit.c in Sources */,
 				414537871CB2D1A300020916 /* render2x2ntsc.c in Sources */,
 				41F2AA6C1E9D0E7900ADE8DF /* c64embedded.c in Sources */,
@@ -6166,6 +6724,7 @@
 				41EC75001CE1E51F00D0E99F /* C64SettingsStorage.mm in Sources */,
 				41925D961B1DD82F00B33B7F /* jdinput.c in Sources */,
 				414539A21CB2E94F00020916 /* clkguard.c in Sources */,
+				416D2EBD208A87CC005235BD /* voicebox.c in Sources */,
 				41F2AB031E9D0F2C00ADE8DF /* via4000.c in Sources */,
 				414536E21CB2D1A300020916 /* mon_breakpoint.c in Sources */,
 				414539B31CB2E94F00020916 /* ioutil.c in Sources */,
@@ -6177,7 +6736,6 @@
 				4163BAF11E9F8C3A00E3C077 /* godotdrv.c in Sources */,
 				41188F8F1E9EA7FF00040048 /* sampler2bit.c in Sources */,
 				39042A23186892A800B570B1 /* CGuiButtonText.mm in Sources */,
-				4152D6EB1C96F86F00EBA9E5 /* CGuiEditHex.mm in Sources */,
 				414538851CB2DC0E00020916 /* rs232drv.c in Sources */,
 				414538931CB2DC2000020916 /* bq4830y.c in Sources */,
 				41B53EA51EE2EFCA0078F9BB /* CViewC64Sprite.mm in Sources */,
@@ -6203,6 +6761,7 @@
 				41925D861B1DD82F00B33B7F /* jcmarker.c in Sources */,
 				41925DA61B1DD82F00B33B7F /* jmemmgr.c in Sources */,
 				390429F1186892A800B570B1 /* SYS_PlatformGuiSettings.mm in Sources */,
+				417F8F52208BBF8B004C6A1F /* CViewAtariScreen.mm in Sources */,
 				4109AB601EAAEBD1005A25B5 /* vice-crc32.c in Sources */,
 				41B5C1381E9E9E5900E9C644 /* clockport-rrnet.c in Sources */,
 				414537931CB2D1A300020916 /* video-render-pal.c in Sources */,
@@ -6213,14 +6772,19 @@
 				39042A66186892A800B570B1 /* pngtrans.c in Sources */,
 				41F2AA641E9D0E7900ADE8DF /* c64-snapshot.c in Sources */,
 				390429E8186892A800B570B1 /* M_CSlrList.mm in Sources */,
+				41430FC8216510D600D003AA /* CGuiViewFrame.mm in Sources */,
 				41E0AC3D18AC2F740065DCAD /* JSONChildren.mm in Sources */,
 				390429EE186892A800B570B1 /* SYS_Funct.mm in Sources */,
 				41188FAE1E9EA97900040048 /* tapelog.c in Sources */,
+				416D2EBB208A87CC005235BD /* ui_basic.c in Sources */,
 				41F2A9F41E9D0E6B00ADE8DF /* gamekiller.c in Sources */,
+				416D2E7D208A87CC005235BD /* afile.c in Sources */,
+				416D2E9A208A87CC005235BD /* input.c in Sources */,
 				414535C21CB2D1A300020916 /* menu_midi.c in Sources */,
-				415838571DC9E89100A56E0E /* C64AsmSource.mm in Sources */,
+				415838571DC9E89100A56E0E /* C64AsmSourceSymbols.mm in Sources */,
 				41F2AA621E9D0E7900ADE8DF /* c64-cmdline-options.c in Sources */,
 				414537241CB2D1A300020916 /* resid-extfilt.cc in Sources */,
+				416D2EE0208A8C40005235BD /* atari_ntsc.c in Sources */,
 				39042AF0186892A800B570B1 /* mdct.c in Sources */,
 				414537181CB2D1A300020916 /* raster-line-changes.c in Sources */,
 				39042AF9186892A800B570B1 /* adler32.c in Sources */,
@@ -6230,6 +6794,7 @@
 				414537611CB2D1A300020916 /* tapeimage.c in Sources */,
 				414537741CB2D1A300020916 /* vicii-cycle.c in Sources */,
 				41F2AA721E9D0E7900ADE8DF /* c64keyboard.c in Sources */,
+				41521FBD20C6BC7C00205456 /* CViewSourceCode.mm in Sources */,
 				41925DB31B1DD82F00B33B7F /* wrgif.c in Sources */,
 				414535DD1CB2D1A300020916 /* signals.c in Sources */,
 				39042A37186892A800B570B1 /* CGuiViewNumKeys.mm in Sources */,
@@ -6254,9 +6819,12 @@
 				4152D70C1C970F3E00EBA9E5 /* CViewC64StateVIC.mm in Sources */,
 				41C5B5AD1C73C010003FBC5F /* SYS_KeyCodes.mm in Sources */,
 				41F2AA6A1E9D0E7900ADE8DF /* c64datasette.c in Sources */,
+				416D2E93208A87CC005235BD /* devices.c in Sources */,
 				4180558318DC676300F6EE8F /* IMG_Filters.mm in Sources */,
 				414536EC1CB2D1A300020916 /* mon_register6502dtv.c in Sources */,
+				416D2E91208A87CC005235BD /* a-crc32.c in Sources */,
 				414538961CB2DC2000020916 /* ds1216e.c in Sources */,
+				416D2EC3208A8A00005235BD /* vtxsmpls.inc in Sources */,
 				41F2A9FD1E9D0E6B00ADE8DF /* magicvoice.c in Sources */,
 				414535D01CB2D1A300020916 /* menu_tape.c in Sources */,
 				41925D8E1B1DD82F00B33B7F /* jdapistd.c in Sources */,
@@ -6278,8 +6846,11 @@
 				414537011CB2D1A300020916 /* platform_solaris_runtime_os.c in Sources */,
 				41B5C1431E9E9E5900E9C644 /* shortbus_digimax.c in Sources */,
 				41925D7C1B1DD82F00B33B7F /* jaricom.c in Sources */,
+				416D2E9C208A87CC005235BD /* memory.c in Sources */,
+				416D2ED4208A8B4F005235BD /* a-main.c in Sources */,
 				41E0AC4818AC2F740065DCAD /* libjson.cpp in Sources */,
 				4145371A1CB2D1A300020916 /* raster-modes.c in Sources */,
+				416D2E92208A87CC005235BD /* cycle_map.c in Sources */,
 				390429EA186892A800B570B1 /* MTH_FixedPoint.mm in Sources */,
 				41428A9619F966F300D2F7C9 /* stb_image.c in Sources */,
 				41F2AA991E9D0EA400ADE8DF /* iecieee.c in Sources */,
@@ -6290,6 +6861,7 @@
 				41F2AA761E9D0E7900ADE8DF /* c64memsc.c in Sources */,
 				39042A29186892A800B570B1 /* CGuiLabel.mm in Sources */,
 				4177D5B21ED6EE240053D9EE /* CVicEditorLayerC64Canvas.mm in Sources */,
+				417F8F4F208AD17A004C6A1F /* AtariDataAdapters.mm in Sources */,
 				390429D0186892A800B570B1 /* CByteBuffer.mm in Sources */,
 				39042B04186892A800B570B1 /* inftrees.c in Sources */,
 				414539A61CB2E94F00020916 /* datasette.c in Sources */,
@@ -6299,6 +6871,7 @@
 				41F2AAB31E9D0EAC00ADE8DF /* via1d2031.c in Sources */,
 				414535D61CB2D1A300020916 /* mousedrv.c in Sources */,
 				414536C61CB2D1A300020916 /* imagecontents.c in Sources */,
+				416D2EA8208A87CC005235BD /* pokeysnd.c in Sources */,
 				39042A2E186892A800B570B1 /* CGuiSlider.mm in Sources */,
 				39042A32186892A800B570B1 /* CGuiViewEditWithTitle.mm in Sources */,
 				3904297A186892A800B570B1 /* CSlrMusicFileOgg.mm in Sources */,
@@ -6324,26 +6897,30 @@
 				39042A6F186892A800B570B1 /* MTH_MTRand.mm in Sources */,
 				41188F8E1E9EA7FF00040048 /* rushware_keypad.c in Sources */,
 				390429E7186892A800B570B1 /* M_ColorSpaces.mm in Sources */,
+				416D2E9E208A87CC005235BD /* mzpokeysnd.c in Sources */,
 				414539B51CB2E94F00020916 /* kbdbuf.c in Sources */,
 				41F2A9DB1E9D0E6B00ADE8DF /* actionreplay3.c in Sources */,
 				4145399C1CB2E94F00020916 /* autostart-prg.c in Sources */,
-				417ACDBD1E69BF31004A15B7 /* CGuiViewFrame.mm in Sources */,
 				414535D81CB2D1A300020916 /* rawnetarch.c in Sources */,
 				414537171CB2D1A300020916 /* raster-line-changes-sprite.c in Sources */,
 				41F2AAFA1E9D0F2C00ADE8DF /* fdd.c in Sources */,
 				41F2AA001E9D0E6B00ADE8DF /* mmcreplay.c in Sources */,
 				41F2AA071E9D0E6B00ADE8DF /* rexep256.c in Sources */,
+				416D2E7F208A87CC005235BD /* artifact.c in Sources */,
 				411AE397191BB9000047026E /* GUI_Debug.mm in Sources */,
+				411C93F1208AB30B0037F28B /* AtariDebugInterface.mm in Sources */,
 				4163BAF81E9F980900E3C077 /* vicefeatures.c in Sources */,
 				4145376F1CB2D1A300020916 /* vdrive-snapshot.c in Sources */,
 				41E0AC3C18AC2F740065DCAD /* JSONAllocator.mm in Sources */,
 				414537F41CB2D27C00020916 /* printer.c in Sources */,
 				39042A20186892A800B570B1 /* CGuiButton.mm in Sources */,
+				416D2E8A208A87CC005235BD /* cfg.c in Sources */,
 				4145399F1CB2E94F00020916 /* cbmimage.c in Sources */,
 				41EB74F21E8F8EEB00492B27 /* CDiskImageD64.mm in Sources */,
 				41925D7B1B1DD82F00B33B7F /* cdjpeg.c in Sources */,
 				41F2AA091E9D0E6B00ADE8DF /* ross.c in Sources */,
 				39042A33186892A800B570B1 /* CGuiViewFade.mm in Sources */,
+				416D2EAB208A87CC005235BD /* rtime.c in Sources */,
 				4160B20C1CEB16AB00EAD217 /* CGuiViewConsole.mm in Sources */,
 				41F2A9FF1E9D0E6B00ADE8DF /* mmc64.c in Sources */,
 				414536DD1CB2D1A300020916 /* asmz80.c in Sources */,
@@ -6353,6 +6930,7 @@
 				414537AD1CB2D1CE00020916 /* serial-iec-lib.c in Sources */,
 				414535B01CB2D1A300020916 /* fullscreen.c in Sources */,
 				41188F861E9EA7FF00040048 /* coplin_keypad.c in Sources */,
+				416D2E8D208A87CC005235BD /* colours_pal.c in Sources */,
 				4145382D1CB2D91600020916 /* residfp-filter.cc in Sources */,
 				414537811CB2D1A300020916 /* render1x1ntsc.c in Sources */,
 				414535AF1CB2D1A300020916 /* dynlib.c in Sources */,
@@ -6373,13 +6951,16 @@
 				41F2AAAC1E9D0EAC00ADE8DF /* ieee-cmdline-options.c in Sources */,
 				414535CA1CB2D1A300020916 /* menu_screenshot.c in Sources */,
 				41F2AADD1E9D0EDA00ADE8DF /* drivemem.c in Sources */,
+				416D2ED5208A8B4F005235BD /* a-palette.c in Sources */,
 				41E0AC4018AC2F740065DCAD /* JSONMemory.mm in Sources */,
+				416D2EA1208A87CC005235BD /* pbi_mio.c in Sources */,
 				4152D6E01C96F73300EBA9E5 /* C64DebugInterface.mm in Sources */,
 				4152D7221C970FA900EBA9E5 /* CViewC64.mm in Sources */,
 				414538BB1CB2DC4400020916 /* sounddummy.c in Sources */,
 				41F2A9EE1E9D0E6B00ADE8DF /* final3.c in Sources */,
 				414537B11CB2D1CE00020916 /* serial.c in Sources */,
 				414537ED1CB2D27C00020916 /* interface-serial.c in Sources */,
+				416D2E7C208A87CC005235BD /* af80.c in Sources */,
 				41188FDE1E9EBFFB00040048 /* c64-memory-hacks.c in Sources */,
 				41CA791A1F3DC0E0004309B8 /* mididrv.c in Sources */,
 				41925D931B1DD82F00B33B7F /* jdcolor.c in Sources */,
@@ -6392,15 +6973,19 @@
 				41E0AC4418AC2F740065DCAD /* JSONStream.mm in Sources */,
 				41925DAE1B1DD82F00B33B7F /* rdrle.c in Sources */,
 				41925DA91B1DD82F00B33B7F /* jutils.c in Sources */,
+				416D2EA3208A87CC005235BD /* pbi_scsi.c in Sources */,
 				414536DA1CB2D1A300020916 /* asm6502dtv.c in Sources */,
 				4145377E1CB2D1A300020916 /* vicii-timing.c in Sources */,
 				4145387C1CB2DBE700020916 /* p64.c in Sources */,
 				414535C81CB2D1A300020916 /* menu_rom.c in Sources */,
 				390429EF186892A800B570B1 /* SYS_Main.mm in Sources */,
 				41F2AA781E9D0E7900ADE8DF /* c64parallel.c in Sources */,
+				416D2ED9208A8B4F005235BD /* a-video.c in Sources */,
+				416D2EBF208A87CC005235BD /* votraxsnd.c in Sources */,
 				41188F921E9EA7FF00040048 /* vizawrite64_dongle.c in Sources */,
 				4145380C1CB2D2D100020916 /* ppmdrv.c in Sources */,
 				390429D2186892A800B570B1 /* CContinuousParam.mm in Sources */,
+				416D2E79208A87CC005235BD /* a-sound.c in Sources */,
 				41F2AA841E9D0E7900ADE8DF /* psid.c in Sources */,
 				414535CF1CB2D1A300020916 /* menu_speed.c in Sources */,
 				414535E51CB2D1A300020916 /* uipause.c in Sources */,
@@ -6410,6 +6995,7 @@
 				41B5C13C1E9E9E5900E9C644 /* daa.c in Sources */,
 				390429DB186892A800B570B1 /* CSlrFileMemory.mm in Sources */,
 				41F8107C1EC1AA7C00E2F9AD /* C64CharHires.mm in Sources */,
+				4199CD2A20ADD6CD00B909C9 /* a-sdl-sound.c in Sources */,
 				4145377A1CB2D1A300020916 /* vicii-mem.c in Sources */,
 				41CF58FE1920E6EA00F43331 /* GFX_WriteImage.mm in Sources */,
 				414539C31CB2E94F00020916 /* ram.c in Sources */,
@@ -6423,6 +7009,7 @@
 				41925D9F1B1DD82F00B33B7F /* jfdctflt.c in Sources */,
 				414539A31CB2E94F00020916 /* cmdline.c in Sources */,
 				414538541CB2DB9C00020916 /* tpicore.c in Sources */,
+				416D2E90208A87CC005235BD /* cpu.c in Sources */,
 				41188FDB1E9EBE9D00040048 /* stardos-exp.c in Sources */,
 				4145376E1CB2D1A300020916 /* vdrive-rel.c in Sources */,
 				39042AF5186892A800B570B1 /* sharedbook.c in Sources */,
@@ -6438,6 +7025,7 @@
 				41925D8C1B1DD82F00B33B7F /* jctrans.c in Sources */,
 				414539B81CB2E94F00020916 /* libm_math.c in Sources */,
 				390429E5186892A800B570B1 /* CSlrString.mm in Sources */,
+				41430FC221650EA500D003AA /* CGuiViewToolBox.mm in Sources */,
 				414535DB1CB2D1A300020916 /* rs232net.c in Sources */,
 				414537261CB2D1A300020916 /* resid-pot.cc in Sources */,
 				41F2AA0B1E9D0E6B00ADE8DF /* simonsbasic.c in Sources */,
@@ -6445,6 +7033,7 @@
 				4145382F1CB2D91600020916 /* residfp-sid.cc in Sources */,
 				41F2A9D91E9D0E6B00ADE8DF /* actionreplay.c in Sources */,
 				390429F5186892A800B570B1 /* CGuiViewDataTable.mm in Sources */,
+				416D2E87208A87CC005235BD /* binload.c in Sources */,
 				414538AD1CB2DC3300020916 /* sid-resources.c in Sources */,
 				414537001CB2D1A300020916 /* platform_os2_runtime_os.c in Sources */,
 				39042A53186892A800B570B1 /* CGuiViewLoadingScreen.mm in Sources */,
@@ -6464,6 +7053,7 @@
 				41F2A9E31E9D0E6B00ADE8DF /* delaep7x8.c in Sources */,
 				41F2AA121E9D0E6B00ADE8DF /* supersnapshot4.c in Sources */,
 				414535E91CB2D1A300020916 /* vkbd.c in Sources */,
+				416D2ED7208A8B4F005235BD /* a-video_gl.c in Sources */,
 				414536F01CB2D1A300020916 /* mon_ui.c in Sources */,
 				414538551CB2DB9C00020916 /* viacore.c in Sources */,
 				41E0F4B01CCE584D00CE367D /* CSlrFileFromMemory.mm in Sources */,
@@ -6523,6 +7113,7 @@
 					"-GDATA_REQUIRE_SERVICE_INCLUDES=1",
 					"-GDATA_INCLUDE_SPREADSHEET_SERVICE=1",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = pl.rabidus.C64Debugger;
 				PRODUCT_NAME = C64Debugger;
 				PROVISIONING_PROFILE = "";
 				SDKROOT = macosx;
@@ -6557,6 +7148,7 @@
 					"-GDATA_REQUIRE_SERVICE_INCLUDES=1",
 					"-GDATA_INCLUDE_SPREADSHEET_SERVICE=1",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = pl.rabidus.C64Debugger;
 				PRODUCT_NAME = C64Debugger;
 				PROVISIONING_PROFILE = "";
 				SDKROOT = macosx;

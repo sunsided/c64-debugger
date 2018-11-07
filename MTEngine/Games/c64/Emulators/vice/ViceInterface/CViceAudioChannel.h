@@ -10,7 +10,8 @@ public:
 	CViceAudioChannel(C64DebugInterfaceVice *debugInterface);
 	
 	C64DebugInterfaceVice *debugInterface;
-	virtual void MixIn(int *mixBuffer, u32 numSamples);
+		
+	virtual void FillBuffer(int *mixBuffer, u32 numSamples);
 };
 
 #endif

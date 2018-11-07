@@ -13,7 +13,8 @@ C64VicDisplayCanvasHiresText::C64VicDisplayCanvasHiresText(CViewC64VicDisplay *v
 	
 }
 
-void C64VicDisplayCanvasHiresText::RefreshScreen(vicii_cycle_state_t *viciiState, CImageData *imageDataScreen)
+void C64VicDisplayCanvasHiresText::RefreshScreen(vicii_cycle_state_t *viciiState, CImageData *imageDataScreen,
+												 u8 backgroundColorAlpha, u8 foregroundColorAlpha)
 {
 	this->viciiState = viciiState;
 	
@@ -55,12 +56,12 @@ void C64VicDisplayCanvasHiresText::RefreshScreen(vicii_cycle_state_t *viciiState
 					if (bitmap & (1 << (7 - l)))
 					{
 						//data->colormap[(i * 320 * 8) + (j * 8) + (k * 320) + l] = fgcolor;
-						imageDataScreen->SetPixelResultRGBA(j*8 + l, i*8 + k, fgColorR, fgColorG, fgColorB, 255);
+						imageDataScreen->SetPixelResultRGBA(j*8 + l, i*8 + k, fgColorR, fgColorG, fgColorB, foregroundColorAlpha);
 					}
 					else
 					{
 						//data->colormap[(i * 320 * 8) + (j * 8) + (k * 320) + l] = bgcolor;
-						imageDataScreen->SetPixelResultRGBA(j*8 + l, i*8 + k, bgColorR, bgColorG, bgColorB, 255);
+						imageDataScreen->SetPixelResultRGBA(j*8 + l, i*8 + k, bgColorR, bgColorG, bgColorB, backgroundColorAlpha);
 					}
 				}
 			}
@@ -98,6 +99,7 @@ u8 C64VicDisplayCanvasHiresText::PutCharacterAt(int charColumn, int charRow, u8 
 
 void C64VicDisplayCanvasHiresText::ClearScreen()
 {
+	LOGD("C64VicDisplayCanvasHiresText::ClearScreen");
 	ClearScreen(0x20, 0x00);
 }
 

@@ -42,7 +42,12 @@ public:
 	virtual bool KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl);
 	virtual bool KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl);
 	virtual bool KeyPressed(u32 keyCode, bool isShift, bool isAlt, bool isControl);	// repeats
+
+	virtual int GetJoystickAxis(u32 keyCode, bool isShift, bool isAlt, bool isControl);
+	virtual void JoystickDown(u32 axis);
+	virtual void JoystickUp(u32 axis);
 	
+
 	virtual void ActivateView();
 	virtual void DeactivateView();
 
@@ -151,7 +156,7 @@ public:
 	float zoomedScreenRasterOffsetY;
 
 	//std::map<u32, bool> pressedKeyCodes;
-
+	
 };
 
 #endif //_CVIEWC64SCREEN_H_

@@ -8,7 +8,7 @@
 C64VicDisplayCanvas::C64VicDisplayCanvas(CViewC64VicDisplay *vicDisplay, u8 canvasType, bool isMultiColor, bool isExtendedColor)
 {
 	this->vicDisplay = vicDisplay;
-	this->debugInterface = viewC64->debugInterface;
+	this->debugInterface = viewC64->debugInterfaceC64;
 	
 	this->canvasType = canvasType;
 	this->isMultiColor = isMultiColor;
@@ -19,7 +19,13 @@ C64VicDisplayCanvas::C64VicDisplayCanvas(CViewC64VicDisplay *vicDisplay, u8 canv
 	ditherMaskPosY = -1;
 }
 
-void C64VicDisplayCanvas::RefreshScreen(vicii_cycle_state_t *viciiState, CImageData *imageDataScreen)
+void C64VicDisplayCanvas::SetViciiState(vicii_cycle_state_t *viciiState)
+{
+	this->viciiState = viciiState;
+}
+
+void C64VicDisplayCanvas::RefreshScreen(vicii_cycle_state_t *viciiState, CImageData *imageDataScreen,
+										u8 backgroundColorAlpha, u8 foregroundColorAlpha)
 {
 	SYS_FatalExit("C64VicDisplayCanvas::RefreshScreen");
 }

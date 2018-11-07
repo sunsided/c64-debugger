@@ -12,6 +12,7 @@ extern "C" {
 #include "C64SettingsStorage.h"
 #include "C64VicDisplayCanvas.h"
 #include "CViewC64Sprite.h"
+#include "CViewC64Palette.h"
 
 
 // TODO: refactor this and remove copy-pasted code...!
@@ -156,7 +157,7 @@ void CVicEditorLayerVirtualSprites::FullScanSpritesInThisFrame()
 //		return;
 	}
 	
-	guiMain->LockMutex();
+	guiMain->LockMutex(); //"CVicEditorLayerVirtualSprites::FullScanSpritesInThisFrame");
 	
 	C64DebugInterface *debugInterface = vicEditor->viewVicDisplayMain->debugInterface;
 	
@@ -542,7 +543,7 @@ void CVicEditorLayerVirtualSprites::FullScanSpritesInThisFrame()
 	
 	//debugInterface->SetDebugMode(debugMode);
 	
-	guiMain->UnlockMutex();
+	guiMain->UnlockMutex(); //"CVicEditorLayerVirtualSprites::FullScanSpritesInThisFrame");
 	
 	LOGD("------------ FINISHED CVicEditorLayerVirtualSprites::FullScanSpritesInThisFrame in %d ms", SYS_GetCurrentTimeInMillis() - t);
 
@@ -559,7 +560,7 @@ void CVicEditorLayerVirtualSprites::SimpleScanSpritesInThisFrame()
 		//		return;
 	}
 	
-	guiMain->LockMutex();
+	guiMain->LockMutex(); //"CVicEditorLayerVirtualSprites::SimpleScanSpritesInThisFrame");
 	
 	C64DebugInterface *debugInterface = vicEditor->viewVicDisplayMain->debugInterface;
 	
@@ -735,7 +736,7 @@ void CVicEditorLayerVirtualSprites::SimpleScanSpritesInThisFrame()
 	
 	//debugInterface->SetDebugMode(debugMode);
 	
-	guiMain->UnlockMutex();
+	guiMain->UnlockMutex(); //"CVicEditorLayerVirtualSprites::SimpleScanSpritesInThisFrame");
 	
 	//LOGD("------------ FINISHED CVicEditorLayerVirtualSprites::SimpleScanSpritesInThisFrame in %d ms", SYS_GetCurrentTimeInMillis() - t);
 	
@@ -764,7 +765,7 @@ void CVicEditorLayerVirtualSprites::ScanSpritesStoreAddressesOnly(int rx, int ry
 		//		return;
 	}
 	
-	guiMain->LockMutex();
+	guiMain->LockMutex(); //"CVicEditorLayerVirtualSprites::ScanSpritesStoreAddressesOnly");
 	
 	C64DebugInterface *debugInterface = vicEditor->viewVicDisplayMain->debugInterface;
 	
@@ -988,7 +989,7 @@ void CVicEditorLayerVirtualSprites::ScanSpritesStoreAddressesOnly(int rx, int ry
 			if (y == searchRasterLine
 				&& cycle == searchRasterCycle)
 			{
-				guiMain->UnlockMutex();
+				guiMain->UnlockMutex(); //"CVicEditorLayerVirtualSprites::ScanSpritesStoreAddressesOnly");
 				return;
 			}
 		}
@@ -1000,13 +1001,17 @@ void CVicEditorLayerVirtualSprites::ScanSpritesStoreAddressesOnly(int rx, int ry
 	
 	//debugInterface->SetDebugMode(debugMode);
 	
-	guiMain->UnlockMutex();
+	guiMain->UnlockMutex(); //"CVicEditorLayerVirtualSprites::ScanSpritesStoreAddressesOnly");
 	
 	LOGError("ScanSpritesStoreAddressesOnly: rasterLine=%d rasterCycle=%d not reached", searchRasterLine, searchRasterCycle);
 	
 	LOGD("------------ FINISHED CVicEditorLayerVirtualSprites::ScanSpritesStoreAddressesOnly in %d ms", SYS_GetCurrentTimeInMillis() - t);
 	
 }
+
+//1 = d025
+//2 = d027+id
+//3 = d026
 
 u8 CVicEditorLayerVirtualSprites::ReplaceColor(int rx, int ry, int spriteId, int colorNum, u8 colorValue)
 {
@@ -1513,7 +1518,7 @@ void CVicEditorLayerVirtualSprites::ClearScreen(u8 charValue, u8 colorValue)
 
 void CVicEditorLayerVirtualSprites::Serialise(CByteBuffer *byteBuffer)
 {
-	guiMain->LockMutex();
+	guiMain->LockMutex(); //"CVicEditorLayerVirtualSprites::Serialise");
 
 	CVicEditorLayer::Serialise(byteBuffer);
 
@@ -1539,7 +1544,7 @@ void CVicEditorLayerVirtualSprites::Serialise(CByteBuffer *byteBuffer)
 		sprite->Serialise(byteBuffer);
 	}
 	
-	guiMain->UnlockMutex();
+	guiMain->UnlockMutex(); //"CVicEditorLayerVirtualSprites::Serialise");
 }
 
 void CVicEditorLayerVirtualSprites::Deserialise(CByteBuffer *byteBuffer, int version)

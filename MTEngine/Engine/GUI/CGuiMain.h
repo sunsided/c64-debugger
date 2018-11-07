@@ -169,6 +169,7 @@ public:
 	
 	//void ShowMessage(const UTFString *popMessage);
 	//void ShowMessage(const UTFString *popMessage, GLfloat showMessageColorR, GLfloat showMessageColorG, GLfloat showMessageColorB);
+	void ShowMessage(CSlrString *showMessage);
 	void ShowMessage(char *popMessage);
 	void ShowMessageAsync(char *popMessage);
 	void ShowMessage(char *popMessage, GLfloat showMessageColorR, GLfloat showMessageColorG, GLfloat showMessageColorB);
@@ -222,6 +223,10 @@ public:
 	volatile bool isControlPressed;
 	volatile bool isAltPressed;
 
+//	volatile bool wasShiftPressed;
+//	volatile bool wasControlPressed;
+//	volatile bool wasAltPressed;
+
 	volatile bool isLeftShiftPressed;
 	volatile bool isLeftControlPressed;
 	volatile bool isLeftAltPressed;
@@ -230,11 +235,13 @@ public:
 	volatile bool isRightControlPressed;
 	volatile bool isRightAltPressed;
 
-	void LockRenderMutex();
-	void UnlockRenderMutex();
+	void UpdateControlKeys(u32 keyCode);
+	
+	void LockRenderMutex(); //char *functionName);
+	void UnlockRenderMutex(); //char *functionName);
 
-	void LockMutex();
-	void UnlockMutex();
+	void LockMutex(); //char *functionName);
+	void UnlockMutex(); //char *functionName);
 
 	float mousePosX, mousePosY;
 

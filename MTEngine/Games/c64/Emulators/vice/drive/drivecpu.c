@@ -2566,8 +2566,8 @@ opcode.op.op8[0] = ((o) >> 16) & 0xff; \
 			//
 			
 			{
-				if (c64d_debug_mode != C64_DEBUG_RUN_ONE_INSTRUCTION
-					&& c64d_debug_mode != C64_DEBUG_RUN_ONE_CYCLE)
+				if (c64d_debug_mode != DEBUGGER_MODE_RUN_ONE_INSTRUCTION
+					&& c64d_debug_mode != DEBUGGER_MODE_RUN_ONE_CYCLE)
 				{
 					// c64d check PC breakpoint after IRQ or trap
 					c64d_drive1541_check_pc_breakpoint(reg_pc);
@@ -3672,9 +3672,9 @@ opcode.op.op8[0] = ((o) >> 16) & 0xff; \
 		//
 		if (c64d_is_debug_on_drive1541())
 		{
-			if (c64d_debug_mode == C64_DEBUG_RUN_ONE_INSTRUCTION)
+			if (c64d_debug_mode == DEBUGGER_MODE_RUN_ONE_INSTRUCTION)
 			{
-				c64d_debug_mode = C64_DEBUG_PAUSED;
+				c64d_debug_mode = DEBUGGER_MODE_PAUSED;
 			}
 			
 			//LOGD("reg_pc=%04x", reg_pc);

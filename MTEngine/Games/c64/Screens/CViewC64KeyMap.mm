@@ -212,7 +212,12 @@ CViewC64KeyMap::CViewC64KeyMap(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	line2sx = line1sx;
 
 	// C64 keys row 2
+#if defined(MACOS)
+	w = w4; AddButtonKey("CMD", "", px, py, w, 7, 2);  px += w + gap;
+#else
 	w = w4; AddButtonKey("CTRL", "", px, py, w, 7, 2);  px += w + gap;
+#endif
+
 	w = w2; AddButtonKey("Q", "", px, py, w, 7, 6);  px += w + gap;
 	w = w2; AddButtonKey("W", "", px, py, w, 1, 1);  px += w + gap;
 	w = w2; AddButtonKey("E", "", px, py, w, 1, 6);  px += w + gap;
@@ -374,7 +379,7 @@ void CViewC64KeyMap::SaveAndGoBack()
 {
 	C64KeyMapStoreToSettings();
 	
-	viewC64->debugInterface->InitKeyMap(keyMap);
+	viewC64->debugInterfaceC64->InitKeyMap(keyMap);
 	
 	viewC64->SwitchToScreenLayout(viewC64->currentScreenLayoutId);
 	guiMain->SetView(viewC64->viewC64SettingsMenu);
@@ -391,21 +396,21 @@ void CViewC64KeyMap::OpenDialogImportKeyMap()
 void CViewC64KeyMap::SystemDialogFileOpenSelected(CSlrString *path)
 {
 	guiMain->LockMutex();
-	viewC64->debugInterface->LockMutex();
+	viewC64->debugInterfaceC64->LockMutex();
 	
 	if (C64KeyMapLoadFromFile(path))
 	{
 		C64KeyMap *keyMap = C64KeyMapGetDefault();
 		UpdateFromKeyMap(keyMap);
 
-		viewC64->debugInterface->UnlockMutex();
+		viewC64->debugInterfaceC64->UnlockMutex();
 		guiMain->UnlockMutex();
 		
 		guiMain->ShowMessage("C64 Key map loaded");
 		return;
 	}
 
-	viewC64->debugInterface->UnlockMutex();
+	viewC64->debugInterfaceC64->UnlockMutex();
 	guiMain->UnlockMutex();
 
 	guiMain->ShowMessage("C64 Key map loading failed");
@@ -1321,8 +1326,8 @@ void CViewC64KeyMap::ActivateView()
 	viewC64->viewC64Screen->SetVisible(true);
 	
 	float scale = 0.676f;
-	float sx = (float)viewC64->debugInterface->GetC64ScreenSizeX() * scale;
-	float sy = (float)viewC64->debugInterface->GetC64ScreenSizeY() * scale;
+	float sx = (float)viewC64->debugInterfaceC64->GetScreenSizeX() * scale;
+	float sy = (float)viewC64->debugInterfaceC64->GetScreenSizeY() * scale;
 	float px = this->sizeX - sx;
 	float py = 0.0;//this->sizeY - sy;
 	viewC64->viewC64Screen->SetPosition(px,

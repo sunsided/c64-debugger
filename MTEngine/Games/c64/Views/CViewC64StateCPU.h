@@ -3,10 +3,14 @@
 
 #include "CViewBaseStateCPU.h"
 
+class C64DebugInterface;
+
 class CViewC64StateCPU : public CViewBaseStateCPU
 {
 public:
 	CViewC64StateCPU(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, C64DebugInterface *debugInterface);
+
+	virtual void Render();
 
 	virtual void RenderRegisters();
 	virtual void SetRegisterValue(StateCPURegister reg, int value);

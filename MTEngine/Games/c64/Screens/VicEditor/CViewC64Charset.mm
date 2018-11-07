@@ -18,15 +18,15 @@
 #include "CViewVicEditor.h"
 #include "CViewC64VicDisplay.h"
 #include "CViewDataDump.h"
+#include "C64SettingsStorage.h"
+#include "CSlrFileFromOS.h"
 
 CViewC64Charset::CViewC64Charset(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, CViewVicEditor *vicEditor)
-: CGuiView(posX, posY, posZ, sizeX, sizeY)
+: CGuiWindow(posX, posY, posZ, sizeX, sizeY, new CSlrString("Charset"))
 {
 	this->name = "CViewC64Charset";
 	
 	this->vicEditor = vicEditor;
-	
-	viewFrame = new CGuiViewFrame(this, new CSlrString("Charset"));
 	
 	int w = 256;
 	int h = 64;
@@ -43,16 +43,29 @@ CViewC64Charset::CViewC64Charset(GLfloat posX, GLfloat posY, GLfloat posZ, GLflo
 	selY = -1;
 	selSizeX = this->sizeX / 32.0f;
 	selSizeY = this->sizeY / 8.0f;
+
+	charsetFileExtensions.push_back(new CSlrString("charset"));
+	charsetFileExtensions.push_back(new CSlrString("bin"));
+	charsetFileExtensions.push_back(new CSlrString("data"));
+
+	// setup icons in frame
+	viewFrame->AddBarToolBox(this);
 	
-	this->AddGuiElement(viewFrame);
+	imgIconImport = RES_GetImage("/gfx/icon_raw_import", true);
+	viewFrame->AddBarIcon(imgIconImport);
+	
+	imgIconExport = RES_GetImage("/gfx/icon_raw_export", true);
+	viewFrame->AddBarIcon(imgIconExport);
 	
 	SelectChar(17 + 0x40);
+	
+	this->UpdatePosition();
 }
 
 void CViewC64Charset::SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY)
 {
 	LOGD("CViewC64Charset::SetPosition: %f %f", posX, posY);
-	CGuiView::SetPosition(posX, posY, posZ, sizeX, sizeY);
+	CGuiWindow::SetPosition(posX, posY, posZ, sizeX, sizeY);
 	
 	selSizeX = this->sizeX / 32.0f;
 	selSizeY = this->sizeY / 8.0f;
@@ -60,7 +73,7 @@ void CViewC64Charset::SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfl
 
 void CViewC64Charset::DoLogic()
 {
-	CGuiView::DoLogic();
+	CGuiWindow::DoLogic();
 }
 
 
@@ -84,11 +97,12 @@ void CViewC64Charset::Render()
 
 	if (viewC64->viewC64VicDisplay->backupRenderDataWithColors)
 	{
-		CopyMultiCharsetToImage(chargen_ptr, imageDataCharset, 32, colors[1], colors[2], colors[3], viewC64->colorToShowD800, viewC64->debugInterface);
+		CopyMultiCharsetToImage(chargen_ptr, imageDataCharset, 32, colors[1], colors[2], colors[3],
+								viewC64->colorToShowD800, viewC64->debugInterfaceC64);
 	}
 	else
 	{
-		CopyHiresCharsetToImage(chargen_ptr, imageDataCharset, 32, 0, 1, viewC64->debugInterface);
+		CopyHiresCharsetToImage(chargen_ptr, imageDataCharset, 32, 0, 1, viewC64->debugInterfaceC64);
 	}
 
 	imageCharset->ReplaceImageData(imageDataCharset);
@@ -124,7 +138,7 @@ void CViewC64Charset::Render()
 	}
 	
 	
-	CGuiView::Render();
+	CGuiWindow::Render();
 
 	BlitRectangle(posX, posY, posZ, sizeX, sizeY, 0, 0, 0, 1, 1);
 }
@@ -144,8 +158,7 @@ bool CViewC64Charset::DoTap(GLfloat x, GLfloat y)
 		return true;
 	}
 	
-	
-	return CGuiView::DoTap(x, y);
+	return CGuiWindow::DoTap(x, y);
 }
 
 bool CViewC64Charset::DoMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat distY, GLfloat diffX, GLfloat diffY)
@@ -153,7 +166,7 @@ bool CViewC64Charset::DoMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat distY,
 	if (this->IsInsideView(x, y))
 		return true;
 	
-	return CGuiView::DoMove(x, y, distX, distY, diffX, diffY);
+	return CGuiWindow::DoMove(x, y, distX, distY, diffX, diffY);
 }
 
 
@@ -192,7 +205,7 @@ bool CViewC64Charset::DoRightClick(GLfloat x, GLfloat y)
 	if (this->IsInsideView(x, y))
 		return true;
 	
-	return CGuiView::DoRightClick(x, y);
+	return CGuiWindow::DoRightClick(x, y);
 }
 
 
@@ -211,5 +224,111 @@ bool CViewC64Charset::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isContro
 bool CViewC64Charset::SetFocus(bool focus)
 {
 	return true;
+}
+
+void CViewC64Charset::ToolBoxIconPressed(CSlrImage *imgIcon)
+{
+	if (imgIcon == this->imgIconExport)
+	{
+		CSlrString *defaultFileName = new CSlrString("charset");
+
+		CSlrString *windowTitle = new CSlrString("Export Charset");
+		viewC64->ShowDialogSaveFile(this, &charsetFileExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
+		delete windowTitle;
+		delete defaultFileName;
+	}
+	else if (imgIcon == this->imgIconImport)
+	{
+		CSlrString *windowTitle = new CSlrString("Import Charset");
+		windowTitle->DebugPrint("windowTitle=");
+		viewC64->ShowDialogOpenFile(this, &charsetFileExtensions, NULL, windowTitle);
+		delete windowTitle;
+	}
+}
+
+void CViewC64Charset::SystemDialogFileOpenSelected(CSlrString *path)
+{
+	int importCharsetAddr = this->ImportCharset(path);
+	
+	CSlrString *str = path->GetFileNameComponentFromPath();
+	
+	char *buf = str->GetStdASCII();
+	char *buf2 = SYS_GetCharBuf();
+	sprintf(buf2, "%s imported at $%04x", buf, importCharsetAddr);
+	guiMain->ShowMessage(buf2);
+	SYS_ReleaseCharBuf(buf2);
+	delete [] buf;
+	delete str;
+}
+
+int CViewC64Charset::ImportCharset(CSlrString *path)
+{
+	u8 *screen_ptr;
+	u8 *color_ram_ptr;
+	u8 *chargen_ptr;
+	u8 *bitmap_low_ptr;
+	u8 *bitmap_high_ptr;
+	u8 colors[0x0F];
+	
+	vicEditor->viewVicDisplaySmall->GetViciiPointers(&(viewC64->viciiStateToShow), &screen_ptr, &color_ram_ptr, &chargen_ptr, &bitmap_low_ptr, &bitmap_high_ptr, colors);
+	
+	int importCharsetAddr = vicEditor->viewVicDisplaySmall->charsetAddress;
+	
+	int charsetAddr = importCharsetAddr;
+	
+	CSlrFile *file = new CSlrFileFromOS(path);
+	if (!file->Exists())
+	{
+		guiMain->ShowMessage("Can't open file");
+		return -1;
+	}
+	
+	CByteBuffer *byteBuffer = new CByteBuffer(file, false);
+	for (int i = 0; i < 0x800; i++)
+	{
+		if (byteBuffer->isEof())
+		{
+			guiMain->ShowMessage("End of file reached");
+			return -1;
+		}
+		
+		u8 v = byteBuffer->GetU8();
+		
+		viewC64->debugInterfaceC64->SetByteC64(charsetAddr, v);
+		
+		charsetAddr++;
+		if (charsetAddr > 0xFFFF)
+		{
+			break;
+		}
+	}
+	
+	delete byteBuffer;
+	delete file;
+	
+	return importCharsetAddr;
+}
+
+void CViewC64Charset::SystemDialogFileOpenCancelled()
+{
+}
+
+void CViewC64Charset::SystemDialogFileSaveSelected(CSlrString *path)
+{
+	this->ExportCharset(path);
+	
+	CSlrString *str = path->GetFileNameComponentFromPath();
+	str->Concatenate(" saved");
+	guiMain->ShowMessage(str);
+	delete str;
+}
+
+void CViewC64Charset::ExportCharset(CSlrString *path)
+{
+	vicEditor->ExportCharset(path);
+}
+
+void CViewC64Charset::SystemDialogFileSaveCancelled()
+{
 }
 

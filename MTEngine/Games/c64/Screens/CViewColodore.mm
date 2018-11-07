@@ -223,8 +223,8 @@ void CViewColodore::ActivateView()
 	viewC64->viewC64Screen->SetVisible(true);
 	
 	float scale = 1.8f;
-	float sx = (float)viewC64->debugInterface->GetC64ScreenSizeX() * scale;
-	float sy = (float)viewC64->debugInterface->GetC64ScreenSizeY() * scale;
+	float sx = (float)viewC64->debugInterfaceC64->GetScreenSizeX() * scale;
+	float sy = (float)viewC64->debugInterfaceC64->GetScreenSizeY() * scale;
 	float px = this->sizeX - sx + 150.0f;
 	float py = 50.0;//this->sizeY - sy;
 	viewC64->viewC64Screen->SetPosition(px,

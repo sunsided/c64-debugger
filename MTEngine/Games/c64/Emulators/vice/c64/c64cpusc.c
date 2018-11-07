@@ -35,7 +35,7 @@
 #include "c64.h"
 #include "cia.h"
 #include "ViceWrapper.h"
-#include "C64DebugTypes.h"
+#include "DebuggerDefs.h"
 
 /* ------------------------------------------------------------------------- */
 
@@ -2620,6 +2620,14 @@ INC_PC(1);                \
 				{
 					DO_INTERRUPT(pending_interrupt);
 					
+					
+					if ((pending_interrupt & IK_NMI)
+						&& (CLK >= (CPU_INT_STATUS->nmi_clk + INTERRUPT_DELAY)))
+					{
+						c64d_c64_check_irqnmi_breakpoint();
+						viceCurrentC64PC = reg_pc;
+					}
+					
 					// c64 debugger - check interrupt breakpoints when irq is ack'ed
 					if ((pending_interrupt & IK_IRQ) && ((reg_p & P_INTERRUPT) == P_INTERRUPT))
 					{
@@ -2667,8 +2675,8 @@ INC_PC(1);                \
 			}
 			
 			{
-				if (c64d_debug_mode != C64_DEBUG_RUN_ONE_INSTRUCTION
-					&& c64d_debug_mode != C64_DEBUG_RUN_ONE_CYCLE)
+				if (c64d_debug_mode != DEBUGGER_MODE_RUN_ONE_INSTRUCTION
+					&& c64d_debug_mode != DEBUGGER_MODE_RUN_ONE_CYCLE)
 				{
 					// c64d check PC breakpoint after IRQ or trap
 					c64d_c64_check_pc_breakpoint(reg_pc);
@@ -3697,9 +3705,9 @@ INC_PC(1);                \
 		if (c64d_is_debug_on_c64())
 		{
 			// one instruction has been just run, pause
-			if (c64d_debug_mode == C64_DEBUG_RUN_ONE_INSTRUCTION)
+			if (c64d_debug_mode == DEBUGGER_MODE_RUN_ONE_INSTRUCTION)
 			{
-				c64d_debug_mode = C64_DEBUG_PAUSED;
+				c64d_debug_mode = DEBUGGER_MODE_PAUSED;
 			}
 			
 			//c64d_c64_check_pc_breakpoint(reg_pc);
@@ -3746,12 +3754,12 @@ int c64d_c64_do_cycle()
 	
 	if (c64d_is_debug_on_c64())
 	{
-		if (c64d_debug_mode == C64_DEBUG_RUN_ONE_CYCLE)
+		if (c64d_debug_mode == DEBUGGER_MODE_RUN_ONE_CYCLE)
 		{
-			c64d_debug_mode = C64_DEBUG_PAUSED;
+			c64d_debug_mode = DEBUGGER_MODE_PAUSED;
 		}
 		
-		if (c64d_debug_mode == C64_DEBUG_RUNNING)
+		if (c64d_debug_mode == DEBUGGER_MODE_RUNNING)
 		{
 			return vicii_cycle();
 		}

@@ -46,7 +46,11 @@ typedef unsigned int DWORD;
 #endif
 
 typedef signed char SIGNED_CHAR;
+
+#ifndef SWORD
 typedef signed short SWORD;
+#endif
+
 //typedef signed long SDWORD;
 typedef signed int SDWORD;
 //#else

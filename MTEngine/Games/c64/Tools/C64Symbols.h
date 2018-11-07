@@ -7,8 +7,8 @@
 class CSlrFile;
 class CByteBuffer;
 class CSlrString;
-class C64DebugInterface;
-class C64AsmSource;
+class CDebugInterface;
+class C64AsmSourceSymbols;
 
 #define C64_SYMBOL_DEVICE_COMMODORE	1
 #define C64_SYMBOL_DEVICE_DRIVE1541	2
@@ -19,25 +19,26 @@ public:
 	C64Symbols();
 	~C64Symbols();
 	
-	C64AsmSource *asmSource;
+	C64AsmSourceSymbols *asmSource;
 	
-	void ClearSymbols(C64DebugInterface *debugInterface);
-	void ParseSymbols(CSlrString *fileName, C64DebugInterface *debugInterface);
-	void ParseSymbols(CSlrFile *file, C64DebugInterface *debugInterface);
-	void ParseSymbols(CByteBuffer *byteBuffer, C64DebugInterface *debugInterface);
+	void DeleteAllSymbols(CDebugInterface *debugInterface);
+	void ParseSymbols(CSlrString *fileName, CDebugInterface *debugInterface);
+	void ParseSymbols(CSlrFile *file, CDebugInterface *debugInterface);
+	void ParseSymbols(CByteBuffer *byteBuffer, CDebugInterface *debugInterface);
 	
-	void ClearBreakpoints(C64DebugInterface *debugInterface);
-	void ParseBreakpoints(CSlrString *fileName, C64DebugInterface *debugInterface);
-	void ParseBreakpoints(CByteBuffer *byteBuffer, C64DebugInterface *debugInterface);
+	void DeleteAllBreakpoints(CDebugInterface *debugInterface);
+	void ParseBreakpoints(CSlrString *fileName, CDebugInterface *debugInterface);
+	void ParseBreakpoints(CByteBuffer *byteBuffer, CDebugInterface *debugInterface);
 	
-	void ClearWatches(C64DebugInterface *debugInterface);
-	void ParseWatches(CSlrString *fileName, C64DebugInterface *debugInterface);
-	void ParseWatches(CSlrFile *file, C64DebugInterface *debugInterface);
-	void ParseWatches(CByteBuffer *byteBuffer, C64DebugInterface *debugInterface);
+	void DeleteAllWatches(CDebugInterface *debugInterface);
+	void ParseWatches(CSlrString *fileName, CDebugInterface *debugInterface);
+	void ParseWatches(CSlrFile *file, CDebugInterface *debugInterface);
+	void ParseWatches(CByteBuffer *byteBuffer, CDebugInterface *debugInterface);
 
-	void ClearSourceDebugInfo(C64DebugInterface *debugInterface);
-	void ParseSourceDebugInfo(CSlrString *fileName, C64DebugInterface *debugInterface);
-	void ParseSourceDebugInfo(CByteBuffer *byteBuffer, C64DebugInterface *debugInterface);
+	void DeleteSourceDebugInfo(CDebugInterface *debugInterface);
+	void ParseSourceDebugInfo(CSlrString *fileName, CDebugInterface *debugInterface);
+	void ParseSourceDebugInfo(CSlrFile *file, CDebugInterface *debugInterface);
+	void ParseSourceDebugInfo(CByteBuffer *byteBuffer, CDebugInterface *debugInterface);
 };
 
 #endif

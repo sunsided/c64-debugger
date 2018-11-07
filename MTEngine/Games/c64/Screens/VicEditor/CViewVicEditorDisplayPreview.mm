@@ -1,12 +1,17 @@
 #include "CViewVicEditorDisplayPreview.h"
 #include "CViewVicEditor.h"
 #include "CVicEditorLayer.h"
+#include "CSlrString.h"
 
 CViewVicEditorDisplayPreview::CViewVicEditorDisplayPreview(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
-					   C64DebugInterface *debugInterface, CViewVicEditor *vicEditor)
-: CViewC64VicDisplay(posX, posY, posZ, sizeX, sizeY, debugInterface)
+					   C64DebugInterface *debugInterface, CSlrString *windowName, CViewVicEditor *vicEditor)
+: CViewC64VicDisplay(posX, posY, posZ, sizeX, sizeY, debugInterface, windowName, GUI_FRAME_MODE_WINDOW, NULL)
 {
 	this->vicEditor = vicEditor;
+
+	this->consumeTapBackground = false;
+	this->name = STRALLOC("viewVicDisplaySmall");
+
 }
 
 void CViewVicEditorDisplayPreview::SetViciiState(vicii_cycle_state_t *viciiState)

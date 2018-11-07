@@ -74,8 +74,11 @@ CSlrImage::CSlrImage(CSlrFile *imgFile, bool linearScaling)
 	
 	this->InitImageLoad(linearScaling);
 	this->LoadImage(imgFile);
-	this->BindImage();
-	this->FreeLoadImage();
+	
+	this->resourceType = RESOURCE_TYPE_IMAGE;
+	this->resourcePriority = RESOURCE_PRIORITY_STATIC;
+	VID_PostImageBinding(this, NULL);
+
 }
 
 CSlrImage::CSlrImage(char *fileName, bool linearScaling, bool fromResources)

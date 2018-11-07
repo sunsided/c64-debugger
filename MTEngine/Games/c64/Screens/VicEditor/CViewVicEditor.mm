@@ -1,3 +1,4 @@
+#include "VID_Main.h"
 #include "CViewC64.h"
 #include "CViewVicEditor.h"
 #include "CViewC64VicDisplay.h"
@@ -28,9 +29,11 @@
 #include "CViewC64VicControl.h"
 #include "CViewMemoryMap.h"
 #include "CViewC64Sprite.h"
+#include "CViewVicEditorLayers.h"
+#include "CViewVicEditorCreateNewPicture.h"
+#include "CGuiViewToolBox.h"
 
 #include "CGuiMain.h"
-#include "CViewVicEditorLayers.h"
 
 #include "C64VicDisplayCanvas.h"
 #include "CVicEditorLayerC64Screen.h"
@@ -38,6 +41,7 @@
 #include "CVicEditorLayerC64Sprites.h"
 #include "CVicEditorLayerVirtualSprites.h"
 #include "CVicEditorLayerUnrestrictedBitmap.h"
+#include "CVicEditorLayerImage.h"
 
 #include "C64DisplayListCodeGenerator.h"
 
@@ -48,13 +52,13 @@ extern "C" {
 }
 
 #define VIC_EDITOR_FILE_MAGIC	0x56434500
-#define VIC_EDITOR_FILE_VERSION	0x00000002
+#define VIC_EDITOR_FILE_VERSION	0x00000003
 
 #define NUMBER_OF_UNDO_LEVELS	100
 #define ZOOMING_SPEED_FACTOR_QUICK	15
 
 CViewVicEditor::CViewVicEditor(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY)
-: CGuiView(posX, posY, posZ, sizeX, sizeY)
+: CGuiViewWindowsManager(posX, posY, posZ, sizeX, sizeY)
 {
 	this->name = "CViewVicEditor";
 	
@@ -91,7 +95,11 @@ CViewVicEditor::CViewVicEditor(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	importFileExtensions.push_back(new CSlrString("dd"));
 	importFileExtensions.push_back(new CSlrString("ddl"));
 	importFileExtensions.push_back(new CSlrString("kla"));
+	importFileExtensions.push_back(new CSlrString("d64"));
+	importFileExtensions.push_back(new CSlrString("prg"));
+	importFileExtensions.push_back(new CSlrString("crt"));
 
+	
 	exportVCEFileExtensions.push_back(new CSlrString("vce"));
 	exportHyperBitmapFileExtensions.push_back(new CSlrString("bin"));
 	exportMultiBitmapFileExtensions.push_back(new CSlrString("kla"));
@@ -101,7 +109,8 @@ CViewVicEditor::CViewVicEditor(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 
 	//
 	
-	viewVicDisplayMain = new CViewC64VicDisplay(0, 0, posZ, SCREEN_WIDTH, SCREEN_HEIGHT, viewC64->debugInterface);
+	viewVicDisplayMain = new CViewC64VicDisplay(0, 0, posZ, SCREEN_WIDTH, SCREEN_HEIGHT, viewC64->debugInterfaceC64,
+												NULL, GUI_FRAME_NO_FRAME, NULL);
 	
 	// set mode
 	viewVicDisplayMain->name = STRALLOC("viewVicDisplayMain");
@@ -133,24 +142,24 @@ CViewVicEditor::CViewVicEditor(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 
 	
 	//
-	viewVicDisplaySmall = new CViewVicEditorDisplayPreview(100, 100, posZ, SCREEN_WIDTH, SCREEN_HEIGHT, viewC64->debugInterface, this);
+	viewTopBar = new CGuiViewToolBox(0, 0, posZ, 17.5, 3.1, 12.8, 12.8, 24.6, 16, -1, NULL, this);
+	this->AddGuiElement(viewTopBar);
+	
+
+	//
+	viewVicDisplaySmall = new CViewVicEditorDisplayPreview(100, 100, posZ, SCREEN_WIDTH, SCREEN_HEIGHT, viewC64->debugInterfaceC64,
+														   new CSlrString("Preview"), this);
 	viewVicDisplaySmall->renderDisplayFrame = true;
+	
+	LOGD("viewVicDisplaySmall->viewFrame=%x", viewVicDisplaySmall->viewFrame);
 	
 	
 	viewVicDisplaySmall->SetShowDisplayBorderType(borderType);
-	
-	
-	viewVicDisplaySmall->name = STRALLOC("viewVicDisplaySmall");
 	
 	viewVicDisplaySmall->SetDisplayPosition(340, 20, 0.7f, true);
 
 	viewVicDisplaySmall->gridLinesColorA = 0.0f;
 	viewVicDisplaySmall->gridLinesColorA2 = 0.0f;
-
-	viewVicDisplaySmall->viewFrame = new CGuiViewFrame(viewVicDisplaySmall, new CSlrString("Preview"));
-	viewVicDisplaySmall->AddGuiElement(viewVicDisplaySmall->viewFrame);
-	
-	viewVicDisplaySmall->consumeTapBackground = false;
 
 	viewVicDisplaySmall->showRasterCursor = false;
 	
@@ -161,7 +170,7 @@ CViewVicEditor::CViewVicEditor(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	// will not render in main CGuiView::Render loop
 //	viewVicDisplaySmall->manualRender = true;
 	
-	this->AddGuiElement(viewVicDisplaySmall);
+	this->AddWindow(viewVicDisplaySmall);
 
 	//
 	viewVicDisplayMain->SetVicControlView(viewC64->viewC64VicControl);
@@ -178,6 +187,9 @@ CViewVicEditor::CViewVicEditor(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	layerC64Screen = new CVicEditorLayerC64Screen(this);
 	layers.push_back(layerC64Screen);
 	
+	layerReferenceImage = new CVicEditorLayerImage(this, "Reference");
+	layers.push_back(layerReferenceImage);
+	
 	layerC64Canvas = new CVicEditorLayerC64Canvas(this);
 	layers.push_back(layerC64Canvas);
 	
@@ -189,27 +201,43 @@ CViewVicEditor::CViewVicEditor(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	layerVirtualSprites = new CVicEditorLayerVirtualSprites(this);
 	layers.push_back(layerVirtualSprites);
 	
-	layerUnrestrictedBitmap = new CVicEditorLayerUnrestrictedBitmap(this);
+	layerUnrestrictedBitmap = new CVicEditorLayerUnrestrictedBitmap(this, "Unrestricted");
 	layers.push_back(layerUnrestrictedBitmap);
 
 	this->selectedLayer = NULL;
 	
+	// this is not selectable layer for showing tool preview
+	layerToolPreview = new CVicEditorLayerUnrestrictedBitmap(this, "Tool preview");
+	toolIsActive = false;
+	
 	//
-	viewLayers = new CViewVicEditorLayers(470, 180, posZ, 80, 50, this);
-	this->AddGuiElement(viewLayers);
+	viewLayers = new CViewVicEditorLayers(470, 180, posZ, 80, 57, this);
+	this->AddWindow(viewLayers);
 	
 	//
 	float sp = 0.85f;
 	viewPalette = new CViewC64Palette(420, 310, posZ, 150*sp, 30*sp, this);
-	this->AddGuiElement(viewPalette);
+	this->AddWindow(viewPalette);
 	
 	//
 	viewCharset = new CViewC64Charset(50, 50, posZ, 200, 50, this);
-	this->AddGuiElement(viewCharset);
+	this->AddWindow(viewCharset);
+
+	viewSprite = new CViewC64Sprite(320, 180, posZ, 100, 64, this);
+	this->AddWindow(viewSprite);
+
+	//
+	viewCreateNewPicture = new CViewVicEditorCreateNewPicture(0,0, posZ, this); //56, this);
+	viewCreateNewPicture->PositionCenterOnParentView();
+	viewCreateNewPicture->SetVisible(false);
+	this->AddGuiElement(viewCreateNewPicture);
 	
 	//
-	viewSprite = new CViewC64Sprite(320, 180, posZ, 100, 64, this);
-	this->AddGuiElement(viewSprite);
+	viewToolBox = new CGuiViewToolBox(30, 80, posZ, 0, 0, 12.8, 12.8, 13, 15.5, 1, new CSlrString(""), this);
+
+	// tool box is not ready, make it invisible in production:
+	viewToolBox->visible = false;
+	this->AddWindow(viewToolBox);
 	
 	//
 	// loop of views for TAB & shift+TAB
@@ -224,13 +252,9 @@ CViewVicEditor::CViewVicEditor(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	prevVisiblePalette = true;
 	prevVisibleSprite = true;
 	prevVisiblePreview = true;
+	prevVisibleTopBar = true;
+	prevVisibleToolBox = true;
 
-	// other
-	UpdateDisplayFrame();
-	
-//	ZoomDisplay(15.0f);
-	ZoomDisplay(5.0f);
-	
 	inPresentationScreen = false;
 	
 	backupRenderDataWithColors = false;
@@ -250,6 +274,68 @@ CViewVicEditor::CViewVicEditor(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	guiMain->AddGlobalOSWindowChangedCallback(this);
 	
 
+	// icons
+	// read gfx
+	//	imgConsoleFonts = RES_GetImage("/Engine/console-plain");
+	//	imgConsoleFonts->ResourceSetPriority(RESOURCE_PRIORITY_STATIC);
+
+	//	imgNew = RES_LoadImageFromFileOS("/Users/mars/develop/MTEngine/_RUNTIME_/Documents/gfx/ico_new.gfx", false);
+	
+	imgNew = RES_GetImage("/gfx/icon_new", false);
+	viewTopBar->AddIcon(imgNew);
+	imgOpen = RES_GetImage("/gfx/icon_open", false);
+	viewTopBar->AddIcon(imgOpen);
+	imgSave = RES_GetImage("/gfx/icon_save", false);
+	viewTopBar->AddIcon(imgSave);
+	imgImport = RES_GetImage("/gfx/icon_import", false);
+	viewTopBar->AddIcon(imgImport);
+	imgExport = RES_GetImage("/gfx/icon_export", false);
+	viewTopBar->AddIcon(imgExport);
+	imgSettings = RES_GetImage("/gfx/icon_settings", false);
+	viewTopBar->AddIcon(imgSettings);
+
+	imgClear = RES_GetImage("/gfx/icon_clear", false);
+	viewTopBar->AddIcon(imgClear);
+
+	viewTopBar->SetPosition(0, 0, posZ, SCREEN_WIDTH, viewTopBar->sizeY);
+	
+	// tool box
+	imgToolPen = RES_GetImage("/gfx/icon_tool_pen", false);
+	viewToolBox->AddIcon(imgToolPen);
+	
+	imgToolBrushSquare = RES_GetImage("/gfx/icon_tool_brush_square", false);
+	viewToolBox->AddIcon(imgToolBrushSquare);
+	
+	imgToolBrushCircle = RES_GetImage("/gfx/icon_tool_brush_circle", false);
+	viewToolBox->AddIcon(imgToolBrushCircle);
+
+	imgToolFill = RES_GetImage("/gfx/icon_tool_fill", false);
+	viewToolBox->AddIcon(imgToolFill);
+	
+	imgToolRectangle = RES_GetImage("/gfx/icon_tool_rectangle", false);
+	viewToolBox->AddIcon(imgToolRectangle);
+	
+	imgToolCircle = RES_GetImage("/gfx/icon_tool_circle", false);
+	viewToolBox->AddIcon(imgToolCircle);
+
+	imgToolLine = RES_GetImage("/gfx/icon_tool_line", false);
+	viewToolBox->AddIcon(imgToolLine);
+
+	imgToolDither = RES_GetImage("/gfx/icon_tool_dither", false);
+	viewToolBox->AddIcon(imgToolDither);
+	
+	viewToolBox->SetPosition(60, 85, posZ, viewToolBox->sizeX, viewToolBox->sizeY);
+
+	
+	//
+	SetTopBarVisible(true);
+	
+	//	ZoomDisplay(15.0f);
+	ZoomDisplay(5.0f);
+	
+
+	//
+//	imgMock = RES_LoadImageFromFileOS("/Users/mars/develop/MTEngine/_RUNTIME_/Documents/gfx/viceditor01.gfx", false);
 }
 
 void CViewVicEditor::InitPaintGridColors()
@@ -293,6 +379,8 @@ void CViewVicEditor::DoLogic()
 
 void CViewVicEditor::Render()
 {
+	guiMain->LockMutex();
+	
 	if (viewSprite->btnScanForSprites->IsOn())
 	{
 		layerVirtualSprites->ClearSprites();
@@ -352,7 +440,10 @@ void CViewVicEditor::Render()
 
 	viewVicDisplayMain->RefreshScreen(viciiState);
 
-	
+	if (toolIsActive)
+	{
+		layerToolPreview->RenderMain(viciiState);
+	}
 	
 	// render main screen layers
 	for (std::list<CVicEditorLayer *>::iterator it = this->layers.begin();
@@ -395,9 +486,14 @@ void CViewVicEditor::Render()
 	viewVicDisplaySmall->SetViciiState(viciiState);
 	
 	// * render UI *
+//	BlitFilledRectangle(0, 0, posZ, SCREEN_WIDTH, SCREEN_HEIGHT, 1, 0, 0, 1);
+//	imgMock->Render(0, -50, posZ, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0.703125, 0.87890625);
+
+	
 	CGuiView::Render();
 	
-	
+	guiMain->UnlockMutex();
+
 	/////////////
 
 	
@@ -473,9 +569,9 @@ void CViewVicEditor::UpdateDisplayFrame()
 	if (py > 0.0f)
 		py = 0.0f;
 	
-	if (px + (viewVicDisplayMain->visibleScreenSizeX + borderX + viewVicDisplayMain->rasterScaleFactorX) < SCREEN_WIDTH)
+	if (px + (mainDisplayPosX + viewVicDisplayMain->visibleScreenSizeX + borderX + viewVicDisplayMain->rasterScaleFactorX) < mainDisplaySizeX)
 	{
-		px = SCREEN_WIDTH - (viewVicDisplayMain->visibleScreenSizeX + borderX + viewVicDisplayMain->rasterScaleFactorX);
+		px = mainDisplaySizeX - (mainDisplayPosX + viewVicDisplayMain->visibleScreenSizeX + borderX + viewVicDisplayMain->rasterScaleFactorX);
 
 		// keep it centered
 //		LOGD("   px=%f", px);
@@ -485,15 +581,15 @@ void CViewVicEditor::UpdateDisplayFrame()
 		}
 	}
 	
-	if (py + viewVicDisplayMain->visibleScreenSizeY < SCREEN_HEIGHT)
+	if (py + (mainDisplayPosY + viewVicDisplayMain->visibleScreenSizeY) < mainDisplaySizeY)
 	{
-		py = SCREEN_HEIGHT - viewVicDisplayMain->visibleScreenSizeY;
+		py = mainDisplaySizeY - (mainDisplayPosY + viewVicDisplayMain->visibleScreenSizeY);
 	}
 	
 	viewVicDisplayMain->SetPosition(px, py);
 	
 	float rx, ry;
-	viewVicDisplayMain->GetRasterPosFromScreenPosWithoutScroll(0.0f, 0.0f, &rx, &ry);
+	viewVicDisplayMain->GetRasterPosFromScreenPosWithoutScroll(mainDisplayPosX, mainDisplayPosY, &rx, &ry);
 	
 	float rx2, ry2;
 	
@@ -501,8 +597,8 @@ void CViewVicEditor::UpdateDisplayFrame()
 //	viewVicDisplayMain->GetRasterPosFromScreenPos(viewVicDisplayMain->posX + viewVicDisplayMain->sizeX,
 //												  viewVicDisplayMain->posY + viewVicDisplayMain->sizeY, &rx2, &ry2);
 
-	viewVicDisplayMain->GetRasterPosFromScreenPosWithoutScroll(SCREEN_WIDTH-1,
-												  SCREEN_HEIGHT-1, &rx2, &ry2);
+	viewVicDisplayMain->GetRasterPosFromScreenPosWithoutScroll(mainDisplayPosEndX-1,
+												  mainDisplayPosEndY-1, &rx2, &ry2);
 
 	
 	
@@ -587,6 +683,10 @@ void CViewVicEditor::PaintBrushWithMessage(CImageData *brush, int rx, int ry, u8
 
 bool CViewVicEditor::IsColorReplace()
 {
+//	LOGD("IsColorReplace: return %d | c64SettingsVicEditorForceReplaceColor %d = %d",
+//		 guiMain->isControlPressed, c64SettingsVicEditorForceReplaceColor,
+//		 (guiMain->isControlPressed | c64SettingsVicEditorForceReplaceColor));
+
 	return (guiMain->isControlPressed | c64SettingsVicEditorForceReplaceColor);
 }
 
@@ -611,7 +711,7 @@ u8 CViewVicEditor::PaintBrush(CImageData *brush, int rx, int ry, u8 colorSource)
 			{
 				int r;
 				
-				if (selectedLayer != NULL)
+				if (selectedLayer != NULL && selectedLayer->isPaintingLocked == false)
 				{
 					bool forceColorReplace = IsColorReplace();
 					
@@ -628,7 +728,7 @@ u8 CViewVicEditor::PaintBrush(CImageData *brush, int rx, int ry, u8 colorSource)
 					{
 						CVicEditorLayer *layer = *it;
 						
-						if (layer->isVisible)
+						if (layer->isVisible && layer->isPaintingLocked == false)
 						{
 							LOGD(" ...sx=%d +x=%d =%d  | sy=%d +y=%d =%d", sx, x, (sx+x), sy, y, (sy+y));
 							
@@ -640,7 +740,10 @@ u8 CViewVicEditor::PaintBrush(CImageData *brush, int rx, int ry, u8 colorSource)
 											 this->viewCharset->selectedChar);
 
 							if (r >= PAINT_RESULT_BLOCKED)
+							{
+//								LOGD("layer %s: r=%d", layer->layerName, r);
 								break;
+							}
 						}
 					}
 				}
@@ -648,8 +751,6 @@ u8 CViewVicEditor::PaintBrush(CImageData *brush, int rx, int ry, u8 colorSource)
 				if (r < result)
 					result = r;
 				
-				if (result >= PAINT_RESULT_BLOCKED)
-					break;
 			}
 		}
 	}
@@ -929,6 +1030,44 @@ bool CViewVicEditor::DoMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat distY, 
 		return false;
 	}
 	return true;
+}
+
+void CViewVicEditor::ToolPaintPixel(int px, int py, u8 colorSource)
+{
+	PaintPixel(px, py, colorSource);
+}
+
+void CViewVicEditor::ToolPaintBrush(int px, int py, u8 colorSource)
+{
+	PaintBrush(this->currentBrush, px, py, colorSource);
+}
+
+void CViewVicEditor::ToolClearDraftImage()
+{
+	layerToolPreview->ClearScreen();
+}
+
+void CViewVicEditor::ToolMakeDraftActive()
+{
+	this->toolIsActive = true;
+}
+
+void CViewVicEditor::ToolMakeDraftNotActive()
+{
+	this->toolIsActive = false;
+}
+
+void CViewVicEditor::ToolPaintPixelOnDraft(int px, int py, u8 colorSource)
+{
+	layerToolPreview->Paint(true, guiMain->isAltPressed,
+							px, py,
+							viewPalette->colorLMB, viewPalette->colorRMB, colorSource,
+							this->viewCharset->selectedChar);
+}
+
+void CViewVicEditor::ToolPaintBrushOnDraft(int px, int py, u8 colorSource)
+{
+	LOGTODO("CViewVicEditor::ToolPaintBrushOnDraft: not implemented");
 }
 
 //
@@ -1231,8 +1370,9 @@ bool CViewVicEditor::DoNotTouchedMove(GLfloat x, GLfloat y)
 
 void CViewVicEditor::MoveDisplayDiff(float diffX, float diffY)
 {
-	float px = viewVicDisplayMain->posX;
-	float py = viewVicDisplayMain->posY;
+	LOGD("CViewVicEditor::MoveDisplayDiff: diffX=%f diffY=%f posX=%f posY=%f posOffsetX=%f posOffsetY=%f", diffX, diffY, viewVicDisplayMain->posX, viewVicDisplayMain->posY, viewVicDisplayMain->posOffsetX, viewVicDisplayMain->posOffsetY);
+	float px = viewVicDisplayMain->posX - mainDisplayPosX - viewVicDisplayMain->posOffsetX;
+	float py = viewVicDisplayMain->posY - mainDisplayPosY - viewVicDisplayMain->posOffsetY;
 	
 	px += diffX;
 	py += diffY;
@@ -1242,7 +1382,7 @@ void CViewVicEditor::MoveDisplayDiff(float diffX, float diffY)
 
 void CViewVicEditor::MoveDisplayToScreenPos(float px, float py)
 {
-	LOGG("CViewVicEditor::MoveDisplayToScreenPos: %f %f", px, py);
+	LOGD("CViewVicEditor::MoveDisplayToScreenPos: %f %f", px, py);
 
 	guiMain->LockMutex();
 	
@@ -1265,11 +1405,11 @@ void CViewVicEditor::MoveDisplayToScreenPos(float px, float py)
 	if (py > 0.0f)
 		py = 0.0f;
 	
-	if (px + (viewVicDisplayMain->visibleScreenSizeX + borderX) < SCREEN_WIDTH)
+	if (px + (mainDisplayPosX + viewVicDisplayMain->visibleScreenSizeX + borderX) < mainDisplaySizeX)
 	{
-//		LOGD("SCREEN_WIDTH=%f visibleScreenSizeX=%f borderX=%f (%f)", SCREEN_WIDTH, viewVicDisplayMain->visibleScreenSizeX, borderX,
+//		LOGD("mainDisplaySizeX=%f visibleScreenSizeX=%f borderX=%f (%f)", mainDisplaySizeX, viewVicDisplayMain->visibleScreenSizeX, borderX,
 //			 (viewVicDisplayMain->visibleScreenSizeX + borderX));
-		px = SCREEN_WIDTH - (viewVicDisplayMain->visibleScreenSizeX + borderX);
+		px = mainDisplaySizeX - (mainDisplayPosX + viewVicDisplayMain->visibleScreenSizeX + borderX);
 		
 //		LOGD("   px=%f", px);
 		if (px > -borderX/4.0f)
@@ -1278,12 +1418,12 @@ void CViewVicEditor::MoveDisplayToScreenPos(float px, float py)
 		}
 	}
 	
-	if (py + viewVicDisplayMain->visibleScreenSizeY < SCREEN_HEIGHT)
+	if (py + (mainDisplayPosY + viewVicDisplayMain->visibleScreenSizeY) < mainDisplaySizeY)
 	{
-		py = SCREEN_HEIGHT - viewVicDisplayMain->visibleScreenSizeY;
+		py = mainDisplaySizeY - (mainDisplayPosY + viewVicDisplayMain->visibleScreenSizeY);
 	}
 	
-	
+	LOGD("------> SetPosition: px=%f py=%f", px, py);
 	viewVicDisplayMain->SetPosition(px, py);
 	UpdateDisplayFrame();
 	
@@ -1328,7 +1468,7 @@ void CViewVicEditor::ZoomDisplay(float newScale)
 		float pcx, pcy;
 		viewVicDisplayMain->GetScreenPosFromRasterPosWithoutScroll(px, py, &pcx, &pcy);
 		
-		MoveDisplayDiff(cx-pcx, cy-pcy);
+		MoveDisplayDiff(cx-pcx-viewVicDisplayMain->posOffsetX, cy-pcy-viewVicDisplayMain->posOffsetY);
 	}
 
 	
@@ -1374,8 +1514,11 @@ bool CViewVicEditor::DoMultiFinishTap(COneTouchData *touch, float x, float y)
 
 void CViewVicEditor::SwitchToVicEditor()
 {
-	c64SettingsIsInVicEditor = true;
-	guiMain->SetView(this);
+	if (viewC64->debugInterfaceC64)
+	{
+		c64SettingsIsInVicEditor = true;
+		guiMain->SetView(this);		
+	}
 }
 
 
@@ -1398,6 +1541,33 @@ void CViewVicEditor::SaveScreenshotAsPNG()
 	this->OpenDialogExportFile();
 }
 
+void CViewVicEditor::SetTopBarVisible(bool isTopBarVisible)
+{
+	guiMain->LockMutex();
+	viewTopBar->SetVisible(isTopBarVisible);
+	
+	mainDisplayPosX = 0;
+	
+	if (isTopBarVisible)
+	{
+		mainDisplayPosY = 16;
+	}
+	else
+	{
+		mainDisplayPosY = 0;
+	}
+	mainDisplaySizeX = SCREEN_WIDTH - mainDisplayPosX;
+	mainDisplaySizeY = SCREEN_HEIGHT - mainDisplayPosY;
+	mainDisplayPosEndX = SCREEN_WIDTH;
+	mainDisplayPosEndY = SCREEN_HEIGHT;
+	viewVicDisplayMain->posOffsetX = mainDisplayPosX;
+	viewVicDisplayMain->posOffsetY = mainDisplayPosY;
+	
+	UpdateDisplayFrame();
+
+	guiMain->UnlockMutex();
+}
+
 bool CViewVicEditor::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
 	LOGI("CViewVicEditor::KeyDown: keyCode=%d", keyCode);
@@ -1418,7 +1588,12 @@ bool CViewVicEditor::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContr
 	zones.push_back(KBZONE_GLOBAL);
 	CSlrKeyboardShortcut *shortcut = viewC64->keyboardShortcuts->FindShortcut(zones, keyCode, isShift, isAlt, isControl);
 	
-	if (shortcut == viewC64->keyboardShortcuts->kbsVicEditorPreviewScale)
+	if (shortcut == viewC64->keyboardShortcuts->kbsVicEditorCreateNewPicture)
+	{
+		this->CreateNewPicture();
+		return true;
+	}
+	else if (shortcut == viewC64->keyboardShortcuts->kbsVicEditorPreviewScale)
 	{
 		resetDisplayScaleIndex++;
 		if (resetDisplayScaleIndex == 5)
@@ -1474,14 +1649,7 @@ bool CViewVicEditor::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContr
 	}
 	else if (shortcut == viewC64->keyboardShortcuts->kbsVicEditorClearScreen)
 	{
-		guiMain->LockMutex();
-		for (std::list<CVicEditorLayer *>::iterator it = this->layers.begin();
-			 it != this->layers.end(); it++)
-		{
-			CVicEditorLayer *layer = *it;
-			layer->ClearScreen();
-		}
-		guiMain->UnlockMutex();
+		this->ClearScreen();
 		return true;
 	}
 	else if (shortcut == viewC64->keyboardShortcuts->kbsVicEditorRectangleBrushSizePlus)
@@ -1498,10 +1666,11 @@ bool CViewVicEditor::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContr
 			
 			currentBrush = CreateBrushRectangle(brushSize);
 			sprintf(buf, "Rectangle brush size %d", brushSize);
-			
+
+			guiMain->UnlockMutex();
+
 			guiMain->ShowMessage(buf);
 			SYS_ReleaseCharBuf(buf);
-			guiMain->UnlockMutex();
 		}
 		return true;
 	}
@@ -1519,10 +1688,11 @@ bool CViewVicEditor::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContr
 			
 			currentBrush = CreateBrushRectangle(brushSize);
 			sprintf(buf, "Rectangle brush size %d", brushSize);
-			
+
+			guiMain->UnlockMutex();
+
 			guiMain->ShowMessage(buf);
 			SYS_ReleaseCharBuf(buf);
-			guiMain->UnlockMutex();
 		}
 		return true;
 	}
@@ -1540,10 +1710,11 @@ bool CViewVicEditor::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContr
 			
 			currentBrush = CreateBrushCircle(brushSize);
 			sprintf(buf, "Circle brush size %d", brushSize);
-			
+
+			guiMain->UnlockMutex();
+
 			guiMain->ShowMessage(buf);
 			SYS_ReleaseCharBuf(buf);
-			guiMain->UnlockMutex();
 		}
 		return true;
 	}
@@ -1561,10 +1732,11 @@ bool CViewVicEditor::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContr
 			
 			currentBrush = CreateBrushCircle(brushSize);
 			sprintf(buf, "Circle brush size %d", brushSize);
-			
+
+			guiMain->UnlockMutex();
+
 			guiMain->ShowMessage(buf);
 			SYS_ReleaseCharBuf(buf);
-			guiMain->UnlockMutex();
 		}
 		return true;
 	}
@@ -1576,6 +1748,11 @@ bool CViewVicEditor::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContr
 			viewCharset->SetVisible(prevVisibleCharset);
 			viewSprite->SetVisible(prevVisibleSprite);
 			viewLayers->SetVisible(prevVisibleLayers);
+			
+			// TODO: toolbox is disabled in production
+			//viewToolBox->SetVisible(prevVisibleToolBox);
+			
+			SetTopBarVisible(prevVisibleTopBar);
 			viewVicDisplaySmall->SetVisible(prevVisiblePreview);
 			inPresentationScreen = false;
 		}
@@ -1585,12 +1762,22 @@ bool CViewVicEditor::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContr
 			prevVisibleCharset = viewCharset->visible;
 			prevVisibleSprite = viewSprite->visible;
 			prevVisibleLayers = viewLayers->visible;
+			prevVisibleTopBar = viewTopBar->visible;
+			
+			// TODO: toolbox is disabled in production
+			//prevVisibleToolBox = viewToolBox->visible;
+			
 			prevVisiblePreview = viewVicDisplaySmall->visible;
 			
 			viewPalette->SetVisible(false);
 			viewCharset->SetVisible(false);
 			viewSprite->SetVisible(false);
 			viewLayers->SetVisible(false);
+			
+			// TODO: toolbox is disabled in production
+			//viewToolBox->SetVisible(false);
+			
+			SetTopBarVisible(false);
 			viewVicDisplaySmall->SetVisible(false);
 			inPresentationScreen = true;
 		}
@@ -1622,6 +1809,17 @@ bool CViewVicEditor::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContr
 		viewSprite->SetVisible(!viewSprite->visible);
 		return true;
 	}
+	else if (shortcut == viewC64->keyboardShortcuts->kbsVicEditorToggleTopBar)
+	{
+		SetTopBarVisible(!viewTopBar->visible);
+		return true;
+	}
+	// TODO: toolbox is disabled in production
+//	else if (shortcut == viewC64->keyboardShortcuts->kbsVicEditorToggleToolBox)
+//	{
+//		viewToolBox->SetVisible(!viewToolBox->visible);
+//		return true;
+//	}
 	else if (shortcut == viewC64->keyboardShortcuts->kbsVicEditorToggleSpriteFrames)
 	{
 		bool show = !viewVicDisplayMain->showSpritesFrames;
@@ -1719,9 +1917,9 @@ bool CViewVicEditor::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContr
 				{
 					StoreUndo();
 					
-					viewC64->debugInterface->SetVicRegister(0x21, color);
+					viewC64->debugInterfaceC64->SetVicRegister(0x21, color);
 					viewPalette->colorD021 = color;
-					viewC64->debugInterface->SetVicRegister(0x20, color);
+					viewC64->debugInterfaceC64->SetVicRegister(0x20, color);
 					viewPalette->colorD020 = color;
 				}
 				
@@ -1741,9 +1939,9 @@ bool CViewVicEditor::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContr
 
 			u8 color = viewVicDisplayMain->currentCanvas->GetColorAtPixel(rx, ry);
 			
-			viewC64->debugInterface->SetVicRegister(0x21, color);
+			viewC64->debugInterfaceC64->SetVicRegister(0x21, color);
 			viewPalette->colorD021 = color;
-			viewC64->debugInterface->SetVicRegister(0x20, color);
+			viewC64->debugInterfaceC64->SetVicRegister(0x20, color);
 			viewPalette->colorD020 = color;
 			return true;
 
@@ -1796,6 +1994,29 @@ bool CViewVicEditor::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContr
 	return viewC64->KeyDown(keyCode, isShift, isAlt, isControl);
 }
 
+void CViewVicEditor::CreateNewPicture()
+{
+	this->BringToFront(viewCreateNewPicture);
+	viewCreateNewPicture->SetVisible(!viewCreateNewPicture->visible);
+	if (viewCreateNewPicture->IsVisible())
+	{
+		viewCreateNewPicture->ActivateView();
+	}
+}
+
+void CViewVicEditor::ClearScreen()
+{
+	guiMain->LockMutex();
+	for (std::list<CVicEditorLayer *>::iterator it = this->layers.begin();
+		 it != this->layers.end(); it++)
+	{
+		CVicEditorLayer *layer = *it;
+		layer->ClearScreen();
+	}
+	guiMain->UnlockMutex();
+}
+
+//
 bool CViewVicEditor::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
 	isKeyboardMovingDisplay = false;
@@ -1895,6 +2116,44 @@ void CViewVicEditor::DeactivateView()
 }
 
 //
+void CViewVicEditor::ToolBoxIconPressed(CSlrImage *imgIcon)
+{
+	LOGD("CViewVicEditor::ToolBoxIconPressed");
+	
+	if (imgIcon == imgNew)
+	{
+		CreateNewPicture();
+	}
+	else if (imgIcon == imgOpen)
+	{
+		OpenDialogImportFile();
+	}
+	else if (imgIcon == imgSave)
+	{
+		OpenDialogSaveVCE();
+	}
+	else if (imgIcon == imgImport)
+	{
+		OpenDialogImportFile();
+	}
+	else if (imgIcon == imgExport)
+	{
+		OpenDialogExportFile();
+	}
+	else if (imgIcon == imgSettings)
+	{
+		guiMain->SetView(viewC64->viewC64SettingsMenu);
+		return;
+	}
+	else if (imgIcon == imgClear)
+	{
+		this->ClearScreen();
+	}
+	
+	
+}
+
+//
 CImageData *CViewVicEditor::CreateBrushCircle(int newSize)
 {
 	CImageData *brush = new CImageData(newSize, newSize, IMG_TYPE_GRAYSCALE);
@@ -1983,6 +2242,13 @@ void CViewVicEditor::SystemDialogFileOpenSelected(CSlrString *path)
 	}
 	else
 	{
+		// TODO: move this into common open file interface, path will be deleted by SystemDialogFileOpenSelected
+		viewC64->viewC64MainMenu->SystemDialogFileOpenSelected(path);
+	}
+
+	/*
+	else
+	{
 		char *cExt = ext->GetStdASCII();
 		
 		char *buf = SYS_GetCharBuf();
@@ -1992,9 +2258,8 @@ void CViewVicEditor::SystemDialogFileOpenSelected(CSlrString *path)
 		
 		delete [] cExt;
 		SYS_ReleaseCharBuf(buf);
-	}
+	}*/
 	
-	delete path;
 }
 
 void CViewVicEditor::SystemDialogFileOpenCancelled()
@@ -2002,14 +2267,10 @@ void CViewVicEditor::SystemDialogFileOpenCancelled()
 	LOGD("CViewVicEditor::SystemDialogFileOpenCancelled");
 }
 
-// import export
-void CViewVicEditor::OpenDialogExportFile()
+// export
+u8 CViewVicEditor::GetExportModeFromVicState(vicii_cycle_state_t *viciiState)
 {
-	LOGM("CViewVicEditor::OpenDialogExportFile");
-	
 	// check current VIC Display mode
-	vicii_cycle_state_t *viciiState = &(viewC64->viciiStateToShow);
-
 	u8 mc;
 	u8 eb;
 	u8 bm;
@@ -2025,6 +2286,65 @@ void CViewVicEditor::OpenDialogExportFile()
 	bool isBitmap = bm;
 	bool isExtColor = eb;
 
+	if (isBitmap == true && isMultiColor == true)
+	{
+		// multi bitmap
+		return VICEDITOR_EXPORT_KOALA;
+	}
+	else if (isBitmap == true && isMultiColor == false)
+	{
+		// hires bitmap
+		return VICEDITOR_EXPORT_ART_STUDIO;
+	}
+	// raw text
+	return VICEDITOR_EXPORT_RAW_TEXT;
+}
+
+void CViewVicEditor::ExportScreen(CSlrString *path)
+{
+	path->DebugPrint("CViewVicEditor::ExportScreen path=");
+	
+	// export current screen to a path based on selected screen mode
+	u8 exportMode = GetExportModeFromVicState(&(viewC64->viciiStateToShow));
+	
+	if (exportMode == VICEDITOR_EXPORT_KOALA)
+	{
+		ExportSpritesData(path);
+
+		CSlrString *strPathKla = new CSlrString(path);
+		strPathKla->Concatenate(".kla");
+		ExportKoala(strPathKla);
+		delete strPathKla;
+	}
+	else if (exportMode == VICEDITOR_EXPORT_ART_STUDIO)
+	{
+		ExportSpritesData(path);
+
+		CSlrString *strPathArt = new CSlrString(path);
+		strPathArt->Concatenate(".art");
+		ExportArtStudio(strPathArt);
+		delete strPathArt;
+	}
+	else //if (exportFileDialogMode == VICEDITOR_EXPORT_RAW_TEXT)
+	{
+		ExportSpritesData(path);
+
+		CSlrString *strPathRaw = new CSlrString(path);
+		strPathRaw->Concatenate(".raw");
+		ExportRawText(strPathRaw);
+		delete strPathRaw;
+		
+		CSlrString *strPathCharset = new CSlrString(path);
+		strPathRaw->Concatenate(".charset");
+		ExportCharset(strPathCharset);
+		delete strPathCharset;
+	}
+}
+
+void CViewVicEditor::OpenDialogExportFile()
+{
+	LOGM("CViewVicEditor::OpenDialogExportFile");
+	
 	if (exportMode == VICEDITOR_EXPORT_HYPER)
 	{
 		LOGD(" ..... export hyper screen");
@@ -2036,6 +2356,7 @@ void CViewVicEditor::OpenDialogExportFile()
 		viewC64->ShowDialogSaveFile(this, &exportHyperBitmapFileExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
 		delete windowTitle;
 		delete defaultFileName;
+		return;
 	}
 	else if (exportMode == VICEDITOR_EXPORT_PNG)
 	{
@@ -2049,8 +2370,13 @@ void CViewVicEditor::OpenDialogExportFile()
 		viewC64->ShowDialogSaveFile(this, &exportPNGFileExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
 		delete windowTitle;
 		delete defaultFileName;
+		return;
 	}
-	else if (isBitmap == true && isMultiColor == true)
+	
+	// automatic mode based on current vicii state
+	exportMode = GetExportModeFromVicState(&(viewC64->viciiStateToShow));
+	
+	if (exportMode == VICEDITOR_EXPORT_KOALA)
 	{
 		LOGD(" ..... export Koala");
 		CSlrString *defaultFileName = new CSlrString("picture");
@@ -2062,8 +2388,9 @@ void CViewVicEditor::OpenDialogExportFile()
 		viewC64->ShowDialogSaveFile(this, &exportMultiBitmapFileExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
 		delete windowTitle;
 		delete defaultFileName;
+		return;
 	}
-	else if (isBitmap == true && isMultiColor == false)
+	else if (exportMode == VICEDITOR_EXPORT_ART_STUDIO)
 	{
 		LOGD(" ..... export Art Studio");
 		CSlrString *defaultFileName = new CSlrString("picture");
@@ -2075,6 +2402,7 @@ void CViewVicEditor::OpenDialogExportFile()
 		viewC64->ShowDialogSaveFile(this, &exportHiresBitmapFileExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
 		delete windowTitle;
 		delete defaultFileName;
+		return;
 	}
 	else
 	{
@@ -2088,6 +2416,7 @@ void CViewVicEditor::OpenDialogExportFile()
 		viewC64->ShowDialogSaveFile(this, &exportHiresTextFileExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
 		delete windowTitle;
 		delete defaultFileName;
+		return;
 	}
 	
 }
@@ -2137,11 +2466,6 @@ void CViewVicEditor::SystemDialogFileSaveSelected(CSlrString *path)
 		ExportSpritesData(path);
 		ExportCharset(path);
 	}
-	else if (exportFileDialogMode == VICEDITOR_EXPORT_HYPER)
-	{
-		ExportHyper(path);
-		ExportSpritesData(path);
-	}
 	else if (exportFileDialogMode == VICEDITOR_EXPORT_PNG)
 	{
 		ExportPNG(path);
@@ -2185,8 +2509,18 @@ void CViewVicEditor::EnsureCorrectScreenAndBitmapAddr()
 
 }
 
-
 void CViewVicEditor::SetVicMode(bool isBitmapMode, bool isMultiColor, bool isExtendedBackground)
+{
+	this->SetVicModeRegsOnly(isBitmapMode, isMultiColor, isExtendedBackground);
+
+	vicii_cycle_state_t *viciiState = &(viewC64->viciiStateToShow);
+	viewVicDisplayMain->SetCurrentCanvas(isBitmapMode, isMultiColor, isExtendedBackground, 1);
+	viewVicDisplayMain->currentCanvas->SetViciiState(viciiState);
+	viewVicDisplaySmall->SetCurrentCanvas(isBitmapMode, isMultiColor, isExtendedBackground, 1);
+	viewVicDisplaySmall->currentCanvas->SetViciiState(viciiState);
+}
+
+void CViewVicEditor::SetVicModeRegsOnly(bool isBitmapMode, bool isMultiColor, bool isExtendedBackground)
 {
 	vicii_cycle_state_t *viciiState = &(viewC64->viciiStateToShow);
 	
@@ -2202,15 +2536,6 @@ void CViewVicEditor::SetVicMode(bool isBitmapMode, bool isMultiColor, bool isExt
 		d011 = (d011 & 0xDF);
 	}
 	
-	if (isExtendedBackground)
-	{
-		d011 = (d011 & 0xBF) | 0x40;
-	}
-	else
-	{
-		d011 = (d011 & 0xBF);
-	}
-	
 	if (isMultiColor)
 	{
 		d016 = (d016 & 0xEF) | 0x10;
@@ -2220,8 +2545,17 @@ void CViewVicEditor::SetVicMode(bool isBitmapMode, bool isMultiColor, bool isExt
 		d016 = (d016 & 0xEF);
 	}
 
-	viewC64->debugInterface->SetVicRegister(0x11, d011);
-	viewC64->debugInterface->SetVicRegister(0x16, d016);
+	if (isExtendedBackground)
+	{
+		d011 = (d011 & 0xBF) | 0x40;
+	}
+	else
+	{
+		d011 = (d011 & 0xBF);
+	}
+	
+	viewC64->debugInterfaceC64->SetVicRegister(0x11, d011);
+	viewC64->debugInterfaceC64->SetVicRegister(0x16, d016);
 }
 
 void CViewVicEditor::SetVicAddresses(int vbank, int screenAddr, int charsetAddr, int bitmapAddr)
@@ -2236,7 +2570,16 @@ void CViewVicEditor::SetVicAddresses(int vbank, int screenAddr, int charsetAddr,
 	
 	int d018 = ((screen << 4) & 0xF0) | ((bitmap << 3) & 0x08) | ((charset << 1) & 0x0E);
 	
-	viewC64->debugInterface->SetVicRegister(0x18, d018);
+	viewC64->debugInterfaceC64->SetVicRegister(0x18, d018);
+
+	viewVicDisplayMain->screenAddress = screenAddr;
+	viewVicDisplayMain->charsetAddress = charsetAddr;
+	viewVicDisplayMain->bitmapAddress = bitmapAddr;
+
+	viewVicDisplaySmall->screenAddress = screenAddr;
+	viewVicDisplaySmall->charsetAddress = charsetAddr;
+	viewVicDisplaySmall->bitmapAddress = bitmapAddr;
+
 }
 
 bool CViewVicEditor::ImportPNG(CSlrString *path)
@@ -2248,134 +2591,169 @@ bool CViewVicEditor::ImportPNG(CSlrString *path)
 	
 	CImageData *imageData = new CImageData(cPath);
 	delete [] cPath;
-	
-	if (imageData->width == 320 && imageData->height == 200)
+
+	if (this->selectedLayer == layerReferenceImage || layerReferenceImage->isVisible)
 	{
-		if (viewVicDisplayMain->currentCanvas->ConvertFrom(imageData) == PAINT_RESULT_OK)
+		// load png as reference image
+		layerReferenceImage->LoadFrom(imageData);
+		
+		if (this->selectedLayer == layerReferenceImage)
 		{
-			guiMain->ShowMessage("File imported");
+			CSlrString *str = path->GetFileNameComponentFromPath();
+			str->Concatenate(" imported");
+			guiMain->ShowMessage(str);
+			delete str;
+
+			delete imageData;
+			guiMain->UnlockMutex();
+			return true;
+		}
+	}
+	
+	if (this->selectedLayer == layerC64Canvas ||
+		this->selectedLayer == layerC64Screen ||
+		layerC64Canvas->isVisible || layerC64Screen->isVisible)
+	{
+		// import to C64
+		if (imageData->width == 320 && imageData->height == 200)
+		{
+			if (viewVicDisplayMain->currentCanvas->ConvertFrom(imageData) == PAINT_RESULT_OK)
+			{
+				CSlrString *str = path->GetFileNameComponentFromPath();
+				str->Concatenate(" imported");
+				guiMain->ShowMessage(str);
+				delete str;
+			}
+			else
+			{
+				guiMain->ShowMessage("Import failed");
+			}
+		}
+		else if (imageData->width == 384 && imageData->height == 272)
+		{
+			//		//-32.000000 -35.000000
+			CImageData *interiorImage = IMG_CropImageRGBA(imageData, 32, 35, 320, 200);
+			
+			if (viewVicDisplayMain->currentCanvas->ConvertFrom(interiorImage) != PAINT_RESULT_OK)
+			{
+				guiMain->UnlockMutex();
+				guiMain->ShowMessage("Import failed");
+				return false;
+			}
+			
+			delete interiorImage;
+			
+			viewSprite->selectedColor = -1;
+			
+			C64DebugInterface *debugInterface = viewVicDisplayMain->debugInterface;
+			
+			CImageData *image = viewVicDisplayMain->currentCanvas->ReducePalette(imageData);
+			
+			for (int ry = 0; ry < 272; ry++)
+			{
+				for (int rx = 0; rx < 384; rx++)
+				{
+					int px = rx - 32;
+					int py = ry - 35;
+					u8 paintColor = image->GetPixelResultByte(rx, ry);
+					
+					C64Sprite *sprite = layerVirtualSprites->FindSpriteByRasterPos(px, py);
+					
+					if (sprite == NULL)
+						continue;
+					
+					int spc = (px + 0x18)/8.0f;
+					int spy = py + 0x32;
+					
+					vicii_cycle_state_t *viciiState = NULL;
+					
+					if (spy >= 0 && spy < 312
+						&& spc >= 0 && spc < 64)
+					{
+						viciiState = c64d_get_vicii_state_for_raster_cycle(spy+2, spc);
+					}
+					
+					// TODO: calculate histograms and select colors for spirtes based on most used color pixels
+					if (viciiState != NULL)
+					{
+						u8 paintColorD021	= viciiState->regs[0x21];
+						u8 paintColorSprite = viciiState->regs[0x27 + (sprite->spriteId)];
+						
+						if (sprite->isMulti)
+						{
+							u8 paintColorD025	= viciiState->regs[0x25];
+							u8 paintColorD026	= viciiState->regs[0x26];
+							
+							if (paintColor == paintColorD021
+								|| paintColor == paintColorD025
+								|| paintColor == paintColorSprite
+								|| paintColor == paintColorD026)
+							{
+								layerVirtualSprites->Paint(false, false, px, py, paintColor, paintColor, VICEDITOR_COLOR_SOURCE_LMB, 0);
+							}
+							else
+							{
+								float dist[4];
+								
+								dist[0] = GetC64ColorDistance(paintColor, paintColorD021, debugInterface);
+								dist[1] = GetC64ColorDistance(paintColor, paintColorD025, debugInterface);
+								dist[2] = GetC64ColorDistance(paintColor, paintColorSprite, debugInterface);
+								dist[3] = GetC64ColorDistance(paintColor, paintColorD026, debugInterface);
+								
+								float minDist = 9999.9f;
+								int minColorNum = 0;
+								
+								for (int i = 0; i < 4; i++)
+								{
+									if (dist[i] < minDist)
+									{
+										minDist = dist[i];
+										minColorNum = i;
+									}
+								}
+								
+								paintColor = viewSprite->GetPaintColorByNum(minColorNum);
+								layerVirtualSprites->Paint(false, false, px, py, paintColor, paintColor, VICEDITOR_COLOR_SOURCE_LMB, 0);
+							}
+						}
+						else
+						{
+							if (paintColor == paintColorD021)
+							{
+								layerVirtualSprites->Paint(false, false, px, py,
+														   viewSprite->paintColorD021, paintColorD021, VICEDITOR_COLOR_SOURCE_LMB, 0);
+							}
+							else
+							{
+								layerVirtualSprites->Paint(false, false, px, py,
+														   viewSprite->paintColorSprite, paintColorSprite, VICEDITOR_COLOR_SOURCE_LMB, 0);
+							}
+						}
+					}
+					
+					
+				}
+			}
+			
+			delete image;
 		}
 		else
 		{
-			guiMain->ShowMessage("Import failed");
-		}
-	}
-	else if (imageData->width == 384 && imageData->height == 272)
-	{
-//		//-32.000000 -35.000000
-		CImageData *interiorImage = IMG_CropImageRGBA(imageData, 32, 35, 320, 200);
+			guiMain->UnlockMutex();
+			guiMain->ShowMessage("Image size should be 320x200 or 384x272");
 
-		if (viewVicDisplayMain->currentCanvas->ConvertFrom(interiorImage) != PAINT_RESULT_OK)
-		{
-			guiMain->ShowMessage("Import failed");
+			// scale
+			
+			delete imageData;
 			return false;
 		}
-		
-		delete interiorImage;
-		
-		viewSprite->selectedColor = -1;
-
-		C64DebugInterface *debugInterface = viewVicDisplayMain->debugInterface;
-		
-		CImageData *image = viewVicDisplayMain->currentCanvas->ReducePalette(imageData);
-
-		for (int ry = 0; ry < 272; ry++)
-		{
-			for (int rx = 0; rx < 384; rx++)
-			{
-				int px = rx - 32;
-				int py = ry - 35;
-				u8 paintColor = image->GetPixelResultByte(rx, ry);
-				
-				C64Sprite *sprite = layerVirtualSprites->FindSpriteByRasterPos(px, py);
-				
-				if (sprite == NULL)
-					continue;
-
-				int spc = (px + 0x18)/8.0f;
-				int spy = py + 0x32;
-				
-				vicii_cycle_state_t *viciiState = NULL;
-				
-				if (spy >= 0 && spy < 312
-					&& spc >= 0 && spc < 64)
-				{
-					viciiState = c64d_get_vicii_state_for_raster_cycle(spy+2, spc);
-				}
-				
-				// TODO: calculate histograms and select colors for spirtes based on most used color pixels
-				if (viciiState != NULL)
-				{
-					u8 paintColorD021	= viciiState->regs[0x21];
-					u8 paintColorSprite = viciiState->regs[0x27 + (sprite->spriteId)];
-
-					if (sprite->isMulti)
-					{
-						u8 paintColorD025	= viciiState->regs[0x25];
-						u8 paintColorD026	= viciiState->regs[0x26];
-
-						if (paintColor == paintColorD021
-							|| paintColor == paintColorD025
-							|| paintColor == paintColorSprite
-							|| paintColor == paintColorD026)
-						{
-							layerVirtualSprites->Paint(false, false, px, py, paintColor, paintColor, VICEDITOR_COLOR_SOURCE_LMB, 0);
-						}
-						else
-						{
-							float dist[4];
-							
-							dist[0] = GetC64ColorDistance(paintColor, paintColorD021, debugInterface);
-							dist[1] = GetC64ColorDistance(paintColor, paintColorD025, debugInterface);
-							dist[2] = GetC64ColorDistance(paintColor, paintColorSprite, debugInterface);
-							dist[3] = GetC64ColorDistance(paintColor, paintColorD026, debugInterface);
-							
-							float minDist = 9999.9f;
-							int minColorNum = 0;
-							
-							for (int i = 0; i < 4; i++)
-							{
-								if (dist[i] < minDist)
-								{
-									minDist = dist[i];
-									minColorNum = i;
-								}
-							}
-							
-							paintColor = viewSprite->GetPaintColorByNum(minColorNum);
-							layerVirtualSprites->Paint(false, false, px, py, paintColor, paintColor, VICEDITOR_COLOR_SOURCE_LMB, 0);
-						}
-					}
-					else
-					{
-						if (paintColor == paintColorD021)
-						{
-							layerVirtualSprites->Paint(false, false, px, py,
-													   viewSprite->paintColorD021, paintColorD021, VICEDITOR_COLOR_SOURCE_LMB, 0);
-						}
-						else
-						{
-							layerVirtualSprites->Paint(false, false, px, py,
-													   viewSprite->paintColorSprite, paintColorSprite, VICEDITOR_COLOR_SOURCE_LMB, 0);
-						}
-					}
-				}
-
-
-			}
-		}
-		
-		delete image;
-	}
-	else
-	{
-		guiMain->ShowMessage("Image size should be 320x200 or 384x272");
-		delete imageData;
-		return false;
 	}
 	
-	guiMain->ShowMessage("File imported");
-	
+	CSlrString *str = path->GetFileNameComponentFromPath();
+	str->Concatenate(" imported");
+	guiMain->ShowMessage(str);
+	delete str;
+
 	delete imageData;
 	
 	guiMain->UnlockMutex();
@@ -2461,12 +2839,15 @@ bool CViewVicEditor::ImportKoala(CSlrString *path)
 
 	u8 bkg = byteBuffer->GetU8();
 	
-	viewC64->debugInterface->SetVicRegister(0x20, bkg);
-	viewC64->debugInterface->SetVicRegister(0x21, bkg);
+	viewC64->debugInterfaceC64->SetVicRegister(0x20, bkg);
+	viewC64->debugInterfaceC64->SetVicRegister(0x21, bkg);
 	
 	guiMain->UnlockMutex();
 	
-	guiMain->ShowMessage("Koala file loaded");
+	CSlrString *str = path->GetFileNameComponentFromPath();
+	str->Concatenate(" loaded");
+	guiMain->ShowMessage(str);
+	delete str;
 
 	return true;
 }
@@ -2545,8 +2926,11 @@ bool CViewVicEditor::ImportDoodle(CSlrString *path)
 	
 	guiMain->UnlockMutex();
 	
-	guiMain->ShowMessage("File loaded");
-	
+	CSlrString *str = path->GetFileNameComponentFromPath();
+	str->Concatenate(" loaded");
+	guiMain->ShowMessage(str);
+	delete str;
+
 	return true;
 }
 
@@ -2618,19 +3002,23 @@ bool CViewVicEditor::ImportArtStudio(CSlrString *path)
 	
 	u8 bkg = byteBuffer->GetU8();
 
-	viewC64->debugInterface->SetVicRegister(0x20, bkg);
-	viewC64->debugInterface->SetVicRegister(0x21, bkg);
+	viewC64->debugInterfaceC64->SetVicRegister(0x20, bkg);
+	viewC64->debugInterfaceC64->SetVicRegister(0x21, bkg);
 	
 	guiMain->UnlockMutex();
 	
-	guiMain->ShowMessage("File loaded");
-	
+	CSlrString *str = path->GetFileNameComponentFromPath();
+	str->Concatenate(" loaded");
+	guiMain->ShowMessage(str);
+	delete str;
+
 	return true;
 }
 
 bool CViewVicEditor::ExportKoala(CSlrString *path)
 {
 	LOGD("CViewVicEditor::ExportKoala");
+	path->DebugPrint("ExportKoala path=");
 	
 	guiMain->LockMutex();
 
@@ -2670,7 +3058,10 @@ bool CViewVicEditor::ExportKoala(CSlrString *path)
 
 	guiMain->UnlockMutex();
 
-	guiMain->ShowMessage("File saved");
+	CSlrString *str = path->GetFileNameComponentFromPath();
+	str->Concatenate(" saved");
+	guiMain->ShowMessage(str);
+	delete str;
 	
 	LOGM("CViewVicEditor::ExportKoala: file saved");
 
@@ -2681,6 +3072,8 @@ bool CViewVicEditor::ExportArtStudio(CSlrString *path)
 {
 	LOGD("CViewVicEditor::ExportArtStudio");
 
+	path->DebugPrint("ExportArtStudio path=");
+
 	guiMain->LockMutex();
 	
 	char *cPath = path->GetStdASCII();
@@ -2716,7 +3109,10 @@ bool CViewVicEditor::ExportArtStudio(CSlrString *path)
 	
 	guiMain->UnlockMutex();
 	
-	guiMain->ShowMessage("File saved");
+	CSlrString *str = path->GetFileNameComponentFromPath();
+	str->Concatenate(" saved");
+	guiMain->ShowMessage(str);
+	delete str;
 	
 	LOGM("CViewVicEditor::ExportArtStudio: file saved");
 
@@ -2726,6 +3122,8 @@ bool CViewVicEditor::ExportArtStudio(CSlrString *path)
 bool CViewVicEditor::ExportRawText(CSlrString *path)
 {
 	LOGM("CViewVicEditor::ExportRawText");
+
+	path->DebugPrint("ExportRawText path=");
 
 	guiMain->LockMutex();
 	
@@ -2755,7 +3153,10 @@ bool CViewVicEditor::ExportRawText(CSlrString *path)
 	
 	guiMain->UnlockMutex();
 	
-	guiMain->ShowMessage("File saved");
+	CSlrString *str = path->GetFileNameComponentFromPath();
+	str->Concatenate(" saved");
+	guiMain->ShowMessage(str);
+	delete str;
 	
 	LOGM("CViewVicEditor::ExportRawText: file saved");
 
@@ -2767,6 +3168,8 @@ bool CViewVicEditor::ExportCharset(CSlrString *path)
 {
 	LOGM("CViewVicEditor::ExportCharset");
 	
+	path->DebugPrint("ExportCharset path=");
+
 	guiMain->LockMutex();
 	
 	char *cPath;
@@ -2777,7 +3180,7 @@ bool CViewVicEditor::ExportCharset(CSlrString *path)
 	
 	CSlrString *pathCharset = new CSlrString(pathNoExt);
 	char buf[64];
-	sprintf(buf, "-charset.data");
+	sprintf(buf, ".charset"); //-charset.data"); //.charset"); //-charset.data");
 	
 	pathCharset->Concatenate(buf);
 	cPath = pathCharset->GetStdASCII();
@@ -2874,15 +3277,16 @@ bool CViewVicEditor::ExportHyper(CSlrString *path)
 bool CViewVicEditor::ExportPNG(CSlrString *path)
 {
 	LOGD("CViewVicEditor::ExportPNG");
+	path->DebugPrint("ExportPNG path=");
 	
 	guiMain->LockMutex();
-	viewC64->debugInterface->LockRenderScreenMutex();
+	viewC64->debugInterfaceC64->LockRenderScreenMutex();
 	
 	// refresh texture of C64's screen
-	CImageData *c64Screen = viewC64->debugInterface->GetC64ScreenImageData();
+	CImageData *c64Screen = viewC64->debugInterfaceC64->GetScreenImageData();
 	CImageData *imageCrop = IMG_CropImageRGBA(c64Screen, 0, 0, 384, 272);
 
-	viewVicDisplayMain->RefreshScreenImageData(&(viewC64->viciiStateToShow));
+	viewVicDisplayMain->RefreshScreenImageData(&(viewC64->viciiStateToShow), 255, 255);
 	layerVirtualSprites->SimpleScanSpritesInThisFrame();
 	
 	char *cPath;
@@ -2905,7 +3309,7 @@ bool CViewVicEditor::ExportPNG(CSlrString *path)
 	CSlrString *pathDisplay = new CSlrString(pathNoExt);
 	pathDisplay->Concatenate("-display.png");
 	cPath = pathDisplay->GetStdASCII();
-	LOGD(" ..... cPath='%s'", cPath);
+	LOGD(" ..... display cPath='%s'", cPath);
 
 	imageCrop = IMG_CropImageRGBA(viewVicDisplayMain->imageDataScreen, 0, 0, 320, 200);
 	
@@ -2921,7 +3325,7 @@ bool CViewVicEditor::ExportPNG(CSlrString *path)
 		CSlrString *pathUnrestricted = new CSlrString(pathNoExt);
 		pathDisplay->Concatenate("-unrestricted.png");
 		cPath = pathUnrestricted->GetStdASCII();
-		LOGD(" ..... cPath='%s'", cPath);
+		LOGD(" ..... unrestricted cPath='%s'", cPath);
 		
 		imageCrop = IMG_CropImageRGBA(layerUnrestrictedBitmap->imageDataUnrestricted, 0, 0, 320, 200);
 		
@@ -3007,7 +3411,7 @@ bool CViewVicEditor::ExportPNG(CSlrString *path)
 			
 			pathSprite->Concatenate(buf);
 			cPath = pathSprite->GetStdASCII();
-			LOGD(" ..... cPath='%s'", cPath);
+			LOGD(" ..... sprite cPath='%s'", cPath);
 			
 			imageDataSprite->Save(cPath);
 			
@@ -3017,11 +3421,11 @@ bool CViewVicEditor::ExportPNG(CSlrString *path)
 
 			// export raw data
 			pathSprite = new CSlrString(pathNoExt);
-			sprintf(buf, "-sprite-%03d-%03d-%d.data", sprx, spry, sprite->spriteId);
+			sprintf(buf, "-sprite-%03d-%03d-%d.sprite", sprx, spry, sprite->spriteId);
 			
 			pathSprite->Concatenate(buf);
 			cPath = pathSprite->GetStdASCII();
-			LOGD(" ..... cPath='%s'", cPath);
+			LOGD(" ..... sprite raw cPath='%s'", cPath);
 			
 			FILE *fp = fopen(cPath, "wb");
 			if (fp)
@@ -3029,6 +3433,10 @@ bool CViewVicEditor::ExportPNG(CSlrString *path)
 				fwrite(spriteData, 64, 1, fp);
 				fclose(fp);
 			}
+
+			// TODO: export sprite colors and flags
+			LOGTODO("export sprite colors and flags");
+
 			delete [] cPath;
 			delete pathSprite;
 
@@ -3039,10 +3447,13 @@ bool CViewVicEditor::ExportPNG(CSlrString *path)
 
 	
 	//
-	viewC64->debugInterface->UnlockRenderScreenMutex();
+	viewC64->debugInterfaceC64->UnlockRenderScreenMutex();
 	guiMain->UnlockMutex();
 	
-	guiMain->ShowMessage("PNG exported");
+	CSlrString *str = path->GetFileNameComponentFromPath();
+	str->Concatenate(" exported");
+	guiMain->ShowMessage(str);
+	delete str;
 	
 	LOGM("CViewVicEditor::ExportPNG: file saved");
 	
@@ -3055,7 +3466,7 @@ bool CViewVicEditor::ExportSpritesData(CSlrString *path)
 	LOGD("CViewVicEditor::ExportSpritesData");
 	
 	guiMain->LockMutex();
-	viewC64->debugInterface->LockRenderScreenMutex();
+	viewC64->debugInterfaceC64->LockRenderScreenMutex();
 	
 	// refresh texture of C64's screen
 	layerVirtualSprites->SimpleScanSpritesInThisFrame();
@@ -3106,7 +3517,7 @@ bool CViewVicEditor::ExportSpritesData(CSlrString *path)
 			
 			CSlrString *pathSprite = new CSlrString(pathNoExt);
 			char buf[64];
-			sprintf(buf, "-sprite-%03d-%03d-%d.data", sprx, spry, sprite->spriteId);
+			sprintf(buf, "-sprite-%03d-%03d-%d.sprite", sprx, spry, sprite->spriteId);
 			
 			pathSprite->Concatenate(buf);
 			cPath = pathSprite->GetStdASCII();
@@ -3118,6 +3529,10 @@ bool CViewVicEditor::ExportSpritesData(CSlrString *path)
 				fwrite(spriteData, 64, 1, fp);
 				fclose(fp);
 			}
+			
+			// TODO: export sprite colors and flags
+			LOGTODO("export sprite colors and flags");
+			
 			delete [] cPath;
 			delete pathSprite;
 		}
@@ -3127,7 +3542,7 @@ bool CViewVicEditor::ExportSpritesData(CSlrString *path)
 	
 	
 	//
-	viewC64->debugInterface->UnlockRenderScreenMutex();
+	viewC64->debugInterfaceC64->UnlockRenderScreenMutex();
 	guiMain->UnlockMutex();
 	
 	LOGM("CViewVicEditor::ExportSpritesData: file saved");
@@ -3434,7 +3849,10 @@ bool CViewVicEditor::ExportVCE(CSlrString *path)
 	
 	guiMain->UnlockMutex();
 	
-	guiMain->ShowMessage("Picture saved");
+	CSlrString *str = path->GetFileNameComponentFromPath();
+	str->Concatenate(" saved");
+	guiMain->ShowMessage(str);
+	delete str;
 	
 	LOGM("CViewVicEditor::ExportKoala: file saved");
 	
@@ -3451,8 +3869,6 @@ bool CViewVicEditor::ImportVCE(CSlrString *path)
 	
 	if (!file->Exists())
 	{
-		guiMain->UnlockMutex();
-
 		delete file;
 		guiMain->ShowMessage("File not found");
 		return false;
@@ -3494,6 +3910,21 @@ bool CViewVicEditor::ImportVCE(CSlrString *path)
 	
 	LOGD("... uncompressedSize=%d", uncompressedSize);
 	
+	
+	// load
+	viewC64->debugInterfaceC64->SetDebugMode(DEBUGGER_MODE_RUNNING);
+	
+	viewC64->viewC64VicControl->UnlockAll();
+	
+	viewC64->debugInterfaceC64->SetPatchKernalFastBoot(true);
+	
+	viewC64->debugInterfaceC64->DetachCartridge();
+	//	viewC64->debugInterfaceC64->HardReset();
+
+	SYS_Sleep(350);
+	
+	this->RunC64EndlessLoop();
+	
 	CByteBuffer *serialiseBuffer = new CByteBuffer(uncompressedData, uncompressedSize);
 	this->Deserialise(serialiseBuffer, fileVersion);
 	
@@ -3501,13 +3932,28 @@ bool CViewVicEditor::ImportVCE(CSlrString *path)
 	
 	delete file;
 	
+	UpdateReferenceLayers();
+	
+	
 	guiMain->UnlockMutex();
 	
-	guiMain->ShowMessage("VCE file loaded");
-	
+	CSlrString *str = path->GetFileNameComponentFromPath();
+	str->Concatenate(" loaded");
+	guiMain->ShowMessage(str);
+	delete str;
+
 	return true;
 }
 
+void CViewVicEditor::RunC64EndlessLoop()
+{
+	// add at 0002 78	SEI		0003 4C 01 09 JMP $0003
+	viewC64->debugInterfaceC64->SetByteToRamC64(0x0002, 0x78);	// SEI
+	viewC64->debugInterfaceC64->SetByteToRamC64(0x0003, 0x4C);	// JMP $0901
+	viewC64->debugInterfaceC64->SetByteToRamC64(0x0004, 0x03);
+	viewC64->debugInterfaceC64->SetByteToRamC64(0x0005, 0x00);
+	viewC64->debugInterfaceC64->MakeJmpC64(0x0002);
+}
 
 void CViewVicEditor::Serialise(CByteBuffer *byteBuffer, bool storeVicRegisters, bool storeC64Memory, bool storeVicDisplayControlState)
 {
@@ -3579,7 +4025,7 @@ void CViewVicEditor::Serialise(CByteBuffer *byteBuffer, bool storeVicRegisters, 
 
 	for (int i = 0; i < 8; i++)
 	{
-		u8 spritePointer = viewC64->debugInterface->GetByteFromRamC64(screen_addr + 0x03F8 + i);
+		u8 spritePointer = viewC64->debugInterfaceC64->GetByteFromRamC64(screen_addr + 0x03F8 + i);
 		byteBuffer->PutU8(spritePointer);
 	}
 	
@@ -3599,7 +4045,7 @@ void CViewVicEditor::Serialise(CByteBuffer *byteBuffer, bool storeVicRegisters, 
 		byteBuffer->PutBool(true);
 		
 		u8 *c64memory = new u8[0x10000];
-		viewC64->debugInterface->GetWholeMemoryMapFromRamC64(c64memory);
+		viewC64->debugInterfaceC64->GetWholeMemoryMapFromRam(c64memory);
 
 		byteBuffer->PutBytes(c64memory, 0x10000);
 		delete [] c64memory;
@@ -3665,7 +4111,7 @@ void CViewVicEditor::Deserialise(CByteBuffer *byteBuffer, int version)
 //	viewC64->viewC64VicControl->btnModeExtended->SetOn(isExtColor);
 //	viewC64->viewC64VicControl->btnModeStandard->SetOn(!isExtColor);
 
-	SetVicMode(isBitmap, isMultiColor, isExtColor);
+	SetVicModeRegsOnly(isBitmap, isMultiColor, isExtColor);
 	
 	// set VBank
 	int vbank = byteBuffer->getInt();
@@ -3690,10 +4136,10 @@ void CViewVicEditor::Deserialise(CByteBuffer *byteBuffer, int version)
 	//
 		
 	u8 colorD020 = byteBuffer->GetU8();
-	viewC64->debugInterface->SetVicRegister(0x20, colorD020);
+	viewC64->debugInterfaceC64->SetVicRegister(0x20, colorD020);
 
 	u8 colorD021 = byteBuffer->GetU8();
-	viewC64->debugInterface->SetVicRegister(0x21, colorD021);
+	viewC64->debugInterfaceC64->SetVicRegister(0x21, colorD021);
 	
 	LOGD(" ......... deserialising layers, index=%d", byteBuffer->index);
 
@@ -3714,10 +4160,11 @@ void CViewVicEditor::Deserialise(CByteBuffer *byteBuffer, int version)
 	for (int i = 0; i < 8; i++)
 	{
 		u8 spritePointer = byteBuffer->GetU8();
-		viewC64->debugInterface->SetByteToRamC64(screenAddr + 0x03F8 + i, spritePointer);
+		viewC64->debugInterfaceC64->SetByteToRamC64(screenAddr + 0x03F8 + i, spritePointer);
 	}
 
 	//
+	LOGD("restoreVicRegisters? index=%d", byteBuffer->index);
 	bool restoreVicRegisters = byteBuffer->GetBool();
 	if (restoreVicRegisters)
 	{
@@ -3727,23 +4174,25 @@ void CViewVicEditor::Deserialise(CByteBuffer *byteBuffer, int version)
 		// set VIC registers
 		for (int i = 0; i < 0x40; i++)
 		{
-			viewC64->debugInterface->SetVicRegister(i, regs[i]);
+			viewC64->debugInterfaceC64->SetVicRegister(i, regs[i]);
 		}
 	}
 	
 	//////////
 	
+	LOGD("restoreC64Memory? index=%d", byteBuffer->index);
+
 	bool restoreC64Memory = byteBuffer->GetBool();
 	if (restoreC64Memory)
 	{
-		LOGD("...restoreC64Memory...");
+		LOGD("...restoreC64Memory... index=%d", byteBuffer->index);
 		u8 *c64memory = new u8[0x10000];
 		byteBuffer->getBytes(c64memory, 0x10000);
 		
 		// leave zero pages as-is
 		for (int i = 0x0400; i < 0xFFF0; i++)
 		{
-			viewC64->debugInterface->SetByteToRamC64(i, c64memory[i]);
+			viewC64->debugInterfaceC64->SetByteToRamC64(i, c64memory[i]);
 		}
 		delete [] c64memory;
 	}
@@ -3811,7 +4260,18 @@ void CViewVicEditor::PaletteColorChanged(u8 colorSource, u8 newColorValue)
 void CViewVicEditor::SelectLayer(CVicEditorLayer *layer)
 {
 	guiMain->LockMutex();
+	if (this->selectedLayer != NULL)
+	{
+		this->selectedLayer->LayerSelected(false);
+	}
+	
 	this->selectedLayer = layer;
+	
+	if (this->selectedLayer != NULL)
+	{
+		this->selectedLayer->LayerSelected(true);
+	}
+	
 	guiMain->UnlockMutex();
 }
 
@@ -3923,6 +4383,19 @@ void CViewVicEditor::MoveFocusToPrevView()
 	}
 }
 
+void CViewVicEditor::UpdateReferenceLayers()
+{
+	if (layerReferenceImage->isVisible)
+	{
+		viewVicDisplayMain->backgroundColorAlpha = 0;
+		viewVicDisplaySmall->backgroundColorAlpha = 0;
+	}
+	else
+	{
+		viewVicDisplayMain->backgroundColorAlpha = 255;
+		viewVicDisplaySmall->backgroundColorAlpha = 255;
+	}
+}
 
 ///
 void CViewVicEditor::RunDebug()

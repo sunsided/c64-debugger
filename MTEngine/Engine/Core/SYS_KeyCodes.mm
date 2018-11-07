@@ -33,8 +33,13 @@ CSlrString *SYS_KeyName(u32 keyCode)
 		case MTKEY_RSHIFT: return new CSlrString("RSHIFT");
 		case MTKEY_LALT: return new CSlrString("LALT");
 		case MTKEY_RALT: return new CSlrString("RALT");
+#if defined(MACOS)
+		case MTKEY_LCONTROL: return new CSlrString("LCMD");
+		case MTKEY_RCONTROL: return new CSlrString("RCMD");
+#else
 		case MTKEY_LCONTROL: return new CSlrString("LCTRL");
 		case MTKEY_RCONTROL: return new CSlrString("RCTRL");
+#endif
 		case MTKEY_CAPS_LOCK: return new CSlrString("CAPS LOCK");
 
 		case MTKEY_NUM_LOCK: return new CSlrString("NUM LOCK");
@@ -133,7 +138,11 @@ CSlrString *SYS_KeyCodeToString(u32 keyCode)
 		}
 		if ((keyCode & MTKEY_SPECIAL_CONTROL) == MTKEY_SPECIAL_CONTROL)
 		{
+#if defined(MACOS)
+			strOut->Concatenate("Cmd+");
+#else
 			strOut->Concatenate("Ctrl+");
+#endif
 		}
 		strOut->Concatenate(keyName);
 		delete keyName;
@@ -162,7 +171,11 @@ CSlrString *SYS_KeyCodeToString(u32 keyCode, bool isShift, bool isAlt, bool isCo
 	}
 	if (isControl || (keyCode & MTKEY_SPECIAL_CONTROL) == MTKEY_SPECIAL_CONTROL)
 	{
+#if defined(MACOS)
+		strOut->Concatenate("Cmd+");
+#else
 		strOut->Concatenate("Ctrl+");
+#endif
 	}
 	
 	strOut->Concatenate(strKey);

@@ -66,6 +66,10 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
+            argument = "/Users/mars/develop/MTEngine/docs/C64Debugger/other/debuginfo-test/sprites-full1.prg"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "/Users/mars/Desktop/vd/sprites1.prg"
             isEnabled = "NO">
          </CommandLineArgument>
@@ -83,6 +87,14 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "350"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-debuginfo"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "/Users/mars/develop/MTEngine/docs/C64Debugger/other/debuginfo-test/sprites-full1.dbg"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument

@@ -371,4 +371,26 @@ CSlrString *SYS_GetClipboardAsSlrString()
 	return NULL;
 }
 
+bool SYS_SetClipboardAsSlrString(CSlrString *str)
+{
+	clipboard_c *cb = clipboard_new(NULL);
+	if (cb == NULL)
+	{
+		LOGError("SYS_SetClipboardAsSlrString: clipboard initialisation failed");
+		return NULL;
+	}
+	
+	char *output = str->GetStdASCII();
+	int len = strlen(output);
+	
+	bool ret = clipboard_set_text_ex(cb, output, len, LCB_CLIPBOARD);
+	
+	LOGD("SYS_SetClipboardAsSlrString: ret=%s", STRBOOL(ret));
+	
+	delete [] output;
+	clipboard_free(cb);
+	
+	return ret;
+}
+
 

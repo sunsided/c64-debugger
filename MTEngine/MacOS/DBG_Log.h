@@ -25,8 +25,9 @@
 #ifndef __DBG_LOGF_H__
 #define __DBG_LOGF_H__
 
-//#define GLOBAL_DEBUG_OFF
-//#undef GLOBAL_DEBUG_OFF
+
+#define GLOBAL_DEBUG_OFF
+
 
 #define DBGLVL_DEBUG		(1 << 0)
 #define DBGLVL_MAIN			(1 << 1)
@@ -52,6 +53,9 @@
 #define DBGLVL_VICE_DEBUG	(1 << 23)
 #define DBGLVL_VICE_MAIN	(1 << 24)
 #define DBGLVL_VICE_VERBOSE	(1 << 25)
+#define DBGLVL_ATARI_DEBUG	(1 << 26)
+#define DBGLVL_ATARI_MAIN	(1 << 27)
+
 #define DBGLVL_TODO			(1 << 29)
 #define DBGLVL_WARN			(1 << 30)
 #define DBGLVL_ERROR		(1 << 31)
@@ -91,6 +95,11 @@ void LOG_Shutdown(void);
 #define LOGC(...) _LOGGER(DBGLVL_NET, __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
 #define LOGCS(...) _LOGGER(DBGLVL_NET_SERVER, __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
 #define LOGCC(...) _LOGGER(DBGLVL_NET_CLIENT, __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
+
+#define LOG_Atari_Main(...) _LOGGER(DBGLVL_ATARI_MAIN, __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
+#define LOG_Atari_Debug(...) _LOGGER(DBGLVL_ATARI_DEBUG, __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
+
+
 #define LOGMEM(...) _LOGGER(DBGLVL_MEMORY, __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
 #define LOGTODO(...) _LOGGER(DBGLVL_TODO, __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
 //#define LOGERROR(...) _LOGGER(DBGLVL_ERROR, __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
@@ -112,6 +121,7 @@ void LOG_Shutdown(void);
 #define LOGNS(...) _LOGGER(DBGLVL_SCRIPT, __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
 #define LOGNMEM(...) _LOGGER(DBGLVL_MEMORY, __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
 #define LOGNX(...) _LOGGER(DBGLVL_XMPLAYER, __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
+
 #define LOGNTODO(...) _LOGGER(DBGLVL_TODO, __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
 //#define LOGNERROR(...) _LOGGER(DBGLVL_ERROR, __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
 #define LOGNWarning(...) _LOGGER(DBGLVL_WARN, __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
@@ -144,6 +154,10 @@ int _LOGGER(unsigned int level, const char *fileName, unsigned int lineNum, cons
 #define LOGVM(...) ;
 #define LOGVD(...) ;
 #define LOGVV(...) ;
+
+#define LOG_Atari_Main(...) ;
+#define LOG_Atari_Debug(...) ;
+
 #define LOGTODO(...) ;
 #define LOGWarning(...) ; 
 #define LOGError(...) ; 

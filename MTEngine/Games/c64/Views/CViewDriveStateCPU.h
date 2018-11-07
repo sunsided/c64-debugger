@@ -3,6 +3,8 @@
 
 #include "CViewBaseStateCPU.h"
 
+class C64DebugInterface;
+
 class CViewDriveStateCPU : public CViewBaseStateCPU
 {
 public:

@@ -2,7 +2,7 @@
 #define __CViewDataWatch__
 
 #include "CGuiView.h"
-#include "C64DebugTypes.h"
+#include "DebuggerDefs.h"
 #include <map>
 
 class C64;
@@ -89,11 +89,12 @@ public:
 	
 	float markerSizeX, markerSizeY;
 
-	void AddWatch(char *watchName, int addr);
-	void AddWatch(char *watchName, int addr, uint8 representation, int numberOfValues, uint8 bits);
-
+	void AddNewWatch(int addr, char *watchName);
+	void AddNewWatch(int addr, char *watchName, uint8 representation, int numberOfValues, uint8 bits);
+	CDataWatchDetails *CreateWatch(int address, char *watchName, uint8 representation, int numberOfValues, uint8 bits);
+	
 	void DeleteWatch(int addr);
-	void ClearWatches();
+	void DeleteAllWatches();
 	
 	std::map<int, CDataWatchDetails *> watches;
 	

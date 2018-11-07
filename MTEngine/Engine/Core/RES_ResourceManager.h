@@ -85,7 +85,11 @@ CSlrImage *RES_GetImageAsync(char *imageName, bool linearScaling, int resourceLe
 // synced image load (locks gui renderer):
 CSlrImage *RES_GetImage(char *imageName, bool linearScaling, bool fromResources);
 CSlrImage *RES_GetImage(char *imageName, bool linearScaling, int resourceLevel, bool fromResources);
+CSlrImage *RES_GetImage(char *imageName, bool linearScaling);
 CSlrImage *RES_GetImage(char *imageName);
+
+CSlrImage *RES_LoadImageFromFileOS(CSlrString *path, bool linearScaling);
+CSlrImage *RES_LoadImageFromFileOS(char *path, bool linearScaling);
 
 // synced image load (locks gui renderer), if no image returns placeholder
 CSlrImage *RES_GetImageOrPlaceholder(char *imageName, bool linearScaling, bool fromResources);

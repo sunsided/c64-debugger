@@ -3,6 +3,9 @@
 
 #include "SYS_Defs.h"
 
+class CSlrString;
+class CByteBuffer;
+
 #define SLR_FILE_MODE_NOT_OPENED	0
 #define SLR_FILE_MODE_ERROR			1
 #define SLR_FILE_MODE_READ			2
@@ -15,6 +18,7 @@ public:
 	char fileName[512];
 
 	CSlrFile();
+	virtual void OpenSlrStr(CSlrString *str);
 	virtual void Open(char *fileName);
 	virtual void OpenForWrite(char *fileName);
 	virtual void Reopen();
@@ -32,6 +36,7 @@ public:
 	virtual byte ReadByte();
 	virtual u16 ReadUnsignedShort();
 	virtual u32 ReadUnsignedInt();
+	virtual CByteBuffer *GetByteBuffer();
 	virtual void Close();
 	virtual ~CSlrFile();
 

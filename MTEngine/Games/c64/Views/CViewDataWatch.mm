@@ -90,14 +90,14 @@ void CViewDataWatch::DoLogic()
 }
 //std::map<int, CDataWatchDetails *> watches;
 
-void CViewDataWatch::AddWatch(char *watchName, int addr)
+void CViewDataWatch::AddNewWatch(int addr, char *watchName)
 {
-	this->AddWatch(watchName, addr, WATCH_REPRESENTATION_HEX, 1, WATCH_BITS_8);
+	this->AddNewWatch(addr, watchName, WATCH_REPRESENTATION_HEX, 1, WATCH_BITS_8);
 }
 
-void CViewDataWatch::AddWatch(char *watchName, int addr, uint8 representation, int numberOfValues, uint8 bits)
+void CViewDataWatch::AddNewWatch(int addr, char *watchName, uint8 representation, int numberOfValues, uint8 bits)
 {
-	LOGD("CViewDataWatch::AddWatch: %04x=%s rep=%d vals=%d bits=%d", addr, watchName, representation, numberOfValues, bits);
+	LOGD("CViewDataWatch::AddNewWatch: %04x=%s rep=%d vals=%d bits=%d", addr, watchName, representation, numberOfValues, bits);
 	
 	guiMain->LockMutex();
 	std::map<int, CDataWatchDetails *>::iterator it = watches.find(addr);
@@ -117,6 +117,13 @@ void CViewDataWatch::AddWatch(char *watchName, int addr, uint8 representation, i
 	guiMain->UnlockMutex();
 }
 
+CDataWatchDetails *CViewDataWatch::CreateWatch(int address, char *watchName, uint8 representation, int numberOfValues, uint8 bits)
+{
+	CDataWatchDetails *watch = new CDataWatchDetails(watchName, address, representation, numberOfValues, bits);
+	return watch;
+}
+
+
 void CViewDataWatch::DeleteWatch(int addr)
 {
 	guiMain->LockMutex();
@@ -133,7 +140,7 @@ void CViewDataWatch::DeleteWatch(int addr)
 	guiMain->UnlockMutex();
 }
 
-void CViewDataWatch::ClearWatches()
+void CViewDataWatch::DeleteAllWatches()
 {
 	guiMain->LockMutex();
 

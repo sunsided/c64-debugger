@@ -89,6 +89,9 @@ public:
 	void StoreMonitorHistory();
 	void RestoreMonitorHistory();
 	
+	//
+	virtual void ActivateView();
+
 };
 
 #endif //_CVIEWC64MONITORCONSOLE_H_

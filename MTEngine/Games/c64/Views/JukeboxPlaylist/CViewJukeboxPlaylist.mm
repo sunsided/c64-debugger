@@ -9,6 +9,8 @@
 #include "CViewSnapshots.h"
 #include "C64SettingsStorage.h"
 #include "CViewC64Screen.h"
+#include "CViewVicEditor.h"
+
 
 CViewJukeboxPlaylist::CViewJukeboxPlaylist(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
@@ -140,8 +142,8 @@ void CViewJukeboxPlaylist::InitFromFile(char *jsonFilePath)
 {
 	LOGD("CViewJukeboxPlaylist::InitFromFile: %s", jsonFilePath);
 	
-	viewC64->debugInterface->LockMutex();
-	guiMain->LockMutex();
+	viewC64->debugInterfaceC64->LockMutex();
+	guiMain->LockMutex(); //"CViewJukeboxPlaylist::InitFromFile");
 
 	this->DeletePlaylist();
 	
@@ -157,8 +159,8 @@ void CViewJukeboxPlaylist::InitFromFile(char *jsonFilePath)
 
 	delete byteBuffer;
 
-	guiMain->UnlockMutex();
-	viewC64->debugInterface->UnlockMutex();
+	guiMain->UnlockMutex(); //"CViewJukeboxPlaylist::InitFromFile");
+	viewC64->debugInterfaceC64->UnlockMutex();
 
 	LOGD("CViewJukeboxPlaylist::InitFromFile done");
 }
@@ -169,7 +171,7 @@ void CViewJukeboxPlaylist::StartPlaylist()
 	
 	mutex->Lock();
 	
-	viewC64->debugInterface->SetPatchKernalFastBoot(this->playlist->fastBootPatch);
+	viewC64->debugInterfaceC64->SetPatchKernalFastBoot(this->playlist->fastBootPatch);
 
 	viewC64->SwitchToScreenLayout(playlist->setLayoutViewNumber);
 	
@@ -186,14 +188,14 @@ void CViewJukeboxPlaylist::InitEntry(int newIndex)
 {
 	LOGD("CViewJukeboxPlaylist::InitEntry: newIndex=%d", newIndex);
 	
-	guiMain->LockMutex();
-	viewC64->debugInterface->LockMutex();
+	guiMain->LockMutex(); //"CViewJukeboxPlaylist::InitEntry");
+	viewC64->debugInterfaceC64->LockMutex();
 	
 	entryIndex = newIndex;
 	
-	uint8 machineType = viewC64->debugInterface->GetC64MachineType();
+	uint8 machineType = viewC64->debugInterfaceC64->GetC64MachineType();
 	
-	if (machineType == C64_MACHINE_PAL)
+	if (machineType == MACHINE_TYPE_PAL)
 	{
 		emulationFPS = 50.0f;
 	}
@@ -237,8 +239,8 @@ void CViewJukeboxPlaylist::InitEntry(int newIndex)
 
 	RunCurrentEntry();
 	
-	guiMain->UnlockMutex();
-	viewC64->debugInterface->UnlockMutex();
+	guiMain->UnlockMutex(); //"CViewJukeboxPlaylist::InitEntry");
+	viewC64->debugInterfaceC64->UnlockMutex();
 }
 
 void CViewJukeboxPlaylist::RunCurrentEntry()
@@ -262,7 +264,7 @@ void CViewJukeboxPlaylist::ThreadRun(void *data)
 	
 	if (entry->resetMode == MACHINE_RESET_HARD)
 	{
-		viewC64->debugInterface->HardReset();
+		viewC64->debugInterfaceC64->HardReset();
 		
 		if (entry->delayAfterResetTime < 0)
 		{
@@ -275,7 +277,7 @@ void CViewJukeboxPlaylist::ThreadRun(void *data)
 	}
 	else if (entry->resetMode == MACHINE_RESET_SOFT)
 	{
-		viewC64->debugInterface->Reset();
+		viewC64->debugInterfaceC64->Reset();
 		
 		if (entry->delayAfterResetTime < 0)
 		{
@@ -287,7 +289,7 @@ void CViewJukeboxPlaylist::ThreadRun(void *data)
 		}
 	}
 	
-	guiMain->LockMutex();
+	guiMain->LockMutex(); //"CViewJukeboxPlaylist::ThreadRun");
 
 	if (entry->filePath != NULL)
 	{
@@ -317,7 +319,7 @@ void CViewJukeboxPlaylist::ThreadRun(void *data)
 		delete ext;
 	}
 	
-	guiMain->UnlockMutex();
+	guiMain->UnlockMutex(); //"CViewJukeboxPlaylist::ThreadRun");
 	
 	mutex->Unlock();
 }
@@ -326,8 +328,8 @@ void CViewJukeboxPlaylist::InitAction(int newIndex)
 {
 	LOGD("CViewJukeboxPlaylist::InitAction: newIndex=%d (entry #%d)", newIndex, entryIndex);
 	
-	guiMain->LockMutex();
-	viewC64->debugInterface->LockMutex();
+	guiMain->LockMutex(); //"CViewJukeboxPlaylist::InitAction");
+	viewC64->debugInterfaceC64->LockMutex();
 
 	actionIndex = newIndex;
 
@@ -335,8 +337,8 @@ void CViewJukeboxPlaylist::InitAction(int newIndex)
 	
 	actionTime = emulationTime + currentAction->doAfterDelay;
 	
-	guiMain->UnlockMutex();
-	viewC64->debugInterface->UnlockMutex();
+	guiMain->UnlockMutex(); //"CViewJukeboxPlaylist::InitAction");
+	viewC64->debugInterfaceC64->UnlockMutex();
 }
 
 void CViewJukeboxPlaylist::RunCurrentAction()
@@ -347,25 +349,25 @@ void CViewJukeboxPlaylist::RunCurrentAction()
 	switch (currentAction->actionType)
 	{
 		case JUKEBOX_ACTION_KEY_DOWN:
-			viewC64->debugInterface->KeyboardDown(currentAction->code);
+			viewC64->debugInterfaceC64->KeyboardDown(currentAction->code);
 			break;
 		case JUKEBOX_ACTION_KEY_UP:
-			viewC64->debugInterface->KeyboardUp(currentAction->code);
+			viewC64->debugInterfaceC64->KeyboardUp(currentAction->code);
 			break;
 		case JUKEBOX_ACTION_JOYSTICK1_DOWN:
-			viewC64->debugInterface->JoystickDown(1, currentAction->code);
+			viewC64->debugInterfaceC64->JoystickDown(1, currentAction->code);
 			break;
 		case JUKEBOX_ACTION_JOYSTICK1_UP:
-			viewC64->debugInterface->JoystickUp(1, currentAction->code);
+			viewC64->debugInterfaceC64->JoystickUp(1, currentAction->code);
 			break;
 		case JUKEBOX_ACTION_JOYSTICK2_DOWN:
-			viewC64->debugInterface->JoystickDown(2, currentAction->code);
+			viewC64->debugInterfaceC64->JoystickDown(2, currentAction->code);
 			break;
 		case JUKEBOX_ACTION_JOYSTICK2_UP:
-			viewC64->debugInterface->JoystickUp(2, currentAction->code);
+			viewC64->debugInterfaceC64->JoystickUp(2, currentAction->code);
 			break;
 		case JUKEBOX_ACTION_SET_WARP:
-			viewC64->debugInterface->SetSettingIsWarpSpeed(currentAction->code == 1 ? true : false);
+			viewC64->debugInterfaceC64->SetSettingIsWarpSpeed(currentAction->code == 1 ? true : false);
 			break;
 		case JUKEBOX_ACTION_DUMP_C64_MEMORY:
 			viewC64->viewC64SettingsMenu->DumpC64Memory(currentAction->text);
@@ -376,6 +378,20 @@ void CViewJukeboxPlaylist::RunCurrentAction()
 		case JUKEBOX_ACTION_DETACH_CARTRIDGE:
 			viewC64->viewC64SettingsMenu->DetachCartridge(false);
 			break;
+		case JUKEBOX_ACTION_SAVE_SCREENSHOT:
+			LOGD("JUKEBOX_ACTION_SAVE_SCREENSHOT");
+			currentAction->text->DebugPrint("SAVE_SCREENSHOT currentAction->text=");
+			viewC64->viewVicEditor->ExportPNG(currentAction->text);
+			break;
+		case JUKEBOX_ACTION_EXPORT_SCREEN:
+			currentAction->text->DebugPrint("EXPORT_SCREEN currentAction->text=");
+			viewC64->viewVicEditor->ExportScreen(currentAction->text);
+			break;
+		case JUKEBOX_ACTION_SHUTDOWN:
+			SYS_Sleep(50);	// sanity sleep...
+			SYS_CleanExit();
+			break;
+			
 		default:
 			LOGError("CViewJukeboxPlaylist::RunCurrentAction: unknown action %d", currentAction->actionType);
 	}
@@ -385,7 +401,7 @@ void CViewJukeboxPlaylist::AdvanceEntry()
 {
 	LOGD("CViewJukeboxPlaylist::AdvanceEntry: time=%8.2f", emulationTime);
 	
-	guiMain->LockMutex();
+	guiMain->LockMutex(); //"CViewJukeboxPlaylist::AdvanceEntry");
 	
 	// advance, run will be performed by init
 	if (entryIndex < playlist->entries.size()-1)
@@ -406,14 +422,14 @@ void CViewJukeboxPlaylist::AdvanceEntry()
 		}
 	}
 
-	guiMain->UnlockMutex();
+	guiMain->UnlockMutex(); //"CViewJukeboxPlaylist::AdvanceEntry");
 }
 
 void CViewJukeboxPlaylist::AdvanceAction()
 {
 	LOGD("CViewJukeboxPlaylist::AdvanceAction: time=%8.2f", emulationTime);
 
-	guiMain->LockMutex();
+	guiMain->LockMutex(); //"CViewJukeboxPlaylist::AdvanceAction");
 
 	// first run action, and then advance
 	this->RunCurrentAction();
@@ -428,7 +444,7 @@ void CViewJukeboxPlaylist::AdvanceAction()
 		actionIndex = -1;
 		actionTime = 0;
 	}
-	guiMain->UnlockMutex();
+	guiMain->UnlockMutex(); //"CViewJukeboxPlaylist::AdvanceAction");
 }
 
 void CViewJukeboxPlaylist::StartTextFadeIn()
@@ -567,7 +583,7 @@ void CViewJukeboxPlaylist::UpdateAudioVolume()
 {
 	if (playlist->fadeSoundVolume)
 	{
-		viewC64->debugInterface->SetAudioVolume(1.0f - fadeValue);
+		viewC64->debugInterfaceC64->SetAudioVolume(1.0f - fadeValue);
 	}
 }
 

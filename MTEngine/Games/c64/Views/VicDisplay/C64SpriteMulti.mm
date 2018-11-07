@@ -236,6 +236,11 @@ u8 C64SpriteMulti::PutPixelMultiSprite(bool forceColorReplace, int x, int y, u8 
 		spx /= 2;
 	}
 	
+	if (this->isStretchedVertically)
+	{
+		spy /= 2;
+	}
+	
 	LOGD(" PAINT PutPixelMultiSprite: colorNum=%d spx=%d spy=%d", colorNum, spx, spy);
 
 	int addr;

@@ -3,6 +3,7 @@
 #include "CSlrFont.h"
 #include "CViewC64.h"
 #include "C64DebugInterfaceVice.h"
+#include "CViewC64StateVIC.h"
 
 #define NUM_C64_REGS 7
 
@@ -24,6 +25,25 @@ CViewC64StateCPU::CViewC64StateCPU(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 	this->numRegisters = NUM_C64_REGS;
 	
 	regs = (register_def*)&c64_cpu_regs;
+}
+
+void CViewC64StateCPU::Render()
+{
+	float px = this->posX;
+	float py = this->posY;
+	
+	float br = 0.0f;
+	float bg = 0.0f;
+	float bb = 0.0f;
+	
+	if (viewC64->viewC64StateVIC->isLockedState)
+	{
+		br = 0.2f; bg = 0.0f; bb = 0.0f;
+		BlitFilledRectangle(px-fontSize*0.3f, py-fontSize*0.3f, -1, fontSize*49.6f, fontSize*2.3f, br, bg, bb, 1.00f);
+	}
+	//////////////////
+
+	CViewBaseStateCPU::Render();
 }
 
 void CViewC64StateCPU::RenderRegisters()
@@ -88,29 +108,29 @@ void CViewC64StateCPU::SetRegisterValue(StateCPURegister reg, int value)
 		case STATE_CPU_REGISTER_PC:
 			viewC64->currentViciiState.pc = value;
 			viewC64->currentViciiState.lastValidPC = value;
-			return debugInterface->MakeJmpC64(value);
+			return ((C64DebugInterface*)debugInterface)->MakeJmpC64(value);
 		case STATE_CPU_REGISTER_A:
 			a = value;
-			debugInterface->SetRegisterAC64(value);
+			((C64DebugInterface*)debugInterface)->SetRegisterAC64(value);
 			break;
 		case STATE_CPU_REGISTER_X:
 			x = value;
-			debugInterface->SetRegisterXC64(value);
+			((C64DebugInterface*)debugInterface)->SetRegisterXC64(value);
 			break;
 		case STATE_CPU_REGISTER_Y:
 			y = value;
-			debugInterface->SetRegisterYC64(value);
+			((C64DebugInterface*)debugInterface)->SetRegisterYC64(value);
 			break;
 		case STATE_CPU_REGISTER_SP:
 			sp = value;
-			debugInterface->SetStackPointerC64(value);
+			((C64DebugInterface*)debugInterface)->SetStackPointerC64(value);
 			break;
 		case STATE_CPU_REGISTER_FLAGS:
 			p = value;
-			debugInterface->SetRegisterPC64(value);
+			((C64DebugInterface*)debugInterface)->SetRegisterPC64(value);
 			break;
 		case STATE_CPU_REGISTER_MEM01:
-			debugInterface->SetByteC64(0x01, value);
+			((C64DebugInterface*)debugInterface)->SetByteC64(0x01, value);
 			viewC64->currentViciiState.memory0001 = value;
 			break;
 		case STATE_CPU_REGISTER_NONE:

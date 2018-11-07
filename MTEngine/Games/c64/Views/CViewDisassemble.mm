@@ -16,6 +16,9 @@
 #include "C64SettingsStorage.h"
 #include "CViewC64VicDisplay.h"
 #include "CViewDataDump.h"
+#include "CViewDisassemble.h"
+#include "C64Symbols.h"
+#include "C64AsmSourceSymbols.h"
 
 #define byte unsigned char
 
@@ -35,15 +38,15 @@ enum editCursorPositions
 
 CViewDisassemble::CViewDisassemble(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
 										 CSlrDataAdapter *dataAdapter, CViewMemoryMap *memoryMap,
-										 std::map<uint16, C64AddrBreakpoint *> *breakpointsMap,
-										 C64DebugInterface *debugInterface)
+										 std::map<uint16, CAddrBreakpoint *> *breakpointsMap,
+										 CDebugInterface *debugInterface)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
 {
 	this->name = "CViewDisassemble";
 	
 	this->addrPositions = NULL;
 	
-	this->memoryMap = memoryMap;
+	this->viewMemoryMap = memoryMap;
 	this->dataAdapter = dataAdapter;
 	this->memoryLength = dataAdapter->AdapterGetDataLength();
 	this->memory = new uint8[memoryLength];
@@ -51,12 +54,16 @@ CViewDisassemble::CViewDisassemble(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 	this->breakpointsMap = breakpointsMap;
 	
 	this->debugInterface = debugInterface;
+
+	this->fontDisassemble = NULL;
+	
 	
 	this->showHexCodes = false;
 	this->showLabels = false;
 	
 	this->isTrackingPC = true;
 	this->changedByUser = false;
+	this->cursorAddress = -1;
 	this->currentPC = -1;
 	this->numberOfLinesBack = 31;
 	this->numberOfLinesBack3 = this->numberOfLinesBack * NUM_MULTIPLY_LINES_FOR_DISASSEMBLE;
@@ -85,6 +92,7 @@ CViewDisassemble::CViewDisassemble(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 	// keyboard shortcut zones for this view
 	shortcutZones.push_back(KBZONE_DISASSEMBLE);
 	shortcutZones.push_back(KBZONE_MEMORY);
+	shortcutZones.push_back(KBZONE_GLOBAL);
 
 	/// debug
 
@@ -101,7 +109,7 @@ CViewDisassemble::~CViewDisassemble()
 {
 }
 
-void CViewDisassemble::AddCodeLabel(u16 address, char *text)
+void CViewDisassemble::AddNewCodeLabel(u16 address, char *text)
 {
 	guiMain->LockMutex();
 	
@@ -128,8 +136,34 @@ void CViewDisassemble::AddCodeLabel(u16 address, char *text)
 	guiMain->UnlockMutex();
 }
 
-void CViewDisassemble::ClearCodeLabels()
+CDisassembleCodeLabel *CViewDisassemble::CreateCodeLabel(u16 address, char *text)
 {
+	CDisassembleCodeLabel *label = new CDisassembleCodeLabel();
+	
+	label->address = address;
+	label->labelText = text;
+	
+	int l = strlen(text)+1;
+	label->px = this->posX + fontSize5*3.0f - l*fontSize;
+	return label;
+}
+
+void CViewDisassemble::DeleteCodeLabels()
+{
+	// TODO: this is a temporary workaround to not delete code labels that
+	//       belong to a segment when old-style labels are also loaded. In future
+	//       this should be removed and all code labels should always
+	//       be associated with a segment.
+	//       Thus, codeLabels from CViewDisassemble should be removed and
+	//       all access to codeLabels should go through currently selected segment.
+	//       This is left as-is for now due to not having 1541 Drive labels properly
+	//       associated to a segment, and due to no time to fiddle before upcoming release :)
+	if (viewC64->symbols->asmSource)
+	{
+		// do not delete code labels, this might leak memory
+		return;
+	}
+	
 	guiMain->LockMutex();
 	
 	while (!codeLabels.empty())
@@ -277,11 +311,12 @@ void CViewDisassemble::EditBoxTextFinished(CGuiEditBoxText *editBox, char *text)
 }
 
 
-void CViewDisassemble::SetViewParameters(float posX, float posY, float posZ, float sizeX, float sizeY, CSlrFont *font, float fontSize, int numberOfLines,
+void CViewDisassemble::SetViewParameters(float posX, float posY, float posZ, float sizeX, float sizeY, CSlrFont *font,
+										 float fontSize, int numberOfLines,
 					   float mnemonicsDisplayOffsetX,
 					   bool showHexCodes,
 					   bool showCodeCycles, float codeCyclesDisplayOffsetX,
-					   bool showLabels, int labelNumCharacters)
+					   bool showLabels, bool showSourceCode, int labelNumCharacters)
 {
 	CGuiView::SetPosition(posX, posY, posZ, sizeX, sizeY);
 	
@@ -301,6 +336,7 @@ void CViewDisassemble::SetViewParameters(float posX, float posY, float posZ, flo
 	this->showHexCodes = showHexCodes;
 	this->showCodeCycles = showCodeCycles;
 	this->showLabels = showLabels;
+	this->showSourceCode = showSourceCode;
 	this->labelNumCharacters = labelNumCharacters;
 
 	UpdateLabelsPositions();
@@ -390,7 +426,7 @@ void CViewDisassemble::CalcDisassembleStart(int startAddress, int *newStart, int
 			// check if cells marked as execute
 
 			// +0
-			CViewMemoryMapCell *cell0 = memoryMap->memoryCells[addr % memoryLength];
+			CViewMemoryMapCell *cell0 = viewMemoryMap->memoryCells[addr % memoryLength];
 			if (cell0->isExecuteCode)
 			{
 				opcode = memory[addr % memoryLength];
@@ -400,7 +436,7 @@ void CViewDisassemble::CalcDisassembleStart(int startAddress, int *newStart, int
 			else
 			{
 				// +1
-				CViewMemoryMapCell *cell1 = memoryMap->memoryCells[ (addr+1) % memoryLength];
+				CViewMemoryMapCell *cell1 = viewMemoryMap->memoryCells[ (addr+1) % memoryLength];
 				if (cell1->isExecuteCode)
 				{
 					checkAddress += 1;
@@ -413,7 +449,7 @@ void CViewDisassemble::CalcDisassembleStart(int startAddress, int *newStart, int
 				else
 				{
 					// +2
-					CViewMemoryMapCell *cell2 = memoryMap->memoryCells[ (addr+2) % memoryLength];
+					CViewMemoryMapCell *cell2 = viewMemoryMap->memoryCells[ (addr+2) % memoryLength];
 					if (cell2->isExecuteCode)
 					{
 						// check if at addr is 2-length opcode
@@ -574,7 +610,7 @@ void CViewDisassemble::RenderDisassemble(int startAddress, int endAddress)
 			addr = renderAddress;
 			
 			// +0
-			CViewMemoryMapCell *cell0 = memoryMap->memoryCells[addr];
+			CViewMemoryMapCell *cell0 = viewMemoryMap->memoryCells[addr];
 			if (cell0->isExecuteCode)
 			{
 				opcode = memory[addr];
@@ -584,7 +620,7 @@ void CViewDisassemble::RenderDisassemble(int startAddress, int endAddress)
 			else
 			{
 				// +1
-				CViewMemoryMapCell *cell1 = memoryMap->memoryCells[ (addr+1) ];
+				CViewMemoryMapCell *cell1 = viewMemoryMap->memoryCells[ (addr+1) ];
 				if (cell1->isExecuteCode)
 				{
 					// check if at addr is 1-length opcode
@@ -619,7 +655,7 @@ void CViewDisassemble::RenderDisassemble(int startAddress, int endAddress)
 				else
 				{
 					// +2
-					CViewMemoryMapCell *cell2 = memoryMap->memoryCells[ (addr+2) ];
+					CViewMemoryMapCell *cell2 = viewMemoryMap->memoryCells[ (addr+2) ];
 					if (cell2->isExecuteCode)
 					{
 						// check if at addr is 2-length opcode
@@ -710,7 +746,7 @@ void CViewDisassemble::RenderDisassemble(int startAddress, int endAddress)
 				int addr;
 				
 				addr = renderAddress-1;
-				CViewMemoryMapCell *cell1 = memoryMap->memoryCells[addr];
+				CViewMemoryMapCell *cell1 = viewMemoryMap->memoryCells[addr];
 				if (cell1->isExecuteCode)
 				{
 					op = memory[addr];
@@ -727,7 +763,7 @@ void CViewDisassemble::RenderDisassemble(int startAddress, int endAddress)
 				}
 				
 				addr = renderAddress-2;
-				CViewMemoryMapCell *cell2 = memoryMap->memoryCells[addr];
+				CViewMemoryMapCell *cell2 = viewMemoryMap->memoryCells[addr];
 				if (cell2->isExecuteCode)
 				{
 					op = memory[addr];
@@ -749,7 +785,7 @@ void CViewDisassemble::RenderDisassemble(int startAddress, int endAddress)
 				}
 				
 				addr = renderAddress-3;
-				CViewMemoryMapCell *cell3 = memoryMap->memoryCells[addr];
+				CViewMemoryMapCell *cell3 = viewMemoryMap->memoryCells[addr];
 				if (cell3->isExecuteCode)
 				{
 					op = memory[addr];
@@ -815,8 +851,8 @@ void CViewDisassemble::RenderDisassemble(int startAddress, int endAddress)
 			// check -2
 			if (renderAddress > 1)
 			{
-				CViewMemoryMapCell *cell1 = memoryMap->memoryCells[renderAddress-1];
-				CViewMemoryMapCell *cell2 = memoryMap->memoryCells[renderAddress-2];
+				CViewMemoryMapCell *cell1 = viewMemoryMap->memoryCells[renderAddress-1];
+				CViewMemoryMapCell *cell2 = viewMemoryMap->memoryCells[renderAddress-2];
 				if (cell1->isExecuteArgument == false
 					&& cell2->isExecuteArgument == false)
 				{
@@ -838,7 +874,7 @@ void CViewDisassemble::RenderDisassemble(int startAddress, int endAddress)
 			// check -1
 			if (renderAddress > 0)
 			{
-				CViewMemoryMapCell *cell1 = memoryMap->memoryCells[renderAddress-1];
+				CViewMemoryMapCell *cell1 = viewMemoryMap->memoryCells[renderAddress-1];
 
 				if (cell1->isExecuteArgument == false)
 				{
@@ -906,7 +942,7 @@ int CViewDisassemble::RenderDisassembleLine(float px, float py, int addr, uint8 
 							markerSizeX, fontSize, 0.78, 0.07, 0.07, 0.7f);
 	}
 
-	CViewMemoryMapCell *cell = memoryMap->memoryCells[addr];
+	CViewMemoryMapCell *cell = viewMemoryMap->memoryCells[addr];
 	
 	float cr, cg, cb, ca;
 	
@@ -1073,109 +1109,9 @@ int CViewDisassemble::RenderDisassembleLine(float px, float py, int addr, uint8 
 		}
 		
 	}
-	
-	// mnemonic
-	strcpy(buf3, opcodes[op].name);
-	strcat(buf3, " ");
-	
 
-	switch (opcodes[op].addressingMode)
-	{
-		case ADDR_IMP:
-			sprintf(buf4, "");
-			break;
-			
-		case ADDR_IMM:
-			//sprintf(buf4, "#%2.2x", lo);
-			buf4[0] = '#';
-			sprintfHexCode8(buf4+1, lo);
-			break;
-			
-		case ADDR_ZP:
-			//sprintf(buf4, "%2.2x", lo);
-			sprintfHexCode8(buf4, lo);
-			break;
-			
-		case ADDR_ZPX:
-			//sprintf(buf4, "%2.2x,x", lo);
-			sprintfHexCode8WithoutZeroEnding(buf4, lo);
-			buf4[2] = ',';
-			buf4[3] = 'x';
-			buf4[4] = 0x00;
-			break;
-			
-		case ADDR_ZPY:
-			//sprintf(buf4, "%2.2x,y", lo);
-			sprintfHexCode8WithoutZeroEnding(buf4, lo);
-			buf4[2] = ',';
-			buf4[3] = 'y';
-			buf4[4] = 0x00;
-			break;
-			
-		case ADDR_IZX:
-			//sprintf(buf4, "(%2.2x,x)", lo);
-			buf4[0] = '(';
-			sprintfHexCode8WithoutZeroEnding(buf4+1, lo);
-			buf4[3] = ',';
-			buf4[4] = 'x';
-			buf4[5] = ')';
-			buf4[6] = 0x00;
-			break;
-			
-		case ADDR_IZY:
-			//sprintf(buf4, "(%2.2x),y", lo);
-			buf4[0] = '(';
-			sprintfHexCode8WithoutZeroEnding(buf4+1, lo);
-			buf4[3] = ')';
-			buf4[4] = ',';
-			buf4[5] = 'y';
-			buf4[6] = 0x00;
-			break;
-
-		case ADDR_ABS:
-			//sprintf(buf4, "%4.4x", (hi << 8) | lo);
-			sprintfHexCode8WithoutZeroEnding(buf4, hi);
-			sprintfHexCode8(buf4+2, lo);
-			break;
-			
-		case ADDR_ABX:
-			//sprintf(buf4, "%4.4x,x", (hi << 8) | lo);
-			sprintfHexCode8WithoutZeroEnding(buf4, hi);
-			sprintfHexCode8WithoutZeroEnding(buf4+2, lo);
-			buf4[4] = ',';
-			buf4[5] = 'x';
-			buf4[6] = 0x00;
-			break;
-			
-		case ADDR_ABY:
-			//sprintf(buf4, "%4.4x,y", (hi << 8) | lo);
-			sprintfHexCode8WithoutZeroEnding(buf4, hi);
-			sprintfHexCode8WithoutZeroEnding(buf4+2, lo);
-			buf4[4] = ',';
-			buf4[5] = 'y';
-			buf4[6] = 0x00;
-			break;
-			
-		case ADDR_IND:
-			//sprintf(buf4, "(%4.4x)", (hi << 8) | lo);
-			buf4[0] = '(';
-			sprintfHexCode8WithoutZeroEnding(buf4+1, hi);
-			sprintfHexCode8WithoutZeroEnding(buf4+3, lo);
-			buf4[5] = ')';
-			buf4[6] = 0x00;
-			break;
-			
-		case ADDR_REL:
-			//sprintf(buf4, "%4.4x", ((addr + 2) + (int8)lo) & 0xFFFF);
-			sprintfHexCode16(buf4, ((addr + 2) + (int8)lo) & 0xFFFF);
-			break;
-		default:
-			break;
-	}
-	
-	//sprintf(buf, "%s%s", buf3, buf4);
-	strcpy(buf, buf3);
-	strcat(buf, buf4);
+	// convert op to text
+	MnemonicWithArgumentToStr(addr, op, lo, hi, buf);
 	
 	px += mnemonicsOffsetX;
 	
@@ -1240,6 +1176,234 @@ int CViewDisassemble::RenderDisassembleLine(float px, float py, int addr, uint8 
 	
 }
 
+void CViewDisassemble::MnemonicWithArgumentToStr(u16 addr, u8 op, u8 lo, u8 hi, char *buf)
+{
+	char buf3[16];
+	char buf4[16];
+	
+	// mnemonic
+	strcpy(buf3, opcodes[op].name);
+	strcat(buf3, " ");
+
+	switch (opcodes[op].addressingMode)
+	{
+		case ADDR_IMP:
+			sprintf(buf4, "");
+			break;
+			
+		case ADDR_IMM:
+			//sprintf(buf4, "#%2.2x", lo);
+			buf4[0] = '#';
+			sprintfHexCode8(buf4+1, lo);
+			break;
+			
+		case ADDR_ZP:
+			//sprintf(buf4, "%2.2x", lo);
+			sprintfHexCode8(buf4, lo);
+			break;
+			
+		case ADDR_ZPX:
+			//sprintf(buf4, "%2.2x,x", lo);
+			sprintfHexCode8WithoutZeroEnding(buf4, lo);
+			buf4[2] = ',';
+			buf4[3] = 'x';
+			buf4[4] = 0x00;
+			break;
+			
+		case ADDR_ZPY:
+			//sprintf(buf4, "%2.2x,y", lo);
+			sprintfHexCode8WithoutZeroEnding(buf4, lo);
+			buf4[2] = ',';
+			buf4[3] = 'y';
+			buf4[4] = 0x00;
+			break;
+			
+		case ADDR_IZX:
+			//sprintf(buf4, "(%2.2x,x)", lo);
+			buf4[0] = '(';
+			sprintfHexCode8WithoutZeroEnding(buf4+1, lo);
+			buf4[3] = ',';
+			buf4[4] = 'x';
+			buf4[5] = ')';
+			buf4[6] = 0x00;
+			break;
+			
+		case ADDR_IZY:
+			//sprintf(buf4, "(%2.2x),y", lo);
+			buf4[0] = '(';
+			sprintfHexCode8WithoutZeroEnding(buf4+1, lo);
+			buf4[3] = ')';
+			buf4[4] = ',';
+			buf4[5] = 'y';
+			buf4[6] = 0x00;
+			break;
+			
+		case ADDR_ABS:
+			//sprintf(buf4, "%4.4x", (hi << 8) | lo);
+			sprintfHexCode8WithoutZeroEnding(buf4, hi);
+			sprintfHexCode8(buf4+2, lo);
+			break;
+			
+		case ADDR_ABX:
+			//sprintf(buf4, "%4.4x,x", (hi << 8) | lo);
+			sprintfHexCode8WithoutZeroEnding(buf4, hi);
+			sprintfHexCode8WithoutZeroEnding(buf4+2, lo);
+			buf4[4] = ',';
+			buf4[5] = 'x';
+			buf4[6] = 0x00;
+			break;
+			
+		case ADDR_ABY:
+			//sprintf(buf4, "%4.4x,y", (hi << 8) | lo);
+			sprintfHexCode8WithoutZeroEnding(buf4, hi);
+			sprintfHexCode8WithoutZeroEnding(buf4+2, lo);
+			buf4[4] = ',';
+			buf4[5] = 'y';
+			buf4[6] = 0x00;
+			break;
+			
+		case ADDR_IND:
+			//sprintf(buf4, "(%4.4x)", (hi << 8) | lo);
+			buf4[0] = '(';
+			sprintfHexCode8WithoutZeroEnding(buf4+1, hi);
+			sprintfHexCode8WithoutZeroEnding(buf4+3, lo);
+			buf4[5] = ')';
+			buf4[6] = 0x00;
+			break;
+			
+		case ADDR_REL:
+			//sprintf(buf4, "%4.4x", ((addr + 2) + (int8)lo) & 0xFFFF);
+			sprintfHexCode16(buf4, ((addr + 2) + (int8)lo) & 0xFFFF);
+			break;
+		default:
+			break;
+	}
+
+	//sprintf(buf, "%s%s", buf3, buf4);
+	strcpy(buf, buf3);
+	strcat(buf, buf4);
+}
+
+// this is the same code but adding $ near hex value. this is copy pasted code for performance
+void CViewDisassemble::MnemonicWithDollarArgumentToStr(u16 addr, u8 op, u8 lo, u8 hi, char *buf)
+{
+	char buf3[16];
+	char buf4[16];
+	
+	// mnemonic
+	strcpy(buf3, opcodes[op].name);
+	strcat(buf3, " ");
+	
+	switch (opcodes[op].addressingMode)
+	{
+		case ADDR_IMP:
+			sprintf(buf4, "");
+			break;
+			
+		case ADDR_IMM:
+			//sprintf(buf4, "#%2.2x", lo);
+			buf4[0] = '#';
+			buf4[1] = '$';
+			sprintfHexCode8(buf4+2, lo);
+			break;
+			
+		case ADDR_ZP:
+			//sprintf(buf4, "%2.2x", lo);
+			buf4[0] = '$';
+			sprintfHexCode8(buf4+1, lo);
+			break;
+			
+		case ADDR_ZPX:
+			//sprintf(buf4, "%2.2x,x", lo);
+			buf4[0] = '$';
+			sprintfHexCode8WithoutZeroEnding(buf4+1, lo);
+			buf4[3] = ',';
+			buf4[4] = 'x';
+			buf4[5] = 0x00;
+			break;
+			
+		case ADDR_ZPY:
+			//sprintf(buf4, "%2.2x,y", lo);
+			buf4[0] = '$';
+			sprintfHexCode8WithoutZeroEnding(buf4+1, lo);
+			buf4[3] = ',';
+			buf4[4] = 'y';
+			buf4[5] = 0x00;
+			break;
+			
+		case ADDR_IZX:
+			//sprintf(buf4, "(%2.2x,x)", lo);
+			buf4[0] = '(';
+			buf4[1] = '$';
+			sprintfHexCode8WithoutZeroEnding(buf4+2, lo);
+			buf4[4] = ',';
+			buf4[5] = 'x';
+			buf4[6] = ')';
+			buf4[7] = 0x00;
+			break;
+			
+		case ADDR_IZY:
+			//sprintf(buf4, "(%2.2x),y", lo);
+			buf4[0] = '(';
+			buf4[1] = '$';
+			sprintfHexCode8WithoutZeroEnding(buf4+2, lo);
+			buf4[4] = ')';
+			buf4[5] = ',';
+			buf4[6] = 'y';
+			buf4[7] = 0x00;
+			break;
+			
+		case ADDR_ABS:
+			//sprintf(buf4, "%4.4x", (hi << 8) | lo);
+			buf4[1] = '$';
+			sprintfHexCode8WithoutZeroEnding(buf4+1, hi);
+			sprintfHexCode8(buf4+3, lo);
+			break;
+			
+		case ADDR_ABX:
+			//sprintf(buf4, "%4.4x,x", (hi << 8) | lo);
+			buf4[0] = '$';
+			sprintfHexCode8WithoutZeroEnding(buf4+1, hi);
+			sprintfHexCode8WithoutZeroEnding(buf4+3, lo);
+			buf4[5] = ',';
+			buf4[6] = 'x';
+			buf4[7] = 0x00;
+			break;
+			
+		case ADDR_ABY:
+			//sprintf(buf4, "%4.4x,y", (hi << 8) | lo);
+			buf4[0] = '$';
+			sprintfHexCode8WithoutZeroEnding(buf4+1, hi);
+			sprintfHexCode8WithoutZeroEnding(buf4+3, lo);
+			buf4[5] = ',';
+			buf4[6] = 'y';
+			buf4[7] = 0x00;
+			break;
+			
+		case ADDR_IND:
+			//sprintf(buf4, "(%4.4x)", (hi << 8) | lo);
+			buf4[0] = '(';
+			buf4[1] = '$';
+			sprintfHexCode8WithoutZeroEnding(buf4+2, hi);
+			sprintfHexCode8WithoutZeroEnding(buf4+4, lo);
+			buf4[6] = ')';
+			buf4[7] = 0x00;
+			break;
+			
+		case ADDR_REL:
+			//sprintf(buf4, "%4.4x", ((addr + 2) + (int8)lo) & 0xFFFF);
+			buf4[0] = '$';
+			sprintfHexCode16(buf4+1, ((addr + 2) + (int8)lo) & 0xFFFF);
+			break;
+		default:
+			break;
+	}
+	
+	//sprintf(buf, "%s%s", buf3, buf4);
+	strcpy(buf, buf3);
+	strcat(buf, buf4);
+}
+
 // Disassemble one hex-only value (for disassemble up)
 void CViewDisassemble::RenderHexLine(float px, float py, int addr)
 {
@@ -1271,7 +1435,7 @@ void CViewDisassemble::RenderHexLine(float px, float py, int addr)
 							markerSizeX, fontSize, 0.78f, 0.07f, 0.07f, 0.7f);
 	}
 	
-	CViewMemoryMapCell *cell = memoryMap->memoryCells[addr];
+	CViewMemoryMapCell *cell = viewMemoryMap->memoryCells[addr];
 	
 	float cr, cg, cb, ca;
 	
@@ -1557,7 +1721,7 @@ void CViewDisassemble::UpdateDisassemble(int startAddress, int endAddress)
 			addr = renderAddress;
 			
 			// +0
-			CViewMemoryMapCell *cell0 = memoryMap->memoryCells[addr];	//% memoryLength
+			CViewMemoryMapCell *cell0 = viewMemoryMap->memoryCells[addr];	//% memoryLength
 			if (cell0->isExecuteCode)
 			{
 				opcode = memory[addr];	//% memoryLength
@@ -1567,7 +1731,7 @@ void CViewDisassemble::UpdateDisassemble(int startAddress, int endAddress)
 			else
 			{
 				// +1
-				CViewMemoryMapCell *cell1 = memoryMap->memoryCells[ (addr+1) ];	//% memoryLength
+				CViewMemoryMapCell *cell1 = viewMemoryMap->memoryCells[ (addr+1) ];	//% memoryLength
 				if (cell1->isExecuteCode)
 				{
 					// check if at addr is 1-length opcode
@@ -1602,7 +1766,7 @@ void CViewDisassemble::UpdateDisassemble(int startAddress, int endAddress)
 				else
 				{
 					// +2
-					CViewMemoryMapCell *cell2 = memoryMap->memoryCells[ (addr+2) ];	//% memoryLength
+					CViewMemoryMapCell *cell2 = viewMemoryMap->memoryCells[ (addr+2) ];	//% memoryLength
 					if (cell2->isExecuteCode)
 					{
 						// check if at addr is 2-length opcode
@@ -1693,7 +1857,7 @@ void CViewDisassemble::UpdateDisassemble(int startAddress, int endAddress)
 				int addr;
 				
 				addr = renderAddress-1;
-				CViewMemoryMapCell *cell1 = memoryMap->memoryCells[addr];
+				CViewMemoryMapCell *cell1 = viewMemoryMap->memoryCells[addr];
 				if (cell1->isExecuteCode)
 				{
 					op = memory[addr];
@@ -1710,7 +1874,7 @@ void CViewDisassemble::UpdateDisassemble(int startAddress, int endAddress)
 				}
 				
 				addr = renderAddress-2;
-				CViewMemoryMapCell *cell2 = memoryMap->memoryCells[addr];
+				CViewMemoryMapCell *cell2 = viewMemoryMap->memoryCells[addr];
 				if (cell2->isExecuteCode)
 				{
 					op = memory[addr];
@@ -1732,7 +1896,7 @@ void CViewDisassemble::UpdateDisassemble(int startAddress, int endAddress)
 				}
 				
 				addr = renderAddress-3;
-				CViewMemoryMapCell *cell3 = memoryMap->memoryCells[addr];
+				CViewMemoryMapCell *cell3 = viewMemoryMap->memoryCells[addr];
 				if (cell3->isExecuteCode)
 				{
 					op = memory[addr];
@@ -1798,8 +1962,8 @@ void CViewDisassemble::UpdateDisassemble(int startAddress, int endAddress)
 			// check -2
 			if (renderAddress > 1)
 			{
-				CViewMemoryMapCell *cell1 = memoryMap->memoryCells[renderAddress-1];
-				CViewMemoryMapCell *cell2 = memoryMap->memoryCells[renderAddress-2];
+				CViewMemoryMapCell *cell1 = viewMemoryMap->memoryCells[renderAddress-1];
+				CViewMemoryMapCell *cell2 = viewMemoryMap->memoryCells[renderAddress-2];
 				if (cell1->isExecuteArgument == false
 					&& cell2->isExecuteArgument == false)
 				{
@@ -1821,7 +1985,7 @@ void CViewDisassemble::UpdateDisassemble(int startAddress, int endAddress)
 			// check -1
 			if (renderAddress > 0)
 			{
-				CViewMemoryMapCell *cell1 = memoryMap->memoryCells[renderAddress-1];
+				CViewMemoryMapCell *cell1 = viewMemoryMap->memoryCells[renderAddress-1];
 				
 				if (cell1->isExecuteArgument == false)
 				{
@@ -1990,11 +2154,11 @@ void CViewDisassemble::TogglePCBreakpoint(int addr)
 	if (found == false)
 	{
 		// add breakpoint
-		//LOGD("add breakpoint addr=%4.4x", addr);
+		LOGD("add breakpoint addr=%4.4x", addr);
 		renderBreakpoints[addr] = addr;
 
-		C64AddrBreakpoint *breakpoint = new C64AddrBreakpoint(addr);
-		breakpoint->actions = C64_ADDR_BREAKPOINT_ACTION_STOP;
+		CAddrBreakpoint *breakpoint = new CAddrBreakpoint(addr);
+		breakpoint->actions = ADDR_BREAKPOINT_ACTION_STOP;
 		
 		debugInterface->AddAddrBreakpoint(breakpointsMap, breakpoint);
 	}
@@ -2046,6 +2210,8 @@ bool CViewDisassemble::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 {
 	LOGI("CViewDisassemble::KeyDown: %x %s %s %s", keyCode, STRBOOL(isShift), STRBOOL(isAlt), STRBOOL(isControl));
 
+	u32 bareKey = SYS_GetBareKey(keyCode, isShift, isAlt, isControl);
+	
 	if (editCursorPos == EDIT_CURSOR_POS_ADDR
 		|| editCursorPos == EDIT_CURSOR_POS_HEX1 || editCursorPos == EDIT_CURSOR_POS_HEX2
 		|| editCursorPos == EDIT_CURSOR_POS_HEX3 || editCursorPos == EDIT_CURSOR_POS_MNEMONIC)
@@ -2060,6 +2226,17 @@ bool CViewDisassemble::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 
 		guiMain->LockMutex();
 		debugInterface->LockMutex();
+		
+		CSlrKeyboardShortcut *keyboardShortcut = viewC64->keyboardShortcuts->FindShortcut(KBZONE_GLOBAL, bareKey, isShift, isAlt, isControl);
+		if (keyboardShortcut == viewC64->keyboardShortcuts->kbsPasteFromClipboard)
+		{
+			// will run keyb downs from clipboard
+			this->PasteKeysFromClipboard();
+			
+			guiMain->UnlockMutex();
+			debugInterface->UnlockMutex();
+			return true;
+		}
 		
 		if (keyCode == MTKEY_ARROW_UP || keyCode == MTKEY_ARROW_DOWN)
 		{
@@ -2119,17 +2296,33 @@ bool CViewDisassemble::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 	
 	if (isShift && keyCode == MTKEY_ARROW_DOWN)
 	{
-		viewC64->viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		// TODO: make generic
+		if (viewC64->debugInterfaceC64)
+		{
+			viewC64->viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		}
+		else if (viewC64->viewAtariScreen)
+		{
+//			viewC64->viewAtariScreen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		}
 		keyCode = MTKEY_PAGE_DOWN;
 	}
 
 	if (isShift && keyCode == MTKEY_ARROW_UP)
 	{
-		viewC64->viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		// TODO: make generic
+		if (viewC64->debugInterfaceC64)
+		{
+			viewC64->viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		}
+//		else if (viewC64->viewAtariScreen)
+//		{
+////			viewC64->viewAtariScreen->KeyUpModifierKeys(isShift, isAlt, isControl);
+//		}
 		keyCode = MTKEY_PAGE_UP;
 	}
 	
-	CSlrKeyboardShortcut *keyboardShortcut = viewC64->keyboardShortcuts->FindShortcut(shortcutZones, keyCode, isShift, isAlt, isControl);
+	CSlrKeyboardShortcut *keyboardShortcut = viewC64->keyboardShortcuts->FindShortcut(shortcutZones, bareKey, isShift, isAlt, isControl);
 	
 	if (keyboardShortcut == viewC64->keyboardShortcuts->kbsToggleBreakpoint)
 	{
@@ -2147,7 +2340,9 @@ bool CViewDisassemble::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 	
 	if (keyboardShortcut == viewC64->keyboardShortcuts->kbsMakeJmp)
 	{
-		viewC64->debugInterface->MakeJmpNoReset(this->dataAdapter, this->cursorAddress);
+		LOGTODO("MAKEJMP: kbsMakeJmp should be in disassemble");
+		
+		viewC64->debugInterfaceC64->MakeJmpNoReset(this->dataAdapter, this->cursorAddress);
 		
 		viewC64->viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
 		return true;
@@ -2167,7 +2362,11 @@ bool CViewDisassemble::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 			changedByUser = true;
 		}
 
-		viewC64->viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		// TODO: make generic
+		if (viewC64->debugInterfaceC64)
+		{
+			viewC64->viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		}
 		return true;
 	}
 	
@@ -2176,10 +2375,31 @@ bool CViewDisassemble::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 		isEnteringGoto = true;
 		StartEditingAtCursorPosition(EDIT_CURSOR_POS_ADDR, true);
 		
-		viewC64->viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		// TODO: make generic
+		if (viewC64->debugInterfaceC64)
+		{
+			viewC64->viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		}
+		return true;
+	}
+
+	if (keyboardShortcut == viewC64->keyboardShortcuts->kbsCopyToClipboard)
+	{
+		this->CopyAssemblyToClipboard();
 		return true;
 	}
 	
+	if (keyboardShortcut == viewC64->keyboardShortcuts->kbsCopyAlternativeToClipboard)
+	{
+		this->CopyHexAddressToClipboard();
+		return true;
+	}
+	
+	if (keyboardShortcut == viewC64->keyboardShortcuts->kbsPasteFromClipboard)
+	{
+		this->PasteHexValuesFromClipboard();
+		return true;
+	}
 
 	if (keyCode == MTKEY_ARROW_DOWN)
 	{
@@ -2255,49 +2475,57 @@ bool CViewDisassemble::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 	}
 	
 	// TODO: fix me, this is workaround
-	if (viewC64->currentScreenLayoutId == C64_SCREEN_LAYOUT_VIC_DISPLAY)
+	if (viewC64->currentScreenLayoutId == SCREEN_LAYOUT_C64_VIC_DISPLAY)
 	{
 		if (viewC64->viewC64VicDisplay->KeyDown(keyCode, isShift, isAlt, isControl))
 			return true;
 	}
 
 	
+	
 	return CGuiView::KeyDown(keyCode, isShift, isAlt, isControl);
 }
 
 void CViewDisassemble::StepOverJsr()
 {
+//	LOGD("CViewDisassemble::StepOverJsr");
+	
 	// step over JSR
-	viewC64->debugInterface->LockMutex();
+	debugInterface->LockMutex();
 	
 	bool a;
-	if (breakpointsMap == &(debugInterface->breakpointsC64PC))
+	if (breakpointsMap == &(debugInterface->breakpointsPC))
 	{
-		int pc = debugInterface->GetC64CpuPC();
+		int pc = debugInterface->GetCpuPC();
 		uint8 opcode;
 		dataAdapter->AdapterReadByte(pc, &opcode, &a);
 		if (a)
 		{
+//			LOGD("pc=%04x opcode=%02x", pc, opcode);
 			// is JSR?
 			if (opcode == 0x20)
 			{
 				int breakPC = pc + opcodes[opcode].addressingLength;
-				debugInterface->SetTemporaryC64BreakpointPC(breakPC);
+				debugInterface->SetTemporaryBreakpointPC(breakPC);
 				
-				//LOGD("temporary C64 breakPC=%04x", breakPC);
+//				LOGD("temporary C64 breakPC=%04x", breakPC);
 				
 				// run to temporary breakpoint (next line after JSR)
-				debugInterface->SetDebugMode(C64_DEBUG_RUNNING);
+				debugInterface->SetDebugMode(DEBUGGER_MODE_RUNNING);
 			}
 			else
 			{
-				debugInterface->SetDebugMode(C64_DEBUG_RUN_ONE_INSTRUCTION);
+				debugInterface->SetDebugMode(DEBUGGER_MODE_RUN_ONE_INSTRUCTION);
 			}
 		}
 	}
-	else if (breakpointsMap == &(debugInterface->breakpointsDrive1541PC))
+	
+#if defined(RUN_COMMODORE64)
+	
+	// TODO: refactor this into new Drive1541DebugInterface
+	else if (breakpointsMap == &(viewC64->debugInterfaceC64->breakpointsDrive1541PC))
 	{
-		int pc = debugInterface->GetDrive1541PC();
+		int pc = viewC64->debugInterfaceC64->GetDrive1541PC();
 		uint8 opcode;
 		dataAdapter->AdapterReadByte(pc, &opcode, &a);
 		if (a)
@@ -2306,21 +2534,23 @@ void CViewDisassemble::StepOverJsr()
 			if (opcode == 0x20)
 			{
 				int breakPC = pc + opcodes[opcode].addressingLength;
-				debugInterface->SetTemporaryDrive1541BreakpointPC(breakPC);
+				viewC64->debugInterfaceC64->SetTemporaryDrive1541BreakpointPC(breakPC);
 				
 				//LOGD("temporary Drive1541 breakPC=%04x", breakPC);
 				
 				// run to temporary breakpoint (next line after JSR)
-				debugInterface->SetDebugMode(C64_DEBUG_RUNNING);
+				debugInterface->SetDebugMode(DEBUGGER_MODE_RUNNING);
 			}
 			else
 			{
-				debugInterface->SetDebugMode(C64_DEBUG_RUN_ONE_INSTRUCTION);
+				debugInterface->SetDebugMode(DEBUGGER_MODE_RUN_ONE_INSTRUCTION);
 			}
 		}
 	}
 	
-	viewC64->debugInterface->UnlockMutex();
+#endif
+	
+	debugInterface->UnlockMutex();
 }
 
 void CViewDisassemble::MoveAddressHistoryBack()
@@ -2338,6 +2568,7 @@ void CViewDisassemble::MoveAddressHistoryBack()
 	guiMain->UnlockMutex();
 }
 
+// accessed when keyboard right arrow is pressed
 void CViewDisassemble::MoveAddressHistoryForward()
 {
 	guiMain->LockMutex();
@@ -2391,7 +2622,7 @@ void CViewDisassemble::MoveAddressHistoryForward()
 		dataAdapter->AdapterReadByte(cursorAddress+2, &a2);
 		
 		u16 addr = a1 | (a2 << 8);
-		this->memoryMap->viewDataDump->ScrollToAddress(addr);
+		this->viewMemoryMap->viewDataDump->ScrollToAddress(addr);
 	}
 	else if (opcodes[opcode].addressingMode == ADDR_IND)
 	{
@@ -2405,7 +2636,7 @@ void CViewDisassemble::MoveAddressHistoryForward()
 		dataAdapter->AdapterReadByte(addr1+1, &a2);
 		
 		u16 addr = a1 | (a2 << 8);
-		this->memoryMap->viewDataDump->ScrollToAddress(addr);
+		this->viewMemoryMap->viewDataDump->ScrollToAddress(addr);
 	}
 	else if (opcodes[opcode].addressingMode == ADDR_ZP
 			 || opcodes[opcode].addressingMode == ADDR_ZPX
@@ -2417,7 +2648,7 @@ void CViewDisassemble::MoveAddressHistoryForward()
 		dataAdapter->AdapterReadByte(cursorAddress+1, &a);
 		
 		u16 addr = a;
-		this->memoryMap->viewDataDump->ScrollToAddress(addr);
+		this->viewMemoryMap->viewDataDump->ScrollToAddress(addr);
 	}
 	
 	guiMain->UnlockMutex();
@@ -2445,7 +2676,7 @@ void CViewDisassemble::SetCursorToNearExecuteCodeAddress(int newCursorAddress)
 	
 	for (int addr = newCursorAddress; addr > newCursorAddress-3; addr--)
 	{
-		if (viewC64->viewC64MemoryMap->IsExecuteCodeAddress(addr))
+		if (this->viewMemoryMap->IsExecuteCodeAddress(addr))
 		{
 			cursorAddress = addr;
 			return;
@@ -2454,7 +2685,7 @@ void CViewDisassemble::SetCursorToNearExecuteCodeAddress(int newCursorAddress)
 	
 	for (int addr = newCursorAddress; addr < newCursorAddress+3; addr++)
 	{
-		if (viewC64->viewC64MemoryMap->IsExecuteCodeAddress(addr))
+		if (this->viewMemoryMap->IsExecuteCodeAddress(addr))
 		{
 			cursorAddress = addr;
 			return;
@@ -2519,6 +2750,11 @@ bool CViewDisassemble::DoScrollWheel(float deltaX, float deltaY)
 	//LOGD("CViewDisassemble::DoScrollWheel: %f %f", deltaX, deltaY);
 	int dy = fabs(round(deltaY));
 	
+	if (guiMain->isShiftPressed)
+	{
+		dy *= 10;
+	}
+	
 	bool scrollUp = (deltaY > 0);
 	
 	for (int i = 0; i < dy; i++)
@@ -2562,13 +2798,13 @@ void CViewDisassemble::Assemble(int assembleAddress)
 		return;
 	}
 	
-	Assemble(assembleAddress, lineBuffer);
+	Assemble(assembleAddress, lineBuffer, true);
 	
 	SYS_ReleaseCharBuf(lineBuffer);
 	
 }
 
-int CViewDisassemble::Assemble(int assembleAddress, char *lineBuffer)
+int CViewDisassemble::Assemble(int assembleAddress, char *lineBuffer, bool showMessage)
 {
 	int instructionOpcode = -1;
 	uint16 instructionValue = 0x0000;
@@ -2579,7 +2815,10 @@ int CViewDisassemble::Assemble(int assembleAddress, char *lineBuffer)
 	if (ret == -1)
 	{
 		// error
-		guiMain->ShowMessage(errorMessage);
+		if (showMessage)
+		{
+			guiMain->ShowMessage(errorMessage);
+		}
 		SYS_ReleaseCharBuf(errorMessage);
 		return -1;
 	}
@@ -2590,19 +2829,19 @@ int CViewDisassemble::Assemble(int assembleAddress, char *lineBuffer)
 	{
 		case 1:
 			dataAdapter->AdapterWriteByte(assembleAddress, instructionOpcode, &isDataAvailable);
-			memoryMap->memoryCells[assembleAddress]->isExecuteCode = true;
+			viewMemoryMap->memoryCells[assembleAddress]->isExecuteCode = true;
 			break;
 			
 		case 2:
 			dataAdapter->AdapterWriteByte(assembleAddress, instructionOpcode, &isDataAvailable);
-			memoryMap->memoryCells[assembleAddress]->isExecuteCode = true;
+			viewMemoryMap->memoryCells[assembleAddress]->isExecuteCode = true;
 			assembleAddress++;
 			dataAdapter->AdapterWriteByte(assembleAddress, (instructionValue & 0xFFFF), &isDataAvailable);
 			break;
 			
 		case 3:
 			dataAdapter->AdapterWriteByte(assembleAddress, instructionOpcode, &isDataAvailable);
-			memoryMap->memoryCells[assembleAddress]->isExecuteCode = true;
+			viewMemoryMap->memoryCells[assembleAddress]->isExecuteCode = true;
 			assembleAddress++;
 			dataAdapter->AdapterWriteByte(assembleAddress, (instructionValue & 0x00FF), &isDataAvailable);
 			assembleAddress++;
@@ -3354,3 +3593,175 @@ bool CViewDisassemble::DoTapNotExecuteAware(GLfloat x, GLfloat y)
 	
 	return CGuiView::DoTap(x, y);
 }
+
+/////
+
+void CViewDisassemble::PasteHexValuesFromClipboard()
+{
+	LOGD("CViewDisassemble::PasteHexValuesFromClipboard");
+
+	u16 currentAssembleAddress = this->cursorAddress;
+
+	//	int CViewDisassemble::Assemble(int assembleAddress, char *lineBuffer)
+
+	CSlrString *pasteStr = SYS_GetClipboardAsSlrString();
+	pasteStr->DebugPrint("pasteStr=");
+	
+	pasteStr->RemoveCharacter('$');
+
+	std::list<u16> splitChars;
+	splitChars.push_back(' ');
+	splitChars.push_back('\n');
+	splitChars.push_back('\r');
+	splitChars.push_back('\t');
+	
+	std::vector<CSlrString *> *strs = pasteStr->Split(splitChars);
+	
+	for (std::vector<CSlrString *>::iterator it = strs->begin(); it != strs->end(); it++)
+	{
+		CSlrString *hexVal = *it;
+
+		CSlrDataAdapter *dataAdapter = debugInterface->GetDataAdapter();
+
+		if (hexVal->IsHexValue() == true)
+		{
+			int len = hexVal->GetLength();
+			
+			if (len == 4 || len == 3)
+			{
+				// 4 hex digits mean an address
+				currentAssembleAddress = hexVal->ToIntFromHex();
+			}
+			
+			if (len == 2 || len == 1)
+			{
+				dataAdapter->AdapterWriteByte(currentAssembleAddress, hexVal->ToIntFromHex());
+				currentAssembleAddress++;
+			}
+			
+			continue;
+		}
+		else
+		{
+			// mnemonic
+			CSlrString *assembleStr = new CSlrString(hexVal);
+			char *cAssembleStr = assembleStr->GetStdASCII();
+
+			assembleStr->DebugPrint("assembleStr1=");
+
+			int opLen = this->Assemble(currentAssembleAddress, cAssembleStr, false);
+			
+			if (opLen == -1)
+			{
+				delete [] cAssembleStr;
+				
+				it++;
+				
+				if (it != strs->end())
+				{
+					CSlrString *argument = *it;
+					assembleStr->Concatenate(' ');
+					assembleStr->Concatenate(argument);
+				}
+				
+				assembleStr->DebugPrint("assembleStr2=");
+				cAssembleStr = assembleStr->GetStdASCII();
+
+				opLen = this->Assemble(currentAssembleAddress, cAssembleStr, false);
+			}
+			
+			delete [] cAssembleStr;
+			
+			if (opLen == -1)
+				continue;
+			
+			currentAssembleAddress += opLen;
+			
+		}
+	}
+	
+	while (!strs->empty())
+	{
+		CSlrString *str = strs->back();
+		
+		strs->pop_back();
+		delete str;
+	}
+	
+	this->ScrollToAddress(currentAssembleAddress);
+	
+	delete pasteStr;
+}
+
+void CViewDisassemble::CopyAssemblyToClipboard()
+{
+	LOGD("CViewDisassemble::CopyAssemblyToClipboard");
+	
+	u8 op = 0x00;
+	u8 hi = 0x00;
+	u8 lo = 0x00;
+	bool isAvailable;
+	
+	// TODO: create wrapping adapter for post $FFFF-reads to wrap starting from $0000
+	dataAdapter->AdapterReadByte(this->cursorAddress, &op, &isAvailable);
+	dataAdapter->AdapterReadByte(this->cursorAddress + 1, &lo, &isAvailable);
+	dataAdapter->AdapterReadByte(this->cursorAddress + 2, &hi, &isAvailable);
+	
+	char *buf = SYS_GetCharBuf();
+	MnemonicWithDollarArgumentToStr(this->cursorAddress, op, lo, hi, buf);
+	
+	CSlrString *str = new CSlrString(buf);
+	SYS_SetClipboardAsSlrString(str);
+	delete str;
+
+	char *buf2 = SYS_GetCharBuf();
+
+	sprintf(buf2, "Copied %s", buf);
+	guiMain->ShowMessage(buf2);
+	
+	SYS_ReleaseCharBuf(buf);
+	SYS_ReleaseCharBuf(buf2);
+	
+}
+
+void CViewDisassemble::CopyHexAddressToClipboard()
+{
+	LOGD("CViewDisassemble::CopyHexAddressToClipboard");
+	
+	char *buf = SYS_GetCharBuf();
+	sprintf(buf, "$%04X", this->cursorAddress);
+	CSlrString *str = new CSlrString(buf);
+	SYS_SetClipboardAsSlrString(str);
+	delete str;
+	
+	sprintf(buf, "Copied $%04X", this->cursorAddress);
+	guiMain->ShowMessage(buf);
+	
+	SYS_ReleaseCharBuf(buf);
+}
+
+void CViewDisassemble::PasteKeysFromClipboard()
+{
+	LOGD("CViewDisassemble::PasteKeysFromClipboard");
+
+	CSlrString *pasteStr = SYS_GetClipboardAsSlrString();
+	pasteStr->DebugPrint("pasteStr=");
+
+	for (int i = 0; i < pasteStr->GetLength(); i++)
+	{
+		u16 chr = pasteStr->GetChar(i);
+		
+		if ((chr >= '0' && chr <= '9')
+			|| (chr >= 'a' && chr <= 'x')
+			|| (chr >= 'A' && chr <= 'X')
+			|| chr == ' ' || chr == '$' || chr == '#'
+			|| chr == ',' || chr == '(' || chr == ')')
+		
+		this->KeyDown(chr, false, false, false);
+	}
+}
+
+//bool CViewDisassemble::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
+//{
+//	LOGI("CViewDisassemble::KeyDown: %x %s %s %s", keyCode, STRBOOL(isShift), STRBOOL(isAlt), STRBOOL(isControl));
+//	

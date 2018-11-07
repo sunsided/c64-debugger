@@ -9,6 +9,8 @@
 #include "CGuiMain.h"
 #include "CViewDisassemble.h"
 #include "CViewMemoryMap.h"
+#include "CViewC64StateCPU.h"
+#include "CViewDriveStateCPU.h"
 #include "C64D_Version.h"
 
 #define C64DEBUGGER_MONITOR_HISTORY_FILE_VERSION	1
@@ -59,6 +61,13 @@ void CViewMonitorConsole::SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, 
 	
 	CGuiElement::SetPosition(posX, posY, posZ, sizeX, sizeY);
 }
+
+
+void CViewMonitorConsole::ActivateView()
+{
+	UpdateDataAdapters();
+}
+
 
 bool CViewMonitorConsole::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
@@ -299,11 +308,11 @@ void CViewMonitorConsole::CommandGoJMP()
 	
 	if (this->device == C64MONITOR_DEVICE_C64)
 	{
-		viewC64->debugInterface->MakeJmpNoResetC64(addrStart);
+		viewC64->debugInterfaceC64->MakeJmpNoResetC64(addrStart);
 	}
 	else
 	{
-		viewC64->debugInterface->MakeJmpNoReset1541(addrStart);
+		viewC64->debugInterfaceC64->MakeJmpNoReset1541(addrStart);
 	}
 }
 
@@ -331,7 +340,7 @@ void CViewMonitorConsole::CommandDevice()
 	}
 	else if (token->CompareWith("D") || token->CompareWith("8"))
 	{
-		this->device= C64MONITOR_DEVICE_DISK1541_8;
+		this->device = C64MONITOR_DEVICE_DISK1541_8;
 	}
 	else
 	{
@@ -362,15 +371,18 @@ void CViewMonitorConsole::UpdateDataAdapters()
 	
 	bool v;
 	v = v1;
+	viewC64->viewC64StateCPU->SetVisible(v);
 	viewC64->viewC64Disassemble->SetVisible(v);
 	viewC64->viewC64MemoryDataDump->SetVisible(v);
 	viewC64->viewC64MemoryMap->SetVisible(v);
-	viewC64->debugInterface->debugOnC64 = v;
+	viewC64->debugInterfaceC64->isDebugOn = v;
 	v = v2;
+	viewC64->viewDriveStateCPU->SetVisible(v);
 	viewC64->viewDrive1541Disassemble->SetVisible(v);
 	viewC64->viewDrive1541MemoryDataDump->SetVisible(v);
 	viewC64->viewDrive1541MemoryMap->SetVisible(v);
-	viewC64->debugInterface->debugOnDrive1541 = v;
+	viewC64->debugInterfaceC64->debugOnDrive1541 = v;
+	
 
 }
 
@@ -416,7 +428,7 @@ void CViewMonitorConsole::CommandFill()
 		return;
 	}
 	
-	if (addrEnd <= addrStart)
+	if (addrEnd < addrStart)
 	{
 		this->viewConsole->PrintLine("Usage: F <from addres> <to address> <value>");
 		return;
@@ -426,10 +438,14 @@ void CViewMonitorConsole::CommandFill()
 	
 	bool avail;
 	
-	for (int i = addrStart; i < addrEnd; i++)
+	int i = addrStart;
+	
+	do
 	{
 		dataAdapter->AdapterWriteByte(i, value, &avail);
+		i++;
 	}
+	while (i < addrEnd);
 }
 
 void CViewMonitorConsole::CommandCompare()
@@ -846,8 +862,6 @@ void CViewMonitorConsole::SystemDialogFileSaveSelected(CSlrString *filePath)
 			this->viewConsole->PrintLine("Save memory dump failed to file %s", cPath);
 			delete [] cPath;
 		}
-		
-		delete filePath;
 	}
 	else if (saveFileType == MONITOR_SAVE_FILE_DISASSEMBLE)
 	{
@@ -1026,8 +1040,6 @@ void CViewMonitorConsole::SystemDialogFileOpenSelected(CSlrString *filePath)
 		this->viewConsole->PrintLine("Loading memory dump failed from file %s", cPath);
 		delete [] cPath;
 	}
-	
-	delete filePath;
 }
 
 void CViewMonitorConsole::SystemDialogFileOpenCancelled()

@@ -24,6 +24,7 @@
 #include "SYS_Main.h"
 #include "CGuiViewResourceManager.h"
 #include "RES_Embedded.h"
+#include "CSlrFileFromOS.h"
 #include <pthread.h>
 #include <algorithm>
 
@@ -103,6 +104,7 @@ void RES_Init(u16 destScreenWidth)
 	resourcesSortedByActivation.clear();
 
 	_resourceLoaderThread = new CResourceLoaderThread();
+	_resourceLoaderThread->ThreadSetName("CResourceLoaderThread");
 	
 	RES_InitDeployFile(destScreenWidth);
 	RES_InitEmbeddedData();
@@ -419,6 +421,11 @@ CSlrImage *RES_GetImage(char *imageName)
 	return RES_GetImage(imageName, true, true);
 }
 
+CSlrImage *RES_GetImage(char *imageName, bool linearScaling)
+{
+	return RES_GetImage(imageName, linearScaling, true);
+}
+
 CSlrImage *RES_GetImage(char *imageName, bool linearScaling, bool fromResources)
 {
 	return RES_GetImageAsync(imageName, linearScaling, gResourceDefaultLevel, fromResources);
@@ -447,6 +454,30 @@ CSlrImage *RES_GetImageOrPlaceholder(char *imageName, bool linearScaling, int re
 		SYS_FatalExit("TODO: RES_GetImageOrPlaceholder");
 	}
 	return img;
+}
+
+CSlrImage *RES_LoadImageFromFileOS(CSlrString *path, bool linearScaling)
+{
+	char *cPath = path->GetStdASCII();
+	CSlrImage *ret = RES_LoadImageFromFileOS(path, linearScaling);
+	delete [] cPath;
+	return ret;
+}
+
+CSlrImage *RES_LoadImageFromFileOS(char *path, bool linearScaling)
+{
+	CSlrFile *file = new CSlrFileFromOS(path);
+	if (!file->Exists())
+	{
+		LOGError("RES_LoadImageFromFileOS: file does not exist=%s", path);
+		delete file;
+		return NULL;
+	}
+	
+	CSlrImage *image = new CSlrImage(file, false);
+
+	delete file;
+	return image;
 }
 
 void RES_ReleaseImage(CSlrImageBase *image)

@@ -1,15 +1,16 @@
 #ifndef _VIEW_VICEDITOR_
 #define _VIEW_VICEDITOR_
 
-#include "CGuiView.h"
+#include "CGuiViewWindowsManager.h"
 #include "CGuiButton.h"
 #include "CGuiViewMenu.h"
 #include "SYS_CFileSystem.h"
 #include "CViewC64VicDisplay.h"
-#include "CViewC64Palette.h"
 #include "CViewC64Charset.h"
+#include "CViewC64Palette.h"
 #include "CGlobalOSWindowChangedCallback.h"
 #include "CViewVicEditorDisplayPreview.h"
+#include "CGuiViewToolBox.h"
 #include <list>
 
 class CSlrKeyboardShortcut;
@@ -17,12 +18,15 @@ class CViewC64MenuItem;
 class CVicEditorLayer;
 class CViewC64Sprite;
 class CViewVicEditorLayers;
+class CViewVicEditorCreateNewPicture;
+class CViewToolBox;
 
 class CVicEditorLayerC64Screen;
 class CVicEditorLayerC64Canvas;
 class CVicEditorLayerC64Sprites;
 class CVicEditorLayerVirtualSprites;
 class CVicEditorLayerUnrestrictedBitmap;
+class CVicEditorLayerImage;
 
 enum
 {
@@ -35,7 +39,7 @@ enum
 	VICEDITOR_EXPORT_PNG		= 6
 };
 
-class CViewVicEditor : public CGuiView, CGuiButtonCallback, CGuiViewMenuCallback, CSystemFileDialogCallback, CGlobalOSWindowChangedCallback
+class CViewVicEditor : public CGuiViewWindowsManager, CGuiButtonCallback, CGuiViewMenuCallback, CViewC64PaletteCallback, CSystemFileDialogCallback, CGlobalOSWindowChangedCallback, CGuiViewToolBoxCallback
 {
 public:
 	CViewVicEditor(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY);
@@ -91,6 +95,12 @@ public:
 	CSlrString *strHeader;
 	void SwitchToVicEditor();
 	
+	float mainDisplayPosX;
+	float mainDisplayPosY;
+	float mainDisplaySizeX;
+	float mainDisplaySizeY;
+	float mainDisplayPosEndX;
+	float mainDisplayPosEndY;
 
 	//
 	CViewC64VicDisplay *viewVicDisplayMain;
@@ -99,6 +109,9 @@ public:
 	CViewC64Charset *viewCharset;
 	CViewC64Sprite *viewSprite;
 	CViewVicEditorLayers *viewLayers;
+	CViewVicEditorCreateNewPicture *viewCreateNewPicture;
+	CGuiViewToolBox *viewTopBar;
+	CGuiViewToolBox *viewToolBox;
 	
 	// layers
 	std::list<CVicEditorLayer *> layers;
@@ -107,16 +120,23 @@ public:
 	CVicEditorLayerC64Sprites *layerC64Sprites;
 	CVicEditorLayerVirtualSprites *layerVirtualSprites;
 	CVicEditorLayerUnrestrictedBitmap *layerUnrestrictedBitmap;
+	CVicEditorLayerImage *layerReferenceImage;
 
 	CVicEditorLayer *selectedLayer;
 	void SelectLayer(CVicEditorLayer *layer);
 	
 	bool IsColorReplace();
 	
+	// temp buffer for showing tools preview
+	CVicEditorLayerUnrestrictedBitmap *layerToolPreview;
+	bool toolIsActive;
+	
 	//
 	void InitAddresses();
 	
 	void UpdateDisplayFrame();
+	
+	void UpdateReferenceLayers();
 	
 	void MoveDisplayDiff(float diffX, float diffY);
 	void MoveDisplayToScreenPos(float px, float py);
@@ -152,6 +172,8 @@ public:
 	bool prevVisibleCharset;
 	bool prevVisibleSprite;
 	bool prevVisibleLayers;
+	bool prevVisibleToolBox;
+	bool prevVisibleTopBar;
 	
 	///
 	
@@ -193,6 +215,10 @@ public:
 	
 	u8 exportMode;
 	
+	u8 GetExportModeFromVicState(vicii_cycle_state_t *viciiState);
+
+	void ExportScreen(CSlrString *path);
+	
 	void OpenDialogImportFile();
 
 	virtual void SystemDialogFileOpenSelected(CSlrString *path);
@@ -201,6 +227,7 @@ public:
 	virtual void SystemDialogFileSaveCancelled();
 
 	void SetVicMode(bool isBitmapMode, bool isMultiColor, bool isExtendedBackground);
+	void SetVicModeRegsOnly(bool isBitmapMode, bool isMultiColor, bool isExtendedBackground);
 	void SetVicAddresses(int vbank, int screenAddr, int charsetAddr, int bitmapAddr);
 
 	bool ImportVCE(CSlrString *path);
@@ -243,7 +270,47 @@ public:
 
 	bool backupRenderDataWithColors;
 	
+	//
+	void ClearScreen();
+	
+	void RunC64EndlessLoop();
+	
+	// icons topbar
+	CSlrImage *imgClear;
+	CSlrImage *imgExport;
+	CSlrImage *imgImport;
+	CSlrImage *imgNew;
+	CSlrImage *imgOpen;
+	CSlrImage *imgSave;
+	CSlrImage *imgSettings;
+
+	CSlrImage *imgToolBrushCircle;
+	CSlrImage *imgToolBrushSquare;
+	CSlrImage *imgToolCircle;
+	CSlrImage *imgToolDither;
+	CSlrImage *imgToolFill;
+	CSlrImage *imgToolLine;
+	CSlrImage *imgToolPen;
+	CSlrImage *imgToolRectangle;
+
+	void SetTopBarVisible(bool isTopBarVisible);
+	
+	virtual void ToolBoxIconPressed(CSlrImage *imgIcon);
+
+	void CreateNewPicture();
+	
+	/// tools
+	virtual void ToolPaintPixel(int px, int py, u8 colorSource);
+	virtual void ToolPaintBrush(int px, int py, u8 colorSource);
+	virtual void ToolPaintPixelOnDraft(int px, int py, u8 colorSource);
+	virtual void ToolPaintBrushOnDraft(int px, int py, u8 colorSource);
+
+	virtual void ToolClearDraftImage();
+	virtual void ToolMakeDraftActive();
+	virtual void ToolMakeDraftNotActive();
+
 	///
+//	CSlrImage *imgMock;
 	void RunDebug();
 };
 

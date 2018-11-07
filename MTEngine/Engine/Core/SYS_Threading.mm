@@ -41,6 +41,10 @@ void *ThreadStarterFuncRun(void *data)
 	}
 #endif
 
+#if defined(IPHONE) || defined(MACOS)
+//	NSLog(@"ThreadStarterFuncRun: threadId=%x threadName=%s", (u64)pthread_self(), threadStarter->threadName);
+#endif
+
 	threadStarter->isRunning = true;
 	threadStarter->ThreadRun(passData);
 	threadStarter->isRunning = false;
@@ -96,6 +100,16 @@ CSlrThread::CSlrThread()
 #endif
 	this->isRunning = false;
 	strcpy(this->threadName, "thread");
+};
+
+CSlrThread::CSlrThread(char *setThreadName)
+{
+	// win32 sucks
+#ifndef WIN32
+	this->threadId = 0;
+#endif
+	this->isRunning = false;
+	strcpy(this->threadName, setThreadName);
 };
 
 void CSlrThread::ThreadSetName(char *name)
@@ -156,6 +170,8 @@ CSlrMutex::CSlrMutex()
 	pthread_mutex_init(&mutex, &attr);
 	pthread_mutexattr_destroy(&attr);
 
+	lockedLevel = 0;
+	
 //#elif defined(WINDOWS)
 //	mutex = new CRITICAL_SECTION;
 //	InitializeCriticalSection((CRITICAL_SECTION *)mutex);
@@ -183,7 +199,7 @@ void CSlrMutex::Lock()
 //#endif
 	
 	pthread_mutex_lock(&mutex);
-//	isLocked = true;
+	lockedLevel++;
 }
 
 void CSlrMutex::Unlock()
@@ -195,7 +211,7 @@ void CSlrMutex::Unlock()
 //#endif
 	
 	
+	lockedLevel--;
 	pthread_mutex_unlock(&mutex);
-//	isLocked = false;
 }
 

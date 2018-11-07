@@ -112,8 +112,8 @@ void CViewFileD64::UpdateDriveDiskID()
 		//
 		LOGD("...diskId= %02x %02x", diskImage->diskId[2], diskImage->diskId[3]);
 		
-		viewC64->debugInterface->SetByte1541(0x0012, diskImage->diskId[2]);
-		viewC64->debugInterface->SetByte1541(0x0013, diskImage->diskId[3]);
+		viewC64->debugInterfaceC64->SetByte1541(0x0012, diskImage->diskId[2]);
+		viewC64->debugInterfaceC64->SetByte1541(0x0013, diskImage->diskId[3]);
 		
 		//		viewC64->debugInterface->SetByte1541(0x0016, diskImage->diskId[2]);
 		//		viewC64->debugInterface->SetByte1541(0x0017, diskImage->diskId[3]);		
@@ -130,9 +130,6 @@ void CViewFileD64::SystemDialogFileOpenSelected(CSlrString *path)
 {
 	LOGM("CViewFileD64::SystemDialogFileOpenSelected, path=%x", path);
 	path->DebugPrint("path=");
-
-	
-	delete path;
 }
 
 

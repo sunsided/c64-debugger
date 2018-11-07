@@ -17,12 +17,22 @@ public:
 	bool destroyMe;	// audio channel should be destroyed by engine immediately
 	bool bypass;
 	
+	virtual void Start();
+	virtual void Stop();
+	
+	int *channelBuffer;
+
+	virtual void CreateChannelBuffer(u32 numSamples);
+	
 	// overwrites buffer
 	virtual void Mix(int *mixBuffer, u32 numSamples);
 	virtual void MixFloat(float *mixBufferL, float *mixBufferR, u32 numSamples);
+
+	virtual void FillBuffer(int *mixBuffer, u32 numSamples);
+	virtual void FillBufferFloat(float *mixBufferL, float *mixBufferR, u32 numSamples);
 	
 	// adds to buffer
-	virtual void MixIn(int *mixBuffer, u32 numSamples);
+	virtual void MixIn(int *mixBuffer, u32 numSamples, int numAudioChannels);
 	virtual void MixInFloat(float *mixBufferL, float *mixBufferR, u32 numSamples);
 };
 

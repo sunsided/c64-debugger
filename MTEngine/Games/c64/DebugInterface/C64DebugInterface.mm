@@ -6,22 +6,16 @@
 #include "CByteBuffer.h"
 
 C64DebugInterface::C64DebugInterface(CViewC64 *viewC64)
+: CDebugInterface(viewC64)
 {
 	this->viewC64 = viewC64;
 	
 	emulationSpeed = 0;
 	emulationFrameRate = 0;	
 
-	breakpointsMutex = new CSlrMutex();
-	renderScreenMutex = new CSlrMutex();
-	ioMutex = new CSlrMutex();
-
 	breakOnC64IrqVIC = false;
 	breakOnC64IrqCIA = false;
 	breakOnC64IrqNMI = false;
-	breakOnC64PC = false;
-	breakOnC64Memory = false;
-	breakOnC64Raster = false;
 	
 	breakOnDrive1541IrqVIA1 = false;
 	breakOnDrive1541IrqVIA2 = false;
@@ -29,11 +23,10 @@ C64DebugInterface::C64DebugInterface(CViewC64 *viewC64)
 	breakOnDrive1541PC = false;
 	breakOnDrive1541Memory = false;
 
-	temporaryC64BreakpointPC = -1;
 	temporaryDrive1541BreakpointPC = -1;
 
-	debugMode = C64_DEBUG_RUNNING;
-	debugOnC64 = true;
+	debugMode = DEBUGGER_MODE_RUNNING;
+	isDebugOn = true;
 	debugOnDrive1541 = false;
 	
 	for (int i = 0; i < C64_NUM_DRIVES; i++)
@@ -69,37 +62,6 @@ uint8 *C64DebugInterface::GetCharRom()
 	return NULL;
 }
 
-void C64DebugInterface::LockMutex()
-{
-	LOGD("C64DebugInterface::LockMutex");
-	breakpointsMutex->Lock();
-}
-
-void C64DebugInterface::UnlockMutex()
-{
-	LOGD("C64DebugInterface::UnlockMutex");
-	breakpointsMutex->Unlock();
-}
-
-void C64DebugInterface::LockRenderScreenMutex()
-{
-	renderScreenMutex->Lock();
-}
-
-void C64DebugInterface::UnlockRenderScreenMutex()
-{
-	renderScreenMutex->Unlock();
-}
-
-void C64DebugInterface::LockIoMutex()
-{
-	ioMutex->Lock();
-}
-
-void C64DebugInterface::UnlockIoMutex()
-{
-	ioMutex->Unlock();
-}
 
 void C64DebugInterface::RunEmulationThread()
 {
@@ -117,79 +79,32 @@ uint8 C64DebugInterface::GetC64MachineType()
 	return 0;
 }
 
-
 //
 void C64DebugInterface::ClearBreakpoints()
 {
-	ClearAddrBreakpoints(&(this->breakpointsC64PC));
-	ClearAddrBreakpoints(&(this->breakpointsC64Raster));
-	ClearAddrBreakpoints(&(this->breakpointsDrive1541PC));
+	CDebugInterface::ClearBreakpoints();
 	
-	ClearMemoryBreakpoints(&(this->breakpointsC64Memory));
+	ClearAddrBreakpoints(&(this->breakpointsDrive1541PC));
 	ClearMemoryBreakpoints(&(this->breakpointsDrive1541Memory));
 }
 
-void C64DebugInterface::ClearAddrBreakpoints(std::map<uint16, C64AddrBreakpoint *> *breakpointsMap)
+void C64DebugInterface::AddAddrBreakpoint(std::map<uint16, CAddrBreakpoint *> *breakpointsMap, CAddrBreakpoint *breakpoint)
 {
-	while(!breakpointsMap->empty())
-	{
-		std::map<uint16, C64AddrBreakpoint *>::iterator it = breakpointsMap->begin();
-		C64AddrBreakpoint *breakpoint = it->second;
-		
-		breakpointsMap->erase(it);
-		delete breakpoint;
-	}
-}
+	CDebugInterface::AddAddrBreakpoint(breakpointsMap, breakpoint);
 
-void C64DebugInterface::ClearMemoryBreakpoints(std::map<uint16, C64MemoryBreakpoint *> *breakpointsMap)
-{
-	while(!breakpointsMap->empty())
-	{
-		std::map<uint16, C64MemoryBreakpoint *>::iterator it = breakpointsMap->begin();
-		C64MemoryBreakpoint *breakpoint = it->second;
-		
-		breakpointsMap->erase(it);
-		delete breakpoint;
-	}
-}
-
-
-void C64DebugInterface::AddAddrBreakpoint(std::map<uint16, C64AddrBreakpoint *> *breakpointsMap, C64AddrBreakpoint *breakpoint)
-{
-	(*breakpointsMap)[breakpoint->addr] = breakpoint;
-	
-	if (breakpointsMap == &(this->breakpointsC64PC))
-	{
-		breakOnC64PC = true;
-	}
-	else if (breakpointsMap == &(this->breakpointsC64Raster))
-	{
-		breakOnC64Raster = true;
-	}
-	else if (breakpointsMap == &(this->breakpointsDrive1541PC))
+	if (breakpointsMap == &(this->breakpointsDrive1541PC))
 	{
 		breakOnDrive1541PC = true;
 	}
 }
 
-void C64DebugInterface::RemoveAddrBreakpoint(std::map<uint16, C64AddrBreakpoint *> *breakpointsMap, uint16 addr)
+void C64DebugInterface::RemoveAddrBreakpoint(std::map<uint16, CAddrBreakpoint *> *breakpointsMap, uint16 addr)
 {
-	std::map<uint16, C64AddrBreakpoint *>::iterator it = breakpointsMap->find(addr);
-	C64AddrBreakpoint *breakpoint = it->second;
-	breakpointsMap->erase(it);
-	delete breakpoint;
-	
+	CDebugInterface::RemoveAddrBreakpoint(breakpointsMap, addr);
+
 	if (breakpointsMap->empty())
 	{
-		if (breakpointsMap == &(this->breakpointsC64PC))
-		{
-			breakOnC64PC = false;
-		}
-		else if (breakpointsMap == &(this->breakpointsC64Raster))
-		{
-			breakOnC64Raster = false;
-		}
-		else if (breakpointsMap == &(this->breakpointsDrive1541PC))
+		if (breakpointsMap == &(this->breakpointsDrive1541PC))
 		{
 			breakOnDrive1541PC = false;
 		}
@@ -199,45 +114,24 @@ void C64DebugInterface::RemoveAddrBreakpoint(std::map<uint16, C64AddrBreakpoint 
 
 // video
 
-int C64DebugInterface::GetC64ScreenSizeX()
+int C64DebugInterface::GetScreenSizeX()
 {
 	return -1;
 }
 
-int C64DebugInterface::GetC64ScreenSizeY()
+int C64DebugInterface::GetScreenSizeY()
 {
 	return -1;
 }
 
 void C64DebugInterface::SetDebugOnC64(bool debugOnC64)
 {
-	this->debugOnC64 = debugOnC64;
+	this->isDebugOn = debugOnC64;
 }
 
 void C64DebugInterface::SetDebugOnDrive1541(bool debugOnDrive1541)
 {
 	this->debugOnDrive1541 = debugOnDrive1541;
-}
-
-void C64DebugInterface::SetDebugMode(uint8 debugMode)
-{
-	this->debugMode = debugMode;
-}
-
-uint8 C64DebugInterface::GetDebugMode()
-{
-	return this->debugMode;
-}
-
-// address -1 means no breakpoint
-void C64DebugInterface::SetTemporaryC64BreakpointPC(int address)
-{
-	this->temporaryC64BreakpointPC = address;
-}
-
-int C64DebugInterface::GetTemporaryC64BreakpointPC()
-{
-	return this->temporaryC64BreakpointPC;
 }
 
 void C64DebugInterface::SetTemporaryDrive1541BreakpointPC(int address)
@@ -250,9 +144,9 @@ int C64DebugInterface::GetTemporaryDrive1541BreakpointPC()
 	return this->temporaryDrive1541BreakpointPC;
 }
 
-CImageData *C64DebugInterface::GetC64ScreenImageData()
+CImageData *C64DebugInterface::GetScreenImageData()
 {
-	SYS_FatalExit("C64DebugInterface::GetC64ScreenImageData");
+	SYS_FatalExit("C64DebugInterface::GetScreenImageData");
 	return NULL;
 }
 
@@ -291,20 +185,9 @@ void C64DebugInterface::JoystickUp(int port, uint32 axis)
 	SYS_FatalExit("C64DebugInterface::JoystickUp");
 }
 
-
-void C64DebugInterface::KeyboardDownWithJoystickCheck(uint32 mtKeyCode)
+int C64DebugInterface::GetCpuPC()
 {
-	SYS_FatalExit("C64DebugInterface::KeyboardDownWithJoystickCheck");
-}
-
-void C64DebugInterface::KeyboardUpWithJoystickCheck(uint32 mtKeyCode)
-{
-	SYS_FatalExit("C64DebugInterface::KeyboardUpWithJoystickCheck");
-}
-
-int C64DebugInterface::GetC64CpuPC()
-{
-	SYS_FatalExit("C64DebugInterface::GetC64CpuPC");
+	SYS_FatalExit("C64DebugInterface::GetCpuPC");
 	return 0;
 }
 
@@ -411,12 +294,6 @@ void C64DebugInterface::SetSettingIsWarpSpeed(bool isWarpSpeed)
 	SYS_FatalExit("C64DebugInterface::SetSettingIsWarpSpeed");
 }
 
-bool C64DebugInterface::GetSettingUseKeyboardForJoystick()
-{
-	SYS_FatalExit("C64DebugInterface::GetSettingUseKeyboardForJoystick");
-	return false;
-}
-
 void C64DebugInterface::GetSidTypes(std::vector<CSlrString *> *sidTypes)
 {
 	SYS_FatalExit("C64DebugInterface::GetSidTypes");
@@ -494,16 +371,6 @@ void C64DebugInterface::SetEmulationMaximumSpeed(int maximumSpeed)
 void C64DebugInterface::SetVSPBugEmulation(bool isVSPBugEmulation)
 {
 	SYS_FatalExit("C64DebugInterface::SetVSPBugEmulation");
-}
-
-void C64DebugInterface::SetSettingUseKeyboardForJoystick(bool isJoystickOn)
-{
-	SYS_FatalExit("C64DebugInterface::SetSettingUseKeyboardForJoystick");
-}
-
-void C64DebugInterface::SetKeyboardJoystickPort(uint8 joystickPort)
-{
-	SYS_FatalExit("C64DebugInterface::SetKeyboardJoystickPort");
 }
 
 void C64DebugInterface::SetByteC64(uint16 addr, uint8 val)
@@ -587,14 +454,14 @@ void C64DebugInterface::MakeJmp1541(uint16 addr)
 	SYS_FatalExit("C64DebugInterface::MakeJmp1541");
 }
 
-void C64DebugInterface::GetWholeMemoryMapC64(uint8 *buffer)
+void C64DebugInterface::GetWholeMemoryMap(uint8 *buffer)
 {
-	SYS_FatalExit("C64DebugInterface::GetWholeMemoryMapC64");
+	SYS_FatalExit("C64DebugInterface::GetWholeMemoryMap");
 }
 
-void C64DebugInterface::GetWholeMemoryMapFromRamC64(uint8 *buffer)
+void C64DebugInterface::GetWholeMemoryMapFromRam(uint8 *buffer)
 {
-	SYS_FatalExit("C64DebugInterface::GetWholeMemoryMapFromRamC64");
+	SYS_FatalExit("C64DebugInterface::GetWholeMemoryMapFromRam");
 }
 
 void C64DebugInterface::GetWholeMemoryMap1541(uint8 *buffer)
@@ -607,14 +474,14 @@ void C64DebugInterface::GetWholeMemoryMapFromRam1541(uint8 *buffer)
 	SYS_FatalExit("C64DebugInterface::GetWholeMemoryMapFromRam1541");
 }
 
-void C64DebugInterface::GetMemoryC64(uint8 *buffer, int addrStart, int addrEnd)
+void C64DebugInterface::GetMemory(uint8 *buffer, int addrStart, int addrEnd)
 {
-	SYS_FatalExit("C64DebugInterface::GetMemoryC64");
+	SYS_FatalExit("C64DebugInterface::GetMemory");
 }
 
-void C64DebugInterface::GetMemoryFromRamC64(uint8 *buffer, int addrStart, int addrEnd)
+void C64DebugInterface::GetMemoryFromRam(uint8 *buffer, int addrStart, int addrEnd)
 {
-	SYS_FatalExit("C64DebugInterface::GetMemoryFromRamC64");
+	SYS_FatalExit("C64DebugInterface::GetMemoryFromRam");
 }
 
 void C64DebugInterface::GetMemoryDrive1541(uint8 *buffer, int addrStart, int addrEnd)
@@ -717,30 +584,45 @@ u8 C64DebugInterface::GetVicRegister(uint8 registerNum)
 	return 0;
 }
 
-
-void C64DebugInterface::RenderStateVIC(vicii_cycle_state_t *viciiState,
-									   float posX, float posY, float posZ, bool isVertical, bool showSprites, CSlrFont *fontBytes, float fontSize,
-									   std::vector<CImageData *> *spritesImageData, std::vector<CSlrImage *> *spritesImages, bool renderDataWithColors)
+u8 C64DebugInterface::GetVicRegister(vicii_cycle_state_t *viciiState, uint8 registerNum)
 {
-	SYS_FatalExit("C64DebugInterface::RenderStateVIC");
+	return viciiState->regs[registerNum];
 }
 
-void C64DebugInterface::RenderStateDrive1541(float posX, float posY, float posZ, CSlrFont *fontBytes, float fontSize,
-											 bool renderVia1, bool renderVia2, bool renderDriveLed,
-											 bool isVertical)
+
+void C64DebugInterface::SetCiaRegister(uint8 ciaId, uint8 registerNum, uint8 value)
 {
-	SYS_FatalExit("C64DebugInterface::RenderStateDrive1541");
+	SYS_FatalExit("C64DebugInterface::SetCiaRegister");
 }
 
-void C64DebugInterface::RenderStateCIA(float posX, float posY, float posZ, CSlrFont *fontBytes, float fontSize, int ciaId)
+u8 C64DebugInterface::GetCiaRegister(uint8 ciaId, uint8 registerNum)
 {
-	SYS_FatalExit("C64DebugInterface::RenderStateCIA");
+	SYS_FatalExit("C64DebugInterface::GetCiaRegister");
+	return 0;
 }
 
-void C64DebugInterface::RenderStateSID(uint16 sidBase, float posX, float posY, float posZ, CSlrFont *fontBytes, float fontSize)
+void C64DebugInterface::SetSidRegister(uint8 sidId, uint8 registerNum, uint8 value)
 {
-	SYS_FatalExit("C64DebugInterface::RenderStateSID");	
+	SYS_FatalExit("C64DebugInterface::SetSidRegister");
 }
+
+u8 C64DebugInterface::GetSidRegister(uint8 sidId, uint8 registerNum)
+{
+	SYS_FatalExit("C64DebugInterface::GetSidRegister");
+	return 0;
+}
+
+void C64DebugInterface::SetViaRegister(uint8 driveId, uint8 viaId, uint8 registerNum, uint8 value)
+{
+	SYS_FatalExit("C64DebugInterface::SetViaRegister");
+}
+
+u8 C64DebugInterface::GetViaRegister(uint8 driveId, uint8 viaId, uint8 registerNum)
+{
+	SYS_FatalExit("C64DebugInterface::GetViaRegister");
+	return 0;
+}
+
 
 void C64DebugInterface::SetSIDMuteChannels(int sidNumber, bool mute1, bool mute2, bool mute3, bool muteExt)
 {
@@ -770,7 +652,61 @@ void C64DebugInterface::ForceRunAndUnJamCpu()
 
 
 //
+void C64DebugInterface::AttachTape(CSlrString *filePath)
+{
+	SYS_FatalExit("C64DebugInterface::AttachTape");
+}
 
+void C64DebugInterface::DetachTape()
+{
+	SYS_FatalExit("C64DebugInterface::DetachTape");
+}
+
+void C64DebugInterface::DatasettePlay()
+{
+	SYS_FatalExit("C64DebugInterface::DatasettePlay");
+}
+
+void C64DebugInterface::DatasetteStop()
+{
+	SYS_FatalExit("C64DebugInterface::DatasetteStop");
+}
+
+void C64DebugInterface::DatasetteForward()
+{
+	SYS_FatalExit("C64DebugInterface::DatasetteForward");
+}
+
+void C64DebugInterface::DatasetteRewind()
+{
+	SYS_FatalExit("C64DebugInterface::DatasetteRewind");
+}
+
+void C64DebugInterface::DatasetteRecord()
+{
+	SYS_FatalExit("C64DebugInterface::DatasetteRecord");
+}
+
+void C64DebugInterface::DatasetteReset()
+{
+	SYS_FatalExit("C64DebugInterface::DatasetteReset");
+}
+
+void C64DebugInterface::DatasetteSetSpeedTuning(int speedTuning)
+{
+}
+
+void C64DebugInterface::DatasetteSetZeroGapDelay(int zeroGapDelay)
+{
+}
+
+void C64DebugInterface::DatasetteSetResetWithCPU(bool resetWithCPU)
+{
+}
+
+void C64DebugInterface::DatasetteSetTapeWobble(int tapeWobble)
+{
+}
 
 void C64DebugInterface::AttachCartridge(CSlrString *filePath)
 {
@@ -805,5 +741,10 @@ void C64DebugInterface::SetRunSIDEmulation(bool isSIDEmulationOn)
 void C64DebugInterface::SetAudioVolume(float volume)
 {
 	SYS_FatalExit("C64DebugInterface::SetAudioVolume");
+}
+
+CSlrDataAdapter *C64DebugInterface::GetDataAdapter()
+{
+	return this->dataAdapterC64;
 }
 

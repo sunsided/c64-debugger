@@ -71,6 +71,7 @@ public:
 	CViewC64MenuItem *menuItemSubMenuEmulation;
 	CViewC64MenuItem *menuItemSubMenuAudio;
 	CViewC64MenuItem *menuItemSubMenuMemory;
+	CViewC64MenuItem *menuItemSubMenuTape;
 	CViewC64MenuItem *menuItemSubMenuUI;
 
 	CSlrKeyboardShortcut *kbsDetachEverything;
@@ -133,6 +134,31 @@ public:
 	CViewC64MenuItemFloat  *menuItemAutoJmpWaitAfterReset;
 
 	void ToggleAutoLoadFromInsertedDisk();
+	
+	// tape
+	CSlrKeyboardShortcut *kbsTapeAttach;
+	CViewC64MenuItem *menuItemTapeAttach;
+	CSlrKeyboardShortcut *kbsTapeDetach;
+	CViewC64MenuItem *menuItemTapeDetach;
+	CViewC64MenuItem *menuItemTapeCreate;
+
+	CSlrKeyboardShortcut *kbsTapeStop;
+	CViewC64MenuItem *menuItemTapeStop;
+	CSlrKeyboardShortcut *kbsTapePlay;
+	CViewC64MenuItem *menuItemTapePlay;
+	CSlrKeyboardShortcut *kbsTapeForward;
+	CViewC64MenuItem *menuItemTapeForward;
+	CSlrKeyboardShortcut *kbsTapeRewind;
+	CViewC64MenuItem *menuItemTapeRewind;
+	CSlrKeyboardShortcut *kbsTapeRecord;
+	CViewC64MenuItem *menuItemTapeRecord;
+	CViewC64MenuItem *menuItemTapeReset;
+
+	CViewC64MenuItemFloat *menuItemDatasetteSpeedTuning;
+	CViewC64MenuItemFloat *menuItemDatasetteZeroGapDelay;
+	CViewC64MenuItemFloat *menuItemDatasetteTapeWobble;
+	CViewC64MenuItemOption *menuItemDatasetteResetWithCPU;
+	
 	
 	//
 	CViewC64MenuItemFloat *menuItemScreenGridLinesAlpha;

@@ -114,7 +114,7 @@ void SID_FrequenciesInit()
 
 // TODO: this is quick POC draft to check if it is feasible feature and such mapping makes sense
 // 1) use interval tree
-// 2) update / change values to allow de-tuning (select middle between notes?)
+// 2) update / change values to allow de-tuning (select middle between notes)
 const sid_frequency_t *SidValueToNote(uint16 sidValue)
 {
 	for (int i = 0; i < 98; i++)

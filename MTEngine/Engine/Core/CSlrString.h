@@ -47,7 +47,9 @@ public:
 	void Concatenate(CSlrString *str);
 	
 	void RemoveLastCharacter();
-
+	void RemoveEndLineCharacter();
+	void RemoveFromBeginningSelectedCharacter(u16 chr);
+	
 	bool CompareWith(u32 pos, char chr);
 	bool CompareWith(char *text);
 	bool CompareWith(CSlrString *text);
@@ -56,7 +58,13 @@ public:
 
 	bool Contains(char chr);
 	bool Contains(u16 chr);
+	
+	void RemoveCharacter(u16 chr);
+	void RemoveCharacter(char chr);
 
+	// replace character with string (insert chars)
+	void ReplaceCharacter(u16 characterToReplace, CSlrString *strToReplaceWith);
+	
 	bool IsEmpty();
 
 	// gets one word characters till char in stopChars occurs
@@ -80,7 +88,9 @@ public:
 	
 	void ConvertToLowerCase();
 
+	void DebugPrint();
 	void DebugPrint(char *name);
+	void DebugPrintVector();
 	void DebugPrintVector(char *name);
 	void DebugPrint(char *name, u32 pos);
 	void DebugPrint(FILE *fp);

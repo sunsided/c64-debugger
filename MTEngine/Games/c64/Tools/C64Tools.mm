@@ -94,7 +94,7 @@ void ConvertCharacterDataToImage(u8 *characterData, CImageData *imageData)
 	}
 }
 
-void ConvertColorCharacterDataToImage(u8 *characterData, CImageData *imageData, u8 colorD021, u8 colorD022, u8 colorD023, u8 colorD800, C64DebugInterface*debugInterface)
+void ConvertColorCharacterDataToImage(u8 *characterData, CImageData *imageData, u8 colorD021, u8 colorD022, u8 colorD023, u8 colorD800, C64DebugInterface *debugInterface)
 {
 	u8 cD021r, cD021g, cD021b;
 	u8 cD022r, cD022g, cD022b;
@@ -1015,7 +1015,8 @@ float GetC64ColorDistance(u8 color1, u8 color2, C64DebugInterface *debugInterfac
 }
 
 //
-void RenderColorRectangle(float px, float py, float ledSizeX, float ledSizeY, float gap, bool isLocked, u8 color, C64DebugInterface *debugInterface)
+void RenderColorRectangle(float px, float py, float ledSizeX, float ledSizeY, float gap, bool isLocked, u8 color,
+						  C64DebugInterface *debugInterface)
 {
 	float colorR, colorG, colorB;
 	debugInterface->GetFloatCBMColor(color, &colorR, &colorG, &colorB);

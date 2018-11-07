@@ -49,5 +49,6 @@ BOOL MACOS_OpenFile(NSString *strPath);
 class CMacOsOpenFileThread : public CSlrThread
 {
 public:
+	CMacOsOpenFileThread(char *threadName);
 	virtual void ThreadRun(void *data);
 };

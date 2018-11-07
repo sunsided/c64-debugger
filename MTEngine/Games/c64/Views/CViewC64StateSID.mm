@@ -1,3 +1,7 @@
+extern "C" {
+#include "sid.h"
+}
+
 #include "CViewC64StateSID.h"
 #include "SYS_Main.h"
 #include "RES_ResourceManager.h"
@@ -14,6 +18,7 @@
 #include "CGuiEditHex.h"
 #include "C64SettingsStorage.h"
 #include "VID_ImageBinding.h"
+#include "C64SIDFrequencies.h"
 
 #define SID_WAVEFORM_LENGTH 1024
 
@@ -68,6 +73,13 @@ CViewC64StateSID::CViewC64StateSID(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 	
 	selectedSidNumber = 0;
 	
+	//
+	showRegistersOnly = false;
+	editHex = new CGuiEditHex(this);
+	editHex->isCapitalLetters = false;
+	editingRegisterValueIndex = -1;
+	editingSIDIndex = -1;
+	
 	// waveforms
 	waveformPos = 0;
 
@@ -120,6 +132,8 @@ CViewC64StateSID::CViewC64StateSID(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 
 		this->AddGuiElement(btnsSelectSID[sidNum]);
 	}
+	
+	consumeTapBackground = false;
 	
 	buttonSizeY = 10.0f;
 	
@@ -176,7 +190,7 @@ void CViewC64StateSID::SetVisible(bool isVisible)
 {
 	CGuiElement::SetVisible(isVisible);
 	
-	viewC64->debugInterface->SetSIDReceiveChannelsData(selectedSidNumber, isVisible);
+	viewC64->debugInterfaceC64->SetSIDReceiveChannelsData(selectedSidNumber, isVisible);
 }
 
 void CViewC64StateSID::UpdateSidButtonsState()
@@ -229,8 +243,8 @@ void CViewC64StateSID::SelectSid(int sidNum)
 	
 	if (this->visible)
 	{
-		viewC64->debugInterface->SetSIDReceiveChannelsData(this->selectedSidNumber, false);
-		viewC64->debugInterface->SetSIDReceiveChannelsData(sidNum, true);
+		viewC64->debugInterfaceC64->SetSIDReceiveChannelsData(this->selectedSidNumber, false);
+		viewC64->debugInterfaceC64->SetSIDReceiveChannelsData(sidNum, true);
 	}
 	
 	this->selectedSidNumber = sidNum;
@@ -264,8 +278,7 @@ void CViewC64StateSID::Render()
 //	if (viewC64->debugInterface->GetSettingIsWarpSpeed() == true)
 //		return;
 
-	uint16 sidBase = GetSidAddressByChipNum(selectedSidNumber);
-	viewC64->debugInterface->RenderStateSID(sidBase, posX, posY + buttonSizeY, posZ, fontBytes, fontBytesSize);
+	this->RenderStateSID(selectedSidNumber, posX, posY + buttonSizeY, posZ, fontBytes, fontBytesSize);
 	
 	for (int i = 0; i < 3; i++)
 	{
@@ -277,32 +290,141 @@ void CViewC64StateSID::Render()
 	CGuiView::Render();
 }
 
-void CViewC64StateSID::AddWaveformData(int sidNumber, int v1, int v2, int v3, short mix)
+void CViewC64StateSID::RenderStateSID(int sidNum, float posX, float posY, float posZ, CSlrFont *fontBytes, float fontSize)
 {
-//	LOGD("CViewC64StateSID::AddWaveformData: sid#%d, %d %d %d %d", sidNumber, v1, v2, v3, mix);
-
-	// sid channels
-	sidChannelWaveform[sidNumber][0]->waveformData[waveformPos] = v1;
-	sidChannelWaveform[sidNumber][1]->waveformData[waveformPos] = v2;
-	sidChannelWaveform[sidNumber][2]->waveformData[waveformPos] = v3;
-
-	// mix channel
-	sidMixWaveform[sidNumber]->waveformData[waveformPos] = mix;
-
-	waveformPos++;
+	uint16 sidBase = GetSidAddressByChipNum(sidNum);
 	
-	if (waveformPos == SID_WAVEFORM_LENGTH)
+	char buf[256];
+	float px = posX;
+	float py = posY;
+	
+	if (showRegistersOnly)
 	{
-		guiMain->LockRenderMutex();
-		sidChannelWaveform[sidNumber][0]->CalculateWaveform();
-		sidChannelWaveform[sidNumber][1]->CalculateWaveform();
-		sidChannelWaveform[sidNumber][2]->CalculateWaveform();
-		sidMixWaveform[sidNumber]->CalculateWaveform();
-		guiMain->UnlockRenderMutex();
+		float fs2 = fontSize;
 		
-		waveformPos = 0;
+		float plx = px + fontSize*15;
+		float ply = py;
+		for (int i = 0; i < 0x1D; i++)
+		{
+			if (editingSIDIndex == sidNum && editingRegisterValueIndex == i)
+			{
+				sprintf(buf, "%04x", sidBase+i);
+				fontBytes->BlitText(buf, plx, ply, posZ, fs2);
+				fontBytes->BlitTextColor(editHex->textWithCursor, plx + fontSize*5.0f, ply, posZ, fontSize, 1.0f, 1.0f, 1.0f, 1.0f);
+			}
+			else
+			{
+				u8 v = debugInterface->GetSidRegister(sidNum, i);
+				sprintf(buf, "%04x %02x", sidBase+i, v);
+				fontBytes->BlitText(buf, plx, ply, posZ, fs2);
+			}
+			
+			ply += fs2;
+			
+			if (i == 0x06 || i == 0x0D || i == 0x14)
+			{
+				ply += fs2;
+			}
+//			else if (i == 0x14)
+//			{
+//				ply = py;
+//				plx += fs2 * 9;
+//			}
+		}
+		
+		return;
 	}
+	
+	uint8 reg_freq_lo, reg_freq_hi, reg_pw_lo, reg_pw_hi, reg_ad, reg_sr, reg_ctrl, reg_res_filter, reg_volume, reg_filter_lo, reg_filter_hi;
+	
+	reg_res_filter = sid_peek(sidBase + 0x17);
+	reg_volume  = sid_peek(sidBase + 0x18);
+	reg_filter_lo = sid_peek(sidBase + 0x15);
+	reg_filter_hi = sid_peek(sidBase + 0x16);
+	
+	
+	for (int voice = 0; voice < 3; voice++)
+	{
+		uint16 voiceBase = sidBase + voice * 0x07;
+		
+		reg_freq_lo = sid_peek(voiceBase + 0x00);
+		reg_freq_hi = sid_peek(voiceBase + 0x01);
+		reg_pw_lo = sid_peek(voiceBase + 0x02);
+		reg_pw_hi = sid_peek(voiceBase + 0x03);
+		reg_ctrl = sid_peek(voiceBase + 0x04);
+		reg_ad = sid_peek(voiceBase + 0x05);
+		reg_sr = sid_peek(voiceBase + 0x06);
+		
+		uint16 freq = (reg_freq_hi << 8) | reg_freq_lo;
+		
+		
+		
+		sprintf(buf, "Voice #%d", (voice+1));
+		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
+		
+		//		sprintf(buf, " Frequency  : %04x", freq);
+		const sid_frequency_t *sidFrequencyData = SidValueToNote(freq);
+		sprintf(buf, " Frequency  : %04x %s", freq, sidFrequencyData->name);
+		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
+		
+		sprintf(buf, " Pulse Width: %04x", ((reg_pw_hi & 0x0f) << 8) | reg_pw_lo);
+		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
+		sprintf(buf, " Env. (ADSR): %1.1x %1.1x %1.1x %1.1x",
+				reg_ad >> 4, reg_ad & 0x0f,
+				reg_sr >> 4, reg_sr & 0x0f);
+		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
+		sprintf(buf, " Waveform   : ");
+		PrintSidWaveform(reg_ctrl, buf);
+		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
+		sprintf(buf, " Gate       : %s  Ring mod.: %s", reg_ctrl & 0x01 ? "On " : "Off", reg_ctrl & 0x04 ? "On" : "Off");
+		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
+		sprintf(buf, " Test bit   : %s  Synchron.: %s", reg_ctrl & 0x08 ? "On " : "Off", reg_ctrl & 0x02 ? "On" : "Off");
+		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
+		if (voice == 2)
+		{
+			sprintf(buf, " Filter     : %s  Mute     : %s", reg_res_filter & (1 << voice) ? "On " : "Off", reg_volume & 0x80 ? "Yes" : "No");
+		}
+		else
+		{
+			sprintf(buf, " Filter     : %s", reg_res_filter & (1 << voice) ? "On " : "Off");
+		}
+		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
+		py += fontSize;
+	}
+	
+	sprintf(buf, "Filters/Volume");
+	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
+	sprintf(buf, " Frequency: %04x", (reg_filter_hi << 3) | (reg_filter_lo & 0x07));
+	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
+	sprintf(buf, " Resonance: %1.1x", reg_res_filter >> 4);
+	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
+	sprintf(buf, " Mode     : ");
+	if (reg_volume & 0x70)
+	{
+		if (reg_volume & 0x10) strcat(buf, "LP ");
+		if (reg_volume & 0x20) strcat(buf, "BP ");
+		if (reg_volume & 0x40) strcat(buf, "HP");
+	}
+	else
+	{
+		strcat(buf, "None");
+	}
+	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
+	sprintf(buf, " Volume   : %1.1x", reg_volume & 0x0f);
+	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 }
+
+void CViewC64StateSID::PrintSidWaveform(uint8 wave, char *buf)
+{
+	if (wave & 0xf0) {
+		if (wave & 0x10) strcat(buf, "Triangle ");
+		if (wave & 0x20) strcat(buf, "Sawtooth ");
+		if (wave & 0x40) strcat(buf, "Rectangle ");
+		if (wave & 0x80) strcat(buf, "Noise");
+	} else
+		strcat(buf, "None");
+}
+
 
 void CViewC64StateSID::DoLogic()
 {
@@ -310,13 +432,88 @@ void CViewC64StateSID::DoLogic()
 
 bool CViewC64StateSID::DoTap(GLfloat x, GLfloat y)
 {
+	guiMain->LockMutex();
+	
+	if (editingRegisterValueIndex != -1)
+	{
+		editHex->FinalizeEntering(MTKEY_ENTER, true);
+	}
+	
+	// check if tap register
+	if (showRegistersOnly)
+	{
+		float fontSize = fontBytesSize;
+
+		float px = posX;
+		editingSIDIndex = selectedSidNumber; //-1;
+		
+//		if (renderSID1)
+//		{
+//			if (x >= posX && x < posX+190)
+//			{
+//				editingSIDIndex = 1;
+//				//				px = posX;
+//			}
+//		}
+//		
+//		if (renderSID2)
+//		{
+//			if (x >= posX+190 && x < posX+190+190)
+//			{
+//				editingSIDIndex = 2;
+//				px = posX+190;
+//			}
+//		}
+		
+		if (editingSIDIndex != -1)
+		{
+			float fs2 = fontSize;
+			float sx = fs2 * 9;
+			
+			float plx = px + fontSize*15;
+			float plex = plx + fontSize * 7.0f;
+			float ply = posY + fontSize*2;
+			for (int i = 0; i < 0x1D; i++)
+			{
+				if (x >= plx && x <= plex
+					&& y >= ply && y <= ply+fontSize)
+				{
+					LOGD("CViewC64StateSID::DoTap: tapped register %02x", i);
+					
+					editingRegisterValueIndex = i;
+					
+					u8 v = debugInterface->GetSidRegister(editingSIDIndex, editingRegisterValueIndex);
+					editHex->SetValue(v, 2);
+					
+					guiMain->UnlockMutex();
+					return true;
+				}
+				
+				ply += fs2;
+				
+				if (i == 0x06 || i == 0x0D || i == 0x14)
+				{
+					ply += fs2;
+				}
+	//			else if (i == 0x14)
+	//			{
+	//				ply = py;
+	//				plx += fs2 * 9;
+	//			}
+			}
+		}
+	}
+	
+	guiMain->UnlockMutex();
+
+	
 	for (int i = 0; i < 3; i++)
 	{
 		if (sidChannelWaveform[selectedSidNumber][i]->IsInside(x, y))
 		{
 			sidChannelWaveform[selectedSidNumber][i]->isMuted = !sidChannelWaveform[selectedSidNumber][i]->isMuted;
 			
-			viewC64->debugInterface->SetSIDMuteChannels(selectedSidNumber,
+			viewC64->debugInterfaceC64->SetSIDMuteChannels(selectedSidNumber,
 														sidChannelWaveform[selectedSidNumber][0]->isMuted,
 														sidChannelWaveform[selectedSidNumber][1]->isMuted,
 														sidChannelWaveform[selectedSidNumber][2]->isMuted, false);
@@ -344,21 +541,115 @@ bool CViewC64StateSID::DoTap(GLfloat x, GLfloat y)
 		sidChannelWaveform[selectedSidNumber][1]->isMuted = sidMixWaveform[selectedSidNumber]->isMuted;
 		sidChannelWaveform[selectedSidNumber][2]->isMuted = sidMixWaveform[selectedSidNumber]->isMuted;
 
-		viewC64->debugInterface->SetSIDMuteChannels(selectedSidNumber,
+		viewC64->debugInterfaceC64->SetSIDMuteChannels(selectedSidNumber,
 													sidChannelWaveform[selectedSidNumber][0]->isMuted,
 													sidChannelWaveform[selectedSidNumber][1]->isMuted,
 													sidChannelWaveform[selectedSidNumber][2]->isMuted, false);
 	}
 
+	if (CGuiView::DoTap(x, y))
+		return true;
 	
+	showRegistersOnly = !showRegistersOnly;
+
 	return false;
+}
+
+void CViewC64StateSID::GuiEditHexEnteredValue(CGuiEditHex *editHex, u32 lastKeyCode, bool isCancelled)
+{
+	if (isCancelled)
+		return;
+	
+	if (editingRegisterValueIndex != -1)
+	{
+		byte v = editHex->value;
+		debugInterface->SetSidRegister(editingSIDIndex, editingRegisterValueIndex, v);
+		
+		editingRegisterValueIndex = -1;
+	}
+	
 }
 
 
 bool CViewC64StateSID::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
-	
+	if (editingRegisterValueIndex != -1)
+	{
+		if (keyCode == MTKEY_ARROW_UP)
+		{
+			if (editingRegisterValueIndex > 0)
+			{
+				editingRegisterValueIndex--;
+				u8 v = debugInterface->GetSidRegister(editingSIDIndex, editingRegisterValueIndex);
+				editHex->SetValue(v, 2);
+				return true;
+			}
+		}
+		
+		if (keyCode == MTKEY_ARROW_DOWN)
+		{
+			if (editingRegisterValueIndex < 0x1C)
+			{
+				editingRegisterValueIndex++;
+				u8 v = debugInterface->GetSidRegister(editingSIDIndex, editingRegisterValueIndex);
+				editHex->SetValue(v, 2);
+				return true;
+			}
+		}
+		
+		if (keyCode == MTKEY_ARROW_LEFT)
+		{
+			if (editHex->cursorPos == 0 && editingRegisterValueIndex > 0x08)
+			{
+				editingRegisterValueIndex -= 0x08;
+				u8 v = debugInterface->GetSidRegister(editingSIDIndex, editingRegisterValueIndex);
+				editHex->SetValue(v, 2);
+				return true;
+			}
+		}
+		
+		if (keyCode == MTKEY_ARROW_RIGHT)
+		{
+			if (editHex->cursorPos == 1 && editingRegisterValueIndex < 0x1D-0x08)
+			{
+				editingRegisterValueIndex += 0x08;
+				u8 v = debugInterface->GetSidRegister(editingSIDIndex, editingRegisterValueIndex);
+				editHex->SetValue(v, 2);
+				return true;
+			}
+		}
+		
+		editHex->KeyDown(keyCode);
+		return true;
+	}
 	return false;
+}
+
+void CViewC64StateSID::AddWaveformData(int sidNumber, int v1, int v2, int v3, short mix)
+{
+	//	LOGD("CViewC64StateSID::AddWaveformData: sid#%d, %d %d %d %d", sidNumber, v1, v2, v3, mix);
+	
+	// sid channels
+	sidChannelWaveform[sidNumber][0]->waveformData[waveformPos] = v1;
+	sidChannelWaveform[sidNumber][1]->waveformData[waveformPos] = v2;
+	sidChannelWaveform[sidNumber][2]->waveformData[waveformPos] = v3;
+	
+	// mix channel
+	sidMixWaveform[sidNumber]->waveformData[waveformPos] = mix;
+	
+	waveformPos++;
+	
+	if (waveformPos == SID_WAVEFORM_LENGTH)
+	{
+		guiMain->LockRenderMutex();
+		sidChannelWaveform[sidNumber][0]->CalculateWaveform();
+		sidChannelWaveform[sidNumber][1]->CalculateWaveform();
+		sidChannelWaveform[sidNumber][2]->CalculateWaveform();
+		sidMixWaveform[sidNumber]->CalculateWaveform();
+		guiMain->UnlockRenderMutex();
+		
+		waveformPos = 0;
+	}
 }
 
 bool CViewC64StateSID::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl)
@@ -368,6 +659,12 @@ bool CViewC64StateSID::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isContr
 
 bool CViewC64StateSID::SetFocus(bool focus)
 {
-	return false;
+	return true;
+}
+
+void CViewC64StateSID::RenderFocusBorder()
+{
+	//	CGuiView::RenderFocusBorder();
+	//
 }
 

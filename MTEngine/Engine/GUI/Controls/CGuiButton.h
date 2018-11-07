@@ -87,6 +87,11 @@ class CGuiButton : public CGuiElement
 	float buttonDisabledColor2G;
 	float buttonDisabledColor2B;
 	float buttonDisabledColor2A;
+	
+	float buttonPressedColorR;
+	float buttonPressedColorG;
+	float buttonPressedColorB;
+	float buttonPressedColorA;
 
 	virtual void InitBackgroundColors();
 	

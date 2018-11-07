@@ -12,6 +12,7 @@
 #include "CViewDataDump.h"
 #include "CViewDisassemble.h"
 #include "C64DebugInterface.h"
+#include "AtariDebugInterface.h"
 #include "C64SettingsStorage.h"
 #include "C64KeyboardShortcuts.h"
 #include "C64Opcodes.h"
@@ -300,29 +301,31 @@ void CViewMemoryMapCell::MarkCellExecuteArgument()
 }
 
 CViewMemoryMap::CViewMemoryMap(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
-									 C64DebugInterface *c64, int imageWidth, int imageHeight, int ramSize, bool isFromDisk)
+									 CDebugInterface *debugInterface, int imageWidth, int imageHeight, int ramSize, bool isFromDisk)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
 {
 	this->name = "CViewMemoryMap";
 
 	viewDataDump = NULL;
 	
-	this->debugInterface = c64;
+	this->debugInterface = debugInterface;
 	
 	this->isFromDisk = isFromDisk;
 	this->imageWidth = imageWidth;
 	this->imageHeight = imageHeight;
 	this->ramSize = ramSize;
 	
+	this->isForcedMovingMap = false;
+	
 	this->font = viewC64->fontCBMShifted; //guiMain->fntConsole;
 	this->fontScale = 0.11f;
 	
-	// alloc with safe margin to avoid comparison in cells marking
+	// alloc with safe margin to avoid comparison in cells marking (quicker)
 	int numCells = ramSize + 0x0200;
 	memoryCells = new CViewMemoryMapCell *[numCells];
 	for (int i = 0; i < numCells; i++)
 	{
-		memoryCells[i] = new CViewMemoryMapCell();
+		memoryCells[i] = new CViewMemoryMapCell(i);
 	}
 
 	// local copy of memory
@@ -384,45 +387,61 @@ void CViewMemoryMap::UpdateWholeMap()
 	//LOGD("FRAMES_PER_SECOND=%d", FRAMES_PER_SECOND);
 	
 	uint16 pc;
-	if (isFromDisk == false)
-	{
-		pc = debugInterface->GetC64CpuPC();
-	}
-	else
-	{
-		pc = debugInterface->GetDrive1541PC();
-	}
+	
+	pc = debugInterface->GetCpuPC();
+	
+	
+//	if (isFromDisk == false)
+//	{
+//		pc = debugInterface->GetC64CpuPC();
+//	}
+//	else
+//	{
+//		pc = debugInterface->GetDrive1541PC();
+//	}
 	
 
 	// use bitmap
 	int vx = 0;
 	int vy = 0;
 	
-	if (isFromDisk == false)
+
+	if (isDataDirectlyFromRAM)
 	{
-		if (isDataDirectlyFromRAM)
-		{
-			debugInterface->GetWholeMemoryMapFromRamC64(memoryBuffer);
-		}
-		else
-		{
-			debugInterface->GetWholeMemoryMapC64(memoryBuffer);
-		}
+		debugInterface->GetWholeMemoryMapFromRam(memoryBuffer);
 	}
 	else
 	{
-		if (isDataDirectlyFromRAM)
-		{
-			debugInterface->GetWholeMemoryMapFromRam1541(memoryBuffer);
-		}
-		else
-		{
-			debugInterface->GetWholeMemoryMap1541(memoryBuffer);
-		}
+		debugInterface->GetWholeMemoryMap(memoryBuffer);
 	}
-	
+
+//	if (isFromDisk == false)
+//	{
+//		if (isDataDirectlyFromRAM)
+//		{
+//			debugInterface->GetWholeMemoryMapFromRam(memoryBuffer);
+//		}
+//		else
+//		{
+//			debugInterface->GetWholeMemoryMap(memoryBuffer);
+//		}
+//	}
+//	else
+//	{
+//		if (isDataDirectlyFromRAM)
+//		{
+//			debugInterface->GetWholeMemoryMapFromRam1541(memoryBuffer);
+//		}
+//		else
+//		{
+//			debugInterface->GetWholeMemoryMap1541(memoryBuffer);
+//		}
+//	}
+//	
 	
 	u16 addr = 0x0000;
+	
+	int index = 0;
 	
 	// TODO: generalize this
 	if (isFromDisk == false)
@@ -434,10 +453,11 @@ void CViewMemoryMap::UpdateWholeMap()
 			
 			for (int x = 0; x < imageWidth; x++)
 			{
+				CViewMemoryMapCell *cell = memoryCells[index];
+				addr = cell->addr;
+			
 				byte v = memoryBuffer[addr];
-				
-				CViewMemoryMapCell *cell = memoryCells[addr];
-				
+
 				ColorFromValue(v, &(cell->vr), &(cell->vg), &(cell->vb), &(cell->va));
 				
 				if (addr == pc)
@@ -478,7 +498,7 @@ void CViewMemoryMap::UpdateWholeMap()
 				
 				imageDataMemoryMap->SetPixelResultRGBA(vx, vy, cell->rr*255.0f, cell->rg*255.0f, cell->rb*255.0f, cell->ra*255.0f);
 				
-				addr++;
+				index++;
 				vx += 1;
 			}
 			
@@ -606,12 +626,13 @@ void CViewMemoryMap::CellsAnimationLogic()
 	float runDataAlphaSpeed;
 	float runCodeColorSpeed;
 	float runCodeAlphaSpeed;
-	if (viewC64->debugInterface->GetDebugMode() == C64_DEBUG_PAUSED)
+	if (debugInterface->GetDebugMode() == DEBUGGER_MODE_PAUSED)
 	{
-		runDataColorSpeed = 0.0f; //dataColorSpeed/500.0f;
-		runDataAlphaSpeed = 0.0f; //dataAlphaSpeed/500.0f;
-		runCodeColorSpeed = 0.0f; //dataColorSpeed/500.0f;
-		runCodeAlphaSpeed = 0.0f; //dataAlphaSpeed/500.0f;
+//		runDataColorSpeed = 0.0f; //dataColorSpeed/500.0f;
+//		runDataAlphaSpeed = 0.0f; //dataAlphaSpeed/500.0f;
+//		runCodeColorSpeed = 0.0f; //dataColorSpeed/500.0f;
+//		runCodeAlphaSpeed = 0.0f; //dataAlphaSpeed/500.0f;
+		return;
 	}
 	else
 	{
@@ -687,7 +708,7 @@ void CViewMemoryMap::DriveROMCellsAnimationLogic()
 	float runDataAlphaSpeed;
 	float runCodeColorSpeed;
 	float runCodeAlphaSpeed;
-	if (viewC64->debugInterface->GetDebugMode() == C64_DEBUG_PAUSED)
+	if (debugInterface->GetDebugMode() == DEBUGGER_MODE_PAUSED)
 	{
 		runDataColorSpeed = 0.0f; //dataColorSpeed/500.0f;
 		runDataAlphaSpeed = 0.0f; //dataAlphaSpeed/500.0f;
@@ -741,11 +762,13 @@ void CViewMemoryMap::DriveROMCellsAnimationLogic()
 
 bool CViewMemoryMap::DoScrollWheel(float deltaX, float deltaY)
 {
-//	LOGD("CViewMemoryMap::DoScrollWheel: %5.2f %5.2f", deltaX, deltaY);
+	LOGG("CViewMemoryMap::DoScrollWheel: %5.2f %5.2f isFromDisk=%s", deltaX, deltaY, STRBOOL(isFromDisk));
 
 	// TODO: make it working also on Drive 1541
 	if (isFromDisk)
+	{
 		return false;
+	}
 
 	if (c64SettingsUseMultiTouchInMemoryMap)
 	{
@@ -754,7 +777,9 @@ bool CViewMemoryMap::DoScrollWheel(float deltaX, float deltaY)
 	else
 	{
 		if (cursorInside == false)
+		{
 			return false;
+		}
 		
 		if (c64SettingsMemoryMapInvertControl)
 		{
@@ -785,11 +810,11 @@ bool CViewMemoryMap::InitZoom()
 
 bool CViewMemoryMap::DoZoomBy(GLfloat x, GLfloat y, GLfloat zoomValue, GLfloat difference)
 {
-//	LOGD("CViewMemoryMap::DoZoomBy: x=%5.2f y=%5.2f zoomValue=%5.2f diff=%5.2f", x, y, zoomValue, difference);
+	LOGD("CViewMemoryMap::DoZoomBy: x=%5.2f y=%5.2f zoomValue=%5.2f diff=%5.2f", x, y, zoomValue, difference);
 
 	// TODO: make it working also on Drive 1541
-	if (isFromDisk)
-		return false;
+//	if (isFromDisk)
+//		return false;
 
 	
 	if (c64SettingsUseMultiTouchInMemoryMap)
@@ -926,7 +951,7 @@ bool CViewMemoryMap::DoNotTouchedMove(GLfloat x, GLfloat y)
 	
 	cursorInside = true;
 	
-	return true;
+	return false;
 }
 
 void CViewMemoryMap::ClearZoom()
@@ -944,7 +969,7 @@ void CViewMemoryMap::ClearZoom()
 
 void CViewMemoryMap::ZoomMap(float zoom)
 {
-//	LOGD("CViewMemoryMap::ZoomMap: %f", zoom);
+	LOGD("CViewMemoryMap::ZoomMap: %f", zoom);
 	
 	// TODO: make it working also on disk map
 	if (isFromDisk)
@@ -1032,7 +1057,7 @@ void CViewMemoryMap::UpdateMapPosition()
 		mapPosY = -mapSizeY+1.0f;
 	
 	
-	guiMain->LockMutex();
+	guiMain->LockMutex(); //"CViewMemoryMap::UpdateMapPosition");
 	
 	
 	renderMapPosX = mapPosX * sizeX + posX;
@@ -1062,7 +1087,7 @@ void CViewMemoryMap::UpdateMapPosition()
 	
 	cellStartX = cellSizeX * cx + renderMapPosX;
 	cellStartY = cellSizeY * cy + renderMapPosY;
-	cellStartAddr = cy * imageWidth + cx;
+	cellStartIndex = cy * imageWidth + cx;
 	
 	float nx = ceil(sizeX / cellSizeX);
 	float ny = ceil(sizeY / cellSizeY);
@@ -1114,7 +1139,7 @@ void CViewMemoryMap::UpdateMapPosition()
 	textCodeGapY += ty;
 	
 	
-	guiMain->UnlockMutex();
+	guiMain->UnlockMutex(); //"CViewMemoryMap::UpdateMapPosition");
 	
 //	LOGD("UpdateMapPosition: mapSize=%5.2f %5.2f", mapSizeX, mapSizeY);
 }
@@ -1161,6 +1186,8 @@ void CViewMemoryMap::HexDigitToBinary(uint8 hexDigit, char *buf)
 void CViewMemoryMap::Render()
 {
 	bool renderMapValuesInThisFrame = renderMapValues;
+	
+	// TODO: fix me
 	if (debugInterface->GetSettingIsWarpSpeed() == false)
 	{
 		CellsAnimationLogic();
@@ -1192,8 +1219,6 @@ void CViewMemoryMap::Render()
 		renderMapValuesInThisFrame = false;
 	}
 
-	
-	
 	frameCounter++;
 	
 	
@@ -1223,7 +1248,7 @@ void CViewMemoryMap::Render()
 		char buf[128];
 		
 		cy = cellStartY;
-		int lineAddr = cellStartAddr;
+		int lineAddr = cellStartIndex;
 		for (int iy = 0; iy < numCellsInHeight; iy++)
 		{
 			cx = cellStartX;
@@ -1381,7 +1406,7 @@ bool CViewMemoryMap::DoTap(GLfloat x, GLfloat y)
 	float cx, cy;
 	
 	cy = cellStartY;
-	int lineAddr = cellStartAddr;
+	int lineAddr = cellStartIndex;
 	for (int iy = 0; iy < numCellsInHeight; iy++)
 	{
 		cx = cellStartX;
@@ -1536,8 +1561,10 @@ void CViewMemoryMapCell::ClearReadWriteMarkers()
 }
 
 
-CViewMemoryMapCell::CViewMemoryMapCell()
+CViewMemoryMapCell::CViewMemoryMapCell(int addr)
 {
+	this->addr = addr;
+	
 	sr = 0.0f; vr = 0.0f; rr = 0.0f;
 	sg = 0.0f; vg = 0.0f; rg = 0.0f;
 	sb = 0.0f; vb = 0.0f; rb = 0.0f;

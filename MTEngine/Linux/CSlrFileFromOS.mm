@@ -3,6 +3,14 @@
 #include "SYS_CFileSystem.h"
 #include "SYS_Funct.h"
 
+CSlrFileFromOS::CSlrFileFromOS(CSlrString *str)
+{
+	this->fp = NULL;
+	this->isFromResources = false;
+	
+	this->OpenSlrStr(str);
+}
+
 CSlrFileFromOS::CSlrFileFromOS(char *filePath)
 {
 	this->fp = NULL;

@@ -16,7 +16,8 @@ C64VicDisplayCanvasMultiBitmap::C64VicDisplayCanvasMultiBitmap(CViewC64VicDispla
 
 ///////
 
-void C64VicDisplayCanvasMultiBitmap::RefreshScreen(vicii_cycle_state_t *viciiState, CImageData *imageDataScreen)
+void C64VicDisplayCanvasMultiBitmap::RefreshScreen(vicii_cycle_state_t *viciiState, CImageData *imageDataScreen,
+												   u8 backgroundColorAlpha, u8 foregroundColorAlpha)
 {
 	this->viciiState = viciiState;
 	
@@ -69,31 +70,32 @@ void C64VicDisplayCanvasMultiBitmap::RefreshScreen(vicii_cycle_state_t *viciiSta
 				
 				for (int l = 0; l < 4; l++)
 				{
-					switch ((bitmap & (3 << ((3 - l) * 2))) >> ((3 - l) * 2)) {
+					switch ((bitmap & (3 << ((3 - l) * 2))) >> ((3 - l) * 2))
+					{
 						case 0:
 							//data->colormap[(i * 320 * 8) + (j * 8) + (k * 320) + (l * 2)] = color0;
 							//data->colormap[(i * 320 * 8) + (j * 8) + (k * 320) + (l * 2) + 1] = color0;
-							imageDataScreen->SetPixelResultRGBA(j*8 + l*2, i*8 + k, color0R, color0G, color0B, 255);
-							imageDataScreen->SetPixelResultRGBA(j*8 + l*2 + 1, i*8 + k, color0R, color0G, color0B, 255);
+							imageDataScreen->SetPixelResultRGBA(j*8 + l*2, i*8 + k, color0R, color0G, color0B, backgroundColorAlpha);
+							imageDataScreen->SetPixelResultRGBA(j*8 + l*2 + 1, i*8 + k, color0R, color0G, color0B, backgroundColorAlpha);
 							
 							break;
 						case 1:
 							//data->colormap[(i * 320 * 8) + (j * 8) + (k * 320) + (l * 2)] = color1;
 							//data->colormap[(i * 320 * 8) + (j * 8) + (k * 320) + (l * 2) + 1] = color1;
-							imageDataScreen->SetPixelResultRGBA(j*8 + l*2, i*8 + k, color1R, color1G, color1B, 255);
-							imageDataScreen->SetPixelResultRGBA(j*8 + l*2 + 1, i*8 + k, color1R, color1G, color1B, 255);
+							imageDataScreen->SetPixelResultRGBA(j*8 + l*2, i*8 + k, color1R, color1G, color1B, foregroundColorAlpha);
+							imageDataScreen->SetPixelResultRGBA(j*8 + l*2 + 1, i*8 + k, color1R, color1G, color1B, foregroundColorAlpha);
 							break;
 						case 2:
 							//data->colormap[(i * 320 * 8) + (j * 8) + (k * 320) + (l * 2)] = color2;
 							//data->colormap[(i * 320 * 8) + (j * 8) + (k * 320) + (l * 2) + 1] = color2;
-							imageDataScreen->SetPixelResultRGBA(j*8 + l*2, i*8 + k, color2R, color2G, color2B, 255);
-							imageDataScreen->SetPixelResultRGBA(j*8 + l*2 + 1, i*8 + k, color2R, color2G, color2B, 255);
+							imageDataScreen->SetPixelResultRGBA(j*8 + l*2, i*8 + k, color2R, color2G, color2B, foregroundColorAlpha);
+							imageDataScreen->SetPixelResultRGBA(j*8 + l*2 + 1, i*8 + k, color2R, color2G, color2B, foregroundColorAlpha);
 							break;
 						case 3:
 							//data->colormap[(i * 320 * 8) + (j * 8) + (k * 320) + (l * 2)] = color3;
 							//data->colormap[(i * 320 * 8) + (j * 8) + (k * 320) + (l * 2) + 1] = color3;
-							imageDataScreen->SetPixelResultRGBA(j*8 + l*2, i*8 + k, color3R, color3G, color3B, 255);
-							imageDataScreen->SetPixelResultRGBA(j*8 + l*2 + 1, i*8 + k, color3R, color3G, color3B, 255);
+							imageDataScreen->SetPixelResultRGBA(j*8 + l*2, i*8 + k, color3R, color3G, color3B, foregroundColorAlpha);
+							imageDataScreen->SetPixelResultRGBA(j*8 + l*2 + 1, i*8 + k, color3R, color3G, color3B, foregroundColorAlpha);
 							break;
 					}
 				}
@@ -316,6 +318,7 @@ void C64VicDisplayCanvasMultiBitmap::RenderCanvasSpecificGridValues()
 //
 void C64VicDisplayCanvasMultiBitmap::ClearScreen()
 {
+	LOGD("C64VicDisplayCanvasMultiBitmap::ClearScreen");
 	ClearScreen(0x00, 0x00);
 }
 

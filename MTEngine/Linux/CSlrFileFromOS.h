@@ -9,6 +9,7 @@ class CSlrFileFromOS : public CSlrFile
 public:
 	char osFilePath[768];
 	
+	CSlrFileFromOS(CSlrString *str);
 	CSlrFileFromOS(char *filePath);
 	CSlrFileFromOS(char *filePath, byte fileMode);
 	virtual void Open(char *filePath);

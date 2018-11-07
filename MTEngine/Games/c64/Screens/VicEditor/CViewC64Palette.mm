@@ -18,29 +18,39 @@
 #include "C64DebugInterfaceVice.h"
 #include "C64VicDisplayCanvas.h"
 
-CViewC64Palette::CViewC64Palette(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, CViewVicEditor *vicEditor)
-: CGuiView(posX, posY, posZ, sizeX, sizeY)
+CViewC64Palette::CViewC64Palette(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, CViewC64PaletteCallback *callback)
+: CGuiWindow(posX, posY, posZ, sizeX, sizeY, new CSlrString("Palette"))
 {
 	this->name = "CViewC64Palette";
-	this->vicEditor = vicEditor;
-
-	viewFrame = new CGuiViewFrame(this, new CSlrString("Palette"));
-	this->AddGuiElement(viewFrame);
+	this->callback = callback;
 	
 	this->isVertical = false;
-	
+	this->gap1 = 0.0f;
+	this->gap2 = 0.0f;
+	this->rectSize = 0.0f;
+	this->rectSize4 = 0.0f;
+	this->rectSizeBig = 0.0f;
+
 	this->SetPosition(posX, posY, sizeX, false);
 	
 	colorD020 = 14;
 	colorD021 = 6;
 	colorLMB = 15;
 	colorRMB = 14;
+	
+	LOGD("1 CViewC64Palette this->sizeX=%f this->rectSize=%f", this->sizeX, this->rectSize);
+	this->UpdatePosition();
+	LOGD("2 CViewC64Palette this->sizeX=%f this->rectSize=%f", this->sizeX, this->rectSize);
+
+	float scale = (this->sizeX - 8.0f*this->gap1 - this->gap2)/10.0f;
+	SetPaletteRectScale(scale);
+
 }
 
 void CViewC64Palette::SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY)
 {
 	LOGD("CViewC64Palette::SetPosition: %f %f", posX, posY);
-	CGuiView::SetPosition(posX, posY, posZ, sizeX, sizeY);
+	CGuiWindow::SetPosition(posX, posY, posZ, sizeX, sizeY);
 }
 
 void CViewC64Palette::SetPosition(float posX, float posY, float sizeX, bool isVertical)
@@ -51,7 +61,7 @@ void CViewC64Palette::SetPosition(float posX, float posY, float sizeX, bool isVe
 	{
 		// horizontal size
 		//float size1 = 10*scale + 8*gap1 + gap2;
-		float newScale = (sizeX - 8*gap1 - gap2)/10.0f;
+		float newScale = (sizeX - 8.0f*gap1 - gap2)/10.0f;
 		
 		this->SetPosition(this->posX, this->posY, this->posZ, newScale);
 		
@@ -62,9 +72,7 @@ void CViewC64Palette::SetPosition(float posX, float posY, float sizeX, bool isVe
 	}
 }
 
-
-// scale is scale of a colour rect
-void CViewC64Palette::SetPosition(float posX, float posY, float posZ, float scale)
+void CViewC64Palette::SetPaletteRectScale(float scale)
 {
 	// so we have
 	this->gap1 = scale / 8.0f;
@@ -73,8 +81,14 @@ void CViewC64Palette::SetPosition(float posX, float posY, float posZ, float scal
 	this->rectSize4 = scale/4.0f;
 	
 	this->rectSizeBig = scale * 2.15f;
+}
+
+// scale is scale of a colour rect
+void CViewC64Palette::SetPosition(float posX, float posY, float posZ, float scale)
+{
+	SetPaletteRectScale(scale);
 	
-	float size1 = 8*scale + 7*gap1 + gap2 + scale*2 + gap1;
+	float size1 = 8.0f*scale + 7.0f*gap1 + gap2 + scale*2.0f + gap1;
 	float size2 = scale * 2.0f + gap1;
 
 	if (!isVertical)
@@ -90,14 +104,24 @@ void CViewC64Palette::SetPosition(float posX, float posY, float posZ, float scal
 
 void CViewC64Palette::DoLogic()
 {
-	CGuiView::DoLogic();
+	CGuiWindow::DoLogic();
 }
 
 
 void CViewC64Palette::Render()
 {
-//	LOGD("CViewC64Palette::Render: pos=%f %f", posX, posY);
-	BlitFilledRectangle(posX, posY, posZ, sizeX, sizeY, viewFrame->barColorR, viewFrame->barColorG, viewFrame->barColorB, 1);
+	//	LOGD("CViewC64Palette::Render: pos=%f %f", posX, posY);
+	
+	this->RenderWindowBackground();
+	this->RenderPalette(true);
+	
+	CGuiWindow::Render();
+
+	BlitRectangle(posX, posY, posZ, sizeX, sizeY, 0, 0, 0, 1, 1);
+}
+
+void CViewC64Palette::RenderPalette(bool renderBackgroundInformation)
+{
 	float py = posY;
 	float px;
 	
@@ -110,62 +134,60 @@ void CViewC64Palette::Render()
 			for (int i = 0; i < 8; i++)
 			{
 				float fr,fg,fb;
-				viewC64->debugInterface->GetFloatCBMColor(colNum, &fr, &fg, &fb);
-				BlitFilledRectangle(px, py, posZ, rectSize, rectSize, fr, fg, fb, 1.0f);
-
+				viewC64->debugInterfaceC64->GetFloatCBMColor(colNum, &fr, &fg, &fb);
+				BlitFilledRectangle(px, py, posZ, this->rectSize, this->rectSize, fr, fg, fb, 1.0f);
+				
 				if (colNum == this->colorLMB)
 				{
-					BlitRectangle(px+1, py+1, posZ, rectSize-1, rectSize-1, 1.0f, 0.2f, 0.2f, 1.0f, 1.0f);
+					BlitRectangle(px+1, py+1, posZ, this->rectSize-1, this->rectSize-1, 1.0f, 0.2f, 0.2f, 1.0f, 1.0f);
 				}
 				
 				colNum++;
-
-				px += rectSize+gap1;
+				
+				px += this->rectSize + this->gap1;
 			}
 			
-			py += rectSize + gap1;
+			py += this->rectSize + this->gap1;
 		}
 		
-		//
-		// background
-		float sy = posY;
-		float sx = px + gap1;
-		py = sy;
-		px = sx;
-		
-		float r,g,b;
-		viewC64->debugInterface->GetFloatCBMColor(colorD021, &r, &g, &b);
-		
-		BlitFilledRectangle(px, py, posZ, rectSizeBig, rectSizeBig, r, g, b, 1);
-		
-		sx += gap2;
-		sy += gap2;
-		
-		px = sx + rectSize*0.65f;
-		py = sy + rectSize*0.65f;
-		
-		viewC64->debugInterface->GetFloatCBMColor(colorRMB, &r, &g, &b);
-		BlitFilledRectangle(px, py, posZ, rectSize, rectSize, r, g, b, 1);
-		BlitRectangle(px, py, posZ, rectSize, rectSize, 0, 0, 0, 1);
-		
-		px = sx;
-		py = sy;
-		viewC64->debugInterface->GetFloatCBMColor(colorLMB, &r, &g, &b);
-		BlitFilledRectangle(px, py, posZ, rectSize, rectSize, r, g, b, 1);
-		BlitRectangle(px, py, posZ, rectSize, rectSize, 0, 0, 0, 1);
+		if (renderBackgroundInformation)
+		{
+			//
+			// background
+			float sy = posY;
+			float sx = px + gap1;
+			py = sy;
+			px = sx;
+			
+			float r,g,b;
+			viewC64->debugInterfaceC64->GetFloatCBMColor(colorD021, &r, &g, &b);
+			
+			BlitFilledRectangle(px, py, posZ, this->rectSizeBig, this->rectSizeBig, r, g, b, 1);
+			
+			sx += gap2;
+			sy += gap2;
+			
+			px = sx + rectSize*0.65f;
+			py = sy + rectSize*0.65f;
+			
+			viewC64->debugInterfaceC64->GetFloatCBMColor(colorRMB, &r, &g, &b);
+			BlitFilledRectangle(px, py, posZ, this->rectSize, this->rectSize, r, g, b, 1);
+			BlitRectangle(px, py, posZ, this->rectSize, this->rectSize, 0, 0, 0, 1);
+			
+			px = sx;
+			py = sy;
+			viewC64->debugInterfaceC64->GetFloatCBMColor(colorLMB, &r, &g, &b);
+			BlitFilledRectangle(px, py, posZ, this->rectSize, this->rectSize, r, g, b, 1);
+			BlitRectangle(px, py, posZ, this->rectSize, this->rectSize, 0, 0, 0, 1);
+		}
 	}
-	
-	
-	CGuiView::Render();
-
-	BlitRectangle(posX, posY, posZ, sizeX, sizeY, 0, 0, 0, 1, 1);
 }
 
 bool CViewC64Palette::DoTap(GLfloat x, GLfloat y)
 {
 	LOGG("CViewC64Palette::DoTap: %f %f", x, y);
 	
-	if (IsInside(x, y))
+	if (IsInsideNonVisible(x, y))
 	{
 		int colorIndex = GetColorIndex(x, y);
 		
@@ -178,7 +200,7 @@ bool CViewC64Palette::DoTap(GLfloat x, GLfloat y)
 		return true;
 	}
 	
-	return CGuiView::DoTap(x, y);
+	return CGuiWindow::DoTap(x, y);
 }
 
 bool CViewC64Palette::DoRightClick(GLfloat x, GLfloat y)
@@ -201,8 +223,8 @@ bool CViewC64Palette::DoRightClick(GLfloat x, GLfloat y)
 		return true;
 	}
 	
-	LOGD(" CViewC64Palette: ret CGuiView::DoRightClick");
-	return CGuiView::DoRightClick(x, y);
+	LOGD(" CViewC64Palette: ret CGuiWindow::DoRightClick");
+	return CGuiWindow::DoRightClick(x, y);
 }
 
 bool CViewC64Palette::DoMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat distY, GLfloat diffX, GLfloat diffY)
@@ -210,7 +232,7 @@ bool CViewC64Palette::DoMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat distY,
 	if (this->IsInsideView(x, y))
 		return true;
 	
-	return CGuiView::DoMove(x, y, distX, distY, diffX, diffY);
+	return CGuiWindow::DoMove(x, y, distX, distY, diffX, diffY);
 }
 
 int CViewC64Palette::GetColorIndex(float x, float y)
@@ -227,18 +249,18 @@ int CViewC64Palette::GetColorIndex(float x, float y)
 			float px = posX;
 			for (int i = 0; i < 8; i++)
 			{
-				if (x >= px && x <= (px + rectSize)
-					&& y >= py && y <= (py + rectSize))
+				if (x >= px && x <= (px + this->rectSize)
+					&& y >= py && y <= (py + this->rectSize))
 				{
 					return colNum;
 				}
 				
 				colNum++;
 				
-				px += rectSize+gap1;
+				px += this->rectSize + this->gap1;
 			}
 			
-			py += rectSize + gap1;
+			py += this->rectSize + this->gap1;
 		}
 	}
 	
@@ -274,12 +296,17 @@ bool CViewC64Palette::SetFocus(bool focus)
 void CViewC64Palette::SetColorLMB(u8 color)
 {
 	this->colorLMB = color;
-	vicEditor->PaletteColorChanged(VICEDITOR_COLOR_SOURCE_LMB, color);
+	callback->PaletteColorChanged(VICEDITOR_COLOR_SOURCE_LMB, color);
 }
 
 void CViewC64Palette::SetColorRMB(u8 color)
 {
 	this->colorRMB = color;
-	vicEditor->PaletteColorChanged(VICEDITOR_COLOR_SOURCE_RMB, color);
+	callback->PaletteColorChanged(VICEDITOR_COLOR_SOURCE_RMB, color);
 }
+
+void CViewC64PaletteCallback::PaletteColorChanged(u8 colorSource, u8 newColorValue)
+{
+}
+
 

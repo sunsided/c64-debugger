@@ -2,13 +2,13 @@
 #define __CViewMemoryMap__
 
 #include "CGuiView.h"
-#include "C64DebugTypes.h"
+#include "DebuggerDefs.h"
 
 class C64;
 class CImageData;
 class CSlrImage;
 class CViewDataDump;
-class C64DebugInterface;
+class CDebugInterface;
 class CSlrFont;
 
 #define MEMORY_MAP_VALUES_STYLE_RGB			0
@@ -25,7 +25,10 @@ void C64DebuggerSetMemoryMapMarkersStyle(uint8 memoryMapMarkersStyle);
 class CViewMemoryMapCell
 {
 public:
-	CViewMemoryMapCell();
+	CViewMemoryMapCell(int addr);
+	
+	// cell address (for virtual maps, like Drive 1541 map)
+	int addr;
 	
 	// read/write colors
 	float sr, sg, sb, sa;
@@ -52,7 +55,7 @@ public:
 	void ClearExecuteMarkers();
 	void ClearReadWriteMarkers();
 	
-	// write PC & raster
+	// write PC & raster (where was PC & raster when cell was written)
 	int pc;
 	int viciiRasterLine, viciiRasterCycle;
 };
@@ -63,7 +66,7 @@ class CViewMemoryMap : public CGuiView
 {
 public:
 	CViewMemoryMap(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
-				   C64DebugInterface *c64, int imageWidth, int imageHeight, int ramSize, bool isFromDisk);
+				   CDebugInterface *debugInterface, int imageWidth, int imageHeight, int ramSize, bool isFromDisk);
 	~CViewMemoryMap();
 	
 	virtual void SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY);
@@ -95,14 +98,14 @@ public:
 	
 	float currentZoom;
 	
-	bool cursorInside;
+	volatile bool cursorInside;
 	float cursorX, cursorY;
 	
 	void ClearZoom();
 	void ZoomMap(float zoom);
 	void MoveMap(float diffX, float diffY);
 	
-	C64DebugInterface *debugInterface;
+	CDebugInterface *debugInterface;
 	
 	CViewMemoryMapCell **memoryCells;
 	int ramSize;
@@ -154,7 +157,7 @@ public:
 	float cellSizeX, cellSizeY;
 	float cellStartX, cellStartY;
 	float cellEndX, cellEndY;
-	int cellStartAddr;
+	int cellStartIndex;
 	int numCellsInWidth;
 	int numCellsInHeight;
 	float currentFontDataScale;

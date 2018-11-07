@@ -9,6 +9,8 @@ void vice_wrapper_log_verbose(char *message);
 void vice_wrapper_mt_debug(char *message);
 void vice_wrapper_mt_main(char *message);
 void vice_wrapper_mt_todo(char *message);
+void atari_wrapper_mt_log_main(char *message);
+void atari_wrapper_mt_log_debug(char *message);
 
 
 #endif

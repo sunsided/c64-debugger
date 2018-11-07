@@ -1,7 +1,7 @@
 #ifndef _CViewC64VicDisplay_H_
 #define _CViewC64VicDisplay_H_
 
-#include "CGuiView.h"
+#include "CGuiWindow.h"
 #include "CGuiLockableList.h"
 #include "CGuiButtonSwitch.h"
 #include "CGuiLabel.h"
@@ -32,7 +32,8 @@ enum
 	AUTOSCROLL_DISASSEMBLE_RASTER_PC,
 	AUTOSCROLL_DISASSEMBLE_BITMAP_ADDRESS,
 	AUTOSCROLL_DISASSEMBLE_TEXT_ADDRESS,
-	AUTOSCROLL_DISASSEMBLE_COLOUR_ADDRESS
+	AUTOSCROLL_DISASSEMBLE_COLOUR_ADDRESS,
+	AUTOSCROLL_DISASSEMBLE_CHARSET_ADDRESS
 };
 
 enum
@@ -43,16 +44,23 @@ enum
 };
 
 
-class CViewC64VicDisplay : public CGuiView
+class CViewC64VicDisplay : public CGuiWindow
 {
 public:
 	
 	// TODO: hide GuiButtons is temporary, it should be avoided and another view just for these buttons must be created
 	//       keep CViewC64VicDisplay just a generic display view with callbacks
-	
-	CViewC64VicDisplay(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, C64DebugInterface *debugInterface);
+
+	CViewC64VicDisplay(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
+					   C64DebugInterface *debugInterface);
+
+	CViewC64VicDisplay(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
+					   C64DebugInterface *debugInterface,
+					   CSlrString *windowName, u32 mode, CGuiWindowCallback *callback);
 	virtual ~CViewC64VicDisplay();
 	
+	
+	void Initialize(C64DebugInterface *debugInterface);
 	void SetVicControlView(CViewC64VicControl *vicControl);
 
 	virtual void Render();
@@ -105,6 +113,10 @@ public:
 	CImageData *imageDataScreen;
 	CSlrImage *imageScreen;
 
+	// global position offset for positioning with topbar in VIC Editor
+	float posOffsetX;
+	float posOffsetY;
+	
 	//
 	float scale;
 	
@@ -131,7 +143,7 @@ public:
 						  u8 **bitmap_low_ptr, u8 **bitmap_high_ptr,
 						  u8 *colors);
 	void RefreshScreen(vicii_cycle_state_t *viciiState);
-	void RefreshScreenImageData(vicii_cycle_state_t *viciiState);
+	void RefreshScreenImageData(vicii_cycle_state_t *viciiState, u8 backgroundColorAlpha, u8 foregroundColorAlpha);
 	
 	//
 	void RefreshScreenStateOnly(vicii_cycle_state_t *viciiState);
@@ -160,6 +172,7 @@ public:
 			 
 	bool IsRasterCursorInsideScreen();
 	vicii_cycle_state_t *UpdateViciiState();
+	void CopyViciiStateFromCurrent();
 	vicii_cycle_state_t *UpdateViciiStateNonVisible(float rx, float ry);
 	
 	float rasterCursorPosX, rasterCursorPosY;
@@ -259,7 +272,7 @@ public:
 	
 	void InitGridLinesColorFromSettings();
 	
-	void RenderRaster(int rasterX, int rasterY);
+	void RenderRasterCursor(int rasterX, int rasterY);
 	
 	void RenderBadLines();
 	
@@ -276,9 +289,6 @@ public:
 	float gridLinesColorA2;
 
 	
-	//
-	CGuiViewFrame *viewFrame;
-	
 	// frame for display
 	bool renderDisplayFrame;
 	float displayFrameRasterX, displayFrameRasterY, displayFrameRasterSizeX, displayFrameRasterSizeY;		// in c64's coordinates
@@ -290,12 +300,13 @@ public:
 	//
 	u16 screenAddress;
 	int bitmapAddress;
+	int charsetAddress;
 	
 	int GetAddressForRaster(int x, int y);
-	int GetTextModeAddressForRaster(int x, int y);
+	int GetScreenAddressForRaster(int x, int y);
 	int GetBitmapModeAddressForRaster(int x, int y);
-	int GetColourAddressForRaster(int x, int y);
-
+	int GetColorAddressForRaster(int x, int y);
+	int GetCharsetAddressForRaster(int x, int y);
 	
 	int currentVicMode;
 	
@@ -330,6 +341,8 @@ public:
 	//
 	//
 	C64VicDisplayCanvas *currentCanvas;
+	void RefreshCurrentCanvas(vicii_cycle_state_t *viciiState);
+	void SetCurrentCanvas(u8 bm, u8 mc, u8 eb, u8 blank);
 	
 	//
 	std::list<u32> shortcutZones;
@@ -337,7 +350,10 @@ public:
 	void ToggleVICRasterBreakpoint();
 
 	bool backupRenderDataWithColors;
-
+	
+	u8 backgroundColorAlpha;
+	u8 foregroundColorAlpha;
+	
 private:
 
 	C64VicDisplayCanvasBlank *canvasBlank;

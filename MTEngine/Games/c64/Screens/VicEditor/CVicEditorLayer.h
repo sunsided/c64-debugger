@@ -18,6 +18,7 @@ public:
 	char *layerName;
 
 	bool isVisible;
+	bool isPaintingLocked;
 	
 	virtual void RenderMain(vicii_cycle_state_t *viciiState);
 	virtual void RenderGridMain(vicii_cycle_state_t *viciiState);
@@ -33,6 +34,8 @@ public:
 	virtual void ClearScreen();
 	virtual void ClearScreen(u8 charValue, u8 colorValue);
 
+	virtual void LayerSelected(bool isSelected);
+	
 	virtual void Serialise(CByteBuffer *byteBuffer);
 	virtual void Deserialise(CByteBuffer *byteBuffer, int version);
 	

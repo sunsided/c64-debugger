@@ -52,6 +52,8 @@
 #include "snapshot.h"
 #include "types.h"
 
+#include "c64.h"	// c64d
+
 
 #define STORE_OFFSET 1
 #define READ_OFFSET 0
@@ -622,7 +624,7 @@ static void ciacore_store_internal(cia_context_t *cia_context, WORD addr, BYTE b
     }                           /* switch */
 }
 
-void ciacore_store(cia_context_t *cia_context, WORD addr, BYTE byte)
+void ciacore_store(cia_context_t *cia_context, WORD addr, BYTE value)
 {
     if (cia_context->pre_store != NULL) {
         (cia_context->pre_store)();
@@ -634,7 +636,7 @@ void ciacore_store(cia_context_t *cia_context, WORD addr, BYTE byte)
         (*(cia_context->clk_ptr))++;
     }
 
-    ciacore_store_internal(cia_context, addr, byte);
+    ciacore_store_internal(cia_context, addr, value);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -1886,4 +1888,14 @@ int ciacore_dump(cia_context_t *cia_context)
     mon_out("TOD Alarm: %02x:%02x:%02x.%x (%s)\n", cia_context->todalarm[0x0b - CIA_TOD_TEN] & 0x7f, cia_context->todalarm[0x0a - CIA_TOD_TEN], cia_context->todalarm[0x09 - CIA_TOD_TEN], cia_context->todalarm[0x08 - CIA_TOD_TEN], cia_context->todalarm[0x0b - CIA_TOD_TEN] & 0x80 ? "pm" : "am");
     mon_out("\nSynchronous Serial I/O Data Buffer: %02x\n", ciacore_peek(cia_context, 0x0c));
     return 0;
+}
+
+//
+cia_context_t *c64d_get_cia_context(int ciaId)
+{
+	if (ciaId == 1)
+	{
+		return machine_context.cia1;
+	}
+	return machine_context.cia2;
 }

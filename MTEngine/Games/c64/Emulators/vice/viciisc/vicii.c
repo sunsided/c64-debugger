@@ -63,7 +63,7 @@
 #include "viewport.h"
 #include "raster.h"
 
-#include "C64DebugTypes.h"
+#include "DebuggerDefs.h"
 
 void vicii_set_phi1_addr_options(WORD mask, WORD offset)
 {

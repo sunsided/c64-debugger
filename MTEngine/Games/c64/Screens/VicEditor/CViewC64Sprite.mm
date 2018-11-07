@@ -21,17 +21,17 @@
 #include "SYS_Funct.h"
 #include "C64VicDisplayCanvas.h"
 #include "CVicEditorLayerVirtualSprites.h"
+#include "C64SettingsStorage.h"
+#include "CSlrFileFromOS.h"
 
 CViewC64Sprite::CViewC64Sprite(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, CViewVicEditor *vicEditor)
-: CGuiView(posX, posY, posZ, sizeX, sizeY)
+: CGuiWindow(posX, posY, posZ, sizeX, sizeY, new CSlrString("Sprite"), NULL)
 {
 	this->name = "CViewC64Sprite";
 	
 	this->vicEditor = vicEditor;
 	
 	viciiState = NULL;
-	
-	viewFrame = new CGuiViewFrame(this, new CSlrString("Sprite"));
 	
 	int w = 32;
 	int h = 32;
@@ -59,8 +59,8 @@ CViewC64Sprite::CViewC64Sprite(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	float py;
 	
 	buttonSizeX = 30.0f;
-	px = posX + 2.5f;
-	py = posY + 5.0f + 28.0f + 3.0f;
+	px = 2.5f; //posX + 2.5f;
+	py = 5.0f + 28.0f + 3.0f; //posY + 5.0f + 28.0f + 3.0f;
 	
 	float gpx = 1.9f;
 	
@@ -107,7 +107,7 @@ CViewC64Sprite::CViewC64Sprite(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 
 	//
 	buttonSizeX = 25.0f;
-	px = posX + sizeX - buttonSizeX - 3.0f;
+	px = sizeX - buttonSizeX - 3.0f;	//posX +
 	py += buttonSizeY + 6.0f;
 	btnScanForSprites = new CGuiButtonSwitch(NULL, NULL, NULL,
 											  px, py, posZ, buttonSizeX, buttonSizeY,
@@ -125,50 +125,34 @@ CViewC64Sprite::CViewC64Sprite(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	
 	prevSpriteId = 0;
 	selectedColor = -1;
-	
-	this->AddGuiElement(viewFrame);
-	
 	isSpriteLocked = false;
+	
+	spriteFileExtensions.push_back(new CSlrString("sprite"));
+	spriteFileExtensions.push_back(new CSlrString("bin"));
+	spriteFileExtensions.push_back(new CSlrString("data"));
+
+	// setup icons in frame
+	viewFrame->AddBarToolBox(this);
+	
+	imgIconImport = RES_GetImage("/gfx/icon_raw_import", true);
+	viewFrame->AddBarIcon(imgIconImport);
+	
+	imgIconExport = RES_GetImage("/gfx/icon_raw_export", true);
+	viewFrame->AddBarIcon(imgIconExport);
+	
+	this->UpdatePosition();
+
 }
 
 void CViewC64Sprite::SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY)
 {
 	LOGD("CViewC64Sprite::SetPosition: %f %f", posX, posY);
-	CGuiView::SetPosition(posX, posY, posZ, sizeX, sizeY);
-
-	// TODO: fix this and let guiview manage this
-	float buttonSizeX = 25.0f;
-	float buttonSizeY = 10.0f;
-
-	float px;
-	float py;
-	
-	buttonSizeX = 30.0f;
-	px = posX + 2.5f;
-	py = posY + 5.0f + 28.0f + 3.0f;
-	
-	float gpx = 1.9f;
-
-	this->btnIsMultiColor->SetPosition(px, py);
-	px += buttonSizeX+ gpx;
-	
-	this->btnIsStretchX->SetPosition(px, py);
-	px += buttonSizeX + gpx;
-	
-	this->btnIsStretchY->SetPosition(px, py);
-
-	buttonSizeX = 25.0f;
-	px = posX + sizeX - buttonSizeX - 3.0f;
-	py += buttonSizeY + 6.0f;
-
-	this->btnScanForSprites->SetPosition(px, py);
-	
-
+	CGuiWindow::SetPosition(posX, posY, posZ, sizeX, sizeY);
 }
 
 void CViewC64Sprite::DoLogic()
 {
-	CGuiView::DoLogic();
+	CGuiWindow::DoLogic();
 }
 
 
@@ -239,11 +223,10 @@ void CViewC64Sprite::Render()
 			
 			int addr = addr2;
 			
-			uint8 spriteData[63];
 			for (int i = 0; i < 63; i++)
 			{
 				u8 v = debugInterface->GetByteFromRamC64(addr);
-				spriteData[i] = v;
+				currentSpriteData[i] = v;
 				addr++;
 			}
 			
@@ -267,12 +250,12 @@ void CViewC64Sprite::Render()
 				//			}
 				//			else
 				{
-					ConvertSpriteDataToImage(spriteData, imageDataSprite, 4);
+					ConvertSpriteDataToImage(currentSpriteData, imageDataSprite, 4);
 				}
 			}
 			else
 			{
-				ConvertColorSpriteDataToImage(spriteData, imageDataSprite, paintColorD021, paintColorD025, paintColorD026, paintColorSprite,
+				ConvertColorSpriteDataToImage(currentSpriteData, imageDataSprite, paintColorD021, paintColorD025, paintColorD026, paintColorSprite,
 											  debugInterface, 4);
 			}
 			
@@ -398,7 +381,7 @@ void CViewC64Sprite::Render()
 	
 	///
 	
-	CGuiView::Render();
+	CGuiWindow::Render();
 
 	if (isSpriteLocked == false)
 	{
@@ -503,7 +486,7 @@ bool CViewC64Sprite::DoTap(GLfloat x, GLfloat y)
 	}
 	
 	
-	return CGuiView::DoTap(x, y);
+	return CGuiWindow::DoTap(x, y);
 }
 
 bool CViewC64Sprite::DoFinishTap(GLfloat x, GLfloat y)
@@ -511,7 +494,7 @@ bool CViewC64Sprite::DoFinishTap(GLfloat x, GLfloat y)
 	// render thread is updating switch buttons, we need to lock render first
 	guiMain->LockMutex();
 	
-	bool ret = CGuiView::DoFinishTap(x, y);
+	bool ret = CGuiWindow::DoFinishTap(x, y);
 	
 	guiMain->UnlockMutex();
 	
@@ -525,7 +508,7 @@ bool CViewC64Sprite::DoMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat distY, 
 	if (this->IsInsideView(x, y))
 		return true;
 	
-	return CGuiView::DoMove(x, y, distX, distY, diffX, diffY);
+	return CGuiWindow::DoMove(x, y, distX, distY, diffX, diffY);
 }
 
 
@@ -595,7 +578,7 @@ bool CViewC64Sprite::DoRightClick(GLfloat x, GLfloat y)
 	if (this->IsInsideView(x, y))
 		return true;
 	
-	return CGuiView::DoRightClick(x, y);
+	return CGuiWindow::DoRightClick(x, y);
 }
 
 
@@ -756,4 +739,229 @@ bool CViewC64Sprite::ButtonSwitchChanged(CGuiButtonSwitch *button)
 	guiMain->UnlockMutex();
 	return true;
 }
+
+//
+void CViewC64Sprite::ToolBoxIconPressed(CSlrImage *imgIcon)
+{
+	if (imgIcon == this->imgIconExport)
+	{
+		CSlrString *defaultFileName = new CSlrString("sprite");
+		
+		CSlrString *windowTitle = new CSlrString("Export Sprite");
+		viewC64->ShowDialogSaveFile(this, &spriteFileExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
+		delete windowTitle;
+		delete defaultFileName;
+	}
+	else if (imgIcon == this->imgIconImport)
+	{
+		CSlrString *windowTitle = new CSlrString("Import Sprite");
+		windowTitle->DebugPrint("windowTitle=");
+		viewC64->ShowDialogOpenFile(this, &spriteFileExtensions, NULL, windowTitle);
+		delete windowTitle;
+	}
+}
+
+void CViewC64Sprite::SystemDialogFileOpenSelected(CSlrString *path)
+{
+	int importSpriteAddr = this->ImportSprite(path);
+	
+	if (importSpriteAddr < 0)
+	{
+		return;
+	}
+	
+	CSlrString *str = path->GetFileNameComponentFromPath();
+	
+	char *buf = str->GetStdASCII();
+	char *buf2 = SYS_GetCharBuf();
+	sprintf(buf2, "%s imported at $%04x", buf, importSpriteAddr);
+	guiMain->ShowMessage(buf2);
+	SYS_ReleaseCharBuf(buf2);
+	delete [] buf;
+	delete str;
+}
+
+// https://csdb.dk/forums/?roomid=7&topicid=125812
+// SpritePad format
+
+//		v1:
+//		1 byte    - 0-3 background
+//		1 byte    - 0-3 multicolour 1
+//		1 byte    - 0-3 multicolour 2
+//
+//		repeated for each sprite:
+//		63 bytes  - sprite data
+//		1 byte    - flags 0-3 colour, 4 overlay, 7 multi
+//
+//		v2:
+//		3 bytes   - magic "SPD"
+//		1 byte    - version (1)
+//		1 byte    - number of sprites - 1
+//		1 byte    - number of animations - 1
+//		1 byte    - 0-3 background
+//		1 byte    - 0-3 multicolour 1
+//		1 byte    - 0-3 multicolour 2
+//
+//		repeated for each sprite:
+//		63 bytes  - sprite data
+//		1 byte    - flags 0-3 colour, 4 overlay, 7 multi
+//
+//		animation settings split into 4 arrays:
+//		n bytes   - animation starts
+//		n bytes   - animation ends
+//		n bytes   - timers
+//		n bytes   - flags 4 ping-pong, 5 overlay, 7 valid
+
+int CViewC64Sprite::ImportSprite(CSlrString *path)
+{
+	guiMain->LockMutex();
+	
+	CSlrFile *file = new CSlrFileFromOS(path);
+	if (file->Exists())
+	{
+		C64Sprite *sprite = vicEditor->layerVirtualSprites->FindSpriteByRasterPos(spriteRasterX, spriteRasterY);
+
+		if (sprite == NULL)
+		{
+			guiMain->ShowMessage("Sprite not selected");
+			delete file;
+			guiMain->UnlockMutex();
+			return -1;
+		}
+		
+		int addr = sprite->pointerAddr;
+		
+		CByteBuffer *byteBuffer = new CByteBuffer(file, false);
+		
+		for (int i = 0; i < 64; i++)
+		{
+			if (byteBuffer->isEof())
+			{
+				guiMain->ShowMessage("Sprite file corrupted");
+				delete byteBuffer;
+				delete file;
+				guiMain->UnlockMutex();
+				return -1;
+			}
+			u8 v = byteBuffer->GetU8();
+			debugInterfaceVice->SetByteToRamC64(addr++, v);
+		}
+		
+		int paintResult;
+		
+		if (byteBuffer->isEof()) { delete byteBuffer; delete file; return sprite->pointerAddr; }
+		u8 colorD021 = byteBuffer->GetU8();
+		// skip D021
+		
+		if (byteBuffer->isEof()) { delete byteBuffer; delete file; return sprite->pointerAddr; }
+		u8 colorD025 = byteBuffer->GetU8();
+		
+		paintResult = vicEditor->layerVirtualSprites->ReplaceColor(spriteRasterX, spriteRasterY, sprite->spriteId, 1, colorD025);
+
+		if (byteBuffer->isEof()) { delete byteBuffer; delete file; return sprite->pointerAddr; }
+		u8 colorD026 = byteBuffer->GetU8();
+
+		paintResult = vicEditor->layerVirtualSprites->ReplaceColor(spriteRasterX, spriteRasterY, sprite->spriteId, 3, colorD026);
+
+		if (byteBuffer->isEof()) { delete byteBuffer; delete file; return sprite->pointerAddr; }
+		u8 colorSprite = byteBuffer->GetU8();
+
+		paintResult = vicEditor->layerVirtualSprites->ReplaceColor(spriteRasterX, spriteRasterY, sprite->spriteId, 2, colorSprite);
+
+		if (byteBuffer->isEof()) { delete byteBuffer; delete file; return sprite->pointerAddr; }
+		bool isMultiColor = byteBuffer->GetBool();
+		vicEditor->layerVirtualSprites->ReplaceMultiColor(spriteRasterX, spriteRasterY, sprite->spriteId, isMultiColor);
+
+		if (byteBuffer->isEof()) { delete byteBuffer; delete file; return sprite->pointerAddr; }
+		bool isStretchX = byteBuffer->GetBool();
+		vicEditor->layerVirtualSprites->ReplaceStretchX(spriteRasterX, spriteRasterY, sprite->spriteId, isStretchX);
+
+		if (byteBuffer->isEof()) { delete byteBuffer; delete file; return sprite->pointerAddr; }
+		bool isStretchY = byteBuffer->GetBool();
+		vicEditor->layerVirtualSprites->ReplaceStretchY(spriteRasterX, spriteRasterY, sprite->spriteId, isStretchY);
+		
+		delete byteBuffer;
+		delete file;
+		guiMain->UnlockMutex();
+		return sprite->pointerAddr;
+	}
+
+	delete file;
+	guiMain->UnlockMutex();
+	return -1;
+}
+
+
+void CViewC64Sprite::SystemDialogFileOpenCancelled()
+{
+}
+
+void CViewC64Sprite::SystemDialogFileSaveSelected(CSlrString *path)
+{
+	this->ExportSprite(path);
+	
+	CSlrString *str = path->GetFileNameComponentFromPath();
+	str->Concatenate(" saved");
+	guiMain->ShowMessage(str);
+	delete str;
+}
+
+void CViewC64Sprite::SystemDialogFileSaveCancelled()
+{
+}
+
+void CViewC64Sprite::ExportSprite(CSlrString *path)
+{
+//	ConvertColorSpriteDataToImage(currentSpriteData, imageDataSprite, paintColorD021, paintColorD025, paintColorD026, paintColorSprite,
+//	//								  debugInterface, 4);
+//	
+	char *cPath = path->GetStdASCII();
+	LOGD(" ..... cPath='%s'", cPath);
+
+	u8 valTrue = TRUE;
+	u8 valFalse = FALSE;
+	
+	FILE *fp = fopen(cPath, "wb");
+	if (fp)
+	{
+		fwrite(currentSpriteData, 64, 1, fp);
+		
+		fwrite(&paintColorD021, 1, 1, fp);
+		fwrite(&paintColorD025, 1, 1, fp);
+		fwrite(&paintColorD026, 1, 1, fp);
+		fwrite(&paintColorSprite, 1, 1, fp);
+
+		if (btnIsMultiColor->IsOn())
+		{
+			fwrite(&valTrue, 1, 1, fp);
+		}
+		else
+		{
+			fwrite(&valFalse, 1, 1, fp);
+		}
+		
+		if (btnIsStretchX->IsOn())
+		{
+			fwrite(&valTrue, 1, 1, fp);
+		}
+		else
+		{
+			fwrite(&valFalse, 1, 1, fp);
+		}
+
+		if (btnIsStretchY->IsOn())
+		{
+			fwrite(&valTrue, 1, 1, fp);
+		}
+		else
+		{
+			fwrite(&valFalse, 1, 1, fp);
+		}
+
+		fclose(fp);
+	}
+	delete [] cPath;
+
+}
+
 

@@ -29,7 +29,16 @@ CViewAbout::CViewAbout(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, 
 	fontScale = 1.5;
 	fontHeight = font->GetCharHeight('@', fontScale) + 2;
 	
+#if defined(RUN_COMMODORE64) && defined(RUN_ATARI)
+	strHeader = new CSlrString("About C64+65XE Debugger");
+#elif defined(RUN_COMMODORE64)
 	strHeader = new CSlrString("About C64 Debugger");
+#elif defined(RUN_ATARI)
+	strHeader = new CSlrString("About 65XE Debugger");
+#else
+	SYS_FatalExit("Unknown version");
+#endif
+
 }
 
 CViewAbout::~CViewAbout()
@@ -42,6 +51,18 @@ void CViewAbout::DoLogic()
 }
 
 void CViewAbout::Render()
+{
+	if (viewC64->debugInterfaceC64)
+	{
+		this->RenderC64ViceLicense();
+	}
+	if (viewC64->debugInterfaceAtari)
+	{
+		this->RenderAtari800License();
+	}
+}
+
+void CViewAbout::RenderC64ViceLicense()
 {
 	BlitFilledRectangle(0, 0, -1, sizeX, sizeY,
 						viewC64->colorsTheme->colorBackgroundFrameR,
@@ -139,7 +160,8 @@ void CViewAbout::Render()
 	font->BlitTextColor("Copyright C 2016-2017 Bas Wassink", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
 	
 	
-	font->BlitTextColor("", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+//	font->BlitTextColor("", px, py, posZ, fontScale, tr, tg, tb, 1);
+	py += fontHeight;
 
 	fontScale = 0.8f;
 	font->BlitTextColor("The ROM files embedded in the source code are Copyright C by Commodore Business Machines.", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
@@ -165,6 +187,139 @@ void CViewAbout::Render()
 	
 	font->BlitTextColor("02111-1307  USA", px, py, posZ, fontScale, tr, tg, tb, 1);
 
+	font->BlitTextColor("Click anywhere to close this", 330, py, posZ, 2.0f, tr, tg, tb, 1);
+	
+}
+
+void CViewAbout::RenderAtari800License()
+{
+//	LOGD("RenderAtari800License");
+	BlitFilledRectangle(0, 0, -1, sizeX, sizeY,
+						viewC64->colorsTheme->colorBackgroundFrameR,
+						viewC64->colorsTheme->colorBackgroundFrameG,
+						viewC64->colorsTheme->colorBackgroundFrameB,
+						1.0);
+	
+	float sb = 20;
+	float gap = 4;
+	
+	float tr = viewC64->colorsTheme->colorTextR;
+	float tg = viewC64->colorsTheme->colorTextG;
+	float tb = viewC64->colorsTheme->colorTextB;
+	
+	float lr = viewC64->colorsTheme->colorHeaderLineR;
+	float lg = viewC64->colorsTheme->colorHeaderLineG;
+	float lb = viewC64->colorsTheme->colorHeaderLineB;
+	float lSizeY = 3;
+	
+	float scrx = sb;
+	float scry = sb;
+	float scrsx = sizeX - sb*2.0f;
+	float scrsy = sizeY - sb*2.0f;
+	float cx = scrsx/2.0f + sb;
+	
+	float bg_r = viewC64->colorsTheme->colorBackgroundR;
+	float bg_g = viewC64->colorsTheme->colorBackgroundG;
+	float bg_b = viewC64->colorsTheme->colorBackgroundB;
+	
+	BlitFilledRectangle(scrx, scry, -1, scrsx, scrsy, bg_r, bg_g, bg_b, 1.0);
+	
+	float px = scrx + gap;
+	float py = scry + gap;
+	
+	fontScale = 3.0f;
+	fontHeight = font->GetCharHeight('@', fontScale) + 1;
+	
+	float htr = viewC64->colorsTheme->colorTextHeaderR;
+	float htg = viewC64->colorsTheme->colorTextHeaderG;
+	float htb = viewC64->colorsTheme->colorTextHeaderB;
+	font->BlitTextColor(strHeader, cx, py, -1, fontScale, htr, htg, htb, 1, FONT_ALIGN_CENTER);
+	
+	py += fontHeight;
+	//	font->BlitTextColor(strHeader2, cx, py, -1, fontScale, tr, tg, tb, 1, FONT_ALIGN_CENTER);
+	//	py += fontHeight;
+	py += 4.0f;
+	
+	BlitFilledRectangle(scrx, py, -1, scrsx, lSizeY, lr, lg, lb, 1);
+	
+	py += lSizeY + gap + 4.0f;
+	
+	
+	//// TODO: this is a quick way to have it immediately implemented
+	//// this needs of course to be changed into some more meaningful
+	
+	fontScale = 2.0f;
+	fontHeight = font->GetCharHeight('@', fontScale) + 1;
+	
+	font->BlitTextColor("65XE Debugger is (C) Marcin Skoczylas, aka Slajerek/Samar", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+	//	font->BlitTextColor("http://samar.untergrund.net", 338, py, posZ, 2.0f, 0.0f, 0.0f, 0.0f, 1);
+	
+	py += fontHeight;
+	
+	fontScale = 1.45f;
+	fontHeight = font->GetCharHeight('@', fontScale) + 1;
+
+	font->BlitTextColor("Atari800 emulator version 3.1.0", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+	font->BlitTextColor("-------------------------------", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+	py += fontHeight;
+
+	font->BlitTextColor("Petr Stehlik        (maintainer)", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+	font->BlitTextColor("Perry McFarlane     (core developer)", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+	font->BlitTextColor("Piotr Fusik         (core developer)", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+	font->BlitTextColor("Tomasz Krasuski     (core developer)", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+	font->BlitTextColor("Mark Grebe          (Mac OSX)", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+	font->BlitTextColor("Kostas Nakos        (Windows CE, Android)", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+	font->BlitTextColor("James Wilkinson     (DOS, BeOS, Win32)", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+	font->BlitTextColor("Christian Groessler (Sega Dreamcast)", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+	font->BlitTextColor("Andrey Dj           (Raspberry Pi)", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+	
+//	font->BlitTextColor("Copyright C 2007-2008 Fabrizio Gennari", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+//	font->BlitTextColor("Copyright C 1999-2007 Andreas Dehmel", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+//	font->BlitTextColor("Copyright C 2003-2005 David Hansel", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+//	font->BlitTextColor("Copyright C 2000-2004 Markus Brenner", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+//	font->BlitTextColor("", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+//	font->BlitTextColor("Copyright C 1999-2004 Thomas Bretz", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+//	font->BlitTextColor("Copyright C 1997-2001 Daniel Sladic", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+//	font->BlitTextColor("Copyright C 1996-1999 Ettore Perazzoli", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+//	font->BlitTextColor("Copyright C 1996-1999 André Fachat", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+//	font->BlitTextColor("Copyright C 1993-1994, 1997-1999 Teemu Rantanen", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+//	font->BlitTextColor("Copyright C 1993-1996 Jouko Valta", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+//	font->BlitTextColor("Copyright C 1993-1994 Jarkko Sonninen", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+//	font->BlitTextColor("Copyright C 1999-2017 Martin Pottendorfer", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+//	font->BlitTextColor("Copyright C 2007-2017 Fabrizio Gennari", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+//	font->BlitTextColor("Copyright C 2009-2017 Groepaz", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+//	font->BlitTextColor("Copyright C 2010-2017 Olaf Seibert", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+//	font->BlitTextColor("Copyright C 2011-2017 Marcus Sutton", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+//	font->BlitTextColor("Copyright C 2011-2017 Kajtar Zsolt", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+//	font->BlitTextColor("Copyright C 2016-2017 AreaScout", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+//	font->BlitTextColor("Copyright C 2016-2017 Bas Wassink", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+	
+	
+//	font->BlitTextColor("", px, py, posZ, fontScale, tr, tg, tb, 1);
+	py += fontHeight;
+	
+	fontScale = 0.8f;
+//	font->BlitTextColor("The ROM files embedded in the source code are Copyright C by Atari.", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+	
+	fontHeight = font->GetCharHeight('@', fontScale) + 1;
+	
+	font->BlitTextColor("This program is free software; you can redistribute it and/or", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+	font->BlitTextColor("modify it under the terms of the GNU General Public License as", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+	font->BlitTextColor("published by the Free Software Foundation; either version 2 of the", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+	font->BlitTextColor("License, or (at your option) any later version.", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+	font->BlitTextColor("", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+	font->BlitTextColor("This program is distributed in the hope that it will be useful,", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+	font->BlitTextColor("but WITHOUT ANY WARRANTY; without even the implied warranty of", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+	font->BlitTextColor("MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+	font->BlitTextColor("GNU General Public License for more details.", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+	font->BlitTextColor("You should have received a copy of the GNU General Public License", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+	font->BlitTextColor("along with this program; if not, write to the Free Software", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+	
+	font->BlitTextColor("Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+	
+	font->BlitTextColor("02111-1307  USA", px, py, posZ, fontScale, tr, tg, tb, 1);
+	
+	py = this->sizeY - 30.0f;
 	font->BlitTextColor("Click anywhere to close this", 330, py, posZ, 2.0f, tr, tg, tb, 1);
 	
 }

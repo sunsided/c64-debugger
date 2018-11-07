@@ -28,7 +28,8 @@
 #define DBGLVL_INFO		(1 << 4)
 #define DBGLVL_MAIN		(DBGLVL_INFO)
 #define DBGLVL_TRANSACTION	(1 << 5)
-#define DBGLVL_HTTP			(1 << 6)
+#define DBGLVL_CONNECTION	(1 << 6)
+#define DBGLVL_HTTP			(DBGLVL_CONNECTION)
 #define DBGLVL_DEBUG		(1 << 7)
 #define DBGLVL_DATABASE		(1 << 8)
 #define DBGLVL_SQL			(1 << 9)
@@ -37,15 +38,20 @@
 #define DBGLVL_XMPLAYER		(1 << 12)
 #define DBGLVL_AUDIO		(1 << 13)
 #define DBGLVL_TODO			(1 << 14)
-#define DBGLVL_MEMORY		(1 << 15)
-#define DBGLVL_ANIMATION	(1 << 16)
-#define DBGLVL_LEVEL		(1 << 17)
+#define DBGLVL_ANIMATION	(1 << 15)
+#define DBGLVL_LEVEL		(1 << 16)
+#define DBGLVL_MEMORY		(1 << 17)
 #define DBGLVL_SCRIPT		(1 << 18)
 #define DBGLVL_NET			(1 << 19)
 #define DBGLVL_NET_SERVER	(1 << 20)
 #define DBGLVL_NET_CLIENT	(1 << 21)
-#define DBGLVL_DEBUG2		(1 << 22)
-#define DBGLVL_INPUT		(1 << 23)
+#define DBGLVL_INPUT		(1 << 22)
+#define DBGLVL_VICE_DEBUG	(1 << 23)
+#define DBGLVL_VICE_MAIN	(1 << 24)
+#define DBGLVL_VICE_VERBOSE	(1 << 25)
+#define DBGLVL_ATARI_DEBUG	(1 << 26)
+#define DBGLVL_ATARI_MAIN	(1 << 27)
+#define DBGLVL_DEBUG2		(1 << 28)
 
 #define LOGAD LOGD
 
@@ -146,6 +152,15 @@ void LOGS(std::string *what);
 void LOGS(char *fmt, ... );
 void LOGS(const char *fmt, ... );
 
+//
+void LOG_Atari_Main(std::string *what);
+void LOG_Atari_Main(char *fmt, ... );
+void LOG_Atari_Main(const char *fmt, ... );
+
+void LOG_Atari_Debug(std::string *what);
+void LOG_Atari_Debug(char *fmt, ... );
+void LOG_Atari_Debug(const char *fmt, ... );
+
 // TODO
 void LOGTODO(std::string *what);
 void LOGTODO(char *fmt, ... );
@@ -193,6 +208,10 @@ void DBG_LogTime();
 #define LOGVV(...) ;
 #define LOGVD(...) ;
 #define LOGVM(...) ;
+
+#define LOG_Atari_Main(...) ;
+#define LOG_Atari_Debug(...) ;
+
 #define LOGTODO(...) ;
 #define LOGWarning(...) ;
 #define LOGError(...) ;

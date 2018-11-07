@@ -1096,6 +1096,7 @@ void SYS_DialogOpenFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 					NSString *strPath = [fileURL path];
 					CSlrString *outPath = FUN_ConvertNSStringToCSlrString(strPath);
 					callback->SystemDialogFileOpenSelected(outPath);
+					delete outPath;
 				}
 			}
 			else
@@ -1199,6 +1200,7 @@ void SYS_DialogSaveFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 				 NSString *strPath = [[panel URL] path];
 				 CSlrString *outPath = FUN_ConvertNSStringToCSlrString(strPath);
 				 callback->SystemDialogFileSaveSelected(outPath);
+				 delete outPath;
 			 }
 			 else
 			 {

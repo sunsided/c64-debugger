@@ -66,6 +66,9 @@ bool logThisLevel(int level)
 
 bool logThisLevel(int level)
 {
+//	if (level == DBGLVL_RES) return true;
+//	return false;
+
 //		return true;
 	if (level == DBGLVL_MAIN) return true; 
 	if (level == DBGLVL_DEBUG) return true;
@@ -83,9 +86,13 @@ bool logThisLevel(int level)
 	if (level == DBGLVL_NET_SERVER) return true;
 	if (level == DBGLVL_NET_CLIENT) return true;
 	if (level == DBGLVL_INPUT) return false;
+
 	if (level == DBGLVL_VICE_DEBUG) return true;
 	if (level == DBGLVL_VICE_MAIN) return true;
 	if (level == DBGLVL_VICE_VERBOSE) return true;
+
+	if (level == DBGLVL_ATARI_DEBUG) return true;
+	if (level == DBGLVL_ATARI_MAIN) return true;
 
 	if (level == currentLogLevel)
 		return true;
@@ -143,6 +150,11 @@ const char *getLevelStr(int level)
 		return "[VICEM]";
 	if (level == DBGLVL_VICE_VERBOSE)
 		return "[VICEV]";
+
+	if (level == DBGLVL_ATARI_DEBUG)
+		return "[ATARI]";
+	if (level == DBGLVL_ATARI_MAIN)
+		return "[ATARI]";
 
 	return "[UNKNOWN]";
 }
@@ -1156,6 +1168,108 @@ void LOGR(const char *fmt, ... )
 	UnlockLoggerMutex();
 }
 ///////////// LOGR
+
+////////LOG_Atari_Main
+
+void LOG_Atari_Main(char *fmt, ... )
+{
+	if (!logThisLevel(DBGLVL_ATARI_MAIN))
+		return;
+	
+    char buffer[4096] = {0};
+	
+    va_list args;
+	
+    va_start(args, fmt);
+    vsprintf(buffer, fmt, args);
+    va_end(args);
+	
+	LockLoggerMutex();
+
+	DBG_SendLog(DBGLVL_ATARI_MAIN, buffer);
+
+	UnlockLoggerMutex();
+}
+
+void LOG_Atari_Main(std::string what)
+{
+	if (!logThisLevel(DBGLVL_ATARI_MAIN))
+		return;
+	
+	LOGF(DBGLVL_ATARI_MAIN, what.c_str());
+}
+
+void LOG_Atari_Main(const char *fmt, ... )
+{
+	if (!logThisLevel(DBGLVL_ATARI_MAIN))
+		return;
+	
+    char buffer[4096] = {0};
+	
+    va_list args;
+	
+    va_start(args, fmt);
+    vsprintf(buffer, fmt, args);
+    va_end(args);
+	
+	LockLoggerMutex();
+
+	DBG_SendLog(DBGLVL_ATARI_MAIN, buffer);
+
+	UnlockLoggerMutex();
+}
+///////////// LOG_Atari_Main
+
+////////LOG_Atari_Debug
+
+void LOG_Atari_Debug(char *fmt, ... )
+{
+	if (!logThisLevel(DBGLVL_ATARI_DEBUG))
+		return;
+	
+    char buffer[4096] = {0};
+	
+    va_list args;
+	
+    va_start(args, fmt);
+    vsprintf(buffer, fmt, args);
+    va_end(args);
+	
+	LockLoggerMutex();
+
+	DBG_SendLog(DBGLVL_ATARI_DEBUG, buffer);
+
+	UnlockLoggerMutex();
+}
+
+void LOG_Atari_Debug(std::string what)
+{
+	if (!logThisLevel(DBGLVL_ATARI_DEBUG))
+		return;
+	
+	LOGF(DBGLVL_ATARI_DEBUG, what.c_str());
+}
+
+void LOG_Atari_Debug(const char *fmt, ... )
+{
+	if (!logThisLevel(DBGLVL_ATARI_DEBUG))
+		return;
+	
+    char buffer[4096] = {0};
+	
+    va_list args;
+	
+    va_start(args, fmt);
+    vsprintf(buffer, fmt, args);
+    va_end(args);
+	
+	LockLoggerMutex();
+
+	DBG_SendLog(DBGLVL_ATARI_DEBUG, buffer);
+
+	UnlockLoggerMutex();
+}
+///////////// LOG_Atari_Debug
 
 ////////LOGTODO
 

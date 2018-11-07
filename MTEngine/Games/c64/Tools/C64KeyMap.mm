@@ -6,6 +6,7 @@ extern "C"{
 #include "SYS_KeyCodes.h"
 #include "CByteBuffer.h"
 #include "CSlrString.h"
+#include "C64SettingsStorage.h"
 
 #include "C64DebugInterfaceVice.h"
 
@@ -145,7 +146,7 @@ void C64KeyMapLoadFromSettings()
 	
 	CByteBuffer *byteBuffer = new CByteBuffer();
 	
-	CSlrString *fileName = new CSlrString("/keymap.dat");
+	CSlrString *fileName = new CSlrString(C64D_KEYMAP_FILE_PATH);
 	byteBuffer->loadFromSettings(fileName);
 	delete fileName;
 	
@@ -176,7 +177,7 @@ void C64KeyMapStoreToSettings()
 	
 	defaultKeyMap->SaveKeyMapToBuffer(byteBuffer);
 	
-	CSlrString *fileName = new CSlrString("/keymap.dat");
+	CSlrString *fileName = new CSlrString(C64D_KEYMAP_FILE_PATH);
 	byteBuffer->storeToSettings(fileName);
 	delete fileName;
 	

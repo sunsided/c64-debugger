@@ -11,7 +11,7 @@ class CSlrFont;
 class CSlrDataAdapter;
 class CViewMemoryMap;
 class CSlrMutex;
-class C64DebugInterface;
+class CDebugInterface;
 class CViewDisassemble;
 
 class CViewDataDump : public CGuiView, CGuiEditHexCallback
@@ -19,7 +19,7 @@ class CViewDataDump : public CGuiView, CGuiEditHexCallback
 public:
 	CViewDataDump(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
 				  CSlrDataAdapter *dataAdapter, CViewMemoryMap *viewMemoryMap, CViewDisassemble *viewDisassemble,
-				  C64DebugInterface *debugInterface);
+				  CDebugInterface *debugInterface);
 	
 	virtual bool KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl);
 	virtual bool KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl);
@@ -28,7 +28,7 @@ public:
 
 	virtual bool DoTap(GLfloat x, GLfloat y);
 
-	C64DebugInterface *debugInterface;
+	CDebugInterface *debugInterface;
 	
 	CSlrFont *fontBytes;
 	CSlrFont *fontCharacters;
@@ -109,6 +109,8 @@ public:
 	int previousClickAddr;
 	
 	void PasteHexValuesFromClipboard();
+	void CopyHexValuesToClipboard();
+	void CopyHexAddressToClipboard();
 	
 	bool showCharacters;
 	bool showSprites;

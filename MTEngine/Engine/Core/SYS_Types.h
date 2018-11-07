@@ -10,4 +10,12 @@ typedef unsigned int uint32;
 typedef int int32;
 #endif
 
+#ifndef u8
+typedef unsigned char u8;
+#endif
+
+#ifndef u16
+typedef unsigned short u16;
+#endif
+
 #endif

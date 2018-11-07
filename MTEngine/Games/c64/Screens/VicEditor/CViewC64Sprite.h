@@ -7,6 +7,7 @@
 #include "CGuiViewFrame.h"
 #include "C64Sprite.h"
 #include "CGuiButtonSwitch.h"
+#include "CGuiViewToolBox.h"
 #include <vector>
 #include <list>
 
@@ -18,7 +19,7 @@ class C64DebugInterface;
 class CViewVicEditor;
 class C64Sprite;
 
-class CViewC64Sprite : public CGuiView, CGuiEditHexCallback, CGuiButtonSwitchCallback
+class CViewC64Sprite : public CGuiWindow, CGuiEditHexCallback, CGuiButtonSwitchCallback, public CGuiViewToolBoxCallback, public CGuiWindowCallback, CSystemFileDialogCallback
 {
 public:
 	CViewC64Sprite(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, CViewVicEditor *vicEditor);
@@ -43,9 +44,6 @@ public:
 	
 	//
 	CViewVicEditor *vicEditor;
-	
-	//
-	CGuiViewFrame *viewFrame;
 	
 	CImageData *imageDataSprite;
 	CSlrImage *imageSprite;
@@ -88,6 +86,25 @@ public:
 	void MoveSelectedSprite(int deltaX, int deltaY);
 
 	virtual bool ButtonSwitchChanged(CGuiButtonSwitch *button);
+
+	//
+	CSlrImage *imgIconExport;
+	CSlrImage *imgIconImport;
+
+	virtual void ToolBoxIconPressed(CSlrImage *imgIcon);
+	
+	std::list<CSlrString *> spriteFileExtensions;
+	
+	virtual void SystemDialogFileOpenSelected(CSlrString *path);
+	virtual void SystemDialogFileOpenCancelled();
+	virtual void SystemDialogFileSaveSelected(CSlrString *path);
+	virtual void SystemDialogFileSaveCancelled();
+	
+	uint8 currentSpriteData[63];
+
+	// returns sprite addr
+	int ImportSprite(CSlrString *path);
+	void ExportSprite(CSlrString *path);
 
 };
 

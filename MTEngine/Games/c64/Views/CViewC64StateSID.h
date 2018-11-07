@@ -30,6 +30,9 @@ public:
 	void Render();
 };
 
+// TODO: make base class to have Vice specific state rendering and editing
+//       class CViewC64ViceStateSID : public CViewC64StateSID
+
 class CViewC64StateSID : public CGuiView, CGuiEditHexCallback, CGuiButtonSwitchCallback
 {
 public:
@@ -72,10 +75,24 @@ public:
 
 	void SelectSid(int sidNum);
 	
+	virtual void RenderStateSID(int sidNum, float posX, float posY, float posZ, CSlrFont *fontBytes, float fontSize);
+	void PrintSidWaveform(uint8 wave, char *buf);
+	
 	void UpdateSidButtonsState();
 	
 	int waveformPos;
 	void AddWaveformData(int sidNumber, int v1, int v2, int v3, short mix);
+	
+	// editing registers
+	bool showRegistersOnly;
+	int editingRegisterValueIndex;		// -1 means no editing
+	int editingSIDIndex;
+	CGuiEditHex *editHex;
+	virtual void GuiEditHexEnteredValue(CGuiEditHex *editHex, u32 lastKeyCode, bool isCancelled);
+
+	//
+	virtual void RenderFocusBorder();
+
 };
 
 

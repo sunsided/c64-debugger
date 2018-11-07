@@ -6,7 +6,6 @@
 #include "CGuiMain.h"
 #include "CGuiTheme.h"
 #include "CColorsTheme.h"
-#include "C64DebugInterface.h"
 #include "CViewMonitorConsole.h"
 #include "SND_SoundEngine.h"
 #include "CViewC64Screen.h"
@@ -15,7 +14,13 @@
 #include "CViewC64StateSID.h"
 #include "CViewVicEditor.h"
 #include "C64Palette.h"
-#include "C64DebugTypes.h"
+#include "DebuggerDefs.h"
+#include "C64DebugInterface.h"
+#include "AtariDebugInterface.h"
+
+// this is used for temporarily allow quick switch for loading settings from other path than default
+//#define DEBUG_SETTINGS_FILE_PATH	"/Users/mars/Downloads/settings.dat.old.bin"
+
 
 extern "C" {
 #include "sid-resources.h"
@@ -37,11 +42,11 @@ extern "C" {
 #define C64DEBUGGER_BLOCK_EOF			0
 
 /// settings
-int c64SettingsDefaultScreenLayoutId = -1; //C64_SCREEN_LAYOUT_MONITOR_CONSOLE; //C64_SCREEN_LAYOUT_C64_DEBUGGER;
-//C64_SCREEN_LAYOUT_C64_DEBUGGER);
-//C64_SCREEN_LAYOUT_C64_1541_MEMORY_MAP; //C64_SCREEN_LAYOUT_C64_ONLY //
-//C64_SCREEN_LAYOUT_SHOW_STATES; //C64_SCREEN_LAYOUT_C64_DATA_DUMP
-//C64_SCREEN_LAYOUT_C64_1541_DEBUGGER
+int c64SettingsDefaultScreenLayoutId = -1; //SCREEN_LAYOUT_MONITOR_CONSOLE; //SCREEN_LAYOUT_C64_DEBUGGER;
+//SCREEN_LAYOUT_C64_DEBUGGER);
+//SCREEN_LAYOUT_C64_1541_MEMORY_MAP; //SCREEN_LAYOUT_C64_ONLY //
+//SCREEN_LAYOUT_SHOW_STATES; //SCREEN_LAYOUT_C64_DATA_DUMP
+//SCREEN_LAYOUT_C64_1541_DEBUGGER
 
 bool c64SettingsIsInVicEditor = false;
 
@@ -49,6 +54,7 @@ bool c64SettingsSkipConfig = false;
 bool c64SettingsPassConfigToRunningInstance = false;
 
 uint8 c64SettingsJoystickPort = 0;
+bool c64SettingsJoystickIsOn = false;
 
 bool c64SettingsWindowAlwaysOnTop = false;
 
@@ -76,6 +82,10 @@ uint8 c64SettingsSIDStereo = 0;					// "SidStereo" 0=none, 1=stereo, 2=triple
 uint16 c64SettingsSIDStereoAddress = 0xD420;	// "SidStereoAddressStart"
 uint16 c64SettingsSIDTripleAddress = 0xDF00;	// "SidTripleAddressStart"
 
+int c64SettingsDatasetteSpeedTuning = 0;
+int c64SettingsDatasetteZeroGapDelay = 20000;
+int c64SettingsDatasetteTapeWobble = 10;
+bool c64SettingsDatasetteResetWithCPU = false;
 
 bool c64SettingsMuteSIDOnPause = false;
 
@@ -100,9 +110,21 @@ CSlrString *c64SettingsDefaultCartridgeFolder = NULL;
 CSlrString *c64SettingsPathToSnapshot = NULL;
 CSlrString *c64SettingsDefaultSnapshotsFolder = NULL;
 
+CSlrString *c64SettingsPathToTAP = NULL;
+CSlrString *c64SettingsDefaultTAPFolder = NULL;
+
+CSlrString *c64SettingsPathToXEX = NULL;
+CSlrString *c64SettingsDefaultXEXFolder = NULL;
+
+CSlrString *c64SettingsPathToATR = NULL;
+CSlrString *c64SettingsDefaultATRFolder = NULL;
+
+CSlrString *c64SettingsPathToAtariROMs = NULL;
+
 CSlrString *c64SettingsDefaultMemoryDumpFolder = NULL;
 
 CSlrString *c64SettingsPathToC64MemoryMapFile = NULL;
+CSlrString *c64SettingsPathToAtari800MemoryMapFile = NULL;
 
 CSlrString *c64SettingsPathToSymbols = NULL;
 CSlrString *c64SettingsPathToBreakpoints = NULL;
@@ -163,6 +185,7 @@ float c64SettingsPaintGridShowZoomLevel = 5.0;
 float c64SettingsPaintGridShowValuesZoomLevel = 26.0;
 
 bool c64SettingsVicEditorForceReplaceColor = false;
+u8 c64SettingsVicEditorDefaultBackgroundColor = 0;
 
 bool c64SettingsUseSystemFileDialogs = true;
 bool c64SettingsUseOnlyFirstCPU = true;
@@ -174,6 +197,9 @@ bool c64SettingsLoadViceLabels = true;
 
 // automatically load watches if filename matched PRG (*.watch)
 bool c64SettingsLoadWatches = true;
+
+// automatically load debug info if filename matched PRG (*.dbg)
+bool c64SettingsLoadDebugInfo = true;
 
 
 void storeSettingBlock(CByteBuffer *byteBuffer, u8 value)
@@ -237,9 +263,13 @@ void C64DebuggerClearSettings()
 
 	storeSettingBlock(byteBuffer, C64DEBUGGER_BLOCK_EOF);
 	
-	CSlrString *fileName = new CSlrString("/settings.dat");
+#if !defined(DEBUG_SETTINGS_FILE_PATH)
+	CSlrString *fileName = new CSlrString(C64D_SETTINGS_FILE_PATH);
 	byteBuffer->storeToSettings(fileName);
 	delete fileName;
+#else
+	LOGWarning("C64DebuggerClearSettings: DEBUG_SETTINGS_FILE_PATH is defined as '%s'. NOT CLEARING SETTINGS.", DEBUG_SETTINGS_FILE_PATH);
+#endif
 	
 	delete byteBuffer;
 }
@@ -253,13 +283,20 @@ void C64DebuggerStoreSettings()
 	storeSettingString(byteBuffer, "FolderD64", c64SettingsDefaultD64Folder);
 	storeSettingString(byteBuffer, "FolderPRG", c64SettingsDefaultPRGFolder);
 	storeSettingString(byteBuffer, "FolderCRT", c64SettingsDefaultCartridgeFolder);
+	storeSettingString(byteBuffer, "FolderTAP", c64SettingsDefaultTAPFolder);
 	storeSettingString(byteBuffer, "FolderSnaps", c64SettingsDefaultSnapshotsFolder);
 	storeSettingString(byteBuffer, "FolderMemDumps", c64SettingsDefaultMemoryDumpFolder);
-	
 	storeSettingString(byteBuffer, "PathD64", c64SettingsPathToD64);
 	storeSettingString(byteBuffer, "PathPRG", c64SettingsPathToPRG);
 	storeSettingString(byteBuffer, "PathCRT", c64SettingsPathToCartridge);
-	
+	storeSettingString(byteBuffer, "PathTAP", c64SettingsPathToTAP);
+
+	storeSettingString(byteBuffer, "FolderAtariROMs", c64SettingsPathToAtariROMs);
+	storeSettingString(byteBuffer, "FolderATR", c64SettingsDefaultATRFolder);
+	storeSettingString(byteBuffer, "PathATR", c64SettingsPathToATR);
+	storeSettingString(byteBuffer, "FolderXEX", c64SettingsDefaultXEXFolder);
+	storeSettingString(byteBuffer, "PathXEX", c64SettingsPathToXEX);
+
 	storeSettingBool(byteBuffer, "AutoJmp", c64SettingsAutoJmp);
 	storeSettingBool(byteBuffer, "AutoJmpAlwaysToLoadedPRGAddress", c64SettingsAutoJmpAlwaysToLoadedPRGAddress);
 	storeSettingBool(byteBuffer, "AutoJmpFromInsertedDiskFirstPrg", c64SettingsAutoJmpFromInsertedDiskFirstPrg);
@@ -293,6 +330,9 @@ void C64DebuggerStoreSettings()
 	storeSettingU8(byteBuffer, "MemoryValuesStyle", c64SettingsMemoryValuesStyle);
 	storeSettingU8(byteBuffer, "MemoryMarkersStyle", c64SettingsMemoryMarkersStyle);
 
+	storeSettingU16(byteBuffer, "AudioVolume", c64SettingsAudioVolume);
+
+#if defined(RUN_COMMODORE64)
 	storeSettingU16(byteBuffer, "SIDStereoAddress", c64SettingsSIDStereoAddress);
 	storeSettingU16(byteBuffer, "SIDTripleAddress", c64SettingsSIDTripleAddress);
 	storeSettingU8(byteBuffer, "SIDStereo", c64SettingsSIDStereo);
@@ -307,7 +347,6 @@ void C64DebuggerStoreSettings()
 	storeSettingBool(byteBuffer, "MuteSIDOnPause", c64SettingsMuteSIDOnPause);
 	storeSettingBool(byteBuffer, "RunSIDWhenWarp", c64SettingsRunSIDWhenInWarp);
 
-	storeSettingU16(byteBuffer, "AudioVolume", c64SettingsAudioVolume);
 	storeSettingBool(byteBuffer, "RunSIDEmulation", c64SettingsRunSIDEmulation);
 	storeSettingU8(byteBuffer, "MuteSIDMode", c64SettingsMuteSIDMode);
 
@@ -315,15 +354,27 @@ void C64DebuggerStoreSettings()
 	storeSettingU16(byteBuffer, "VicPalette", c64SettingsVicPalette);
 	storeSettingBool(byteBuffer, "RenderScreenNearest", c64SettingsRenderScreenNearest);
 	
+	storeSettingU16(byteBuffer, "EmulationMaximumSpeed", c64SettingsEmulationMaximumSpeed);
+	
+	storeSettingBool(byteBuffer, "EmulateVSPBug", c64SettingsEmulateVSPBug);
+	
+	storeSettingU8(byteBuffer, "VicDisplayBorder", c64SettingsVicDisplayBorderType);
+	
+	storeSettingBool (byteBuffer, "VicEditorForceReplaceColor", c64SettingsVicEditorForceReplaceColor);
+	storeSettingU8(byteBuffer, "VicEditorDefaultBackgroundColor", c64SettingsVicEditorDefaultBackgroundColor);
+	
+	storeSettingI32(byteBuffer, "DatasetteSpeedTuning", c64SettingsDatasetteSpeedTuning);
+	storeSettingI32(byteBuffer, "DatasetteZeroGapDelay", c64SettingsDatasetteZeroGapDelay);
+	storeSettingI32(byteBuffer, "DatasetteTapeWobble", c64SettingsDatasetteTapeWobble);
+	storeSettingBool(byteBuffer, "DatasetteResetWithCPU", c64SettingsDatasetteResetWithCPU);
+	
+#endif
+
 	storeSettingBool(byteBuffer, "MemMapMultiTouch", c64SettingsUseMultiTouchInMemoryMap);
 	storeSettingBool(byteBuffer, "MemMapInvert", c64SettingsMemoryMapInvertControl);
 	storeSettingU8(byteBuffer, "MemMapRefresh", c64SettingsMemoryMapRefreshRate);
 	storeSettingU16(byteBuffer, "MemMapFadeSpeed", c64SettingsMemoryMapFadeSpeed);
 
-	storeSettingU16(byteBuffer, "EmulationMaximumSpeed", c64SettingsEmulationMaximumSpeed);
-
-	storeSettingBool(byteBuffer, "EmulateVSPBug", c64SettingsEmulateVSPBug);
-	
 	storeSettingFloat(byteBuffer, "GridLinesAlpha", c64SettingsScreenGridLinesAlpha);
 	storeSettingU8(byteBuffer, "GridLinesColor", c64SettingsScreenGridLinesColorScheme);
 	storeSettingFloat(byteBuffer, "ViewfinderScale", c64SettingsScreenRasterViewfinderScale);
@@ -345,8 +396,6 @@ void C64DebuggerStoreSettings()
 	//
 	storeSettingU8(byteBuffer, "AutoJmpDoReset", c64SettingsAutoJmpDoReset);
 	storeSettingI32(byteBuffer, "AutoJmpWaitAfterReset", c64SettingsAutoJmpWaitAfterReset);
-
-	storeSettingU8(byteBuffer, "VicDisplayBorder", c64SettingsVicDisplayBorderType);
 	
 	storeSettingFloat (byteBuffer, "PaintGridCharactersColorR", c64SettingsPaintGridCharactersColorR);
 	storeSettingFloat (byteBuffer, "PaintGridCharactersColorG", c64SettingsPaintGridCharactersColorG);
@@ -360,13 +409,18 @@ void C64DebuggerStoreSettings()
 	
 	storeSettingFloat (byteBuffer, "PaintGridShowZoomLevel", c64SettingsPaintGridShowZoomLevel);
 	
-	storeSettingBool (byteBuffer, "VicEditorForceReplaceColor", c64SettingsVicEditorForceReplaceColor);
-	
 	storeSettingBlock(byteBuffer, C64DEBUGGER_BLOCK_EOF);
 
-	CSlrString *fileName = new CSlrString("/settings.dat");
+	
+#if !defined(DEBUG_SETTINGS_FILE_PATH)
+	LOGD("C64D_SETTINGS_FILE_PATH is set to=%s", C64D_SETTINGS_FILE_PATH);
+	CSlrString *fileName = new CSlrString(C64D_SETTINGS_FILE_PATH);
+	fileName->DebugPrint("fileName=");
 	byteBuffer->storeToSettings(fileName);
 	delete fileName;
+#else
+	LOGWarning("DEBUG_SETTINGS_FILE_PATH is defined as '%s'. NOT STORING SETTINGS.", DEBUG_SETTINGS_FILE_PATH);
+#endif
 	
 	delete byteBuffer;
 }
@@ -384,9 +438,18 @@ void C64DebuggerRestoreSettings(uint8 settingsBlockType)
 	
 	CByteBuffer *byteBuffer = new CByteBuffer();
 
-	CSlrString *fileName = new CSlrString("/settings.dat");
+#if !defined(DEBUG_SETTINGS_FILE_PATH)
+	CSlrString *fileName = new CSlrString(C64D_SETTINGS_FILE_PATH);
 	byteBuffer->loadFromSettings(fileName);
 	delete fileName;
+#else
+	LOGWarning("Restoring settings from DEBUG_SETTINGS_FILE_PATH defined as '%s'", DEBUG_SETTINGS_FILE_PATH);
+
+	CSlrString *fileName = new CSlrString(DEBUG_SETTINGS_FILE_PATH);
+	byteBuffer->readFromFile(fileName);
+	delete fileName;
+#endif
+
 	
 	if (byteBuffer->length == 0)
 	{
@@ -511,13 +574,14 @@ void C64DebuggerReadSettingCustom(char *name, CByteBuffer *byteBuffer)
 void C64DebuggerSetSetting(char *name, void *value)
 {
 	LOGD("C64DebuggerSetStartupSetting: name='%s'", name);
-		
+	
 	if (!strcmp(name, "FolderD64"))
 	{
 		if (c64SettingsDefaultD64Folder != NULL)
 			delete c64SettingsDefaultD64Folder;
 		
 		c64SettingsDefaultD64Folder = new CSlrString((CSlrString*)value);
+		return;
 	}
 	else if (!strcmp(name, "FolderPRG"))
 	{
@@ -525,6 +589,7 @@ void C64DebuggerSetSetting(char *name, void *value)
 			delete c64SettingsDefaultPRGFolder;
 		
 		c64SettingsDefaultPRGFolder = new CSlrString((CSlrString*)value);
+		return;
 	}
 	else if (!strcmp(name, "FolderCRT"))
 	{
@@ -532,6 +597,15 @@ void C64DebuggerSetSetting(char *name, void *value)
 			delete c64SettingsDefaultCartridgeFolder;
 		
 		c64SettingsDefaultCartridgeFolder = new CSlrString((CSlrString*)value);
+		return;
+	}
+	else if (!strcmp(name, "FolderTAP"))
+	{
+		if (c64SettingsDefaultTAPFolder != NULL)
+			delete c64SettingsDefaultTAPFolder;
+		
+		c64SettingsDefaultTAPFolder = new CSlrString((CSlrString*)value);
+		return;
 	}
 	else if (!strcmp(name, "FolderSnaps"))
 	{
@@ -539,6 +613,7 @@ void C64DebuggerSetSetting(char *name, void *value)
 			delete c64SettingsDefaultSnapshotsFolder;
 		
 		c64SettingsDefaultSnapshotsFolder = new CSlrString((CSlrString*)value);
+		return;
 	}
 	else if (!strcmp(name, "FolderMemDumps"))
 	{
@@ -546,8 +621,9 @@ void C64DebuggerSetSetting(char *name, void *value)
 			delete c64SettingsDefaultMemoryDumpFolder;
 		
 		c64SettingsDefaultMemoryDumpFolder = new CSlrString((CSlrString*)value);
+		return;
 	}
-
+	
 	else if (!strcmp(name, "PathD64"))
 	{
 		if (c64SettingsPathToD64 != NULL)
@@ -556,10 +632,11 @@ void C64DebuggerSetSetting(char *name, void *value)
 		c64SettingsPathToD64 = new CSlrString((CSlrString*)value);
 		
 		// the setting will be updated later by c64PerformStartupTasksThreaded
-		if (viewC64->isEmulationThreadRunning)
+		if (viewC64->debugInterfaceC64 && viewC64->debugInterfaceC64->isRunning)
 		{
 			viewC64->viewC64MainMenu->InsertD64(c64SettingsPathToD64, false, c64SettingsAutoJmpFromInsertedDiskFirstPrg, 0, true);
 		}
+		return;
 	}
 	else if (!strcmp(name, "PathPRG"))
 	{
@@ -569,10 +646,24 @@ void C64DebuggerSetSetting(char *name, void *value)
 		c64SettingsPathToPRG = new CSlrString((CSlrString*)value);
 		
 		// the setting will be updated later by c64PerformStartupTasksThreaded
-		if (viewC64->isEmulationThreadRunning)
+		if (viewC64->debugInterfaceC64 && viewC64->debugInterfaceC64->isRunning)
 		{
 			viewC64->viewC64MainMenu->LoadPRG(c64SettingsPathToPRG, false, false, true);
 		}
+		return;
+	}
+	else if (!strcmp(name, "PathTAP"))
+	{
+		if (c64SettingsPathToTAP != NULL)
+			delete c64SettingsPathToTAP;
+		
+		c64SettingsPathToTAP = new CSlrString((CSlrString*)value);
+		// the setting will be updated later by c64PerformStartupTasksThreaded
+		if (viewC64->debugInterfaceC64 && viewC64->debugInterfaceC64->isRunning)
+		{
+			viewC64->viewC64MainMenu->LoadTape(c64SettingsPathToTAP, false, false, false);
+		}
+		return;
 	}
 	else if (!strcmp(name, "PathCRT"))
 	{
@@ -582,27 +673,492 @@ void C64DebuggerSetSetting(char *name, void *value)
 		c64SettingsPathToCartridge = new CSlrString((CSlrString*)value);
 		
 		// the setting will be updated later by c64PerformStartupTasksThreaded
-		if (viewC64->isEmulationThreadRunning)
+		if (viewC64->debugInterfaceC64 && viewC64->debugInterfaceC64->isRunning)
 		{
 			viewC64->viewC64MainMenu->InsertCartridge(c64SettingsPathToCartridge, false);
 		}
-	}
-	else if (!strcmp(name, "PathMemMapFile"))
-	{
-		if (c64SettingsPathToC64MemoryMapFile != NULL)
-			delete c64SettingsPathToC64MemoryMapFile;
-		
-		c64SettingsPathToC64MemoryMapFile = new CSlrString((CSlrString*)value);
+		return;
 	}
 	else if (!strcmp(name, "FastBootPatch"))
 	{
 		bool v = *((bool*)value);
 		c64SettingsFastBootKernalPatch = v;
+		return;
+	}
+	else if (!strcmp(name, "IsInVicEditor"))
+	{
+		bool v = *((bool*)value);
+		c64SettingsIsInVicEditor = v;
+		return;
+	}
+	else if (!strcmp(name, "AutoJmp"))
+	{
+		bool v = *((bool*)value);
+		c64SettingsAutoJmp = v;
+		return;
+	}
+	else if (!strcmp(name, "AutoJmpAlwaysToLoadedPRGAddress"))
+	{
+		bool v = *((bool*)value);
+		c64SettingsAutoJmpAlwaysToLoadedPRGAddress = v;
+		return;
+	}
+	else if (!strcmp(name, "AutoJmpFromInsertedDiskFirstPrg"))
+	{
+		bool v = *((bool*)value);
+		c64SettingsAutoJmpFromInsertedDiskFirstPrg = v;
+		return;
+	}
+	else if (!strcmp(name, "C64Model"))
+	{
+		int v = *((int*)value);
+		//viewC64->viewC64SettingsMenu->SetOptionC64ModelType(v);
+		c64SettingsC64Model = v;
+		
+		if (viewC64->debugInterfaceC64 && viewC64->debugInterfaceC64->isRunning)
+		{
+			viewC64->debugInterfaceC64->SetC64ModelType(c64SettingsC64Model);
+		}
+		return;
+	}
+	
+//	if (viewC64->debugInterfaceC64)
+#if defined(RUN_COMMODORE64)
+	{
+		if (!strcmp(name, "VicStateRecording"))
+		{
+			int v = *((int*)value);
+			viewC64->viewC64SettingsMenu->menuItemVicStateRecordingMode->SetSelectedOption(v, false);
+			
+			c64SettingsVicStateRecordingMode = v;
+			viewC64->debugInterfaceC64->SetVicRecordStateMode(v);
+			return;
+		}
+		else if (!strcmp(name, "VicPalette"))
+		{
+			int v = *((int*)value);
+			viewC64->viewC64SettingsMenu->menuItemVicPalette->SetSelectedOption(v, false);
+			
+			c64SettingsVicPalette = v;
+			C64SetPaletteNum(v);
+			return;
+		}
+
+		else if (!strcmp(name, "SIDEngineModel"))
+		{
+			int v = *((int*)value);
+			viewC64->viewC64SettingsMenu->menuItemSIDModel->SetSelectedOption(v, false);
+			c64SettingsSIDEngineModel = v;
+			
+			// the setting will be updated later by c64PerformStartupTasksThreaded
+			if (viewC64->debugInterfaceC64 && viewC64->debugInterfaceC64->isRunning)
+			{
+				viewC64->debugInterfaceC64->SetSidType(c64SettingsSIDEngineModel);
+			}
+			return;
+		}
+		else if (!strcmp(name, "RESIDSamplingMethod"))
+		{
+			int v = *((int*)value);
+			viewC64->viewC64SettingsMenu->menuItemRESIDSamplingMethod->SetSelectedOption(v, false);
+			c64SettingsRESIDSamplingMethod = v;
+			
+			viewC64->debugInterfaceC64->SetSidSamplingMethod(c64SettingsRESIDSamplingMethod);
+			return;
+		}
+		else if (!strcmp(name, "RESIDEmulateFilters"))
+		{
+			bool v = *((bool*)value);
+			
+			if (v)
+			{
+				viewC64->viewC64SettingsMenu->menuItemRESIDEmulateFilters->SetSelectedOption(1, false);
+				c64SettingsRESIDEmulateFilters = true;
+			}
+			else
+			{
+				viewC64->viewC64SettingsMenu->menuItemRESIDEmulateFilters->SetSelectedOption(0, false);
+				c64SettingsRESIDEmulateFilters = false;
+			}
+			
+			viewC64->debugInterfaceC64->SetSidEmulateFilters(c64SettingsRESIDEmulateFilters);
+			return;
+		}
+		else if (!strcmp(name, "RESIDPassBand"))
+		{
+			int v = *((int*)value);
+			viewC64->viewC64SettingsMenu->menuItemRESIDPassBand->SetValue(v, false);
+			c64SettingsRESIDPassBand = v;
+			
+			viewC64->debugInterfaceC64->SetSidPassBand(c64SettingsRESIDPassBand);
+			return;
+		}
+		else if (!strcmp(name, "RESIDFilterBias"))
+		{
+			int v = *((int*)value);
+			viewC64->viewC64SettingsMenu->menuItemRESIDFilterBias->SetValue(v, false);
+			c64SettingsRESIDFilterBias = v;
+			
+			viewC64->debugInterfaceC64->SetSidFilterBias(c64SettingsRESIDFilterBias);
+			return;
+		}
+		else if (!strcmp(name, "SIDStereo"))
+		{
+			int v = *((int*)value);
+			viewC64->viewC64SettingsMenu->menuItemSIDStereo->SetSelectedOption(v, false);
+			c64SettingsSIDStereo = v;
+			
+			viewC64->debugInterfaceC64->SetSidStereo(c64SettingsSIDStereo);
+			viewC64->viewC64StateSID->UpdateSidButtonsState();
+			return;
+		}
+		else if (!strcmp(name, "SIDStereoAddress"))
+		{
+			int v = *((int*)value);
+			c64SettingsSIDStereoAddress = v;
+			
+			int optNum = viewC64->viewC64SettingsMenu->GetOptionNumFromSidAddress(v);
+			viewC64->viewC64SettingsMenu->menuItemSIDStereoAddress->SetSelectedOption(optNum, false);
+			
+			viewC64->debugInterfaceC64->SetSidStereoAddress(c64SettingsSIDStereoAddress);
+			viewC64->viewC64StateSID->UpdateSidButtonsState();
+			return;
+		}
+		else if (!strcmp(name, "SIDTripleAddress"))
+		{
+			int v = *((int*)value);
+			c64SettingsSIDTripleAddress = v;
+			
+			int optNum = viewC64->viewC64SettingsMenu->GetOptionNumFromSidAddress(v);
+			viewC64->viewC64SettingsMenu->menuItemSIDTripleAddress->SetSelectedOption(optNum, false);
+			
+			viewC64->debugInterfaceC64->SetSidTripleAddress(c64SettingsSIDTripleAddress);
+			viewC64->viewC64StateSID->UpdateSidButtonsState();
+			return;
+		}
+		else if (!strcmp(name, "MuteSIDOnPause"))
+		{
+			bool v = *((bool*)value);
+			
+			if (v)
+			{
+				viewC64->viewC64SettingsMenu->menuItemMuteSIDOnPause->SetSelectedOption(1, false);
+				c64SettingsMuteSIDOnPause = true;
+			}
+			else
+			{
+				viewC64->viewC64SettingsMenu->menuItemMuteSIDOnPause->SetSelectedOption(0, false);
+				c64SettingsMuteSIDOnPause = false;
+			}
+			return;
+		}
+		else if (!strcmp(name, "RunSIDWhenWarp"))
+		{
+			bool v = *((bool*)value);
+			
+			if (v)
+			{
+				viewC64->viewC64SettingsMenu->menuItemRunSIDWhenInWarp->SetSelectedOption(1, false);
+				c64SettingsRunSIDWhenInWarp = true;
+			}
+			else
+			{
+				viewC64->viewC64SettingsMenu->menuItemRunSIDWhenInWarp->SetSelectedOption(0, false);
+				c64SettingsRunSIDWhenInWarp = false;
+			}
+			viewC64->debugInterfaceC64->SetRunSIDWhenInWarp(c64SettingsRunSIDWhenInWarp);
+			return;
+		}
+		else if (!strcmp(name, "RunSIDEmulation"))
+		{
+			bool v = *((bool*)value);
+			
+			if (v)
+			{
+				viewC64->viewC64SettingsMenu->menuItemRunSIDEmulation->SetSelectedOption(1, false);
+				c64SettingsRunSIDEmulation = true;
+			}
+			else
+			{
+				viewC64->viewC64SettingsMenu->menuItemRunSIDEmulation->SetSelectedOption(0, false);
+				c64SettingsRunSIDEmulation = false;
+			}
+			viewC64->debugInterfaceC64->SetRunSIDEmulation(c64SettingsRunSIDEmulation);
+			return;
+		}
+		else if (!strcmp(name, "MuteSIDMode"))
+		{
+			u8 v = *((u8*)value);
+			c64SettingsMuteSIDMode = v;
+			viewC64->viewC64SettingsMenu->menuItemMuteSIDMode->SetSelectedOption(v, false);
+			viewC64->UpdateSIDMute();
+			return;
+		}
+
+		else if (!strcmp(name, "EmulationMaximumSpeed"))
+		{
+			int v = *((int*)value);
+			if (v == 10)
+			{
+				viewC64->viewC64SettingsMenu->menuItemMaximumSpeed->SetSelectedOption(0, false);
+			}
+			else if (v == 20)
+			{
+				viewC64->viewC64SettingsMenu->menuItemMaximumSpeed->SetSelectedOption(1, false);
+			}
+			else if (v == 50)
+			{
+				viewC64->viewC64SettingsMenu->menuItemMaximumSpeed->SetSelectedOption(2, false);
+			}
+			else if (v == 100)
+			{
+				viewC64->viewC64SettingsMenu->menuItemMaximumSpeed->SetSelectedOption(3, false);
+			}
+			else if (v == 200)
+			{
+				viewC64->viewC64SettingsMenu->menuItemMaximumSpeed->SetSelectedOption(4, false);
+			}
+			
+			c64SettingsEmulationMaximumSpeed = v;
+			
+			viewC64->debugInterfaceC64->SetEmulationMaximumSpeed(v);
+			return;
+		}
+		else if (!strcmp(name, "EmulateVSPBug"))
+		{
+			bool v = *((bool*)value);
+			c64SettingsEmulateVSPBug = v;
+			viewC64->debugInterfaceC64->SetVSPBugEmulation(c64SettingsEmulateVSPBug);
+			return;
+		}
+		else if (!strcmp(name, "AutoJmpDoReset"))
+		{
+			int v = *((int*)value);
+			viewC64->viewC64SettingsMenu->menuItemAutoJmpDoReset->SetSelectedOption(v, false);
+			c64SettingsAutoJmpDoReset = v;
+			return;
+		}
+		else if (!strcmp(name, "AutoJmpWaitAfterReset"))
+		{
+			int v = *((int*)value);
+			c64SettingsAutoJmpWaitAfterReset = v;
+			viewC64->viewC64SettingsMenu->menuItemAutoJmpWaitAfterReset->SetValue(v, false);
+			return;
+		}
+		
+		else if (!strcmp(name, "VicDisplayBorder"))
+		{
+			u8 v = *((u8*)value);
+			c64SettingsVicDisplayBorderType = v;
+			viewC64->viewC64VicControl->SetBorderType(c64SettingsVicDisplayBorderType);
+			return;
+		}
+		else if (!strcmp(name, "VicEditorForceReplaceColor"))
+		{
+			bool v = *((bool*)value);
+			c64SettingsVicEditorForceReplaceColor = v;
+			viewC64->viewC64SettingsMenu->menuItemVicEditorForceReplaceColor->SetSelectedOption(v, false);
+			return;
+		}
+		else if (!strcmp(name, "VicEditorDefaultBackgroundColor"))
+		{
+			u8 v = *((u8*)value);
+			c64SettingsVicEditorDefaultBackgroundColor = v;
+			return;
+		}
+		else if (!strcmp(name, "AudioVolume"))
+		{
+			u16 v = *((u16*)value);
+			c64SettingsAudioVolume = v;
+			viewC64->viewC64SettingsMenu->menuItemAudioVolume->SetValue(v, false);
+			viewC64->debugInterfaceC64->SetAudioVolume((float)(c64SettingsAudioVolume) / 100.0f);
+			return;
+		}
+
+		//
+		else if (!strcmp(name, "CrossLinesAlpha"))
+		{
+			float v = *((float*)value);
+			c64SettingsScreenRasterCrossLinesAlpha = v;
+			viewC64->viewC64SettingsMenu->menuItemScreenRasterCrossLinesAlpha->SetValue(v, false);
+			
+			if (viewC64->debugInterfaceC64)
+			{
+				viewC64->viewC64Screen->InitRasterColorsFromScheme();
+			}
+			return;
+		}
+		else if (!strcmp(name, "CrossLinesColor"))
+		{
+			u8 v = *((u8*)value);
+			c64SettingsScreenRasterCrossLinesColorScheme = v;
+			viewC64->viewC64SettingsMenu->menuItemScreenRasterCrossLinesColorScheme->SetSelectedOption(v, false);
+			
+			if (viewC64->debugInterfaceC64)
+			{
+				viewC64->viewC64Screen->InitRasterColorsFromScheme();
+				
+			}
+			return;
+		}
+		else if (!strcmp(name, "CrossAlpha"))
+		{
+			float v = *((float*)value);
+			c64SettingsScreenRasterCrossAlpha = v;
+			viewC64->viewC64SettingsMenu->menuItemScreenRasterCrossAlpha->SetValue(v, false);
+			if (viewC64->debugInterfaceC64)
+			{
+				viewC64->viewC64Screen->InitRasterColorsFromScheme();
+			}
+			return;
+		}
+		else if (!strcmp(name, "CrossInteriorColor"))
+		{
+			u8 v = *((u8*)value);
+			c64SettingsScreenRasterCrossInteriorColorScheme = v;
+			viewC64->viewC64SettingsMenu->menuItemScreenRasterCrossInteriorColorScheme->SetSelectedOption(v, false);
+			
+			if (viewC64->debugInterfaceC64)
+			{
+				viewC64->viewC64Screen->InitRasterColorsFromScheme();
+			}
+			return;
+		}
+		else if (!strcmp(name, "CrossExteriorColor"))
+		{
+			u8 v = *((u8*)value);
+			c64SettingsScreenRasterCrossExteriorColorScheme = v;
+			viewC64->viewC64SettingsMenu->menuItemScreenRasterCrossExteriorColorScheme->SetSelectedOption(v, false);
+			
+			if (viewC64->debugInterfaceC64)
+			{
+				viewC64->viewC64Screen->InitRasterColorsFromScheme();
+			}
+			return;
+		}
+		else if (!strcmp(name, "CrossTipColor"))
+		{
+			u8 v = *((u8*)value);
+			c64SettingsScreenRasterCrossTipColorScheme = v;
+			viewC64->viewC64SettingsMenu->menuItemScreenRasterCrossTipColorScheme->SetSelectedOption(v, false);
+			
+			if (viewC64->debugInterfaceC64)
+			{
+				viewC64->viewC64Screen->InitRasterColorsFromScheme();
+			}
+			return;
+		}
+		
+		//
+		else if (!strcmp(name, "DatasetteSpeedTuning"))
+		{
+			int v = *((int*)value);
+			c64SettingsDatasetteSpeedTuning = v;
+			viewC64->viewC64SettingsMenu->menuItemDatasetteSpeedTuning->SetValue((float)v, false);
+			
+			viewC64->debugInterfaceC64->DatasetteSetSpeedTuning(v);
+			return;
+		}
+		else if (!strcmp(name, "DatasetteZeroGapDelay"))
+		{
+			int v = *((int*)value);
+			c64SettingsDatasetteZeroGapDelay = v;
+			viewC64->viewC64SettingsMenu->menuItemDatasetteZeroGapDelay->SetValue((float)v, false);
+
+			viewC64->debugInterfaceC64->DatasetteSetZeroGapDelay(v);
+			return;
+		}
+		else if (!strcmp(name, "DatasetteTapeWobble"))
+		{
+			int v = *((int*)value);
+			c64SettingsDatasetteTapeWobble = v;
+			viewC64->viewC64SettingsMenu->menuItemDatasetteTapeWobble->SetValue((float)v, false);
+
+			viewC64->debugInterfaceC64->DatasetteSetTapeWobble(v);
+			return;
+		}
+		else if (!strcmp(name, "DatasetteResetWithCPU"))
+		{
+			bool v = *((bool*)value);
+			c64SettingsDatasetteResetWithCPU = v;
+			viewC64->viewC64SettingsMenu->menuItemDatasetteResetWithCPU->SetSelectedOption(v ? 1:0, false);
+
+			viewC64->debugInterfaceC64->DatasetteSetResetWithCPU(v);
+			return;
+		}
+	}
+#endif
+	
+#if defined(RUN_ATARI)
+	{
+		if (!strcmp(name, "FolderAtariROMs"))
+		{
+			if (c64SettingsPathToAtariROMs != NULL)
+				delete c64SettingsPathToAtariROMs;
+			
+			c64SettingsPathToAtariROMs = new CSlrString((CSlrString*)value);
+			return;
+		}
+		else if (!strcmp(name, "FolderATR"))
+		{
+			if (c64SettingsDefaultATRFolder != NULL)
+				delete c64SettingsDefaultATRFolder;
+			
+			c64SettingsDefaultATRFolder = new CSlrString((CSlrString*)value);
+			return;
+		}
+		else if (!strcmp(name, "PathATR"))
+		{
+			if (c64SettingsPathToATR != NULL)
+				delete c64SettingsPathToATR;
+			
+			c64SettingsPathToATR = new CSlrString((CSlrString*)value);
+			
+			// the setting will be updated later by c64PerformStartupTasksThreaded
+			if (viewC64->debugInterfaceAtari && viewC64->debugInterfaceAtari->isRunning)
+			{
+				viewC64->viewC64MainMenu->InsertATR(c64SettingsPathToATR, false, c64SettingsAutoJmpFromInsertedDiskFirstPrg, 0, true);
+			}
+			return;
+		}
+		else if (!strcmp(name, "FolderXEX"))
+		{
+			if (c64SettingsDefaultXEXFolder != NULL)
+				delete c64SettingsDefaultXEXFolder;
+			
+			c64SettingsDefaultXEXFolder = new CSlrString((CSlrString*)value);
+			return;
+		}
+		else if (!strcmp(name, "PathXEX"))
+		{
+			if (c64SettingsPathToXEX != NULL)
+				delete c64SettingsPathToXEX;
+			
+			c64SettingsPathToXEX = new CSlrString((CSlrString*)value);
+			
+			// the setting will be updated later by c64PerformStartupTasksThreaded
+			if (viewC64->debugInterfaceAtari && viewC64->debugInterfaceAtari->isRunning)
+			{
+				viewC64->viewC64MainMenu->LoadXEX(c64SettingsPathToXEX, false, false, true);
+			}
+			return;
+		}
+	}
+#endif
+
+	if (!strcmp(name, "PathMemMapFile"))
+	{
+		if (c64SettingsPathToC64MemoryMapFile != NULL)
+			delete c64SettingsPathToC64MemoryMapFile;
+		
+		c64SettingsPathToC64MemoryMapFile = new CSlrString((CSlrString*)value);
+		return;
 	}
 	else if (!strcmp(name, "DisassembleExecuteAware"))
 	{
 		bool v = *((bool*)value);
 		c64SettingsRenderDisassembleExecuteAware = v;
+		return;
 	}
 	else if (!strcmp(name, "WindowAlwaysOnTop"))
 	{
@@ -610,6 +1166,7 @@ void C64DebuggerSetSetting(char *name, void *value)
 		c64SettingsWindowAlwaysOnTop = v;
 		
 		VID_SetWindowAlwaysOnTop(c64SettingsWindowAlwaysOnTop);
+		return;
 	}
 	
 #if !defined(WIN32)
@@ -617,6 +1174,7 @@ void C64DebuggerSetSetting(char *name, void *value)
 	{
 		bool v = *((bool*)value);
 		c64SettingsUseSystemFileDialogs = v;
+		return;
 	}
 #endif
 	
@@ -625,41 +1183,24 @@ void C64DebuggerSetSetting(char *name, void *value)
 	{
 		bool v = *((bool*)value);
 		c64SettingsUseOnlyFirstCPU = v;
+		return;
 	}
 #endif
 
-	else if (!strcmp(name, "VicStateRecording"))
-	{
-		int v = *((int*)value);
-		viewC64->viewC64SettingsMenu->menuItemVicStateRecordingMode->SetSelectedOption(v, false);
-		
-		c64SettingsVicStateRecordingMode = v;
-		viewC64->debugInterface->SetVicRecordStateMode(v);
-	}
-	else if (!strcmp(name, "VicPalette"))
-	{
-		int v = *((int*)value);
-		viewC64->viewC64SettingsMenu->menuItemVicPalette->SetSelectedOption(v, false);
-		
-		c64SettingsVicPalette = v;
-		C64SetPaletteNum(v);
-	}
+
+	
 	else if (!strcmp(name, "ScreenLayoutId"))
 	{
 		int v = *((int*)value);
 		c64SettingsDefaultScreenLayoutId = v;
-	}
-	else if (!strcmp(name, "IsInVicEditor"))
-	{
-		bool v = *((bool*)value);
-		c64SettingsIsInVicEditor = v;
+		return;
 	}
 	else if (!strcmp(name, "JoystickPort"))
 	{
 		int v = *((int*)value);
 		viewC64->viewC64SettingsMenu->menuItemJoystickPort->SetSelectedOption(v, false);
 		c64SettingsJoystickPort = v;
-		viewC64->debugInterface->SetKeyboardJoystickPort(v);		
+		return;
 	}
 	else if (!strcmp(name, "MemoryValuesStyle"))
 	{
@@ -667,6 +1208,7 @@ void C64DebuggerSetSetting(char *name, void *value)
 		viewC64->viewC64SettingsMenu->menuItemMemoryCellsColorStyle->SetSelectedOption(v, false);
 		c64SettingsMemoryValuesStyle = v;
 		C64DebuggerComputeMemoryMapColorTables(v);
+		return;
 	}
 	else if (!strcmp(name, "MemoryMarkersStyle"))
 	{
@@ -675,151 +1217,7 @@ void C64DebuggerSetSetting(char *name, void *value)
 		
 		c64SettingsMemoryMarkersStyle = v;
 		C64DebuggerSetMemoryMapMarkersStyle(v);
-	}
-	else if (!strcmp(name, "SIDEngineModel"))
-	{
-		int v = *((int*)value);
-		viewC64->viewC64SettingsMenu->menuItemSIDModel->SetSelectedOption(v, false);
-		c64SettingsSIDEngineModel = v;
-		
-		// the setting will be updated later by c64PerformStartupTasksThreaded
-		if (viewC64->isEmulationThreadRunning)
-		{
-			viewC64->debugInterface->SetSidType(c64SettingsSIDEngineModel);
-		}
-	}
-	else if (!strcmp(name, "RESIDSamplingMethod"))
-	{
-		int v = *((int*)value);
-		viewC64->viewC64SettingsMenu->menuItemRESIDSamplingMethod->SetSelectedOption(v, false);
-		c64SettingsRESIDSamplingMethod = v;
-		
-		viewC64->debugInterface->SetSidSamplingMethod(c64SettingsRESIDSamplingMethod);
-	}
-	else if (!strcmp(name, "RESIDEmulateFilters"))
-	{
-		bool v = *((bool*)value);
-		
-		if (v)
-		{
-			viewC64->viewC64SettingsMenu->menuItemRESIDEmulateFilters->SetSelectedOption(1, false);
-			c64SettingsRESIDEmulateFilters = true;
-		}
-		else
-		{
-			viewC64->viewC64SettingsMenu->menuItemRESIDEmulateFilters->SetSelectedOption(0, false);
-			c64SettingsRESIDEmulateFilters = false;
-		}
-
-		viewC64->debugInterface->SetSidEmulateFilters(c64SettingsRESIDEmulateFilters);
-	}
-	else if (!strcmp(name, "RESIDPassBand"))
-	{
-		int v = *((int*)value);
-		viewC64->viewC64SettingsMenu->menuItemRESIDPassBand->SetValue(v, false);
-		c64SettingsRESIDPassBand = v;
-		
-		viewC64->debugInterface->SetSidPassBand(c64SettingsRESIDPassBand);
-	}
-	else if (!strcmp(name, "RESIDFilterBias"))
-	{
-		int v = *((int*)value);
-		viewC64->viewC64SettingsMenu->menuItemRESIDFilterBias->SetValue(v, false);
-		c64SettingsRESIDFilterBias = v;
-		
-		viewC64->debugInterface->SetSidFilterBias(c64SettingsRESIDFilterBias);
-	}
-	else if (!strcmp(name, "SIDStereo"))
-	{
-		int v = *((int*)value);
-		viewC64->viewC64SettingsMenu->menuItemSIDStereo->SetSelectedOption(v, false);
-		c64SettingsSIDStereo = v;
-		
-		viewC64->debugInterface->SetSidStereo(c64SettingsSIDStereo);
-		viewC64->viewC64StateSID->UpdateSidButtonsState();
-	}
-	else if (!strcmp(name, "SIDStereoAddress"))
-	{
-		int v = *((int*)value);
-		c64SettingsSIDStereoAddress = v;
-		
-		int optNum = viewC64->viewC64SettingsMenu->GetOptionNumFromSidAddress(v);
-		viewC64->viewC64SettingsMenu->menuItemSIDStereoAddress->SetSelectedOption(optNum, false);
-
-		viewC64->debugInterface->SetSidStereoAddress(c64SettingsSIDStereoAddress);
-		viewC64->viewC64StateSID->UpdateSidButtonsState();
-	}
-	else if (!strcmp(name, "SIDTripleAddress"))
-	{
-		int v = *((int*)value);
-		c64SettingsSIDTripleAddress = v;
-		
-		int optNum = viewC64->viewC64SettingsMenu->GetOptionNumFromSidAddress(v);
-		viewC64->viewC64SettingsMenu->menuItemSIDTripleAddress->SetSelectedOption(optNum, false);
-		
-		viewC64->debugInterface->SetSidTripleAddress(c64SettingsSIDTripleAddress);
-		viewC64->viewC64StateSID->UpdateSidButtonsState();
-	}
-	else if (!strcmp(name, "MuteSIDOnPause"))
-	{
-		bool v = *((bool*)value);
-		
-		if (v)
-		{
-			viewC64->viewC64SettingsMenu->menuItemMuteSIDOnPause->SetSelectedOption(1, false);
-			c64SettingsMuteSIDOnPause = true;
-		}
-		else
-		{
-			viewC64->viewC64SettingsMenu->menuItemMuteSIDOnPause->SetSelectedOption(0, false);
-			c64SettingsMuteSIDOnPause = false;
-		}
-	}
-	else if (!strcmp(name, "RunSIDWhenWarp"))
-	{
-		bool v = *((bool*)value);
-		
-		if (v)
-		{
-			viewC64->viewC64SettingsMenu->menuItemRunSIDWhenInWarp->SetSelectedOption(1, false);
-			c64SettingsRunSIDWhenInWarp = true;
-		}
-		else
-		{
-			viewC64->viewC64SettingsMenu->menuItemRunSIDWhenInWarp->SetSelectedOption(0, false);
-			c64SettingsRunSIDWhenInWarp = false;
-		}
-		viewC64->debugInterface->SetRunSIDWhenInWarp(c64SettingsRunSIDWhenInWarp);
-	}
-	else if (!strcmp(name, "AudioVolume"))
-	{
-		u16 v = *((u16*)value);
-		c64SettingsAudioVolume = v;
-		viewC64->viewC64SettingsMenu->menuItemAudioVolume->SetValue(v, false);
-		viewC64->debugInterface->SetAudioVolume((float)(c64SettingsAudioVolume) / 100.0f);
-	}
-	else if (!strcmp(name, "RunSIDEmulation"))
-	{
-		bool v = *((bool*)value);
-		
-		if (v)
-		{
-			viewC64->viewC64SettingsMenu->menuItemRunSIDEmulation->SetSelectedOption(1, false);
-			c64SettingsRunSIDEmulation = true;
-		}
-		else
-		{
-			viewC64->viewC64SettingsMenu->menuItemRunSIDEmulation->SetSelectedOption(0, false);
-			c64SettingsRunSIDEmulation = false;
-		}
-		viewC64->debugInterface->SetRunSIDEmulation(c64SettingsRunSIDEmulation);
-	}
-	else if (!strcmp(name, "MuteSIDMode"))
-	{
-		u8 v = *((u8*)value);
-		c64SettingsMuteSIDMode = v;
-		viewC64->viewC64SettingsMenu->menuItemMuteSIDMode->SetSelectedOption(v, false);
-		viewC64->UpdateSIDMute();
+		return;
 	}
 	else if (!strcmp(name, "AudioOutDevice"))
 	{
@@ -829,18 +1227,10 @@ void C64DebuggerSetSetting(char *name, void *value)
 		c64SettingsAudioOutDevice = new CSlrString((CSlrString*)value);
 		
 		gSoundEngine->SetOutputAudioDevice(c64SettingsAudioOutDevice);
+		return;
 	}
-	else if (!strcmp(name, "C64Model"))
-	{
-		int v = *((int*)value);
-		//viewC64->viewC64SettingsMenu->SetOptionC64ModelType(v);
-		c64SettingsC64Model = v;
-		
-		if (viewC64->isEmulationThreadRunning)
-		{
-			viewC64->debugInterface->SetC64ModelType(c64SettingsC64Model);
-		}
-	}
+	
+	
 	else if (!strcmp(name, "RenderScreenNearest"))
 	{
 		bool v = *((bool*)value);
@@ -855,6 +1245,7 @@ void C64DebuggerSetSetting(char *name, void *value)
 			viewC64->viewC64SettingsMenu->menuItemRenderScreenNearest->SetSelectedOption(0, false);
 			c64SettingsRenderScreenNearest = false;
 		}
+		return;
 	}
 	
 	else if (!strcmp(name, "MemMapMultiTouch"))
@@ -872,6 +1263,7 @@ void C64DebuggerSetSetting(char *name, void *value)
 			viewC64->viewC64SettingsMenu->menuItemMultiTouchMemoryMap->SetSelectedOption(0, false);
 			c64SettingsUseMultiTouchInMemoryMap = false;
 		}
+		return;
 #endif
 	}
 	else if (!strcmp(name, "MemMapInvert"))
@@ -888,6 +1280,7 @@ void C64DebuggerSetSetting(char *name, void *value)
 			viewC64->viewC64SettingsMenu->menuItemMemoryMapInvert->SetSelectedOption(0, false);
 			c64SettingsMemoryMapInvertControl = false;
 		}
+		return;
 	}
 	else if (!strcmp(name, "MemMapRefresh"))
 	{
@@ -914,6 +1307,7 @@ void C64DebuggerSetSetting(char *name, void *value)
 		}
 
 		c64SettingsMemoryMapRefreshRate = v;
+		return;
 	}
 	else if (!strcmp(name, "MemMapFadeSpeed"))
 	{
@@ -963,63 +1357,44 @@ void C64DebuggerSetSetting(char *name, void *value)
 		
 		float fadeSpeed = v / 100.0f;
 		C64DebuggerSetMemoryMapCellsFadeSpeed(fadeSpeed);
-	}
-	else if (!strcmp(name, "EmulationMaximumSpeed"))
-	{
-		int v = *((int*)value);
-		if (v == 10)
-		{
-			viewC64->viewC64SettingsMenu->menuItemMaximumSpeed->SetSelectedOption(0, false);
-		}
-		else if (v == 20)
-		{
-			viewC64->viewC64SettingsMenu->menuItemMaximumSpeed->SetSelectedOption(1, false);
-		}
-		else if (v == 50)
-		{
-			viewC64->viewC64SettingsMenu->menuItemMaximumSpeed->SetSelectedOption(2, false);
-		}
-		else if (v == 100)
-		{
-			viewC64->viewC64SettingsMenu->menuItemMaximumSpeed->SetSelectedOption(3, false);
-		}
-		else if (v == 200)
-		{
-			viewC64->viewC64SettingsMenu->menuItemMaximumSpeed->SetSelectedOption(4, false);
-		}
-		
-		c64SettingsEmulationMaximumSpeed = v;
-		
-		viewC64->debugInterface->SetEmulationMaximumSpeed(v);
+		return;
 	}
 	else if (!strcmp(name, "GridLinesAlpha"))
 	{
 		float v = *((float*)value);
 		c64SettingsScreenGridLinesAlpha = v;
 		viewC64->viewC64SettingsMenu->menuItemScreenGridLinesAlpha->SetValue(v, false);
-		viewC64->viewC64Screen->InitRasterColorsFromScheme();
+		
+		if (viewC64->debugInterfaceC64)
+		{
+			viewC64->viewC64Screen->InitRasterColorsFromScheme();
+		}
+		return;
 	}
 	else if (!strcmp(name, "GridLinesColor"))
 	{
 		u8 v = *((u8*)value);
 		c64SettingsScreenGridLinesColorScheme = v;
 		viewC64->viewC64SettingsMenu->menuItemScreenGridLinesColorScheme->SetSelectedOption(v, false);
-		viewC64->viewC64Screen->InitRasterColorsFromScheme();
-		viewC64->viewC64VicDisplay->InitRasterColorsFromScheme();
+		
+		if (viewC64->debugInterfaceC64)
+		{
+			viewC64->viewC64Screen->InitRasterColorsFromScheme();
+			viewC64->viewC64VicDisplay->InitRasterColorsFromScheme();
+		}
+		return;
 	}
 	else if (!strcmp(name, "ViewfinderScale"))
 	{
 		float v = *((float*)value);
 		c64SettingsScreenRasterViewfinderScale = v;
 		viewC64->viewC64SettingsMenu->menuItemScreenRasterViewfinderScale->SetValue(v, false);
-		viewC64->viewC64Screen->SetZoomedScreenLevel(v);
-	}
-	else if (!strcmp(name, "CrossLinesAlpha"))
-	{
-		float v = *((float*)value);
-		c64SettingsScreenRasterCrossLinesAlpha = v;
-		viewC64->viewC64SettingsMenu->menuItemScreenRasterCrossLinesAlpha->SetValue(v, false);
-		viewC64->viewC64Screen->InitRasterColorsFromScheme();
+
+		if (viewC64->debugInterfaceC64)
+		{
+			viewC64->viewC64Screen->SetZoomedScreenLevel(v);
+		}
+		return;
 	}
 	else if (!strcmp(name, "FocusBorderWidth"))
 	{
@@ -1027,24 +1402,28 @@ void C64DebuggerSetSetting(char *name, void *value)
 		c64SettingsFocusBorderLineWidth = v;
 		viewC64->viewC64SettingsMenu->menuItemFocusBorderLineWidth->SetValue(v, false);
 		guiMain->theme->focusBorderLineWidth = v;
+		return;
 	}
 	else if (!strcmp(name, "DisassemblyBackgroundColor"))
 	{
 		u8 v = *((u8*)value);
 		c64SettingsDisassemblyBackgroundColor = v;
 		viewC64->viewC64SettingsMenu->menuItemDisassemblyBackgroundColor->SetSelectedOption(v, false);
+		return;
 	}
 	else if (!strcmp(name, "DisassemblyExecuteColor"))
 	{
 		u8 v = *((u8*)value);
 		c64SettingsDisassemblyExecuteColor = v;
 		viewC64->viewC64SettingsMenu->menuItemDisassemblyExecuteColor->SetSelectedOption(v, false);
+		return;
 	}
 	else if (!strcmp(name, "DisassemblyNonExecuteColor"))
 	{
 		u8 v = *((u8*)value);
 		c64SettingsDisassemblyNonExecuteColor = v;
 		viewC64->viewC64SettingsMenu->menuItemDisassemblyNonExecuteColor->SetSelectedOption(v, false);
+		return;
 	}
 	else if (!strcmp(name, "MenusColorTheme"))
 	{
@@ -1052,156 +1431,118 @@ void C64DebuggerSetSetting(char *name, void *value)
 		c64SettingsMenusColorTheme = v;
 		viewC64->viewC64SettingsMenu->menuItemMenusColorTheme->SetSelectedOption(v, false);
 		viewC64->colorsTheme->InitColors(c64SettingsMenusColorTheme);
+		return;
 	}
-	else if (!strcmp(name, "CrossLinesColor"))
-	{
-		u8 v = *((u8*)value);
-		c64SettingsScreenRasterCrossLinesColorScheme = v;
-		viewC64->viewC64SettingsMenu->menuItemScreenRasterCrossLinesColorScheme->SetSelectedOption(v, false);
-		viewC64->viewC64Screen->InitRasterColorsFromScheme();
-	}
-	else if (!strcmp(name, "CrossAlpha"))
-	{
-		float v = *((float*)value);
-		c64SettingsScreenRasterCrossAlpha = v;
-		viewC64->viewC64SettingsMenu->menuItemScreenRasterCrossAlpha->SetValue(v, false);
-		viewC64->viewC64Screen->InitRasterColorsFromScheme();
-	}
-	else if (!strcmp(name, "CrossInteriorColor"))
-	{
-		u8 v = *((u8*)value);
-		c64SettingsScreenRasterCrossInteriorColorScheme = v;
-		viewC64->viewC64SettingsMenu->menuItemScreenRasterCrossInteriorColorScheme->SetSelectedOption(v, false);
-		viewC64->viewC64Screen->InitRasterColorsFromScheme();
-	}
-	else if (!strcmp(name, "CrossExteriorColor"))
-	{
-		u8 v = *((u8*)value);
-		c64SettingsScreenRasterCrossExteriorColorScheme = v;
-		viewC64->viewC64SettingsMenu->menuItemScreenRasterCrossExteriorColorScheme->SetSelectedOption(v, false);
-		viewC64->viewC64Screen->InitRasterColorsFromScheme();
-	}
-	else if (!strcmp(name, "CrossTipColor"))
-	{
-		u8 v = *((u8*)value);
-		c64SettingsScreenRasterCrossTipColorScheme = v;
-		viewC64->viewC64SettingsMenu->menuItemScreenRasterCrossTipColorScheme->SetSelectedOption(v, false);
-		viewC64->viewC64Screen->InitRasterColorsFromScheme();
-	}
-
 	else if (!strcmp(name, "PaintGridCharactersColorR"))
 	{
 		float v = *((float*)value);
 		c64SettingsPaintGridCharactersColorR = v;
 		viewC64->viewC64SettingsMenu->menuItemPaintGridCharactersColorR->SetValue(v, false);
-		viewC64->viewVicEditor->InitPaintGridColors();
+		
+		if (viewC64->debugInterfaceC64)
+		{
+			viewC64->viewVicEditor->InitPaintGridColors();
+		}
+		return;
 	}
 	else if (!strcmp(name, "PaintGridCharactersColorG"))
 	{
 		float v = *((float*)value);
 		c64SettingsPaintGridCharactersColorG = v;
 		viewC64->viewC64SettingsMenu->menuItemPaintGridCharactersColorG->SetValue(v, false);
-		viewC64->viewVicEditor->InitPaintGridColors();
+		
+		if (viewC64->debugInterfaceC64)
+		{
+			viewC64->viewVicEditor->InitPaintGridColors();
+		}
+		return;
 	}
 	else if (!strcmp(name, "PaintGridCharactersColorB"))
 	{
 		float v = *((float*)value);
 		c64SettingsPaintGridCharactersColorB = v;
 		viewC64->viewC64SettingsMenu->menuItemPaintGridCharactersColorB->SetValue(v, false);
-		viewC64->viewVicEditor->InitPaintGridColors();
+
+		if (viewC64->debugInterfaceC64)
+		{
+			viewC64->viewVicEditor->InitPaintGridColors();
+		}
+		return;
 	}
 	else if (!strcmp(name, "PaintGridCharactersColorA"))
 	{
 		float v = *((float*)value);
 		c64SettingsPaintGridCharactersColorA = v;
 		viewC64->viewC64SettingsMenu->menuItemPaintGridCharactersColorA->SetValue(v, false);
-		viewC64->viewVicEditor->InitPaintGridColors();
+
+		if (viewC64->debugInterfaceC64)
+		{
+			viewC64->viewVicEditor->InitPaintGridColors();
+		}
+		return;
 	}
 	else if (!strcmp(name, "PaintGridPixelsColorR"))
 	{
 		float v = *((float*)value);
 		c64SettingsPaintGridPixelsColorR = v;
 		viewC64->viewC64SettingsMenu->menuItemPaintGridPixelsColorR->SetValue(v, false);
-		viewC64->viewVicEditor->InitPaintGridColors();
+		
+		if (viewC64->debugInterfaceC64)
+		{
+			viewC64->viewVicEditor->InitPaintGridColors();
+		}
+		return;
 	}
 	else if (!strcmp(name, "PaintGridPixelsColorG"))
 	{
 		float v = *((float*)value);
 		c64SettingsPaintGridPixelsColorG = v;
 		viewC64->viewC64SettingsMenu->menuItemPaintGridPixelsColorG->SetValue(v, false);
-		viewC64->viewVicEditor->InitPaintGridColors();
+		
+		if (viewC64->debugInterfaceC64)
+		{
+			viewC64->viewVicEditor->InitPaintGridColors();
+		}
+		return;
 	}
 	else if (!strcmp(name, "PaintGridPixelsColorB"))
 	{
 		float v = *((float*)value);
 		c64SettingsPaintGridPixelsColorB = v;
 		viewC64->viewC64SettingsMenu->menuItemPaintGridPixelsColorB->SetValue(v, false);
-		viewC64->viewVicEditor->InitPaintGridColors();
+
+		if (viewC64->debugInterfaceC64)
+		{
+			viewC64->viewVicEditor->InitPaintGridColors();
+		}
+		return;
 	}
 	else if (!strcmp(name, "PaintGridPixelsColorA"))
 	{
 		float v = *((float*)value);
 		c64SettingsPaintGridPixelsColorA = v;
 		viewC64->viewC64SettingsMenu->menuItemPaintGridPixelsColorA->SetValue(v, false);
-		viewC64->viewVicEditor->InitPaintGridColors();
+
+		if (viewC64->debugInterfaceC64)
+		{
+			viewC64->viewVicEditor->InitPaintGridColors();
+		}
+		return;
 	}
 	else if (!strcmp(name, "PaintGridShowZoomLevel"))
 	{
 		float v = *((float*)value);
 		c64SettingsPaintGridShowZoomLevel = v;
 		viewC64->viewC64SettingsMenu->menuItemPaintGridShowZoomLevel->SetValue(v, false);
-		viewC64->viewVicEditor->InitPaintGridShowZoomLevel();
+		
+		if (viewC64->debugInterfaceC64)
+		{
+			viewC64->viewVicEditor->InitPaintGridShowZoomLevel();
+		}
+		return;
 	}
 
-	else if (!strcmp(name, "EmulateVSPBug"))
-	{
-		bool v = *((bool*)value);
-		c64SettingsEmulateVSPBug = v;
-		viewC64->debugInterface->SetVSPBugEmulation(c64SettingsEmulateVSPBug);
-	}
-	else if (!strcmp(name, "AutoJmp"))
-	{
-		bool v = *((bool*)value);
-		c64SettingsAutoJmp = v;
-	}
-	else if (!strcmp(name, "AutoJmpAlwaysToLoadedPRGAddress"))
-	{
-		bool v = *((bool*)value);
-		c64SettingsAutoJmpAlwaysToLoadedPRGAddress = v;
-	}
-	else if (!strcmp(name, "AutoJmpFromInsertedDiskFirstPrg"))
-	{
-		bool v = *((bool*)value);
-		c64SettingsAutoJmpFromInsertedDiskFirstPrg = v;
-	}
-	else if (!strcmp(name, "AutoJmpDoReset"))
-	{
-		int v = *((int*)value);
-		viewC64->viewC64SettingsMenu->menuItemAutoJmpDoReset->SetSelectedOption(v, false);
-		c64SettingsAutoJmpDoReset = v;
-	}
-	else if (!strcmp(name, "AutoJmpWaitAfterReset"))
-	{
-		int v = *((int*)value);
-		c64SettingsAutoJmpWaitAfterReset = v;
-		viewC64->viewC64SettingsMenu->menuItemAutoJmpWaitAfterReset->SetValue(v, false);
-	}
-	
-	else if (!strcmp(name, "VicDisplayBorder"))
-	{
-		u8 v = *((u8*)value);
-		c64SettingsVicDisplayBorderType = v;
-		viewC64->viewC64VicControl->SetBorderType(c64SettingsVicDisplayBorderType);
-	}
-	else if (!strcmp(name, "VicEditorForceReplaceColor"))
-	{
-		bool v = *((bool*)value);
-		c64SettingsVicEditorForceReplaceColor = v;
-	}
-	else
-	{
-		LOGError("C64DebuggerSetSetting: unknown setting '%s'", name);
-	}
+	LOGError("C64DebuggerSetSetting: unknown setting '%s'", name);
 }
 
 //

@@ -10,6 +10,7 @@
 #include "CGuiView.h"
 #include "VID_GLViewController.h"
 #include "CGuiMain.h"
+#include "CGuiWindow.h"
 
 CGuiView::CGuiView(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY)
 	: CGuiElement(posX, posY, posZ, sizeX, sizeY)
@@ -21,7 +22,7 @@ CGuiView::CGuiView(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 	focusElement = NULL;
 	
 	consumeTapBackground = true;
-	
+	positionElementsOnFrameMove = true;
 	
 	//mousePosX = mousePosY = -1;
 }
@@ -68,7 +69,47 @@ void CGuiView::SetSize(GLfloat sizeX, GLfloat sizeY)
 void CGuiView::SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY)
 {
 	CGuiElement::SetPosition(posX, posY, posZ, sizeX, sizeY);
+	
+	if (positionElementsOnFrameMove)
+	{
+		this->SetPositionElements(posX, posY);
+	}
 }
+
+// iterate over all elements and move them accordingly, to be called by CGuiViewFrame when window is moved
+// TODO: change window frame movements to use CGuiAnimation and glTranslate
+void CGuiView::SetPositionElements(GLfloat posX, GLfloat posY)
+{
+	LOGD("CGuiView::SetPositionElements: px=%f py=%f", posX, posY);
+	for (std::map<float, CGuiElement *, compareZupwards>::iterator enumGuiElems = guiElementsUpwards.begin();
+		 enumGuiElems != guiElementsUpwards.end(); enumGuiElems++)
+	{
+		CGuiElement *pElement = (*enumGuiElems).second;
+		
+		LOGD("pElement '%s' offset=%f %f", pElement->name, pElement->offsetPosX, pElement->offsetPosY);
+		pElement->SetPosition(this->posX + pElement->offsetPosX, this->posY + pElement->offsetPosY);
+	}
+	
+}
+
+void CGuiView::PositionCenterOnParentView()
+{
+	float parentX, parentY;
+	if (this->parent)
+	{
+		parentX = this->parent->posX;
+		parentY = this->parent->posY;
+	}
+	else
+	{
+		parentX = SCREEN_WIDTH/2.0f;
+		parentY = SCREEN_HEIGHT/2.0f;
+		
+	}
+	
+	this->SetPosition(parentX - this->sizeX/2.0f, parentY - this->sizeY/2.0f);
+}
+
 
 void CGuiView::RemoveGuiElements()
 {
@@ -211,7 +252,7 @@ bool CGuiView::DoTapNoBackground(GLfloat x, GLfloat y)
 		 enumGuiElems != guiElementsDownwards.end(); enumGuiElems++)
 	{
 		CGuiElement *guiElement = (*enumGuiElems).second;
-		//LOGD("CGuiView::DoTap: %s", guiElement->name);
+		LOGD("CGuiView::DoTap: %s", guiElement->name);
 		if (!guiElement->visible)
 			continue;
 
@@ -229,9 +270,9 @@ bool CGuiView::DoTapNoBackground(GLfloat x, GLfloat y)
 			
 			if (guiElement->bringToFrontOnTap)
 			{
-				guiMain->LockMutex();
+				guiMain->LockMutex(); //"CGuiView::DoTapNoBackground");
 				this->BringToFront(guiElement);
-				guiMain->UnlockMutex();
+				guiMain->UnlockMutex(); //"CGuiView::DoTapNoBackground");
 			}
 			return true;
 		}
@@ -248,7 +289,7 @@ bool CGuiView::DoTapNoBackground(GLfloat x, GLfloat y)
 
 bool CGuiView::DoFinishTap(GLfloat x, GLfloat y)
 {
-	//LOGG("CGuiView::DoFinishTap: %f %f", x, y);
+	LOGG("CGuiView::DoFinishTap: %f %f", x, y);
 
 	for (std::map<float, CGuiElement *, compareZdownwards>::iterator enumGuiElems = guiElementsDownwards.begin();
 		 enumGuiElems != guiElementsDownwards.end(); enumGuiElems++)
@@ -385,9 +426,9 @@ bool CGuiView::DoRightClick(GLfloat x, GLfloat y)
 		{
 			if (guiElement->bringToFrontOnTap)
 			{
-				guiMain->LockMutex();
+				guiMain->LockMutex(); //"CGuiView::DoRightClick");
 				this->BringToFront(guiElement);
-				guiMain->UnlockMutex();
+				guiMain->UnlockMutex(); //"CGuiView::DoRightClick");
 			}
 			
 			return true;
@@ -506,10 +547,14 @@ bool CGuiView::DoNotTouchedMove(GLfloat x, GLfloat y)
 		
 		//LOGG("DoNotTouchedMove %f: %s", (*enumGuiElems).first, guiElement->name);
 		
-		bool consumed = guiElement->DoNotTouchedMove(x, y);
+		//bool consumed =
+		guiElement->DoNotTouchedMove(x, y);
+		
 		//LOGG("   consumed=%d", consumed);
-		if (consumed)
-			return true;
+		// arrrgh! this is a bug... not touched move event does not need to be 'consumed'. it is for tracking mouse!
+		// TODO: refactor DoNotTouchedMove to not return anything (void).
+//		if (consumed)
+//			return true;
 	}
 	
 	return false;
@@ -743,7 +788,6 @@ bool CGuiView::DoMultiFinishTap(COneTouchData *touch, float x, float y)
 	
 	return false;
 }
-
 
 void CGuiView::ActivateView()
 {

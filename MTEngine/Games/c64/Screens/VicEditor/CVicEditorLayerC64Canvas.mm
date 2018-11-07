@@ -76,6 +76,7 @@ bool CVicEditorLayerC64Canvas::GetColorAtPixel(int x, int y, u8 *color)
 
 void CVicEditorLayerC64Canvas::ClearScreen()
 {
+	LOGD("CVicEditorLayerC64Canvas::ClearScreen");
 	vicEditor->viewVicDisplayMain->currentCanvas->ClearScreen();
 }
 

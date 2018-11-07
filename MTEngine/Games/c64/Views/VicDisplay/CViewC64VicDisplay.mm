@@ -52,19 +52,28 @@ extern "C" {
 //        0              50   251             312
 
 
-
 CViewC64VicDisplay::CViewC64VicDisplay(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
 									   C64DebugInterface *debugInterface)
-: CGuiView(posX, posY, posZ, sizeX, sizeY)
+: CGuiWindow(posX, posY, posZ, sizeX, sizeY, NULL, GUI_FRAME_NO_FRAME, NULL)
+{
+	this->Initialize(debugInterface);
+}
+
+CViewC64VicDisplay::CViewC64VicDisplay(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
+									   C64DebugInterface *debugInterface,
+									   CSlrString *windowName, u32 mode, CGuiWindowCallback *callback)
+: CGuiWindow(posX, posY, posZ, sizeX, sizeY, windowName, mode, callback)
+{
+	this->Initialize(debugInterface);
+}
+
+
+void CViewC64VicDisplay::Initialize(C64DebugInterface *debugInterface)
 {
 	this->name = "CViewC64VicDisplay";
 	
 	this->debugInterface = debugInterface;
 	
-	viewFrame = NULL;
-//	viewFrame = new CGuiViewFrame(this, new CSlrString("VIC Display"));
-//	this->AddGuiElement(viewFrame);
-
 	// view with buttons to control this Vic Display
 	viewVicControl = NULL;
 	
@@ -78,6 +87,10 @@ CViewC64VicDisplay::CViewC64VicDisplay(GLfloat posX, GLfloat posY, GLfloat posZ,
 	font = viewC64->fontCBMShifted;
 	fontScale = 0.8;
 	fontHeight = font->GetCharHeight('@', fontScale) + 2;
+	
+	// global position offset
+	posOffsetX = 0;
+	posOffsetY = 0;
 	
 	// vic display frame
 	displayFrameRasterX = 0.0f;
@@ -125,6 +138,10 @@ CViewC64VicDisplay::CViewC64VicDisplay(GLfloat posX, GLfloat posY, GLfloat posZ,
 	screenTexEndX = (float)320.0f / 512.0f;
 	screenTexEndY = 1.0f - (float)200.0f / 512.0f;
 
+	// no transparency by default
+	this->backgroundColorAlpha = 255;
+	this->foregroundColorAlpha = 255;
+	
 	this->showGridLines = true; //false;
 
 	this->showDisplayBorderType = VIC_DISPLAY_SHOW_BORDER_FULL;		//VIC_DISPLAY_SHOW_BORDER_VISIBLE_AREA
@@ -156,9 +173,13 @@ CViewC64VicDisplay::CViewC64VicDisplay(GLfloat posX, GLfloat posY, GLfloat posZ,
 	
 	currentVicMode = 0;
 	
+	this->screenAddress = 0;
+	this->bitmapAddress = 0;
+	this->charsetAddress = 0;
+	
 //	/// debug
 //	int rasterNum = 0x003A;
-//	C64AddrBreakpoint *addrBreakpoint = new C64AddrBreakpoint(rasterNum);
+//	CAddrBreakpoint *addrBreakpoint = new CAddrBreakpoint(rasterNum);
 //	debugInterface->breakpointsC64Raster[rasterNum] = addrBreakpoint;
 //	
 //	debugInterface->breakOnC64Raster = true;
@@ -206,21 +227,10 @@ void CViewC64VicDisplay::SetAutoScrollMode(int newMode)
 			}
 		}
 	}
-	else if (autoScrollMode == AUTOSCROLL_DISASSEMBLE_BITMAP_ADDRESS)
-	{
-		if (viewC64->viewC64Disassemble->changedByUser == false)
-		{
-			ScrollMemoryAndDisassembleToRasterPosition(rasterCursorPosX, rasterCursorPosY, true);
-		}
-	}
-	else if (autoScrollMode == AUTOSCROLL_DISASSEMBLE_TEXT_ADDRESS)
-	{
-		if (viewC64->viewC64Disassemble->changedByUser == false)
-		{
-			ScrollMemoryAndDisassembleToRasterPosition(rasterCursorPosX, rasterCursorPosY, true);
-		}
-	}
-	else if (autoScrollMode == AUTOSCROLL_DISASSEMBLE_COLOUR_ADDRESS)
+	else if (autoScrollMode == AUTOSCROLL_DISASSEMBLE_BITMAP_ADDRESS
+			 || autoScrollMode == AUTOSCROLL_DISASSEMBLE_TEXT_ADDRESS
+			 || autoScrollMode == AUTOSCROLL_DISASSEMBLE_COLOUR_ADDRESS
+			 || autoScrollMode == AUTOSCROLL_DISASSEMBLE_CHARSET_ADDRESS)
 	{
 		if (viewC64->viewC64Disassemble->changedByUser == false)
 		{
@@ -266,7 +276,10 @@ void CViewC64VicDisplay::SetDisplayPosition(float posX, float posY, float scale,
 {
 	this->updateViewAspectRatio = updateViewAspectRatio;
 	this->scale = scale;
-	
+
+	posX += posOffsetX;
+	posY += posOffsetY;
+
 	float sx, sy;
 	
 	if (updateViewAspectRatio == false)
@@ -308,9 +321,15 @@ void CViewC64VicDisplay::SetDisplayPosition(float posX, float posY, float scale,
 		this->SetScreenAndDisplaySize(posX, posY, sx, sy);
 	}
 
+	LOGD("CViewC64VicDisplay::SetDisplayPosition %s: posX=%f posY=%f", this->name, posX, posY);
 	CGuiView::SetPosition(posX, posY, posZ, sx, sy);
-
+	
 	UpdateRasterCrossFactors();
+
+	if (this->viewFrame)
+	{
+		this->viewFrame->UpdateSize();
+	}	
 }
 
 void CViewC64VicDisplay::SetDisplayScale(float scale)
@@ -560,8 +579,7 @@ void CViewC64VicDisplay::DoLogic()
 	CGuiView::DoLogic();
 }
 
-// TODO: refactor to GetScreenAddressForRaster
-int CViewC64VicDisplay::GetTextModeAddressForRaster(int x, int y)
+int CViewC64VicDisplay::GetScreenAddressForRaster(int x, int y)
 {
 	u16 screenBase = this->screenAddress;
 	
@@ -573,8 +591,7 @@ int CViewC64VicDisplay::GetTextModeAddressForRaster(int x, int y)
 	return screenBase + offset;
 }
 
-// TODO: refactor to GetColorAddressForRaster
-int CViewC64VicDisplay::GetColourAddressForRaster(int x, int y)
+int CViewC64VicDisplay::GetColorAddressForRaster(int x, int y)
 {
 	u16 screenBase = 0xD800;
 	
@@ -585,6 +602,37 @@ int CViewC64VicDisplay::GetColourAddressForRaster(int x, int y)
 	
 	return screenBase + offset;
 }
+
+int CViewC64VicDisplay::GetCharsetAddressForRaster(int x, int y)
+{
+	vicii_cycle_state_t *viciiState = &(viewC64->viciiStateToShow);
+
+	// refresh texture of C64's character mode screen
+	u8 *screen_ptr;
+	u8 *color_ram_ptr;
+	u8 *chargen_ptr;
+	u8 *bitmap_low_ptr;
+	u8 *bitmap_high_ptr;
+	u8 colors[0x0F];
+	
+	this->GetViciiPointers(viciiState, &screen_ptr, &color_ram_ptr, &chargen_ptr, &bitmap_low_ptr, &bitmap_high_ptr, colors);
+
+	int charColumn = floor((float)((float)x / 8.0f));
+	
+	float dy = (float)((float)y / 8.0f);
+	int charRow = floor(dy);
+	
+	int offset = charColumn + charRow * 40;
+
+	u8 chr = screen_ptr[offset];
+	
+	int oy = (int)((dy - (float)charRow) * 8.0f);
+
+	//LOGD("chr=%02x oy=%d", chr, oy);
+
+	return this->charsetAddress + chr*8 + oy;
+}
+
 
 
 int CViewC64VicDisplay::GetBitmapModeAddressForRaster(int x, int y)
@@ -609,13 +657,13 @@ int CViewC64VicDisplay::GetAddressForRaster(int x, int y)
 		switch (currentVicMode)
 		{
 			case 0:    // normal text mode
-				return this->GetTextModeAddressForRaster(x, y);
+				return this->GetScreenAddressForRaster(x, y);
 			case 1:    // hires bitmap mode
 				return this->GetBitmapModeAddressForRaster(x, y);
 			case 2:    // extended background mode
-				return this->GetTextModeAddressForRaster(x, y);
+				return this->GetScreenAddressForRaster(x, y);
 			case 4:    // multicolor text mode
-				return this->GetTextModeAddressForRaster(x, y);
+				return this->GetScreenAddressForRaster(x, y);
 			case 5:    // multicolor bitmap mode
 				return this->GetBitmapModeAddressForRaster(x, y);
 			default:   // illegal modes (3, 6 and 7)
@@ -747,6 +795,7 @@ void CViewC64VicDisplay::GetViciiPointers(vicii_cycle_state_t *viciiState,
 	//////////////////
 	this->screenAddress = screen_addr;
 	this->bitmapAddress = bitmap_bank;
+	this->charsetAddress = charset_addr;
 }
 
 void CViewC64VicDisplay::UpdateDisplayPosFromScrollRegister(vicii_cycle_state_t *viciiState)
@@ -818,7 +867,7 @@ void CViewC64VicDisplay::RefreshScreen(vicii_cycle_state_t *viciiState)
 {
 	//LOGD("CViewC64VicDisplay::RefreshScreen");
 	
-	RefreshScreenImageData(viciiState);
+	RefreshScreenImageData(viciiState, this->backgroundColorAlpha, this->foregroundColorAlpha);
 
 	imageScreen->ReplaceImageData(imageDataScreen);
 
@@ -826,7 +875,7 @@ void CViewC64VicDisplay::RefreshScreen(vicii_cycle_state_t *viciiState)
 //	debugInterface->UnlockRenderScreenMutex();
 }
 
-void CViewC64VicDisplay::RefreshScreenImageData(vicii_cycle_state_t *viciiState)
+void CViewC64VicDisplay::RefreshScreenImageData(vicii_cycle_state_t *viciiState, u8 backgroundColorAlpha, u8 foregroundColorAlpha)
 {
 	//LOGD("CViewC64VicDisplay::RefreshScreen");
 	
@@ -856,7 +905,18 @@ void CViewC64VicDisplay::RefreshScreenImageData(vicii_cycle_state_t *viciiState)
 	 */
 	
 	///
+	this->RefreshCurrentCanvas(viciiState);
 	
+	this->currentCanvas->RefreshScreen(viciiState, imageDataScreen, this->backgroundColorAlpha, this->foregroundColorAlpha);
+		
+	// no need to mutex this operation:
+	//	debugInterface->UnlockRenderScreenMutex();
+}
+
+
+////
+void CViewC64VicDisplay::RefreshCurrentCanvas(vicii_cycle_state_t *viciiState)
+{
 	u8 mc;
 	u8 eb;
 	u8 bm;
@@ -876,6 +936,13 @@ void CViewC64VicDisplay::RefreshScreenImageData(vicii_cycle_state_t *viciiState)
 	
 	UpdateDisplayPosFromScrollRegister(viciiState);
 	
+	this->SetCurrentCanvas(bm, mc, eb, blank);
+}
+
+void CViewC64VicDisplay::SetCurrentCanvas(u8 bm, u8 mc, u8 eb, u8 blank)
+{
+//	LOGD("CViewC64VicDisplay::SetCurrentCanvas: %d %d %d %d", bm, mc, eb, blank);
+	
 	if (!blank)
 	{
 		//		ui_error("Screen is blanked, no picture to save");
@@ -883,10 +950,9 @@ void CViewC64VicDisplay::RefreshScreenImageData(vicii_cycle_state_t *viciiState)
 		
 		//LOGD("blank");
 		this->currentCanvas = this->canvasBlank;
-		this->currentCanvas->RefreshScreen(viciiState, imageDataScreen);
 		return;
 	}
-	
+
 	currentVicMode = mc << 2 | eb << 1 | bm;
 	
 	switch (currentVicMode)
@@ -911,14 +977,7 @@ void CViewC64VicDisplay::RefreshScreenImageData(vicii_cycle_state_t *viciiState)
 			break;
 	}
 	
-	this->currentCanvas->RefreshScreen(viciiState, imageDataScreen);
-		
-	// no need to mutex this operation:
-	//	debugInterface->UnlockRenderScreenMutex();
 }
-
-
-////
 
 void CViewC64VicDisplay::RenderFocusBorder()
 {
@@ -942,7 +1001,7 @@ void CViewC64VicDisplay::Render()
 //				  this->sizeX, this->sizeY, 0.1f, 0.8f, 1.0f, 1.0f, 3.0f);
 	
 	
-	//LOGG("CViewC64VicDisplay::Render: %s", this->name);
+	LOGG("CViewC64VicDisplay::Render: %s posX=%5.2f posY=%5.2f sizeX=%5.2f sizeY=%5.2f", this->name, posX, posY, sizeX, sizeY);
 	BlitFilledRectangle(posX, posY, posZ, sizeX, sizeY, 0, 0, 0, 0.7f);
 
 	
@@ -1111,6 +1170,15 @@ vicii_cycle_state_t *CViewC64VicDisplay::UpdateViciiState()
 	return UpdateViciiStateNonVisible(this->rasterCursorPosX, this->rasterCursorPosY);
 }
 
+void CViewC64VicDisplay::CopyViciiStateFromCurrent()
+{
+	// not locked & not visible - copy current state
+	vicii_cycle_state_t *viciiState = &(viewC64->currentViciiState);
+	c64d_vicii_copy_state_data(&(viewC64->viciiStateToShow), viciiState);
+	viewC64->viewC64StateVIC->isLockedState = false;
+
+}
+
 vicii_cycle_state_t *CViewC64VicDisplay::UpdateViciiStateNonVisible(float rx, float ry)
 {
 	vicii_cycle_state_t *viciiState = NULL;
@@ -1197,9 +1265,10 @@ void CViewC64VicDisplay::RenderDisplayScreen()
 		float br, bg, bb;
 		u8 color = viewC64->viciiStateToShow.regs[0x20];
 		
-		viewC64->debugInterface->GetFloatCBMColor(color, &br, &bg, &bb);
+		viewC64->debugInterfaceC64->GetFloatCBMColor(color, &br, &bg, &bb);
 		
-		BlitFilledRectangle(visibleScreenPosX, visibleScreenPosY, posZ, visibleScreenSizeX, visibleScreenSizeY, br, bg, bb, 1.0f);
+		BlitFilledRectangle(visibleScreenPosX, visibleScreenPosY, posZ, visibleScreenSizeX, visibleScreenSizeY, br, bg, bb,
+							(float)backgroundColorAlpha/255.0f);
 	}
 	
 	// render texture of C64's screen
@@ -1221,9 +1290,10 @@ void CViewC64VicDisplay::RenderDisplayScreen(CSlrImage *imageScreenToRender)
 		float br, bg, bb;
 		u8 color = viewC64->viciiStateToShow.regs[0x20];
 		
-		viewC64->debugInterface->GetFloatCBMColor(color, &br, &bg, &bb);
+		viewC64->debugInterfaceC64->GetFloatCBMColor(color, &br, &bg, &bb);
 		
-		BlitFilledRectangle(visibleScreenPosX, visibleScreenPosY, posZ, visibleScreenSizeX, visibleScreenSizeY, br, bg, bb, 1.0f);
+		BlitFilledRectangle(visibleScreenPosX, visibleScreenPosY, posZ, visibleScreenSizeX, visibleScreenSizeY, br, bg, bb,
+							(float)backgroundColorAlpha/255.0f);
 	}
 	
 	// render texture of C64's screen
@@ -1572,7 +1642,7 @@ void CViewC64VicDisplay::RenderCursor(float rasterCursorPosX, float rasterCursor
 		if (rasterCursorPosX >= -0x88 && rasterCursorPosX < 0x170
 			&& rasterCursorPosY >= -0x32 && rasterCursorPosY < 0x106)
 		{
-			this->RenderRaster(rasterCursorPosX, rasterCursorPosY);
+			this->RenderRasterCursor(rasterCursorPosX, rasterCursorPosY);
 		}
 		else
 		{
@@ -1584,7 +1654,7 @@ void CViewC64VicDisplay::RenderCursor(float rasterCursorPosX, float rasterCursor
 				if (viewC64->rasterToShowX >= 0x000 && viewC64->rasterToShowX < 0x1F8
 					&& viewC64->rasterToShowY >= 0x000 && viewC64->rasterToShowY < 0x138)
 				{
-					this->RenderRaster(rx, ry);
+					this->RenderRasterCursor(rx, ry);
 				}
 			}
 			
@@ -1595,7 +1665,7 @@ void CViewC64VicDisplay::RenderCursor(float rasterCursorPosX, float rasterCursor
 		if (rasterCursorPosX >= -0x20 && rasterCursorPosX <= 0x160
 			&& rasterCursorPosY >= -0x22 && rasterCursorPosY <= 0xF6)
 		{
-			this->RenderRaster(rasterCursorPosX, rasterCursorPosY);
+			this->RenderRasterCursor(rasterCursorPosX, rasterCursorPosY);
 		}
 		else
 		{
@@ -1607,7 +1677,7 @@ void CViewC64VicDisplay::RenderCursor(float rasterCursorPosX, float rasterCursor
 				if (viewC64->rasterToShowX >= 0x068 && viewC64->rasterToShowX < 0x1F0
 					&& viewC64->rasterToShowY >= 0x010 && viewC64->rasterToShowY < 0x128)
 				{
-					this->RenderRaster(rx, ry);
+					this->RenderRasterCursor(rx, ry);
 				}
 			}
 		}
@@ -1616,7 +1686,7 @@ void CViewC64VicDisplay::RenderCursor(float rasterCursorPosX, float rasterCursor
 	{
 		if (rasterCursorPosX >= 0 && rasterCursorPosX <= 320.0f && rasterCursorPosY >= 0 && rasterCursorPosY <= 200.0f)
 		{
-			this->RenderRaster(rasterCursorPosX, rasterCursorPosY);
+			this->RenderRasterCursor(rasterCursorPosX, rasterCursorPosY);
 		}
 		else
 		{
@@ -1632,7 +1702,7 @@ void CViewC64VicDisplay::RenderCursor(float rasterCursorPosX, float rasterCursor
 				
 				if (rx >= 0 && rx <= 320.0f && ry >= 0 && ry <= 200.0f)
 				{
-					this->RenderRaster(rx, ry);
+					this->RenderRasterCursor(rx, ry);
 				}
 			}
 		}
@@ -1644,7 +1714,7 @@ void CViewC64VicDisplay::UpdateRasterCrossFactors()
 {
 //	LOGD("CViewC64VicDisplay::UpdateRasterCrossFactors");
 
-	if (viewC64->debugInterface->GetEmulatorType() == C64_EMULATOR_VICE)
+	if (viewC64->debugInterfaceC64->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
 	{
 		this->rasterScaleFactorX = displaySizeX / (float)320;
 		this->rasterScaleFactorY = displaySizeY / (float)200;
@@ -1695,7 +1765,7 @@ void CViewC64VicDisplay::SetDisplayFrameRaster(float rasterX, float rasterY, flo
 }
 
 
-void CViewC64VicDisplay::RenderRaster(int rasterX, int rasterY)
+void CViewC64VicDisplay::RenderRasterCursor(int rasterX, int rasterY)
 {
 	float cx = displayPosWithScrollX + (float)rasterX * rasterScaleFactorX  + rasterCrossOffsetX;
 	float cy = displayPosWithScrollY + (float)rasterY * rasterScaleFactorY  + rasterCrossOffsetY;
@@ -1761,7 +1831,7 @@ void CViewC64VicDisplay::Render(GLfloat posX, GLfloat posY)
 
 bool CViewC64VicDisplay::ScrollMemoryAndDisassembleToRasterPosition(float rx, float ry, bool isForced)
 {
-//	LOGD("ScrollMemoryAndDisassembleToRasterPosition: %f %f %d", rx, ry, isForced);
+	LOGD("ScrollMemoryAndDisassembleToRasterPosition: %f %f %d", rx, ry, isForced);
 
 	// check if outside
 	int addr = -1;
@@ -1782,15 +1852,19 @@ bool CViewC64VicDisplay::ScrollMemoryAndDisassembleToRasterPosition(float rx, fl
 	
 	if (autoScrollMode == AUTOSCROLL_DISASSEMBLE_COLOUR_ADDRESS)
 	{
-		addr = GetColourAddressForRaster(rx, ry);
+		addr = GetColorAddressForRaster(rx, ry);
 	}
 	else if (autoScrollMode == AUTOSCROLL_DISASSEMBLE_TEXT_ADDRESS)
 	{
-		addr = GetTextModeAddressForRaster(rx, ry);
+		addr = GetScreenAddressForRaster(rx, ry);
 	}
 	else if (autoScrollMode == AUTOSCROLL_DISASSEMBLE_BITMAP_ADDRESS)
 	{
 		addr = GetAddressForRaster(rx, ry);
+	}
+	else if (autoScrollMode == AUTOSCROLL_DISASSEMBLE_CHARSET_ADDRESS)
+	{
+		addr = GetCharsetAddressForRaster(rx, ry);
 	}
 	else	// ?
 	{
@@ -1926,7 +2000,7 @@ bool CViewC64VicDisplay::DoTap(GLfloat x, GLfloat y)
 bool CViewC64VicDisplay::DoRightClick(GLfloat x, GLfloat y)
 {
 	// TODO: this is too nasty workaround, do something with this!
-	if (viewC64->currentScreenLayoutId == C64_SCREEN_LAYOUT_VIC_DISPLAY
+	if (viewC64->currentScreenLayoutId == SCREEN_LAYOUT_C64_VIC_DISPLAY
 		&& guiMain->currentView == viewC64)
 	{
 		if (viewC64->viewC64Screen->IsInsideViewNonVisible(x, y))
@@ -1965,9 +2039,13 @@ void CViewC64VicDisplay::SetNextAutoScrollMode()
 		case AUTOSCROLL_DISASSEMBLE_TEXT_ADDRESS:
 			SetAutoScrollMode(AUTOSCROLL_DISASSEMBLE_COLOUR_ADDRESS);
 			break;
-			
-		default:
+
 		case AUTOSCROLL_DISASSEMBLE_COLOUR_ADDRESS:
+			SetAutoScrollMode(AUTOSCROLL_DISASSEMBLE_CHARSET_ADDRESS);
+			break;
+
+		default:
+		case AUTOSCROLL_DISASSEMBLE_CHARSET_ADDRESS:
 			SetAutoScrollMode(AUTOSCROLL_DISASSEMBLE_RASTER_PC);
 			break;
 			
@@ -2011,7 +2089,8 @@ void CViewC64VicDisplay::UpdateAutoscrollDisassemble(bool isForced)
 {
 	if (autoScrollMode == AUTOSCROLL_DISASSEMBLE_TEXT_ADDRESS
 		|| autoScrollMode == AUTOSCROLL_DISASSEMBLE_BITMAP_ADDRESS
-		|| autoScrollMode == AUTOSCROLL_DISASSEMBLE_COLOUR_ADDRESS)
+		|| autoScrollMode == AUTOSCROLL_DISASSEMBLE_COLOUR_ADDRESS
+		|| autoScrollMode == AUTOSCROLL_DISASSEMBLE_CHARSET_ADDRESS)
 	{
 		ScrollMemoryAndDisassembleToRasterPosition(rasterCursorPosX, rasterCursorPosY, isForced);
 	}
@@ -2398,23 +2477,23 @@ void CViewC64VicDisplay::ToggleVICRasterBreakpoint()
 	{
 		char *buf = SYS_GetCharBuf();
 		
-		viewC64->debugInterface->LockMutex();
+		viewC64->debugInterfaceC64->LockMutex();
 
-		std::map<uint16, C64AddrBreakpoint *> *breakpointsMap = &(viewC64->debugInterface->breakpointsC64Raster);
+		std::map<uint16, CAddrBreakpoint *> *breakpointsMap = &(viewC64->debugInterfaceC64->breakpointsRaster);
 
 		// find if breakpoint exists
-		std::map<uint16, C64AddrBreakpoint *>::iterator it = breakpointsMap->find(rasterLine);
+		std::map<uint16, CAddrBreakpoint *>::iterator it = breakpointsMap->find(rasterLine);
 		
 		if (it == breakpointsMap->end())
 		{
-			C64AddrBreakpoint *addrBreakpoint = new C64AddrBreakpoint(rasterLine);
+			CAddrBreakpoint *addrBreakpoint = new CAddrBreakpoint(rasterLine);
 			(*breakpointsMap)[addrBreakpoint->addr] = addrBreakpoint;
 			
 			sprintf(buf, "Created raster breakpoint line $%03X", rasterLine);
 		}
 		else
 		{
-			C64AddrBreakpoint *breakpoint = it->second;
+			CAddrBreakpoint *breakpoint = it->second;
 			breakpointsMap->erase(it);
 			delete breakpoint;
 			
@@ -2423,15 +2502,15 @@ void CViewC64VicDisplay::ToggleVICRasterBreakpoint()
 
 		if (breakpointsMap->empty())
 		{
-			viewC64->debugInterface->breakOnC64Raster = false;
+			viewC64->debugInterfaceC64->breakOnRaster = false;
 		}
 		else
 		{
-			viewC64->debugInterface->breakOnC64Raster = true;
+			viewC64->debugInterfaceC64->breakOnRaster = true;
 		}
 
 		
-		viewC64->debugInterface->UnlockMutex();
+		viewC64->debugInterfaceC64->UnlockMutex();
 		
 		guiMain->ShowMessage(buf);
 		SYS_ReleaseCharBuf(buf);

@@ -8,6 +8,9 @@
 #include "C64DebugInterface.h"
 #include "C64SettingsStorage.h"
 #include "C64ColodoreScreen.h"
+#include "C64KeyboardShortcuts.h"
+
+#include "CViewAtariScreen.h"
 
 CViewC64Screen::CViewC64Screen(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, C64DebugInterface *debugInterface)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
@@ -39,8 +42,8 @@ CViewC64Screen::CViewC64Screen(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	imageScreen = imageScreenDefault;
 	
 	// c64 screen texture boundaries
-	screenTexEndX = (float)debugInterface->GetC64ScreenSizeX() / 512.0f;
-	screenTexEndY = 1.0f - (float)debugInterface->GetC64ScreenSizeY() / 512.0f;
+	screenTexEndX = (float)debugInterface->GetScreenSizeX() / 512.0f;
+	screenTexEndY = 1.0f - (float)debugInterface->GetScreenSizeY() / 512.0f;
 
 	this->colodoreScreen = NULL;
 	
@@ -54,7 +57,7 @@ CViewC64Screen::CViewC64Screen(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	
 //	/// debug
 //	int rasterNum = 0x003A;
-//	C64AddrBreakpoint *addrBreakpoint = new C64AddrBreakpoint(rasterNum);
+//	CAddrBreakpoint *addrBreakpoint = new CAddrBreakpoint(rasterNum);
 //	debugInterface->breakpointsC64Raster[rasterNum] = addrBreakpoint;
 //	
 //	debugInterface->breakOnC64Raster = true;
@@ -154,7 +157,7 @@ void CViewC64Screen::RefreshScreen()
 	debugInterface->LockRenderScreenMutex();
 	
 	// refresh texture of C64's screen
-	CImageData *screen = debugInterface->GetC64ScreenImageData();
+	CImageData *screen = debugInterface->GetScreenImageData();
 	
 #if !defined(FINAL_RELEASE)
 	if (screen == NULL)
@@ -180,7 +183,7 @@ void CViewC64Screen::RefreshScreenColodore()
 	debugInterface->LockRenderScreenMutex();
 	
 	// refresh texture of C64's screen
-	CImageData *screen = debugInterface->GetC64ScreenImageData();
+	CImageData *screen = debugInterface->GetScreenImageData();
 	colodoreScreen->RefreshColodoreScreen(screen);
 	
 	imageScreen->Deallocate();
@@ -280,8 +283,8 @@ void CViewC64Screen::SetZoomedScreenLevel(float zoomedScreenLevel)
 {
 	this->zoomedScreenLevel = zoomedScreenLevel;
 	
-	zoomedScreenImageSizeX = (float)debugInterface->GetC64ScreenSizeX() * zoomedScreenLevel;
-	zoomedScreenImageSizeY = (float)debugInterface->GetC64ScreenSizeY() * zoomedScreenLevel;
+	zoomedScreenImageSizeX = (float)debugInterface->GetScreenSizeX() * zoomedScreenLevel;
+	zoomedScreenImageSizeY = (float)debugInterface->GetScreenSizeY() * zoomedScreenLevel;
 
 	zoomedScreenRasterScaleFactorX = zoomedScreenImageSizeX / (float)384; //debugInterface->GetC64ScreenSizeX();
 	zoomedScreenRasterScaleFactorY = zoomedScreenImageSizeY / (float)272; //debugInterface->GetC64ScreenSizeY();
@@ -337,7 +340,7 @@ void CViewC64Screen::RenderZoomedScreen(int rasterX, int rasterY)
 		 0.0f, 1.0f, screenTexEndX, screenTexEndY);
 	
 	// clipping
-	if (viewC64->currentScreenLayoutId != C64_SCREEN_LAYOUT_FULL_SCREEN_ZOOM)
+	if (viewC64->currentScreenLayoutId != SCREEN_LAYOUT_C64_FULL_SCREEN_ZOOM)
 	{
 		BlitRectangle(zoomedScreenPosX, zoomedScreenPosY, -1, zoomedScreenSizeX, zoomedScreenSizeY, 0.0f, 1.0f, 1.0f, 1.0f);
 	}
@@ -368,9 +371,9 @@ void CViewC64Screen::SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLflo
 
 void CViewC64Screen::UpdateRasterCrossFactors()
 {
-	if (viewC64->debugInterface->GetEmulatorType() == C64_EMULATOR_VICE)
+	if (viewC64->debugInterfaceC64->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
 	{
-		if (debugInterface->GetC64MachineType() == C64_MACHINE_PAL)
+		if (debugInterface->GetC64MachineType() == MACHINE_TYPE_PAL)
 		{
 			/// PAL
 			this->rasterScaleFactorX = sizeX / (float)384; //debugInterface->GetC64ScreenSizeX();
@@ -379,7 +382,7 @@ void CViewC64Screen::UpdateRasterCrossFactors()
 			rasterCrossOffsetX =  -103.787 * rasterScaleFactorX;
 			rasterCrossOffsetY = -15.500 * rasterScaleFactorY;
 		}
-		else if (debugInterface->GetC64MachineType() == C64_MACHINE_NTSC)
+		else if (debugInterface->GetC64MachineType() == MACHINE_TYPE_NTSC)
 		{
 			/// NTSC uses the same framebuffer
 			this->rasterScaleFactorX = sizeX / (float)384; //debugInterface->GetC64ScreenSizeX();
@@ -533,9 +536,89 @@ void CViewC64Screen::FinishTouches()
 	return CGuiView::FinishTouches();
 }
 
+int CViewC64Screen::GetJoystickAxis(u32 keyCode, bool isShift, bool isAlt, bool isControl)
+{
+	if (c64SettingsJoystickIsOn)
+	{
+		// workaround for fire (eg. fire+up = ALT+UP)
+		CSlrKeyboardShortcut *shortcut = NULL;
+		
+		if (viewC64->keyboardShortcuts->kbsJoystickFire->keyCode == keyCode
+			&& viewC64->keyboardShortcuts->kbsJoystickFire->isShift == isShift
+			&& viewC64->keyboardShortcuts->kbsJoystickFire->isAlt == isAlt
+			&& viewC64->keyboardShortcuts->kbsJoystickFire->isControl == isControl)
+		{
+			return JOYPAD_FIRE;
+		}
+		else
+		{
+			if (viewC64->keyboardShortcuts->kbsJoystickFire->keyCode == MTKEY_LALT
+				|| viewC64->keyboardShortcuts->kbsJoystickFire->keyCode == MTKEY_RALT)
+			{
+				isAlt = false;
+			}
+			else if (viewC64->keyboardShortcuts->kbsJoystickFire->keyCode == MTKEY_LCONTROL
+					 || viewC64->keyboardShortcuts->kbsJoystickFire->keyCode == MTKEY_RCONTROL)
+			{
+				isControl = false;
+			}
+			else if (viewC64->keyboardShortcuts->kbsJoystickFire->keyCode == MTKEY_LSHIFT
+					 || viewC64->keyboardShortcuts->kbsJoystickFire->keyCode == MTKEY_RSHIFT)
+			{
+				isShift = false;
+			}
+			
+			shortcut = viewC64->keyboardShortcuts->FindShortcut(KBZONE_SCREEN, keyCode, isShift, isAlt, isControl);
+		}
+		
+		if (shortcut != NULL)
+		{
+			if (shortcut == viewC64->keyboardShortcuts->kbsJoystickUp)
+			{
+				return JOYPAD_N;
+			}
+			else if (shortcut == viewC64->keyboardShortcuts->kbsJoystickDown)
+			{
+				return JOYPAD_S;
+			}
+			// something is messy here, why this is opposite?
+			else if (shortcut == viewC64->keyboardShortcuts->kbsJoystickLeft)
+			{
+				return JOYPAD_W;
+			}
+			else if (shortcut == viewC64->keyboardShortcuts->kbsJoystickRight)
+			{
+				return JOYPAD_E;
+			}
+			else if (shortcut == viewC64->keyboardShortcuts->kbsJoystickFire)
+			{
+				return JOYPAD_FIRE;
+			}
+		}
+	}
+
+	return JOYPAD_IDLE;
+}
+
+
 bool CViewC64Screen::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
-	LOGI(".......... CViewC64Screen::KeyDown: keyCode=%d", keyCode);
+	LOGD(".......... CViewC64Screen::KeyDown: keyCode=%d isShift=%s isAlt=%s isControl=%s", keyCode,
+		 STRBOOL(isShift), STRBOOL(isAlt), STRBOOL(isControl));
+	
+	if (viewC64->currentScreenLayoutId == SCREEN_LAYOUT_C64_AND_ATARI)
+	{
+		viewC64->viewAtariScreen->KeyDown(keyCode, isShift, isAlt, isControl);
+	}
+	
+	int joyAxis = GetJoystickAxis(keyCode, isShift, isAlt, isControl);
+	
+	if (joyAxis != JOYPAD_IDLE)
+	{
+		this->JoystickDown(joyAxis);
+		return true;
+	}
+	
 //	u32 bareKey = SYS_GetBareKey(keyCode, isShift, isAlt, isControl);
 	
 	debugInterface->LockIoMutex();
@@ -568,18 +651,39 @@ bool CViewC64Screen::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContr
 //		return true;
 	
 	
-	debugInterface->KeyboardDownWithJoystickCheck(keyCode); //bareKey);
+	
+	debugInterface->KeyboardDown(keyCode); //bareKey);
 	debugInterface->UnlockIoMutex();
 	return true;
 	
 	//return CGuiView::KeyDown(keyCode, isShift, isAlt, isControl);
 }
 
+
+
 bool CViewC64Screen::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
-	LOGI(".......... CViewC64Screen::KeyUp: keyCode=%d", keyCode);
-//	u32 bareKey = SYS_GetBareKey(keyCode, isShift, isAlt, isControl);
+	LOGD(".......... CViewC64Screen::KeyUp: keyCode=%d isShift=%s isAlt=%s isControl=%s", keyCode,
+		 STRBOOL(isShift), STRBOOL(isAlt), STRBOOL(isControl));
 	
+	if (viewC64->currentScreenLayoutId == SCREEN_LAYOUT_C64_AND_ATARI)
+	{
+		viewC64->viewAtariScreen->KeyUp(keyCode, isShift, isAlt, isControl);
+	}
+	
+
+	int joyAxis = GetJoystickAxis(keyCode, isShift, isAlt, isControl);
+	
+	if (joyAxis != JOYPAD_IDLE)
+	{
+		this->JoystickUp(joyAxis);
+		return true;
+	}
+	
+
+		
+	//	u32 bareKey = SYS_GetBareKey(keyCode, isShift, isAlt, isControl);
+
 	debugInterface->LockIoMutex();
 	
 	/*
@@ -603,7 +707,7 @@ bool CViewC64Screen::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl
 
 	LOGI(".........SYS_KeyCodeConvertSpecial converted key is ", keyCode);
 
-	debugInterface->KeyboardUpWithJoystickCheck(keyCode); //bareKey);
+	debugInterface->KeyboardUp(keyCode); //bareKey);
 	debugInterface->UnlockIoMutex();
 	
 	return true;
@@ -615,6 +719,35 @@ bool CViewC64Screen::KeyPressed(u32 keyCode, bool isShift, bool isAlt, bool isCo
 {
 	return CGuiView::KeyPressed(keyCode, isShift, isAlt, isControl);
 }
+
+void CViewC64Screen::JoystickDown(u32 axis)
+{
+	if (c64SettingsJoystickPort == 0)
+	{
+		// both ports
+		debugInterface->JoystickDown(1, axis);
+		debugInterface->JoystickDown(2, axis);
+	}
+	else
+	{
+		debugInterface->JoystickDown(c64SettingsJoystickPort, axis);
+	}
+}
+
+void CViewC64Screen::JoystickUp(u32 axis)
+{
+	if (c64SettingsJoystickPort == 0)
+	{
+		// both ports
+		debugInterface->JoystickUp(1, axis);
+		debugInterface->JoystickUp(2, axis);
+	}
+	else
+	{
+		debugInterface->JoystickUp(c64SettingsJoystickPort, axis);
+	}
+}
+
 
 void CViewC64Screen::ActivateView()
 {

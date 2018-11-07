@@ -21,6 +21,7 @@ extern "C" {
 #include "sid.h"
 #include "sid-resources.h"
 #include "drive.h"
+#include "datasette.h"
 #include "c64mem.h"
 #include "c64model.h"
 #include "ui.h"
@@ -43,6 +44,7 @@ extern "C" {
 #include "C64SIDFrequencies.h"
 #include "CViewC64.h"
 #include "CViewC64StateSID.h"
+#include "CViceAudioChannel.h"
 
 extern "C" {
 	void vsync_suspend_speed_eval(void);
@@ -75,7 +77,7 @@ C64DebugInterfaceVice::C64DebugInterfaceVice(CViewC64 *viewC64, uint8 *c64memory
 	screen = new CImageData(512, 512, IMG_TYPE_RGBA);
 	screen->AllocImage(false, true);
 
-	viceAudioChannel = NULL;
+	audioChannel = NULL;
 
 	ViceWrapperInit(this);
 	
@@ -93,7 +95,7 @@ C64DebugInterfaceVice::C64DebugInterfaceVice(CViewC64 *viewC64, uint8 *c64memory
 	
 	// PAL
 	screenHeight = 272;
-	machineType = C64_MACHINE_PAL;
+	machineType = MACHINE_TYPE_PAL;
 
 	// init C64 memory, will be attached to a memmaped file if needed
 	if (c64memory == NULL)
@@ -118,13 +120,8 @@ C64DebugInterfaceVice::C64DebugInterfaceVice(CViewC64 *viewC64, uint8 *c64memory
 	this->dataAdapterDrive1541 = new C64DiskDataAdapterVice(this);
 	this->dataAdapterDrive1541DirectRam = new C64DiskDirectRamDataAdapterVice(this);
 	
-
 	C64KeyMap *keyMap = C64KeyMapGetDefault();
 	InitKeyMap(keyMap);
-	
-
-	isJoystickEnabled = false;
-	joystickPort = 0x03;
 }
 
 extern "C" {
@@ -174,7 +171,7 @@ void C64DebugInterfaceVice::SetAudioVolume(float volume)
 
 int C64DebugInterfaceVice::GetEmulatorType()
 {
-	return C64_EMULATOR_VICE;
+	return EMULATOR_TYPE_C64_VICE;
 }
 
 CSlrString *C64DebugInterfaceVice::GetEmulatorVersionString()
@@ -198,6 +195,8 @@ void C64DebugInterfaceVice::RunEmulationThread()
 {
 	LOGM("C64DebugInterfaceVice::RunEmulationThread");
 
+	this->isRunning = true;
+
 #if defined(WIN32)
 	if (c64SettingsUseOnlyFirstCPU)
 	{
@@ -211,6 +210,8 @@ void C64DebugInterfaceVice::RunEmulationThread()
 	
 	vice_main_loop_run();
 	
+	audioChannel->Stop();
+
 	LOGM("C64DebugInterfaceVice::RunEmulationThread: finished");
 }
 
@@ -245,17 +246,17 @@ uint8 *C64DebugInterfaceVice::GetCharRom()
 	return mem_chargen_rom;
 }
 
-int C64DebugInterfaceVice::GetC64ScreenSizeX()
+int C64DebugInterfaceVice::GetScreenSizeX()
 {
 	return 384;
 }
 
-int C64DebugInterfaceVice::GetC64ScreenSizeY()
+int C64DebugInterfaceVice::GetScreenSizeY()
 {
 	return screenHeight;
 }
 
-CImageData *C64DebugInterfaceVice::GetC64ScreenImageData()
+CImageData *C64DebugInterfaceVice::GetScreenImageData()
 {
 	return screen;
 }
@@ -273,7 +274,7 @@ bool C64DebugInterfaceVice::IsCpuJam()
 void C64DebugInterfaceVice::ForceRunAndUnJamCpu()
 {
 	c64d_is_cpu_in_jam_state = 0;
-	this->SetDebugMode(C64_DEBUG_RUNNING);
+	this->SetDebugMode(DEBUGGER_MODE_RUNNING);
 }
 
 
@@ -288,7 +289,7 @@ void C64DebugInterfaceVice::Reset()
 
 	if (c64d_is_cpu_in_jam_state == 1)
 	{
-		this->SetDebugMode(C64_DEBUG_RUNNING);
+		this->SetDebugMode(DEBUGGER_MODE_RUNNING);
 		c64d_is_cpu_in_jam_state = 0;
 	}
 }
@@ -305,7 +306,7 @@ void C64DebugInterfaceVice::HardReset()
 
 	if (c64d_is_cpu_in_jam_state == 1)
 	{
-		this->SetDebugMode(C64_DEBUG_RUNNING);
+		this->SetDebugMode(DEBUGGER_MODE_RUNNING);
 		c64d_is_cpu_in_jam_state = 0;
 	}
 }
@@ -342,108 +343,7 @@ void C64DebugInterfaceVice::JoystickUp(int port, uint32 axis)
 	c64d_joystick_key_up(axis, port);
 }
 
-void C64DebugInterfaceVice::KeyboardDownWithJoystickCheck(uint32 mtKeyCode)
-{
-	LOGI("C64DebugInterfaceVice::KeyboardDownWithJoystickCheck: %d", mtKeyCode);
-	if (isJoystickEnabled)
-	{
-		if (mtKeyCode == MTKEY_ARROW_LEFT)
-		{
-			if ((joystickPort & 0x01) == 0x01)
-				c64d_joystick_key_down(JOYPAD_W, 1);
-			
-			if ((joystickPort & 0x02) == 0x02)
-				c64d_joystick_key_down(JOYPAD_W, 2);
-			return;
-		}
-		else if (mtKeyCode == MTKEY_ARROW_RIGHT)
-		{
-			if ((joystickPort & 0x01) == 0x01)
-				c64d_joystick_key_down(JOYPAD_E, 1);
-			if ((joystickPort & 0x02) == 0x02)
-				c64d_joystick_key_down(JOYPAD_E, 2);
-			return;
-		}
-		else if (mtKeyCode == MTKEY_ARROW_UP)
-		{
-			if ((joystickPort & 0x01) == 0x01)
-				c64d_joystick_key_down(JOYPAD_N, 1);
-			if ((joystickPort & 0x02) == 0x02)
-				c64d_joystick_key_down(JOYPAD_N, 2);
-			return;
-		}
-		else if (mtKeyCode == MTKEY_ARROW_DOWN)
-		{
-			if ((joystickPort & 0x01) == 0x01)
-				c64d_joystick_key_down(JOYPAD_S, 1);
-			if ((joystickPort & 0x02) == 0x02)
-				c64d_joystick_key_down(JOYPAD_S, 2);
-			return;
-		}
-		else if (mtKeyCode == MTKEY_RALT)
-		{
-			if ((joystickPort & 0x01) == 0x01)
-				c64d_joystick_key_down(JOYPAD_FIRE, 1);
-			if ((joystickPort & 0x02) == 0x02)
-				c64d_joystick_key_down(JOYPAD_FIRE, 2);
-			return;
-		}
-	}
-	
-	keyboard_key_pressed((unsigned long)mtKeyCode);
-}
-
-void C64DebugInterfaceVice::KeyboardUpWithJoystickCheck(uint32 mtKeyCode)
-{
-	LOGI("C64DebugInterfaceVice::KeyboardUpWithJoystickCheck: %d", mtKeyCode);
-	if (isJoystickEnabled)
-	{
-		if (mtKeyCode == MTKEY_ARROW_LEFT)
-		{
-			if ((joystickPort & 0x01) == 0x01)
-				c64d_joystick_key_up(JOYPAD_W, 1);
-			if ((joystickPort & 0x02) == 0x02)
-				c64d_joystick_key_up(JOYPAD_W, 2);
-			return;
-		}
-		else if (mtKeyCode == MTKEY_ARROW_RIGHT)
-		{
-			if ((joystickPort & 0x01) == 0x01)
-				c64d_joystick_key_up(JOYPAD_E, 1);
-			if ((joystickPort & 0x02) == 0x02)
-				c64d_joystick_key_up(JOYPAD_E, 2);
-			return;
-		}
-		else if (mtKeyCode == MTKEY_ARROW_UP)
-		{
-			if ((joystickPort & 0x01) == 0x01)
-				c64d_joystick_key_up(JOYPAD_N, 1);
-			if ((joystickPort & 0x02) == 0x02)
-				c64d_joystick_key_up(JOYPAD_N, 2);
-			return;
-		}
-		else if (mtKeyCode == MTKEY_ARROW_DOWN)
-		{
-			if ((joystickPort & 0x01) == 0x01)
-				c64d_joystick_key_up(JOYPAD_S, 1);
-			if ((joystickPort & 0x02) == 0x02)
-				c64d_joystick_key_up(JOYPAD_S, 2);
-			return;
-		}
-		else if (mtKeyCode == MTKEY_RALT)
-		{
-			if ((joystickPort & 0x01) == 0x01)
-				c64d_joystick_key_up(JOYPAD_FIRE, 1);
-			if ((joystickPort & 0x02) == 0x02)
-				c64d_joystick_key_up(JOYPAD_FIRE, 2);
-			return;
-		}
-	}
-
-	keyboard_key_released((unsigned long)mtKeyCode);
-}
-
-int C64DebugInterfaceVice::GetC64CpuPC()
+int C64DebugInterfaceVice::GetCpuPC()
 {
 	return viceCurrentC64PC;
 }
@@ -527,32 +427,6 @@ bool C64DebugInterfaceVice::GetSettingIsWarpSpeed()
 void C64DebugInterfaceVice::SetSettingIsWarpSpeed(bool isWarpSpeed)
 {
 	set_warp_mode(isWarpSpeed ? 1 : 0, NULL);
-}
-
-bool C64DebugInterfaceVice::GetSettingUseKeyboardForJoystick()
-{
-	return isJoystickEnabled;
-}
-
-void C64DebugInterfaceVice::SetSettingUseKeyboardForJoystick(bool isJoystickOn)
-{
-	this->isJoystickEnabled = isJoystickOn;
-}
-
-void C64DebugInterfaceVice::SetKeyboardJoystickPort(uint8 joystickPort)
-{
-	switch(joystickPort)
-	{
-		case 0:
-			this->joystickPort = 0x03;
-			break;
-		case 1:
-			this->joystickPort = 0x01;
-			break;
-		case 2:
-			this->joystickPort = 0x02;
-			break;
-	}
 }
 
 ///
@@ -889,14 +763,83 @@ u8 C64DebugInterfaceVice::GetVicRegister(uint8 registerNum)
 	return v;
 }
 
+//
+extern "C" {
+	cia_context_t *c64d_get_cia_context(int ciaId);
+	BYTE c64d_ciacore_peek(cia_context_t *cia_context, WORD addr);
+	void ciacore_store(cia_context_t *cia_context, WORD addr, BYTE value);
+}
+
+void C64DebugInterfaceVice::SetCiaRegister(uint8 ciaId, uint8 registerNum, uint8 value)
+{
+	cia_context_t *cia_context = c64d_get_cia_context(ciaId);
+	ciacore_store(cia_context, registerNum, value);
+}
+
+u8 C64DebugInterfaceVice::GetCiaRegister(uint8 ciaId, uint8 registerNum)
+{
+	cia_context_t *cia_context = c64d_get_cia_context(ciaId);	
+	return c64d_ciacore_peek(cia_context, registerNum);
+}
+
+extern "C" {
+	BYTE sid_peek_chip(WORD addr, int chipno);
+	void sid_store_chip(WORD addr, BYTE value, int chipno);
+}
+
+void C64DebugInterfaceVice::SetSidRegister(uint8 sidId, uint8 registerNum, uint8 value)
+{
+	sid_store_chip(registerNum, value, sidId);
+}
+
+u8 C64DebugInterfaceVice::GetSidRegister(uint8 sidId, uint8 registerNum)
+{
+	return sid_peek_chip(registerNum, sidId);
+}
+
+extern "C" {
+	void via1d1541_store(drive_context_t *ctxptr, WORD addr, BYTE data);
+	BYTE c64d_via1d1541_peek(drive_context_t *ctxptr, WORD addr);
+	void via2d_store(drive_context_t *ctxptr, WORD addr, BYTE data);
+	BYTE c64d_via2d_peek(drive_context_t *ctxptr, WORD addr);
+}
+void C64DebugInterfaceVice::SetViaRegister(uint8 driveId, uint8 viaId, uint8 registerNum, uint8 value)
+{
+	drive_context_t *drivectx = drive_context[driveId];
+	
+	if (viaId == 1)
+	{
+		via1d1541_store(drivectx, registerNum, value);
+	}
+	else
+	{
+		via2d_store(drivectx, registerNum, value);
+	}
+
+}
+
+u8 C64DebugInterfaceVice::GetViaRegister(uint8 driveId, uint8 viaId, uint8 registerNum)
+{
+	drive_context_t *drivectx = drive_context[driveId];
+	
+	if (viaId == 1)
+	{
+		return c64d_via1d1541_peek(drivectx, registerNum);
+	}
+	
+	return c64d_via2d_peek(drivectx, registerNum);
+}
+
+
+
 void C64DebugInterfaceVice::MakeJmpC64(uint16 addr)
 {
 	LOGD("C64DebugInterfaceVice::MakeJmpC64: %04x", addr);
 	
-	if (c64d_debug_mode == C64_DEBUG_PAUSED)
+	if (c64d_debug_mode == DEBUGGER_MODE_PAUSED)
 	{
 		c64d_set_c64_pc(addr);
-		c64d_set_debug_mode(C64_DEBUG_PAUSED);
+		c64d_set_debug_mode(DEBUGGER_MODE_PAUSED);
 	}
 	else
 	{
@@ -1085,10 +1028,10 @@ uint8 C64DebugInterfaceVice::GetByteFromRam1541(uint16 addr)
 
 void C64DebugInterfaceVice::MakeJmp1541(uint16 addr)
 {
-	if (c64d_debug_mode == C64_DEBUG_PAUSED)
+	if (c64d_debug_mode == DEBUGGER_MODE_PAUSED)
 	{
 		c64d_set_drive_pc(0, addr);
-		//c64d_set_debug_mode(C64_DEBUG_RUN_ONE_INSTRUCTION);
+		//c64d_set_debug_mode(DEBUGGER_MODE_RUN_ONE_INSTRUCTION);
 	}
 	else
 	{
@@ -1102,12 +1045,12 @@ void C64DebugInterfaceVice::MakeJmpNoReset1541(uint16 addr)
 }
 
 
-void C64DebugInterfaceVice::GetWholeMemoryMapC64(uint8 *buffer)
+void C64DebugInterfaceVice::GetWholeMemoryMap(uint8 *buffer)
 {
 	c64d_peek_whole_map_c64(buffer);
 }
 
-void C64DebugInterfaceVice::GetWholeMemoryMapFromRamC64(uint8 *buffer)
+void C64DebugInterfaceVice::GetWholeMemoryMapFromRam(uint8 *buffer)
 {
 	c64d_copy_whole_mem_ram_c64(buffer);
 }
@@ -1195,6 +1138,94 @@ uint8 C64DebugInterfaceVice::GetDebugMode()
 	return c64d_debug_mode;
 }
 
+// tape
+extern "C" {
+	int tape_image_attach(unsigned int unit, const char *name);
+	int tape_image_detach(unsigned int unit);
+	void datasette_control(int command);
+}
+
+static void tape_attach_trap(WORD addr, void *v)
+{
+	char *filePath = (char*)v;
+	tape_image_attach(1, filePath);
+
+	SYS_ReleaseCharBuf(filePath);
+}
+
+static void tape_detach_trap(WORD addr, void *v)
+{
+	tape_image_detach(1);
+}
+
+void C64DebugInterfaceVice::AttachTape(CSlrString *filePath)
+{
+	char *asciiPath = filePath->GetStdASCII();
+	
+	FixFileNameSlashes(asciiPath);
+	
+	char *buf = SYS_GetCharBuf();
+	strcpy(buf, asciiPath);
+
+	interrupt_maincpu_trigger_trap(tape_attach_trap, asciiPath);
+}
+
+void C64DebugInterfaceVice::DetachTape()
+{
+	interrupt_maincpu_trigger_trap(tape_detach_trap, NULL);
+}
+
+
+void C64DebugInterfaceVice::DatasettePlay()
+{
+	datasette_control(DATASETTE_CONTROL_START);
+}
+
+void C64DebugInterfaceVice::DatasetteStop()
+{
+	datasette_control(DATASETTE_CONTROL_STOP);
+}
+
+void C64DebugInterfaceVice::DatasetteForward()
+{
+	datasette_control(DATASETTE_CONTROL_FORWARD);
+}
+
+void C64DebugInterfaceVice::DatasetteRewind()
+{
+	datasette_control(DATASETTE_CONTROL_REWIND);
+}
+
+void C64DebugInterfaceVice::DatasetteRecord()
+{
+	datasette_control(DATASETTE_CONTROL_RECORD);
+}
+
+void C64DebugInterfaceVice::DatasetteReset()
+{
+	datasette_control(DATASETTE_CONTROL_RESET);
+}
+
+void C64DebugInterfaceVice::DatasetteSetSpeedTuning(int speedTuning)
+{
+	resources_set_int("DatasetteSpeedTuning", speedTuning);
+}
+
+void C64DebugInterfaceVice::DatasetteSetZeroGapDelay(int zeroGapDelay)
+{
+	resources_set_int("DatasetteZeroGapDelay", zeroGapDelay);
+}
+
+void C64DebugInterfaceVice::DatasetteSetResetWithCPU(bool resetWithCPU)
+{
+	resources_set_int("DatasetteResetWithCPU", resetWithCPU ? 1:0);
+}
+
+void C64DebugInterfaceVice::DatasetteSetTapeWobble(int tapeWobble)
+{
+	resources_set_int("DatasetteTapeWobble", tapeWobble);
+}
+
 
 // http://www.lemon64.com/?mainurl=http%3A//www.lemon64.com/apps/list.php%3FGenre%3Dcarts
 
@@ -1217,8 +1248,8 @@ static void cartridge_detach_trap(WORD addr, void *v)
 {
 	// -1 means all slots
 	cartridge_detach_image(-1);
+	machine_trigger_reset(MACHINE_RESET_MODE_HARD);
 }
-
 
 void C64DebugInterfaceVice::AttachCartridge(CSlrString *filePath)
 {
@@ -1279,699 +1310,6 @@ void C64DebugInterfaceVice::SetVicRecordStateMode(uint8 recordMode)
 	c64d_c64_set_vicii_record_state_mode(recordMode);
 }
 
-/// render states
-extern "C" {
-	const char *fetch_phi1_type(int addr);
-	BYTE c64d_ciacore_peek(cia_context_t *cia_context, WORD addr);
-}
-
-// TODO: change all %02x %04x into sprintfHexCode8WithoutZeroEnding(bufPtr, ...);
-
-void C64DebugInterfaceVice::RenderStateVIC(vicii_cycle_state_t *viciiState,
-										   float posX, float posY, float posZ, bool isVertical, bool showSprites, CSlrFont *fontBytes, float fontSize,
-										   std::vector<CImageData *> *spritesImageData,
-										   std::vector<CSlrImage *> *spritesImages, bool renderDataWithColors)
-{
-	static const char *mode_name[] =
-	{
-		"Standard Text",
-		"Multicolor Text",
-		"Hires Bitmap",
-		"Multicolor Bitmap",
-		"Extended Text",
-		"Illegal Text",
-		"Invalid Bitmap 1",
-		"Invalid Bitmap 2"
-	};
-
-	char buf[256];
-	char buf2[256];
-	float px = posX;
-	float py = posY;
-
-	int video_mode, m_mcm, m_bmm, m_ecm, v_bank, v_vram;
-	int i, bits, bits2;
-	
-	video_mode = ((viciiState->regs[0x11] & 0x60) | (viciiState->regs[0x16] & 0x10)) >> 4;
-	
-	m_ecm = (video_mode & 4) >> 2;  /* 0 standard, 1 extended */
-	m_bmm = (video_mode & 2) >> 1;  /* 0 text, 1 bitmap */
-	m_mcm = video_mode & 1;         /* 0 hires, 1 multi */
-	
-	v_bank = viciiState->vbank_phi1;
-	
-//	sprintf(buf, "Raster cycle/line: %d/%d IRQ: %d", viciiState->raster_cycle, viciiState->raster_line, viciiState->raster_irq_line);
-//	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-	
-	if (isVertical == false)
-	{
-		sprintf(buf, "Raster line       : %04x", viciiState->raster_line);
-		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-	}
-
-	sprintf(buf, "IRQ raster line   : %04x", viciiState->raster_irq_line);
-	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-	
-//	if (isVertical == false)
-//	{
-//		uint8 irqFlags = viciiState->irq_status;// | 0x70;
-//		sprintf(buf, "Interrupt status  : "); PrintVicInterrupts(irqFlags, buf);
-//		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-//	}
-	uint8 irqMask = viciiState->regs[0x1a];
-	sprintf(buf, "Enabled interrupts: "); PrintVicInterrupts(irqMask, buf);
-	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-
-//	sprintf(buf, "Scroll X/Y: %d/%d, RC %d, Idle: %d, %dx%d", viciiState->regs[0x16] & 0x07, viciiState->regs[0x11] & 0x07,
-//			viciiState->rc, viciiState->idle_state,
-//			39 + ((viciiState->regs[0x16] >> 3) & 1), 24 + ((viciiState->regs[0x11] >> 3) & 1));
-//	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-	
-
-	sprintf(buf, "X scroll          : %d", viciiState->regs[0x16] & 0x07);
-	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-	sprintf(buf, "Y scroll          : %d", viciiState->regs[0x11] & 0x07);
-	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-
-	sprintf(buf, "Border            : %dx%d", 39 + ((viciiState->regs[0x16] >> 3) & 1), 24 + ((viciiState->regs[0x11] >> 3) & 1));
-	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-
-	if (showSprites == true)
-	{
-		py += fontSize * 0.5f;
-	}
-	else
-	{
-		py = posY;
-		px = posX + fontSize * 29.0f;
-	}
-	
-	
-	sprintf(buf, "Display mode      : %s", mode_name[video_mode]);
-	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-//	sprintf(buf, "Mode: %s (ECM/BMM/MCM=%d/%d/%d)", mode_name[video_mode], m_ecm, m_bmm, m_mcm);
-//	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-
-	sprintf(buf, "Sequencer state   : %s", viciiState->idle_state ? "Idle" : "Display");
-	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-
-	sprintf(buf, "Row counter       : %d", viciiState->rc);
-	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-
-	const int FIRST_DMA_LINE = 0x30;
-	const int LAST_DMA_LINE = 0xf7;
-	uint8 yScroll = viciiState->regs[0x11] & 0x07;
-	bool isBadLine = viciiState->raster_line >= FIRST_DMA_LINE && viciiState->raster_line <= LAST_DMA_LINE && ((viciiState->raster_line & 7) == yScroll);
-
-	
-	sprintf(buf, "Bad line state    : %s", isBadLine ? "Yes" : "No");
-	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-
-	sprintf(buf, "VC %03x VCBASE %03x VMLI %2d Phi1 %02x", viciiState->vc, viciiState->vcbase, viciiState->vmli, viciiState->last_read_phi1);
-	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-
-//	sprintf(buf, "Colors: Border: %x BG: %x ", viciiState->regs[0x20], viciiState->regs[0x21]);
-//	if (m_ecm)
-//	{
-//		sprintf(buf2, "BG1: %x BG2: %x BG3: %x\n", viciiState->regs[0x22], viciiState->regs[0x23], viciiState->regs[0x24]);
-//		strcat(buf, buf2);
-//	}
-//	else if (m_mcm && !m_bmm)
-//	{
-//		sprintf(buf2, "MC1: %x MC2: %x\n", viciiState->regs[0x22], viciiState->regs[0x23]);
-//		strcat(buf, buf2);
-//	}
-//	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-	
-	
-	v_vram = ((viciiState->regs[0x18] >> 4) * 0x0400) + viciiState->vbank_phi2;
-	
-	if (isVertical == false)
-	{
-		sprintf(buf, "Video base        : %04x, ", v_vram);
-		if (m_bmm)
-		{
-			i = ((viciiState->regs[0x18] >> 3) & 1) * 0x2000 + v_bank;
-			sprintf(buf2, "Bitmap  %04x (%s)", i, fetch_phi1_type(i));
-			strcat(buf, buf2);
-		}
-		else
-		{
-			i = (((viciiState->regs[0x18] >> 1) & 0x7) * 0x0800) + v_bank;
-			sprintf(buf2, "Charset %04x (%s)", i, fetch_phi1_type(i));
-			strcat(buf, buf2);
-		}
-		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-	}
-	else
-	{
-		sprintf(buf, "Video base        : %04x", v_vram);
-		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-		if (m_bmm)
-		{
-			i = ((viciiState->regs[0x18] >> 3) & 1) * 0x2000 + v_bank;
-			sprintf(buf, "            Bitmap: %04x (%s)", i, fetch_phi1_type(i));
-		}
-		else
-		{
-			i = (((viciiState->regs[0x18] >> 1) & 0x7) * 0x800) + v_bank;
-			sprintf(buf, "           Charset: %04x (%s)", i, fetch_phi1_type(i));
-		}
-		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-	}
-	
-	py += fontSize * 0.5f;
-
-	
-	if (showSprites)
-	{
-		/// sprites
-		int numPasses = 1;
-		int step = 8;
-		
-		if (isVertical)
-		{
-			numPasses = 2;
-			step = 4;
-		}
-		
-	 // get VIC sprite colors
-		uint8 cD021 = viciiState->regs[0x21];
-		uint8 cD025 = viciiState->regs[0x25];
-		uint8 cD026 = viciiState->regs[0x26];
-		
-		float fss = fontSize * 0.25f;
-		
-		//bool isEnabled[8] = { false };
-		for (int passNum = 0; passNum < numPasses; passNum++)
-		{
-			int startId = passNum * step;
-			int endId = (passNum+1) * step;
-			
-			sprintf(buf, "         ");
-			
-			if (isVertical)
-			{
-				for (int z = startId; z < endId; z++)
-				{
-					sprintf(buf2, "#%d    ", z);
-					strcat(buf, buf2);
-				}
-				fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-			}
-			else
-			{
-				for (int z = startId; z < endId; z++)
-				{
-					sprintf(buf2, "%d     ", z);
-					strcat(buf, buf2);
-				}
-				fontBytes->BlitText(buf, px, py-fss, posZ, fontSize); py += fontSize;
-			}
-			
-			sprintf(buf, "Enabled: ");
-			bits = viciiState->regs[0x15];
-			for (i = startId; i < endId; i++)
-			{
-				/*
-				if (((bits >> i) & 1))
-				{
-					isEnabled[i] = true;
-				}
-				else
-				{
-					isEnabled[i] = false;
-				}
-				*/
-				
-				sprintf(buf2, "%s", ((bits >> i) & 1) ? "Yes   " : "No    ");
-				strcat(buf, buf2);
-			}
-			
-			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-			
-			/////////////"         "
-			sprintf(buf, "DMA/dis: ");
-			bits = viciiState->sprite_dma;
-			bits2 = viciiState->sprite_display_bits;
-			for (i = startId; i < endId; i++)
-			{
-				sprintf(buf2, "%c/%c   ", ((bits >> i) & 1) ? 'D' : ' ', ((bits2 >> i) & 1) ? 'd' : ' ');
-				strcat(buf, buf2);
-			}
-			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-			
-			/////////////"         "
-			sprintf(buf, "Pointer: ");
-			for (i = startId; i < endId; i++)
-			{
-				sprintf(buf2, "%02x    ", viciiState->sprite[i].pointer);
-				strcat(buf, buf2);
-			}
-			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-			
-			
-			/////////////"         "
-			sprintf(buf, "MC:      ");
-			for (i = startId; i < endId; i++)
-			{
-				sprintf(buf2, "%02x    ", viciiState->sprite[i].mc);
-				strcat(buf, buf2);
-			}
-			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-			
-			/////////////"         "
-			if (isVertical == false)
-			{
-				sprintf(buf, "MCBASE:  ");
-				for (i = startId; i < endId; i++)
-				{
-					sprintf(buf2, "%02x    ", viciiState->sprite[i].mcbase);
-					strcat(buf, buf2);
-				}
-				fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-			}
-			
-			/////////////"         "
-			sprintf(buf, "X-Pos:   ");
-			for (i = startId; i < endId; i++)
-			{
-				sprintf(buf2, "%-4d  ", viciiState->sprite[i].x);
-				
-				/*
-				int x = viciiState->regs[0 + (i << 1)];
-				
-				bits = viciiState->regs[0x10];
-				int e = ((bits >> i) & 1);
-				
-				if (e != 0)
-				{
-					x += 256;
-				}
-				LOGD(" .. #%d s.x=%d x=%d", i, viciiState->sprite[i].x, x);
-				*/
-				
-				strcat(buf, buf2);
-			}
-			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-			
-			
-			/////////////"         "
-			sprintf(buf, "Y-Pos:   ");
-			for (i = startId; i < endId; i++)
-			{
-				sprintf(buf2, "%-4d  ", viciiState->regs[1 + (i << 1)]);
-				strcat(buf, buf2);
-			}
-			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-			
-			/////////////"         "
-			sprintf(buf, "X-Exp:   ");
-			bits = viciiState->regs[0x1d];
-			
-			for (i = startId; i < endId; i++)
-			{
-				sprintf(buf2, "%s", ((bits >> i) & 1) ? "Yes   " : "No    ");
-				strcat(buf, buf2);
-			}
-			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-			
-			/////////////"         "
-			sprintf(buf, "Y-Exp:   ");
-			bits = viciiState->regs[0x17];
-			
-			for (i = startId; i < endId; i++)
-			{
-				sprintf(buf2, "%s", ((bits >> i) & 1) ? (viciiState->sprite[i].exp_flop ? "YES*  " : "Yes   ") : "No    ");
-				strcat(buf, buf2);
-			}
-			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-			
-			sprintf(buf, "Mode   : ");
-			bits = viciiState->regs[0x1c];
-			for (i = startId; i < endId; i++)
-			{
-				sprintf(buf2, "%s", ((bits >> i) & 1) ? "Multi " : "Std.  ");
-				strcat(buf, buf2);
-			}
-			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-			
-			sprintf(buf, "Prio.  : ");
-			bits = viciiState->regs[0x1b];
-			for (int z = startId; z < endId; z++)
-			{
-				sprintf(buf2, "%s", ((bits >> i) & 1) ? "Back  " : "Fore  ");
-				strcat(buf, buf2);
-			}
-			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-			
-			sprintf(buf, "Data   : ");
-			for (int z = startId; z < endId; z++)
-			{
-				int addr = v_bank + viciiState->sprite[z].pointer * 64;
-				sprintf(buf2, "%04x  ", addr);
-				strcat(buf, buf2);
-			}
-			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-			
-			py += fontSize * 0.25f;
-			
-			
-			//
-			// draw sprites
-			//
-			px += 9*fontSize;
-			
-			const float spriteSizeX = 6*fontSize;
-			const float spriteSizeY = (21.0f * spriteSizeX) / 24.0f;
-			
-			// sprites are rendered upside down
-			const float spriteTexStartX = 4.0/32.0;
-			const float spriteTexStartY = (32.0-4.0)/32.0;
-			const float spriteTexEndX = (4.0+24.0)/32.0;
-			const float spriteTexEndY = (32.0-(4.0+21.0))/32.0;
-			
-			//
-			
-			for (int zi = startId; zi < endId; zi++)
-			{
-				CSlrImage *image = (*spritesImages)[zi];
-				CImageData *imageData = (*spritesImageData)[zi];
-				
-				int addr = v_bank + viciiState->sprite[zi].pointer * 64;
-				
-				//LOGD("sprite#=%d dataAddr=%04x", zi, addr);
-				uint8 spriteData[63];
-				
-				for (int i = 0; i < 63; i++)
-				{
-					uint8 v;
-					this->dataAdapterC64DirectRam->AdapterReadByte(addr, &v);
-					spriteData[i] = v;
-					addr++;
-				}
-				
-				bool isColor = false;
-				if (viciiState->regs[0x1c] & (1<<zi))
-				{
-					isColor = true;
-				}
-				if (isColor == false)
-				{
-					if (renderDataWithColors)
-					{
-						uint8 spriteColor = viciiState->regs[0x27+zi];
-						ConvertSpriteDataToImage(spriteData, imageData, cD021, spriteColor, this, 4);
-					}
-					else
-					{
-						ConvertSpriteDataToImage(spriteData, imageData, 4);
-					}
-				}
-				else
-				{
-					uint8 spriteColor = viciiState->regs[0x27+zi];
-					ConvertColorSpriteDataToImage(spriteData, imageData, cD021, cD025, cD026, spriteColor, this, 4);
-				}
-				
-				// re-bind image
-				image->ReplaceImageData(imageData);
-				
-				// render image
-				//BlitRectangle(px, py, posZ, 32, 32, 0.5, 0.5, 1.0f, 1.0f);
-				
-				Blit(image, px, py, posZ, spriteSizeX, spriteSizeY, spriteTexStartX, spriteTexStartY, spriteTexEndX, spriteTexEndY);
-				px += spriteSizeX;
-			}
-			
-			px = posX;
-			py += 5.5f*fontSize;
-		}
-	}	
-}
-
-void C64DebugInterfaceVice::PrintVicInterrupts(uint8 flags, char *buf)
-{
-	if (flags & 0x1F)
-	{
-		if (flags & 0x01) strcat(buf, "Raster ");
-		if (flags & 0x02) strcat(buf, "Spr-Data ");
-		if (flags & 0x04) strcat(buf, "Spr-Spr ");
-		if (flags & 0x08) strcat(buf, "Lightpen");
-	}
-	else
-	{
-		strcat(buf, "None");
-	}
-}
-
-void C64DebugInterfaceVice::UpdateVICSpritesImages(vicii_cycle_state_t *viciiState,
-										   std::vector<CImageData *> *spritesImageData,
-										   std::vector<CSlrImage *> *spritesImages, bool renderDataWithColors)
-{
-	int v_bank = viciiState->vbank_phi1;
-	uint8 cD021 = viciiState->regs[0x21];
-	uint8 cD025 = viciiState->regs[0x25];
-	uint8 cD026 = viciiState->regs[0x26];
-
-	for (int zi = 0; zi < 8; zi++)
-	{
-		CSlrImage *image = (*spritesImages)[zi];
-		CImageData *imageData = (*spritesImageData)[zi];
-		
-		int addr = v_bank + viciiState->sprite[zi].pointer * 64;
-		
-		//LOGD("sprite#=%d dataAddr=%04x", zi, addr);
-		uint8 spriteData[63];
-		
-		for (int i = 0; i < 63; i++)
-		{
-			uint8 v;
-			this->dataAdapterC64DirectRam->AdapterReadByte(addr, &v);
-			spriteData[i] = v;
-			addr++;
-		}
-		
-		bool isColor = false;
-		if (viciiState->regs[0x1c] & (1<<zi))
-		{
-			isColor = true;
-		}
-		if (isColor == false)
-		{
-			if (renderDataWithColors)
-			{
-				uint8 spriteColor = viciiState->regs[0x27+zi];
-				ConvertSpriteDataToImage(spriteData, imageData, cD021, spriteColor, this, 4);
-			}
-			else
-			{
-				ConvertSpriteDataToImage(spriteData, imageData, 4);
-			}
-		}
-		else
-		{
-			uint8 spriteColor = viciiState->regs[0x27+zi];
-			ConvertColorSpriteDataToImage(spriteData, imageData, cD021, cD025, cD026, spriteColor, this, 4);
-		}
-		
-		// re-bind image
-		image->ReplaceImageData(imageData);		
-	}
-}
-
-void C64DebugInterfaceVice::RenderStateCIA(float px, float py, float posZ, CSlrFont *fontBytes, float fontSize, int ciaId)
-{
-	char buf[256];
-	cia_context_t *cia_context;
-	
-	if (ciaId == 1)
-	{
-		cia_context = machine_context.cia1;
-	}
-	else
-	{
-		cia_context = machine_context.cia2;
-	}
-	
-	uint8 cra = c64d_ciacore_peek(cia_context, 0x0e);
-
-	sprintf(buf, "CIA %d:", ciaId);
-	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-
-	sprintf(buf, "ICR: %02x CTRLA: %02x CTRLB: %02x",
-			c64d_ciacore_peek(cia_context, 0x0d), c64d_ciacore_peek(cia_context, 0x0e), c64d_ciacore_peek(cia_context, 0x0f));
-	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-	
-	sprintf(buf, "Port A:  %02x DDR: %02x", c64d_ciacore_peek(cia_context, 0x00), c64d_ciacore_peek(cia_context, 0x02));
-	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-	sprintf(buf, "Port B:  %02x DDR: %02x", c64d_ciacore_peek(cia_context, 0x01), c64d_ciacore_peek(cia_context, 0x03));
-	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-
-	sprintf(buf, "Serial data : %02x %s", c64d_ciacore_peek(cia_context, 0x0c), cra & 0x40 ? "Output" : "Input");
-	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-	
-	sprintf(buf, "Timer A  : %s", cra & 1 ? "On" : "Off");
-	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-	sprintf(buf, " Counter : %04x", c64d_ciacore_peek(cia_context, 0x04) + (c64d_ciacore_peek(cia_context, 0x05) << 8));
-	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-	sprintf(buf, " Run mode: %s", cra & 8 ? "One-shot" : "Continuous");
-	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-	sprintf(buf, " Input   : %s", cra & 0x20 ? "CNT" : "Phi2");
-	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-	sprintf(buf, " Output  : ");
-	if (cra & 2)
-		if (cra & 4)
-			strcat(buf, "PB6 Toggle");
-		else
-			strcat(buf, "PB6 Pulse");
-		else
-			strcat(buf, "None");
-	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-	//py+=fontSize;
-	
-	
-//	sprintf(buf, "Timer B  : %s", crb & 1 ? "On" : "Off");
-//	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-//	sprintf(buf, " Counter : %04x", c64d_ciacore_peek(cia_context, 0x06) + (c64d_ciacore_peek(cia_context, 0x07) << 8));
-//	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-//	sprintf(buf, " Run mode: %s", crb & 8 ? "One-shot" : "Continuous");
-//	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-//	sprintf(buf, " Input   : ");
-//	if (crb & 0x40)
-//		if (crb & 0x20)
-//			strcat(buf, "Timer A underflow (CNT high)");
-//		else
-//			strcat(buf, "Timer A underflow");
-//		else
-//			if (crb & 0x20)
-//				strcat(buf, "CNT");
-//			else
-//				strcat(buf, "Phi2");
-//	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-//	
-//	sprintf(buf, " Output  : ");
-//	if (crb & 2)
-//		if (crb & 4)
-//			strcat(buf, "PB7 Toggle");
-//		else
-//			strcat(buf, "PB7 Pulse");
-//		else
-//			strcat(buf, "None");
-//	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-
-	
-	uint8 tod_hr = c64d_ciacore_peek(cia_context, 0x0b);
-	uint8 tod_min = c64d_ciacore_peek(cia_context, 0x0a);
-	uint8 tod_sec = c64d_ciacore_peek(cia_context, 0x09);
-	uint8 tod_10ths = c64d_ciacore_peek(cia_context, 0x08);
-	
-	sprintf(buf, "TOD      : %1.1x%1.1x:%1.1x%1.1x:%1.1x%1.1x.%1.1x %s",
-			(tod_hr >> 4) & 1, tod_hr & 0x0f,
-			(tod_min >> 4) & 7, tod_min & 0x0f,
-			(tod_sec >> 4) & 7, tod_sec & 0x0f,
-			tod_10ths & 0x0f, tod_hr & 0x80 ? "PM" : "AM");
-	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-	
-	py += fontSize;
-
-}
-
-void C64DebugInterfaceVice::RenderStateSID(uint16 sidBase, float posX, float posY, float posZ, CSlrFont *fontBytes, float fontSize)
-{
-	char buf[256];
-	float px = posX;
-	float py = posY;
-	
-	uint8 reg_freq_lo, reg_freq_hi, reg_pw_lo, reg_pw_hi, reg_ad, reg_sr, reg_ctrl, reg_res_filter, reg_volume, reg_filter_lo, reg_filter_hi;
-	
-	reg_res_filter = sid_peek(sidBase + 0x17);
-	reg_volume  = sid_peek(sidBase + 0x18);
-	reg_filter_lo = sid_peek(sidBase + 0x15);
-	reg_filter_hi = sid_peek(sidBase + 0x16);
-	
-	
-	for (int voice = 0; voice < 3; voice++)
-	{
-		uint16 voiceBase = sidBase + voice * 0x07;
-		
-		reg_freq_lo = sid_peek(voiceBase + 0x00);
-		reg_freq_hi = sid_peek(voiceBase + 0x01);
-		reg_pw_lo = sid_peek(voiceBase + 0x02);
-		reg_pw_hi = sid_peek(voiceBase + 0x03);
-		reg_ctrl = sid_peek(voiceBase + 0x04);
-		reg_ad = sid_peek(voiceBase + 0x05);
-		reg_sr = sid_peek(voiceBase + 0x06);
-		
-		uint16 freq = (reg_freq_hi << 8) | reg_freq_lo;
-		
-		
-		
-		sprintf(buf, "Voice #%d", (voice+1));
-		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-
-		//		sprintf(buf, " Frequency  : %04x", freq);
-		const sid_frequency_t *sidFrequencyData = SidValueToNote(freq);
-		sprintf(buf, " Frequency  : %04x %s", freq, sidFrequencyData->name);
-		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-		
-		sprintf(buf, " Pulse Width: %04x", ((reg_pw_hi & 0x0f) << 8) | reg_pw_lo);
-		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-		sprintf(buf, " Env. (ADSR): %1.1x %1.1x %1.1x %1.1x",
-				reg_ad >> 4, reg_ad & 0x0f,
-				reg_sr >> 4, reg_sr & 0x0f);
-		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-		sprintf(buf, " Waveform   : ");
-		PrintSidWaveform(reg_ctrl, buf);
-		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-		sprintf(buf, " Gate       : %s  Ring mod.: %s", reg_ctrl & 0x01 ? "On " : "Off", reg_ctrl & 0x04 ? "On" : "Off");
-		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-		sprintf(buf, " Test bit   : %s  Synchron.: %s", reg_ctrl & 0x08 ? "On " : "Off", reg_ctrl & 0x02 ? "On" : "Off");
-		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-		if (voice == 2)
-		{
-			sprintf(buf, " Filter     : %s  Mute     : %s", reg_res_filter & (1 << voice) ? "On " : "Off", reg_volume & 0x80 ? "Yes" : "No");
-		}
-		else
-		{
-			sprintf(buf, " Filter     : %s", reg_res_filter & (1 << voice) ? "On " : "Off");
-		}
-		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-		py += fontSize;
-	}
-	
-	sprintf(buf, "Filters/Volume");
-	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-	sprintf(buf, " Frequency: %04x", (reg_filter_hi << 3) | (reg_filter_lo & 0x07));
-	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-	sprintf(buf, " Resonance: %1.1x", reg_res_filter >> 4);
-	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-	sprintf(buf, " Mode     : ");
-	if (reg_volume & 0x70)
-	{
-		if (reg_volume & 0x10) strcat(buf, "LP ");
-		if (reg_volume & 0x20) strcat(buf, "BP ");
-		if (reg_volume & 0x40) strcat(buf, "HP");
-	}
-	else
-	{
-		strcat(buf, "None");
-	}
-	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-	sprintf(buf, " Volume   : %1.1x", reg_volume & 0x0f);
-	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-}
-
-void C64DebugInterfaceVice::PrintSidWaveform(uint8 wave, char *buf)
-{
-	if (wave & 0xf0) {
-		if (wave & 0x10) strcat(buf, "Triangle ");
-		if (wave & 0x20) strcat(buf, "Sawtooth ");
-		if (wave & 0x40) strcat(buf, "Rectangle ");
-		if (wave & 0x80) strcat(buf, "Noise");
-	} else
-		strcat(buf, "None");
-}
 
 void C64DebugInterfaceVice::SetSIDMuteChannels(int sidNumber, bool mute1, bool mute2, bool mute3, bool muteExt)
 {
@@ -2044,7 +1382,7 @@ void c64d_update_c64_machine_from_model_type(int modelType)
 		case 7:
 		case 11:
 			// PAL, 312 lines
-			debugInterfaceVice->machineType = C64_MACHINE_PAL;
+			debugInterfaceVice->machineType = MACHINE_TYPE_PAL;
 			break;
 		case 3:
 		case 4:
@@ -2052,7 +1390,7 @@ void c64d_update_c64_machine_from_model_type(int modelType)
 		case 8:
 		case 12:
 			// NTSC, 275 lines
-			debugInterfaceVice->machineType = C64_MACHINE_NTSC;
+			debugInterfaceVice->machineType = MACHINE_TYPE_NTSC;
 			break;
 	}
 }
@@ -2104,7 +1442,7 @@ static void load_snapshot_trap(WORD addr, void *v)
 	{
 		guiMain->ShowMessage("Snapshot loading failed");
 		
-		debugInterfaceVice->machineType = C64_MACHINE_UNKNOWN;
+		debugInterfaceVice->machineType = MACHINE_TYPE_UNKNOWN;
 		debugInterfaceVice->screenHeight = 0;
 		
 		c64d_clear_screen();
@@ -2115,7 +1453,7 @@ static void load_snapshot_trap(WORD addr, void *v)
 		if (c64d_is_cpu_in_jam_state == 1)
 		{
 			c64d_is_cpu_in_jam_state = 0;
-			c64d_set_debug_mode(C64_DEBUG_RUNNING);
+			c64d_set_debug_mode(DEBUGGER_MODE_RUNNING);
 		}
 	}
 	
@@ -2150,13 +1488,13 @@ bool C64DebugInterfaceVice::LoadFullSnapshot(char *filePath)
 	char *buf = SYS_GetCharBuf();
 	strcpy(buf, filePath);
 	
-	this->machineType = C64_MACHINE_LOADING_SNAPSHOT;
+	this->machineType = MACHINE_TYPE_LOADING_SNAPSHOT;
 	
 	interrupt_maincpu_trigger_trap(load_snapshot_trap, buf);
 	
-	if (c64d_debug_mode == C64_DEBUG_PAUSED)
+	if (c64d_debug_mode == DEBUGGER_MODE_PAUSED)
 	{
-		c64d_set_debug_mode(C64_DEBUG_RUN_ONE_INSTRUCTION);
+		c64d_set_debug_mode(DEBUGGER_MODE_RUN_ONE_INSTRUCTION);
 	}
 	
 	return true;
@@ -2191,182 +1529,13 @@ void C64DebugInterfaceVice::SaveFullSnapshot(char *filePath)
 		interrupt_maincpu_trigger_trap(save_snapshot_trap, buf);
 	}
 	
-	if (c64d_debug_mode == C64_DEBUG_PAUSED)
+	if (c64d_debug_mode == DEBUGGER_MODE_PAUSED)
 	{
-		c64d_set_debug_mode(C64_DEBUG_RUN_ONE_INSTRUCTION);
+		c64d_set_debug_mode(DEBUGGER_MODE_RUN_ONE_INSTRUCTION);
 	}
 }
 
 
-
-
-
-extern "C" {
-	BYTE c64d_via1d1541_peek(drive_context_t *ctxptr, WORD addr);
-	BYTE c64d_via2d_peek(drive_context_t *ctxptr, WORD addr);
-};
-
-#define VIA_PRB         0  /* Port B */
-#define VIA_PRA         1  /* Port A */
-#define VIA_DDRB        2  /* Data direction register for port B */
-#define VIA_DDRA        3  /* Data direction register for port A */
-
-#define VIA_T1CL        4  /* Timer 1 count low */
-#define VIA_T1CH        5  /* Timer 1 count high */
-#define VIA_T1LL        6  /* Timer 1 latch low */
-#define VIA_T1LH        7  /* Timer 1 latch high */
-#define VIA_T2CL        8  /* Timer 2 count low - read only */
-#define VIA_T2LL        8  /* Timer 2 latch low - write only */
-#define VIA_T2CH        9  /* Timer 2 latch/count high */
-
-#define VIA_SR          10 /* Serial port shift register */
-#define VIA_ACR         11 /* Auxiliary control register */
-#define VIA_PCR         12 /* Peripheral control register */
-
-#define VIA_IFR         13 /* Interrupt flag register */
-#define VIA_IER         14 /* Interrupt control register */
-
-void C64DebugInterfaceVice::RenderStateDrive1541(float posX, float posY, float posZ, CSlrFont *fontBytes, float fontSize,
-												 bool renderVia1, bool renderVia2, bool renderDriveLed,
-												 bool isVertical)
-{
-	char buf[256];
-	float px = posX;
-	float py = posY;
-	byte v1, v2;
-	byte counterlo;
-	byte counterhi;
-	byte latchlo;
-	byte latchhi;
-	
-	if (renderVia1)
-	{
-		sprintf(buf, "VIA 1:");
-		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-		
-		v1 = c64d_via1d1541_peek(drive_context[0], 0x1800);
-		v2 = c64d_via1d1541_peek(drive_context[0], 0x1801);
-		sprintf(buf, " PRB: %02x PRA: %02x", v1, v2);
-		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-		
-		
-		counterlo = c64d_via1d1541_peek(drive_context[0], 0x1804);
-		counterhi = c64d_via1d1541_peek(drive_context[0], 0x1805);
-		latchlo = c64d_via1d1541_peek(drive_context[0], 0x1806);
-		latchhi = c64d_via1d1541_peek(drive_context[0], 0x1807);
-		sprintf(buf, " Timer Counter: %02x%02x", counterhi, counterlo); // Latch: %02x%02x", counterhi, counterlo, latchlo, latchhi);
-		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-		
-		//	counterlo = c64d_via1d1541_peek(drive_context[0], 0x1804);
-		//	counterhi = c64d_via1d1541_peek(drive_context[0], 0x1805);
-		//	sprintf(buf, " Timer 2 Counter: %02x%02x", counterhi, counterlo);
-		//	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-
-		v1 = c64d_via1d1541_peek(drive_context[0], 0x180B);
-		v2 = c64d_via1d1541_peek(drive_context[0], 0x180C);
-		
-		if (isVertical)
-		{
-			sprintf(buf, " ACR: %02x PCR: %02x", v1, v2);
-			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-		}
-		else
-		{
-			sprintf(buf, " ACR: %02x", v1);
-			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-			
-			sprintf(buf, " PCR: %02x", v2);
-			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-		}
-		
-		v1 = c64d_via1d1541_peek(drive_context[0], 0x180D);
-		v2 = c64d_via1d1541_peek(drive_context[0], 0x180E);
-		sprintf(buf, " IFR: %02x IER: %02x", v1, v2);
-		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-		
-		
-		//	TODO: pending interrupts & enabled interrupts
-		
-		
-		if (isVertical)
-		{
-		}
-		else
-		{
-			py = posY;
-			px = posX + 120;
-		}
-	}
-	
-	if (renderVia2)
-	{
-		sprintf(buf, "VIA 2:");
-		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-		v1 = c64d_via2d_peek(drive_context[0], 0x1C00);
-		v2 = c64d_via2d_peek(drive_context[0], 0x1C01);
-		sprintf(buf, " PRB: %02x PRA: %02x", v1, v2);
-		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-		
-		
-		counterlo = c64d_via2d_peek(drive_context[0], 0x1C04);
-		counterhi = c64d_via2d_peek(drive_context[0], 0x1C05);
-		latchlo = c64d_via2d_peek(drive_context[0], 0x1C06);
-		latchhi = c64d_via2d_peek(drive_context[0], 0x1C07);
-		sprintf(buf, " Timer Counter: %02x%02x", counterhi, counterlo); // Latch: %02x%02x", counterhi, counterlo, latchlo, latchhi);
-		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-		
-		//	counterlo = c64d_via2d_peek(drive_context[0], 0x1C04);
-		//	counterhi = c64d_via2d_peek(drive_context[0], 0x1C05);
-		//	sprintf(buf, " Timer 2 Counter: %02x%02x", counterhi, counterlo);
-		//	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-		
-		v1 = c64d_via2d_peek(drive_context[0], 0x1C0B);
-		v2 = c64d_via2d_peek(drive_context[0], 0x1C0C);
-
-		if (isVertical)
-		{
-			sprintf(buf, " ACR: %02x PCR: %02x", v1, v2);
-			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-		}
-		else
-		{
-			sprintf(buf, " ACR: %02x", v1);
-			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-			
-			sprintf(buf, " PCR: %02x", v2);
-			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-		}
-		
-		
-		v1 = c64d_via2d_peek(drive_context[0], 0x1C0D);
-		v2 = c64d_via2d_peek(drive_context[0], 0x1C0E);
-		sprintf(buf, " IFR: %02x IER: %02x", v1, v2);
-		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-		
-	}
-	
-	if (renderDriveLed)
-	{
-		px = posX;
-		py += fontSize;
-		fontBytes->BlitText("Drive LED: ", px, py, posZ, fontSize);
-		
-		float ledSizeX = fontSize*4.0f;
-		float gap = fontSize * 0.1f;
-		float ledSizeY = fontSize + gap + gap;
-
-		float ledX = px + fontSize * 12.0f;
-		float ledY = py - gap;
-
-		float color = this->ledState[0];
-		
-		BlitFilledRectangle(ledX, ledY, posZ, ledSizeX, ledSizeY,
-							0.0f, color, 0.0f, 1.0f);
-		BlitRectangle(ledX, py - gap, posZ, ledSizeX, ledSizeY,
-					  0.3f, 0.3f, 0.3f, 1.0f, gap);
-	}
-	
-}
 
 /// default keymap
 void ViceKeyMapInitDefault()

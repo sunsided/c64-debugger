@@ -1326,7 +1326,7 @@ PaError PaUtil_ValidateStreamPointer( PaStream* stream )
 
 PaError Pa_CloseStream( PaStream* stream )
 {
-    PaUtilStreamInterface *interface;
+    PaUtilStreamInterface *iface;
     PaError result = PaUtil_ValidateStreamPointer( stream );
 
     PA_LOGAPI_ENTER_PARAMS( "Pa_CloseStream" );
@@ -1339,17 +1339,17 @@ PaError Pa_CloseStream( PaStream* stream )
 
     if( result == paNoError )
     {
-        interface = PA_STREAM_INTERFACE(stream);
+        iface = PA_STREAM_INTERFACE(stream);
 
         /* abort the stream if it isn't stopped */
-        result = interface->IsStopped( stream );
+        result = iface->IsStopped( stream );
         if( result == 1 )
             result = paNoError;
         else if( result == 0 )
-            result = interface->Abort( stream );
+            result = iface->Abort( stream );
 
         if( result == paNoError )                 /** @todo REVIEW: shouldn't we close anyway? see: http://www.portaudio.com/trac/ticket/115 */
-            result = interface->Close( stream );
+            result = iface->Close( stream );
     }
 
     PA_LOGAPI_EXIT_PAERROR( "Pa_CloseStream", result );

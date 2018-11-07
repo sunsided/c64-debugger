@@ -1358,12 +1358,16 @@ static PaError OpenAndSetupOneAudioUnit(
                     sizeof(value) ) );
     }
     /* now set the format on the Audio Units. */
+	LOGD("now set the format on the Audio Units");
     if( outStreamParams )
     {
+		LOGD("outStreamParams");
        desiredFormat.mSampleRate    =sampleRate;
        desiredFormat.mBytesPerPacket=sizeof(float)*outStreamParams->channelCount;
        desiredFormat.mBytesPerFrame =sizeof(float)*outStreamParams->channelCount;
        desiredFormat.mChannelsPerFrame = outStreamParams->channelCount;
+		
+		LOGD("call blocking AudioUnitSetProperty");
        ERR_WRAP( AudioUnitSetProperty( *audioUnit,
                             kAudioUnitProperty_StreamFormat,
                             kAudioUnitScope_Input,

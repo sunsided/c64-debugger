@@ -149,13 +149,13 @@ double GetTickCountF()
 
 void SYS_LockRenderMutex()
 {
-	guiMain->LockMutex();
+	guiMain->LockMutex(); //"SYS_LockRenderMutex");
 //	pthread_mutex_lock(&gRenderMutex);
 }
 
 void SYS_UnlockRenderMutex()
 {
-	guiMain->UnlockMutex();
+	guiMain->UnlockMutex(); //"SYS_LockRenderMutex");
 //	pthread_mutex_unlock(&gRenderMutex);
 }
 

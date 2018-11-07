@@ -22,6 +22,7 @@ public:
 	virtual void SetPosition(GLfloat posX, GLfloat posY);
 	virtual void SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ);
 	virtual void SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY);
+	virtual void SetPositionElements(GLfloat posX, GLfloat posY);
 	virtual void SetSize(GLfloat sizeX, GLfloat sizeY);
 
 	// is inside including frame (with title bar, etc)?
@@ -71,9 +72,12 @@ public:
 	virtual bool DoMultiMove(COneTouchData *touch, float x, float y);
 	virtual bool DoMultiFinishTap(COneTouchData *touch, float x, float y);
 
+	void PositionCenterOnParentView();
+	
 	virtual void ActivateView();
 	virtual void DeactivateView();
 
+	bool positionElementsOnFrameMove;
 	bool consumeTapBackground;
 	
 	CSlrImage *imgBackground;
