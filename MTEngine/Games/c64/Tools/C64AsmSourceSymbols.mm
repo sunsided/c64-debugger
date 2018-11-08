@@ -754,7 +754,7 @@ void C64AsmSourceSymbols::ParseOldFormat(CByteBuffer *byteBuffer, CDebugInterfac
 	// Play with all the lines in the file
 	while (true)
 	{
-		if (getline(reader, line) == false)
+		if (!getline(reader, line))
 			break;
 		
 		LOGD("---- line=%d", lineNum);
@@ -1000,7 +1000,7 @@ void C64AsmSourceSymbols::LoadSource(C64AsmSourceFile *asmSourceFile, CSlrFile *
 	
 	while (true)
 	{
-		if (getline(reader, line) == false)
+		if (!getline(reader, line))
 			break;
 		
 //		LOGD("---- line=%d len=%d eof=%s", lineNum, line.length(), STRBOOL(reader.eof()));
