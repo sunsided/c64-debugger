@@ -175,7 +175,7 @@ void _LOGGER(unsigned int level, const char *fileName, unsigned int lineNum, con
  *  MobiTracker
  *
  *  Created by Marcin Skoczylas on 09-11-19.
- *  Copyright 2009. All rights reserved.
+ *  Copyright 2009 __MyCompanyName__. All rights reserved.
  *
 
 #ifndef __DBG_LOGF_H__

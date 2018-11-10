@@ -241,6 +241,10 @@ void CGuiButton::InitBackgroundColors()
 	textColorDisabledG = guiMain->theme->buttonDisabledTextColorG;
 	textColorDisabledB = guiMain->theme->buttonDisabledTextColorB;
 
+	buttonPressedColorR = buttonEnabledColorR;
+	buttonPressedColorG = buttonEnabledColorG;
+	buttonPressedColorB = buttonEnabledColorB;
+	buttonPressedColorA = buttonEnabledColorA;
 }
 
 void CGuiButton::UpdateTheme()
@@ -438,6 +442,13 @@ void CGuiButton::Render(GLfloat posX, GLfloat posY)
 		
 		if (this->enabled)
 		{
+			if (beingClicked)
+			{
+				BlitFilledRectangle(posX, posY, posZ, this->sizeX, this->sizeY,
+									this->buttonPressedColorR, this->buttonPressedColorG, this->buttonPressedColorB,
+									this->buttonPressedColorA);
+			}
+			
 			if (this->image != NULL)
 			{
 				if (this->imageExpanded == NULL)
@@ -549,7 +560,6 @@ void CGuiButton::Render(GLfloat posX, GLfloat posY)
 // @returns is consumed
 bool CGuiButton::DoTap(GLfloat posX, GLfloat posY)
 {
-	//LOGD("CGuiButton::DoTap");
 	if (!this->visible)
 		return false;
 
@@ -576,6 +586,7 @@ bool CGuiButton::DoTap(GLfloat posX, GLfloat posY)
 
 bool CGuiButton::DoFinishTap(GLfloat posX, GLfloat posY)
 {
+	LOGD("CGuiButton::DoFinishTap: name=%s", this->name);
 	if (!this->visible)
 		return false;
 

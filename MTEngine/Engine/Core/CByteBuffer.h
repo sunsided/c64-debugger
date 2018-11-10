@@ -174,6 +174,9 @@ public:
 	void removeCRLF();
 	void removeCRLFinQuotations();
 	
+	int GetNumberOfLines();
+
+	
 	//bool logBytes;
 	
 #ifdef USE_CBYTEBUFFER_POOL

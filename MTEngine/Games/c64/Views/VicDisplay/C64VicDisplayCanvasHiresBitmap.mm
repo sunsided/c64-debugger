@@ -6,6 +6,8 @@
 #include "C64CharHires.h"
 #include "CImageData.h"
 #include "C64Tools.h"
+#include "CViewVicEditor.h"
+#include "CViewC64Palette.h"
 
 C64VicDisplayCanvasHiresBitmap::C64VicDisplayCanvasHiresBitmap(CViewC64VicDisplay *vicDisplay)
 : C64VicDisplayCanvas(vicDisplay, C64_CANVAS_TYPE_BITMAP, false, false)
@@ -13,7 +15,8 @@ C64VicDisplayCanvasHiresBitmap::C64VicDisplayCanvasHiresBitmap(CViewC64VicDispla
 	
 }
 
-void C64VicDisplayCanvasHiresBitmap::RefreshScreen(vicii_cycle_state_t *viciiState, CImageData *imageDataScreen)
+void C64VicDisplayCanvasHiresBitmap::RefreshScreen(vicii_cycle_state_t *viciiState, CImageData *imageDataScreen,
+												   u8 backgroundColorAlpha, u8 foregroundColorAlpha)
 {
 	this->viciiState = viciiState;
 	
@@ -62,13 +65,13 @@ void C64VicDisplayCanvasHiresBitmap::RefreshScreen(vicii_cycle_state_t *viciiSta
 					if (bitmap & (1 << (7 - l)))
 					{
 						//data->colormap[(i * 320 * 8) + (j * 8) + (k * 320) + l] = fgcolor;
-						imageDataScreen->SetPixelResultRGBA(j*8 + l, i*8 + k, fgColorR, fgColorG, fgColorB, 255);
+						imageDataScreen->SetPixelResultRGBA(j*8 + l, i*8 + k, fgColorR, fgColorG, fgColorB, foregroundColorAlpha);
 						
 					}
 					else
 					{
 						//data->colormap[(i * 320 * 8) + (j * 8) + (k * 320) + l] = bgcolor;
-						imageDataScreen->SetPixelResultRGBA(j*8 + l, i*8 + k, bgColorR, bgColorG, bgColorB, 255);
+						imageDataScreen->SetPixelResultRGBA(j*8 + l, i*8 + k, bgColorR, bgColorG, bgColorB, backgroundColorAlpha);
 					}
 				}
 			}
@@ -282,7 +285,8 @@ void C64VicDisplayCanvasHiresBitmap::RenderCanvasSpecificGridValues()
 //
 void C64VicDisplayCanvasHiresBitmap::ClearScreen()
 {
-	ClearScreen(0x00, 0x00);
+	LOGD("C64VicDisplayCanvasHiresBitmap::ClearScreen");
+	ClearScreen(viewC64->viewVicEditor->viewPalette->colorD021, 0x00);
 }
 
 void C64VicDisplayCanvasHiresBitmap::ClearScreen(u8 charValue, u8 colorValue)
@@ -700,7 +704,7 @@ u8 C64VicDisplayCanvasHiresBitmap::PaintDither(bool forceColorReplace, int x, in
 					if (bitChar->colors[0] != color2)
 					{
 						if (bitChar->histogram[0] != 0
-							&& guiMain->isControlPressed == false)
+							&& forceColorReplace == false)
 						{
 							return PAINT_RESULT_BLOCKED;
 						}

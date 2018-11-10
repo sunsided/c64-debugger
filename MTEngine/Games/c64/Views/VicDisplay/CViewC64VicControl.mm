@@ -48,6 +48,7 @@ CViewC64VicControl::CViewC64VicControl(GLfloat posX, GLfloat posY, GLfloat posZ,
 	txtAutolockBitmapAddress = new CSlrString("BITMAP");
 	txtAutolockTextAddress = new CSlrString("SCREEN");
 	txtAutolockColourAddress = new CSlrString("COLOUR");
+	txtAutolockCharsetAddress = new CSlrString("CHARSET");
 	
 	// init display default vars
 	this->fontSize = 8.0f;
@@ -427,6 +428,10 @@ void CViewC64VicControl::SetAutoScrollModeUI(int newMode)
 	{
 		lblAutolockScrollMode->SetText(txtAutolockColourAddress);
 	}
+	else if (newMode == AUTOSCROLL_DISASSEMBLE_CHARSET_ADDRESS)
+	{
+		lblAutolockScrollMode->SetText(txtAutolockCharsetAddress);
+	}
 }
 
 void CViewC64VicControl::SetViciiPointersFromUI(uint16 *screenAddress, int *charsetAddress, int *bitmapBank)
@@ -788,6 +793,22 @@ void CViewC64VicControl::DoLogic()
 	CGuiView::DoLogic();
 }
 
+void CViewC64VicControl::UnlockAll()
+{
+	vicDisplay->ResetCursorLock();
+
+	lstScreenAddresses->SetListLocked(false);
+	lstCharsetAddresses->SetListLocked(false);
+	lstBitmapAddresses->SetListLocked(false);
+	
+	btnModeText->SetOn(false);
+	btnModeBitmap->SetOn(false);
+	btnModeHires->SetOn(false);
+	btnModeMulti->SetOn(false);
+	btnModeStandard->SetOn(false);
+	btnModeExtended->SetOn(false);
+}
+
 void CViewC64VicControl::RefreshScreenStateOnly(vicii_cycle_state_t *viciiState)
 {
 	u8 mc;
@@ -968,7 +989,7 @@ void CViewC64VicControl::Render()
 	{
 		btnToggleBreakpoint->SetEnabled(true);
 		
-		if (viewC64->debugInterface->breakOnC64Raster)
+		if (viewC64->debugInterfaceC64->breakOnRaster)
 		{
 			int rasterLine;
 
@@ -984,10 +1005,10 @@ void CViewC64VicControl::Render()
 			LOGD("rasterLine=%02x", rasterLine);
 			
 
-			std::map<uint16, C64AddrBreakpoint *> *breakpointsMap = &(viewC64->debugInterface->breakpointsC64Raster);
+			std::map<uint16, CAddrBreakpoint *> *breakpointsMap = &(viewC64->debugInterfaceC64->breakpointsRaster);
 			
 			// find if breakpoint exists
-			std::map<uint16, C64AddrBreakpoint *>::iterator it = breakpointsMap->find(rasterLine);
+			std::map<uint16, CAddrBreakpoint *>::iterator it = breakpointsMap->find(rasterLine);
 			if (it == breakpointsMap->end())
 			{
 				btnToggleBreakpoint->SetOn(false);
@@ -1345,6 +1366,12 @@ bool CViewC64VicControl::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isC
 	{
 		// Screen
 		this->vicDisplay->SetAutoScrollMode(AUTOSCROLL_DISASSEMBLE_COLOUR_ADDRESS);
+		return true;
+	}
+	else if ((keyCode == 't' || keyCode == 'T') && !isShift && !isAlt && !isControl)
+	{
+		// Screen
+		this->vicDisplay->SetAutoScrollMode(AUTOSCROLL_DISASSEMBLE_CHARSET_ADDRESS);
 		return true;
 	}
 	else if ((keyCode == 'v' || keyCode == 'V') && !isShift && !isAlt && !isControl)

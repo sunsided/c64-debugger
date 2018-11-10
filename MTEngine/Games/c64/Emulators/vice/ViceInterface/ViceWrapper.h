@@ -2,7 +2,7 @@
 #define _VICEDEBUGINTERFACE_H_
 
 #include "SYS_Types.h"
-#include "C64DebugTypes.h"
+#include "DebuggerDefs.h"
 
 #define C64DEBUGGER_VICE_VERSION_STRING		"3.1"
 
@@ -133,6 +133,7 @@ int c64d_is_debug_on_c64();
 int c64d_is_debug_on_drive1541();
 
 extern volatile int c64d_debug_mode;
+
 void c64d_c64_check_pc_breakpoint(uint16 pc);
 void c64d_c64_check_raster_breakpoint(uint16 rasterLine);
 int c64d_c64_is_checking_irq_breakpoints_enabled();
@@ -144,6 +145,7 @@ void c64d_drive1541_check_irqvia2_breakpoint();
 
 void c64d_c64_check_irqvic_breakpoint();
 void c64d_c64_check_irqcia_breakpoint(int ciaNum);
+void c64d_c64_check_irqnmi_breakpoint();
 void c64d_debug_pause_check();
 
 void c64d_show_message(char *message);
@@ -165,6 +167,9 @@ extern int c64d_setting_run_sid_when_in_warp;
 
 // run SID emulation at all or always skip?
 extern int c64d_setting_run_sid_emulation;
+
+//// render transparent c64 screen (for Vic Display), transparent color = $d021
+//extern int c64d_setting_render_transparent_screen;
 
 
 #endif

@@ -80,7 +80,9 @@ public:
 	int ditherMaskPosY;
 
 	// note that viciiState pointer is copied in RefreshScreen which is then used for other methods
-	virtual void RefreshScreen(vicii_cycle_state_t *viciiState, CImageData *imageDataScreen);
+	void SetViciiState(vicii_cycle_state_t *viciiState);
+	virtual void RefreshScreen(vicii_cycle_state_t *viciiState, CImageData *imageDataScreen,
+							   u8 backgroundColorAlpha, u8 foregroundColorAlpha);
 	virtual void RenderGridLines();
 	
 	virtual void RenderCanvasSpecificGridLines();

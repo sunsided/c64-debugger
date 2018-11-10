@@ -28,7 +28,7 @@ public:
 	// @returns painting status (ok, replaced color, blocked)
 	virtual u8 PaintDither(bool forceColorReplace, int x, int y, u8 colorLMB, u8 colorRMB, u8 colorSource, int charValue);
 	
-	virtual void RefreshScreen(vicii_cycle_state_t *viciiState, CImageData *imageDataScreen);
+	virtual void RefreshScreen(vicii_cycle_state_t *viciiState, CImageData *imageDataScreen, u8 backgroundColorAlpha, u8 foregroundColorAlpha);
 	
 	virtual void RenderCanvasSpecificGridLines();
 	virtual void RenderCanvasSpecificGridValues();

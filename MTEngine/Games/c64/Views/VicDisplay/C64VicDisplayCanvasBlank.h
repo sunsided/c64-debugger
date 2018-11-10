@@ -18,7 +18,8 @@ public:
 	virtual u8 GetColorAtPixel(int x, int y);
 	virtual void PutColorAtPixel(int x, int y, u8 paintColor);
 	
-	virtual void RefreshScreen(vicii_cycle_state_t *viciiState, CImageData *imageDataScreen);
+	virtual void ClearScreen();
+	virtual void RefreshScreen(vicii_cycle_state_t *viciiState, CImageData *imageDataScreen, u8 backgroundColorAlpha, u8 foregroundColorAlpha);
 
 	virtual void RenderCanvasSpecificGridLines();
 	virtual void RenderCanvasSpecificGridValues();

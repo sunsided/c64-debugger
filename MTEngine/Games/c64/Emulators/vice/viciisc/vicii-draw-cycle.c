@@ -698,7 +698,7 @@ void vicii_draw_cycle(void)
 	
 	////
 
-	if (c64d_debug_mode != C64_DEBUG_RUNNING)
+	if (c64d_debug_mode != DEBUGGER_MODE_RUNNING)
 	{
 		//LOGD("debug_mode=%2.2x", c64d_debug_mode);
 		//LOGD("vicii_draw_cycle: cycle=%d dbuf_offset=%d", vicii.raster_cycle, vicii.dbuf_offset);

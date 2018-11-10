@@ -1,3 +1,8 @@
+//
+// this is Colodore WIP convert based on JS from https://www.colodore.com
+// NOTE: this is not ready at all
+//
+
 #include "C64ColodoreScreen.h"
 #include "C64DebugInterface.h"
 #include "CImageData.h"
@@ -73,8 +78,8 @@ void C64ColodoreScreen::InitColodoreScreen()
 
 	
 	//
-	int imageWidth = debugInterface->GetC64ScreenSizeX();
-	int imageHeight = debugInterface->GetC64ScreenSizeY();
+	int imageWidth = debugInterface->GetScreenSizeX();
+	int imageHeight = debugInterface->GetScreenSizeY();
 
 	int displayWidth = imageWidth;
 	int displayHeight = imageHeight;
@@ -119,8 +124,8 @@ void C64ColodoreScreen::InitColodoreScreen()
 
 void C64ColodoreScreen::RefreshColodoreScreen(CImageData *imageC64Screen)
 {
-	int imageWidth = debugInterface->GetC64ScreenSizeX();
-	int imageHeight = debugInterface->GetC64ScreenSizeY();
+	int imageWidth = debugInterface->GetScreenSizeX();
+	int imageHeight = debugInterface->GetScreenSizeY();
 	int displayWidth = imageWidth;
 	int displayHeight = imageHeight;
 

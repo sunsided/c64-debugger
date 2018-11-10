@@ -15,7 +15,6 @@
 #include "CViewSnapshots.h"
 #include "CViewC64KeyMap.h"
 #include "CViewKeyboardShortcuts.h"
-#include "C64DebugInterface.h"
 #include "MTH_Random.h"
 #include "C64Palette.h"
 
@@ -24,6 +23,9 @@
 
 #include "CGuiMain.h"
 #include "SND_SoundEngine.h"
+
+#include "C64DebugInterface.h"
+#include "AtariDebugInterface.h"
 
 #if defined(WIN32)
 extern "C" {
@@ -37,6 +39,7 @@ extern "C" {
 #define VIEWC64SETTINGS_DUMP_DRIVE1541_MEMORY			3
 #define VIEWC64SETTINGS_DUMP_DRIVE1541_MEMORY_MARKERS	4
 #define VIEWC64SETTINGS_MAP_C64_MEMORY_TO_FILE			5
+#define VIEWC64SETTINGS_ATTACH_TAPE						6
 
 CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
@@ -87,10 +90,28 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 	menuItemBackSubMenu->DebugPrint();
 	
 	//
+	
+	//
+	if (viewC64->debugInterfaceC64)
+	{
+		menuItemSubMenuTape = new CViewC64MenuItem(fontHeight, new CSlrString("Tape >>"),
+													NULL, tr, tg, tb, viewMenu);
+		viewMenu->AddMenuItem(menuItemSubMenuTape);
+		
+		menuItemSubMenuTape->DebugPrint();
+		
+		
+		menuItemBackSubMenu = new CViewC64MenuItem(fontHeight*2.0f, new CSlrString("<< BACK to Settings"),
+												   NULL, tr, tg, tb);
+		menuItemBackSubMenu->subMenu = viewMenu;
+		menuItemSubMenuTape->subMenu->AddMenuItem(menuItemBackSubMenu);
+		
+		menuItemBackSubMenu->DebugPrint();
+	}
 
 	//
 	menuItemSubMenuAudio = new CViewC64MenuItem(fontHeight, new CSlrString("Audio >>"),
-													NULL, tr, tg, tb, viewMenu);
+												NULL, tr, tg, tb, viewMenu);
 	viewMenu->AddMenuItem(menuItemSubMenuAudio);
 	
 	menuItemSubMenuAudio->DebugPrint();
@@ -104,7 +125,7 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 	menuItemBackSubMenu->DebugPrint();
 	
 	//
-
+	
 	//
 	menuItemSubMenuMemory = new CViewC64MenuItem(fontHeight, new CSlrString("Memory >>"),
 												NULL, tr, tg, tb, viewMenu);
@@ -162,64 +183,69 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 	optionsColors->push_back(new CSlrString("magenta"));
 
 	
-	//
-	kbsDetachEverything = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Detach Everything", 'd', true, false, true);
-	viewC64->keyboardShortcuts->AddShortcut(kbsDetachEverything);
-	menuItemDetachEverything = new CViewC64MenuItem(fontHeight, new CSlrString("Detach everything"),
-													kbsDetachEverything, tr, tg, tb);
-	menuItemSubMenuEmulation->AddMenuItem(menuItemDetachEverything);
-	
-	kbsDetachDiskImage = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Detach Disk Image", '8', true, false, true);
-	viewC64->keyboardShortcuts->AddShortcut(kbsDetachDiskImage);
-	menuItemDetachDiskImage = new CViewC64MenuItem(fontHeight, new CSlrString("Detach Disk Image"),
-													kbsDetachDiskImage, tr, tg, tb);
-	menuItemSubMenuEmulation->AddMenuItem(menuItemDetachDiskImage);
-
-	kbsDetachCartridge = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Detach Cartridge", '0', true, false, true);
-	viewC64->keyboardShortcuts->AddShortcut(kbsDetachCartridge);
-	menuItemDetachCartridge = new CViewC64MenuItem(fontHeight*2, new CSlrString("Detach Cartridge"),
-												   kbsDetachCartridge, tr, tg, tb);
-	menuItemSubMenuEmulation->AddMenuItem(menuItemDetachCartridge);
-	
-	
-	//
-	
-	c64ModelTypeIds = new std::vector<int>();
-	options = new std::vector<CSlrString *>();
-	viewC64->debugInterface->GetC64ModelTypes(options, c64ModelTypeIds);
-	
-	menuItemC64Model = new CViewC64MenuItemOption(fontHeight, new CSlrString("Machine model: "),
-												  NULL, tr, tg, tb, options, font, fontScale);
-	menuItemC64Model->SetSelectedOption(c64SettingsC64Model, false);
-	menuItemSubMenuEmulation->AddMenuItem(menuItemC64Model);
-
-	options = new std::vector<CSlrString *>();
-	options->push_back(new CSlrString("10"));
-	options->push_back(new CSlrString("20"));
-	options->push_back(new CSlrString("50"));
-	options->push_back(new CSlrString("100"));
-	options->push_back(new CSlrString("200"));
-	
-	kbsSwitchNextMaximumSpeed = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Next maximum speed", ']', false, false, true);
-	viewC64->keyboardShortcuts->AddShortcut(kbsSwitchNextMaximumSpeed);
-	kbsSwitchPrevMaximumSpeed = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Previous maximum speed", '[', false, false, true);
-	viewC64->keyboardShortcuts->AddShortcut(kbsSwitchPrevMaximumSpeed);
-
-	menuItemMaximumSpeed = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("Maximum speed: "),
-												  NULL, tr, tg, tb, options, font, fontScale);
-	menuItemMaximumSpeed->SetSelectedOption(3, false);
-	menuItemSubMenuEmulation->AddMenuItem(menuItemMaximumSpeed);
-	
-	//
-	
-
-	//
-	options = new std::vector<CSlrString *>();
-	viewC64->debugInterface->GetSidTypes(options);
-	menuItemSIDModel = new CViewC64MenuItemOption(fontHeight, new CSlrString("SID model: "),
-												  NULL, tr, tg, tb, options, font, fontScale);
-	menuItemSIDModel->SetSelectedOption(c64SettingsSIDEngineModel, false);
-	menuItemSubMenuAudio->AddMenuItem(menuItemSIDModel);
+	if (viewC64->debugInterfaceC64)
+	{
+		//
+		kbsDetachEverything = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Detach Everything", 'd', true, false, true);
+		viewC64->keyboardShortcuts->AddShortcut(kbsDetachEverything);
+		menuItemDetachEverything = new CViewC64MenuItem(fontHeight, new CSlrString("Detach everything"),
+														kbsDetachEverything, tr, tg, tb);
+		menuItemSubMenuEmulation->AddMenuItem(menuItemDetachEverything);
+		
+		kbsDetachDiskImage = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Detach Disk Image", '8', true, false, true);
+		viewC64->keyboardShortcuts->AddShortcut(kbsDetachDiskImage);
+		menuItemDetachDiskImage = new CViewC64MenuItem(fontHeight, new CSlrString("Detach Disk Image"),
+													   kbsDetachDiskImage, tr, tg, tb);
+		menuItemSubMenuEmulation->AddMenuItem(menuItemDetachDiskImage);
+		
+		kbsDetachCartridge = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Detach Cartridge", '0', true, false, true);
+		viewC64->keyboardShortcuts->AddShortcut(kbsDetachCartridge);
+		menuItemDetachCartridge = new CViewC64MenuItem(fontHeight*2, new CSlrString("Detach Cartridge"),
+													   kbsDetachCartridge, tr, tg, tb);
+		menuItemSubMenuEmulation->AddMenuItem(menuItemDetachCartridge);
+		
+		
+		//
+		
+		c64ModelTypeIds = new std::vector<int>();
+		options = new std::vector<CSlrString *>();
+		viewC64->debugInterfaceC64->GetC64ModelTypes(options, c64ModelTypeIds);
+		
+		menuItemC64Model = new CViewC64MenuItemOption(fontHeight, new CSlrString("Machine model: "),
+													  NULL, tr, tg, tb, options, font, fontScale);
+		menuItemC64Model->SetSelectedOption(c64SettingsC64Model, false);
+		menuItemSubMenuEmulation->AddMenuItem(menuItemC64Model);
+		
+		options = new std::vector<CSlrString *>();
+		options->push_back(new CSlrString("10"));
+		options->push_back(new CSlrString("20"));
+		options->push_back(new CSlrString("50"));
+		options->push_back(new CSlrString("100"));
+		options->push_back(new CSlrString("200"));
+		options->push_back(new CSlrString("300"));
+		options->push_back(new CSlrString("400"));
+		
+		kbsSwitchNextMaximumSpeed = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Next maximum speed", ']', false, false, true);
+		viewC64->keyboardShortcuts->AddShortcut(kbsSwitchNextMaximumSpeed);
+		kbsSwitchPrevMaximumSpeed = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Previous maximum speed", '[', false, false, true);
+		viewC64->keyboardShortcuts->AddShortcut(kbsSwitchPrevMaximumSpeed);
+		
+		menuItemMaximumSpeed = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("Maximum speed: "),
+														  NULL, tr, tg, tb, options, font, fontScale);
+		menuItemMaximumSpeed->SetSelectedOption(3, false);
+		menuItemSubMenuEmulation->AddMenuItem(menuItemMaximumSpeed);
+		
+		//
+		
+		
+		//
+		options = new std::vector<CSlrString *>();
+		viewC64->debugInterfaceC64->GetSidTypes(options);
+		menuItemSIDModel = new CViewC64MenuItemOption(fontHeight, new CSlrString("SID model: "),
+													  NULL, tr, tg, tb, options, font, fontScale);
+		menuItemSIDModel->SetSelectedOption(c64SettingsSIDEngineModel, false);
+		menuItemSubMenuAudio->AddMenuItem(menuItemSIDModel);
+	}
 	
 	//
 	menuItemAudioOutDevice = new CViewC64MenuItemOption(fontHeight, new CSlrString("Audio Out device: "),
@@ -227,98 +253,100 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 	menuItemSubMenuAudio->AddMenuItem(menuItemAudioOutDevice);
 	
 	//
-	menuItemAudioVolume = new CViewC64MenuItemFloat(fontHeight, new CSlrString("Audio volume: "),
+	menuItemAudioVolume = new CViewC64MenuItemFloat(fontHeight, new CSlrString("VICE Audio volume: "),
 																	NULL, tr, tg, tb,
 																	0.0f, 100.0f, 1.0f, font, fontScale);
 	menuItemAudioVolume->numDecimalsDigits = 0;
 	menuItemAudioVolume->SetValue(100.0f, false);
 	menuItemSubMenuAudio->AddMenuItem(menuItemAudioVolume);
 	
-	//
-	menuItemMuteSIDOnPause = new CViewC64MenuItemOption(fontHeight, new CSlrString("Mute SID on pause: "),
-														NULL, tr, tg, tb, optionsYesNo, font, fontScale);
-	menuItemMuteSIDOnPause->SetSelectedOption(c64SettingsMuteSIDOnPause ? 1 : 0, false);
-	menuItemSubMenuAudio->AddMenuItem(menuItemMuteSIDOnPause);
-	
-	//
-	options = new std::vector<CSlrString *>();
-	options->push_back(new CSlrString("Zero volume"));
-	options->push_back(new CSlrString("Stop SID emulation"));
-
-	menuItemMuteSIDMode = new CViewC64MenuItemOption(fontHeight, new CSlrString("Mute SID mode: "),
-														NULL, tr, tg, tb, options, font, fontScale);
-	menuItemMuteSIDMode->SetSelectedOption(c64SettingsMuteSIDMode, false);
-	menuItemSubMenuAudio->AddMenuItem(menuItemMuteSIDMode);
-
-	//
-	menuItemRunSIDEmulation = new CViewC64MenuItemOption(fontHeight, new CSlrString("Run SID emulation: "),
-											NULL, tr, tg, tb, optionsYesNo, font, fontScale);
-	menuItemRunSIDEmulation->SetSelectedOption(c64SettingsRunSIDEmulation ? 1 : 0, false);
-	menuItemSubMenuAudio->AddMenuItem(menuItemRunSIDEmulation);
-	
-	//
-	
-	menuItemRunSIDWhenInWarp = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("Run SID emulation in warp: "),
-														NULL, tr, tg, tb, optionsYesNo, font, fontScale);
-	menuItemRunSIDWhenInWarp->SetSelectedOption(c64SettingsRunSIDWhenInWarp ? 1 : 0, false);
-	menuItemSubMenuAudio->AddMenuItem(menuItemRunSIDWhenInWarp);
-
-	//
-	// samplingMethod: Fast=0, Interpolating=1, Resampling=2, Fast Resampling=3
-	options = new std::vector<CSlrString *>();
-	options->push_back(new CSlrString("Fast"));
-	options->push_back(new CSlrString("Interpolating"));
-	options->push_back(new CSlrString("Resampling"));
-	options->push_back(new CSlrString("Fast Resampling"));
-
-	menuItemRESIDSamplingMethod = new CViewC64MenuItemOption(fontHeight, new CSlrString("RESID Sampling method: "),
-															 NULL, tr, tg, tb, options, font, fontScale);
-	menuItemRESIDSamplingMethod->SetSelectedOption(c64SettingsRESIDSamplingMethod, false);
-	menuItemSubMenuAudio->AddMenuItem(menuItemRESIDSamplingMethod);
-
-	menuItemRESIDEmulateFilters = new CViewC64MenuItemOption(fontHeight, new CSlrString("RESID Emulate filters: "),
+	if (viewC64->debugInterfaceC64)
+	{
+		//
+		menuItemMuteSIDOnPause = new CViewC64MenuItemOption(fontHeight, new CSlrString("Mute SID on pause: "),
+															NULL, tr, tg, tb, optionsYesNo, font, fontScale);
+		menuItemMuteSIDOnPause->SetSelectedOption(c64SettingsMuteSIDOnPause ? 1 : 0, false);
+		menuItemSubMenuAudio->AddMenuItem(menuItemMuteSIDOnPause);
+		
+		//
+		options = new std::vector<CSlrString *>();
+		options->push_back(new CSlrString("Zero volume"));
+		options->push_back(new CSlrString("Stop SID emulation"));
+		
+		menuItemMuteSIDMode = new CViewC64MenuItemOption(fontHeight, new CSlrString("Mute SID mode: "),
+														 NULL, tr, tg, tb, options, font, fontScale);
+		menuItemMuteSIDMode->SetSelectedOption(c64SettingsMuteSIDMode, false);
+		menuItemSubMenuAudio->AddMenuItem(menuItemMuteSIDMode);
+		
+		//
+		menuItemRunSIDEmulation = new CViewC64MenuItemOption(fontHeight, new CSlrString("Run SID emulation: "),
 															 NULL, tr, tg, tb, optionsYesNo, font, fontScale);
-	menuItemRESIDEmulateFilters->SetSelectedOption((c64SettingsRESIDEmulateFilters == 1 ? true : false), false);
-	menuItemSubMenuAudio->AddMenuItem(menuItemRESIDEmulateFilters);
+		menuItemRunSIDEmulation->SetSelectedOption(c64SettingsRunSIDEmulation ? 1 : 0, false);
+		menuItemSubMenuAudio->AddMenuItem(menuItemRunSIDEmulation);
+		
+		//
+		
+		menuItemRunSIDWhenInWarp = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("Run SID emulation in warp: "),
+															  NULL, tr, tg, tb, optionsYesNo, font, fontScale);
+		menuItemRunSIDWhenInWarp->SetSelectedOption(c64SettingsRunSIDWhenInWarp ? 1 : 0, false);
+		menuItemSubMenuAudio->AddMenuItem(menuItemRunSIDWhenInWarp);
+		
+		//
+		// samplingMethod: Fast=0, Interpolating=1, Resampling=2, Fast Resampling=3
+		options = new std::vector<CSlrString *>();
+		options->push_back(new CSlrString("Fast"));
+		options->push_back(new CSlrString("Interpolating"));
+		options->push_back(new CSlrString("Resampling"));
+		options->push_back(new CSlrString("Fast Resampling"));
+		
+		menuItemRESIDSamplingMethod = new CViewC64MenuItemOption(fontHeight, new CSlrString("RESID Sampling method: "),
+																 NULL, tr, tg, tb, options, font, fontScale);
+		menuItemRESIDSamplingMethod->SetSelectedOption(c64SettingsRESIDSamplingMethod, false);
+		menuItemSubMenuAudio->AddMenuItem(menuItemRESIDSamplingMethod);
+		
+		menuItemRESIDEmulateFilters = new CViewC64MenuItemOption(fontHeight, new CSlrString("RESID Emulate filters: "),
+																 NULL, tr, tg, tb, optionsYesNo, font, fontScale);
+		menuItemRESIDEmulateFilters->SetSelectedOption((c64SettingsRESIDEmulateFilters == 1 ? true : false), false);
+		menuItemSubMenuAudio->AddMenuItem(menuItemRESIDEmulateFilters);
+		
+		//
+		menuItemRESIDPassBand = new CViewC64MenuItemFloat(fontHeight, new CSlrString("RESID Pass Band: "),
+														  NULL, tr, tg, tb,
+														  0.00f, 90.0f, 1.00f, font, fontScale);
+		menuItemRESIDPassBand->SetValue(c64SettingsRESIDPassBand, false);
+		menuItemSubMenuAudio->AddMenuItem(menuItemRESIDPassBand);
+		
+		menuItemRESIDFilterBias = new CViewC64MenuItemFloat(fontHeight*2, new CSlrString("RESID Filter Bias: "),
+															NULL, tr, tg, tb,
+															-500.0f, 500.0f, 1.00f, font, fontScale);
+		menuItemRESIDFilterBias->SetValue(c64SettingsRESIDFilterBias, false);
+		menuItemSubMenuAudio->AddMenuItem(menuItemRESIDFilterBias);
+		
+		//
+		options = new std::vector<CSlrString *>();
+		options->push_back(new CSlrString("None"));
+		options->push_back(new CSlrString("One"));
+		options->push_back(new CSlrString("Two"));
+		menuItemSIDStereo = new CViewC64MenuItemOption(fontHeight, new CSlrString("SID stereo: "),
+													   NULL, tr, tg, tb, options, font, fontScale);
+		menuItemSIDStereo->SetSelectedOption(c64SettingsSIDStereo, false);
+		menuItemSubMenuAudio->AddMenuItem(menuItemSIDStereo);
+		
+		options = GetSidAddressOptions();
+		
+		menuItemSIDStereoAddress = new CViewC64MenuItemOption(fontHeight, new CSlrString("SID #1 address: "),
+															  NULL, tr, tg, tb, options, font, fontScale);
+		int optNum = GetOptionNumFromSidAddress(c64SettingsSIDStereoAddress);
+		menuItemSIDStereoAddress->SetSelectedOption(optNum, false);
+		menuItemSubMenuAudio->AddMenuItem(menuItemSIDStereoAddress);
+		
+		menuItemSIDTripleAddress = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("SID #2 address: "),
+															  NULL, tr, tg, tb, options, font, fontScale);
+		optNum = GetOptionNumFromSidAddress(c64SettingsSIDTripleAddress);
+		menuItemSIDTripleAddress->SetSelectedOption(optNum, false);
+		menuItemSubMenuAudio->AddMenuItem(menuItemSIDTripleAddress);
 
-	//
-	menuItemRESIDPassBand = new CViewC64MenuItemFloat(fontHeight, new CSlrString("RESID Pass Band: "),
-																	NULL, tr, tg, tb,
-																	0.00f, 90.0f, 1.00f, font, fontScale);
-	menuItemRESIDPassBand->SetValue(c64SettingsRESIDPassBand, false);
-	menuItemSubMenuAudio->AddMenuItem(menuItemRESIDPassBand);
-
-	menuItemRESIDFilterBias = new CViewC64MenuItemFloat(fontHeight*2, new CSlrString("RESID Filter Bias: "),
-																	NULL, tr, tg, tb,
-																	-500.0f, 500.0f, 1.00f, font, fontScale);
-	menuItemRESIDFilterBias->SetValue(c64SettingsRESIDFilterBias, false);
-	menuItemSubMenuAudio->AddMenuItem(menuItemRESIDFilterBias);
-
-	//
-	options = new std::vector<CSlrString *>();
-	options->push_back(new CSlrString("None"));
-	options->push_back(new CSlrString("One"));
-	options->push_back(new CSlrString("Two"));
-	menuItemSIDStereo = new CViewC64MenuItemOption(fontHeight, new CSlrString("SID stereo: "),
-												  NULL, tr, tg, tb, options, font, fontScale);
-	menuItemSIDStereo->SetSelectedOption(c64SettingsSIDStereo, false);
-	menuItemSubMenuAudio->AddMenuItem(menuItemSIDStereo);
-
-	options = GetSidAddressOptions();
-	
-	menuItemSIDStereoAddress = new CViewC64MenuItemOption(fontHeight, new CSlrString("SID #1 address: "),
-												   NULL, tr, tg, tb, options, font, fontScale);
-	int optNum = GetOptionNumFromSidAddress(c64SettingsSIDStereoAddress);
-	menuItemSIDStereoAddress->SetSelectedOption(optNum, false);
-	menuItemSubMenuAudio->AddMenuItem(menuItemSIDStereoAddress);
-
-	menuItemSIDTripleAddress = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("SID #2 address: "),
-														  NULL, tr, tg, tb, options, font, fontScale);
-	optNum = GetOptionNumFromSidAddress(c64SettingsSIDTripleAddress);
-	menuItemSIDTripleAddress->SetSelectedOption(optNum, false);
-	menuItemSubMenuAudio->AddMenuItem(menuItemSIDTripleAddress);
-	
-
+	}
 
 	//
 	kbsSwitchSoundOnOff = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Switch sound mute On/Off", 't', false, false, true);
@@ -433,47 +461,51 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 	menuItemScreenGridLinesColorScheme->SetSelectedOption(0, false);
 	menuItemSubMenuUI->AddMenuItem(menuItemScreenGridLinesColorScheme);
 
-	menuItemScreenRasterCrossLinesAlpha = new CViewC64MenuItemFloat(fontHeight, new CSlrString("Raster cross lines alpha: "),
-																	NULL, tr, tg, tb,
-																	0.0f, 1.0f, 0.05f, font, fontScale);
-	menuItemScreenRasterCrossLinesAlpha->SetValue(0.35f, false);
-	menuItemSubMenuUI->AddMenuItem(menuItemScreenRasterCrossLinesAlpha);
 	
-	menuItemScreenRasterCrossLinesColorScheme = new CViewC64MenuItemOption(fontHeight, new CSlrString("Raster cross lines: "),
-																		   NULL, tr, tg, tb, optionsColors, font, fontScale);
-	menuItemScreenRasterCrossLinesColorScheme->SetSelectedOption(6, false);
-	menuItemSubMenuUI->AddMenuItem(menuItemScreenRasterCrossLinesColorScheme);
-	
-	
-	menuItemScreenRasterCrossAlpha = new CViewC64MenuItemFloat(fontHeight, new CSlrString("Raster cross alpha: "),
-															   NULL, tr, tg, tb,
-															   0.0f, 1.0f, 0.05f, font, fontScale);
-	menuItemScreenRasterCrossAlpha->SetValue(0.85f, false);
-	menuItemSubMenuUI->AddMenuItem(menuItemScreenRasterCrossAlpha);
-	
-	menuItemScreenRasterCrossInteriorColorScheme = new CViewC64MenuItemOption(fontHeight, new CSlrString("Raster cross interior: "),
-																			  NULL, tr, tg, tb, optionsColors, font, fontScale);
-	menuItemScreenRasterCrossInteriorColorScheme->SetSelectedOption(4, false);
-	menuItemSubMenuUI->AddMenuItem(menuItemScreenRasterCrossInteriorColorScheme);
-	
-	menuItemScreenRasterCrossExteriorColorScheme = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("Raster cross exterior: "),
-																			  NULL, tr, tg, tb, optionsColors, font, fontScale);
-	menuItemScreenRasterCrossExteriorColorScheme->SetSelectedOption(0, false);
-	menuItemSubMenuUI->AddMenuItem(menuItemScreenRasterCrossExteriorColorScheme);
-	
-	menuItemScreenRasterCrossTipColorScheme = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("Raster cross tip: "),
-																		 NULL, tr, tg, tb, optionsColors, font, fontScale);
-	menuItemScreenRasterCrossTipColorScheme->SetSelectedOption(3, false);
-	menuItemSubMenuUI->AddMenuItem(menuItemScreenRasterCrossTipColorScheme);
-	
-	//
-	menuItemVicEditorForceReplaceColor = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("Vic Editor always replace color: "),
-																	NULL, tr, tg, tb, optionsYesNo, font, fontScale);
-	menuItemVicEditorForceReplaceColor->SetSelectedOption(c64SettingsVicEditorForceReplaceColor, false);
-	menuItemSubMenuUI->AddMenuItem(menuItemVicEditorForceReplaceColor);
-	//menuItemSubMenuVicEditor
-	
+	if (viewC64->debugInterfaceC64)
+	{
+		menuItemScreenRasterCrossLinesAlpha = new CViewC64MenuItemFloat(fontHeight, new CSlrString("Raster cross lines alpha: "),
+																		NULL, tr, tg, tb,
+																		0.0f, 1.0f, 0.05f, font, fontScale);
+		menuItemScreenRasterCrossLinesAlpha->SetValue(0.35f, false);
+		menuItemSubMenuUI->AddMenuItem(menuItemScreenRasterCrossLinesAlpha);
+		
+		menuItemScreenRasterCrossLinesColorScheme = new CViewC64MenuItemOption(fontHeight, new CSlrString("Raster cross lines: "),
+																			   NULL, tr, tg, tb, optionsColors, font, fontScale);
+		menuItemScreenRasterCrossLinesColorScheme->SetSelectedOption(6, false);
+		menuItemSubMenuUI->AddMenuItem(menuItemScreenRasterCrossLinesColorScheme);
+		
+		
+		menuItemScreenRasterCrossAlpha = new CViewC64MenuItemFloat(fontHeight, new CSlrString("Raster cross alpha: "),
+																   NULL, tr, tg, tb,
+																   0.0f, 1.0f, 0.05f, font, fontScale);
+		menuItemScreenRasterCrossAlpha->SetValue(0.85f, false);
+		menuItemSubMenuUI->AddMenuItem(menuItemScreenRasterCrossAlpha);
+		
+		menuItemScreenRasterCrossInteriorColorScheme = new CViewC64MenuItemOption(fontHeight, new CSlrString("Raster cross interior: "),
+																				  NULL, tr, tg, tb, optionsColors, font, fontScale);
+		menuItemScreenRasterCrossInteriorColorScheme->SetSelectedOption(4, false);
+		menuItemSubMenuUI->AddMenuItem(menuItemScreenRasterCrossInteriorColorScheme);
+		
+		menuItemScreenRasterCrossExteriorColorScheme = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("Raster cross exterior: "),
+																				  NULL, tr, tg, tb, optionsColors, font, fontScale);
+		menuItemScreenRasterCrossExteriorColorScheme->SetSelectedOption(0, false);
+		menuItemSubMenuUI->AddMenuItem(menuItemScreenRasterCrossExteriorColorScheme);
+		
+		menuItemScreenRasterCrossTipColorScheme = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("Raster cross tip: "),
+																			 NULL, tr, tg, tb, optionsColors, font, fontScale);
+		menuItemScreenRasterCrossTipColorScheme->SetSelectedOption(3, false);
+		menuItemSubMenuUI->AddMenuItem(menuItemScreenRasterCrossTipColorScheme);
+		
+		//
+		menuItemVicEditorForceReplaceColor = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("Vic Editor always replace color: "),
+																		NULL, tr, tg, tb, optionsYesNo, font, fontScale);
+		menuItemVicEditorForceReplaceColor->SetSelectedOption(c64SettingsVicEditorForceReplaceColor, false);
+		menuItemSubMenuUI->AddMenuItem(menuItemVicEditorForceReplaceColor);
+		//menuItemSubMenuVicEditor
 
+	}
+	
 	//
 	menuItemDisassemblyExecuteColor = new CViewC64MenuItemOption(fontHeight, new CSlrString("Disassembly execute color: "),
 																	NULL, tr, tg, tb, optionsColors, font, fontScale);
@@ -490,13 +522,17 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 	menuItemDisassemblyBackgroundColor->SetSelectedOption(C64D_COLOR_BLACK, false);
 	menuItemSubMenuUI->AddMenuItem(menuItemDisassemblyBackgroundColor);
 	
-	//
-	options = new std::vector<CSlrString *>();
-	C64GetAvailablePalettes(options);
-	menuItemVicPalette = new CViewC64MenuItemOption(fontHeight, new CSlrString("VIC palette: "),
-													NULL, tr, tg, tb, options, font, fontScale);
-	menuItemSubMenuUI->AddMenuItem(menuItemVicPalette);
 	
+	if (viewC64->debugInterfaceC64)
+	{
+		//
+		options = new std::vector<CSlrString *>();
+		C64GetAvailablePalettes(options);
+		menuItemVicPalette = new CViewC64MenuItemOption(fontHeight, new CSlrString("VIC palette: "),
+														NULL, tr, tg, tb, options, font, fontScale);
+		menuItemSubMenuUI->AddMenuItem(menuItemVicPalette);
+		
+	}
 	
 	options = new std::vector<CSlrString *>();
 	options->push_back(new CSlrString("Billinear"));
@@ -597,41 +633,136 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 
 
 	//
+	if (viewC64->debugInterfaceC64)
+	{
+		// tape menu
+		kbsTapeAttach = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Tape Attach", 't', true, false, true);
+		viewC64->keyboardShortcuts->AddShortcut(kbsTapeAttach);
+		
+		menuItemTapeAttach = new CViewC64MenuItem(fontHeight, new CSlrString("Attach Tape"),
+													 kbsTapeAttach, tr, tg, tb);
+		menuItemSubMenuTape->AddMenuItem(menuItemTapeAttach);
+		
+		// TODO: add showing path when tape is attached
+		
+		kbsTapeDetach = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Tape Detach", 't', true, true, true);
+		viewC64->keyboardShortcuts->AddShortcut(kbsTapeDetach);
+		
+		menuItemTapeDetach = new CViewC64MenuItem(fontHeight*2, new CSlrString("Detach Tape"),
+													 kbsTapeDetach, tr, tg, tb);
+		menuItemSubMenuTape->AddMenuItem(menuItemTapeDetach);
+		
+		menuItemTapeCreate = new CViewC64MenuItem(fontHeight*2, new CSlrString("Create Tape"),
+													 NULL, tr, tg, tb);
+		menuItemSubMenuTape->AddMenuItem(menuItemTapeCreate);
+		
+		//
 
+		kbsTapeStop = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Tape Stop", 's', true, true, true);
+		viewC64->keyboardShortcuts->AddShortcut(kbsTapeStop);
+		
+		menuItemTapeStop = new CViewC64MenuItem(fontHeight, new CSlrString("Stop"),
+													 kbsTapeStop, tr, tg, tb);
+		menuItemSubMenuTape->AddMenuItem(menuItemTapeStop);
+
+		kbsTapePlay = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Tape Play", 'p', true, true, true);
+		viewC64->keyboardShortcuts->AddShortcut(kbsTapePlay);
+		
+		menuItemTapePlay = new CViewC64MenuItem(fontHeight, new CSlrString("Play"),
+											kbsTapePlay, tr, tg, tb);
+		menuItemSubMenuTape->AddMenuItem(menuItemTapePlay);
+		
+		kbsTapeForward = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Tape Forward", 'f', true, true, true);
+		viewC64->keyboardShortcuts->AddShortcut(kbsTapeForward);
+		
+		menuItemTapeForward = new CViewC64MenuItem(fontHeight, new CSlrString("Forward"),
+											kbsTapeForward, tr, tg, tb);
+		menuItemSubMenuTape->AddMenuItem(menuItemTapeForward);
+		
+		kbsTapeRewind = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Tape Rewind", 'r', true, true, true);
+		viewC64->keyboardShortcuts->AddShortcut(kbsTapeRewind);
+		
+		menuItemTapeRewind = new CViewC64MenuItem(fontHeight, new CSlrString("Rewind"),
+											kbsTapeRewind, tr, tg, tb);
+		menuItemSubMenuTape->AddMenuItem(menuItemTapeRewind);
+		
+		kbsTapeRecord = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Tape Record", 'y', true, true, true);
+		viewC64->keyboardShortcuts->AddShortcut(kbsTapeRecord);
+		
+		menuItemTapeRecord = new CViewC64MenuItem(fontHeight*2, new CSlrString("Record"),
+											kbsTapeRecord, tr, tg, tb);
+		menuItemSubMenuTape->AddMenuItem(menuItemTapeRecord);
+		
+		menuItemTapeReset = new CViewC64MenuItem(fontHeight*2, new CSlrString("Reset Datasette"),
+											NULL, tr, tg, tb);
+		menuItemSubMenuTape->AddMenuItem(menuItemTapeReset);
+		
+		//
+		menuItemDatasetteSpeedTuning = new CViewC64MenuItemFloat(fontHeight, new CSlrString("Datasette speed tuning: "),
+														NULL, tr, tg, tb,
+														0.0f, 100.0f, 1.0f, font, fontScale);
+		menuItemDatasetteSpeedTuning->numDecimalsDigits = 0;
+		menuItemDatasetteSpeedTuning->SetValue(0.0f, false);
+		menuItemSubMenuTape->AddMenuItem(menuItemDatasetteSpeedTuning);
+		
+		menuItemDatasetteZeroGapDelay = new CViewC64MenuItemFloat(fontHeight, new CSlrString("Datasette zero-gap delay: "),
+																 NULL, tr, tg, tb,
+																 0.0f, 50000.0f, 100.0f, font, fontScale);
+		menuItemDatasetteZeroGapDelay->numDecimalsDigits = 0;
+		menuItemDatasetteZeroGapDelay->SetValue(20000.0f, false);
+		menuItemSubMenuTape->AddMenuItem(menuItemDatasetteZeroGapDelay);
+
+		menuItemDatasetteTapeWobble = new CViewC64MenuItemFloat(fontHeight, new CSlrString("Datasette tape wobble: "),
+																 NULL, tr, tg, tb,
+																 0.0f, 100.0f, 1.0f, font, fontScale);
+		menuItemDatasetteTapeWobble->numDecimalsDigits = 0;
+		menuItemDatasetteTapeWobble->SetValue(10.0f, false);
+		menuItemSubMenuTape->AddMenuItem(menuItemDatasetteTapeWobble);
+
+		
+		menuItemDatasetteResetWithCPU = new CViewC64MenuItemOption(fontHeight, new CSlrString("Datasette reset with CPU: "),
+																   NULL, tr, tg, tb, optionsYesNo, font, fontScale);
+		menuItemSubMenuTape->AddMenuItem(menuItemDatasetteResetWithCPU);
+
+	}
 	
-
 	//
-	// memory mapping can be initialised only on startup
-	menuItemMapC64MemoryToFile = new CViewC64MenuItem(fontHeight*3, NULL,
-													  NULL, tr, tg, tb);
-	menuItemSubMenuMemory->AddMenuItem(menuItemMapC64MemoryToFile);
 	
-	UpdateMapC64MemoryToFileLabels();
-	
-	///
-	kbsDumpC64Memory = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Dump C64 memory", 'u', false, false, true);
-	viewC64->keyboardShortcuts->AddShortcut(kbsDumpC64Memory);
-	
-	menuItemDumpC64Memory = new CViewC64MenuItem(fontHeight, new CSlrString("Dump C64 memory"),
-													kbsDumpC64Memory, tr, tg, tb);
-	menuItemSubMenuMemory->AddMenuItem(menuItemDumpC64Memory);
-	
-	menuItemDumpC64MemoryMarkers = new CViewC64MenuItem(fontHeight, new CSlrString("Dump C64 memory markers"),
-														NULL, tr, tg, tb);
-	menuItemSubMenuMemory->AddMenuItem(menuItemDumpC64MemoryMarkers);
-	
-	kbsDumpDrive1541Memory = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Dump Drive 1541 memory", 'u', true, false, true);
-	viewC64->keyboardShortcuts->AddShortcut(kbsDumpDrive1541Memory);
-	
-	menuItemDumpDrive1541Memory = new CViewC64MenuItem(fontHeight, new CSlrString("Dump Disk 1541 memory"),
-													   kbsDumpDrive1541Memory, tr, tg, tb);
-	menuItemSubMenuMemory->AddMenuItem(menuItemDumpDrive1541Memory);
-	
-	menuItemDumpDrive1541MemoryMarkers = new CViewC64MenuItem(fontHeight*2, new CSlrString("Dump Disk 1541 memory markers"),
-															  NULL, tr, tg, tb);
-	menuItemSubMenuMemory->AddMenuItem(menuItemDumpDrive1541MemoryMarkers);
-
-	//
+	if (viewC64->debugInterfaceC64)
+	{
+		//
+		// memory mapping can be initialised only on startup
+		menuItemMapC64MemoryToFile = new CViewC64MenuItem(fontHeight*3, NULL,
+														  NULL, tr, tg, tb);
+		menuItemSubMenuMemory->AddMenuItem(menuItemMapC64MemoryToFile);
+		
+		UpdateMapC64MemoryToFileLabels();
+		
+		///
+		kbsDumpC64Memory = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Dump C64 memory", 'u', false, false, true);
+		viewC64->keyboardShortcuts->AddShortcut(kbsDumpC64Memory);
+		
+		menuItemDumpC64Memory = new CViewC64MenuItem(fontHeight, new CSlrString("Dump C64 memory"),
+													 kbsDumpC64Memory, tr, tg, tb);
+		menuItemSubMenuMemory->AddMenuItem(menuItemDumpC64Memory);
+		
+		menuItemDumpC64MemoryMarkers = new CViewC64MenuItem(fontHeight, new CSlrString("Dump C64 memory markers"),
+															NULL, tr, tg, tb);
+		menuItemSubMenuMemory->AddMenuItem(menuItemDumpC64MemoryMarkers);
+		
+		kbsDumpDrive1541Memory = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Dump Drive 1541 memory", 'u', true, false, true);
+		viewC64->keyboardShortcuts->AddShortcut(kbsDumpDrive1541Memory);
+		
+		menuItemDumpDrive1541Memory = new CViewC64MenuItem(fontHeight, new CSlrString("Dump Disk 1541 memory"),
+														   kbsDumpDrive1541Memory, tr, tg, tb);
+		menuItemSubMenuMemory->AddMenuItem(menuItemDumpDrive1541Memory);
+		
+		menuItemDumpDrive1541MemoryMarkers = new CViewC64MenuItem(fontHeight*2, new CSlrString("Dump Disk 1541 memory markers"),
+																  NULL, tr, tg, tb);
+		menuItemSubMenuMemory->AddMenuItem(menuItemDumpDrive1541MemoryMarkers);
+		
+		//
+	}
 
 	kbsClearMemoryMarkers = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Clear Memory markers", MTKEY_BACKSPACE, false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsClearMemoryMarkers);
@@ -661,7 +792,6 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 	menuItemSubMenuEmulation->AddMenuItem(menuItemJoystickPort);
 	
 	//
-	
 	kbsIsWarpSpeed = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Warp speed", 'p', false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsIsWarpSpeed);
 	options = new std::vector<CSlrString *>();
@@ -671,91 +801,99 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 	menuItemSubMenuEmulation->AddMenuItem(menuItemIsWarpSpeed);
 	
 
-	kbsCartridgeFreezeButton = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Cartridge freeze", 'f', false, false, true);
-	viewC64->keyboardShortcuts->AddShortcut(kbsCartridgeFreezeButton);
-	menuItemCartridgeFreeze = new CViewC64MenuItem(fontHeight*2.0f, new CSlrString("Cartridge freeze"),
-												   kbsCartridgeFreezeButton, tr, tg, tb);
-	menuItemSubMenuEmulation->AddMenuItem(menuItemCartridgeFreeze);
-
-	//
-	
-	//
-	//
-	menuItemAutoJmp = new CViewC64MenuItemOption(fontHeight, new CSlrString("Auto JMP: "),
-												 NULL, tr, tg, tb, optionsYesNo, font, fontScale);
-	menuItemAutoJmp->SetSelectedOption(c64SettingsAutoJmp, false);
-	//menuItemSubMenuEmulation->AddMenuItem(menuItemAutoJmp);
-	
-	menuItemAutoJmpAlwaysToLoadedPRGAddress = new CViewC64MenuItemOption(fontHeight, new CSlrString("Always JMP to loaded addr: "),
-																		 NULL, tr, tg, tb, optionsYesNo, font, fontScale);
-	menuItemAutoJmpAlwaysToLoadedPRGAddress->SetSelectedOption(c64SettingsAutoJmpAlwaysToLoadedPRGAddress, false);
-	menuItemSubMenuEmulation->AddMenuItem(menuItemAutoJmpAlwaysToLoadedPRGAddress);
-	
-	
-	kbsAutoJmpFromInsertedDiskFirstPrg = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Auto load first PRG from D64", 'a', true, false, true);
-	viewC64->keyboardShortcuts->AddShortcut(kbsAutoJmpFromInsertedDiskFirstPrg);
-
-	menuItemAutoJmpFromInsertedDiskFirstPrg = new CViewC64MenuItemOption(fontHeight, new CSlrString("Load first PRG from D64: "),
-																		 kbsAutoJmpFromInsertedDiskFirstPrg, tr, tg, tb, optionsYesNo, font, fontScale);
-	menuItemAutoJmpFromInsertedDiskFirstPrg->SetSelectedOption(c64SettingsAutoJmpFromInsertedDiskFirstPrg, false);
-	menuItemSubMenuEmulation->AddMenuItem(menuItemAutoJmpFromInsertedDiskFirstPrg);
-	
-	options = new std::vector<CSlrString *>();
-	options->push_back(new CSlrString("No"));
-	options->push_back(new CSlrString("Soft"));
-	options->push_back(new CSlrString("Hard"));
-	menuItemAutoJmpDoReset = new CViewC64MenuItemOption(fontHeight, new CSlrString("Reset C64 before PRG load: "),
+	if (viewC64->debugInterfaceC64)
+	{
+		kbsCartridgeFreezeButton = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Cartridge freeze", 'f', false, false, true);
+		viewC64->keyboardShortcuts->AddShortcut(kbsCartridgeFreezeButton);
+		menuItemCartridgeFreeze = new CViewC64MenuItem(fontHeight*2.0f, new CSlrString("Cartridge freeze"),
+													   kbsCartridgeFreezeButton, tr, tg, tb);
+		menuItemSubMenuEmulation->AddMenuItem(menuItemCartridgeFreeze);
+		
+		//
+		
+		//
+		//
+		menuItemAutoJmp = new CViewC64MenuItemOption(fontHeight, new CSlrString("Auto JMP: "),
+													 NULL, tr, tg, tb, optionsYesNo, font, fontScale);
+		menuItemAutoJmp->SetSelectedOption(c64SettingsAutoJmp, false);
+		//menuItemSubMenuEmulation->AddMenuItem(menuItemAutoJmp);
+		
+		menuItemAutoJmpAlwaysToLoadedPRGAddress = new CViewC64MenuItemOption(fontHeight, new CSlrString("Always JMP to loaded addr: "),
+																			 NULL, tr, tg, tb, optionsYesNo, font, fontScale);
+		menuItemAutoJmpAlwaysToLoadedPRGAddress->SetSelectedOption(c64SettingsAutoJmpAlwaysToLoadedPRGAddress, false);
+		menuItemSubMenuEmulation->AddMenuItem(menuItemAutoJmpAlwaysToLoadedPRGAddress);
+		
+		
+		kbsAutoJmpFromInsertedDiskFirstPrg = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Auto load first PRG from D64", 'a', true, false, true);
+		viewC64->keyboardShortcuts->AddShortcut(kbsAutoJmpFromInsertedDiskFirstPrg);
+		
+		menuItemAutoJmpFromInsertedDiskFirstPrg = new CViewC64MenuItemOption(fontHeight, new CSlrString("Load first PRG from D64: "),
+																			 kbsAutoJmpFromInsertedDiskFirstPrg, tr, tg, tb, optionsYesNo, font, fontScale);
+		menuItemAutoJmpFromInsertedDiskFirstPrg->SetSelectedOption(c64SettingsAutoJmpFromInsertedDiskFirstPrg, false);
+		menuItemSubMenuEmulation->AddMenuItem(menuItemAutoJmpFromInsertedDiskFirstPrg);
+		
+		options = new std::vector<CSlrString *>();
+		options->push_back(new CSlrString("No"));
+		options->push_back(new CSlrString("Soft"));
+		options->push_back(new CSlrString("Hard"));
+		menuItemAutoJmpDoReset = new CViewC64MenuItemOption(fontHeight, new CSlrString("Reset C64 before PRG load: "),
 													  NULL, tr, tg, tb, options, font, fontScale);
-	menuItemAutoJmpDoReset->SetSelectedOption(c64SettingsAutoJmpDoReset, false);
-	menuItemSubMenuEmulation->AddMenuItem(menuItemAutoJmpDoReset);
-
-	menuItemAutoJmpWaitAfterReset = new CViewC64MenuItemFloat(fontHeight * 2.0f, new CSlrString("Wait after Reset: "),
+		menuItemAutoJmpDoReset->SetSelectedOption(c64SettingsAutoJmpDoReset, false);
+		menuItemSubMenuEmulation->AddMenuItem(menuItemAutoJmpDoReset);
+		
+		menuItemAutoJmpWaitAfterReset = new CViewC64MenuItemFloat(fontHeight * 2.0f, new CSlrString("Wait after Reset: "),
 																  NULL, tr, tg, tb,
 																  0.0f, 5000.0f, 10.00f, font, fontScale);
-	menuItemAutoJmpWaitAfterReset->SetValue(c64SettingsAutoJmpWaitAfterReset, false);
-	menuItemSubMenuEmulation->AddMenuItem(menuItemAutoJmpWaitAfterReset);
+		menuItemAutoJmpWaitAfterReset->SetValue(c64SettingsAutoJmpWaitAfterReset, false);
+		menuItemSubMenuEmulation->AddMenuItem(menuItemAutoJmpWaitAfterReset);
+		
+		
+		///
+		//	options = new std::vector<CSlrString *>();
+		//	options->push_back(new CSlrString("No"));
+		//	options->push_back(new CSlrString("Yes"));
+		
+		menuItemFastBootKernalPatch = new CViewC64MenuItemOption(fontHeight, new CSlrString("Fast boot kernal patch: "),
+																 NULL, tr, tg, tb, optionsYesNo, font, fontScale);
+		menuItemFastBootKernalPatch->SetSelectedOption(c64SettingsFastBootKernalPatch, false);
+		menuItemSubMenuEmulation->AddMenuItem(menuItemFastBootKernalPatch);
 
+		menuItemEmulateVSPBug = new CViewC64MenuItemOption(fontHeight, new CSlrString("Emulate VSP bug: "),
+														   NULL, tr, tg, tb, optionsYesNo, font, fontScale);
+		menuItemEmulateVSPBug->SetSelectedOption(c64SettingsEmulateVSPBug, false);
+		menuItemSubMenuEmulation->AddMenuItem(menuItemEmulateVSPBug);
 
-	///
-//	options = new std::vector<CSlrString *>();
-//	options->push_back(new CSlrString("No"));
-//	options->push_back(new CSlrString("Yes"));
-	
-	menuItemFastBootKernalPatch = new CViewC64MenuItemOption(fontHeight, new CSlrString("Fast boot kernal patch: "),
-															 NULL, tr, tg, tb, optionsYesNo, font, fontScale);
-	menuItemFastBootKernalPatch->SetSelectedOption(c64SettingsFastBootKernalPatch, false);
-	menuItemSubMenuEmulation->AddMenuItem(menuItemFastBootKernalPatch);
+		//
+		options = new std::vector<CSlrString *>();
+		options->push_back(new CSlrString("None"));
+		options->push_back(new CSlrString("Each raster line"));
+		options->push_back(new CSlrString("Each VIC cycle"));
+		menuItemVicStateRecordingMode = new CViewC64MenuItemOption(fontHeight, new CSlrString("VIC Display recording: "),
+																   NULL, tr, tg, tb, options, font, fontScale);
+		menuItemVicStateRecordingMode->SetSelectedOption(c64SettingsVicStateRecordingMode, false);
+		menuItemSubMenuEmulation->AddMenuItem(menuItemVicStateRecordingMode);
+		
+		
+
+	}
 
 	menuItemDisassembleExecuteAware = new CViewC64MenuItemOption(fontHeight, new CSlrString("Execute-aware disassemble: "),
 																 NULL, tr, tg, tb, optionsYesNo, font, fontScale);
 	menuItemDisassembleExecuteAware->SetSelectedOption(c64SettingsRenderDisassembleExecuteAware, false);
 	menuItemSubMenuEmulation->AddMenuItem(menuItemDisassembleExecuteAware);
-
-	menuItemEmulateVSPBug = new CViewC64MenuItemOption(fontHeight, new CSlrString("Emulate VSP bug: "),
-															 NULL, tr, tg, tb, optionsYesNo, font, fontScale);
-	menuItemEmulateVSPBug->SetSelectedOption(c64SettingsEmulateVSPBug, false);
-	menuItemSubMenuEmulation->AddMenuItem(menuItemEmulateVSPBug);
 	
 
-	//
-	options = new std::vector<CSlrString *>();
-	options->push_back(new CSlrString("None"));
-	options->push_back(new CSlrString("Each raster line"));
-	options->push_back(new CSlrString("Each VIC cycle"));
-	menuItemVicStateRecordingMode = new CViewC64MenuItemOption(fontHeight, new CSlrString("VIC Display recording: "),
-															   NULL, tr, tg, tb, options, font, fontScale);
-	menuItemVicStateRecordingMode->SetSelectedOption(c64SettingsVicStateRecordingMode, false);
-	menuItemSubMenuEmulation->AddMenuItem(menuItemVicStateRecordingMode);
-	
-	
 	//
 	menuItemStartJukeboxPlaylist = new CViewC64MenuItem(fontHeight*2, new CSlrString("Start JukeBox playlist"),
 														NULL, tr, tg, tb);
 	viewMenu->AddMenuItem(menuItemStartJukeboxPlaylist);
 	
-	menuItemSetC64KeyboardMapping = new CViewC64MenuItem(fontHeight, new CSlrString("Set C64 keyboard mapping"),
-														 NULL, tr, tg, tb);
-	viewMenu->AddMenuItem(menuItemSetC64KeyboardMapping);
+	if (viewC64->debugInterfaceC64)
+	{
+		menuItemSetC64KeyboardMapping = new CViewC64MenuItem(fontHeight, new CSlrString("Set C64 keyboard mapping"),
+															 NULL, tr, tg, tb);
+		viewMenu->AddMenuItem(menuItemSetC64KeyboardMapping);		
+	}
 	
 	menuItemSetKeyboardShortcuts = new CViewC64MenuItem(fontHeight*2, new CSlrString("Set keyboard shortcuts"),
 														NULL, tr, tg, tb);
@@ -862,23 +1000,39 @@ void CViewSettingsMenu::MenuCallbackItemChanged(CGuiViewMenuItem *menuItem)
 	{
 		if (menuItemIsWarpSpeed->selectedOption == 0)
 		{
-			viewC64->debugInterface->SetSettingIsWarpSpeed(false);
+			if (viewC64->debugInterfaceC64 != NULL)
+			{
+				viewC64->debugInterfaceC64->SetSettingIsWarpSpeed(false);
+			}
+			
+			if (viewC64->debugInterfaceAtari != NULL)
+			{
+				viewC64->debugInterfaceAtari->SetSettingIsWarpSpeed(false);
+			}
 		}
 		else
 		{
-			viewC64->debugInterface->SetSettingIsWarpSpeed(true);
+			if (viewC64->debugInterfaceC64 != NULL)
+			{
+				viewC64->debugInterfaceC64->SetSettingIsWarpSpeed(true);
+			}
+			
+			if (viewC64->debugInterfaceAtari != NULL)
+			{
+				viewC64->debugInterfaceAtari->SetSettingIsWarpSpeed(true);
+			}
 		}
 	}
 	else if (menuItem == menuItemUseKeyboardAsJoystick)
 	{
 		if (menuItemUseKeyboardAsJoystick->selectedOption == 0)
 		{
-			viewC64->debugInterface->SetSettingUseKeyboardForJoystick(false);
+			c64SettingsJoystickIsOn = false;
 			guiMain->ShowMessage("Joystick is OFF");
 		}
 		else
 		{
-			viewC64->debugInterface->SetSettingUseKeyboardForJoystick(true);
+			c64SettingsJoystickIsOn = true;
 			guiMain->ShowMessage("Joystick is ON");
 		}
 	}
@@ -957,12 +1111,34 @@ void CViewSettingsMenu::MenuCallbackItemChanged(CGuiViewMenuItem *menuItem)
 		int v = menuItemMuteSIDMode->selectedOption;
 		C64DebuggerSetSetting("MuteSIDMode", &(v));
 	}
+	else if (menuItem == menuItemDatasetteSpeedTuning)
+	{
+		i32 v = (i32)(menuItemDatasetteSpeedTuning->value);
+		C64DebuggerSetSetting("DatasetteSpeedTuning", &v);
+	}
+	else if (menuItem == menuItemDatasetteZeroGapDelay)
+	{
+		i32 v = (i32)(menuItemDatasetteZeroGapDelay->value);
+		C64DebuggerSetSetting("DatasetteZeroGapDelay", &v);
+	}
+	else if (menuItem == menuItemDatasetteTapeWobble)
+	{
+		i32 v = (i32)(menuItemDatasetteTapeWobble->value);
+		C64DebuggerSetSetting("DatasetteTapeWobble", &v);
+	}
+	else if (menuItem == menuItemDatasetteResetWithCPU)
+	{
+		bool v = menuItemDatasetteResetWithCPU->selectedOption == 0 ? false : true;
+		C64DebuggerSetSetting("DatasetteResetWithCPU", &(v));
+		
+		viewC64->debugInterfaceC64->SetPatchKernalFastBoot(v);
+	}
 	else if (menuItem == menuItemFastBootKernalPatch)
 	{
 		bool v = menuItemFastBootKernalPatch->selectedOption == 0 ? false : true;
 		C64DebuggerSetSetting("FastBootPatch", &(v));
 		
-		viewC64->debugInterface->SetPatchKernalFastBoot(v);
+		viewC64->debugInterfaceC64->SetPatchKernalFastBoot(v);
 	}
 	else if (menuItem == menuItemEmulateVSPBug)
 	{
@@ -1199,6 +1375,11 @@ void CViewSettingsMenu::MenuCallbackItemChanged(CGuiViewMenuItem *menuItem)
 		float v = menuItemPaintGridPixelsColorA->value;
 		C64DebuggerSetSetting("PaintGridPixelsColorA", &v);
 	}
+	else if (menuItem == menuItemVicEditorForceReplaceColor)
+	{
+		bool v = menuItemVicEditorForceReplaceColor->selectedOption == 0 ? false : true;
+		C64DebuggerSetSetting("VicEditorForceReplaceColor", &(v));
+	}
 
 	
 	//
@@ -1275,6 +1456,14 @@ void CViewSettingsMenu::MenuCallbackItemChanged(CGuiViewMenuItem *menuItem)
 		{
 			newMaximumSpeed = 200;
 		}
+		else if (sel == 5)
+		{
+			newMaximumSpeed = 300;
+		}
+		else if (sel == 6)
+		{
+			newMaximumSpeed = 400;
+		}
 		
 		SetEmulationMaximumSpeed(newMaximumSpeed);
 	}
@@ -1300,6 +1489,12 @@ void CViewSettingsMenu::SwitchNextMaximumSpeed()
 			newMaximumSpeed = 200;
 			break;
 		case 200:
+			newMaximumSpeed = 300;
+			break;
+		case 300:
+			newMaximumSpeed = 400;
+			break;
+		case 400:
 			newMaximumSpeed = 10;
 			break;
 		default:
@@ -1316,7 +1511,7 @@ void CViewSettingsMenu::SwitchPrevMaximumSpeed()
 	switch(c64SettingsEmulationMaximumSpeed)
 	{
 		case 10:
-			newMaximumSpeed = 200;
+			newMaximumSpeed = 400;
 			break;
 		case 20:
 			newMaximumSpeed = 10;
@@ -1329,6 +1524,12 @@ void CViewSettingsMenu::SwitchPrevMaximumSpeed()
 			break;
 		case 200:
 			newMaximumSpeed = 100;
+			break;
+		case 300:
+			newMaximumSpeed = 200;
+			break;
+		case 400:
+			newMaximumSpeed = 300;
 			break;
 		default:
 			newMaximumSpeed = 100;
@@ -1354,8 +1555,8 @@ void CViewSettingsMenu::DetachEverything()
 	void DetachEverything();
 	
 	// detach drive & cartridge
-	viewC64->debugInterface->DetachCartridge();
-	viewC64->debugInterface->DetachDriveDisk();
+	viewC64->debugInterfaceC64->DetachCartridge();
+	viewC64->debugInterfaceC64->DetachDriveDisk();
 	
 	guiMain->LockMutex();
 	
@@ -1379,7 +1580,9 @@ void CViewSettingsMenu::DetachEverything()
 	
 	delete c64SettingsPathToPRG;
 	c64SettingsPathToPRG = NULL;
-	
+
+	viewC64->viewC64MemoryMap->ClearExecuteMarkers();
+	viewC64->viewDrive1541MemoryMap->ClearExecuteMarkers();
 	
 	guiMain->UnlockMutex();
 	
@@ -1391,7 +1594,7 @@ void CViewSettingsMenu::DetachEverything()
 void CViewSettingsMenu::DetachDiskImage()
 {
 	// detach drive
-	viewC64->debugInterface->DetachDriveDisk();
+	viewC64->debugInterfaceC64->DetachDriveDisk();
 	
 	guiMain->LockMutex();
 	
@@ -1412,7 +1615,7 @@ void CViewSettingsMenu::DetachDiskImage()
 void CViewSettingsMenu::DetachCartridge(bool showMessage)
 {
 	// detach cartridge
-	viewC64->debugInterface->DetachCartridge();
+	viewC64->debugInterfaceC64->DetachCartridge();
 	
 	guiMain->LockMutex();
 	
@@ -1446,6 +1649,40 @@ void CViewSettingsMenu::MenuCallbackItemEntered(CGuiViewMenuItem *menuItem)
 	if (menuItem == menuItemDetachCartridge)
 	{
 		DetachCartridge(true);
+	}
+	else if (menuItem == menuItemTapeAttach)
+	{
+		viewC64->viewC64MainMenu->OpenDialogInsertTape();
+	}
+	else if (menuItem == menuItemTapeDetach)
+	{
+		viewC64->debugInterfaceC64->DetachTape();
+		guiMain->ShowMessage("Tape detached");
+	}
+	else if (menuItem == menuItemTapeStop)
+	{
+		viewC64->debugInterfaceC64->DatasetteStop();
+		guiMain->ShowMessage("Datasette STOP");
+	}
+	else if (menuItem == menuItemTapePlay)
+	{
+		viewC64->debugInterfaceC64->DatasettePlay();
+		guiMain->ShowMessage("Datasette PLAY");
+	}
+	else if (menuItem == menuItemTapeForward)
+	{
+		viewC64->debugInterfaceC64->DatasetteForward();
+		guiMain->ShowMessage("Datasette FORWARD");
+	}
+	else if (menuItem == menuItemTapeRewind)
+	{
+		viewC64->debugInterfaceC64->DatasetteRewind();
+		guiMain->ShowMessage("Datasette REWIND");
+	}
+	else if (menuItem == menuItemTapeReset)
+	{
+		viewC64->debugInterfaceC64->DatasetteReset();
+		guiMain->ShowMessage("Datasette RESET");
 	}
 	else if (menuItem == menuItemDumpC64Memory)
 	{
@@ -1500,15 +1737,18 @@ void CViewSettingsMenu::MenuCallbackItemEntered(CGuiViewMenuItem *menuItem)
 	}
 	else if (menuItem == menuItemClearSettings)
 	{
+		// TODO: move to C64DebuggerClearSettings
+		
 		CByteBuffer *byteBuffer = new CByteBuffer();
 		byteBuffer->PutU16(0xFFFF);
-		CSlrString *fileName = new CSlrString("/settings.dat");
+		
+		CSlrString *fileName = new CSlrString(C64D_SETTINGS_FILE_PATH);
 		byteBuffer->storeToSettings(fileName);
 		
-		fileName->Set("/shortcuts.dat");
+		fileName->Set(C64D_KEYBOARD_SHORTCUTS_FILE_PATH);
 		byteBuffer->storeToSettings(fileName);
 		
-		fileName->Set("/keymap.dat");
+		fileName->Set(C64D_KEYMAP_FILE_PATH);
 		byteBuffer->storeToSettings(fileName);
 		
 		delete fileName;
@@ -1621,8 +1861,6 @@ void CViewSettingsMenu::SystemDialogFileSaveSelected(CSlrString *path)
 		MapC64MemoryToFile(path);
 		C64DebuggerStoreSettings();
 	}
-	
-	delete path;
 }
 
 void CViewSettingsMenu::SystemDialogFileSaveCancelled()
@@ -1645,15 +1883,15 @@ void CViewSettingsMenu::DumpC64Memory(CSlrString *path)
 	
 //	if (viewC64->viewC64MemoryMap->isDataDirectlyFromRAM)
 	{
-		viewC64->debugInterface->GetWholeMemoryMapFromRamC64(memoryBuffer);
+		viewC64->debugInterfaceC64->GetWholeMemoryMapFromRam(memoryBuffer);
 	}
 //	else
 //	{
 //		viewC64->debugInterface->GetWholeMemoryMapC64(memoryBuffer);
 //	}
 
-	memoryBuffer[0x0000] = viewC64->debugInterface->GetByteFromRamC64(0x0000);
-	memoryBuffer[0x0001] = viewC64->debugInterface->GetByteFromRamC64(0x0001);
+	memoryBuffer[0x0000] = viewC64->debugInterfaceC64->GetByteFromRamC64(0x0000);
+	memoryBuffer[0x0001] = viewC64->debugInterfaceC64->GetByteFromRamC64(0x0001);
 
 	FILE *fp = fopen(asciiPath, "wb");
 	if (fp == NULL)
@@ -1682,15 +1920,15 @@ void CViewSettingsMenu::DumpDisk1541Memory(CSlrString *path)
 	
 //	if (viewC64->viewC64MemoryMap->isDataDirectlyFromRAM)
 	{
-		viewC64->debugInterface->GetWholeMemoryMapFromRam1541(memoryBuffer);
+		viewC64->debugInterfaceC64->GetWholeMemoryMapFromRam1541(memoryBuffer);
 	}
 //	else
 //	{
 //		viewC64->debugInterface->GetWholeMemoryMap1541(memoryBuffer);
 //	}
 	
-	memoryBuffer[0x0000] = viewC64->debugInterface->GetByteFromRam1541(0x0000);
-	memoryBuffer[0x0001] = viewC64->debugInterface->GetByteFromRam1541(0x0001);
+	memoryBuffer[0x0000] = viewC64->debugInterfaceC64->GetByteFromRam1541(0x0000);
+	memoryBuffer[0x0001] = viewC64->debugInterfaceC64->GetByteFromRam1541(0x0001);
 	
 	FILE *fp = fopen(asciiPath, "wb");
 	if (fp == NULL)
@@ -1730,22 +1968,22 @@ void CViewSettingsMenu::DumpC64MemoryMarkers(CSlrString *path)
 		return;
 	}
 	
-	viewC64->debugInterface->LockMutex();
+	viewC64->debugInterfaceC64->LockMutex();
 	
 	// local copy of memory
 	uint8 *memoryBuffer = new uint8[0x10000];
 	
 	if (viewC64->viewC64MemoryMap->isDataDirectlyFromRAM)
 	{
-		viewC64->debugInterface->GetWholeMemoryMapFromRamC64(memoryBuffer);
+		viewC64->debugInterfaceC64->GetWholeMemoryMapFromRam(memoryBuffer);
 	}
 	else
 	{
-		viewC64->debugInterface->GetWholeMemoryMapC64(memoryBuffer);
+		viewC64->debugInterfaceC64->GetWholeMemoryMap(memoryBuffer);
 	}
 
-	memoryBuffer[0x0000] = viewC64->debugInterface->GetByteFromRamC64(0x0000);
-	memoryBuffer[0x0001] = viewC64->debugInterface->GetByteFromRamC64(0x0001);
+	memoryBuffer[0x0000] = viewC64->debugInterfaceC64->GetByteFromRamC64(0x0000);
+	memoryBuffer[0x0001] = viewC64->debugInterfaceC64->GetByteFromRamC64(0x0001);
 
 	fprintf(fp, "Address,Value,Read,Write,Execute,Argument\n");
 	
@@ -1764,7 +2002,7 @@ void CViewSettingsMenu::DumpC64MemoryMarkers(CSlrString *path)
 
 	delete [] memoryBuffer;
 
-	viewC64->debugInterface->UnlockMutex();
+	viewC64->debugInterfaceC64->UnlockMutex();
 
 	guiMain->ShowMessage("C64 memory markers saved");
 }
@@ -1788,7 +2026,7 @@ void CViewSettingsMenu::DumpDisk1541MemoryMarkers(CSlrString *path)
 		return;
 	}
 	
-	viewC64->debugInterface->LockMutex();
+	viewC64->debugInterfaceC64->LockMutex();
 	
 	// local copy of memory
 	uint8 *memoryBuffer = new uint8[0x10000];
@@ -1797,19 +2035,19 @@ void CViewSettingsMenu::DumpDisk1541MemoryMarkers(CSlrString *path)
 	{
 		for (int addr = 0; addr < 0x10000; addr++)
 		{
-			memoryBuffer[addr] = viewC64->debugInterface->GetByteFromRam1541(addr);
+			memoryBuffer[addr] = viewC64->debugInterfaceC64->GetByteFromRam1541(addr);
 		}
 	}
 	else
 	{
 		for (int addr = 0; addr < 0x10000; addr++)
 		{
-			memoryBuffer[addr] = viewC64->debugInterface->GetByte1541(addr);
+			memoryBuffer[addr] = viewC64->debugInterfaceC64->GetByte1541(addr);
 		}
 	}
 	
-	memoryBuffer[0x0000] = viewC64->debugInterface->GetByteFromRam1541(0x0000);
-	memoryBuffer[0x0001] = viewC64->debugInterface->GetByteFromRam1541(0x0001);
+	memoryBuffer[0x0000] = viewC64->debugInterfaceC64->GetByteFromRam1541(0x0000);
+	memoryBuffer[0x0001] = viewC64->debugInterfaceC64->GetByteFromRam1541(0x0001);
 	
 	fprintf(fp, "Address,Value,Read,Write,Execute,Argument\n");
 	
@@ -1828,7 +2066,7 @@ void CViewSettingsMenu::DumpDisk1541MemoryMarkers(CSlrString *path)
 	
 	delete [] memoryBuffer;
 	
-	viewC64->debugInterface->UnlockMutex();
+	viewC64->debugInterfaceC64->UnlockMutex();
 	
 	guiMain->ShowMessage("Drive 1541 memory markers saved");
 }
@@ -2074,9 +2312,12 @@ void CViewSettingsMenu::ActivateView()
 {
 	LOGG("CViewSettingsMenu::ActivateView()");
 	
-	//
-	int modelType = viewC64->debugInterface->GetC64ModelType();
-	this->SetOptionC64ModelType(modelType);
+	if (viewC64->debugInterfaceC64)
+	{
+		//
+		int modelType = viewC64->debugInterfaceC64->GetC64ModelType();
+		this->SetOptionC64ModelType(modelType);
+	}
 
 	UpdateAudioOutDevices();
 }

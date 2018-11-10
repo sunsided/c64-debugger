@@ -13,6 +13,9 @@ class CViewMemoryMap;
 class CSlrMutex;
 class C64DebugInterface;
 
+// TODO: make base class to have Vice specific state rendering and editing
+//       class CViewC64ViceStateCIA : public CViewC64StateCIA
+
 class CViewC64StateCIA : public CGuiView, CGuiEditHexCallback
 {
 public:
@@ -39,6 +42,19 @@ public:
 	
 	bool renderCIA1;
 	bool renderCIA2;
+
+	//
+	virtual void RenderStateCIA(float px, float py, float posZ, CSlrFont *fontBytes, float fontSize, int ciaId);
+	
+	// editing registers
+	bool showRegistersOnly;
+	int editingRegisterValueIndex;		// -1 means no editing
+	int editingCIAIndex;
+	CGuiEditHex *editHex;
+	virtual void GuiEditHexEnteredValue(CGuiEditHex *editHex, u32 lastKeyCode, bool isCancelled);
+	
+	//
+	virtual void RenderFocusBorder();
 
 };
 

@@ -142,7 +142,7 @@ void CViewKeyboardShortcuts::StoreKeyboardShortcuts()
 	byteBuffer->PutU16(C64DEBUGGER_KEYBOARD_SHORTCUTS_VERSION);
 	shortcuts->StoreToByteBuffer(byteBuffer);
 	
-	CSlrString *fileName = new CSlrString("/shortcuts.dat");
+	CSlrString *fileName = new CSlrString(C64D_KEYBOARD_SHORTCUTS_FILE_PATH);
 	byteBuffer->storeToSettings(fileName);
 	delete fileName;
 	
@@ -157,7 +157,7 @@ void CViewKeyboardShortcuts::RestoreKeyboardShortcuts()
 
 	CByteBuffer *byteBuffer = new CByteBuffer();
 	
-	CSlrString *fileName = new CSlrString("/shortcuts.dat");
+	CSlrString *fileName = new CSlrString(C64D_KEYBOARD_SHORTCUTS_FILE_PATH);
 	bool ret = byteBuffer->loadFromSettings(fileName);
 	delete fileName;
 	

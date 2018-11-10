@@ -13,7 +13,7 @@ CJukeboxPlaylist::CJukeboxPlaylist(char *json)
 	delayAfterResetMs = 1000;
 	showLoadAddressInfo = false;
 	fadeSoundVolume = true;
-	setLayoutViewNumber = -1; //C64_SCREEN_LAYOUT_C64_ONLY;
+	setLayoutViewNumber = -1; //SCREEN_LAYOUT_C64_ONLY;
 
 	showTextInfo = true;
 	showTextFadeTime = 0.75f;
@@ -37,9 +37,9 @@ void CJukeboxPlaylist::InitFromJSON(char *json)
 	LOGD("CJukeboxPlaylist::InitFromJSON");
 //	LOGD("CJukeboxPlaylist::InitFromJSON: json=\n>>\"%s\"<<", json);
 	
-	LOGTODO("windows: jeszcze taka mysl luzna... pamietaj ze w pliku JSON na windows sciezki musisz escapowac \
-			bo znak \ jest nielegalnym znakiem JSON \
-			musi byc \\");
+//	LOGTODO("windows: jeszcze taka mysl luzna... pamietaj ze w pliku JSON na windows sciezki musisz escapowac \
+//			bo znak \ jest nielegalnym znakiem JSON \
+//			musi byc \\");
 
 	LOGD("CJukeboxPlaylist: parse...");
 	
@@ -137,6 +137,10 @@ void CJukeboxPlaylist::InitFromJSON(char *json)
 						else if (!strcmp(buf, "soft"))
 						{
 							playlistEntry->resetMode = MACHINE_RESET_SOFT;
+						}
+						else if (!strcmp(buf, "none"))
+						{
+							playlistEntry->resetMode = MACHINE_RESET_NONE;
 						}
 						LOGD("                       Reset = %d", playlistEntry->resetMode);
 						delete [] buf;
@@ -319,7 +323,7 @@ void CJukeboxPlaylist::InitFromJSON(char *json)
 								{
 									playlistAction->actionType = JUKEBOX_ACTION_DUMP_C64_MEMORY;
 									
-									std::string str = itEntry->as_string();
+									std::string str = itAction->as_string();
 									char *buf = FUN_SafeConvertStdStringToCharArray(str);
 									
 									playlistAction->text = new CSlrString(buf);
@@ -330,7 +334,7 @@ void CJukeboxPlaylist::InitFromJSON(char *json)
 								{
 									playlistAction->actionType = JUKEBOX_ACTION_DUMP_DISK_MEMORY;
 									
-									std::string str = itEntry->as_string();
+									std::string str = itAction->as_string();
 									char *buf = FUN_SafeConvertStdStringToCharArray(str);
 
 									playlistAction->text = new CSlrString(buf);
@@ -341,7 +345,35 @@ void CJukeboxPlaylist::InitFromJSON(char *json)
 								{
 									playlistAction->actionType = JUKEBOX_ACTION_DETACH_CARTRIDGE;
 								}
-								
+								else if (nodeName == "SaveScreenshot")
+								{
+									playlistAction->actionType = JUKEBOX_ACTION_SAVE_SCREENSHOT;
+
+									std::string str = itAction->as_string();
+									char *buf = FUN_SafeConvertStdStringToCharArray(str);
+									LOGD("CJukeboxPlaylist::InitFromJSON SaveScreenshot: buf='%s'", buf);
+									
+									playlistAction->text = new CSlrString(buf);
+									
+									delete [] buf;
+								}
+								else if (nodeName == "ExportScreen")
+								{
+									playlistAction->actionType = JUKEBOX_ACTION_EXPORT_SCREEN;
+									
+									std::string str = itAction->as_string();
+									char *buf = FUN_SafeConvertStdStringToCharArray(str);
+									LOGD("CJukeboxPlaylist::InitFromJSON ExportScreen: buf='%s'", buf);
+
+									playlistAction->text = new CSlrString(buf);
+									
+									delete [] buf;
+								}
+								else if (nodeName == "Shutdown")
+								{
+									playlistAction->actionType = JUKEBOX_ACTION_SHUTDOWN;
+								}
+
 								itAction++;
 							}
 							

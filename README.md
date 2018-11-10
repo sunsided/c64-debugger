@@ -80,6 +80,9 @@ Should work as-is without troubles. Just put files into
 
 ### Linux
 
+There's a `Makefile` in root folder you can use to compile. Just type `make`.
+
+To compile code for development purposes:
 I use a tool from hell to compile the project that is called Eclipse CDT.
 It is crap and you can find my stupid posts on Eclipse support forums
 showing why I think so. Devs of Eclipse have never released a stable

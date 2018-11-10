@@ -29,6 +29,10 @@ extern "C"
 #include <vector>
 #include <map>
 
+class CDebugInterface;
+class C64DebugInterface;
+class AtariDebugInterface;
+
 class C64KeyboardShortcuts;
 class CSlrFontProportional;
 class CSlrKeyboardShortcut;
@@ -40,11 +44,13 @@ class CC64DiskDirectRamDataAdapter;
 class C64Symbols;
 
 class CViewC64Screen;
+
 class CViewMemoryMap;
 class CViewDataDump;
 class CViewDataWatch;
 class CViewBreakpoints;
 class CViewDisassemble;
+class CViewSourceCode;
 class CViewC64StateCPU;
 class CViewC64StateCIA;
 class CViewC64StateSID;
@@ -53,9 +59,13 @@ class CViewC64VicDisplay;
 class CViewC64VicControl;
 class CViewVicEditor;
 class CViewDriveStateCPU;
-class CViewDrive1541State;
+class CViewDrive1541StateVIA;
 class CViewEmulationState;
 class CViewMonitorConsole;
+
+class CViewAtariScreen;
+class CViewAtariStateCPU;
+
 class CViewJukeboxPlaylist;
 class CViewMainMenu;
 class CViewSettingsMenu;
@@ -68,34 +78,49 @@ class CViewAbout;
 
 class CColorsTheme;
 
-class C64DebugInterface;
 
-
-enum c64ScreenLayouts
+enum screenLayouts
 {
-	C64_SCREEN_LAYOUT_C64_ONLY = 0,
-	C64_SCREEN_LAYOUT_C64_DATA_DUMP = 1,
-	C64_SCREEN_LAYOUT_C64_DEBUGGER = 2,
-	C64_SCREEN_LAYOUT_C64_1541_MEMORY_MAP = 3,
-	C64_SCREEN_LAYOUT_SHOW_STATES = 4,
-	C64_SCREEN_LAYOUT_C64_MEMORY_MAP = 5,
-	C64_SCREEN_LAYOUT_C64_1541_DEBUGGER = 6,
-	//	C64_SCREEN_LAYOUT_C64_1541_DATA_DUMP,
-	C64_SCREEN_LAYOUT_MONITOR_CONSOLE = 7,
-	C64_SCREEN_LAYOUT_CYCLER = 8,
-	C64_SCREEN_LAYOUT_VIC_DISPLAY = 9,
-	C64_SCREEN_LAYOUT_VIC_DISPLAY_LITE = 10,
-	C64_SCREEN_LAYOUT_FULL_SCREEN_ZOOM = 11,
-	C64_SCREEN_LAYOUT_MAX
+	// c64
+	SCREEN_LAYOUT_C64_ONLY = 0,
+	SCREEN_LAYOUT_C64_DATA_DUMP = 1,
+	SCREEN_LAYOUT_C64_DEBUGGER = 2,
+	SCREEN_LAYOUT_C64_1541_MEMORY_MAP = 3,
+	SCREEN_LAYOUT_C64_SHOW_STATES = 4,
+	SCREEN_LAYOUT_C64_MEMORY_MAP = 5,
+	SCREEN_LAYOUT_C64_1541_DEBUGGER = 6,
+	//	SCREEN_LAYOUT_C64_1541_DATA_DUMP,
+	SCREEN_LAYOUT_C64_MONITOR_CONSOLE = 7,
+	SCREEN_LAYOUT_C64_CYCLER = 8,
+	SCREEN_LAYOUT_C64_VIC_DISPLAY = 9,
+	SCREEN_LAYOUT_C64_VIC_DISPLAY_LITE = 10,
+	SCREEN_LAYOUT_C64_FULL_SCREEN_ZOOM = 11,
+	SCREEN_LAYOUT_C64_SOURCE_CODE = 12,
+
+	// atari
+	SCREEN_LAYOUT_ATARI_ONLY,
+	SCREEN_LAYOUT_ATARI_DATA_DUMP,
+	SCREEN_LAYOUT_ATARI_DEBUGGER,
+	SCREEN_LAYOUT_ATARI_SHOW_STATES,
+	SCREEN_LAYOUT_ATARI_MEMORY_MAP,
+	SCREEN_LAYOUT_ATARI_MONITOR_CONSOLE,
+
+	// other
+	SCREEN_LAYOUT_C64_AND_ATARI,
+	
+	SCREEN_LAYOUT_MAX
 };
 
 
-class C64ScreenLayout
+class CScreenLayout
 {
 public:
-	C64ScreenLayout();
+	CScreenLayout();
 	bool isAvailable;
 	
+	bool debugOnC64;
+	bool debugOnDrive1541;
+
 	bool c64ScreenVisible;
 	float c64ScreenX, c64ScreenY;
 	float c64ScreenSizeX, c64ScreenSizeY;
@@ -121,7 +146,13 @@ public:
 	bool c64DisassembleShowCodeCycles;
 	float c64DisassembleCodeCyclesOffset;
 	bool c64DisassembleShowLabels;
+	bool c64DisassembleShowSourceCode;
 	int c64DisassembleNumberOfLabelCharacters;
+	
+	bool c64SourceCodeVisible;
+	float c64SourceCodeX, c64SourceCodeY;
+	float c64SourceCodeSizeX, c64SourceCodeSizeY;
+	float c64SourceCodeFontSize;
 
 	bool drive1541DisassembleVisible;
 	float drive1541DisassembleX, drive1541DisassembleY;
@@ -133,6 +164,7 @@ public:
 	bool drive1541DisassembleShowCodeCycles;
 	float drive1541DisassembleCodeCyclesOffset;
 	bool drive1541DisassembleShowLabels;
+	bool drive1541DisassembleShowSourceCode;
 	int drive1541DisassembleNumberOfLabelCharacters;
 
 	bool c64MemoryMapVisible;
@@ -172,17 +204,19 @@ public:
 	float c64StateSIDFontSize;
 	bool c64StateVICVisible;
 	float c64StateVICX, c64StateVICY;
+	float c64StateVICSizeX, c64StateVICSizeY;
 	float c64StateVICFontSize;
 	bool c64StateVICIsVertical;
 	bool c64StateVICShowSprites;
+	int c64StateVICNumValuesPerColumn;
 	
-	bool c64StateDrive1541Visible;
-	float c64StateDrive1541X, c64StateDrive1541Y;
-	float c64StateDrive1541FontSize;
-	bool c64StateDrive1541RenderVIA1;
-	bool c64StateDrive1541RenderVIA2;
-	bool c64StateDrive1541RenderDriveLED;
-	bool c64StateDrive1541IsVertical;
+	bool drive1541StateVIAVisible;
+	float drive1541StateVIAX, drive1541StateVIAY;
+	float drive1541StateVIAFontSize;
+	bool drive1541StateVIARenderVIA1;
+	bool drive1541StateVIARenderVIA2;
+	bool drive1541StateVIARenderDriveLED;
+	bool drive1541StateVIAIsVertical;
 	
 	bool c64VicDisplayVisible;
 	float c64VicDisplayX, c64VicDisplayY;
@@ -202,11 +236,63 @@ public:
 	bool emulationStateVisible;
 	float emulationStateX, emulationStateY;
 	
-	bool debugOnC64;
-	bool debugOnDrive1541;
+	///////
+	bool debugOnAtari;
+	
+	bool atariScreenVisible;
+	float atariScreenX, atariScreenY;
+	float atariScreenSizeX, atariScreenSizeY;
+	bool atariScreenShowGridLines;
+	bool atariScreenShowZoomedScreen;
+	float atariScreenZoomedX, atariScreenZoomedY;
+	float atariScreenZoomedSizeX, atariScreenZoomedSizeY;
+	
+	bool atariCpuStateVisible;
+	float atariCpuStateX, atariCpuStateY;
+	float atariCpuStateFontSize;
+
+	bool atariDisassembleVisible;
+	float atariDisassembleX, atariDisassembleY;
+	float atariDisassembleSizeX, atariDisassembleSizeY;
+	float atariDisassembleFontSize;
+	int atariDisassembleNumberOfLines;
+	float atariDisassembleCodeMnemonicsOffset;
+	bool atariDisassembleShowHexCodes;
+	bool atariDisassembleShowCodeCycles;
+	float atariDisassembleCodeCyclesOffset;
+	bool atariDisassembleShowLabels;
+	int atariDisassembleNumberOfLabelCharacters;
+
+	bool atariDataDumpVisible;
+	float atariDataDumpX, atariDataDumpY;
+	float atariDataDumpSizeX, atariDataDumpSizeY;
+	float atariDataDumpFontSize;
+	float atariDataDumpGapAddress;
+	float atariDataDumpGapHexData;
+	float atariDataDumpGapDataCharacters;
+	bool atariDataDumpShowCharacters;
+	bool atariDataDumpShowSprites;
+	int atariDataDumpNumberOfBytesPerLine;
+	
+	bool atariMemoryMapVisible;
+	float atariMemoryMapX, atariMemoryMapY;
+	float atariMemoryMapSizeX, atariMemoryMapSizeY;
+
+
 };
 
-class CViewC64 : public CGuiView, CGuiButtonCallback, CSlrThread, CApplicationPauseResumeListener,
+class CEmulationThreadC64 : public CSlrThread
+{
+	void ThreadRun(void *data);
+};
+
+class CEmulationThreadAtari : public CSlrThread
+{
+	void ThreadRun(void *data);
+};
+
+
+class CViewC64 : public CGuiView, CGuiButtonCallback, CApplicationPauseResumeListener,
 				 public CSharedMemorySignalCallback, public CGuiViewSelectFileCallback, public CGuiViewSaveFileCallback
 {
 public:
@@ -247,8 +333,13 @@ public:
 	virtual void ActivateView();
 	virtual void DeactivateView();
 
+	CDebugInterface *selectedDebugInterface;
 	
-	C64DebugInterface *debugInterface;
+	C64DebugInterface *debugInterfaceC64;
+	CEmulationThreadC64 *emulationThreadC64;
+
+	AtariDebugInterface *debugInterfaceAtari;
+	CEmulationThreadAtari *emulationThreadAtari;
 	
 	CColorsTheme *colorsTheme;
 	
@@ -284,10 +375,17 @@ public:
 	CViewDisassemble *viewC64Disassemble;
 	CViewDisassemble *viewDrive1541Disassemble;
 	
+	CViewSourceCode *viewC64SourceCode;
+	
+	CViewDisassemble *viewAtariDisassemble;
+	CViewDataDump *viewAtariMemoryDataDump;
+	CViewMemoryMap *viewAtariMemoryMap;
+	
+	
 	CViewC64StateCIA *viewC64StateCIA;
 	CViewC64StateSID *viewC64StateSID;
 	CViewC64StateVIC *viewC64StateVIC;
-	CViewDrive1541State *viewC64StateDrive1541;
+	CViewDrive1541StateVIA *viewDrive1541StateVIA;
 	
 	CViewEmulationState *viewEmulationState;
 	
@@ -302,6 +400,10 @@ public:
 	// VIC Editor
 	CViewVicEditor *viewVicEditor;
 	
+	// Atari
+	CViewAtariScreen *viewAtariScreen;
+	CViewAtariStateCPU *viewAtariStateCPU;
+
 	// updated every render frame
 	vicii_cycle_state_t currentViciiState;
 	
@@ -324,15 +426,14 @@ public:
 	
 	//
 	void InitViceC64();
+	void InitAtari800();
 
 	void InitViews();
 	void InitLayouts();
 	
 	void InitJukebox(CSlrString *jukeboxJsonFilePath);
 	
-	void ThreadRun(void *data);
-	
-	C64ScreenLayout *screenPositions[C64_SCREEN_LAYOUT_MAX];
+	CScreenLayout *screenPositions[SCREEN_LAYOUT_MAX];
 	
 	int guiRenderFrameCounter;
 //	int nextScreenUpdateFrame;
@@ -342,13 +443,15 @@ public:
 	void EmulationStartFrameCallback();
 	
 	//
-	void AddDebugCode();
+	void AddC64DebugCode();
 
 	C64KeyboardShortcuts *keyboardShortcuts;
 	bool ProcessGlobalKeyboardShortcut(u32 keyCode, bool isShift, bool isAlt, bool isControl);
 	
 	void SwitchIsWarpSpeed();
+	
 	void SwitchScreenLayout();
+	void SetLayout(int newScreenLayoutId);
 	void SwitchToScreenLayout(int newScreenLayoutId);
 	void SwitchUseKeyboardAsJoystick();
 	void SwitchIsMulticolorDataDump();
@@ -382,14 +485,19 @@ public:
 	virtual void ApplicationEnteredBackground();
 	virtual void ApplicationEnteredForeground();
 
-	//
-	bool isEmulationThreadRunning;
 	
+	// TODO: move this below to proper debug interfaces:
 	void MapC64MemoryToFile(char *filePath);
 	void UnMapC64MemoryFromFile();
 	uint8 *mappedC64Memory;
 	void *mappedC64MemoryDescriptor;
-	
+
+	//
+//	void MapAtariMemoryToFile(char *filePath);
+//	void UnMapAtariMemoryFromFile();
+//	uint8 *mappedAtariMemory;
+//	void *mappedAtariMemoryDescriptor;
+
 	//
 	std::list<u32> keyDownCodes;
 	
@@ -437,7 +545,10 @@ public:
 	void SetWatchVisible(bool isVisibleWatch);
 	void UpdateWatchVisible();
 	
+	//
 	
+	char *ATRD_GetPathForRoms_IMPL();
+
 };
 
 extern CViewC64 *viewC64;
@@ -447,9 +558,23 @@ extern long c64dStartupTime;
 
 void C64D_DragDropCallback(char *filePath);
 void C64D_DragDropCallback(CSlrString *filePath);
+
+// c64
 void C64D_DragDropCallbackPRG(CSlrString *filePath);
 void C64D_DragDropCallbackD64(CSlrString *filePath);
+void C64D_DragDropCallbackTAP(CSlrString *filePath);
 void C64D_DragDropCallbackCRT(CSlrString *filePath);
 void C64D_DragDropCallbackSNAP(CSlrString *filePath);
+void C64D_DragDropCallbackVCE(CSlrString *filePath);
+void C64D_DragDropCallbackPNG(CSlrString *filePath);
+
+// atari
+void C64D_DragDropCallbackXEX(CSlrString *filePath);
+void C64D_DragDropCallbackATR(CSlrString *filePath);
+
+// jukebox
+void C64D_DragDropCallbackJukeBox(CSlrString *filePath);
+
+
 
 #endif //_GUI_C64DEMO_

@@ -11,10 +11,10 @@
 
 class CSlrDataAdapter;
 class CSlrFont;
-class C64DebugInterface;
+class CDebugInterface;
 class CSlrMutex;
 class CSlrString;
-class C64AddrBreakpoint;
+class CAddrBreakpoint;
 class CViewMemoryMap;
 class CSlrKeyboardShortcut;
 
@@ -51,7 +51,7 @@ class CViewDisassemble : public CGuiView, CGuiEditHexCallback, CGuiEditBoxTextCa
 public:
 	CViewDisassemble(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
 						CSlrDataAdapter *dataAdapter, CViewMemoryMap *memoryMap,
-						std::map<uint16, C64AddrBreakpoint *> *breakpointsMap, C64DebugInterface *debugInterface);
+						std::map<uint16, CAddrBreakpoint *> *breakpointsMap, CDebugInterface *debugInterface);
 	virtual ~CViewDisassemble();
 
 	virtual void Render();
@@ -66,9 +66,9 @@ public:
 	virtual bool KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl);
 	virtual bool KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl);
 	
-	CViewMemoryMap *memoryMap;
+	CViewMemoryMap *viewMemoryMap;
 	CSlrDataAdapter *dataAdapter;
-	C64DebugInterface *debugInterface;
+	CDebugInterface *debugInterface;
 	
 	CSlrFont *fontDisassemble;
 	float fontSize;
@@ -84,6 +84,8 @@ public:
 	void RenderDisassemble(int startAddress, int endAddress);
 
 	int RenderDisassembleLine(float px, float py, int addr, uint8 op, uint8 lo, uint8 hi);
+	void MnemonicWithArgumentToStr(u16 addr, u8 op, u8 lo, u8 hi, char *buf);
+	void MnemonicWithDollarArgumentToStr(u16 addr, u8 op, u8 lo, u8 hi, char *buf);
 	void RenderHexLine(float px, float py, int addr);
 	
 	int UpdateDisassembleOpcodeLine(float py, int addr, uint8 op, uint8 lo, uint8 hi);
@@ -109,7 +111,7 @@ public:
 	std::map<uint16, uint16> renderBreakpoints;
 	
 	// these point to real breakpoints (emulation mutex will be locked when these are edited)
-	std::map<uint16, C64AddrBreakpoint *> *breakpointsMap;
+	std::map<uint16, CAddrBreakpoint *> *breakpointsMap;
 	 
 	int previousOpAddr;
 	int nextOpAddr;
@@ -128,7 +130,7 @@ public:
 						   float mnemonicsDisplayOffsetX,
 						   bool showHexCodes,
 						   bool showCodeCycles, float codeCyclesDisplayOffsetX,
-						   bool showLabels, int labelNumCharacters);
+						   bool showLabels, bool showSourceCode, int labelNumCharacters);
 	void SetCurrentPC(int pc);
 	
 	void UpdateLabelsPositions();
@@ -138,6 +140,7 @@ public:
 	bool showCodeCycles;
 	float codeCyclesOffsetX;
 	bool showLabels;
+	bool showSourceCode;
 	int labelNumCharacters;
 	
 	bool isTrackingPC;
@@ -161,7 +164,7 @@ public:
 	void FinalizeEditing();
 	
 	void Assemble(int assembleAddress);
-	int Assemble(int assembleAddress, char *lineBuffer);
+	int Assemble(int assembleAddress, char *lineBuffer, bool showMessage);
 	int Assemble(int assembleAddress, char *lineBuffer, int *instructionOpCode, uint16 *instructionValue, char *errorMessageBuf);
 
 	AssembleToken AssembleGetToken(CSlrTextParser *textParser);
@@ -186,13 +189,21 @@ public:
 	std::list<u32> shortcutZones;
 	
 	std::map<u16, CDisassembleCodeLabel *> codeLabels;
-	void AddCodeLabel(u16 address, char *text);
-	void ClearCodeLabels();
+	void AddNewCodeLabel(u16 address, char *text);
+	CDisassembleCodeLabel *CreateCodeLabel(u16 address, char *text);
+	void DeleteCodeLabels();
 
 	std::vector<int> traverseHistoryAddresses;
 	void MoveAddressHistoryBack();
 	void MoveAddressHistoryForward();
 	void MoveAddressHistoryForwardWithAddr(u16 addr);
+	
+	void PasteHexValuesFromClipboard();
+	void CopyAssemblyToClipboard();
+	void CopyHexAddressToClipboard();
+	
+	void PasteKeysFromClipboard();
+	
 };
 
 

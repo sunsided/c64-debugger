@@ -18,20 +18,22 @@
 #include "CViewVicEditor.h"
 #include "CViewC64VicDisplay.h"
 #include "CVicEditorLayer.h"
+#include "CVicEditorLayerC64Canvas.h"
+#include "CVicEditorLayerImage.h"
 #include <list>
 
 CViewVicEditorLayers::CViewVicEditorLayers(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, CViewVicEditor *vicEditor)
-: CGuiView(posX, posY, posZ, sizeX, sizeY)
+: CGuiWindow(posX, posY, posZ, sizeX, sizeY, new CSlrString("Layers"), NULL)
 {
 	this->name = "CViewVicEditorLayers";
 	
 	this->vicEditor = vicEditor;
 	
-	float px = posX + 11.5f;
-	float py = posY + 1.0f;
+	float px = 11.5f; //posX + 11.5f;
+	float py = 1.0f; //posY + 1.0f;
 	
 	float sx = sizeX - 5.0f;
-	float sy = 50;
+	float sy = sizeY; //57;
 	
 	font = viewC64->fontCBMShifted;
 	fontScale = 1.25f;
@@ -50,8 +52,8 @@ CViewVicEditorLayers::CViewVicEditorLayers(GLfloat posX, GLfloat posY, GLfloat p
 
 	RefreshLayers();
 	
-	viewFrame = new CGuiViewFrame(this, new CSlrString("Layers"));
-	this->AddGuiElement(viewFrame);
+	// always run
+	this->UpdatePosition();
 }
 
 void CViewVicEditorLayers::RefreshLayers()
@@ -83,8 +85,8 @@ void CViewVicEditorLayers::RefreshLayers()
 	this->lstLayers->Init(items, vicEditor->layers.size(), true);
 
 	// create buttons
-	float px = posX + 2.0f;
-	float py = posY + 2.5f;
+	float px = 2.0f; //posX + 2.0f;
+	float py = 2.5f; //posY + 2.5f;
 	float buttonSizeX = 12.0f;
 	float buttonSizeY = 8.0f;
 
@@ -132,26 +134,7 @@ void CViewVicEditorLayers::SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ,
 {
 	LOGD("CViewVicEditorLayers::SetPosition: %f %f", posX, posY);
 	
-	// TODO: fix this and let guiview manage this
-	CGuiView::SetPosition(posX, posY, posZ, sizeX, sizeY);
-	
-	float px = posX + 11.5f;
-	float py = posY + 1.0f;
-
-	lstLayers->SetPosition(px, py);
-
-	// move buttons
-	px = posX + 2.0f;
-	py = posY + 2.5f;
-	
-	for (std::vector<CGuiButtonSwitch *>::iterator it = this->btnsVisible.begin();
-		 it != this->btnsVisible.end(); it++)
-	{
-		CGuiButtonSwitch *btnVisible = *it;
-		btnVisible->SetPosition(px, py);
-		
-		py += 9.0f;
-	}
+	CGuiWindow::SetPosition(posX, posY, posZ, sizeX, sizeY);
 }
 
 void CViewVicEditorLayers::UpdateVisibleSwitchButtons()
@@ -174,6 +157,11 @@ bool CViewVicEditorLayers::ButtonSwitchChanged(CGuiButtonSwitch *button)
 	CVicEditorLayer *layer = (CVicEditorLayer *)button->userData;
 	
 	layer->isVisible = button->IsOn();
+	
+	if (layer == (CVicEditorLayer*)vicEditor->layerReferenceImage)
+	{
+		vicEditor->UpdateReferenceLayers();
+	}
 	
 	return false;
 }
@@ -230,7 +218,7 @@ void CViewVicEditorLayers::SelectNextLayer()
 
 void CViewVicEditorLayers::DoLogic()
 {
-	CGuiView::DoLogic();
+	CGuiWindow::DoLogic();
 }
 
 
@@ -238,7 +226,7 @@ void CViewVicEditorLayers::Render()
 {
 	BlitFilledRectangle(posX, posY, posZ, sizeX, sizeY, viewFrame->barColorR, viewFrame->barColorG, viewFrame->barColorB, 1);
 
-	CGuiView::Render();
+	CGuiWindow::Render();
 
 	BlitRectangle(posX, posY, posZ, sizeX, sizeY, 0, 0, 0, 1, 1);
 }
@@ -249,13 +237,13 @@ bool CViewVicEditorLayers::DoTap(GLfloat x, GLfloat y)
 
 //	if (this->IsInsideView(x, y))
 //	{
-//		if (CGuiView::DoTapNoBackground(x, y) == false)
+//		if (CGuiWindow::DoTapNoBackground(x, y) == false)
 //		{
 //			SelectLayer(NULL);
 //		}
 //	}
 	
-	if (CGuiView::DoTap(x, y) == false)
+	if (CGuiWindow::DoTap(x, y) == false)
 	{
 		if (this->IsInsideView(x, y))
 		{
@@ -263,7 +251,7 @@ bool CViewVicEditorLayers::DoTap(GLfloat x, GLfloat y)
 		}
 	}
 	
-	return CGuiView::DoTap(x, y);;
+	return CGuiWindow::DoTap(x, y);;
 }
 
 bool CViewVicEditorLayers::DoMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat distY, GLfloat diffX, GLfloat diffY)
@@ -271,7 +259,7 @@ bool CViewVicEditorLayers::DoMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat d
 	if (this->IsInsideView(x, y))
 		return true;
 	
-	return CGuiView::DoMove(x, y, distX, distY, diffX, diffY);
+	return CGuiWindow::DoMove(x, y, distX, distY, diffX, diffY);
 }
 
 
@@ -282,7 +270,7 @@ bool CViewVicEditorLayers::DoRightClick(GLfloat x, GLfloat y)
 	if (this->IsInsideView(x, y))
 		return true;
 	
-	return CGuiView::DoRightClick(x, y);
+	return CGuiWindow::DoRightClick(x, y);
 }
 
 

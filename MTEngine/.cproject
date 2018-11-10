@@ -5,7 +5,7 @@
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.exe.release.522952127" moduleId="org.eclipse.cdt.core.settings" name="Release">
 				<externalSettings/>
 				<extensions>
-					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
+					<extension id="org.eclipse.cdt.core.GNU_ELF" point="org.eclipse.cdt.core.BinaryParser"/>
 					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
@@ -14,16 +14,16 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactName="MTEngine" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="" errorParsers="org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.CWDLocator;org.eclipse.cdt.core.GCCErrorParser;org.eclipse.cdt.core.GASErrorParser;org.eclipse.cdt.core.GLDErrorParser" id="cdt.managedbuild.config.gnu.exe.release.522952127" name="Release" parent="cdt.managedbuild.config.gnu.exe.release" postannouncebuildStep="" postbuildStep="" preannouncebuildStep="" prebuildStep="">
+				<configuration artifactName="MTEngine" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release" cleanCommand="rm -rf" description="" errorParsers="org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.CWDLocator;org.eclipse.cdt.core.GCCErrorParser;org.eclipse.cdt.core.GASErrorParser;org.eclipse.cdt.core.GLDErrorParser" id="cdt.managedbuild.config.gnu.exe.release.522952127" name="Release" parent="cdt.managedbuild.config.gnu.exe.release" postannouncebuildStep="" postbuildStep="" preannouncebuildStep="" prebuildStep="">
 					<folderInfo id="cdt.managedbuild.config.gnu.exe.release.522952127." name="/" resourcePath="">
 						<toolChain errorParsers="" id="cdt.managedbuild.toolchain.gnu.exe.release.1874285046" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.exe.release">
 							<targetPlatform id="cdt.managedbuild.target.gnu.platform.exe.release.1918097873" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.exe.release"/>
 							<builder arguments="-j 4" autoBuildTarget="all" buildPath="${workspace_loc:/MTEngine/bin/Release}" cleanBuildTarget="clean" command="make" enableAutoBuild="false" enableCleanBuild="true" enabledIncrementalBuild="true" errorParsers="org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.CWDLocator" id="cdt.managedbuild.target.gnu.builder.exe.release.306507217" incrementalBuildTarget="all" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="cdt.managedbuild.target.gnu.builder.exe.release"/>
 							<tool id="cdt.managedbuild.tool.gnu.archiver.base.2012258175" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
 							<tool errorParsers="org.eclipse.cdt.core.GCCErrorParser" id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release.745368038" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release">
-								<option id="gnu.cpp.compiler.exe.release.option.optimization.level.720518138" name="Optimization Level" superClass="gnu.cpp.compiler.exe.release.option.optimization.level" value="gnu.cpp.compiler.optimization.level.most" valueType="enumerated"/>
-								<option id="gnu.cpp.compiler.exe.release.option.debugging.level.900409383" name="Debug Level" superClass="gnu.cpp.compiler.exe.release.option.debugging.level" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
-								<option id="gnu.cpp.compiler.option.include.paths.557858599" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
+								<option id="gnu.cpp.compiler.exe.release.option.optimization.level.720518138" name="Optimization Level" superClass="gnu.cpp.compiler.exe.release.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
+								<option id="gnu.cpp.compiler.exe.release.option.debugging.level.900409383" name="Debug Level" superClass="gnu.cpp.compiler.exe.release.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
+								<option id="gnu.cpp.compiler.option.include.paths.557858599" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Linux}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Linux/portaudio}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Linux/portaudio/os}&quot;"/>
@@ -69,13 +69,13 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/frodo}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/frodo/FrodoInterface}&quot;"/>
 								</option>
-								<option id="gnu.cpp.compiler.option.other.other.1095401961" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -Wno-write-strings" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.other.other.1095401961" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" useByScannerDiscovery="false" value="-c -fmessage-length=0 -Wno-write-strings" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1517738961" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool errorParsers="org.eclipse.cdt.core.GCCErrorParser" id="cdt.managedbuild.tool.gnu.c.compiler.exe.release.970594796" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.release">
-								<option defaultValue="gnu.c.optimization.level.most" id="gnu.c.compiler.exe.release.option.optimization.level.544168769" name="Optimization Level" superClass="gnu.c.compiler.exe.release.option.optimization.level" value="gnu.c.optimization.level.most" valueType="enumerated"/>
-								<option id="gnu.c.compiler.exe.release.option.debugging.level.2058772456" name="Debug Level" superClass="gnu.c.compiler.exe.release.option.debugging.level" value="gnu.c.debugging.level.none" valueType="enumerated"/>
-								<option id="gnu.c.compiler.option.include.paths.1202598359" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
+								<option defaultValue="gnu.c.optimization.level.most" id="gnu.c.compiler.exe.release.option.optimization.level.544168769" name="Optimization Level" superClass="gnu.c.compiler.exe.release.option.optimization.level" useByScannerDiscovery="false" value="gnu.c.optimization.level.none" valueType="enumerated"/>
+								<option id="gnu.c.compiler.exe.release.option.debugging.level.2058772456" name="Debug Level" superClass="gnu.c.compiler.exe.release.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.max" valueType="enumerated"/>
+								<option id="gnu.c.compiler.option.include.paths.1202598359" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Engine/Tremor/Ogg}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Linux/portaudio}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Linux/portaudio/common}&quot;"/>
@@ -85,7 +85,7 @@
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.release.1946803805" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.release"/>
 							<tool errorParsers="org.eclipse.cdt.core.GLDErrorParser" id="cdt.managedbuild.tool.gnu.cpp.linker.exe.release.1101766569" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.release">
-								<option id="gnu.cpp.link.option.libs.1237726898" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
+								<option id="gnu.cpp.link.option.libs.1237726898" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" useByScannerDiscovery="false" valueType="libs">
 									<listOptionValue builtIn="false" value="asound"/>
 									<listOptionValue builtIn="false" value="rt"/>
 									<listOptionValue builtIn="false" value="X11"/>
@@ -116,7 +116,7 @@
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.exe.debug.89624051.1832953639" moduleId="org.eclipse.cdt.core.settings" name="Release2">
 				<externalSettings/>
 				<extensions>
-					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
+					<extension id="org.eclipse.cdt.core.GNU_ELF" point="org.eclipse.cdt.core.BinaryParser"/>
 					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
@@ -125,18 +125,19 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactName="MTEngine" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="" errorParsers="org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.CWDLocator;org.eclipse.cdt.core.GCCErrorParser;org.eclipse.cdt.core.GASErrorParser;org.eclipse.cdt.core.GLDErrorParser" id="cdt.managedbuild.config.gnu.exe.debug.89624051.1832953639" name="Release2" parent="cdt.managedbuild.config.gnu.exe.debug" postannouncebuildStep="" postbuildStep="" preannouncebuildStep="" prebuildStep="">
+				<configuration artifactName="MTEngine" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="rm -rf" description="" errorParsers="org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.CWDLocator;org.eclipse.cdt.core.GCCErrorParser;org.eclipse.cdt.core.GASErrorParser;org.eclipse.cdt.core.GLDErrorParser" id="cdt.managedbuild.config.gnu.exe.debug.89624051.1832953639" name="Release2" parent="cdt.managedbuild.config.gnu.exe.debug" postannouncebuildStep="" postbuildStep="" preannouncebuildStep="" prebuildStep="">
 					<folderInfo id="cdt.managedbuild.config.gnu.exe.debug.89624051.1832953639." name="/" resourcePath="">
 						<toolChain errorParsers="" id="cdt.managedbuild.toolchain.gnu.exe.debug.2035889528" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.exe.debug">
 							<targetPlatform id="cdt.managedbuild.target.gnu.platform.exe.debug.545574324" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.exe.debug"/>
 							<builder arguments="-j 8" autoBuildTarget="all" buildPath="${workspace_loc:/MTEngine/bin/Debug}" cleanBuildTarget="clean" command="make" enableAutoBuild="false" enableCleanBuild="true" enabledIncrementalBuild="true" errorParsers="org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.CWDLocator" id="cdt.managedbuild.target.gnu.builder.exe.debug.1011010302" incrementalBuildTarget="all" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="cdt.managedbuild.target.gnu.builder.exe.debug"/>
 							<tool id="cdt.managedbuild.tool.gnu.archiver.base.1854591133" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
 							<tool command="g++ -x c++ -static -static-libgcc -static-libstdc++" commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG}${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" errorParsers="org.eclipse.cdt.core.GCCErrorParser" id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.1443348232" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug">
-								<option id="gnu.cpp.compiler.exe.debug.option.optimization.level.701983739" name="Optimization Level" superClass="gnu.cpp.compiler.exe.debug.option.optimization.level" value="gnu.cpp.compiler.optimization.level.most" valueType="enumerated"/>
-								<option id="gnu.cpp.compiler.exe.debug.option.debugging.level.1715637543" name="Debug Level" superClass="gnu.cpp.compiler.exe.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
-								<option id="gnu.cpp.compiler.option.include.paths.583457368" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
+								<option id="gnu.cpp.compiler.exe.debug.option.optimization.level.701983739" name="Optimization Level" superClass="gnu.cpp.compiler.exe.debug.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.most" valueType="enumerated"/>
+								<option id="gnu.cpp.compiler.exe.debug.option.debugging.level.1715637543" name="Debug Level" superClass="gnu.cpp.compiler.exe.debug.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
+								<option id="gnu.cpp.compiler.option.include.paths.583457368" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="/usr/include/gtk-3.0"/>
 									<listOptionValue builtIn="false" value="/usr/lib/i386-linux-gnu/glib-2.0/include"/>
+									<listOptionValue builtIn="false" value="/usr/lib/x86_64-linux-gnu/glib-2.0/include"/>
 									<listOptionValue builtIn="false" value="/usr/include/atk-1.0"/>
 									<listOptionValue builtIn="false" value="/usr/include/glib-2.0"/>
 									<listOptionValue builtIn="false" value="/usr/lib64/glib-2.0/include"/>
@@ -148,6 +149,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Linux/portaudio/os}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Linux/portaudio/common}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Linux/arch}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Linux/libclipboard}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Engine}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Engine/Embedded}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Engine/Pool}&quot;"/>
@@ -183,10 +185,15 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Engine/jpeg}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Engine/jpeg/jpeg-9a}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Engine/mtrand}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/DebugInterface}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Screens}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Screens/VicEditor}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Tools}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Layout}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Views}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Views/VicDisplay}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Views/JukeboxPlaylist}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/frodo}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/frodo/FrodoInterface}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice}&quot;"/>
@@ -194,19 +201,19 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/arch}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/c64}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/c64/cart}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/c64/cart/libc64cart}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/c64/cart/libc64cartsystem}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/c64/cart/libc64commoncart}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/c64/libc64sc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/core}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/diskimage}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/diag}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/joyport}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/tapeport}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Games/c64/Emulators/vice/samplerdrv}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/iec}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/iec/c64exp/libdriveiecc64exp}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/iec/libdriveiec}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/iecieee/libdriveiecieee}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/ieee/libdriveieee}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/libdrive}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/iec/c64exp}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/iec}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/iecieee}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/ieee}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/tcbm}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/fileio}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/fsdevice}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/gfxoutputdrv}&quot;"/>
@@ -232,13 +239,13 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/viciisc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/video}&quot;"/>
 								</option>
-								<option id="gnu.cpp.compiler.option.other.other.934890628" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -Wno-write-strings" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.other.other.934890628" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" useByScannerDiscovery="false" value="-c -fmessage-length=0 -Wno-write-strings" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1440129922" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool command="gcc -static -static-libgcc" commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" errorParsers="org.eclipse.cdt.core.GCCErrorParser" id="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.2095163099" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.debug">
-								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.exe.debug.option.optimization.level.1036147288" name="Optimization Level" superClass="gnu.c.compiler.exe.debug.option.optimization.level" value="gnu.c.optimization.level.most" valueType="enumerated"/>
-								<option id="gnu.c.compiler.exe.debug.option.debugging.level.873035989" name="Debug Level" superClass="gnu.c.compiler.exe.debug.option.debugging.level" value="gnu.c.debugging.level.none" valueType="enumerated"/>
-								<option id="gnu.c.compiler.option.include.paths.752566358" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
+								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.exe.debug.option.optimization.level.1036147288" name="Optimization Level" superClass="gnu.c.compiler.exe.debug.option.optimization.level" useByScannerDiscovery="false" value="gnu.c.optimization.level.most" valueType="enumerated"/>
+								<option id="gnu.c.compiler.exe.debug.option.debugging.level.873035989" name="Debug Level" superClass="gnu.c.compiler.exe.debug.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.none" valueType="enumerated"/>
+								<option id="gnu.c.compiler.option.include.paths.752566358" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Engine/Tremor/Ogg}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Linux/portaudio}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Linux/portaudio/common}&quot;"/>
@@ -282,28 +289,28 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Engine/jpeg}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Engine/jpeg/jpeg-9a}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Engine/mtrand}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/DebugInterface}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Screens}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Screens/VicEditor}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Tools}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Views}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Views/VicDisplay}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/ViceInterface}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/arch}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/c64}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/c64/cart}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/c64/cart/libc64cart}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/c64/cart/libc64cartsystem}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/c64/cart/libc64commoncart}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/c64/libc64sc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/core}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/diskimage}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/iec}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/iec/c64exp/libdriveiecc64exp}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/iec/libdriveiec}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/iecieee/libdriveiecieee}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/ieee/libdriveieee}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/libdrive}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/iec/c64exp}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/iec}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/iecieee}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/ieee}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/tcbm}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/fileio}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/fsdevice}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/gfxoutputdrv}&quot;"/>
@@ -328,22 +335,28 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/vdrive}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/viciisc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/video}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/diag}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/tapeport}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/samplerdrv}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/joyport}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Linux/libclipboard}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.971854624" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.1145957556" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug"/>
 							<tool command="g++" commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" errorParsers="org.eclipse.cdt.core.GLDErrorParser" id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.315020907" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug">
-								<option id="gnu.cpp.link.option.libs.430559653" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
+								<option id="gnu.cpp.link.option.libs.430559653" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" useByScannerDiscovery="false" valueType="libs">
 									<listOptionValue builtIn="false" value="asound"/>
 									<listOptionValue builtIn="false" value="gobject-2.0"/>
 									<listOptionValue builtIn="false" value="gtk-3"/>
 									<listOptionValue builtIn="false" value="rt"/>
 									<listOptionValue builtIn="false" value="X11"/>
+									<listOptionValue builtIn="false" value="xcb"/>
 									<listOptionValue builtIn="false" value="pthread"/>
 									<listOptionValue builtIn="false" value="dl"/>
 									<listOptionValue builtIn="false" value="GL"/>
 								</option>
-								<option id="gnu.cpp.link.option.paths.267514913" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
+								<option id="gnu.cpp.link.option.paths.267514913" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" useByScannerDiscovery="false" valueType="libPaths">
 									<listOptionValue builtIn="false" value="/lib32"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1749464138" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
@@ -365,11 +378,11 @@
 			<storageModule moduleId="org.eclipse.cdt.core.language.mapping"/>
 			<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 		</cconfiguration>
-		<cconfiguration id="cdt.managedbuild.config.gnu.exe.debug.89624051.1832953639.497420552">
-			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.exe.debug.89624051.1832953639.497420552" moduleId="org.eclipse.cdt.core.settings" name="Debug">
+		<cconfiguration id="cdt.managedbuild.config.gnu.exe.debug.89624051.1832953639.1315582888">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.exe.debug.89624051.1832953639.1315582888" moduleId="org.eclipse.cdt.core.settings" name="Debug">
 				<externalSettings/>
 				<extensions>
-					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
+					<extension id="org.eclipse.cdt.core.GNU_ELF" point="org.eclipse.cdt.core.BinaryParser"/>
 					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
@@ -378,17 +391,19 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactName="MTEngine" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="Debug" errorParsers="org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.CWDLocator;org.eclipse.cdt.core.GCCErrorParser;org.eclipse.cdt.core.GASErrorParser;org.eclipse.cdt.core.GLDErrorParser" id="cdt.managedbuild.config.gnu.exe.debug.89624051.1832953639.497420552" name="Debug" parent="cdt.managedbuild.config.gnu.exe.debug" postannouncebuildStep="" postbuildStep="" preannouncebuildStep="" prebuildStep="">
-					<folderInfo id="cdt.managedbuild.config.gnu.exe.debug.89624051.1832953639.497420552." name="/" resourcePath="">
-						<toolChain errorParsers="" id="cdt.managedbuild.toolchain.gnu.exe.debug.82019216" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.exe.debug">
-							<targetPlatform id="cdt.managedbuild.target.gnu.platform.exe.debug.1832385417" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.exe.debug"/>
-							<builder arguments="-j 8" autoBuildTarget="all" buildPath="${workspace_loc:/MTEngine/bin/Debug}" cleanBuildTarget="clean" command="make" enableAutoBuild="false" enableCleanBuild="true" enabledIncrementalBuild="true" errorParsers="org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.CWDLocator" id="cdt.managedbuild.target.gnu.builder.exe.debug.1700807849" incrementalBuildTarget="all" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="cdt.managedbuild.target.gnu.builder.exe.debug"/>
-							<tool id="cdt.managedbuild.tool.gnu.archiver.base.1887168440" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
-							<tool command="g++ -x c++ -static -static-libgcc -static-libstdc++" commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG}${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" errorParsers="org.eclipse.cdt.core.GCCErrorParser" id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.1983417972" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug">
-								<option id="gnu.cpp.compiler.exe.debug.option.optimization.level.1138997020" name="Optimization Level" superClass="gnu.cpp.compiler.exe.debug.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
-								<option id="gnu.cpp.compiler.exe.debug.option.debugging.level.1227994632" name="Debug Level" superClass="gnu.cpp.compiler.exe.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
-								<option id="gnu.cpp.compiler.option.include.paths.1432157752" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
+				<configuration artifactName="MTEngine" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="rm -rf" description="" errorParsers="org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.CWDLocator;org.eclipse.cdt.core.GCCErrorParser;org.eclipse.cdt.core.GASErrorParser;org.eclipse.cdt.core.GLDErrorParser" id="cdt.managedbuild.config.gnu.exe.debug.89624051.1832953639.1315582888" name="Debug" parent="cdt.managedbuild.config.gnu.exe.debug" postannouncebuildStep="" postbuildStep="" preannouncebuildStep="" prebuildStep="">
+					<folderInfo id="cdt.managedbuild.config.gnu.exe.debug.89624051.1832953639.1315582888." name="/" resourcePath="">
+						<toolChain errorParsers="" id="cdt.managedbuild.toolchain.gnu.exe.debug.1526776119" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.exe.debug">
+							<targetPlatform id="cdt.managedbuild.target.gnu.platform.exe.debug.1095757668" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.exe.debug"/>
+							<builder arguments="-j 8" autoBuildTarget="all" buildPath="${workspace_loc:/MTEngine/bin/Debug}" cleanBuildTarget="clean" command="make" enableAutoBuild="false" enableCleanBuild="true" enabledIncrementalBuild="true" errorParsers="org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.CWDLocator" id="cdt.managedbuild.target.gnu.builder.exe.debug.387595079" incrementalBuildTarget="all" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="cdt.managedbuild.target.gnu.builder.exe.debug"/>
+							<tool id="cdt.managedbuild.tool.gnu.archiver.base.1249218972" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
+							<tool command="g++ -x c++ -static -static-libgcc -static-libstdc++" commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG}${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" errorParsers="org.eclipse.cdt.core.GCCErrorParser" id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.1822890579" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug">
+								<option id="gnu.cpp.compiler.exe.debug.option.optimization.level.924719484" name="Optimization Level" superClass="gnu.cpp.compiler.exe.debug.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.most" valueType="enumerated"/>
+								<option id="gnu.cpp.compiler.exe.debug.option.debugging.level.1766765598" name="Debug Level" superClass="gnu.cpp.compiler.exe.debug.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
+								<option id="gnu.cpp.compiler.option.include.paths.1686291735" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="/usr/include/gtk-3.0"/>
+									<listOptionValue builtIn="false" value="/usr/lib/i386-linux-gnu/glib-2.0/include"/>
+									<listOptionValue builtIn="false" value="/usr/lib/x86_64-linux-gnu/glib-2.0/include"/>
 									<listOptionValue builtIn="false" value="/usr/include/atk-1.0"/>
 									<listOptionValue builtIn="false" value="/usr/include/glib-2.0"/>
 									<listOptionValue builtIn="false" value="/usr/lib64/glib-2.0/include"/>
@@ -400,6 +415,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Linux/portaudio/os}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Linux/portaudio/common}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Linux/arch}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Linux/libclipboard}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Engine}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Engine/Embedded}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Engine/Pool}&quot;"/>
@@ -435,10 +451,13 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Engine/jpeg}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Engine/jpeg/jpeg-9a}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Engine/mtrand}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/DebugInterface}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Screens}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Screens/VicEditor}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Tools}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Views}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Views/VicDisplay}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/frodo}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/frodo/FrodoInterface}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice}&quot;"/>
@@ -446,19 +465,19 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/arch}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/c64}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/c64/cart}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/c64/cart/libc64cart}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/c64/cart/libc64cartsystem}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/c64/cart/libc64commoncart}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/c64/libc64sc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/core}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/diskimage}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/diag}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/joyport}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/tapeport}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Games/c64/Emulators/vice/samplerdrv}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/iec}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/iec/c64exp/libdriveiecc64exp}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/iec/libdriveiec}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/iecieee/libdriveiecieee}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/ieee/libdriveieee}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/libdrive}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/iec/c64exp}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/iec}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/iecieee}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/ieee}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/tcbm}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/fileio}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/fsdevice}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/gfxoutputdrv}&quot;"/>
@@ -484,13 +503,13 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/viciisc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/video}&quot;"/>
 								</option>
-								<option id="gnu.cpp.compiler.option.other.other.1913378113" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -Wno-write-strings" valueType="string"/>
-								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1086682583" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
+								<option id="gnu.cpp.compiler.option.other.other.1952532573" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" useByScannerDiscovery="false" value="-c -fmessage-length=0 -Wno-write-strings" valueType="string"/>
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1384248352" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
-							<tool command="gcc -static -static-libgcc" commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" errorParsers="org.eclipse.cdt.core.GCCErrorParser" id="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.1005479602" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.debug">
-								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.exe.debug.option.optimization.level.1383321731" name="Optimization Level" superClass="gnu.c.compiler.exe.debug.option.optimization.level" value="gnu.c.optimization.level.none" valueType="enumerated"/>
-								<option id="gnu.c.compiler.exe.debug.option.debugging.level.2061139027" name="Debug Level" superClass="gnu.c.compiler.exe.debug.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
-								<option id="gnu.c.compiler.option.include.paths.699532003" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
+							<tool command="gcc -static -static-libgcc" commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" errorParsers="org.eclipse.cdt.core.GCCErrorParser" id="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.1778129532" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.debug">
+								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.exe.debug.option.optimization.level.1620068585" name="Optimization Level" superClass="gnu.c.compiler.exe.debug.option.optimization.level" useByScannerDiscovery="false" value="gnu.c.optimization.level.most" valueType="enumerated"/>
+								<option id="gnu.c.compiler.exe.debug.option.debugging.level.1475075189" name="Debug Level" superClass="gnu.c.compiler.exe.debug.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.none" valueType="enumerated"/>
+								<option id="gnu.c.compiler.option.include.paths.1766098214" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Engine/Tremor/Ogg}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Linux/portaudio}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Linux/portaudio/common}&quot;"/>
@@ -534,28 +553,28 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Engine/jpeg}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Engine/jpeg/jpeg-9a}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Engine/mtrand}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/DebugInterface}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Screens}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Screens/VicEditor}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Tools}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Views}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Views/VicDisplay}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/ViceInterface}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/arch}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/c64}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/c64/cart}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/c64/cart/libc64cart}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/c64/cart/libc64cartsystem}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/c64/cart/libc64commoncart}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/c64/libc64sc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/core}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/diskimage}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/iec}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/iec/c64exp/libdriveiecc64exp}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/iec/libdriveiec}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/iecieee/libdriveiecieee}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/ieee/libdriveieee}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/libdrive}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/iec/c64exp}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/iec}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/iecieee}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/ieee}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/drive/tcbm}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/fileio}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/fsdevice}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/gfxoutputdrv}&quot;"/>
@@ -580,31 +599,37 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/vdrive}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/viciisc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/video}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/diag}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/tapeport}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/samplerdrv}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Games/c64/Emulators/vice/joyport}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MTEngine/Linux/libclipboard}&quot;"/>
 								</option>
-								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1783617648" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
+								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1592631547" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
-							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.49556362" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug"/>
-							<tool command="g++" commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" errorParsers="org.eclipse.cdt.core.GLDErrorParser" id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.1844153671" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug">
-								<option id="gnu.cpp.link.option.libs.124596259" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
+							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.1996010662" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug"/>
+							<tool command="g++" commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" errorParsers="org.eclipse.cdt.core.GLDErrorParser" id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.306868759" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug">
+								<option id="gnu.cpp.link.option.libs.310704880" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" useByScannerDiscovery="false" valueType="libs">
 									<listOptionValue builtIn="false" value="asound"/>
 									<listOptionValue builtIn="false" value="gobject-2.0"/>
 									<listOptionValue builtIn="false" value="gtk-3"/>
 									<listOptionValue builtIn="false" value="rt"/>
 									<listOptionValue builtIn="false" value="X11"/>
+									<listOptionValue builtIn="false" value="xcb"/>
 									<listOptionValue builtIn="false" value="pthread"/>
 									<listOptionValue builtIn="false" value="dl"/>
 									<listOptionValue builtIn="false" value="GL"/>
 								</option>
-								<option id="gnu.cpp.link.option.paths.1968214698" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
+								<option id="gnu.cpp.link.option.paths.1624154879" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" useByScannerDiscovery="false" valueType="libPaths">
 									<listOptionValue builtIn="false" value="/lib32"/>
 								</option>
-								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.568213281" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.681626718" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
 								</inputType>
 							</tool>
-							<tool command="as" commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" errorParsers="org.eclipse.cdt.core.GASErrorParser" id="cdt.managedbuild.tool.gnu.assembler.exe.debug.682506305" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.exe.debug">
-								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1935985710" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
+							<tool command="as" commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" errorParsers="org.eclipse.cdt.core.GASErrorParser" id="cdt.managedbuild.tool.gnu.assembler.exe.debug.1171779505" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.exe.debug">
+								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.2044170851" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
 						</toolChain>
 					</folderInfo>

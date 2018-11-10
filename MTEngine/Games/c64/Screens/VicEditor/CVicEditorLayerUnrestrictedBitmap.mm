@@ -9,10 +9,10 @@
 
 #define PIXEL_TRANSPARENT	0xFF
 
-CVicEditorLayerUnrestrictedBitmap::CVicEditorLayerUnrestrictedBitmap(CViewVicEditor *vicEditor)
-: CVicEditorLayer(vicEditor, "Unrestricted")
+CVicEditorLayerUnrestrictedBitmap::CVicEditorLayerUnrestrictedBitmap(CViewVicEditor *vicEditor, char *layerName)
+: CVicEditorLayer(vicEditor, layerName)
 {
-	C64DebugInterface *debugInterface = viewC64->debugInterface;
+	C64DebugInterface *debugInterface = viewC64->debugInterfaceC64;
 	
 	this->isVisible = false;
 	
@@ -28,8 +28,8 @@ CVicEditorLayerUnrestrictedBitmap::CVicEditorLayerUnrestrictedBitmap(CViewVicEdi
 	VID_PostImageBinding(imageUnrestricted, NULL);
 
 	// c64 screen texture boundaries
-	screenTexEndX = (float)debugInterface->GetC64ScreenSizeX() / 512.0f;
-	screenTexEndY = 1.0f - (float)debugInterface->GetC64ScreenSizeY() / 512.0f;
+	screenTexEndX = (float)debugInterface->GetScreenSizeX() / 512.0f;
+	screenTexEndY = 1.0f - (float)debugInterface->GetScreenSizeY() / 512.0f;
 	
 	///
 	
@@ -282,6 +282,17 @@ void CVicEditorLayerUnrestrictedBitmap::UpdateBitmapFromMap()
 			
 		}
 	}
+}
+
+bool CVicEditorLayerUnrestrictedBitmap::LoadFrom(CImageData *imageData)
+{
+	SYS_FatalExit("CVicEditorLayerUnrestrictedBitmap::LoadFrom: not implemented");
+	
+	if (imageData->width == 384 && imageData->height == 272)
+	{
+		
+	}
+	return false;
 }
 
 void CVicEditorLayerUnrestrictedBitmap::Serialise(CByteBuffer *byteBuffer)

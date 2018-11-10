@@ -1,22 +1,341 @@
+v0.64.56c
+Bug Fixed: Tabs in source files were displayed as "A"
+Bug Fixed: Breakpoint red markers are now properly displayed when loaded from dbg symbols file
+Bug Fixed: Breakpoints in some Segments from dbg symbols file were set on by default
+Bug Fixed: NMI interrupt breakpoint is fixed
+
+v0.64.56
 Added: PALette palette.
+Added: CHARSET mode in VIC Display
+Added: Joystick keys can be defined as regular keyboard shortcut keys
+Added: New actions to JukeBox scripting: save screenshot, export screen to kla/art/raw, shutdown the C64 Debugger
+Added: Edit values of registers in VIC/SID/CIA/VIA state views
+Added: Quick disassemble mouse scroll with Shift pressed
+Added: Copy (Ctrl+C) and Paste (Ctrl+V) assembly line as text in Disassembly view
+Added: Copy (Ctrl+C) and Paste (Ctrl+V) value (or address with Shift pressed) in Memory Dump view
+Added: Create new Picture in VIC Editor using Ctrl+N
+Added: Export and import Charset in VIC Editor
+Added: Export and import Sprite in VIC Editor
+Added: New unrestricted image Reference layer in VIC Editor
+Added: TAP/T64 load and Tape menu in Settings (thanks to Pontus Berg and Josefin Svensson for reminding me this!)
+Added: Loading sources and debug info from new *.dbg file format. You can view diassembled code together with original source code in new Ctrl+Shift+F3 view. Thanks to Mads Nielsen for his valuable suggestions on the integration of the debug info file format in his KickAssembler. Idea by Stein Pedersen.
+Added: Atari 800/65XE emulator aka 65XE Debugger (early draft)
+Added Linux: New compile Makefile by Kuba Skrzypnik, Eclipse is no more needed to compile sources!
+Changed: Cycler layout (Ctrl+Shift+F2) now contains also memory dump
+Changed: Ctrl+O starts a generic file dialog to open any supported file
+Bug Fixed: Drive CPU status was not displayed in Monitor view when Drive device was selected (thanks to Javier Martin for bug report)
+Bug Fixed: Markers are cleared automatically after PRG load (thanks to Alex Goldablat for bug report)
+Bug Fixed: Zooming in memory map was sometimes blocked
+Bug Fixed: Command line -help option now properly displays message box on Windows (thanks to Timsa Uotila for bug report)
+Bug fixed: Painting on vertically-stretched multicolor sprite caused crash (thanks to Isildur/Samar for bug report)
 
-----
+--TODO--
+
+TODO: "rejestrator makr w word", tj. jukebox nagrywanie
+
+TODO:  grapher pokazujący zmiany wartości komórki na wykresie czasowym byłby miodowy ;-)
+
+TODO: profiler https://github.com/specht/champ?fbclid=IwAR26oNd7BO4ztHPzU4x6vK3DgcvIvOdTznMfbP7F4pUAHAedR-8c-qKbqf0
 
 
 
-v0.64.2
+granie ogg w jukebox (->tracker)
+set vice volume :)
 
-Bug fixed: VIC Sequencer state was displayed reversed (thanks to Mattias Weidhagen for bug reporting)
-Bug fixed: Muting a channel in Stereo/Triple SID state view did not work correctly
-Bug fixed: Automatic loading of *.watch file sometimes caused lock of the debugger (thanks to Yugorin/Samar for bug reporting)
-Bug fixed: Automatic focus for C64 screen was not triggered (thanks to Isildur/Samar for bug reporting)
-Bug fixed: Crash when ReSID emulation was selected and Run SID emulation option was set to No (thanks to Isildur/Samar for bug reporting)
-Bug fixed: When PRG was selected from command line and disk was attached with autorun set then the file entry from D64 was started instead of PRG (thanks to Isildur/Samar for bug reporting)
-Added: Saving VIC Display state with VCE file (thanks to Isildur/Samar for suggestion)
+forever lost z pece!
+
+BUG: disassemble problem screenshot
+
+BUG: add pugixml to docs
+
+BUG: atari full screen start not corrected
+
+BUG: RTS -> rclick does not move to return address (+1 history)
+
+readme atari debugger
 
 
-------
-la-style> In Monitor i always have to select a range of atleast 2 Bytes to fill a memory Location. You are not able to fill just 1 byte. It always has to be atleast F 1000 1001 31, I cant do F 1000 1000 31
+BUG: PROPER AUDIO OUT VOLUME! for 65xe debugger & C64 Debugger
+
+
+BUG: eksport sprajtów zapisuje tylko pierwszy z brzegu, zamiast wszystkich na ekranie, tak ma być?
+
+TODO: setbkg inc/dec
+
+bug: ctrl+m: set is from ram does not switch Disassemble adapter
+bug: execute marker does not distinguish ROM/RAM execution
+
+
+So my general wish list is:
+- Window based structure (also with a pulldown menu based setting structure).
+- Improved monitor that does all what the VICE one does plus more.
+
+
+
+
+
+A cosmetical thing is the settings now. "Emulation" is very little about that. You have sort of "broken out" tape from that. I would sugget a disk and a cart item under "settings" so emulation, disk, tape, cart, audio, memory and UI"
+
+
+// TODO: export sprite colors and flags
+LOGTODO("export sprite colors and flags");
+
+TODO: SystemDialogFileOpenSelected - make delete path when finished callback in Windows & Linux (done in MacOS)
+
+BUG: tetsuo: file select dialog on linux, scroll does not show the last line (last file)
+
+TODO: viceditor żeby zliczał ilość użytych znaków bardzo pomocne przy robieniu grafiki na znaki (isildur)
+
+
+TODO: Add PLAY OGG in JukeBox player
+TODO: add play ogv in jukebox player
+
+TODO BUG: ADD ExtraKey (CMD/Ctrl) support: I cannot get on MacOS *Ctrl*+F10 to step over JSRs, regardless of whether I have "use all F1, F2 etc...
+
+TODO: Does the save icon let me save a charset? Load + Save icons for charset.
+
+BTW tak sobie przypomnialem o tym co kiedys mowilismy - taki quick help do skrotow w VIC Editor i ogolnie c64d
+
+csdb:
+https://csdb.dk/privatemessages/viewmessages.php?shownew=1
+thumbs up for creation and improvement of c64debugger at first, have been using frequently. i have below issue, noticed while testing previous release, cabal, Cabal +8DFHIR
+summary: settings - use keyboard as joystick Y / N might not be reliable, toggling them. tested with latest 0.64.2
+
+i first did:
+settings - c64 model = C64 NTSC and hard resetted and
+settings - use keyboard as joystick Y
+
+loaded cabal boot file, trainermenu appears, i set above to N to navigate through trainers up and down arrow keys. that's OK.
+and then set use keyboard as joystick Y again.
+game loads, but joystick seems not working. then i switch above N and then Y and start game. finally, after that toggle, joystick behaviour is out of control!
+
+my system is win7 64 bit, locale TR (i don't think debugger executable has a connection with locale)
+
+
+
+
+
+//////////////////
+BUG: $d800 colour changes in vic state, take default? charset colour strange changes i rogue-2.prg
+
+
+ctrl+k by mogl te kombinacje zmieniac
+tj ctrl+k by po kolei robil
+- bez koloru
+- kolory z pod kursora myszki
+- zestaw 00 0b 0c 0f
+- zestaw 0f 0c 0b 00
+etc..
+
+
+isildur 12:49 AM
+hmmm a nie prościej byłoby założyć, że user edytuje max 1 zestaw znaków i jeden zestaw kolorów?
+załżyć/wymusić?
+
+
+slajerek 12:50 AM
+no nie do konca bo przy podgladaniu sobie demek moze byc odtwrotnie ten bitorder a tak ctrl+k i ma juz dobrze
+inaczej za kazdym razem gdzies do menu i ustawiac recznie
+
+
+isildur 12:51 AM
+
+tak CTRL+K jest dobrym pomysłem, bo aż tak dużo kombinacji nie ma
+
+
+slajerek 12:51 AM
+4-5 sie wcisnie ctrl+k i dostanie cos co moze ma sens
+
+dobra mysle ze moze to nie taki zly pomysl
+
+//////////////////
+
+
+
+
+
+WATCHES: https://sourceforge.net/p/c64-debugger/tickets/20/
+Watches - a watch is essentially a defined range of memory with a label or name. Watches would be displayed with its Name, and Values in HEX/DEC/BIN
+Watch Boundries - a Watch should have the ability to be defined using normal memory identifiers such as byte, word, text, etc
+Watch View - watches could be displayed on a seperate view along with dissasembly, screen and register information - ideally, one could swap the memory map or data dumps with watches
+Quick Watch - pressing ctrl-w from any memory location will create a "quick watch"
+Watch Import - have the ability to import watches created from assemblers, etc
+
+
+ADD NEW WATCH in watches view
+
+TODO: search by name of watch
+- search/goto watches / wyszukiwanie watch
+
+TODO: sort watches (by addr, by name)
+- sort watches / sortowanie watch
+
+- edycja wartosci watch
+
+TODO: search by name of label
+- search/goto labels / wyszukiwanie labelek
+
+
+TODO: In memory dump Switch to also display watch name (above the value)
+
+
+TODO: store snapshow as PRG (like action replay's FREEZE)
+
+
+BUG: Karty w systemie Windows przełączanie = crash.
+
+
+SHOW LABEL IN MEMORY MAP WHEN ZOOMED IN
+
+DISASSEMBLE SHOW ARGUMENT COLOUR BASED ON MEM ACCESS
+disassemble colouring for read/write
+
+EDIT TEXT IN DATA DUMP
+
+
+memory dump cursor bar horiz & vert
+
+
+DONE: 65xe debugger set path to roms on macos
+
+FIXED: atari has red outline in F1!
+
+
+DONE?: disable some layouts in 65xe debugger
+
+
+DONE: menu for 65xe debugger
+
+
+DONE: zoom in viceditor with bar moves zoom center
+
+select code with shift+ctrl export with ctrl+c
+
+
+przy ladowaniu KLA/ART zrobic tak jak z VCE reset c64
+
+
+Hard Reset aka CTRL+SHIFT+R will also remove the breakpoints from the list.
+
+
+could be nice if Load PRG and start (CTRL+L) would create notification like loading a prg to the debugger ,
+could be nice "loaded from" start address + end address like you display now
+
+
+i wish if there option to clear a bunch of breakpoints without disable them . apparntly loading the PRG
+or even Hard Reset don't clear the breaks.
+
+
+BUG: viceditor: it is possible to move window out of the screen and it is then lost
+
+
+
+bug: jak jestem na widoku sf5 i robie touch scroll up/down to po przelaczeniu na dowolny widok z memory dump to sie wykonuje niepotrzebny event konczy scroll
+
+
+
+
+update to vice3.2
+
+
+
+
+TODO: update the LibreOffice version of README
+
+
+BUG: CHARSET (??)
+
+
+REVIEW can't paint from ux perspective and remove limitations (always paint whatever option)
+
+MG TRACKER: MASTER VOLUME SLIDER FOR THE PRESENTATION 
+
+
+robi se zooma i wciska enter na memory map na zoomie i pisze wartosci ramu!
+
+
+
+
+gdy jest wybrane w vic display bitmap a jest tryb textowy to teraz jest pokazywane tak jak screen
+moze lepiej pokazywac tak jak charset
+albo tak jakby to bylo gdyby faktycznie byl wybrany bitmap?
+
+
+BUG: ??? ctrl+shift+f4 does not refresh sprites (scan ?) ??
+
+
+
+
+BUG: memory map ctrl+m is not generic
+
+
+BUG: memory map isFromDisk
+
+
+
+
+Right+Click C64 screen on any layout to switch between:
+- real c64
+- zoomed c64
+- vic display style
+
+
+Atari
+LOGM("TODO: configure ROMs");
+
+*TO CHECK* atari joystick
+atari snapshots
+atari symbols & breakpoints from file
+atari watches
+atari breakpoints view
+atari menu view
+
+
+
+
+czy idzie wylaczyc antyaliasing w debugerze?
+bluring powoduje ze moje oczy wariuja (w sensie proboja robic akomodacje, bo maja wrazenie ze obraz jest dalej)
+bylo by super jesli dalo by sie wlaczyc "ostrą pixeloze"
+Marcin
+teraz można wyłączyć tylko na ekranie przedstawiającym C64
+elementy UI nie
+Andrzej Śliwa
+myslisz ze to duza zmiana zeby to zrobic opcjonalnie
+?
+Marcin
+nie powinno byc ciezkie bo mozna to sprobowac przez globalny przelacznik
+ale wygladac bedzie tragicznie :}
+przynajmniej windows sobie wogole nie daje rady z nearest scale i nie wiem czemu
+mac jest OK
+Andrzej Śliwa
+dlatego zrobienie tego jako optional bylo by fajne
+pewnie wiekszosc ludzi tego nie potrzebuje
+ale jak ktos ma dobry wzrok i uzywa retiny to oczy swiruja 😀
+moglbym cie prosic o dodanie takiej opcji?
+Marcin
+spoko - dorzucę do TODO, to nie będzie ciężkie 😉
+Andrzej Śliwa
+daj znac jak pojdzie na "produkcje" 😀
+Seen by Andrzej Śliwa at 3:24in the evenin'
+
+
+
+
+BUG: VicEditor locks sometimes on paint... missing UnlockMutex somewhere (?)
+
+
+SID VIEW: http://www.oxyron.de/html/registers_sid.html
+
+
+NOT A BUG: windows editor icons do not load properly  -> VirtualBox 'enable 2d/3d acceleration'
+
+
+
+
+
+
+la-style> In Monitor i always have to select a range of atleast 2 Bytes to fill a memory Location. You are not able to fill just 1 byte. It always has to be atleast F 1000 1001 31, I cant do F 1000 1000 31 .......hmm
+
 
 autorundisk entry num
 
@@ -24,10 +343,22 @@ TODO: redirect monitor output to file
 TODO: scroll monitor console
 
 
-robi se zooma i wciska enter na memory map na zoomie i pisze wartosci ramu!
 
 TODO: ViewVicEditor proper Deserialise
-	a dwa - to i tak nie zadziala dla wiekszej liczby rejestrow ($d011/$d016/$d020/$d021..)
+	*FIXED* a dwa - to i tak nie zadziala dla wiekszej liczby rejestrow ($d011/$d016/$d020/$d021..)
+
+
+----
+
+
+
+
+------
+la-style> In Monitor i always have to select a range of atleast 2 Bytes to fill a memory Location. You are not able to fill just 1 byte. It always has to be atleast F 1000 1001 31, I cant do F 1000 1000 31
+
+autorundisk entry num
+
+
 
 
 moze chodzi o ustawienie z ctrl+shift+f5 ?
@@ -51,21 +382,9 @@ moze to wreszcie polacze wlasnie odrazu z jakims dialogiem "NEW PICTURE" 😃 �
 
 
 
-TODO: isildur: da się zapisać/odtworzyć jakie layersy są włączone?
 
 
 
-?musze zrobic callback cos w stylu 'zainicjalizuj VIC' z VCE
-?dorzucam do TODO, thx for report 🙂
-???	viewC64->debugInterface->SetVicRegister(0x20, colorD020);
-???	SYS_Sleep(100);
-???	viewC64->debugInterface->SetVicRegister(0x21, colorD021);
-
-
-# printing the current speed (as native Vice does; x% emulation speed and Y frames per second)
-
-
-BUG: I am not able to zoom in on memory map on .64 release. (?)
 
 
 # Any progress in the more flexible window handling and adding a menu system? A menu system replacing the F9 screen would make it so much more accessible.
@@ -77,35 +396,7 @@ x# In-app, context-aware, help would also be great. Standing on the hex view and
 * Printing to file:
 - Commands such as CHIS is great but you can only get what you can fit on screen as there is no scroll buffer and you cannot print to file. Making a "CHIS 500 >file.txt" would seem very logical, giving you a file with a 500 row computer history.
 
-# printing the current speed (as native Vice does; x% emulation speed and Y frames per second)
 
-
-
-
-v0.64
-
-Added: JukeBox playlist feature! Allows to play your favourite demos from playlist with transitions, run automated tests of your games and programs with keystrokes and joystick movements, run your productions in Warp mode and then do a memory dump after selected time... and more!
-Added: BASIC-compatible auto run
-Added: Setting CPU registers value in registers view
-Added: Setting for Stereo and Triple SID, showing registers of additional SIDs in SID state view
-Added: Switch off SID emulation in Settings
-Added: Mute audio using Ctrl+T shortcut, also select switch mute mode between just muting the volume, or switching SID emulation off when muted, selectable in Settings (thanks to Mojzesh/Arise and Wegi/Elysium for the help and idea)
-Added: Support of 64tass code labels
-Added: Automatically load Vice code labels if file with *.labels extension is found near loaded PRG
-Added: Watch selected memory locations (Ctrl+W), automatically load *.watch file with PRG. Simple for now, update soon!
-Added: Change menus colour theme and disassembly colour theme, new menus colour themes by Mojzesh/Arise and Isildur/Samar
-Added: Export sprite raw data with screen save
-Added: Show multi-colour charset in Vic Editor
-Added: Setting to adjust focus border width
-Change: You can now save current screen using Ctrl+Shift+E keyboard shortcut in any view, not only Vic Editor
-Change: Saving current screen to file also exports sprites data and charset data
-Change: Shift+0 in Vic Editor sets both $D020 and $D021 colors
-Bug fixed: On Windows it was not possible to enter opcodes in the disassembly pane due to keycodes mismatch (thanks to Scan/House for bug report)
-Bug fixed: On MacOS accent keys that needed double keystroke on ISO keyboards were not recognised (thanks to Ruben Aparicio for bug report and great help with fixing)
-Bug fixed: Importing key map from file caused corruption in key map editor (thanks to Ruben Aparicio for bug report)
-
-TODO: Add Alex Goldblat tester to readme
-TODO: Add Ruben Aparicio tester to readme
 
 
 
@@ -131,9 +422,11 @@ https://drive.google.com/drive/folders/1k1dHTBfGdvNmA803X-6T55GdOwdpXyLF
 *PROGRESS*: show watch,memory watch... podglad wybranych komorek pamieci
 able to "watch" memory locations. these watches would include a name, and then the values in hex/dec/bin - i would like to be able to define the boundaries of the watch for example, byte, word, text, etc - these watches could be displayed on a separate view, along with disassembly, screen, register information, etc - additional features - from any memory location (memory map, disassembly, etc) pressing ctrl-w will create a "quick watch" - finally - allow 64db to read input file containing predefined watch variables that could be spit out from assemblers, etc - ok - can you have that done by next week
 
-*DONE*: 2. on the Monitor console is a bit elusive , as the marker in not auto-focus on the Monitor pane. take me a time to focus on the monitor. but maybe its just me hehe small "nice to have option" (which ofcourse its just my experience maybe other will say the opposite. its okay we are different in our GUI Experience )
 
-TODO: add to readme: Raw text is just a raw text, so a dump of current character video memory (f.e. values stored in 0400-07E7), followed by color memory (values stored in D800-DBE7), followed by background colour (value stored in D020).
+
+
+
+
 
 BUG: vic display in NTSC does not calc proper raster lines
 
@@ -142,20 +435,18 @@ TODO: check remote VICE debugger
 TODO: sprites browser
 
 TODO: sid view
+      stereo sid - two SIDs in one screen
 
-TODO: stereo sid
 
 TODO: load t64/tap files
 
+
 TODO:  the C64 fonts on the Settings are really not fit in my opinion . when i resize the app , the fonts are close to be unreadable. i can attach you printscreen if you want .
 
-*DONE*: if could be nice /better way to save Koala pictures then to the go VIC Editor screen and do Export. maybe 1 button to open dialog and to save Koala . so is for char+screen+color memory (nice for ripping stuff ;-)
 
 TODO: (not sure how to do that...) when i use "d nh startaddress toaddress " command could be cool if you form it with a dialog box . for now its writing the files without extension to "D:\" which i don't have a clue how they got to this drive if i have never wanted to save the files there. except of all my request/nerdish asks , the app is just one of coolest apps around . keep cool ! beer on me very soon
 
 
-
-TODO BUG: ADD ExtraKey (CMD/Ctrl) support: I cannot get on MacOS *Ctrl*+F10 to step over JSRs, regardless of whether I have "use all F1, F2 etc...
 
 TODO: autorun disk commandline param to run selected file #
 
@@ -178,7 +469,7 @@ https://github.com/psenough/teach_yourself_demoscene_in_14_days
 
 artillery: https://www.youtube.com/watch?v=6Sfl5VOszEs
 
-hmmm
+
 
 
 ---------
@@ -188,7 +479,6 @@ BUG: w vice: przy zapisie na dyskietke na windows, nie robi sie flush - trzeba p
 - README changelog
 
 
-VicEditor set VIC regs on import
 
 
 - COMMAND LINE to reset in autoload
@@ -216,16 +506,18 @@ VicEditor set VIC regs on import
 
 /////////
 
-*DONE*. Able to change the background of the tabs especially the Disassembly . black is sometimes not so nice and i prefer whiter themes/ or background selections (from default selections )
+
+
+
 2. option to export disassembler only to text . could very ! handy.
 3. nice easy way to see all the the keys combinations for the multiple views like CTRL+F1 , CRTL+F2, and which tabs they contain (data dump/memory dump
 3. shift+ctrl+0 don't work to unload CARTS when i use AR6
 5. the keyboard the escape for me is always to escape the present screen so i prefer to exlude it from the assign-keys , a bit obstructive cause i want to get out of the screen without ! saving which apparently i can't !   <--- ISILDUR?
-*DONE* to bold the tabs !! they almost unseen with the tick of them.
 6. resize of the window don't always align the small frames , for example: SHIFT+CTRL+F2 when resize to full width , it doesn't change the frames (disassembly) respectively , there gaps of space and its a bit annoying.
 7. on Winvice there is nice option to make SC command to see the screen in petscii layout , could be nice if there feature/option to do it (not like the CTRL+F1 to show the acutall c64 screen) also here
 8. add hinting while moving across over the fields to show added information , like CC , VC panel to display what every field means. just a suggestion , i know its a lot of work to do .
-10. maybe its just me but i can't understand how the memory dump is working , the zooming don't work all the time (i don't know why) and i don't know what it meant for and why the scrolling (page up/down) is not working there but i guess its only me who got troubles on that window. also could be nice to bind the data dump view with the memory view , if i press on hex value for example $1000 , so the memory map will be refeshed. just a suggestion.
+10. maybe its just me but i can't understand how the memory dump is working , the zooming don't work all the time (i don't know why)*FIXED*
+and i don't know what it meant for and why the scrolling (page up/down) is not working there but i guess its only me who got troubles on that window. also could be nice to bind the data dump view with the memory view , if i press on hex value for example $1000 , so the memory map will be refeshed. just a suggestion.
 sorry if i was messy Marcin Skoczylas don't take it too hard , i am a software tester so i am very picky and nerdish sometimes. i love your tool very much and encourage others to use it too , cause i believe it powerful tool for C64 usres.
 
 
@@ -280,22 +572,12 @@ TODO: freq sida  note recog? TODO: interval tree, add interval tree to readme
 
 
 
-
-
-
-
-bool CViewC64VicDisplay::DoScrollWheel(float deltaX, float deltaY) // remove buttons first return false;
-
-
-
 vic display: dodac key shortcut jako switch c64 screen zoom ,
 
 
 
 
-
-
-bug: jak wlaczasz widok vic display to nie ma priority sprajtow tj. echo sprajt jest wyzej niz
+??? bug: jak wlaczasz widok vic display to nie ma priority sprajtow tj. echo sprajt jest wyzej niz
 
 
 
@@ -420,44 +702,17 @@ Dodatkowe info oczywiście, że tak i jak je opisałeś jest super.   ---> + bit
 Ikonki Hires/Multi już są na wcześniejszym screenshocie.
 
 
-*DONE* Z tymi kolorami jest tak, że w P1 jak wykorzystałeś już  kolory, to masz blokadę ijak chcesz podmienić kolor to robisz to przez CTRL+LMB z nowym kolorem (ta opcja mnie najbardziej pasuje), ale będą na 100% narzekania i to dałbym do wyboru opcje KEEP/REPLACE color.
-
-Teraz najważniejsze skróty klawiszowe:
-*DONE* SHIFT+LMB - pobierz kolor pod kursorem
-*DONE* CTRL+LMB - wypełnij pixele pod kursorem kolorem wybranym z palety
-*DONE* ALT+LMB - dither painting, czyli stawianie na zmianę pixeli z wybranych kolorów foreground/background
-
-*DONE* X - zamiana miejscami kolorów foreground/background (X - nie na obrazku, a tylko w palecie jak w PS)
-*DONE* CTRL+wheel - zoom in/out zarówno w głównym oknie edycji, jak i w podglądzie, przy czym nie płynnie, a skokowo np. 25%, no chyba, że da się lepiej i prościej w wersji płynnej.
-
-*DONE* [     ] -  zmniejszenie/powiększenie brush'a - jak w PS
-
-
-*DONE*
-    Można zrobić wybieranie kolorów z klawiatury 1...0 plus SHIFT+1...0, albo tak jak w wartościach kolorów 1...0  $0b (B), $0A (A) itd.
-	* Na razie zrobilem 12345678qwertyui bo blokuje mi inne potrzebne shortcuty
 
 
 
 
-Wybor koloru:
-*DONE*duży kwadrat na pierwszym planie pokazuje którym kolorem rysujesz LMB i ten na drugim planie kolor rysowany przez RMB (zazwyczaj służy jako ERASE), czarny kwadrat po nimi to kolor tła $D021 i mały kwadrat zamiana miejscami jak w Photoshopie
 
-
-
-	* w sumie może być tylko open/save, a jak będzie się otwierać PNG to wtedy będzie z opcjami, ale to jak chcesz. Zrobię jak Ci wygodniej
-
-*DONE* okno z prv zoom musi być ruchome, żeby odsłaniać tam zasłonięty obszar obrazka i to samo z palette
-
+--------------
 
 // TODO: addGuiButtons is temporary, it should be avoided and another view just for these buttons must be created
 //       keep CViewC64VicDisplay just a generic display view with callbacks
 
 
---------------
-
-
-*DONE* upgrade to VICE3
 
 bug with CPU flags --??
 
@@ -483,11 +738,6 @@ TODO: M <adr1> <adr2> [file name]   - dump memory
 
 ///
 
-
-// *DONE?* shifted keys do not work on windows
-
-
-// *DONE*zoom in ekranu c64 ?>?<??>??
 
 // "cycling" screen:
 // 1. Fonty (siatka 8x8)
@@ -583,6 +833,11 @@ TODO: M <adr1> <adr2> [file name]   - dump memory
 
 
 
+
+
+
+
+
 // IDEAS:
 
 //> Powiększanie okna z oddziaływaniem na RAM/ROM - popatrz ICU
@@ -606,6 +861,76 @@ TODO: M <adr1> <adr2> [file name]   - dump memory
 
 
 // TODO: @Slayerek: Would you be able to record some sort of screencast with feature walkthrough? :)   --> riverwash
+
+
+DONE: Raw text is just a raw text, so a dump of current character video memory (f.e. values stored in 0400-07E7), followed by color memory (values stored in D800-DBE7), followed by background colour (value stored in D021).
+
+
+DONE: dodac w vic editor nowy layer 'reference' pod display/c64 (wtedy display/c64 kolor d021 oznacza przezroczystosc). to unrestricted nieedytowalny.
+DONE: FIXED bug: win32 only: show cmd line error/help in messagebox
+DONE: shift+ctrl+C isildur: mam taki mały i dosyć ciekawy request: żeby po kliknięciu na wartość w tabeli lub na ekran/bitmapę/charset automatycznie ten adres kopiował się do schowka, ew. ctrl+c, (jak na obrazku) co sądzisz?
+*DONE* VicEditor ctrl+N create new image
+*DONE*: obok przyciskow bedzie paleta zeby wybrac kolor tla
+DONE click on VIC status to see registers click w VIC State - show pure register values
+DONE click on SID status to see registers click w SID State - show pure register values
+DONE click on CIA status to see registers click w CIA State - show pure register values
+DONE click on VIA status to see registers click w VIA State - show pure register values
+
+DONE: isildur: da się zapisać/odtworzyć jakie layersy są włączone?
+
+DONE:
+VIC Display - select "CHARSET" mode
+The Debugger now supports checking where was written SCREEN, BITMAP, COLOUR, unfortunately not CHARSET. I will add this into my TODO list, but this can also be easily achieved. By Ctrl+Clicking on a value in memory dump it will move assembly code to place that wrote the value.
+*FIXED*: I am not able to zoom in on memory map on .64 release. (?)
+DONE:
+?musze zrobic callback cos w stylu 'zainicjalizuj VIC' z VCE
+?dorzucam do TODO, thx for report 🙂
+???	viewC64->debugInterface->SetVicRegister(0x20, colorD020);
+???	SYS_Sleep(100);
+???	viewC64->debugInterface->SetVicRegister(0x21, colorD021);
+*DONE*: 2. on the Monitor console is a bit elusive , as the marker in not auto-focus on the Monitor pane. take me a time to focus on the monitor. but maybe its just me hehe small "nice to have option" (which ofcourse its just my experience maybe other will say the opposite. its okay we are different in our GUI Experience )
+
+DONE? VicEditor set VIC regs on import
+*DONE*. Able to change the background of the tabs especially the Disassembly . black is sometimes not so nice and i prefer whiter themes/ or background selections (from default selections )
+*DONE* to bold the tabs !! they almost unseen with the tick of them.
+
+
+
+*DONE* Z tymi kolorami jest tak, że w P1 jak wykorzystałeś już  kolory, to masz blokadę ijak chcesz podmienić kolor to robisz to przez CTRL+LMB z nowym kolorem (ta opcja mnie najbardziej pasuje), ale będą na 100% narzekania i to dałbym do wyboru opcje KEEP/REPLACE color.
+
+Teraz najważniejsze skróty klawiszowe:
+*DONE* SHIFT+LMB - pobierz kolor pod kursorem
+*DONE* CTRL+LMB - wypełnij pixele pod kursorem kolorem wybranym z palety
+*DONE* ALT+LMB - dither painting, czyli stawianie na zmianę pixeli z wybranych kolorów foreground/background
+
+*DONE* X - zamiana miejscami kolorów foreground/background (X - nie na obrazku, a tylko w palecie jak w PS)
+*DONE* CTRL+wheel - zoom in/out zarówno w głównym oknie edycji, jak i w podglądzie, przy czym nie płynnie, a skokowo np. 25%, no chyba, że da się lepiej i prościej w wersji płynnej.
+
+*DONE* [     ] -  zmniejszenie/powiększenie brush'a - jak w PS
+
+
+*DONE*
+Można zrobić wybieranie kolorów z klawiatury 1...0 plus SHIFT+1...0, albo tak jak w wartościach kolorów 1...0  $0b (B), $0A (A) itd.
+* Na razie zrobilem 12345678qwertyui bo blokuje mi inne potrzebne shortcuty
+
+Wybor koloru:
+*DONE*duży kwadrat na pierwszym planie pokazuje którym kolorem rysujesz LMB i ten na drugim planie kolor rysowany przez RMB (zazwyczaj służy jako ERASE), czarny kwadrat po nimi to kolor tła $D021 i mały kwadrat zamiana miejscami jak w Photoshopie
+
+
+
+* w sumie może być tylko open/save, a jak będzie się otwierać PNG to wtedy będzie z opcjami, ale to jak chcesz. Zrobię jak Ci wygodniej
+
+*DONE* okno z prv zoom musi być ruchome, żeby odsłaniać tam zasłonięty obszar obrazka i to samo z palette
+
+
+// *DONE?* shifted keys do not work on windows
+
+
+// *DONE*zoom in ekranu c64 ?>?<??>??
+
+*DONE* upgrade to VICE3
+*DONE*: if could be nice /better way to save Koala pictures then to the go VIC Editor screen and do Export. maybe 1 button to open dialog and to save Koala . so is for char+screen+color memory (nice for ripping stuff ;-)
+
 
 
 
@@ -645,6 +970,7 @@ TODO: M <adr1> <adr2> [file name]   - dump memory
 //https://www.c64-wiki.com/index.php/Extended_color_mode
 
 //http://www.mikesenese.com/DOIT/2011/03/twelve-awesome-commodore-64-hacks-and-projects-and-a-gallery-of-classic-c64-game-discs/
+
 
 
 

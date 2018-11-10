@@ -50,6 +50,11 @@ bool CSlrFile::Eof()
 	return false;
 }
 
+bool CSlrFile::Exists()
+{
+	return false;
+}
+
 bool CSlrFile::ReadLine(char *buf, u32 bufLen)
 {
 	bool eof = false;

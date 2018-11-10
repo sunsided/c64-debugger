@@ -13,16 +13,17 @@
 #include "CGuiEditHex.h"
 #include "VID_ImageBinding.h"
 #include "CViewDisassemble.h"
-#include "C64DebugInterface.h"
+#include "CDebugInterface.h"
 #include "C64SettingsStorage.h"
 #include "C64KeyboardShortcuts.h"
 #include "SYS_SharedMemory.h"
 #include "CViewC64VicDisplay.h"
+#include "CViewAtariScreen.h"
 #include <math.h>
 
 CViewDataDump::CViewDataDump(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
 							 CSlrDataAdapter *dataAdapter, CViewMemoryMap *viewMemoryMap, CViewDisassemble *viewDisassemble,
-							 C64DebugInterface *debugInterface)
+							 CDebugInterface *debugInterface)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
 {
 	this->name = "CViewDataDump";
@@ -483,13 +484,22 @@ void CViewDataDump::UpdateCharacters(bool useColors, byte colorD021, byte colorD
 			addr++;
 		}
 		
-		if (useColors == false)
+		// TODO: make this generic
+		if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
 		{
-			ConvertCharacterDataToImage(characterData, imageData);
+			if (useColors == false)
+			{
+				ConvertCharacterDataToImage(characterData, imageData);
+			}
+			else
+			{
+				ConvertColorCharacterDataToImage(characterData, imageData, colorD021, colorD022, colorD023, colorD800,
+												 (C64DebugInterface*)debugInterface);
+			}
 		}
 		else
 		{
-			ConvertColorCharacterDataToImage(characterData, imageData, colorD021, colorD022, colorD023, colorD800, debugInterface);
+			ConvertCharacterDataToImage(characterData, imageData);
 		}
 
 		
@@ -526,13 +536,22 @@ void CViewDataDump::UpdateSprites(bool useColors, byte colorD021, byte colorD025
 			addr++;
 		}
 		
-		if (useColors == false)
+		// TODO: make this generic
+		if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
 		{
-			ConvertSpriteDataToImage(spriteData, imageData, 4);
+			if (useColors == false)
+			{
+				ConvertSpriteDataToImage(spriteData, imageData, 4);
+			}
+			else
+			{
+				ConvertColorSpriteDataToImage(spriteData, imageData, colorD021, colorD025, colorD026, colorD027,
+											  (C64DebugInterface*)debugInterface, 4);
+			}
 		}
 		else
 		{
-			ConvertColorSpriteDataToImage(spriteData, imageData, colorD021, colorD025, colorD026, colorD027, debugInterface, 4);
+			ConvertSpriteDataToImage(spriteData, imageData, 4);
 		}
 		
 		addr++;
@@ -737,7 +756,9 @@ void CViewDataDump::ScrollToAddress(int address)
 
 bool CViewDataDump::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
-	//LOGD("CViewDataDump::keyDown=%4.4x", keyCode);
+	LOGD("CViewDataDump::keyDown=%4.4x", keyCode);
+	
+	u32 bareKey = SYS_GetBareKey(keyCode, isShift, isAlt, isControl);
 	
 	// change charset
 	if ((keyCode == MTKEY_LSHIFT && isAlt) || (keyCode == MTKEY_LALT && isShift))
@@ -761,13 +782,13 @@ bool CViewDataDump::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContro
 		return true;
 	}
 	
-	CSlrKeyboardShortcut *keyboardShortcut = viewC64->keyboardShortcuts->FindShortcut(KBZONE_DISASSEMBLE, keyCode, isShift, isAlt, isControl);
+	CSlrKeyboardShortcut *keyboardShortcut = viewC64->keyboardShortcuts->FindShortcut(KBZONE_DISASSEMBLE, bareKey, isShift, isAlt, isControl);
 	if (keyboardShortcut == viewC64->keyboardShortcuts->kbsToggleTrackPC)
 	{
 		return viewDisassemble->KeyDown(keyCode, isShift, isAlt, isControl);
 	}
 	
-	keyboardShortcut = viewC64->keyboardShortcuts->FindShortcut(KBZONE_MEMORY, keyCode, isShift, isAlt, isControl);
+	keyboardShortcut = viewC64->keyboardShortcuts->FindShortcut(KBZONE_MEMORY, bareKey, isShift, isAlt, isControl);
 	
 	if (keyboardShortcut == viewC64->keyboardShortcuts->kbsGoToAddress)
 	{
@@ -777,9 +798,40 @@ bool CViewDataDump::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContro
 		isEditingValue = false;
 		isEditingValueAddr = true;
 		
-		viewC64->viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		// TODO: make generic and iterate over interfaces
+		if (viewC64->debugInterfaceC64)
+		{
+			viewC64->viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		}
+		
+		if (viewC64->debugInterfaceAtari)
+		{
+			viewC64->viewAtariScreen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		}
 		return true;
 	}
+
+	keyboardShortcut = viewC64->keyboardShortcuts->FindShortcut(KBZONE_GLOBAL, bareKey, isShift, isAlt, isControl);
+
+	if (keyboardShortcut == viewC64->keyboardShortcuts->kbsCopyToClipboard)
+	{
+		this->CopyHexValuesToClipboard();
+		return true;
+	}
+
+	if (keyboardShortcut == viewC64->keyboardShortcuts->kbsCopyAlternativeToClipboard)
+	{
+		this->CopyHexAddressToClipboard();
+		return true;
+	}
+
+	if (keyboardShortcut == viewC64->keyboardShortcuts->kbsPasteFromClipboard)
+	{
+		this->PasteHexValuesFromClipboard();
+		return true;
+	}
+	
+	//
 	
 	// mimic shift+cursor up/down as page up/down
 	if (keyCode == MTKEY_PAGE_DOWN)
@@ -793,6 +845,7 @@ bool CViewDataDump::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContro
 		isShift = true;
 	}
 
+	
 //	// simple data show/scroll
 //	if (isVisibleEditCursor == false)
 //	{
@@ -932,11 +985,6 @@ bool CViewDataDump::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContro
 		}
 	}
 	
-	if (keyCode == 'v' && isControl)
-	{
-		this->PasteHexValuesFromClipboard();
-	}
-
 	
 	return false;
 }
@@ -1012,6 +1060,9 @@ void CViewDataDump::PasteHexValuesFromClipboard()
 		int len = hexVal->GetLength();
 		int val = hexVal->ToIntFromHex();
 		
+		if (hexVal->GetChar(0) == '$')
+			len--;
+		
 		if (len == 4 || len == 3)
 		{
 			addr = val;
@@ -1045,5 +1096,51 @@ void CViewDataDump::PasteHexValuesFromClipboard()
 	}
 	
 	delete pasteStr;
+}
+
+void CViewDataDump::CopyHexValuesToClipboard()
+{
+	LOGD("CViewDataDump::CopyHexValuesToClipboard");
+	
+	int addrCursor = GetAddrFromDataPosition(editCursorPositionX, editCursorPositionY);
+	
+	u8 val;
+	bool isAvailable;
+	dataAdapter->AdapterReadByte(addrCursor, &val, &isAvailable);
+	if (isAvailable)
+	{
+		char *buf = SYS_GetCharBuf();
+		sprintf(buf, "$%02X", val);
+		CSlrString *str = new CSlrString(buf);
+		SYS_SetClipboardAsSlrString(str);
+		delete str;
+
+		sprintf(buf, "Copied $%02X", val);
+		guiMain->ShowMessage(buf);
+		
+		SYS_ReleaseCharBuf(buf);
+	}
+	else
+	{
+		guiMain->ShowMessage("Data not available for copy");
+	}
+}
+
+void CViewDataDump::CopyHexAddressToClipboard()
+{
+	LOGD("CViewDataDump::CopyHexAddressToClipboard");
+	
+	int addrCursor = GetAddrFromDataPosition(editCursorPositionX, editCursorPositionY);
+
+	char *buf = SYS_GetCharBuf();
+	sprintf(buf, "$%04X", addrCursor);
+	CSlrString *str = new CSlrString(buf);
+	SYS_SetClipboardAsSlrString(str);
+	delete str;
+	
+	sprintf(buf, "Copied $%04X", addrCursor);
+	guiMain->ShowMessage(buf);
+
+	SYS_ReleaseCharBuf(buf);
 }
 

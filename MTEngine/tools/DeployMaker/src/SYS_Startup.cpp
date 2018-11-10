@@ -69,12 +69,13 @@ void printUsage()
 {
 	LOGM("Usage: DeployMaker <deploy-file.txt>");
 	LOGM("       DeployMaker <image-file.png>");
+	LOGM("       DeployMaker embed <file>");
 	LOGM("       DeployMaker scan <deploy-file.txt> <deploy-dir> <root-folder> [prefix]");
 	LOGM("");
 	LOGM("Deploy file structure:");
 	LOGM("");
-	LOGM("<folder with files>				<-- folder where are files currently");
-	LOGM("<root folder>						<-- root folder for deploy file names");
+	LOGM("<folder with files>               <-- folder where are files currently");
+	LOGM("<root folder>                     <-- root folder for deploy file names");
 	LOGM("<source screen width>");
 	LOGM("[resolutions]");
 	LOGM("<dest screen width #1>");
@@ -153,6 +154,87 @@ void MakeScan(char *deployFile, char *folder, char *rootFolder, char *prefix)
 
 }
 
+void DoEmbed(char *fileName)
+{
+	CSlrFileFromSystem *fpIn = new CSlrFileFromSystem(fileName);
+	if (!fpIn->Exists())
+	{
+		exit(-1);
+	}
+	
+	int fsize = fpIn->GetFileSize();
+
+	char safeFileName[4096];
+	char safeFileNameNoExt[4096];
+	
+	// create new filename
+	sprintf(safeFileName, "%s", fileName);
+	int l = strlen(safeFileName);
+	for (int i = 0; i < l; i++)
+	{
+		if (safeFileName[i] == '.' || safeFileName[i] == '-')
+		{
+			safeFileName[i] = '_';
+		}
+	}
+
+	sprintf(safeFileNameNoExt, "%s", fileName);
+	l = strlen(safeFileNameNoExt);
+	for (int i = 0; i < l; i++)
+	{
+		if (safeFileNameNoExt[i] == '-')
+		{
+			safeFileNameNoExt[i] = '_';
+		}
+		else if (safeFileNameNoExt[i] == '.')
+		{
+			safeFileNameNoExt[i] = 0x00;
+			break;
+		}
+	}
+
+	char buf[4096];
+	sprintf(buf, "%s.h", safeFileName);
+
+	LOGD("Out file name: %s", buf);
+
+	FILE *fpOut = fopen(buf, "wb");
+	fprintf(fpOut, "// Embedded file name: %s\n", fileName);
+	fprintf(fpOut, "// #include \"%s.h\"\n", safeFileName);
+	fprintf(fpOut, "// RES_AddEmbeddedDataToDeploy(\"/gfx/%s\", DEPLOY_FILE_TYPE_GFX, %s, %s_length);\n", safeFileNameNoExt, safeFileName, safeFileName);
+	fprintf(fpOut, "int %s_length = %d;\n", safeFileName, fsize);
+	fprintf(fpOut, "uint8 %s[%d] = {\n", safeFileName, fsize);
+
+	int lt = fsize-1;
+	int b = 0;
+	fprintf(fpOut, "\t");
+	for (int i = 0;  ; i++)
+	{
+		u8 v = fpIn->ReadByte();
+		fprintf(fpOut, "0x%02x", v);
+		
+		if (i == lt)
+		{
+			fprintf(fpOut, "\n};\n\n");
+			break;
+		}
+		
+		if (b == 0x0F)
+		{
+			fprintf(fpOut, ",\n\t");
+			b = 0;
+			continue;
+		}
+		
+		b++;
+		fprintf(fpOut, ", ");
+	}
+	
+	delete fpIn;
+	fflush(fpOut);
+	fclose(fpOut);
+}
+
 int main( int argc, char **argv )
 {
 	LOG_Init();
@@ -168,6 +250,19 @@ int main( int argc, char **argv )
 	char fileName[1024] = {0};
 	char extension[1024] = {0};
 
+	if (!strcmp(argv[1], "embed"))
+	{
+		if (argc != 3)
+		{
+			printUsage();
+			exit(-1);
+		}
+
+		DoEmbed(argv[2]);
+		LOGM("Done!");
+		exit(0);
+	}
+	
 	if (!strcmp(argv[1], "scan"))
 	{
 		char *prefix = "";

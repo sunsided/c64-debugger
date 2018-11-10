@@ -2,7 +2,7 @@
 #include "C64SettingsStorage.h"
 #include "CViewC64.h"
 #include "C64DebugInterface.h"
-#include "C64DebugTypes.h"
+#include "DebuggerDefs.h"
 
 extern "C" {
 	void sdl_callback(void *userdata, uint8 *stream, int len);
@@ -13,9 +13,10 @@ extern "C" {
 CViceAudioChannel::CViceAudioChannel(C64DebugInterfaceVice *debugInterface)
 {
 	this->debugInterface = debugInterface;
+	sprintf(this->name, "c64");
 }
 
-void CViceAudioChannel::MixIn(int *mixBuffer, u32 numSamples)
+void CViceAudioChannel::FillBuffer(int *mixBuffer, u32 numSamples)
 {
 	sdl_callback(NULL, (uint8*)mixBuffer, numSamples);
 
@@ -24,7 +25,7 @@ void CViceAudioChannel::MixIn(int *mixBuffer, u32 numSamples)
 	
 	if (c64SettingsMuteSIDOnPause)
 	{
-		if (viewC64->debugInterface->GetDebugMode() != C64_DEBUG_RUNNING)
+		if (debugInterface->GetDebugMode() != DEBUGGER_MODE_RUNNING)
 		{
 			memset(mixBuffer, 0, numSamples*4);
 		}

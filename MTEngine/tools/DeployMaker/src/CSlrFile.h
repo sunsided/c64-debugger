@@ -24,6 +24,7 @@ public:
 	virtual u16 ReadUnsignedShort();
 	virtual u32 ReadUnsignedInt();
 	virtual void Close();
+	virtual bool Exists();
 	virtual ~CSlrFile();
 
 	u32 fileSize;

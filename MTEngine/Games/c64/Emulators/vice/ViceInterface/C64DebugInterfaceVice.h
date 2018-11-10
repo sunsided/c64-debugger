@@ -35,7 +35,7 @@ public:
 
 	CImageData *screen;
 	
-	CViceAudioChannel *viceAudioChannel;
+	CViceAudioChannel *audioChannel;
 	
 	int screenHeight;
 	
@@ -44,6 +44,7 @@ public:
 
 	virtual int GetEmulatorType();
 	virtual CSlrString *GetEmulatorVersionString();
+	
 	virtual void RunEmulationThread();
 	
 	virtual uint8 *GetCharRom();
@@ -51,10 +52,10 @@ public:
 	volatile uint8 machineType;
 	virtual uint8 GetC64MachineType();
 
-	virtual int GetC64ScreenSizeX();
-	virtual int GetC64ScreenSizeY();
+	virtual int GetScreenSizeX();
+	virtual int GetScreenSizeY();
 	
-	virtual CImageData *GetC64ScreenImageData();
+	virtual CImageData *GetScreenImageData();
 
 	virtual void Reset();
 	virtual void HardReset();
@@ -67,11 +68,8 @@ public:
 	virtual void JoystickDown(int port, uint32 axis);
 	virtual void JoystickUp(int port, uint32 axis);
 	
-	virtual void KeyboardDownWithJoystickCheck(uint32 mtKeyCode);
-	virtual void KeyboardUpWithJoystickCheck(uint32 mtKeyCode);
-
 	//
-	virtual int GetC64CpuPC();
+	virtual int GetCpuPC();
 	virtual int GetDrive1541PC();
 	virtual void GetC64CpuState(C64StateCPU *state);
 	virtual void GetDrive1541CpuState(C64StateCPU *state);
@@ -84,9 +82,6 @@ public:
 
 	virtual bool GetSettingIsWarpSpeed();
 	virtual void SetSettingIsWarpSpeed(bool isWarpSpeed);
-	virtual bool GetSettingUseKeyboardForJoystick();
-	virtual void SetSettingUseKeyboardForJoystick(bool isJoystickOn);
-	virtual void SetKeyboardJoystickPort(uint8 joystickPort);
 
 	virtual void GetSidTypes(std::vector<CSlrString *> *sidTypes);
 	virtual void SetSidType(int sidType);
@@ -109,9 +104,6 @@ public:
 	virtual void SetC64ModelType(int modelType);
 	virtual void SetEmulationMaximumSpeed(int maximumSpeed);
 
-	bool isJoystickEnabled;
-	uint8 joystickPort;
-	
 	virtual void SetVSPBugEmulation(bool isVSPBugEmulation);
 
 	virtual void SetByteC64(uint16 addr, uint8 val);
@@ -147,8 +139,8 @@ public:
 	virtual void MakeJmpNoReset1541(uint16 addr);
 
 	// memory access for memory map
-	virtual void GetWholeMemoryMapC64(uint8 *buffer);
-	virtual void GetWholeMemoryMapFromRamC64(uint8 *buffer);
+	virtual void GetWholeMemoryMap(uint8 *buffer);
+	virtual void GetWholeMemoryMapFromRam(uint8 *buffer);
 	virtual void GetWholeMemoryMap1541(uint8 *buffer);
 	virtual void GetWholeMemoryMapFromRam1541(uint8 *buffer);
 
@@ -176,6 +168,20 @@ public:
 	virtual bool IsCpuJam();
 	virtual void ForceRunAndUnJamCpu();
 
+	// tape
+	virtual void AttachTape(CSlrString *filePath);
+	virtual void DetachTape();
+	virtual void DatasettePlay();
+	virtual void DatasetteStop();
+	virtual void DatasetteForward();
+	virtual void DatasetteRewind();
+	virtual void DatasetteRecord();
+	virtual void DatasetteReset();
+	virtual void DatasetteSetSpeedTuning(int speedTuning);
+	virtual void DatasetteSetZeroGapDelay(int zeroGapDelay);
+	virtual void DatasetteSetResetWithCPU(bool resetWithCPU);
+	virtual void DatasetteSetTapeWobble(int tapeWobble);
+
 	virtual void AttachCartridge(CSlrString *filePath);
 	virtual void DetachCartridge();
 	virtual void CartridgeFreezeButtonPressed();
@@ -184,37 +190,38 @@ public:
 	//
 	virtual void SetVicRegister(uint8 registerNum, uint8 value);
 	virtual u8 GetVicRegister(uint8 registerNum);
+	
 
+	// CIA
+	virtual void SetCiaRegister(uint8 ciaId, uint8 registerNum, uint8 value);
+	virtual u8 GetCiaRegister(uint8 ciaId, uint8 registerNum);
+	
+	// SID
+	virtual void SetSidRegister(uint8 sidId, uint8 registerNum, uint8 value);
+	virtual u8 GetSidRegister(uint8 sidId, uint8 registerNum);
+
+	// VIA
+	virtual void SetViaRegister(uint8 driveId, uint8 viaId, uint8 registerNum, uint8 value);
+	virtual u8 GetViaRegister(uint8 driveId, uint8 viaId, uint8 registerNum);
+	
 	virtual void SetVicRecordStateMode(uint8 recordMode);
 
-	// render states
-	virtual void RenderStateVIC(vicii_cycle_state_t *viciiState,
-								float posX, float posY, float posZ, bool isVertical, bool showSprites, CSlrFont *fontBytes, float fontSize,
-								std::vector<CImageData *> *spritesImageData, std::vector<CSlrImage *> *spritesImages, bool renderDataWithColors);
-	void PrintVicInterrupts(uint8 flags, char *buf);
-	void UpdateVICSpritesImages(vicii_cycle_state_t *viciiState,
-								std::vector<CImageData *> *spritesImageData,
-								std::vector<CSlrImage *> *spritesImages, bool renderDataWithColors);
-
-	virtual void RenderStateDrive1541(float posX, float posY, float posZ, CSlrFont *fontBytes, float fontSize,
-									  bool renderVia1, bool renderVia2, bool renderDriveLed, bool isVertical);
-	virtual void RenderStateCIA(float px, float py, float posZ, CSlrFont *fontBytes, float fontSize, int ciaId);
-	virtual void RenderStateSID(uint16 sidBase, float posX, float posY, float posZ, CSlrFont *fontBytes, float fontSize);
-	void PrintSidWaveform(uint8 wave, char *buf);
-	
 	// SID
 	virtual void SetSIDMuteChannels(int sidNumber, bool mute1, bool mute2, bool mute3, bool muteExt);
 	virtual void SetSIDReceiveChannelsData(int sidNumber, bool isReceiving);
 
 	// memory
 	uint8 *c64memory;
-	
+
+	//
 	virtual void SetPatchKernalFastBoot(bool isPatchKernal);
 	virtual void SetRunSIDWhenInWarp(bool isRunningSIDInWarp);
 	
 	//
 	virtual void SetRunSIDEmulation(bool isSIDEmulationOn);
 	virtual void SetAudioVolume(float volume);
+	
+
 };
 
 extern C64DebugInterfaceVice *debugInterfaceVice;

@@ -281,8 +281,8 @@ CSlrString *SYS_GetClipboardAsSlrString()
 {
 	LOGD("SYS_GetClipboardAsSlrString");
 	
-	NSPasteboard *pasteboard = [NSPasteboard generalPasteboard];
-	NSString *str = [pasteboard stringForType:NSPasteboardTypeString];
+	NSPasteboard *pasteBoard = [NSPasteboard generalPasteboard];
+	NSString *str = [pasteBoard stringForType:NSPasteboardTypeString];
 	//	NSLog(@"SYS_GetClipboardAsSlrString: str=%@", str);
 	
 	if (str == nil)
@@ -293,4 +293,19 @@ CSlrString *SYS_GetClipboardAsSlrString()
 	return retStr;
 }
 
+bool SYS_SetClipboardAsSlrString(CSlrString *str)
+{
+	LOGD("SYS_SetClipboardAsSlrString");
+	
+	NSString *nsStr = FUN_ConvertCSlrStringToNSString(str);
+	
+	NSPasteboard *pasteBoard = [NSPasteboard generalPasteboard];
+	[pasteBoard clearContents];
+	[pasteBoard declareTypes:[NSArray arrayWithObject:NSPasteboardTypeString] owner:nil];
+	BOOL ret = [pasteBoard setString:nsStr forType:NSPasteboardTypeString];
+
+	[nsStr dealloc];
+	
+	return (bool)ret;
+}
 

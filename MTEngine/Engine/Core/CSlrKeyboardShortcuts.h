@@ -71,7 +71,7 @@ public:
 	CSlrKeyboardShortcut *FindShortcut(std::list<u32> zones, i32 keyCode, bool isShift, bool isAlt, bool isControl);
 	CSlrKeyboardShortcut *FindShortcut(u32 zone, i32 keyCode, bool isShift, bool isAlt, bool isControl);
 	CSlrKeyboardShortcut *FindGlobalShortcut(i32 keyCode, bool isShift, bool isAlt, bool isControl);
-	
+
 	void LoadFromByteBuffer(CByteBuffer *byteBuffer);
 	void StoreToByteBuffer(CByteBuffer *byteBuffer);
 };

@@ -5,14 +5,31 @@
 
 #define KBZONE_GLOBAL				MT_KEYBOARD_SHORTCUT_GLOBAL
 #define KBZONE_SETTINGS				2
-#define KBZONE_DISASSEMBLE			3
-#define KBZONE_MEMORY				4
-#define KBZONE_VIC_EDITOR			5
+#define KBZONE_SCREEN				3
+#define KBZONE_DISASSEMBLE			4
+#define KBZONE_MEMORY				5
+#define KBZONE_VIC_EDITOR			6
 
 class C64KeyboardShortcuts : public CSlrKeyboardShortcuts
 {
 public:
 	C64KeyboardShortcuts();
+	
+	// general
+	CSlrKeyboardShortcut *kbsCopyToClipboard;
+	CSlrKeyboardShortcut *kbsCopyAlternativeToClipboard;
+	CSlrKeyboardShortcut *kbsPasteFromClipboard;
+	CSlrKeyboardShortcut *kbsPasteAlternativeFromClipboard;
+	
+	CSlrKeyboardShortcut *kbsNextCodeSegmentSymbols;
+	CSlrKeyboardShortcut *kbsPreviousCodeSegmentSymbols;
+	
+	// joystick
+	CSlrKeyboardShortcut *kbsJoystickUp;
+	CSlrKeyboardShortcut *kbsJoystickDown;
+	CSlrKeyboardShortcut *kbsJoystickLeft;
+	CSlrKeyboardShortcut *kbsJoystickRight;
+	CSlrKeyboardShortcut *kbsJoystickFire;
 	
 	// disassemble
 	CSlrKeyboardShortcut *kbsToggleBreakpoint;
@@ -24,6 +41,7 @@ public:
 	CSlrKeyboardShortcut *kbsGoToAddress;
 	
 	// vic editor
+	CSlrKeyboardShortcut *kbsVicEditorCreateNewPicture;
 	CSlrKeyboardShortcut *kbsVicEditorPreviewScale;
 	CSlrKeyboardShortcut *kbsVicEditorShowCursor;
 	CSlrKeyboardShortcut *kbsVicEditorDoUndo;
@@ -45,6 +63,8 @@ public:
 	CSlrKeyboardShortcut *kbsVicEditorToggleWindowCharset;
 	CSlrKeyboardShortcut *kbsVicEditorToggleWindowSprite;
 	CSlrKeyboardShortcut *kbsVicEditorToggleSpriteFrames;
+	CSlrKeyboardShortcut *kbsVicEditorToggleTopBar;
+	CSlrKeyboardShortcut *kbsVicEditorToggleToolBox;
 
 	CSlrKeyboardShortcut *kbsVicEditorSelectNextLayer;
 	

@@ -5,6 +5,7 @@
 #include "CSlrString.h"
 #include "SYS_Funct.h"
 #include "C64SettingsStorage.h"
+#include "CViewC64.h"
 
 GLView *glView;
 
@@ -368,8 +369,14 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 	
 	NSString *strExt = [[draggedFilenames objectAtIndex:0] pathExtension];
 
-	if ([strExt isEqual:@"prg"] || [strExt isEqual:@"d64"] || [strExt isEqual:@"crt"] || [strExt isEqualToString:@"snap"]
-		|| [strExt isEqual:@"PRG"] || [strExt isEqual:@"D64"] || [strExt isEqual:@"CRT"] || [strExt isEqualToString:@"SNAP"])
+	if ([strExt isEqual:@"prg"] || [strExt isEqual:@"d64"] || [strExt isEqual:@"crt"] || [strExt isEqual:@"tap"] || [strExt isEqual:@"t64"]
+		|| [strExt isEqualToString:@"snap"] || [strExt isEqualToString:@"vce"] || [strExt isEqualToString:@"png"]
+		|| [strExt isEqual:@"PRG"] || [strExt isEqual:@"D64"] || [strExt isEqual:@"CRT"] || [strExt isEqual:@"TAP"] || [strExt isEqual:@"T64"]
+		|| [strExt isEqualToString:@"SNAP"] || [strExt isEqualToString:@"VCE"] || [strExt isEqualToString:@"PNG"]
+		|| [strExt isEqual:@"xex"] || [strExt isEqual:@"XEX"]
+		|| [strExt isEqual:@"atr"] || [strExt isEqualToString:@"ATR"]
+		|| [strExt isEqual:@"c64jukebox"] || [strExt isEqualToString:@"C64JUKEBOX"] || [strExt isEqual:@"json"] || [strExt isEqualToString:@"JSON"])
+		
 	{
 		//NSString *strPath = [draggedFilenames objectAtIndex:0];
 		//NSLog(@"..... YES=%@", strPath);
@@ -388,6 +395,9 @@ void C64D_DragDropCallbackPRG(CSlrString *filePath);
 void C64D_DragDropCallbackD64(CSlrString *filePath);
 void C64D_DragDropCallbackCRT(CSlrString *filePath);
 void C64D_DragDropCallbackSNAP(CSlrString *filePath);
+void C64D_DragDropCallbackXEX(CSlrString *filePath);
+void C64D_DragDropCallbackATR(CSlrString *filePath);
+void C64D_DragDropCallbackJukeBox(CSlrString *filePath);
 
 - (void)concludeDragOperation:(id <NSDraggingInfo>)sender
 {
@@ -403,13 +413,19 @@ enum
 {
 	MACOS_OPEN_FILE_TYPE_PRG = 1,
 	MACOS_OPEN_FILE_TYPE_D64,
+	MACOS_OPEN_FILE_TYPE_TAP,
 	MACOS_OPEN_FILE_TYPE_CRT,
 	MACOS_OPEN_FILE_TYPE_SNAP,
+	MACOS_OPEN_FILE_TYPE_VCE,
+	MACOS_OPEN_FILE_TYPE_PNG,
+	MACOS_OPEN_FILE_TYPE_XEX,
+	MACOS_OPEN_FILE_TYPE_ATR,
+	MACOS_OPEN_FILE_TYPE_JukeBox
 };
 
 static int macOsThreadedOpenFileType = -1;
 static CSlrString *macOsThreadedOpenFilePath = NULL;
-static CMacOsOpenFileThread *macOsOpenFileThread = new CMacOsOpenFileThread();
+static CMacOsOpenFileThread *macOsOpenFileThread = new CMacOsOpenFileThread("OpenFileThread");
 static bool macOsThreadedOpenFileAutoJMP = false;
 
 BOOL MACOS_OpenFile(NSString *strPath)
@@ -448,6 +464,18 @@ BOOL MACOS_OpenFile(NSString *strPath)
 		SYS_StartThread(macOsOpenFileThread);
 		return YES;
 	}
+	else if ([strExt isEqual:@"tap"] || [strExt isEqual:@"TAP"]
+			 || [strExt isEqual:@"t64"] || [strExt isEqual:@"T64"])
+	{
+		//NSLog(@"%@", strPath);
+		c64SettingsAutoJmp = false;
+		
+		macOsThreadedOpenFileType = MACOS_OPEN_FILE_TYPE_TAP;
+		macOsThreadedOpenFilePath = FUN_ConvertNSStringToCSlrString(strPath);
+		
+		SYS_StartThread(macOsOpenFileThread);
+		return YES;
+	}
 	else if ([strExt isEqual:@"crt"] || [strExt isEqual:@"CRT"])
 	{
 		//NSLog(@"%@", strPath);
@@ -471,8 +499,57 @@ BOOL MACOS_OpenFile(NSString *strPath)
 		SYS_StartThread(macOsOpenFileThread);
 		return YES;
 	}
-	
+	else if ([strExt isEqual:@"vce"] || [strExt isEqual:@"VCE"])
+	{
+		macOsThreadedOpenFileType = MACOS_OPEN_FILE_TYPE_VCE;
+		macOsThreadedOpenFilePath = FUN_ConvertNSStringToCSlrString(strPath);
+		
+		SYS_StartThread(macOsOpenFileThread);
+		return YES;
+	}
+	else if ([strExt isEqual:@"png"] || [strExt isEqual:@"PNG"])
+	{
+		macOsThreadedOpenFileType = MACOS_OPEN_FILE_TYPE_PNG;
+		macOsThreadedOpenFilePath = FUN_ConvertNSStringToCSlrString(strPath);
+		
+		SYS_StartThread(macOsOpenFileThread);
+		return YES;
+	}
+	else if ([strExt isEqual:@"xex"] || [strExt isEqual:@"XEX"])
+	{
+		macOsThreadedOpenFileType = MACOS_OPEN_FILE_TYPE_XEX;
+		macOsThreadedOpenFilePath = FUN_ConvertNSStringToCSlrString(strPath);
+		
+		SYS_StartThread(macOsOpenFileThread);
+		
+		return YES;
+	}
+	else if ([strExt isEqual:@"atr"] || [strExt isEqual:@"ATR"])
+	{
+		macOsThreadedOpenFileType = MACOS_OPEN_FILE_TYPE_ATR;
+		macOsThreadedOpenFilePath = FUN_ConvertNSStringToCSlrString(strPath);
+		
+		SYS_StartThread(macOsOpenFileThread);
+		
+		return YES;
+	}
+	else if ([strExt isEqual:@"c64jukebox"] || [strExt isEqual:@"C64JUKEBOX"]
+			 || [strExt isEqual:@"json"] || [strExt isEqual:@"JSON"])
+	{
+		macOsThreadedOpenFileType = MACOS_OPEN_FILE_TYPE_JukeBox;
+		macOsThreadedOpenFilePath = FUN_ConvertNSStringToCSlrString(strPath);
+		
+		SYS_StartThread(macOsOpenFileThread);
+		
+		return YES;
+	}
+
 	return NO;
+}
+
+CMacOsOpenFileThread::CMacOsOpenFileThread(char *threadName)
+: CSlrThread(threadName)
+{
 }
 
 void CMacOsOpenFileThread::ThreadRun(void *data)
@@ -489,6 +566,10 @@ void CMacOsOpenFileThread::ThreadRun(void *data)
 	{
 		C64D_DragDropCallbackD64(macOsThreadedOpenFilePath);
 	}
+	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_TAP)
+	{
+		C64D_DragDropCallbackTAP(macOsThreadedOpenFilePath);
+	}
 	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_CRT)
 	{
 		C64D_DragDropCallbackCRT(macOsThreadedOpenFilePath);
@@ -496,6 +577,26 @@ void CMacOsOpenFileThread::ThreadRun(void *data)
 	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_SNAP)
 	{
 		C64D_DragDropCallbackSNAP(macOsThreadedOpenFilePath);
+	}
+	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_VCE)
+	{
+		C64D_DragDropCallbackVCE(macOsThreadedOpenFilePath);
+	}
+	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_PNG)
+	{
+		C64D_DragDropCallbackPNG(macOsThreadedOpenFilePath);
+	}
+	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_XEX)
+	{
+		C64D_DragDropCallbackXEX(macOsThreadedOpenFilePath);
+	}
+	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_ATR)
+	{
+		C64D_DragDropCallbackATR(macOsThreadedOpenFilePath);
+	}
+	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_JukeBox)
+	{
+		C64D_DragDropCallbackJukeBox(macOsThreadedOpenFilePath);
 	}
 
 	delete macOsThreadedOpenFilePath;

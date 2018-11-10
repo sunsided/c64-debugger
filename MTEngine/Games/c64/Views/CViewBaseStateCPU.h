@@ -6,7 +6,7 @@
 #include "CGuiEditHex.h"
 
 class CSlrFont;
-class C64DebugInterface;
+class CDebugInterface;
 
 enum StateCPURegister : uint8
 {
@@ -17,7 +17,8 @@ enum StateCPURegister : uint8
 	STATE_CPU_REGISTER_Y,
 	STATE_CPU_REGISTER_SP,
 	STATE_CPU_REGISTER_FLAGS,
-	STATE_CPU_REGISTER_MEM01
+	STATE_CPU_REGISTER_MEM01,
+	STATE_CPU_REGISTER_IRQ
 };
 
 typedef struct {
@@ -29,7 +30,7 @@ typedef struct {
 class CViewBaseStateCPU : public CGuiView, CGuiEditHexCallback
 {
 public:
-	CViewBaseStateCPU(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, C64DebugInterface *debugInterface);
+	CViewBaseStateCPU(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, CDebugInterface *debugInterface);
 	
 	virtual bool KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl);
 	virtual bool KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl);
@@ -48,7 +49,7 @@ public:
 
 	virtual bool SetFocus(bool focus);
 
-	C64DebugInterface *debugInterface;
+	CDebugInterface *debugInterface;
 	
 	register_def *regs;
 	int numRegisters;

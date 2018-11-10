@@ -2,9 +2,11 @@
 #define _CViewC64Charset_H_
 
 #include "SYS_Defs.h"
-#include "CGuiView.h"
+#include "CGuiWindow.h"
 #include "CGuiEditHex.h"
 #include "CGuiViewFrame.h"
+#include "CGuiViewToolBox.h"
+#include "SYS_CFileSystem.h"
 #include <vector>
 #include <list>
 
@@ -15,7 +17,7 @@ class CSlrMutex;
 class C64DebugInterface;
 class CViewVicEditor;
 
-class CViewC64Charset : public CGuiView, CGuiEditHexCallback
+class CViewC64Charset : public CGuiWindow, CGuiEditHexCallback, public CGuiViewToolBoxCallback, public CGuiWindowCallback, CSystemFileDialogCallback
 {
 public:
 	CViewC64Charset(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, CViewVicEditor *vicEditor);
@@ -40,11 +42,11 @@ public:
 	//
 	CViewVicEditor *vicEditor;
 	
-	//
-	CGuiViewFrame *viewFrame;
-	
 	CImageData *imageDataCharset;
 	CSlrImage *imageCharset;
+	
+	CSlrImage *imgIconExport;
+	CSlrImage *imgIconImport;
 	
 	float selX, selY;
 	float selSizeX, selSizeY;
@@ -53,6 +55,19 @@ public:
 	
 	int GetSelectedChar();
 	void SelectChar(int chr);
+	
+	virtual void ToolBoxIconPressed(CSlrImage *imgIcon);
+
+	std::list<CSlrString *> charsetFileExtensions;
+
+	virtual void SystemDialogFileOpenSelected(CSlrString *path);
+	virtual void SystemDialogFileOpenCancelled();
+	virtual void SystemDialogFileSaveSelected(CSlrString *path);
+	virtual void SystemDialogFileSaveCancelled();
+
+	// returns charset addr
+	int ImportCharset(CSlrString *path);
+	void ExportCharset(CSlrString *path);
 };
 
 

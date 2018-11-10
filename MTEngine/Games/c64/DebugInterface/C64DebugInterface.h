@@ -1,10 +1,11 @@
 #ifndef _C64DEBUGINTERFACE_H_
 #define _C64DEBUGINTERFACE_H_
 
-#include "C64DebugData.h"
+#include "CDebugInterface.h"
+#include "CDebuggerBreakpoints.h"
 #include "CSlrDataAdapter.h"
 #include "CByteBuffer.h"
-#include "C64DebugTypes.h"
+#include "DebuggerDefs.h"
 
 extern "C"
 {
@@ -21,18 +22,8 @@ class CSlrImage;
 class CSlrFont;
 class C64KeyMap;
 
-#define JOYPAD_FIRE 0x10
-#define JOYPAD_E    0x08
-#define JOYPAD_W    0x04
-#define JOYPAD_S    0x02
-#define JOYPAD_N    0x01
-#define JOYPAD_SW   (JOYPAD_S | JOYPAD_W)
-#define JOYPAD_SE   (JOYPAD_S | JOYPAD_E)
-#define JOYPAD_NW   (JOYPAD_N | JOYPAD_W)
-#define JOYPAD_NE   (JOYPAD_N | JOYPAD_E)
-
 // abstract class
-class C64DebugInterface
+class C64DebugInterface : public CDebugInterface
 {
 public:
 	C64DebugInterface(CViewC64 *viewC64);
@@ -40,8 +31,8 @@ public:
 	CViewC64 *viewC64;
 	
 	virtual int GetEmulatorType();
-	
 	virtual CSlrString *GetEmulatorVersionString();
+	
 	virtual void RunEmulationThread();
 	
 	virtual void InitKeyMap(C64KeyMap *keyMap);
@@ -50,30 +41,10 @@ public:
 	
 	float emulationSpeed, emulationFrameRate;
 	
-	CSlrMutex *breakpointsMutex;
-	void LockMutex();
-	void UnlockMutex();
-	
-	CSlrMutex *renderScreenMutex;
-	void LockRenderScreenMutex();
-	void UnlockRenderScreenMutex();
-	
-	CSlrMutex *ioMutex;
-	void LockIoMutex();
-	void UnlockIoMutex();
-	
-	// c64
-	bool debugOnC64;
+	// additional breakpoints, c64
 	bool breakOnC64IrqVIC;
 	bool breakOnC64IrqCIA;
 	bool breakOnC64IrqNMI;
-	
-	bool breakOnC64PC;
-	std::map<uint16, C64AddrBreakpoint *> breakpointsC64PC;
-	bool breakOnC64Memory;
-	std::map<uint16, C64MemoryBreakpoint *> breakpointsC64Memory;
-	bool breakOnC64Raster;
-	std::map<uint16, C64AddrBreakpoint *> breakpointsC64Raster;
 	
 	// 1541 disk drive
 	bool debugOnDrive1541;
@@ -81,18 +52,14 @@ public:
 	bool breakOnDrive1541IrqVIA2;
 	bool breakOnDrive1541IrqIEC;
 	bool breakOnDrive1541PC;
-	std::map<uint16, C64AddrBreakpoint *> breakpointsDrive1541PC;
+	std::map<uint16, CAddrBreakpoint *> breakpointsDrive1541PC;
 	bool breakOnDrive1541Memory;
-	std::map<uint16, C64MemoryBreakpoint *> breakpointsDrive1541Memory;
+	std::map<uint16, CMemoryBreakpoint *> breakpointsDrive1541Memory;
 	
-	//
-	void ClearAddrBreakpoints(std::map<uint16, C64AddrBreakpoint *> *breakpointsMap);
-	void AddAddrBreakpoint(std::map<uint16, C64AddrBreakpoint *> *breakpointsMap, C64AddrBreakpoint *breakpoint);
-	void RemoveAddrBreakpoint(std::map<uint16, C64AddrBreakpoint *> *breakpointsMap, uint16 addr);
-
-	void ClearMemoryBreakpoints(std::map<uint16, C64MemoryBreakpoint *> *breakpointsMap);
-
-	void ClearBreakpoints();
+	// TODO: make new debug interface solely for Drive1541 and do not override this:
+	virtual void ClearBreakpoints();
+	virtual void AddAddrBreakpoint(std::map<uint16, CAddrBreakpoint *> *breakpointsMap, CAddrBreakpoint *breakpoint);
+	virtual void RemoveAddrBreakpoint(std::map<uint16, CAddrBreakpoint *> *breakpointsMap, uint16 addr);
 
 	// data adapters
 	CSlrDataAdapter *dataAdapterC64;
@@ -103,10 +70,10 @@ public:
 	virtual int GetC64ModelType();
 	virtual uint8 GetC64MachineType();
 	
-	virtual int GetC64ScreenSizeX();
-	virtual int GetC64ScreenSizeY();
+	virtual int GetScreenSizeX();
+	virtual int GetScreenSizeY();
 	
-	virtual CImageData *GetC64ScreenImageData();
+	virtual CImageData *GetScreenImageData();
 	
 	virtual void Reset();
 	virtual void HardReset();
@@ -119,26 +86,16 @@ public:
 	virtual void JoystickDown(int port, uint32 axis);
 	virtual void JoystickUp(int port, uint32 axis);
 
-	virtual void KeyboardDownWithJoystickCheck(uint32 mtKeyCode);
-	virtual void KeyboardUpWithJoystickCheck(uint32 mtKeyCode);	
-	
 	// debugger control
 	virtual void SetDebugOnC64(bool debugOnC64);
 	virtual void SetDebugOnDrive1541(bool debugOnDrive1541);
 	
-	virtual void SetDebugMode(uint8 debugMode);
-	virtual uint8 GetDebugMode();
-
-	int temporaryC64BreakpointPC;
-	virtual int GetTemporaryC64BreakpointPC();
-	virtual void SetTemporaryC64BreakpointPC(int address);
-
 	int temporaryDrive1541BreakpointPC;
 	virtual int GetTemporaryDrive1541BreakpointPC();
 	virtual void SetTemporaryDrive1541BreakpointPC(int address);
 	
 	// circuitry states
-	virtual int GetC64CpuPC();
+	virtual int GetCpuPC();
 	virtual int GetDrive1541PC();
 	virtual void GetC64CpuState(C64StateCPU *state);
 	virtual void GetDrive1541CpuState(C64StateCPU *state);
@@ -151,9 +108,6 @@ public:
 	
 	virtual bool GetSettingIsWarpSpeed();
 	virtual void SetSettingIsWarpSpeed(bool isWarpSpeed);
-	virtual bool GetSettingUseKeyboardForJoystick();
-	virtual void SetSettingUseKeyboardForJoystick(bool isJoystickOn);
-	virtual void SetKeyboardJoystickPort(uint8 joystickPort);
 
 	virtual void GetSidTypes(std::vector<CSlrString *> *sidTypes);
 	virtual void SetSidType(int sidType);
@@ -219,14 +173,14 @@ public:
 	virtual void MakeJmpNoReset1541(uint16 addr);
 	
 	// memory access for memory map
-	virtual void GetWholeMemoryMapC64(uint8 *buffer);
-	virtual void GetWholeMemoryMapFromRamC64(uint8 *buffer);
+	virtual void GetWholeMemoryMap(uint8 *buffer);
+	virtual void GetWholeMemoryMapFromRam(uint8 *buffer);
 	virtual void GetWholeMemoryMap1541(uint8 *buffer);
 	virtual void GetWholeMemoryMapFromRam1541(uint8 *buffer);
 
 	// memory access
-	virtual void GetMemoryC64(uint8 *buffer, int addrStart, int addrEnd);
-	virtual void GetMemoryFromRamC64(uint8 *buffer, int addrStart, int addrEnd);
+	virtual void GetMemory(uint8 *buffer, int addrStart, int addrEnd);
+	virtual void GetMemoryFromRam(uint8 *buffer, int addrStart, int addrEnd);
 	virtual void GetMemoryDrive1541(uint8 *buffer, int addrStart, int addrEnd);
 	virtual void GetMemoryFromRamDrive1541(uint8 *buffer, int addrStart, int addrEnd);
 	
@@ -249,7 +203,20 @@ public:
 	virtual void CartridgeFreezeButtonPressed();
 	virtual void GetC64CartridgeState(C64StateCartridge *cartridgeState);
 
-	
+	// tape
+	virtual void AttachTape(CSlrString *filePath);
+	virtual void DetachTape();
+	virtual void DatasettePlay();
+	virtual void DatasetteStop();
+	virtual void DatasetteForward();
+	virtual void DatasetteRewind();
+	virtual void DatasetteRecord();
+	virtual void DatasetteReset();
+	virtual void DatasetteSetSpeedTuning(int speedTuning);
+	virtual void DatasetteSetZeroGapDelay(int zeroGapDelay);
+	virtual void DatasetteSetResetWithCPU(bool resetWithCPU);
+	virtual void DatasetteSetTapeWobble(int tapeWobble);
+
 	// snapshots
 	virtual bool LoadFullSnapshot(CByteBuffer *snapshotBuffer);
 	virtual void SaveFullSnapshot(CByteBuffer *snapshotBuffer);
@@ -267,26 +234,28 @@ public:
 	virtual bool IsCpuJam();
 	virtual void ForceRunAndUnJamCpu();
 
-	// state rendering
-	virtual void RenderStateVIC(vicii_cycle_state_t *viciiState,
-								float posX, float posY, float posZ, bool isVertical, bool showSprites, CSlrFont *fontBytes, float fontSize,
-								std::vector<CImageData *> *spritesImageData, std::vector<CSlrImage *> *spritesImages, bool renderDataWithColors);
-	virtual void RenderStateDrive1541(float posX, float posY, float posZ, CSlrFont *fontBytes, float fontSize,
-									  bool renderVia1, bool renderVia2, bool renderDriveLed, bool isVertical);
-	virtual void RenderStateCIA(float px, float py, float posZ, CSlrFont *fontBytes, float fontSize, int ciaId);
-	virtual void RenderStateSID(uint16 sidBase, float posX, float posY, float posZ, CSlrFont *fontBytes, float fontSize);
-
 	// state recording
 	virtual void SetVicRecordStateMode(uint8 recordMode);
 	
 	// VIC
 	virtual void SetVicRegister(uint8 registerNum, uint8 value);
 	virtual u8 GetVicRegister(uint8 registerNum);
+	virtual u8 GetVicRegister(vicii_cycle_state_t *viciiState, uint8 registerNum);
 
+	// CIA
+	virtual void SetCiaRegister(uint8 ciaId, uint8 registerNum, uint8 value);
+	virtual u8 GetCiaRegister(uint8 ciaId, uint8 registerNum);
+	
 	// SID
+	virtual void SetSidRegister(uint8 sidId, uint8 registerNum, uint8 value);
+	virtual u8 GetSidRegister(uint8 sidId, uint8 registerNum);
 	virtual void SetSIDMuteChannels(int sidNumber, bool mute1, bool mute2, bool mute3, bool muteExt);
 	virtual void SetSIDReceiveChannelsData(int sidNumber, bool isReceiving);
-	
+
+	// VIA
+	virtual void SetViaRegister(uint8 driveId, uint8 viaId, uint8 registerNum, uint8 value);
+	virtual u8 GetViaRegister(uint8 driveId, uint8 viaId, uint8 registerNum);
+
 	// drive leds
 	float ledState[C64_NUM_DRIVES];
 	
@@ -299,8 +268,8 @@ public:
 	virtual void SetRunSIDEmulation(bool isSIDEmulationOn);
 	virtual void SetAudioVolume(float volume);
 	
-private:
-	volatile int debugMode;
+	//
+	virtual CSlrDataAdapter *GetDataAdapter();
 
 };
 

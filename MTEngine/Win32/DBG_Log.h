@@ -16,8 +16,6 @@
 #include <string>
 
 #define GLOBAL_DEBUG_OFF
-//#undef GLOBAL_DEBUG_OFF
-
 
 #define byte unsigned char
 
@@ -51,6 +49,8 @@
 #define DBGLVL_VICE_DEBUG	(1 << 23)
 #define DBGLVL_VICE_MAIN	(1 << 24)
 #define DBGLVL_VICE_VERBOSE	(1 << 25)
+#define DBGLVL_ATARI_DEBUG	(1 << 26)
+#define DBGLVL_ATARI_MAIN	(1 << 27)
 
 void LOG_Init(void);
 void LOG_Shutdown(void);
@@ -142,6 +142,15 @@ void LOGR(std::string *what);
 void LOGR(char *fmt, ... );
 void LOGR(const char *fmt, ... );
 
+void LOG_Atari_Main(std::string *what);
+void LOG_Atari_Main(char *fmt, ... );
+void LOG_Atari_Main(const char *fmt, ... );
+
+void LOG_Atari_Debug(std::string *what);
+void LOG_Atari_Debug(char *fmt, ... );
+void LOG_Atari_Debug(const char *fmt, ... );
+
+
 // TODO
 void LOGTODO(std::string *what);
 void LOGTODO(char *fmt, ... );
@@ -191,6 +200,9 @@ void DBG_LogTime();
 #define LOGVV(...) ;
 #define LOGVD(...) ;
 #define LOGVM(...) ;
+#define LOG_Atari_Main(...) ;
+#define LOG_Atari_Debug(...) ;
+
 #define LOGTODO(...) ; 
 #define LOGWarning(...) ; 
 #define LOGError(...) ; 

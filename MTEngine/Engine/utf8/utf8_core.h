@@ -317,7 +317,18 @@ namespace internal
     octet_iterator find_invalid(octet_iterator start, octet_iterator end)
     {
         octet_iterator result = start;
+		
+		int quickFixBySlajerek = 0;
+		
         while (result != end) {
+			
+			quickFixBySlajerek++;
+			if (quickFixBySlajerek == 99)
+			{
+				LOGError("utf8_core.h: detected endless loop");
+				return result;
+			}
+			
             internal::utf_error err_code = internal::validate_next(result, end);
             if (err_code != internal::UTF8_OK)
                 return result;

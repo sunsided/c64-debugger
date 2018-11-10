@@ -164,6 +164,39 @@ CGuiLabel::CGuiLabel(CSlrString *textUTF, GLfloat posX, GLfloat posY, GLfloat po
 
 }
 
+CGuiLabel::CGuiLabel(CSlrString *textUTF, GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, byte alignment, CSlrFont *font, GLfloat fontSize, float colorR, float colorG, float colorB, float alpha, CGuiLabelCallback *callback)
+: CGuiElement(posX, posY, posZ, 1.0f, 1.0f)
+{
+	this->name = "CGuiLabel:Text";
+	this->beingClicked = false;
+	this->clickConsumed = false;
+	
+	this->transparentToTaps = false;
+	
+	this->image = guiMain->theme->imgBackgroundLabel;
+	this->text = NULL;
+	this->textUTF = NULL;
+	this->callback = callback;
+	
+	this->posX = posX;
+	this->posY = posY;
+	this->alignment = alignment;
+	
+	textColorR = colorR;
+	textColorG = colorG;
+	textColorB = colorB;
+	textColorA = alpha;
+	
+	this->font = font;
+	this->fontSize = fontSize;
+	this->fontWidth = fontSize;
+	this->fontHeight = fontSize;
+	
+	SetText(textUTF);
+	
+	this->sizeY = font->GetLineHeight();
+}
+
 CGuiLabel::CGuiLabel(CSlrString *textUTF, GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, byte alignment, CSlrFont *font, GLfloat fontScale,
 					 float bkgColorR, float bkgColorG, float bkgColorB, float bkgColorA,
 					 float textColorR, float textColorG, float textColorB, float textColorA,

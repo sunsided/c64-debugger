@@ -113,6 +113,7 @@ void CGuiMain::Startup()
 	gScaleDownImages = false;
 
 	threadViewLoader = new CViewLoaderThread();
+	threadViewLoader->ThreadSetName("CViewLoaderThread");
 	isLoadingResources = false;
 
 	//bool tmp = gScaleDownImages;	// force always nearest
@@ -870,11 +871,13 @@ void CGuiMain::DoNotTouchedMove(GLfloat x, GLfloat y)
 		
 				//LOGD("DoNotTouchedMove %f: %s", (*enumGuiElems).first, guiElement->name);
 		
-		bool consumed = guiElement->DoNotTouchedMove(x, y);
+		//bool consumed =
+		guiElement->DoNotTouchedMove(x, y);
 
+		// TODO: refactor DoNotTouchedMove to not return anything
 			//LOGD("   consumed=%d", consumed);
-		if (consumed)
-			return;
+//		if (consumed)
+//			return;
 	}
 }
 
@@ -1317,7 +1320,7 @@ void CGuiMain::Render()
 {
 	//LOGD("-------------- GUI_Render() --------------");
 
-	this->LockRenderMutex();
+	this->LockRenderMutex(); //"CGuiMain::Render");
 
 //	this->imgBackgroundBlue->Render(0, 0, -3.0, 320, 200);
 
@@ -1474,7 +1477,7 @@ void CGuiMain::Render()
 #endif
 #endif
 
-	guiMain->UnlockRenderMutex();
+	guiMain->UnlockRenderMutex(); //"CGuiMain::Render");
 
 //	LOGD("------------ GUI_Render done -------------");
 
@@ -1670,6 +1673,13 @@ void CGuiMain::SetView(CGuiView *element)
 	LOGD("CGuiMain::SetView: finished");
 }
 
+void CGuiMain::ShowMessage(CSlrString *showMessage)
+{
+	char *cStr = showMessage->GetStdASCII();
+	this->ShowMessage(cStr);
+	delete [] cStr;
+}
+
 void CGuiMain::ShowMessage(char *showMessage)
 {
 	guiMain->ShowMessage(showMessage, 0.7, 0.7, 0.7);
@@ -1728,8 +1738,9 @@ void CGuiMain::ShowMessageAsync(char *showMessage, GLfloat showMessageColorR,
 	this->showMessageColorB = showMessageColorB;
 }
 
-void CGuiMain::StopShowingMessage() {
-	guiMain->LockRenderMutex();
+void CGuiMain::StopShowingMessage()
+{
+	guiMain->LockRenderMutex(); //CGuiMain::StopShowingMessage");
 
 	if (this->showMessage != NULL) {
 //#if defined(IPHONE)
@@ -1744,7 +1755,7 @@ void CGuiMain::StopShowingMessage() {
 	this->showMessageAlpha = 0.0f;
 	this->showMessageCurrentScale = 0.0f;
 
-	guiMain->UnlockRenderMutex();
+	guiMain->UnlockRenderMutex(); //CGuiMain::StopShowingMessage");
 
 }
 
@@ -1788,29 +1799,34 @@ void CGuiMain::StopShowingMessage() {
  */
 
 void CGuiMain::ShowMessageBox(UTFString *text,
-		CGuiMessageBoxCallback *messageBoxCallback) {
-	guiMain->LockRenderMutex();
-	if (this->messageBox != NULL) {
+		CGuiMessageBoxCallback *messageBoxCallback)
+{
+	guiMain->LockRenderMutex(); //"CGuiMain::ShowMessageBox");
+	if (this->messageBox != NULL)
+	{
 		delete this->messageBox;
 	}
 
 	this->messageBoxCallback = messageBoxCallback;
 	this->messageBox = new CGuiViewMessageBox(0, 0, -3.0, SCREEN_WIDTH,
 			SCREEN_HEIGHT, text, this);
-	guiMain->UnlockRenderMutex();
+	guiMain->UnlockRenderMutex(); //"CGuiMain::ShowMessageBox");
 }
 
-bool CGuiMain::MessageBoxClickedOK(CGuiViewMessageBox *messageBox) {
-	if (this->messageBoxCallback) {
+bool CGuiMain::MessageBoxClickedOK(CGuiViewMessageBox *messageBox)
+{
+	if (this->messageBoxCallback)
+	{
 		return this->messageBoxCallback->MessageBoxClickedOK(messageBox);
 	}
 
-	guiMain->LockRenderMutex();
-	if (this->messageBox != NULL) {
+	guiMain->LockRenderMutex(); //"CGuiMain::MessageBoxClickedOK");
+	if (this->messageBox != NULL)
+	{
 		delete this->messageBox;
 		this->messageBox = NULL;
 	}
-	guiMain->UnlockRenderMutex();
+	guiMain->UnlockRenderMutex(); //"CGuiMain::MessageBoxClickedOK");
 
 	return false;
 }
@@ -1968,7 +1984,11 @@ void CGuiMain::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 	isShiftPressed = isShift;
 	isAltPressed = isAlt;
 	isControlPressed = isControl;
-	
+
+//	wasShiftPressed = isShift;
+//	wasAltPressed = isAlt;
+//	wasControlPressed = isControl;
+
 	if (keyCode == MTKEY_LSHIFT)
 	{
 		isShiftPressed = true;
@@ -2073,6 +2093,59 @@ void CGuiMain::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
 	LOGI("CGuiMain::KeyUp: keyCode=%d (0x%2.2x = %c) isShift=%s isAlt=%s isControl=%s", keyCode, keyCode, keyCode, STRBOOL(isShift), STRBOOL(isAlt), STRBOOL(isControl));
 	
+	this->repeatTime = 0;
+	isKeyDown = false;
+
+	if (this->focusElement)
+	{
+		// consumed?
+		if (this->focusElement->KeyUp(keyCode, isShiftPressed, isAltPressed, isControlPressed))
+		{
+			UpdateControlKeys(keyCode);
+			return;
+		}
+		
+		// consumed?
+		if (this->focusElement->KeyPressed(keyCode, isShiftPressed, isAltPressed, isControlPressed))
+		{
+			UpdateControlKeys(keyCode);
+			return;
+		}
+	}
+
+	if (this->currentView != NULL)
+	{
+		// consumed?
+		if (this->currentView->KeyUp(keyCode, isShiftPressed, isAltPressed, isControlPressed) == false)
+		{
+			this->currentView->KeyPressed(keyCode, isShiftPressed, isAltPressed, isControlPressed);
+			UpdateControlKeys(keyCode);
+			return;
+		}
+	}
+	
+	
+	for (std::list<CGlobalKeyboardCallback *>::const_iterator itKeybardCallbacks =
+			this->globalKeyboardCallbacks.begin();
+			itKeybardCallbacks != this->globalKeyboardCallbacks.end();
+			itKeybardCallbacks++)
+	{
+		CGlobalKeyboardCallback *callback = (CGlobalKeyboardCallback *) *itKeybardCallbacks;
+		if (callback->GlobalKeyUpCallback(keyCode, isShiftPressed, isAltPressed, isControlPressed))
+			break;
+
+#ifndef WIN32
+		if (callback->GlobalKeyPressCallback(keyCode, isShiftPressed, isAltPressed, isControlPressed))
+			break;
+#endif
+
+	}
+	
+	UpdateControlKeys(keyCode);
+}
+
+void CGuiMain::UpdateControlKeys(u32 keyCode)
+{
 	if (keyCode == MTKEY_LSHIFT)
 	{
 		isShiftPressed = false;
@@ -2104,49 +2177,31 @@ void CGuiMain::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 		isRightControlPressed = false;
 	}
 
-	this->repeatTime = 0;
-	isKeyDown = false;
+//	if (keyCode == MTKEY_LSHIFT)
+//	{
+//		wasShiftPressed = false;
+//	}
+//	else if (keyCode == MTKEY_RSHIFT)
+//	{
+//		wasShiftPressed = false;
+//	}
+//	else if (keyCode == MTKEY_LALT)
+//	{
+//		wasAltPressed = false;
+//	}
+//	else if (keyCode == MTKEY_RALT)
+//	{
+//		wasAltPressed = false;
+//	}
+//	else if (keyCode == MTKEY_LCONTROL)
+//	{
+//		wasControlPressed = false;
+//	}
+//	else if (keyCode == MTKEY_RCONTROL)
+//	{
+//		wasControlPressed = false;
+//	}
 
-	if (this->focusElement)
-	{
-		// consumed?
-		if (this->focusElement->KeyUp(keyCode, isShift, isAlt, isControl))
-		{
-			return;
-		}
-		
-		// consumed?
-		if (this->focusElement->KeyPressed(keyCode, isShift, isAlt, isControl))
-		{
-			return;
-		}
-	}
-
-	if (this->currentView != NULL)
-	{
-		// consumed?
-		if (this->currentView->KeyUp(keyCode, isShift, isAlt, isControl) == false)
-		{
-			this->currentView->KeyPressed(keyCode, isShift, isAlt, isControl);
-		}
-	}
-	
-	
-	for (std::list<CGlobalKeyboardCallback *>::const_iterator itKeybardCallbacks =
-			this->globalKeyboardCallbacks.begin();
-			itKeybardCallbacks != this->globalKeyboardCallbacks.end();
-			itKeybardCallbacks++)
-	{
-		CGlobalKeyboardCallback *callback = (CGlobalKeyboardCallback *) *itKeybardCallbacks;
-		if (callback->GlobalKeyUpCallback(keyCode, isShift, isAlt, isControl))
-			break;
-
-#ifndef WIN32
-		if (callback->GlobalKeyPressCallback(keyCode, isShift, isAlt, isControl))
-			break;
-#endif
-
-	}
 }
 
 void CGuiMain::KeyPressed(u32 keyCode, bool isShift, bool isAlt, bool isControl)
@@ -2209,28 +2264,30 @@ void CGuiMain::RemoveAllViews()
 	this->UnlockMutex();
 }
 
-void CGuiMain::LockRenderMutex()
+void CGuiMain::LockRenderMutex()  //char *functionName)
 {
-	//LOGD("CGuiMain::LockRenderMutex: threadId=%x isLocked=%d", (u64)pthread_self(), renderMutex->isLocked);
+//	LOGD("CGuiMain::LockRenderMutex: threadId=%x isLocked=%d", (u64)pthread_self(), renderMutex->isLocked);
+//	NSLog(@"CGuiMain::LockRenderMutex: threadId=%x lockedLevel pre=%d (locking to %d)", (u64)pthread_self(), renderMutex->lockedLevel, renderMutex->lockedLevel+1); //, functionName);
 	renderMutex->Lock();
 }
 
-void CGuiMain::UnlockRenderMutex()
+void CGuiMain::UnlockRenderMutex()  //char *functionName)
 {
-	//LOGD("CGuiMain::UnlockRenderMutex: threadId=%x", (u64)pthread_self());
+//	LOGD("CGuiMain::UnlockRenderMutex: threadId=%x", (u64)pthread_self());
+//	NSLog(@"CGuiMain::UnlockRenderMutex: threadId=%x  lockedLevel pre=%d (unlocked to %d)", (u64)pthread_self(), renderMutex->lockedLevel, renderMutex->lockedLevel-1); //, functionName);
 	renderMutex->Unlock();
 }
 
-void CGuiMain::LockMutex()
+void CGuiMain::LockMutex() //char *functionName)
 {
 //		LOGD("CGuiMain::LockMutex");
-	this->LockRenderMutex();
+	this->LockRenderMutex(); //functionName);
 }
 
-void CGuiMain::UnlockMutex()
+void CGuiMain::UnlockMutex() //char *functionName)
 {
 //		LOGD("CGuiMain::UnlockMutex");
-	this->UnlockRenderMutex();
+	this->UnlockRenderMutex(); //functionName);
 }
 
 float SCREEN_WIDTHd2 = 0.0f;

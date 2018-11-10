@@ -5,6 +5,7 @@
 #include "CVicEditorLayerVirtualSprites.h"
 #include "C64DebugInterface.h"
 #include "CViewC64Sprite.h"
+#include "CViewC64Palette.h"
 
 // create empty hires sprite
 C64SpriteHires::C64SpriteHires()
@@ -304,6 +305,8 @@ u8 C64SpriteHires::PaintDither(bool forceColorReplace, int x, int y, u8 colorLMB
 // @returns painting status (ok, replaced color, blocked)
 u8 C64SpriteHires::PutColorAtPixel(bool forceColorReplace, int x, int y, u8 colorLMB, u8 colorRMB, u8 colorSource)
 {
+	LOGD("C64SpriteHires::PutColorAtPixel");
+	
 	if (colorSource == VICEDITOR_COLOR_SOURCE_LMB)
 	{
 		// always replace with sprite color
@@ -350,6 +353,11 @@ u8 C64SpriteHires::GetColorAtPixel(int x, int y)
 	if (this->isStretchedHorizontally)
 	{
 		spx /= 2;
+	}
+	
+	if (this->isStretchedVertically)
+	{
+		spy /= 2;
 	}
 	
 	int rasterLine = y + 0x32;

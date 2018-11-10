@@ -18,6 +18,7 @@ public:
 	int Seek(long int offset, int origin);
 	u32 Tell();
 	bool Eof();
+	virtual bool Exists();
 	void Close();
 	~CSlrFileFromSystem();
 

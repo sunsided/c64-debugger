@@ -8,7 +8,7 @@
 #include "CViewC64.h"
 #include "CViewDisassemble.h"
 #include "CViewBreakpoints.h"
-#include "C64AsmSource.h"
+#include "C64AsmSourceSymbols.h"
 #include "CViewDataWatch.h"
 
 #include <fstream>
@@ -20,13 +20,14 @@
 
 C64Symbols::C64Symbols()
 {
+	this->asmSource = NULL;
 }
 
 C64Symbols::~C64Symbols()
 {
 }
 
-void C64Symbols::ParseSymbols(CSlrString *fileName, C64DebugInterface *debugInterface)
+void C64Symbols::ParseSymbols(CSlrString *fileName, CDebugInterface *debugInterface)
 {
 	char *fname = fileName->GetStdASCII();
 	
@@ -47,7 +48,7 @@ void C64Symbols::ParseSymbols(CSlrString *fileName, C64DebugInterface *debugInte
 	delete file;
 }
 
-void C64Symbols::ParseSymbols(CSlrFile *file, C64DebugInterface *debugInterface)
+void C64Symbols::ParseSymbols(CSlrFile *file, CDebugInterface *debugInterface)
 {
 	CByteBuffer *byteBuffer = new CByteBuffer(file, false);
 	
@@ -56,17 +57,17 @@ void C64Symbols::ParseSymbols(CSlrFile *file, C64DebugInterface *debugInterface)
 	delete byteBuffer;
 }
 
-void C64Symbols::ClearSymbols(C64DebugInterface *debugInterface)
+void C64Symbols::DeleteAllSymbols(CDebugInterface *debugInterface)
 {
 	debugInterface->LockMutex();
 
-	viewC64->viewC64Disassemble->ClearCodeLabels();
-	viewC64->viewDrive1541Disassemble->ClearCodeLabels();
+	viewC64->viewC64Disassemble->DeleteCodeLabels();
+	viewC64->viewDrive1541Disassemble->DeleteCodeLabels();
 	
 	debugInterface->UnlockMutex();
 }
 
-void C64Symbols::ParseSymbols(CByteBuffer *byteBuffer, C64DebugInterface *debugInterface)
+void C64Symbols::ParseSymbols(CByteBuffer *byteBuffer, CDebugInterface *debugInterface)
 {
 	LOGM("C64Symbols::ParseSymbols");
 	
@@ -184,11 +185,11 @@ void C64Symbols::ParseSymbols(CByteBuffer *byteBuffer, C64DebugInterface *debugI
 
 			if (deviceId == C64_SYMBOL_DEVICE_COMMODORE)
 			{
-				viewC64->viewC64Disassemble->AddCodeLabel(addr, labelNameStr);
+				viewC64->viewC64Disassemble->AddNewCodeLabel(addr, labelNameStr);
 			}
 			else if (deviceId == C64_SYMBOL_DEVICE_DRIVE1541)
 			{
-				viewC64->viewDrive1541Disassemble->AddCodeLabel(addr, labelNameStr);
+				viewC64->viewDrive1541Disassemble->AddNewCodeLabel(addr, labelNameStr);
 			}
 		}
 		else if (words->size() > 3)
@@ -225,7 +226,7 @@ void C64Symbols::ParseSymbols(CByteBuffer *byteBuffer, C64DebugInterface *debugI
 				}
 				
 				LOGD("labelNameStr=%s  addr=%04x", labelNameStr, addr);
-				viewC64->viewC64Disassemble->AddCodeLabel(addr, labelNameStr);
+				viewC64->viewC64Disassemble->AddNewCodeLabel(addr, labelNameStr);
 				
 				delete []addrStr;
 //				delete []labelNameStr;	TODO: AddCodeLabel does not allocate own string
@@ -262,14 +263,14 @@ void C64Symbols::ParseSymbols(CByteBuffer *byteBuffer, C64DebugInterface *debugI
 }
 
 
-void C64Symbols::ClearBreakpoints(C64DebugInterface *debugInterface)
+void C64Symbols::DeleteAllBreakpoints(CDebugInterface *debugInterface)
 {
-	viewC64->debugInterface->LockMutex();
-	viewC64->debugInterface->ClearBreakpoints();
-	viewC64->debugInterface->UnlockMutex();
+	debugInterface->LockMutex();
+	debugInterface->ClearBreakpoints();
+	debugInterface->UnlockMutex();
 }
 
-void C64Symbols::ParseBreakpoints(CSlrString *fileName, C64DebugInterface *debugInterface)
+void C64Symbols::ParseBreakpoints(CSlrString *fileName, CDebugInterface *debugInterface)
 {
 	char *fname = fileName->GetStdASCII();
 	CSlrFileFromOS *file = new CSlrFileFromOS(fname);
@@ -290,7 +291,7 @@ void C64Symbols::ParseBreakpoints(CSlrString *fileName, C64DebugInterface *debug
 	delete file;
 }
 
-void C64Symbols::ParseBreakpoints(CByteBuffer *byteBuffer, C64DebugInterface *debugInterface)
+void C64Symbols::ParseBreakpoints(CByteBuffer *byteBuffer, CDebugInterface *debugInterface)
 {
 	LOGM("C64Symbols::ParseBreakpoints");
 	
@@ -371,21 +372,21 @@ void C64Symbols::ParseBreakpoints(CByteBuffer *byteBuffer, C64DebugInterface *de
 			
 			LOGD(".. adding breakOnPC %4.4x", address);
 			
-			std::map<uint16, C64AddrBreakpoint *>::iterator it = debugInterface->breakpointsC64PC.find(address);
-			if (it == debugInterface->breakpointsC64PC.end())
+			std::map<uint16, CAddrBreakpoint *>::iterator it = debugInterface->breakpointsPC.find(address);
+			if (it == debugInterface->breakpointsPC.end())
 			{
 				// not found
-				C64AddrBreakpoint *addrBreakpoint = new C64AddrBreakpoint(address);
-				addrBreakpoint->actions = C64_ADDR_BREAKPOINT_ACTION_STOP;
-				debugInterface->breakpointsC64PC[address] = addrBreakpoint;
+				CAddrBreakpoint *addrBreakpoint = new CAddrBreakpoint(address);
+				addrBreakpoint->actions = ADDR_BREAKPOINT_ACTION_STOP;
+				debugInterface->breakpointsPC[address] = addrBreakpoint;
 				
-				debugInterface->breakOnC64PC = true;
+				debugInterface->breakOnPC = true;
 			}
 			else
 			{
 				LOGD("...... exists %4.4x", address);
-				C64AddrBreakpoint *addrBreakpoint = it->second;
-				SET_BIT(addrBreakpoint->actions, C64_ADDR_BREAKPOINT_ACTION_STOP);
+				CAddrBreakpoint *addrBreakpoint = it->second;
+				SET_BIT(addrBreakpoint->actions, ADDR_BREAKPOINT_ACTION_STOP);
 			}
 		}
 		else if (command->Equals("setbkg") || command->Equals("setbackground"))
@@ -406,23 +407,23 @@ void C64Symbols::ParseBreakpoints(CByteBuffer *byteBuffer, C64DebugInterface *de
 			
 			LOGD(".. adding setBkg %4.4x %2.2x", address, value);
 			
-			std::map<uint16, C64AddrBreakpoint *>::iterator it = debugInterface->breakpointsC64PC.find(address);
-			if (it == debugInterface->breakpointsC64PC.end())
+			std::map<uint16, CAddrBreakpoint *>::iterator it = debugInterface->breakpointsPC.find(address);
+			if (it == debugInterface->breakpointsPC.end())
 			{
 				// not found
-				C64AddrBreakpoint *addrBreakpoint = new C64AddrBreakpoint(address);
-				addrBreakpoint->actions = C64_ADDR_BREAKPOINT_ACTION_SET_BACKGROUND;
+				CAddrBreakpoint *addrBreakpoint = new CAddrBreakpoint(address);
+				addrBreakpoint->actions = ADDR_BREAKPOINT_ACTION_SET_BACKGROUND;
 				addrBreakpoint->data = value;
-				debugInterface->breakpointsC64PC[address] = addrBreakpoint;
+				debugInterface->breakpointsPC[address] = addrBreakpoint;
 				
-				debugInterface->breakOnC64PC = true;
+				debugInterface->breakOnPC = true;
 			}
 			else
 			{
 				LOGD("...... exists %4.4x", address);
-				C64AddrBreakpoint *addrBreakpoint = it->second;
+				CAddrBreakpoint *addrBreakpoint = it->second;
 				addrBreakpoint->data = value;
-				SET_BIT(addrBreakpoint->actions, C64_ADDR_BREAKPOINT_ACTION_SET_BACKGROUND);
+				SET_BIT(addrBreakpoint->actions, ADDR_BREAKPOINT_ACTION_SET_BACKGROUND);
 			}
 		}
 		else if (command->Equals("breakraster") || command->Equals("breakonraster"))
@@ -440,25 +441,34 @@ void C64Symbols::ParseBreakpoints(CByteBuffer *byteBuffer, C64DebugInterface *de
 			
 			LOGD(".. adding breakOnRaster %4.4x", rasterNum);
 			
-			C64AddrBreakpoint *addrBreakpoint = new C64AddrBreakpoint(rasterNum);
-			debugInterface->breakpointsC64Raster[rasterNum] = addrBreakpoint;
+			CAddrBreakpoint *addrBreakpoint = new CAddrBreakpoint(rasterNum);
+			debugInterface->breakpointsRaster[rasterNum] = addrBreakpoint;
 			
-			debugInterface->breakOnC64Raster = true;
+			debugInterface->breakOnRaster = true;
 		}
 		else if (command->Equals("breakvic") || command->Equals("breakonvic") || command->Equals("breakonirqvic"))
 		{
-			debugInterface->breakOnC64IrqVIC = true;
-			LOGD(".. adding breakOnC64IrqVIC");
+			if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
+			{
+				((C64DebugInterface*)debugInterface)->breakOnC64IrqVIC = true;
+				LOGD(".. adding breakOnC64IrqVIC");
+			}
 		}
 		else if (command->Equals("breakcia") || command->Equals("breakoncia") || command->Equals("breakonirqcia"))
 		{
-			debugInterface->breakOnC64IrqCIA = true;
-			LOGD(".. adding breakOnC64IrqCIA");
+			if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
+			{
+				((C64DebugInterface*)debugInterface)->breakOnC64IrqCIA = true;
+				LOGD(".. adding breakOnC64IrqCIA");
+			}
 		}
 		else if (command->Equals("breaknmi") || command->Equals("breakonnmi") || command->Equals("breakonirqnmi"))
 		{
-			debugInterface->breakOnC64IrqNMI = true;
-			LOGD(".. adding breakOnC64IrqNMI");
+			if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
+			{
+				((C64DebugInterface*)debugInterface)->breakOnC64IrqNMI = true;
+				LOGD(".. adding breakOnC64IrqNMI");
+			}
 		}
 		else if (command->Equals("breakmemory") || command->Equals("breakonmemory") || command->Equals("breakmem"))
 		{
@@ -514,27 +524,27 @@ void C64Symbols::ParseBreakpoints(CByteBuffer *byteBuffer, C64DebugInterface *de
 			
 			if (op->Equals("==") || op->Equals("="))
 			{
-				memBreakType = C64_MEMORY_BREAKPOINT_EQUAL;
+				memBreakType = MEMORY_BREAKPOINT_EQUAL;
 			}
 			else if (op->Equals("!="))
 			{
-				memBreakType = C64_MEMORY_BREAKPOINT_NOT_EQUAL;
+				memBreakType = MEMORY_BREAKPOINT_NOT_EQUAL;
 			}
 			else if (op->Equals("<"))
 			{
-				memBreakType = C64_MEMORY_BREAKPOINT_LESS;
+				memBreakType = MEMORY_BREAKPOINT_LESS;
 			}
 			else if (op->Equals("<=") || op->Equals("=<"))
 			{
-				memBreakType = C64_MEMORY_BREAKPOINT_LESS_OR_EQUAL;
+				memBreakType = MEMORY_BREAKPOINT_LESS_OR_EQUAL;
 			}
 			else if (op->Equals(">"))
 			{
-				memBreakType = C64_MEMORY_BREAKPOINT_GREATER;
+				memBreakType = MEMORY_BREAKPOINT_GREATER;
 			}
 			else if (op->Equals(">=") || op->Equals("=>"))
 			{
-				memBreakType = C64_MEMORY_BREAKPOINT_GREATER_OR_EQUAL;
+				memBreakType = MEMORY_BREAKPOINT_GREATER_OR_EQUAL;
 			}
 			else
 			{
@@ -547,10 +557,10 @@ void C64Symbols::ParseBreakpoints(CByteBuffer *byteBuffer, C64DebugInterface *de
 			op->DebugPrint("..... op=");
 			LOGD("..... value=%2.2x", value);
 			
-			C64MemoryBreakpoint *memBreakpoint = new C64MemoryBreakpoint(address, memBreakType, value);
-			debugInterface->breakpointsC64Memory[address] = memBreakpoint;
+			CMemoryBreakpoint *memBreakpoint = new CMemoryBreakpoint(address, memBreakType, value);
+			debugInterface->breakpointsMemory[address] = memBreakpoint;
 			
-			debugInterface->breakOnC64Memory = true;
+			debugInterface->breakOnMemory = true;
 		}
 		else
 		{
@@ -576,15 +586,15 @@ void C64Symbols::ParseBreakpoints(CByteBuffer *byteBuffer, C64DebugInterface *de
 }
 
 ///
-void C64Symbols::ClearWatches(C64DebugInterface *debugInterface)
+void C64Symbols::DeleteAllWatches(CDebugInterface *debugInterface)
 {
-	viewC64->debugInterface->LockMutex();
-	viewC64->viewC64MemoryDataWatch->ClearWatches();
-	viewC64->viewDrive1541MemoryDataWatch->ClearWatches();
-	viewC64->debugInterface->UnlockMutex();
+	debugInterface->LockMutex();
+	viewC64->viewC64MemoryDataWatch->DeleteAllWatches();
+	viewC64->viewDrive1541MemoryDataWatch->DeleteAllWatches();
+	debugInterface->UnlockMutex();
 }
 
-void C64Symbols::ParseWatches(CSlrString *fileName, C64DebugInterface *debugInterface)
+void C64Symbols::ParseWatches(CSlrString *fileName, CDebugInterface *debugInterface)
 {
 	char *fname = fileName->GetStdASCII();
 	
@@ -605,7 +615,7 @@ void C64Symbols::ParseWatches(CSlrString *fileName, C64DebugInterface *debugInte
 	delete file;
 }
 
-void C64Symbols::ParseWatches(CSlrFile *file, C64DebugInterface *debugInterface)
+void C64Symbols::ParseWatches(CSlrFile *file, CDebugInterface *debugInterface)
 {
 	CByteBuffer *byteBuffer = new CByteBuffer(file, false);
 	
@@ -615,10 +625,12 @@ void C64Symbols::ParseWatches(CSlrFile *file, C64DebugInterface *debugInterface)
 }
 
 
-void C64Symbols::ParseWatches(CByteBuffer *byteBuffer, C64DebugInterface *debugInterface)
+void C64Symbols::ParseWatches(CByteBuffer *byteBuffer, CDebugInterface *debugInterface)
 {
 	LOGM("C64Symbols::ParseWatches");
 	
+	LOGTODO("ParseWatches: viewC64->viewC64MemoryDataWatch->AddWatch: make generic for Atari");
+
 	debugInterface->LockMutex();
 	
 	byteBuffer->removeCRLFinQuotations();
@@ -766,7 +778,7 @@ void C64Symbols::ParseWatches(CByteBuffer *byteBuffer, C64DebugInterface *debugI
 //				}
 //			}
 			
-			viewC64->viewC64MemoryDataWatch->AddWatch(watchNameStr, addr); //, representation, numberOfValues, bits);
+			viewC64->viewC64MemoryDataWatch->AddNewWatch(addr, watchNameStr); //, representation, numberOfValues, bits);
 			
 			delete [] watchNameStr;
 			delete [] addrStr;
@@ -813,8 +825,7 @@ void C64Symbols::ParseWatches(CByteBuffer *byteBuffer, C64DebugInterface *debugI
 				//					viewC64->viewC64MemoryDataWatch->AddWatch(labelNameStr, addr);
 				//				}
 				
-
-				viewC64->viewC64MemoryDataWatch->AddWatch(labelNameStr, addr);
+				viewC64->viewC64MemoryDataWatch->AddNewWatch(addr, labelNameStr);
 				
 				delete []addrStr;
 				delete []labelNameStr;
@@ -850,7 +861,7 @@ void C64Symbols::ParseWatches(CByteBuffer *byteBuffer, C64DebugInterface *debugI
 
 ///
 
-void C64Symbols::ParseSourceDebugInfo(CSlrString *fileName, C64DebugInterface *debugInterface)
+void C64Symbols::ParseSourceDebugInfo(CSlrString *fileName, CDebugInterface *debugInterface)
 {
 	char *fname = fileName->GetStdASCII();
 	CSlrFileFromOS *file = new CSlrFileFromOS(fname);
@@ -871,30 +882,42 @@ void C64Symbols::ParseSourceDebugInfo(CSlrString *fileName, C64DebugInterface *d
 	delete file;
 }
 
-void C64Symbols::ClearSourceDebugInfo(C64DebugInterface *debugInterface)
+void C64Symbols::ParseSourceDebugInfo(CSlrFile *file, CDebugInterface *debugInterface)
+{
+	CByteBuffer *byteBuffer = new CByteBuffer(file, false);
+	
+	ParseSourceDebugInfo(byteBuffer, debugInterface);
+	
+	delete byteBuffer;
+}
+
+void C64Symbols::DeleteSourceDebugInfo(CDebugInterface *debugInterface)
 {
 	debugInterface->LockMutex();
 	
-	delete this->asmSource;
+	if (this->asmSource)
+	{
+		delete this->asmSource;
+	}
 	this->asmSource = NULL;
 	
 	debugInterface->UnlockMutex();
 }
 
-void C64Symbols::ParseSourceDebugInfo(CByteBuffer *byteBuffer, C64DebugInterface *debugInterface)
+void C64Symbols::ParseSourceDebugInfo(CByteBuffer *byteBuffer, CDebugInterface *debugInterface)
 {
 	LOGM("C64Symbols::ParseSourceDebugInfo");
 	
 	debugInterface->LockMutex();
 	
+	LOGTODO("move this->asmSource to debugInterfce->asmSource");
 	if (this->asmSource != NULL)
 	{
 		delete this->asmSource;
 		asmSource = NULL;
 	}
 	
-	this->asmSource = new C64AsmSource(byteBuffer, debugInterface);
-	
+	this->asmSource = new C64AsmSourceSymbols(byteBuffer, debugInterface);
 	
 	debugInterface->UnlockMutex();
 	

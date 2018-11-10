@@ -114,12 +114,15 @@ public:
 	CSlrString *txtAutolockBitmapAddress;
 	CSlrString *txtAutolockTextAddress;
 	CSlrString *txtAutolockColourAddress;
+	CSlrString *txtAutolockCharsetAddress;
 	
 	CGuiButtonSwitch *btnLockCursor;
 	//	CGuiButton *btnCursorCycleLeft;
 	//	CGuiButton *btnCursorCycleRight;
 	//	CGuiButton *btnCursorRasterLineUp;
 	//	CGuiButton *btnCursorRasterLineDown;
+	
+	void UnlockAll();
 	
 	CSlrFont *font;
 	float fontScale;

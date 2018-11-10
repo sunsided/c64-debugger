@@ -16,7 +16,7 @@ public:
 	
 	virtual u8 PutCharacterAtRaster(int x, int y, u8 color, int charValue);
 
-	virtual void RefreshScreen(vicii_cycle_state_t *viciiState, CImageData *imageDataScreen);
+	virtual void RefreshScreen(vicii_cycle_state_t *viciiState, CImageData *imageDataScreen, u8 backgroundColorAlpha, u8 foregroundColorAlpha);
 	
 	virtual void RenderCanvasSpecificGridLines();
 	virtual void RenderCanvasSpecificGridValues();

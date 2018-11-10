@@ -15,62 +15,96 @@
 #include "CViewJukeboxPlaylist.h"
 #include "C64D_Version.h"
 
-#define printLine printf
 #define C64D_PASS_CONFIG_DATA_MARKER	0x029A
 #define C64D_PASS_CONFIG_DATA_VERSION	0x0002
 
 bool isPRGInCommandLine = false;
 bool isD64InCommandLine = false;
 bool isSNAPInCommandLine = false;
+bool isTAPInCommandLine = false;
 bool isCRTInCommandLine = false;
 
 void C64DebuggerPassConfigToRunningInstance();
 
+#if !defined(WIN32)
+
+#define printLine printf
+#define printInfo printf
+
+#else
+
+// Warning: on Win32 API apps do not have a console, so this will not be printed to console but log instead:
+#define printLine LOGM
+#define printInfo(...)	{	MessageBox(NULL, __VA_ARGS__, "C64 Debugger", MB_ICONWARNING | MB_OK);	}
+
+
+#endif
+
 void c64ShowCommandLineHelp()
 {
-	printLine("C64 Debugger v%s by Slajerek/Samar, VICE %s by The VICE Team\n", C64DEBUGGER_VERSION_STRING, C64DEBUGGER_VICE_VERSION_STRING);
-	printLine("\n");
-	printLine("-help  show this help\n");
-	printLine("\n");
-	printLine("-layout <id>\n");
-	printLine("     start with layout id <1-%d>\n", C64_SCREEN_LAYOUT_MAX);
-	printLine("-breakpoints <file>\n");
-	printLine("     load breakpoints from file\n");
-	printLine("-symbols <file>\n");
-	printLine("     load symbols (code labels)");
-	printLine("-watch <file>\n");
-	printLine("     load watches");
-	printLine("\n");
-	printLine("-wait <ms>\n");
-	printLine("     wait before performing tasks\n");
-	printLine("-prg <file>\n");
-	printLine("     load PRG file into memory\n");
-	printLine("-d64 <file>\n");
-	printLine("     insert D64 disk\n");
-	printLine("-crt <file>\n");
-	printLine("     attach cartridge\n");
-	printLine("-jmp <addr>\n");
-	printLine("     jmp to address, for example jmp x1000, jmp $1000 or jmp 4096\n");
-	printLine("-autojmp\n");
-	printLine("     automatically jmp to address if basic SYS is detected\n");
-	printLine("-alwaysjmp\n");
-	printLine("     always jmp to load address of PRG\n");
-	printLine("-autorundisk\n");
-	printLine("     automatically load first PRG from inserted disk\n");
-	printLine("-unpause\n");
-	printLine("     force code running\n");
-	printLine("-snapshot <file>\n");
-	printLine("     load snapshot from file\n");
-	printLine("-soundout <\"device name\" | device number>\n");
-	printLine("     set sound out device by name or number\n");
-	printLine("-playlist <file>\n");
-	printLine("     load and start jukebox playlist from json file\n");
-	printLine("\n");
-	printLine("-clearsettings\n");
-	printLine("     clear all config settings\n");
-	printLine("-pass\n");
-	printLine("     pass parameters to already running instance\n");
-	printLine("\n");
+#if !defined(WIN32)
+	#define printHelp printf
+#else
+	char *bufOut = SYS_GetCharBuf();
+	char *bufTemp = SYS_GetCharBuf();
+	
+	bufOut[0] = '\0';
+	
+	#define printHelp(...)	{	sprintf(bufTemp, __VA_ARGS__); strcat(bufOut, bufTemp);	}
+#endif
+	
+	printHelp("C64 Debugger v%s by Slajerek/Samar, VICE %s by The VICE Team\n", C64DEBUGGER_VERSION_STRING, C64DEBUGGER_VICE_VERSION_STRING);
+	printHelp("\n");
+	printHelp("-help  show this help\n");
+	printHelp("\n");
+	printHelp("-layout <id>\n");
+	printHelp("     start with layout id <1-%d>\n", SCREEN_LAYOUT_MAX);
+	printHelp("-breakpoints <file>\n");
+	printHelp("     load breakpoints from file\n");
+	printHelp("-symbols <file>\n");
+	printHelp("     load symbols (code labels)");
+	printHelp("-watch <file>\n");
+	printHelp("     load watches");
+	printHelp("\n");
+	printHelp("-wait <ms>\n");
+	printHelp("     wait before performing tasks\n");
+	printHelp("-prg <file>\n");
+	printHelp("     load PRG file into memory\n");
+	printHelp("-d64 <file>\n");
+	printHelp("     insert D64 disk\n");
+	printHelp("-tap <file>\n");
+	printHelp("     attach TAP file\n");
+	printHelp("-crt <file>\n");
+	printHelp("     attach cartridge\n");
+	printHelp("-jmp <addr>\n");
+	printHelp("     jmp to address, for example jmp x1000, jmp $1000 or jmp 4096\n");
+	printHelp("-autojmp\n");
+	printHelp("     automatically jmp to address if basic SYS is detected\n");
+	printHelp("-alwaysjmp\n");
+	printHelp("     always jmp to load address of PRG\n");
+	printHelp("-autorundisk\n");
+	printHelp("     automatically load first PRG from inserted disk\n");
+	printHelp("-unpause\n");
+	printHelp("     force code running\n");
+	printHelp("-snapshot <file>\n");
+	printHelp("     load snapshot from file\n");
+	printHelp("-soundout <\"device name\" | device number>\n");
+	printHelp("     set sound out device by name or number\n");
+	printHelp("-playlist <file>\n");
+	printHelp("     load and start jukebox playlist from json file\n");
+	printHelp("\n");
+	printHelp("-clearsettings\n");
+	printHelp("     clear all config settings\n");
+	printHelp("-pass\n");
+	printHelp("     pass parameters to already running instance\n");
+	printHelp("\n");
+	
+#if defined(WIN32)
+	MessageBox(NULL, bufOut, "C64 Debugger command line options", MB_ICONINFORMATION | MB_OK);
+	
+	SYS_ReleaseCharBuf(bufTemp);
+	SYS_ReleaseCharBuf(bufOut);
+#endif
 	
 	SYS_CleanExit();
 }
@@ -167,6 +201,28 @@ void C64DebuggerParseCommandLine0()
 
 				return;
 			}
+
+			else if (ext->CompareWith("tap") || ext->CompareWith("TAP")
+					 || ext->CompareWith("t64") || ext->CompareWith("T64"))
+			{
+				isTAPInCommandLine = true;
+				
+				char *path = sysCommandLineArguments[0];
+				
+				sysCommandLineArguments.clear();
+				sysCommandLineArguments.push_back("-pass");
+				sysCommandLineArguments.push_back("-tap");
+				sysCommandLineArguments.push_back(path);
+				delete filePath;
+				
+				delete ext;
+				
+				// pass to running instance if exists
+				C64DebuggerInitSharedMemory();
+				C64DebuggerPassConfigToRunningInstance();
+				
+				return;
+			}
 			else if (ext->CompareWith("crt") || ext->CompareWith("CRT"))
 			{
 				isCRTInCommandLine = true;
@@ -261,7 +317,7 @@ void C64DebuggerParseCommandLine1()
 		if (!strcmp(cmd, "-clearsettings") || !strcmp(cmd, "clearsettings"))
 		{
 			c64SettingsSkipConfig = true;
-			printLine("Skipping loading config\n");
+			printInfo("Skipping loading config\n");
 			LOGD("Skipping auto loading settings config");
 		}		
 	}
@@ -278,33 +334,35 @@ void c64PerformStartupTasksThreaded()
 	{
 		if (gSoundEngine->SetOutputAudioDevice(c64CommandLineAudioOutDevice) == false)
 		{
-			printLine("Selected sound out device not found, fall back to default output.\n");
+			printInfo("Selected sound out device not found, fall back to default output.\n");
 		}
 	}
 	
 	// load breakpoints & symbols
+	LOGTODO("c64PerformStartupTasksThreaded: SYMBOLS & BREAKPOINTS FOR ATARI");
+	
 	if (c64SettingsPathToBreakpoints != NULL)
 	{
-		viewC64->symbols->ClearBreakpoints(viewC64->debugInterface);
-		viewC64->symbols->ParseBreakpoints(c64SettingsPathToBreakpoints, viewC64->debugInterface);
+		viewC64->symbols->DeleteAllBreakpoints(viewC64->debugInterfaceC64);
+		viewC64->symbols->ParseBreakpoints(c64SettingsPathToBreakpoints, viewC64->debugInterfaceC64);
 	}
 	
 	if (c64SettingsPathToSymbols != NULL)
 	{
-		viewC64->symbols->ClearSymbols(viewC64->debugInterface);
-		viewC64->symbols->ParseSymbols(c64SettingsPathToSymbols, viewC64->debugInterface);
+		viewC64->symbols->DeleteAllSymbols(viewC64->debugInterfaceC64);
+		viewC64->symbols->ParseSymbols(c64SettingsPathToSymbols, viewC64->debugInterfaceC64);
 	}
 	
 	if (c64SettingsPathToWatches != NULL)
 	{
-		viewC64->symbols->ClearWatches(viewC64->debugInterface);
-		viewC64->symbols->ParseWatches(c64SettingsPathToWatches, viewC64->debugInterface);
+		viewC64->symbols->DeleteAllWatches(viewC64->debugInterfaceC64);
+		viewC64->symbols->ParseWatches(c64SettingsPathToWatches, viewC64->debugInterfaceC64);
 	}
 	
 	if (c64SettingsPathToDebugInfo != NULL)
 	{
-		viewC64->symbols->ClearSourceDebugInfo(viewC64->debugInterface);
-		viewC64->symbols->ParseSourceDebugInfo(c64SettingsPathToDebugInfo, viewC64->debugInterface);
+		viewC64->symbols->DeleteSourceDebugInfo(viewC64->debugInterfaceC64);
+		viewC64->symbols->ParseSourceDebugInfo(c64SettingsPathToDebugInfo, viewC64->debugInterfaceC64);
 	}
 	
 	// skip any automatic loading if jukebox is active
@@ -312,7 +370,7 @@ void c64PerformStartupTasksThreaded()
 	{
 		if (c64SettingsSIDEngineModel != 0)
 		{
-			viewC64->debugInterface->SetSidType(c64SettingsSIDEngineModel);
+			viewC64->debugInterfaceC64->SetSidType(c64SettingsSIDEngineModel);
 		}
 		
 		viewC64->viewJukeboxPlaylist->StartPlaylist();
@@ -340,7 +398,7 @@ void c64PerformStartupTasksThreaded()
 		// setup SID
 		if (c64SettingsSIDEngineModel != 0)
 		{
-			viewC64->debugInterface->SetSidType(c64SettingsSIDEngineModel);
+			viewC64->debugInterfaceC64->SetSidType(c64SettingsSIDEngineModel);
 		}
 		
 		//
@@ -363,7 +421,27 @@ void c64PerformStartupTasksThreaded()
 			}
 			
 		}
-		
+
+		if (c64SettingsPathToTAP != NULL)
+		{
+//			LOGD("isPRGInCommandLine=%s", STRBOOL(isPRGInCommandLine));
+//			if (isPRGInCommandLine == false && isD64InCommandLine == true)
+//			{
+//				// start disk based on settings
+//				if (c64SettingsAutoJmpFromInsertedDiskFirstPrg)
+//				{
+//					SYS_Sleep(100);
+//				}
+//				viewC64->viewC64MainMenu->InsertD64(c64SettingsPathToD64, false, c64SettingsAutoJmpFromInsertedDiskFirstPrg, 0, true);
+//			}
+//			else
+			{
+				// just load tape, do not start
+				viewC64->viewC64MainMenu->LoadTape(c64SettingsPathToTAP, false, false, false);
+			}
+			
+		}
+
 		if (c64SettingsPathToCartridge != NULL)
 		{
 			viewC64->viewC64MainMenu->InsertCartridge(c64SettingsPathToCartridge, false);
@@ -394,7 +472,7 @@ void c64PerformStartupTasksThreaded()
 		
 		LOGD("c64PerformStartupTasksThreaded: c64SettingsJmpOnStartupAddr=%04x", c64SettingsJmpOnStartupAddr);
 
-		viewC64->debugInterface->MakeJsrC64(c64SettingsJmpOnStartupAddr);
+		viewC64->debugInterfaceC64->MakeJsrC64(c64SettingsJmpOnStartupAddr);
 	}
 
 	//
@@ -482,6 +560,11 @@ void C64DebuggerParseCommandLine2()
 			char *arg = c64ParseCommandLineGetArgument();
 			c64SettingsPathToD64 = new CSlrString(arg);
 		}
+		else if (!strcmp(cmd, "tap"))
+		{
+			char *arg = c64ParseCommandLineGetArgument();
+			c64SettingsPathToTAP = new CSlrString(arg);
+		}
 		else if (!strcmp(cmd, "prg"))
 		{
 			char *arg = c64ParseCommandLineGetArgument();
@@ -549,6 +632,7 @@ void C64DebuggerPerformStartupTasks()
 {
 	LOGM("C64DebuggerPerformStartupTasks()");
 	C64PerformStartupTasksThread *thread = new C64PerformStartupTasksThread();
+	thread->ThreadSetName("C64PerformStartupTasksThread");
 	SYS_StartThread(thread, NULL);
 }
 
@@ -632,7 +716,14 @@ void C64DebuggerPassConfigToRunningInstance()
 		byteBuffer->PutU8(C64D_PASS_CONFIG_DATA_PATH_TO_D64);
 		byteBuffer->PutSlrString(c64SettingsPathToD64);
 	}
+
+	if (c64SettingsPathToTAP)
+	{
+		byteBuffer->PutU8(C64D_PASS_CONFIG_DATA_PATH_TO_TAP);
+		byteBuffer->PutSlrString(c64SettingsPathToTAP);
+	}
 	
+
 	if (c64SettingsAutoJmp)
 	{
 		byteBuffer->PutU8(C64D_PASS_CONFIG_DATA_SET_AUTOJMP);
@@ -751,29 +842,29 @@ void c64PerformNewConfigurationTasksThreaded(CByteBuffer *byteBuffer)
 		else if (t == C64D_PASS_CONFIG_DATA_BREAKPOINTS_FILE)
 		{
 			CSlrString *str = byteBuffer->GetSlrString();
-			viewC64->symbols->ClearBreakpoints(viewC64->debugInterface);
-			viewC64->symbols->ParseBreakpoints(str, viewC64->debugInterface);
+			viewC64->symbols->DeleteAllBreakpoints(viewC64->debugInterfaceC64);
+			viewC64->symbols->ParseBreakpoints(str, viewC64->debugInterfaceC64);
 			delete str;
 		}
 		else if (t == C64D_PASS_CONFIG_DATA_SYMBOLS_FILE)
 		{
 			CSlrString *str = byteBuffer->GetSlrString();
-			viewC64->symbols->ClearSymbols(viewC64->debugInterface);
-			viewC64->symbols->ParseSymbols(str, viewC64->debugInterface);
+			viewC64->symbols->DeleteAllSymbols(viewC64->debugInterfaceC64);
+			viewC64->symbols->ParseSymbols(str, viewC64->debugInterfaceC64);
 			delete str;
 		}
 		else if (t == C64D_PASS_CONFIG_DATA_WATCHES_FILE)
 		{
 			CSlrString *str = byteBuffer->GetSlrString();
-			viewC64->symbols->ClearWatches(viewC64->debugInterface);
-			viewC64->symbols->ParseWatches(str, viewC64->debugInterface);
+			viewC64->symbols->DeleteAllWatches(viewC64->debugInterfaceC64);
+			viewC64->symbols->ParseWatches(str, viewC64->debugInterfaceC64);
 			delete str;
 		}
 		else if (t == C64D_PASS_CONFIG_DATA_DEBUG_INFO)
 		{
 			CSlrString *str = byteBuffer->GetSlrString();
-			viewC64->symbols->ClearSymbols(viewC64->debugInterface);
-			viewC64->symbols->ParseSymbols(str, viewC64->debugInterface);
+			viewC64->symbols->DeleteAllSymbols(viewC64->debugInterfaceC64);
+			viewC64->symbols->ParseSymbols(str, viewC64->debugInterfaceC64);
 			delete str;
 		}
 		else if (t == C64D_PASS_CONFIG_DATA_WAIT)
@@ -785,6 +876,12 @@ void c64PerformNewConfigurationTasksThreaded(CByteBuffer *byteBuffer)
 		{
 			CSlrString *str = byteBuffer->GetSlrString();
 			viewC64->viewC64MainMenu->InsertD64(str, false, c64SettingsAutoJmpFromInsertedDiskFirstPrg, 0, true);
+			delete str;
+		}
+		else if (t == C64D_PASS_CONFIG_DATA_PATH_TO_TAP)
+		{
+			CSlrString *str = byteBuffer->GetSlrString();
+			viewC64->viewC64MainMenu->LoadTape(str, false, false, true);
 			delete str;
 		}
 		else if (t == C64D_PASS_CONFIG_DATA_PATH_TO_CRT)
@@ -824,9 +921,9 @@ void c64PerformNewConfigurationTasksThreaded(CByteBuffer *byteBuffer)
 		{
 			int layoutId = byteBuffer->getInt();
 			c64SettingsDefaultScreenLayoutId = layoutId;
-			if (c64SettingsDefaultScreenLayoutId >= C64_SCREEN_LAYOUT_MAX)
+			if (c64SettingsDefaultScreenLayoutId >= SCREEN_LAYOUT_MAX)
 			{
-				c64SettingsDefaultScreenLayoutId = C64_SCREEN_LAYOUT_C64_DEBUGGER;
+				c64SettingsDefaultScreenLayoutId = SCREEN_LAYOUT_C64_DEBUGGER;
 			}
 			viewC64->SwitchToScreenLayout(c64SettingsDefaultScreenLayoutId);
 
@@ -834,14 +931,14 @@ void c64PerformNewConfigurationTasksThreaded(CByteBuffer *byteBuffer)
 		else if (t == C64D_PASS_CONFIG_DATA_JMP)
 		{
 			int jmpAddr = byteBuffer->getInt();
-			viewC64->debugInterface->MakeJsrC64(jmpAddr);
+			viewC64->debugInterfaceC64->MakeJsrC64(jmpAddr);
 		}
 		else if (t == C64D_PASS_CONFIG_DATA_SOUND_DEVICE_OUT)
 		{
 			CSlrString *str = byteBuffer->GetSlrString();
 			if (gSoundEngine->SetOutputAudioDevice(str) == false)
 			{
-				printLine("Selected sound out device not found, fall back to default output.\n");
+				printInfo("Selected sound out device not found, fall back to default output.\n");
 			}
 			
 			delete str;

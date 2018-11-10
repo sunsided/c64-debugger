@@ -2,7 +2,7 @@
 #define _CViewVicEditorLayers_H_
 
 #include "SYS_Defs.h"
-#include "CGuiView.h"
+#include "CGuiWindow.h"
 #include "CGuiEditHex.h"
 #include "CGuiViewFrame.h"
 #include "CGuiList.h"
@@ -18,7 +18,7 @@ class C64DebugInterface;
 class CViewVicEditor;
 class CVicEditorLayer;
 
-class CViewVicEditorLayers : public CGuiView, public CGuiListCallback, CGuiButtonSwitchCallback
+class CViewVicEditorLayers : public CGuiWindow, public CGuiListCallback, CGuiButtonSwitchCallback
 {
 public:
 	CViewVicEditorLayers(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, CViewVicEditor *vicEditor);
@@ -42,9 +42,6 @@ public:
 	
 	//
 	CViewVicEditor *vicEditor;
-	
-	//
-	CGuiViewFrame *viewFrame;
 	
 	CGuiList *lstLayers;
 	std::vector<CGuiButtonSwitch *> btnsVisible;

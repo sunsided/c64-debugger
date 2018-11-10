@@ -431,7 +431,7 @@ ui_jam_action_t ui_jam_dialog(const char *format, ...)
 
 	c64d_show_message("CPU JAM has occured");
 	
-	c64d_set_debug_mode(C64_DEBUG_PAUSED);
+	c64d_set_debug_mode(DEBUGGER_MODE_PAUSED);
 	
 	return UI_JAM_NONE;
 }

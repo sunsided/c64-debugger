@@ -8,7 +8,9 @@ CVicEditorLayer::CVicEditorLayer(CViewVicEditor *vicEditor, char *layerName)
 	this->vicEditor = vicEditor;
 	this->layerName = layerName;
 	this->isVisible = true;
+	this->isPaintingLocked = false;
 }
+
 
 CVicEditorLayer::~CVicEditorLayer()
 {
@@ -62,6 +64,10 @@ void CVicEditorLayer::Serialise(CByteBuffer *byteBuffer)
 {
 	LOGD("isVisible=%s", STRBOOL(this->isVisible));
 	byteBuffer->PutBool(this->isVisible);
+}
+
+void CVicEditorLayer::LayerSelected(bool isSelected)
+{
 }
 
 void CVicEditorLayer::Deserialise(CByteBuffer *byteBuffer, int version)

@@ -121,7 +121,7 @@
 				Optimization="3"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
-				AdditionalIncludeDirectories="C:\develop\MTEngine\Games\c64\Emulators\vice\video;C:\develop\MTEngine\Games\c64\Emulators\vice\viciisc;C:\develop\MTEngine\Games\c64\Emulators\vice\core;C:\develop\MTEngine\Games\c64\Emulators\vice\ViceInterface;C:\develop\MTEngine\Games\c64\Emulators\vice\vdrive;C:\develop\MTEngine\Games\c64\Emulators\vice\userport;C:\develop\MTEngine\Games\c64\Emulators\vice\tape;C:\develop\MTEngine\Games\c64\Emulators\vice\sounddrv;C:\develop\MTEngine\Games\c64\Emulators\vice\sid;C:\develop\MTEngine\Games\c64\Emulators\vice\tapeport;C:\develop\MTEngine\Games\c64\Emulators\vice\serial;C:\develop\MTEngine\Games\c64\Emulators\vice\rtc;C:\develop\MTEngine\Games\c64\Emulators\vice\rs232drv;C:\develop\MTEngine\Games\c64\Emulators\vice\root;&quot;C:\develop\MTEngine\Games\c64\Emulators\vice\resid-fp&quot;;C:\develop\MTEngine\Games\c64\Emulators\vice\resid;C:\develop\MTEngine\Games\c64\Emulators\vice\raster;C:\develop\MTEngine\Games\c64\Emulators\vice\printerdrv;C:\develop\MTEngine\Games\c64\Emulators\vice\platform;C:\develop\MTEngine\Games\c64\Emulators\vice\parallel;C:\develop\MTEngine\Games\c64\Emulators\vice\monitor;C:\develop\MTEngine\Games\c64\Emulators\vice\lib\p64;C:\develop\MTEngine\Games\c64\Emulators\vice\imagecontents;C:\develop\MTEngine\Games\c64\Emulators\vice\iecbus;C:\develop\MTEngine\Games\c64\Emulators\vice\gfxoutputdrv;C:\develop\MTEngine\Games\c64\Emulators\vice\fsdevice;C:\develop\MTEngine\Games\c64\Emulators\vice\fileio;C:\develop\MTEngine\Games\c64\Emulators\vice\joyport;C:\develop\MTEngine\Games\c64\Emulators\vice\samplerdrv;C:\develop\MTEngine\Games\c64\Emulators\vice\diag;C:\develop\MTEngine\Games\c64\Emulators\vice\drive\;C:\develop\MTEngine\Games\c64\Emulators\vice\drive\tcbm;C:\develop\MTEngine\Games\c64\Emulators\vice\drive\ieee\;C:\develop\MTEngine\Games\c64\Emulators\vice\drive\iecieee\;C:\develop\MTEngine\Games\c64\Emulators\vice\drive\iec\;C:\develop\MTEngine\Games\c64\Emulators\vice\drive\iec\c64exp\;C:\develop\MTEngine\Games\c64\Emulators\vice\drive\iec;C:\develop\MTEngine\Games\c64\Emulators\vice\drive;C:\develop\MTEngine\Games\c64\Emulators\vice\diskimage;C:\develop\MTEngine\Games\c64\Emulators\vice\c64\cart;C:\develop\MTEngine\Games\c64\Emulators\vice\c64;C:\develop\MTEngine\Games\c64\Emulators\vice\arch;C:\develop\MTEngine\Games\c64\Emulators\vice;C:\develop\MTEngine\Games\c64\Screens\VicEditor;C:\develop\MTEngine\Games\c64\Screens;C:\develop\MTEngine\Games\c64\Layout;C:\develop\MTEngine\Games\c64\Tools;C:\develop\MTEngine\Games\c64\Views\JukeboxPlaylist;C:\develop\MTEngine\Games\c64\Views\VicDisplay;C:\develop\MTEngine\Games\c64\Views;C:\develop\MTEngine\Games\c64\Emulators\frodo\FrodoInterface;C:\develop\MTEngine\Games\c64\Emulators\frodo;C:\develop\MTEngine\Games\c64\DebugInterface;C:\develop\MTEngine\Games\c64;C:\develop\MTEngine\Engine\GUI\Helpers\ImagePyramid;C:\develop\MTEngine\Engine\lodepng;C:\develop\MTEngine\Engine\Squirrel\sqstdlib;C:\develop\MTEngine\Engine\Squirrel\sqratthread;C:\develop\MTEngine\Engine\Squirrel\sqimport;C:\develop\MTEngine\Engine\Squirrel\squirrel;C:\develop\MTEngine\Engine\Squirrel\include\sqrat;C:\develop\MTEngine\Engine\Squirrel\include;C:\develop\MTEngine\Engine\Squirrel\;C:\develop\MTEngine\Engine\Net\ENet;C:\develop\MTEngine\Engine\Net\Physics;C:\develop\MTEngine\Engine\Net\Chat;C:\develop\MTEngine\Engine\Net;C:\develop\MTEngine\Engine\utf8;C:\develop\MTEngine\Engine\Regional;C:\develop\MTEngine\Engine\GUI\Helpers\LoadingScreen;C:\develop\MTEngine\Win32;C:\develop\MTEngine\Win32\Tracker\Modules.PL;c:\develop\MTEngine\Tracker\SID;C:\develop\MTEngine\Tracker;C:\develop\MTEngine\Games\KidsChristmasTree\decorations;C:\develop\MTEngine\Games\KidsChristmasTree\atlas;C:\develop\MTEngine\Games\KidsChristmasTree;C:\develop\MTEngine\Games\Cars\DataProvider;C:\develop\MTEngine\Games\Cars;C:\develop\MTEngine\Games\FiveInLine;C:\develop\MTEngine\Games\MegaBlast;C:\develop\MTEngine\Games\MultiPlayer;C:\develop\MTEngine\Engine\Core;C:\develop\MTEngine\Engine\Box2D.lib\Box2D\Rope;C:\develop\MTEngine\Engine\Box2D.lib\Box2D\Dynamics\Joints;C:\develop\MTEngine\Engine\Box2D.lib\Box2D\Dynamics\Contacts;C:\develop\MTEngine\Engine\Box2D.lib\Box2D\Dynamics;C:\develop\MTEngine\Engine\Box2D.lib\Box2D\Common;C:\develop\MTEngine\Engine\Box2D.lib\Box2D\Collision\Shapes;C:\develop\MTEngine\Engine\Box2D.lib\Box2D\Particle;C:\develop\MTEngine\Engine\Box2D.lib\Box2D\Collision;C:\develop\MTEngine\Engine\Box2D.lib\Box2D;C:\develop\MTEngine\Engine\Box2D.lib\Contrib;C:\develop\MTEngine\Engine\Box2D.lib\Triangulation;C:\develop\MTEngine\Engine\Box2D.lib;C:\develop\MTEngine\Engine\zlib;C:\develop\MTEngine\Engine\libpng;C:\develop\MTEngine\Engine\mtrand;C:\develop\MTEngine\Engine\FFT;C:\develop\MTEngine\Engine\Audio\WAV;C:\develop\MTEngine\Engine\Audio\stats;C:\develop\MTEngine\Engine\Audio\AudioEffects\smbPitchShift;C:\develop\MTEngine\Engine\Audio\AudioEffects\SimpleDSP;C:\develop\MTEngine\Engine\Audio\AudioEffects\biquad;C:\develop\MTEngine\Engine\Audio\AudioEffects;C:\develop\MTEngine\Engine\Audio\Synth;C:\develop\MTEngine\Engine\Audio\XMPlayer;C:\develop\MTEngine\Engine\Audio\;C:\develop\MTEngine\Engine\Funct\;C:\develop\MTEngine\Engine\Funct\FFT;C:\develop\MTEngine\Engine\Funct\DataTable;&quot;C:\develop\MTEngine\Engine\**&quot;;C:\develop\MTEngine\Engine\poly2tri\sweep;C:\develop\MTEngine\Engine\poly2tri\common;C:\develop\MTEngine\Engine\poly2tri;C:\develop\MTEngine\Engine\libjson\_internal\Source;&quot;C:\develop\MTEngine\Engine\libjson\_internal\Dependencies\mempool++&quot;;&quot;C:\develop\MTEngine\Engine\libjson\_internal\Dependencies\libbase64++&quot;;C:\develop\MTEngine\Engine\libjson\_internal\Dependencies;C:\develop\MTEngine\Engine\libjson\_internal;C:\develop\MTEngine\Engine\libjson;C:\develop\MTEngine\Engine\jpeg;&quot;C:\develop\MTEngine\Engine\jpeg\jpeg-9a&quot;;C:\develop\MTEngine\Engine\Funct\Randomizer;C:\develop\MTEngine\Engine\Funct\ImageProcessing\stb_image;C:\develop\MTEngine\Engine\Funct\ImageProcessing\resampler;C:\develop\MTEngine\Engine\Funct\ImageProcessing;C:\develop\MTEngine\Engine\Funct\Crypto;C:\develop\MTEngine\Engine\Funct\AStar;C:\develop\MTEngine\Engine\Tremor\Ogg;c:\develop\MTEngine\Engine\Pool;C:\develop\MTEngine\Engine\Embedded;C:\develop\MTEngine\Engine\Tremor;C:\develop\MTEngine\Engine\GUI\Animation;C:\develop\MTEngine\Engine\GUI\Editors;C:\develop\MTEngine\Engine\GUI\Effects\explosion;C:\develop\MTEngine\Engine\GUI\Effects\snow;C:\develop\MTEngine\Engine\GUI\Controls;C:\develop\MTEngine\Engine\GUI\HttpServer;C:\develop\MTEngine\Engine\GUI\Helpers\ResourceManager;C:\develop\MTEngine\Engine\GUI\Helpers\HexBoard;C:\develop\MTEngine\Engine\GUI\Helpers\;C:\develop\MTEngine\Engine\GUI\Tests;C:\develop\MTEngine\Engine\GUI;C:\develop\MTEngine\Engine\sidplay4/resid;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/sidtune;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/resid;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/sid6526;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/xsid;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/mos6526;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/mos6510;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/include/sidplay/builders;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/include/sidplay;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/include;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/c64;C:\develop\MTEngine\Engine\sidplay4/libsidplay2;C:\develop\MTEngine\Engine\sidplay4;C:\develop\MTEngine\Win32\sidplay4\libsidplay2\include\sidplay;C:\develop\MTEngine\Win32\sidplay4\libsidplay2\include;C:\develop\MTEngine\Win32\portaudio\common;C:\develop\MTEngine\Win32\portaudio\os;C:\develop\MTEngine\Win32\arch\wpcap\net;C:\develop\MTEngine\Win32\arch\wpcap;C:\develop\MTEngine\Win32\arch;C:\develop\MTEngine\Win32\portaudio;C:\develop\MTEngine\Win32\lib;C:\develop\MTEngine\Engine;&quot;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include&quot;"
+				AdditionalIncludeDirectories="C:\develop\MTEngine\Games\c64\Emulators\atari800\sdl;C:\develop\MTEngine\Games\c64\Emulators\atari800\AtariInterface;C:\develop\MTEngine\Games\c64\Emulators\atari800\atari_ntsc;C:\develop\MTEngine\Games\c64\Emulators\atari800;C:\develop\MTEngine\Games\c64\Emulators\vice\video;C:\develop\MTEngine\Games\c64\Emulators\vice\viciisc;C:\develop\MTEngine\Games\c64\Emulators\vice\core;C:\develop\MTEngine\Games\c64\Emulators\vice\ViceInterface;C:\develop\MTEngine\Games\c64\Emulators\vice\vdrive;C:\develop\MTEngine\Games\c64\Emulators\vice\userport;C:\develop\MTEngine\Games\c64\Emulators\vice\tape;C:\develop\MTEngine\Games\c64\Emulators\vice\sounddrv;C:\develop\MTEngine\Games\c64\Emulators\vice\sid;C:\develop\MTEngine\Games\c64\Emulators\vice\tapeport;C:\develop\MTEngine\Games\c64\Emulators\vice\serial;C:\develop\MTEngine\Games\c64\Emulators\vice\rtc;C:\develop\MTEngine\Games\c64\Emulators\vice\rs232drv;C:\develop\MTEngine\Games\c64\Emulators\vice\root;&quot;C:\develop\MTEngine\Games\c64\Emulators\vice\resid-fp&quot;;C:\develop\MTEngine\Games\c64\Emulators\vice\resid;C:\develop\MTEngine\Games\c64\Emulators\vice\raster;C:\develop\MTEngine\Games\c64\Emulators\vice\printerdrv;C:\develop\MTEngine\Games\c64\Emulators\vice\platform;C:\develop\MTEngine\Games\c64\Emulators\vice\parallel;C:\develop\MTEngine\Games\c64\Emulators\vice\monitor;C:\develop\MTEngine\Games\c64\Emulators\vice\lib\p64;C:\develop\MTEngine\Games\c64\Emulators\vice\imagecontents;C:\develop\MTEngine\Games\c64\Emulators\vice\iecbus;C:\develop\MTEngine\Games\c64\Emulators\vice\gfxoutputdrv;C:\develop\MTEngine\Games\c64\Emulators\vice\fsdevice;C:\develop\MTEngine\Games\c64\Emulators\vice\fileio;C:\develop\MTEngine\Games\c64\Emulators\vice\joyport;C:\develop\MTEngine\Games\c64\Emulators\vice\samplerdrv;C:\develop\MTEngine\Games\c64\Emulators\vice\diag;C:\develop\MTEngine\Games\c64\Emulators\vice\drive\;C:\develop\MTEngine\Games\c64\Emulators\vice\drive\tcbm;C:\develop\MTEngine\Games\c64\Emulators\vice\drive\ieee\;C:\develop\MTEngine\Games\c64\Emulators\vice\drive\iecieee\;C:\develop\MTEngine\Games\c64\Emulators\vice\drive\iec\;C:\develop\MTEngine\Games\c64\Emulators\vice\drive\iec\c64exp\;C:\develop\MTEngine\Games\c64\Emulators\vice\drive\iec;C:\develop\MTEngine\Games\c64\Emulators\vice\drive;C:\develop\MTEngine\Games\c64\Emulators\vice\diskimage;C:\develop\MTEngine\Games\c64\Emulators\vice\c64\cart;C:\develop\MTEngine\Games\c64\Emulators\vice\c64;C:\develop\MTEngine\Games\c64\Emulators\vice\arch;C:\develop\MTEngine\Games\c64\Emulators\vice;C:\develop\MTEngine\Games\c64\Screens\VicEditor;C:\develop\MTEngine\Games\c64\Screens;C:\develop\MTEngine\Games\c64\Layout;C:\develop\MTEngine\Games\c64\Data;C:\develop\MTEngine\Games\c64\Tools;C:\develop\MTEngine\Games\c64\Views\JukeboxPlaylist;C:\develop\MTEngine\Games\c64\Views\VicDisplay;C:\develop\MTEngine\Games\c64\Views;C:\develop\MTEngine\Games\c64\Emulators\frodo\FrodoInterface;C:\develop\MTEngine\Games\c64\Emulators\frodo;C:\develop\MTEngine\Games\c64\DebugInterface;C:\develop\MTEngine\Games\c64;C:\develop\MTEngine\Engine\GUI\Helpers\ImagePyramid;C:\develop\MTEngine\Engine\lodepng;C:\develop\MTEngine\Engine\Squirrel\sqstdlib;C:\develop\MTEngine\Engine\Squirrel\sqratthread;C:\develop\MTEngine\Engine\Squirrel\sqimport;C:\develop\MTEngine\Engine\Squirrel\squirrel;C:\develop\MTEngine\Engine\Squirrel\include\sqrat;C:\develop\MTEngine\Engine\Squirrel\include;C:\develop\MTEngine\Engine\Squirrel\;C:\develop\MTEngine\Engine\Net\ENet;C:\develop\MTEngine\Engine\Net\Physics;C:\develop\MTEngine\Engine\Net\Chat;C:\develop\MTEngine\Engine\Net;C:\develop\MTEngine\Engine\pugixml;C:\develop\MTEngine\Engine\utf8;C:\develop\MTEngine\Engine\Regional;C:\develop\MTEngine\Engine\GUI\Helpers\LoadingScreen;C:\develop\MTEngine\Win32;C:\develop\MTEngine\Win32\Tracker\Modules.PL;c:\develop\MTEngine\Tracker\SID;C:\develop\MTEngine\Tracker;C:\develop\MTEngine\Games\KidsChristmasTree\decorations;C:\develop\MTEngine\Games\KidsChristmasTree\atlas;C:\develop\MTEngine\Games\KidsChristmasTree;C:\develop\MTEngine\Games\Cars\DataProvider;C:\develop\MTEngine\Games\Cars;C:\develop\MTEngine\Games\FiveInLine;C:\develop\MTEngine\Games\MegaBlast;C:\develop\MTEngine\Games\MultiPlayer;C:\develop\MTEngine\Engine\Core;C:\develop\MTEngine\Engine\Box2D.lib\Box2D\Rope;C:\develop\MTEngine\Engine\Box2D.lib\Box2D\Dynamics\Joints;C:\develop\MTEngine\Engine\Box2D.lib\Box2D\Dynamics\Contacts;C:\develop\MTEngine\Engine\Box2D.lib\Box2D\Dynamics;C:\develop\MTEngine\Engine\Box2D.lib\Box2D\Common;C:\develop\MTEngine\Engine\Box2D.lib\Box2D\Collision\Shapes;C:\develop\MTEngine\Engine\Box2D.lib\Box2D\Particle;C:\develop\MTEngine\Engine\Box2D.lib\Box2D\Collision;C:\develop\MTEngine\Engine\Box2D.lib\Box2D;C:\develop\MTEngine\Engine\Box2D.lib\Contrib;C:\develop\MTEngine\Engine\Box2D.lib\Triangulation;C:\develop\MTEngine\Engine\Box2D.lib;C:\develop\MTEngine\Engine\zlib;C:\develop\MTEngine\Engine\libpng;C:\develop\MTEngine\Engine\mtrand;C:\develop\MTEngine\Engine\FFT;C:\develop\MTEngine\Engine\Audio\WAV;C:\develop\MTEngine\Engine\Audio\stats;C:\develop\MTEngine\Engine\Audio\AudioEffects\smbPitchShift;C:\develop\MTEngine\Engine\Audio\AudioEffects\SimpleDSP;C:\develop\MTEngine\Engine\Audio\AudioEffects\biquad;C:\develop\MTEngine\Engine\Audio\AudioEffects;C:\develop\MTEngine\Engine\Audio\Synth;C:\develop\MTEngine\Engine\Audio\XMPlayer;C:\develop\MTEngine\Engine\Audio\;C:\develop\MTEngine\Engine\Funct\;C:\develop\MTEngine\Engine\Funct\FFT;C:\develop\MTEngine\Engine\Funct\DataTable;&quot;C:\develop\MTEngine\Engine\**&quot;;C:\develop\MTEngine\Engine\poly2tri\sweep;C:\develop\MTEngine\Engine\poly2tri\common;C:\develop\MTEngine\Engine\poly2tri;C:\develop\MTEngine\Engine\libjson\_internal\Source;&quot;C:\develop\MTEngine\Engine\libjson\_internal\Dependencies\mempool++&quot;;&quot;C:\develop\MTEngine\Engine\libjson\_internal\Dependencies\libbase64++&quot;;C:\develop\MTEngine\Engine\libjson\_internal\Dependencies;C:\develop\MTEngine\Engine\libjson\_internal;C:\develop\MTEngine\Engine\libjson;C:\develop\MTEngine\Engine\jpeg;&quot;C:\develop\MTEngine\Engine\jpeg\jpeg-9a&quot;;C:\develop\MTEngine\Engine\Funct\Randomizer;C:\develop\MTEngine\Engine\Funct\ImageProcessing\stb_image;C:\develop\MTEngine\Engine\Funct\ImageProcessing\resampler;C:\develop\MTEngine\Engine\Funct\ImageProcessing;C:\develop\MTEngine\Engine\Funct\Crypto;C:\develop\MTEngine\Engine\Funct\AStar;C:\develop\MTEngine\Engine\Tremor\Ogg;c:\develop\MTEngine\Engine\Pool;C:\develop\MTEngine\Engine\Embedded;C:\develop\MTEngine\Engine\Tremor;C:\develop\MTEngine\Engine\GUI\Animation;C:\develop\MTEngine\Engine\GUI\Editors;C:\develop\MTEngine\Engine\GUI\Effects\explosion;C:\develop\MTEngine\Engine\GUI\Effects\snow;C:\develop\MTEngine\Engine\GUI\Controls;C:\develop\MTEngine\Engine\GUI\HttpServer;C:\develop\MTEngine\Engine\GUI\Helpers\ResourceManager;C:\develop\MTEngine\Engine\GUI\Helpers\HexBoard;C:\develop\MTEngine\Engine\GUI\Helpers\;C:\develop\MTEngine\Engine\GUI\Tests;C:\develop\MTEngine\Engine\GUI;C:\develop\MTEngine\Engine\sidplay4/resid;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/sidtune;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/resid;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/sid6526;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/xsid;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/mos6526;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/mos6510;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/include/sidplay/builders;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/include/sidplay;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/include;C:\develop\MTEngine\Engine\sidplay4/libsidplay2/c64;C:\develop\MTEngine\Engine\sidplay4/libsidplay2;C:\develop\MTEngine\Engine\sidplay4;C:\develop\MTEngine\Win32\sidplay4\libsidplay2\include\sidplay;C:\develop\MTEngine\Win32\sidplay4\libsidplay2\include;C:\develop\MTEngine\Win32\portaudio\common;C:\develop\MTEngine\Win32\portaudio\os;C:\develop\MTEngine\Win32\arch\wpcap\net;C:\develop\MTEngine\Win32\arch\wpcap;C:\develop\MTEngine\Win32\arch;C:\develop\MTEngine\Win32\portaudio;C:\develop\MTEngine\Win32\lib;C:\develop\MTEngine\Engine;&quot;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;HAVE_MSWINDOWS;inline=__inline;PTW32_STATIC;PTW32_STATIC_LIB"
 				GeneratePreprocessedFile="0"
 				RuntimeLibrary="2"
@@ -377,22 +377,6 @@
 						RelativePath=".\Engine\GUI\CGuiMain.mm"
 						>
 					</File>
-					<File
-						RelativePath=".\Engine\GUI\CGuiViewFrame.h"
-						>
-					</File>
-					<File
-						RelativePath=".\Engine\GUI\CGuiViewFrame.mm"
-						>
-					</File>
-					<File
-						RelativePath=".\Engine\GUI\CGuiViewWindowsManager.h"
-						>
-					</File>
-					<File
-						RelativePath=".\Engine\GUI\CGuiViewWindowsManager.mm"
-						>
-					</File>
 					<Filter
 						Name="Controls"
 						>
@@ -466,6 +450,14 @@
 						</File>
 						<File
 							RelativePath=".\Engine\GUI\Controls\CGuiEditBoxText.mm"
+							>
+						</File>
+						<File
+							RelativePath=".\Engine\GUI\Controls\CGuiEditHex.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Engine\GUI\Controls\CGuiEditHex.mm"
 							>
 						</File>
 						<File
@@ -561,6 +553,14 @@
 							>
 						</File>
 						<File
+							RelativePath=".\Engine\GUI\Controls\CGuiViewFrame.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Engine\GUI\Controls\CGuiViewFrame.mm"
+							>
+						</File>
+						<File
 							RelativePath=".\Engine\GUI\Controls\CGuiViewHorizontalScroll.h"
 							>
 						</File>
@@ -577,11 +577,11 @@
 							>
 						</File>
 						<File
-							RelativePath=".\Engine\Core\CGuiViewMenu.h"
+							RelativePath=".\Engine\GUI\Controls\CGuiViewMenu.h"
 							>
 						</File>
 						<File
-							RelativePath=".\Engine\Core\CGuiViewMenu.mm"
+							RelativePath=".\Engine\GUI\Controls\CGuiViewMenu.mm"
 							>
 						</File>
 						<File
@@ -633,11 +633,35 @@
 							>
 						</File>
 						<File
+							RelativePath=".\Engine\GUI\Controls\CGuiViewToolBox.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Engine\GUI\Controls\CGuiViewToolBox.mm"
+							>
+						</File>
+						<File
 							RelativePath=".\Engine\GUI\Controls\CGuiViewVerticalScroll.h"
 							>
 						</File>
 						<File
 							RelativePath=".\Engine\GUI\Controls\CGuiViewVerticalScroll.mm"
+							>
+						</File>
+						<File
+							RelativePath=".\Engine\GUI\Controls\CGuiViewWindowsManager.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Engine\GUI\Controls\CGuiViewWindowsManager.mm"
+							>
+						</File>
+						<File
+							RelativePath=".\Engine\GUI\Controls\CGuiWindow.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Engine\GUI\Controls\CGuiWindow.mm"
 							>
 						</File>
 					</Filter>
@@ -1026,14 +1050,6 @@
 						>
 					</File>
 					<File
-						RelativePath=".\Engine\Core\CGuiEditHex.h"
-						>
-					</File>
-					<File
-						RelativePath=".\Engine\Core\CGuiEditHex.mm"
-						>
-					</File>
-					<File
 						RelativePath=".\Engine\Core\CImageData.h"
 						>
 					</File>
@@ -1371,10 +1387,6 @@
 					</File>
 					<File
 						RelativePath=".\Engine\Core\SYS_Types.h"
-						>
-					</File>
-					<File
-						RelativePath=".\Engine\Core\utf8.h"
 						>
 					</File>
 					<File
@@ -2110,6 +2122,22 @@
 						</Filter>
 					</Filter>
 				</Filter>
+				<Filter
+					Name="pugixml"
+					>
+					<File
+						RelativePath=".\Engine\pugixml\pugiconfig.h"
+						>
+					</File>
+					<File
+						RelativePath=".\Engine\pugixml\pugixml.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\Engine\pugixml\pugixml.h"
+						>
+					</File>
+				</Filter>
 			</Filter>
 			<Filter
 				Name="Win32"
@@ -2529,6 +2557,10 @@
 						RelativePath=".\Win32\arch\system.h"
 						>
 					</File>
+					<File
+						RelativePath=".\Win32\arch\ui-resources.c"
+						>
+					</File>
 					<Filter
 						Name="wpcap"
 						>
@@ -2577,23 +2609,39 @@
 				<Filter
 					Name="c64"
 					>
+					<File
+						RelativePath=".\Games\c64\C64D_Version.h"
+						>
+					</File>
 					<Filter
 						Name="DebugInterface"
 						>
-						<File
-							RelativePath=".\Games\c64\DebugInterface\C64DebugData.h"
-							>
-						</File>
-						<File
-							RelativePath=".\Games\c64\DebugInterface\C64DebugData.mm"
-							>
-						</File>
 						<File
 							RelativePath=".\Games\c64\DebugInterface\C64DebugInterface.h"
 							>
 						</File>
 						<File
 							RelativePath=".\Games\c64\DebugInterface\C64DebugInterface.mm"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\DebugInterface\CDebuggerBreakpoints.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\DebugInterface\CDebuggerBreakpoints.mm"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\DebugInterface\CDebugInterface.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\DebugInterface\CDebugInterface.mm"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\DebugInterface\DebuggerDefs.h"
 							>
 						</File>
 					</Filter>
@@ -7420,6 +7468,606 @@
 								</File>
 							</Filter>
 						</Filter>
+						<Filter
+							Name="atari800"
+							>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\a-cartridge.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\a-cartridge.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\a-crc32.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\a-crc32.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\a-log.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\a-log.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\a-monitor.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\a-monitor.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\a-platform.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\a-sound.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\a-sound.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\a-ui.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\a-ui.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\a-util.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\a-util.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\af80.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\af80.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\afile.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\afile.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\akey.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\antic.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\antic.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\artifact.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\artifact.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\atari-config.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\atari.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\atari.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\binload.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\binload.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\bit3.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\bit3.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\cassette.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\cassette.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\cfg.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\cfg.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\colours.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\colours.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\colours_external.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\colours_external.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\colours_ntsc.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\colours_ntsc.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\colours_pal.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\colours_pal.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\compfile.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\compfile.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\cpu.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\cpu.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\cycle_map.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\cycle_map.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\devices.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\devices.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\emuos.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\emuos.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\esc.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\esc.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\filter_ntsc.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\filter_ntsc.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\gtia.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\gtia.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\ide.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\ide.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\ide_internal.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\img_tape.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\img_tape.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\input.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\input.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\memory.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\memory.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\mzpokeysnd.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\mzpokeysnd.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\pal_blending.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\pal_blending.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\pbi.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\pbi.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\pbi_bb.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\pbi_bb.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\pbi_mio.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\pbi_mio.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\pbi_proto80.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\pbi_proto80.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\pbi_scsi.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\pbi_scsi.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\pbi_xld.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\pbi_xld.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\pcjoy.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\pia.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\pia.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\pokey.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\pokey.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\pokeysnd.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\pokeysnd.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\remez.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\remez.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\rtime.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\rtime.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\screen.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\screen.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\sio.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\sio.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\sndsave.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\sndsave.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\statesav.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\statesav.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\sysrom.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\sysrom.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\ui_basic.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\ui_basic.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\videomode.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\videomode.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\voicebox.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\voicebox.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\votrax.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\votrax.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\votraxsnd.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\votraxsnd.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\vtxsmpls.inc"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\xep80.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\xep80.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\xep80_fonts.c"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Emulators\atari800\xep80_fonts.h"
+								>
+							</File>
+							<Filter
+								Name="atari_ntsc"
+								>
+								<File
+									RelativePath=".\Games\c64\Emulators\atari800\atari_ntsc\atari_ntsc.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\atari800\atari_ntsc\atari_ntsc.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\atari800\atari_ntsc\atari_ntsc_config.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\atari800\atari_ntsc\atari_ntsc_impl.h"
+									>
+								</File>
+							</Filter>
+							<Filter
+								Name="AtariInterface"
+								>
+								<File
+									RelativePath=".\Games\c64\Emulators\atari800\AtariInterface\AtariDataAdapters.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\atari800\AtariInterface\AtariDataAdapters.mm"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\atari800\AtariInterface\AtariDebugInterface.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\atari800\AtariInterface\AtariDebugInterface.mm"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\atari800\AtariInterface\AtariWrapper.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\atari800\AtariInterface\AtariWrapper.mm"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\atari800\AtariInterface\CAtariAudioChannel.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\atari800\AtariInterface\CAtariAudioChannel.mm"
+									>
+								</File>
+							</Filter>
+							<Filter
+								Name="sdl"
+								>
+								<File
+									RelativePath=".\Games\c64\Emulators\atari800\sdl\a-init.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\atari800\sdl\a-init.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\atari800\sdl\a-input.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\atari800\sdl\a-input.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\atari800\sdl\a-main.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\atari800\sdl\a-palette.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\atari800\sdl\a-palette.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\atari800\sdl\a-sdl-sound.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\atari800\sdl\a-video.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\atari800\sdl\a-video.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\atari800\sdl\a-video_gl.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\atari800\sdl\a-video_gl.h"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\atari800\sdl\a-video_sw.c"
+									>
+								</File>
+								<File
+									RelativePath=".\Games\c64\Emulators\atari800\sdl\a-video_sw.h"
+									>
+								</File>
+							</Filter>
+						</Filter>
 					</Filter>
 					<Filter
 						Name="Screens"
@@ -7548,6 +8196,14 @@
 								>
 							</File>
 							<File
+								RelativePath=".\Games\c64\Screens\VicEditor\CVicEditorLayerImage.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Screens\VicEditor\CVicEditorLayerImage.mm"
+								>
+							</File>
+							<File
 								RelativePath=".\Games\c64\Screens\VicEditor\CVicEditorLayerUnrestrictedBitmap.h"
 								>
 							</File>
@@ -7604,6 +8260,14 @@
 								>
 							</File>
 							<File
+								RelativePath=".\Games\c64\Screens\VicEditor\CViewVicEditorCreateNewPicture.h"
+								>
+							</File>
+							<File
+								RelativePath=".\Games\c64\Screens\VicEditor\CViewVicEditorCreateNewPicture.mm"
+								>
+							</File>
+							<File
 								RelativePath=".\Games\c64\Screens\VicEditor\CViewVicEditorDisplayPreview.h"
 								>
 							</File>
@@ -7625,11 +8289,11 @@
 						Name="Tools"
 						>
 						<File
-							RelativePath=".\Games\c64\Tools\C64AsmSource.h"
+							RelativePath=".\Games\c64\Tools\C64AsmSourceSymbols.h"
 							>
 						</File>
 						<File
-							RelativePath=".\Games\c64\Tools\C64AsmSource.mm"
+							RelativePath=".\Games\c64\Tools\C64AsmSourceSymbols.mm"
 							>
 						</File>
 						<File
@@ -7745,6 +8409,22 @@
 						Name="Views"
 						>
 						<File
+							RelativePath=".\Games\c64\Views\CViewAtariScreen.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Views\CViewAtariScreen.mm"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Views\CViewAtariStateCPU.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Views\CViewAtariStateCPU.mm"
+							>
+						</File>
+						<File
 							RelativePath=".\Games\c64\Views\CViewBaseStateCPU.h"
 							>
 						</File>
@@ -7817,11 +8497,11 @@
 							>
 						</File>
 						<File
-							RelativePath=".\Games\c64\Views\CViewDrive1541State.h"
+							RelativePath=".\Games\c64\Views\CViewDrive1541StateVIA.h"
 							>
 						</File>
 						<File
-							RelativePath=".\Games\c64\Views\CViewDrive1541State.mm"
+							RelativePath=".\Games\c64\Views\CViewDrive1541StateVIA.mm"
 							>
 						</File>
 						<File
@@ -7854,6 +8534,14 @@
 						</File>
 						<File
 							RelativePath=".\Games\c64\Views\CViewMonitorConsole.mm"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Views\CViewSourceCode.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Views\CViewSourceCode.mm"
 							>
 						</File>
 						<Filter
@@ -8018,6 +8706,70 @@
 						</File>
 						<File
 							RelativePath=".\Games\c64\Layout\CColorsTheme.mm"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="Data"
+						>
+						<File
+							RelativePath=".\Games\c64\Data\ico_clear_gfx.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Data\ico_export_gfx.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Data\ico_import_gfx.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Data\ico_new_gfx.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Data\ico_open_gfx.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Data\ico_save_gfx.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Data\ico_settings_gfx.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Data\ico_tool_brush_circle_gfx.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Data\ico_tool_brush_square_gfx.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Data\ico_tool_circle_gfx.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Data\ico_tool_dither_gfx.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Data\ico_tool_fill_gfx.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Data\ico_tool_line_gfx.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Data\ico_tool_pen_gfx.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Data\ico_tool_rectangle_gfx.h"
 							>
 						</File>
 					</Filter>

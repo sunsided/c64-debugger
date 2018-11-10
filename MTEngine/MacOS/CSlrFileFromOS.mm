@@ -3,6 +3,14 @@
 #include "SYS_CFileSystem.h"
 #include "SYS_Funct.h"
 
+CSlrFileFromOS::CSlrFileFromOS(CSlrString *str)
+{
+	this->fp = NULL;
+	this->isFromResources = false;
+	
+	this->OpenSlrStr(str);
+}
+
 CSlrFileFromOS::CSlrFileFromOS(char *filePath)
 {
 	this->fp = NULL;
@@ -35,6 +43,10 @@ CSlrFileFromOS::CSlrFileFromOS(char *filePath, byte fileMode)
 	else SYS_FatalExit("unknown file mode %d", fileMode);
 }
 
+//void CSlrFileFromOS::Open(CSlrString *str)
+//{
+//}
+//
 void CSlrFileFromOS::Open(char *filePath)
 {
 	LOGR("CSlrFileFromOS: opening %s", filePath);

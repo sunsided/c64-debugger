@@ -1,10 +1,21 @@
 #include "CSlrFile.h"
 #include "SYS_Main.h"
+#include "CSlrString.h"
+#include "CByteBuffer.h"
 
 CSlrFile::CSlrFile()
 {
 	this->fileName[0] = '\0';
 	this->fileMode = SLR_FILE_MODE_NOT_OPENED;
+}
+
+void CSlrFile::OpenSlrStr(CSlrString *str)
+{
+	char *path = str->GetStdASCII();
+	
+	this->Open(path);
+	
+	delete []path;
 }
 
 void CSlrFile::Open(char *fileName)
@@ -138,6 +149,13 @@ u32 CSlrFile::ReadUnsignedInt()
 	unsigned int ret = ((i << 16) & 0xFFFF0000) | (ReadUnsignedShort() & 0x0000FFFF);
 	return ret;
 }
+
+CByteBuffer *CSlrFile::GetByteBuffer()
+{
+	CByteBuffer *byteBuffer = new CByteBuffer(this, false);
+	return byteBuffer;
+}
+
 
 void CSlrFile::Close()
 {

@@ -33,8 +33,17 @@ public:
 	CGuiElement(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY);
 	virtual ~CGuiElement();
 
-	GLfloat posX, posY, posZ, sizeX, sizeY, posEndX, posEndY;
-	GLfloat gapX, gapY; // for GuiViewList
+	// TODO: refactor posX to screenPosX and offsetPosX to posX
+	// TODO: use OpenGL's glTranslate to not calculate offsets within a window frame (extend CGuiElement from CGuiAnimation that handles this already)
+	
+	// real position of the element on screen
+	float posX, posY, posZ, sizeX, sizeY, posEndX, posEndY;
+	float gapX, gapY; // for GuiViewList
+	
+	// offset position within a window frame
+	float offsetPosX, offsetPosY, offsetPosZ;
+	float offsetPosEndX, offsetPosEndY;
+	
 	virtual bool IsInside(GLfloat x, GLfloat y);
 	virtual bool IsInsideNonVisible(GLfloat x, GLfloat y);
 
@@ -43,7 +52,10 @@ public:
 	virtual void SetPosition(GLfloat posX, GLfloat posY);
 	virtual void SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ);
 	virtual void SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY);
+	virtual void SetPositionOffset(GLfloat offsetPosX, GLfloat offsetPosY);
+	virtual void SetPositionOffset(GLfloat offsetPosX, GLfloat offsetPosY, GLfloat offsetPosZ);
 	virtual void SetSize(GLfloat sizeX, GLfloat sizeY);
+	virtual void UpdatePosition();
 
 	virtual void Render();
 	virtual void Render(GLfloat posX, GLfloat posY);
@@ -102,6 +114,7 @@ public:
 	virtual void ResourcesPrepare();
 	virtual void ResourcesPostLoad();
 
+	bool IsVisible();
 	volatile bool visible;
 
 	// does not render in view->Render method

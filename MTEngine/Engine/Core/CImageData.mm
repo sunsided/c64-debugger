@@ -505,6 +505,10 @@ void CImageData::AllocImage(bool allocTemp, bool allocResult)
 				break;
 		}
 	}
+	else
+	{
+		tempData = NULL;
+	}
 
 	if (allocResult)
 	{
@@ -545,6 +549,11 @@ void CImageData::AllocImage(bool allocTemp, bool allocResult)
 				break;
 		}
 	}
+	else
+	{
+		resultData = NULL;
+	}
+
 	if (this->mask)
 	{
 		delete [] this->mask;

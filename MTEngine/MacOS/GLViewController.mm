@@ -424,9 +424,27 @@ u32 mapKey(int c, int keyCodeBare, bool isShift)
 	else if (c == 0x0079)
 		return MTKEY_PAGE_DOWN;
 	else if (c == 0x0027)				// workaround for spanish keyboard
-		return '\'';
+	{
+		if (isShift)
+		{
+			return '"';
+		}
+		else
+		{
+			return '\'';
+		}
+	}
 	else if (c == 0x0021)
-		return '[';
+	{
+		if (isShift)
+		{
+			return '{';
+		}
+		else
+		{
+			return '[';
+		}
+	}
 	else if (c == 0x0032)
 	{
 		if (isShift)

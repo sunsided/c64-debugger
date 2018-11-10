@@ -7,7 +7,7 @@
 // THIS IS START OF POC, not used
 
 #define B(b) dataAdapter->AdapterWriteByte(addr++, (b))
-#define A(b) strcpy(buf, (b)); addr += viewDisassemble->Assemble(addr, (buf));
+#define A(b) strcpy(buf, (b)); addr += viewDisassemble->Assemble(addr, (buf), false);
 
 void C64GenerateDisplayListCode(CViewVicEditor *vicEditor)
 {
@@ -23,7 +23,7 @@ void C64GenerateDisplayListCode(CViewVicEditor *vicEditor)
 	
 	u16 addr = 0x0801;
 
-	// BASIC
+	// BASICe
 	B(	0x00	);
 	B(	0x00	);
 	

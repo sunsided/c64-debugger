@@ -167,7 +167,7 @@ static BYTE sid_read_chip(WORD addr, int chipno)
     return val;
 }
 
-static BYTE sid_peek_chip(WORD addr, int chipno)
+BYTE sid_peek_chip(WORD addr, int chipno)
 {
     addr &= 0x1f;
 
@@ -176,11 +176,11 @@ static BYTE sid_peek_chip(WORD addr, int chipno)
 }
 
 /* write register value to sid */
-static void sid_store_chip(WORD addr, BYTE byte, int chipno)
+void sid_store_chip(WORD addr, BYTE value, int chipno)
 {
     addr &= 0x1f;
 
-    siddata[chipno][addr] = byte;
+    siddata[chipno][addr] = value;
 
     /* WARNING: assumes `maincpu_rmw_flag' is 0 or 1.  */
     machine_handle_pending_alarms(maincpu_rmw_flag + 1);
@@ -191,7 +191,7 @@ static void sid_store_chip(WORD addr, BYTE byte, int chipno)
         maincpu_clk++;
     }
 
-    sid_store_func(addr, byte, chipno);
+    sid_store_func(addr, value, chipno);
 }
 
 static int sid_dump_chip(int chipno)

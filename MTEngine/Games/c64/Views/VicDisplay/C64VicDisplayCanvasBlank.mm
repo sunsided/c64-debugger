@@ -11,7 +11,13 @@ C64VicDisplayCanvasBlank::C64VicDisplayCanvasBlank(CViewC64VicDisplay *vicDispla
 	
 }
 
-void C64VicDisplayCanvasBlank::RefreshScreen(vicii_cycle_state_t *viciiState, CImageData *imageDataScreen)
+void C64VicDisplayCanvasBlank::ClearScreen()
+{
+	LOGWarning("C64VicDisplayCanvasBlank::ClearScreen");
+}
+
+void C64VicDisplayCanvasBlank::RefreshScreen(vicii_cycle_state_t *viciiState, CImageData *imageDataScreen,
+											 u8 backgroundColorAlpha, u8 foregroundColorAlpha)
 {
 	this->viciiState = viciiState;
 
@@ -36,7 +42,7 @@ void C64VicDisplayCanvasBlank::RefreshScreen(vicii_cycle_state_t *viciiState, CI
 	{
 		for (int x = 0; x < 320; x++)
 		{
-			imageDataScreen->SetPixelResultRGBA(x, y, bgColorR, bgColorG, bgColorB, 255);
+			imageDataScreen->SetPixelResultRGBA(x, y, bgColorR, bgColorG, bgColorB, backgroundColorAlpha);
 		}
 	}
 }

@@ -4,6 +4,18 @@
 #include "SYS_Defs.h"
 #include "SYS_Types.h"
 #include "CSlrString.h"
+#include "C64D_Version.h"
+
+// TODO: make generic:
+#if defined(RUN_COMMODORE64)
+#define C64D_SETTINGS_FILE_PATH				"/settings.dat"
+#define C64D_KEYBOARD_SHORTCUTS_FILE_PATH	"/shortcuts.dat"
+#define C64D_KEYMAP_FILE_PATH				"/keymap.dat"
+#else
+#define C64D_SETTINGS_FILE_PATH				"/settings-atari.dat"
+#define C64D_KEYBOARD_SHORTCUTS_FILE_PATH	"/shortcuts-atari.dat"
+#define C64D_KEYMAP_FILE_PATH				"/keymap-atari.dat"
+#endif
 
 // settings that need to be initialized pre-launch
 #define C64DEBUGGER_BLOCK_PRELAUNCH		1
@@ -65,6 +77,7 @@ extern uint16 c64SettingsVicPalette;
 extern bool c64SettingsRenderScreenNearest;
 
 extern uint8 c64SettingsJoystickPort;
+extern bool c64SettingsJoystickIsOn;
 
 extern bool c64SettingsRenderDisassembleExecuteAware;
 
@@ -94,6 +107,16 @@ extern CSlrString *c64SettingsDefaultSnapshotsFolder;
 extern CSlrString *c64SettingsDefaultMemoryDumpFolder;
 extern CSlrString *c64SettingsPathToC64MemoryMapFile;
 
+extern CSlrString *c64SettingsPathToTAP;
+extern CSlrString *c64SettingsDefaultTAPFolder;
+
+extern CSlrString *c64SettingsPathToAtariROMs;
+
+extern CSlrString *c64SettingsPathToATR;
+extern CSlrString *c64SettingsDefaultATRFolder;
+extern CSlrString *c64SettingsPathToXEX;
+extern CSlrString *c64SettingsDefaultXEXFolder;
+
 extern CSlrString *c64SettingsPathToSymbols;
 extern CSlrString *c64SettingsPathToWatches;
 extern CSlrString *c64SettingsPathToBreakpoints;
@@ -111,6 +134,12 @@ extern bool c64SettingsAutoJmpFromInsertedDiskFirstPrg;
 extern u8 c64SettingsAutoJmpDoReset;
 extern int c64SettingsAutoJmpWaitAfterReset;
 extern bool c64SettingsForceUnpause;
+
+//
+extern int c64SettingsDatasetteSpeedTuning;
+extern int c64SettingsDatasetteZeroGapDelay;
+extern int c64SettingsDatasetteTapeWobble;
+extern bool c64SettingsDatasetteResetWithCPU;
 
 extern bool c64SettingsRunSIDWhenInWarp;
 
@@ -132,6 +161,7 @@ extern float c64SettingsPaintGridShowValuesZoomLevel;
 extern float c64SettingsFocusBorderLineWidth;
 
 extern bool c64SettingsVicEditorForceReplaceColor;
+extern u8 c64SettingsVicEditorDefaultBackgroundColor;
 
 extern int c64SettingsDisassemblyBackgroundColor;
 extern int c64SettingsDisassemblyExecuteColor;
@@ -146,6 +176,7 @@ extern int c64SettingsDoubleClickMS;
 
 extern bool c64SettingsLoadViceLabels;
 extern bool c64SettingsLoadWatches;
+extern bool c64SettingsLoadDebugInfo;
 
 void C64DebuggerSetSettingInt(char *settingName, int param);
 void C64DebuggerSetSettingString(char *settingName, CSlrString *param);

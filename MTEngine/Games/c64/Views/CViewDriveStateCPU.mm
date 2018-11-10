@@ -30,11 +30,11 @@ void CViewDriveStateCPU::RenderRegisters()
 	
 	/// 1541 CPU
 	C64StateCPU diskCpuState;
-	debugInterface->GetDrive1541CpuState(&diskCpuState);
+	((C64DebugInterface*)debugInterface)->GetDrive1541CpuState(&diskCpuState);
 	
 	/// 1541 ICE
 	C64StateDrive1541 diskState;
-	debugInterface->GetDrive1541State(&diskState);
+	((C64DebugInterface*)debugInterface)->GetDrive1541State(&diskState);
 	
 	char buf[128];
 	strcpy(buf, "PC   AR XR YR SP NV-BDIZC  HD");
@@ -73,7 +73,7 @@ void CViewDriveStateCPU::SetRegisterValue(StateCPURegister reg, int value)
 	debugInterface->LockMutex();
 	
 	C64StateCPU diskCpuState;
-	debugInterface->GetDrive1541CpuState(&diskCpuState);
+	((C64DebugInterface*)debugInterface)->GetDrive1541CpuState(&diskCpuState);
 
 	uint8 a, x, y, p, sp;
 	a = diskCpuState.a;
@@ -89,26 +89,26 @@ void CViewDriveStateCPU::SetRegisterValue(StateCPURegister reg, int value)
 			{
 				c64d_set_drivecpu_pc_no_trap(0, value);
 			}
-			return debugInterface->MakeJmp1541(value);
+			return ((C64DebugInterface*)debugInterface)->MakeJmp1541(value);
 		case STATE_CPU_REGISTER_A:
 			a = value;
-			debugInterface->SetRegisterA1541(value);
+			((C64DebugInterface*)debugInterface)->SetRegisterA1541(value);
 			break;
 		case STATE_CPU_REGISTER_X:
 			x = value;
-			debugInterface->SetRegisterX1541(value);
+			((C64DebugInterface*)debugInterface)->SetRegisterX1541(value);
 			break;
 		case STATE_CPU_REGISTER_Y:
 			y = value;
-			debugInterface->SetRegisterY1541(value);
+			((C64DebugInterface*)debugInterface)->SetRegisterY1541(value);
 			break;
 		case STATE_CPU_REGISTER_SP:
 			sp = value;
-			debugInterface->SetStackPointer1541(value);
+			((C64DebugInterface*)debugInterface)->SetStackPointer1541(value);
 			break;
 		case STATE_CPU_REGISTER_FLAGS:
 			p = value;
-			debugInterface->SetRegisterP1541(value);
+			((C64DebugInterface*)debugInterface)->SetRegisterP1541(value);
 			break;
 		case STATE_CPU_REGISTER_NONE:
 		default:
@@ -116,7 +116,7 @@ void CViewDriveStateCPU::SetRegisterValue(StateCPURegister reg, int value)
 	}
 	
 	// this direct inject is to have the set reflected in UI immediately
-	if (debugInterface->GetDebugMode() != C64_DEBUG_RUNNING)
+	if (debugInterface->GetDebugMode() != DEBUGGER_MODE_RUNNING)
 	{
 		c64d_set_drivecpu_regs_no_trap(0, a, x, y, p, sp);
 	}
@@ -129,7 +129,7 @@ int CViewDriveStateCPU::GetRegisterValue(StateCPURegister reg)
 	LOGD("CViewDriveStateCPU::GetRegisterValue: reg=%d", reg);
 	
 	C64StateCPU diskCpuState;
-	debugInterface->GetDrive1541CpuState(&diskCpuState);
+	((C64DebugInterface*)debugInterface)->GetDrive1541CpuState(&diskCpuState);
 
 	switch (reg)
 	{

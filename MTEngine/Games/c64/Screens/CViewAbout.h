@@ -57,6 +57,9 @@ public:
 	CSlrString *strHeader;
 	void SwitchAboutScreen();
 	
+	//
+	virtual void RenderC64ViceLicense();
+	virtual void RenderAtari800License();
 
 	
 };

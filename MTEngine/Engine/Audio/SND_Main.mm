@@ -5,6 +5,8 @@
 
 #define NUM_OGG_CHANNELS_POOL 16
 
+int SND_numAudioChannels = 0;
+
 std::list<CAudioChannel *> audioChannelsDynamic;
 CSlrMusicFileOgg *oggAudioChannelsPool[NUM_OGG_CHANNELS_POOL];
 CSlrFileMemory *oggAudioFilesPool[NUM_OGG_CHANNELS_POOL];
@@ -18,6 +20,8 @@ void SND_MainInitialize()
 		oggAudioChannelsPool[i] = new CSlrMusicFileOgg();
 		oggAudioFilesPool[i] = new CSlrFileMemory();
 	}
+
+	SND_numAudioChannels = 0;
 }
 
 void SND_MainMixer(int *mixBuffer, u32 numSamples)
@@ -50,8 +54,8 @@ void SND_MainMixer(int *mixBuffer, u32 numSamples)
 		if (audioChannel->bypass)
 			continue;
 
-		//LOGD("mixin channel: '%s'", audioChannel->name);
-		audioChannel->MixIn(mixBuffer, numSamples);
+//		LOGD("mixin channel: '%s'", audioChannel->name);
+		audioChannel->MixIn(mixBuffer, numSamples, SND_numAudioChannels);
 	}
 
 	for (u16 i = 0; i < NUM_OGG_CHANNELS_POOL; i++)
@@ -85,6 +89,7 @@ void SND_RemoveChannel(CAudioChannel *channel)
 void SND_AddChannel_NoMutex(CAudioChannel *channel)
 {
 	audioChannelsDynamic.push_back(channel);
+	SND_numAudioChannels++;
 	channel->isActive = true;
 }
 
@@ -92,6 +97,7 @@ void SND_RemoveChannel_NoMutex(CAudioChannel *channel)
 {
 	audioChannelsDynamic.remove(channel);
 	channel->isActive = false;
+	SND_numAudioChannels--;
 }
 
 void SND_PlaySound(CSlrFileMemory *file)

@@ -36,6 +36,9 @@ std::vector<u16> *_CSlrString_GetCharsVector()
 		_CSlrString_charVectorsPool.pop_front();
 	}
 
+	// should be clear already
+	vect->clear();
+	
 	pthread_mutex_unlock(&_CSlrString_mutex);
 
 	return vect;
@@ -94,7 +97,9 @@ CSlrString::CSlrString(char *value)
 CSlrString::CSlrString(const char *value)
 {
 	u32 len = strlen(value);
-	
+
+//	LOGD("CSlrString::CSlrString: len=%d", len);
+
 	this->chars = _CSlrString_GetCharsVector();
 	
 	for (u32 i = 0; i < len; i++)
@@ -182,6 +187,7 @@ void CSlrString::Deserialize(CByteBuffer *byteBuffer)
 
 CSlrString::~CSlrString()
 {
+//	LOGD("~CSlrString: %x", this);
 	_CSlrString_ReleaseCharsVector(this->chars);
 }
 
@@ -282,13 +288,29 @@ bool CSlrString::CompareWith(char *text)
 {
 	u32 len = GetLength();
 
-	if (len != strlen(text))
-		return false;
+//	LOGD("CSlrString::CompareWith: text='%s'", text);
+//	this->DebugPrint("CSlrString::CompareWith: this=");
+	
+	u32 len2 = strlen(text);
+
+//	for (int i = 0; i < len; i++)
+//	{
+//		LOGD(" ... i=%d ch=%04x '%c'", i, GetChar(i), GetChar(i));
+//	}
+//	
+//	if (len != len2)
+//	{
+//		LOGD("len=%d len2=%d", len, len2);
+//		return false;
+//	}
 
 	for (u32 i = 0; i < len; i++)
 	{
 		if (text[i] != GetChar(i))
+		{
+//			LOGD("i=%d text[i]=%d GetChar(i)=%d", i, text[i], GetChar(i));
 			return false;
+		}
 	}
 
 	return true;
@@ -344,6 +366,24 @@ void CSlrString::RemoveLastCharacter()
 		this->chars->pop_back();
 	}
 }
+
+// this is workaround for Windows stupid implementation of getline which returns \n character within string
+void CSlrString::RemoveEndLineCharacter()
+{
+	while (GetLength() > 0)
+	{
+		u16 chr = GetChar(GetLength()-1);
+		if (chr == '\n' || chr == '\r')
+		{
+			RemoveLastCharacter();
+			continue;
+		}
+		
+		return;
+	}
+}
+
+
 
 CSlrString *CSlrString::GetWord(u32 startPos, u32 *retPos, std::list<u16> stopChars)
 {
@@ -505,6 +545,36 @@ std::vector<CSlrString *> *CSlrString::SplitWithChars(std::list<u16> splitChars)
 	return words;
 }
 
+void CSlrString::RemoveFromBeginningSelectedCharacter(u16 chr)
+{
+	std::vector<u16> newChars;
+	
+	bool skip = true;
+	for (std::vector<u16>::iterator it = this->chars->begin(); it != this->chars->end(); it++)
+	{
+		u16 c = *it;
+		if (skip)
+		{
+			if (c == chr)
+			{
+				continue;
+			}
+			
+			skip = false;
+		}
+		
+		newChars.push_back(c);
+	}
+	
+	this->Clear();
+	
+	for (std::vector<u16>::iterator it = newChars.begin(); it != newChars.end(); it++)
+	{
+		u16 c = *it;
+		this->chars->push_back(c);
+	}
+}
+
 bool CSlrString::Contains(char chr)
 {
 	return this->Contains((u16)chr);
@@ -521,6 +591,57 @@ bool CSlrString::Contains(u16 chr)
 	}
 
 	return false;
+}
+
+void CSlrString::RemoveCharacter(char chr)
+{
+	this->RemoveCharacter((u16)chr);
+}
+
+void CSlrString::RemoveCharacter(u16 chr)
+{
+	u32 len = GetLength();
+	
+	for (u32 i = 0; i < len; i++)
+	{
+		if (GetChar(i) == chr)
+		{
+			this->RemoveCharAt(i);
+			len = GetLength();
+		}
+	}
+}
+
+// replace character with string (insert chars)
+void CSlrString::ReplaceCharacter(u16 characterToReplace, CSlrString *strToReplaceWith)
+{
+	std::vector<u16> replacedChars;
+
+	u32 len = GetLength();
+	
+	for (u32 i = 0; i < len; i++)
+	{
+		u16 c = GetChar(i);
+		if (c == characterToReplace)
+		{
+			for (u32 j = 0; j < strToReplaceWith->GetLength(); j++)
+			{
+				u16 chr2 = strToReplaceWith->GetChar(j);
+				replacedChars.push_back(chr2);
+			}
+		}
+		else
+		{
+			replacedChars.push_back(c);
+		}
+	}
+	
+	this->chars->clear();
+	for (std::vector<u16>::iterator it = replacedChars.begin(); it != replacedChars.end(); it++)
+	{
+		u16 c = *it;
+		this->chars->push_back(c);
+	}
 }
 
 char *CSlrString::GetStdASCII()
@@ -606,7 +727,15 @@ int CSlrString::ToIntFromHex()
 {
 	int value;
 	char *hexStr = this->GetStdASCII();
-	sscanf(hexStr, "%x", &value);
+	
+	char *hexStrParse = hexStr;
+	
+	if (hexStr[0] == '$')
+	{
+		hexStrParse = hexStr+1;
+	}
+	
+	sscanf(hexStrParse, "%x", &value);
 	delete hexStr;
 
 	return value;
@@ -643,7 +772,8 @@ bool CSlrString::IsHexValue()
 		
 		if ((chr >= 0x30 && chr <= 0x39)
 			|| (chr >= 0x41 && chr <= 0x46)
-			|| (chr >= 0x61 && chr <= 0x66))
+			|| (chr >= 0x61 && chr <= 0x66)
+			|| (chr == '$'))
 		{
 			continue;
 		}
@@ -652,6 +782,24 @@ bool CSlrString::IsHexValue()
 	}
 	
 	return true;
+}
+
+void CSlrString::DebugPrint()
+{
+	char buf[1024];
+	u16 l = 0;
+	
+	//LOGD("len=%d", GetLength());
+	for (u32 i = 0; i < GetLength(); i++)
+	{
+		char c = (char)GetChar(i);
+		//LOGD("i=%d l=%d c=%2.2x '%c'", i, l, c, c);
+		buf[l++] = c;
+	}
+	
+	buf[l] = 0x00;
+	
+	LOGD(buf);
 }
 
 void CSlrString::DebugPrint(char *name)
@@ -708,6 +856,17 @@ void CSlrString::DebugPrint(FILE *fp)
 	{
 		u16 chr = GetChar(i);
 		fwrite(&chr, 1, 2, fp);
+	}
+}
+
+void CSlrString::DebugPrintVector()
+{
+	LOGD("CSlrString::DebugPrintVector: len=%d", GetLength());
+	
+	for (u32 i = 0; i < GetLength(); i++)
+	{
+		u16 c = GetChar(i);
+		LOGD("  -> i=%d c=%x '%c'", i, c, c);
 	}
 }
 
@@ -800,6 +959,9 @@ bool CSlrStringIterator::IsEnd()
 CSlrString *CSlrString::GetFileNameComponentFromPath()
 {
 	std::vector<CSlrString *> *strs = this->Split(SYS_FILE_SYSTEM_PATH_SEPARATOR);
+	if (strs->empty())
+		return new CSlrString(this);
+	
 	CSlrString *fname = new CSlrString(strs->back());
 	
 	while(!strs->empty())
@@ -817,6 +979,13 @@ CSlrString *CSlrString::GetFileExtensionComponentFromPath()
 {
 	CSlrString *fname = GetFileNameComponentFromPath();
 	std::vector<CSlrString *> *strs = this->Split(SYS_FILE_SYSTEM_EXTENSION_SEPARATOR);
+	
+	if (strs->empty())
+	{
+		LOGError("CSlrString::GetFileExtensionComponentFromPath: empty string");
+		return new CSlrString("");	// this is a proper leak, TODO: fix it
+	}
+	
 	CSlrString *fext = new CSlrString(strs->back());
 	
 	while(!strs->empty())

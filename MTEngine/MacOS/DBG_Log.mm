@@ -113,7 +113,10 @@ void LOG_Init(void)
 	LOG_SetLevel(DBGLVL_VICE_MAIN, true);
 	LOG_SetLevel(DBGLVL_VICE_VERBOSE, true);
 
+	LOG_SetLevel(DBGLVL_ATARI_MAIN, true);
+	LOG_SetLevel(DBGLVL_ATARI_DEBUG, true);
 
+	
 	/// leave only debug2:
 //	LOG_SetLevel(DBGLVL_MAIN, false);
 //	LOG_SetLevel(DBGLVL_DEBUG, false);
@@ -461,9 +464,14 @@ const char *getLevelStr(unsigned int level)
 	if (level == DBGLVL_VICE_DEBUG)
 		return "[VICE ]";
 	if (level == DBGLVL_VICE_MAIN)
-		return "[VICEM]";
+		return "[*VICE]";
 	if (level == DBGLVL_VICE_VERBOSE)
-		return "[VICEV]";
+		return "[VICE ]";
+
+	if (level == DBGLVL_ATARI_DEBUG)
+		return "[ATARI]";
+	if (level == DBGLVL_ATARI_MAIN)
+		return "[ATARI]";
 
 	return "[> UNKNOWN <]";
 	//return     "[>???<]";

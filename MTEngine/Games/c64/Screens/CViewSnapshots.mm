@@ -42,6 +42,7 @@ CViewSnapshots::CViewSnapshots(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	fontHeight = font->GetCharHeight('@', fontScale) + 2;
 
 	snapshotExtensions.push_back(new CSlrString("snap"));
+	snapshotExtensions.push_back(new CSlrString("vsf"));
 //	pathToSnapshot = NULL;
 	
 	strHeader = new CSlrString("Snapshots");
@@ -107,9 +108,19 @@ CViewSnapshots::CViewSnapshots(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 
 	//
 	strStoreSnapshotText = new CSlrString("Quick store snapshot");
+	
+#if defined(MACOS)
+	strStoreSnapshotKeys = new CSlrString("Shift+Cmd+1,2,3...");
+#else
 	strStoreSnapshotKeys = new CSlrString("Shift+Ctrl+1,2,3...");
+#endif
 	strRestoreSnapshotText = new CSlrString("Quick restore snapshot");
+
+#if defined(MACOS)
+	strRestoreSnapshotKeys = new CSlrString("Cmd+1,2,3...");
+#else
 	strRestoreSnapshotKeys = new CSlrString("Ctrl+1,2,3...");
+#endif
 
 	
 	this->updateThread = new CSnapshotUpdateThread();
@@ -259,20 +270,27 @@ void CViewSnapshots::QuickRestoreFullSnapshot(int snapshotId)
 //	}
 //	else
 	{
-		char *fname = SYS_GetCharBuf();
-		sprintf(fname, "/snapshot-%d.snap", snapshotId);
-		
-		CSlrString *path = new CSlrString();
-		path->Concatenate(gUTFPathToSettings);
-		path->Concatenate(fname);
-		
-		path->DebugPrint("QuickStoreFullSnapshot: path=");
-		
-		this->LoadSnapshot(path, false);
-		
-		SYS_ReleaseCharBuf(fname);
-		delete path;
-
+		if (viewC64->debugInterfaceC64)
+		{
+			char *fname = SYS_GetCharBuf();
+			sprintf(fname, "/snapshot-%d.snap", snapshotId);
+			
+			CSlrString *path = new CSlrString();
+			path->Concatenate(gUTFPathToSettings);
+			path->Concatenate(fname);
+			
+			path->DebugPrint("QuickStoreFullSnapshot: path=");
+			
+			this->LoadSnapshot(path, false);
+			
+			SYS_ReleaseCharBuf(fname);
+			delete path;
+		}
+		else if (viewC64->debugInterfaceAtari)
+		{
+			LOGTODO("CViewSnapshots::QuickRestoreFullSnapshot: not implemented");
+		}
+			
 	}
 }
 
@@ -345,8 +363,6 @@ void CViewSnapshots::SystemDialogFileOpenSelected(CSlrString *path)
 		c64SettingsDefaultSnapshotsFolder = path->GetFilePathWithoutFileNameComponentFromPath();
 		C64DebuggerStoreSettings();
 	}
-	
-	delete path;
 }
 
 void CViewSnapshots::SystemDialogFileSaveSelected(CSlrString *path)
@@ -361,8 +377,6 @@ void CViewSnapshots::SystemDialogFileSaveSelected(CSlrString *path)
 		c64SettingsDefaultSnapshotsFolder = path->GetFilePathWithoutFileNameComponentFromPath();
 		C64DebuggerStoreSettings();
 	}
-
-	delete path;
 }
 
 void CViewSnapshots::LoadSnapshot(CSlrString *path, bool showMessage)
@@ -372,7 +386,7 @@ void CViewSnapshots::LoadSnapshot(CSlrString *path, bool showMessage)
 	// TODO: support UTF paths
 	char *asciiPath = path->GetStdASCII();
 	
-//	if (viewC64->debugInterface->GetEmulatorType() != C64_EMULATOR_VICE)
+//	if (viewC64->debugInterface->GetEmulatorType() != EMULATOR_TYPE_C64_VICE)
 //	{
 //		CSlrFileFromOS *file = new CSlrFileFromOS(asciiPath, SLR_FILE_MODE_READ);
 //		CByteBuffer *buffer = new CByteBuffer(file, false);
@@ -383,9 +397,11 @@ void CViewSnapshots::LoadSnapshot(CSlrString *path, bool showMessage)
 //		delete buffer;
 //	}
 //	else
-//	if (viewC64->debugInterface->GetEmulatorType() == C64_EMULATOR_VICE)
+	
+	// TODO: make this generic and move to the interface of C64 UI 
+	if (viewC64->selectedDebugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
 	{
-		bool ret = viewC64->debugInterface->LoadFullSnapshot(asciiPath);
+		bool ret = viewC64->debugInterfaceC64->LoadFullSnapshot(asciiPath);
 		
 		viewC64->viewC64MemoryMap->ClearExecuteMarkers();
 		viewC64->viewDrive1541MemoryMap->ClearExecuteMarkers();
@@ -403,7 +419,7 @@ void CViewSnapshots::LoadSnapshot(CSlrString *path, bool showMessage)
 		}
 	}
 
-	viewC64->debugInterface->LockIoMutex();
+	viewC64->debugInterfaceC64->LockIoMutex();
 	if (updateThread->isRunning == false)
 	{
 		updateThread->snapshotLoadedTime = SYS_GetCurrentTimeInMillis();
@@ -413,7 +429,7 @@ void CViewSnapshots::LoadSnapshot(CSlrString *path, bool showMessage)
 	{
 		updateThread->snapshotLoadedTime = SYS_GetCurrentTimeInMillis();
 	}
-	viewC64->debugInterface->UnlockIoMutex();
+	viewC64->debugInterfaceC64->UnlockIoMutex();
 	
 	delete asciiPath;
 }
@@ -478,11 +494,11 @@ void CViewSnapshots::SaveSnapshot(CSlrString *path)
 //	}
 //	else
 	
-	if (viewC64->debugInterface->GetEmulatorType() == C64_EMULATOR_VICE)
+	if (viewC64->debugInterfaceC64->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
 	{
 		char *asciiPath = path->GetStdASCII();
 		
-		viewC64->debugInterface->SaveFullSnapshot(asciiPath);
+		viewC64->debugInterfaceC64->SaveFullSnapshot(asciiPath);
 				
 		delete asciiPath;
 	}
@@ -713,6 +729,8 @@ void CViewSnapshots::DeactivateView()
 
 CSnapshotUpdateThread::CSnapshotUpdateThread()
 {
+	this->ThreadSetName("CSnapshotUpdateThread");
+	
 	this->snapshotLoadedTime = 0;
 	this->snapshotUpdatedTime = -1;
 }
@@ -721,33 +739,33 @@ void CSnapshotUpdateThread::ThreadRun(void *data)
 {
 	LOGD("CSnapshotUpdateThread::ThreadRun");
 	
-	viewC64->debugInterface->LockIoMutex();
+	viewC64->debugInterfaceC64->LockIoMutex();
 	
 	while (this->snapshotUpdatedTime != this->snapshotLoadedTime)
 	{
 		this->snapshotUpdatedTime = this->snapshotLoadedTime;
 		
-		viewC64->debugInterface->UnlockIoMutex();
+		viewC64->debugInterfaceC64->UnlockIoMutex();
 		
-		while (viewC64->debugInterface->GetC64MachineType() == C64_MACHINE_LOADING_SNAPSHOT)
+		while (viewC64->debugInterfaceC64->GetC64MachineType() == MACHINE_TYPE_LOADING_SNAPSHOT)
 		{
 			SYS_Sleep(100);
 		}
 		
 		SYS_Sleep(100);
 		
-		if (viewC64->debugInterface->GetC64MachineType() == C64_MACHINE_UNKNOWN)
+		if (viewC64->debugInterfaceC64->GetC64MachineType() == MACHINE_TYPE_UNKNOWN)
 		{
 			// failed to load snapshot, make a full reset, this will likely crash
-			int model = viewC64->debugInterface->GetC64ModelType();
+			int model = viewC64->debugInterfaceC64->GetC64ModelType();
 			
 			if (model == 0)
 			{
-				viewC64->debugInterface->SetC64ModelType(1);
+				viewC64->debugInterfaceC64->SetC64ModelType(1);
 			}
 			else
 			{
-				viewC64->debugInterface->SetC64ModelType(0);
+				viewC64->debugInterfaceC64->SetC64ModelType(0);
 			}
 			
 			if (model == C64MODEL_UNKNOWN)
@@ -757,20 +775,20 @@ void CSnapshotUpdateThread::ThreadRun(void *data)
 			
 			SYS_Sleep(200);
 			
-			viewC64->debugInterface->SetC64ModelType(model);
+			viewC64->debugInterfaceC64->SetC64ModelType(model);
 			
 			SYS_Sleep(200);
 
-			viewC64->debugInterface->HardReset();
+			viewC64->debugInterfaceC64->HardReset();
 		}
 		
 		// perform update
 		viewC64->viewC64Screen->UpdateRasterCrossFactors();
 		
-		viewC64->debugInterface->LockIoMutex();
+		viewC64->debugInterfaceC64->LockIoMutex();
 	}
 	
-	viewC64->debugInterface->UnlockIoMutex();
+	viewC64->debugInterfaceC64->UnlockIoMutex();
 	
 	LOGD("CSnapshotUpdateThread::ThreadRun finished");
 }

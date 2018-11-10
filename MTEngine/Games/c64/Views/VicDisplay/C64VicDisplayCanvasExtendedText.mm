@@ -15,7 +15,8 @@ C64VicDisplayCanvasExtendedText::C64VicDisplayCanvasExtendedText(CViewC64VicDisp
 	
 }
 
-void C64VicDisplayCanvasExtendedText::RefreshScreen(vicii_cycle_state_t *viciiState, CImageData *imageDataScreen)
+void C64VicDisplayCanvasExtendedText::RefreshScreen(vicii_cycle_state_t *viciiState, CImageData *imageDataScreen,
+													u8 backgroundColorAlpha, u8 foregroundColorAlpha)
 {
 	this->viciiState = viciiState;
 	
@@ -55,11 +56,11 @@ void C64VicDisplayCanvasExtendedText::RefreshScreen(vicii_cycle_state_t *viciiSt
 				{
 					if (bitmap & (1 << (7 - l)))
 					{
-						imageDataScreen->SetPixelResultRGBA(j*8 + l, i*8 + k, fgColorR, fgColorG, fgColorB, 255);
+						imageDataScreen->SetPixelResultRGBA(j*8 + l, i*8 + k, fgColorR, fgColorG, fgColorB, foregroundColorAlpha);
 					}
 					else
 					{
-						imageDataScreen->SetPixelResultRGBA(j*8 + l, i*8 + k, bgColorR, bgColorG, bgColorB, 255);
+						imageDataScreen->SetPixelResultRGBA(j*8 + l, i*8 + k, bgColorR, bgColorG, bgColorB, backgroundColorAlpha);
 					}
 				}
 			}
@@ -70,6 +71,7 @@ void C64VicDisplayCanvasExtendedText::RefreshScreen(vicii_cycle_state_t *viciiSt
 //
 void C64VicDisplayCanvasExtendedText::ClearScreen()
 {
+	LOGD("C64VicDisplayCanvasExtendedText::ClearScreen");
 	ClearScreen(0x20, 0x00);
 }
 

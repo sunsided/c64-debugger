@@ -16,6 +16,8 @@ CGuiElement::CGuiElement(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX
 	this->parent = NULL;
 	
 	this->visible = true;
+	
+	SetPositionOffset(posX, posY, posZ);
 	SetPosition(posX, posY, posZ, sizeX, sizeY);
 
 	this->elementAlignment = ELEMENT_ALIGNED_NONE;
@@ -39,11 +41,21 @@ CGuiElement::~CGuiElement()
 
 }
 
+bool CGuiElement::IsVisible()
+{
+	return this->visible;
+}
+
 void CGuiElement::SetVisible(bool isVisible)
 {
 	this->visible = isVisible;
 }
 
+// refresh UI
+void CGuiElement::UpdatePosition()
+{
+	this->SetPosition(this->posX, this->posY, this->posZ, this->sizeX, this->sizeY);
+}
 
 void CGuiElement::SetPosition(GLfloat posX, GLfloat posY)
 {
@@ -52,7 +64,10 @@ void CGuiElement::SetPosition(GLfloat posX, GLfloat posY)
 
 void CGuiElement::SetSize(GLfloat sizeX, GLfloat sizeY)
 {
-	this->SetPosition(this->posX, this->posY, this->posZ, sizeX, sizeY);
+	this->sizeX = sizeX;
+	this->sizeY = sizeY;
+	this->posEndX = posX + sizeX;
+	this->posEndY = posY + sizeY;
 }
 
 void CGuiElement::SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ)
@@ -67,13 +82,25 @@ void CGuiElement::SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat 
 	this->posX = posX;
 	this->posY = posY;
 	this->posZ = posZ;
-	this->sizeX = sizeX;
-	this->sizeY = sizeY;
-	this->posEndX = posX + sizeX;
-	this->posEndY = posY + sizeY;
-
+	this->SetSize(sizeX, sizeY);
+	
 	this->gapX = 0;
 	this->gapY = 0;
+}
+
+void CGuiElement::SetPositionOffset(GLfloat offsetPosX, GLfloat offsetPosY)
+{
+	this->SetPositionOffset(offsetPosX, offsetPosY, offsetPosZ);
+}
+
+void CGuiElement::SetPositionOffset(GLfloat offsetPosX, GLfloat offsetPosY, GLfloat offsetPosZ)
+{
+	this->offsetPosX = offsetPosX;
+	this->offsetPosY = offsetPosY;
+	this->offsetPosZ = offsetPosZ;
+	
+	this->offsetPosEndX = offsetPosX + sizeX;
+	this->offsetPosEndY = offsetPosY + sizeY;
 }
 
 bool CGuiElement::IsInside(GLfloat x, GLfloat y)

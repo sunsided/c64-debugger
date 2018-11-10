@@ -86,6 +86,10 @@ Ctrl+T
 	Mute sound On/Off
 Ctrl+W
 	Replace memory dump view with watches view
+Ctrl+[
+	Set slower emulation speed
+Ctrl+]
+	Set faster emulation speed
 Ctrl+8
 	Insert D64 file
 Ctrl+Shift+8
@@ -149,7 +153,10 @@ F7
 	Browse attached disk image
 F3
 	Start first PRG from disk image
-
+Ctrl+;
+	Select next code symbols segment
+Ctrl+'
+	Select previous code symbols segment
 
 In Disassembly view:
 
@@ -177,6 +184,8 @@ CTRL+G <addr>
         Move cursor to specific address (f.e. CTRL+G EA31)
 CTRL+J
 	JMP to current cursor's address (change CPU PC)
+Mouse wheel
+	Scroll code (faster with Shift pressed)
 
 
 In Data dump view:
@@ -248,17 +257,21 @@ When joystick is turned on then you can control selected ports using arrow keys,
 and right-alt as fire.
 
 
+* VIC state view
+
+This view shows state of VIC registers. You can lock colors using Mouse Left Click,
+or change them using Mouse Right Click, these will be reflected in previews like
+Memory Dump or VIC Display view.
+
 * SID state view
 
 You can click waveforms to mute SID channels. Detected musical notes are
 displayed, these are based on standard 440Hz A4 notation.
 
 
-* VIC state view
-
-This view shows state of VIC registers. You can lock colors using Mouse Left Click,
-or change them using Mouse Right Click, these will be reflected in previews like
-Memory Dump or VIC Display view.
+Note:
+You can click inside VIC/SID/CIA/VIA state views to show values of registers. You can 
+edit these values by clicking on value.
 
 
 * VIC Display screen:
@@ -309,13 +322,15 @@ Button "Break" adds VIC raster breakpoint, the text is in red when a selected li
 already the breakpoint set.
 
 The "Show PC for" informs in which auto-scroll code disassembly mode we are, you can 
-click on the mode and change it to other mode (Raster / Screen / Bitmap / Colour).
+click on the mode and change it to other mode (Raster / Screen / Bitmap / Colour / Charset).
 
 VIC Display records state of VIC each cycle in the frame and with the mouse cursor you
 can see what is in the frame. The X key changes what we "look" at: where was the code 
 in a given cycle (Raster mode) or where the code saved the pixel in memory (Raster / 
-Screen / Bitmap / Colour). For Screen / Bitmap / Colour modes the memory
-view under C64 screen will be moved to address that holds the value at cursor.
+Screen / Bitmap / Colour / Charset). For Screen / Bitmap / Colour modes the memory
+view cursor under C64 screen will be moved to address that holds the value at cursor. 
+For Charset mode the memory view cursor will point to a charset and definition of char
+under cursor.  
 
 You can Right-Click on C64 Screen in right top to replace it to a zoomed raster view. 
 
@@ -360,6 +375,9 @@ Layers window shows available layers, default layers are:
   like in VIC Display view.
 - Display: this is the same VIC Display which works exactly the same way, thus exact 
   state of VIC for selected cycle under cursor is rendered.
+- Reference: this works like Unrestricted but has full palette and images imported 
+  into that layer are displayed as-is. Painting on that layer is disabled by default,
+  you can paint only when this layer is selected.
 - C64 Screen: this is the C64 Screen as it was rendered by VIC, note that if emulation 
   is paused, then painting on this layer will not have immediate affect - the VIC must 
   render the screen first to have changes visible.
@@ -435,6 +453,11 @@ places of LDA/STA for colors in the current frame.
 You can also import KLA (Bitmap Multi-Color), ART (Bitmap Hires), DD (Bitmap Hires) and
 export to KLA, ART or raw text depending on selected mode.
 
+Note: when you export to raw text it contains these blocks:
+$000-$3E7: Current character video memory (screen). For example values stored in $0400-$07E7.
+$3E7-$7CE: Color memory (values stored in $D800-$DBE7)
+$7CF:      Background color (value stored in $D021)
+
 Zooming and panning of the canvas is performed using mouse, you can use Mouse Scroll
 for zooming and hold Space Bar for panning. Also, you can Mouse Right-Click on Preview
 Window to quickly move the painting area to selected position. When you zoom-in deeply
@@ -442,6 +465,8 @@ then numbers such as pixel addresses and values will be also shown.
 
 
 VIC Editor keys: (LMB=left mouse button, RMB=right mouse button)
+Ctrl+N
+	Create new picture and setup C64 for painting
 LMB, RMB
 	Paint using selected color
 Alt+LMB, Alt+RMB
@@ -510,6 +535,8 @@ Ctrl+O
 	Load/Import image (vce, png, kla, art, dd)
 Ctrl+Shift+E
 	Export image to kla/art/raw text
+Ctrl+B
+	Toggle top bar with icons
 ESCAPE
 	Back to C64 Debugger
 	
@@ -606,6 +633,8 @@ section 9.5: Writing to User Defined Files.
      load PRG file into memory
 -d64 <file>
      insert D64 disk
+-tap <file>
+     attach TAP/T64
 -crt <file>
      attach cartridge
 -jmp <addr>
@@ -673,6 +702,84 @@ For example watches file please refer to:
 https://sourceforge.net/p/c64-debugger/code/ci/master/tree/Examples/example.watch
 
 
+* KickAss debug symbols
+
+With Mads Nielsen (Slammer/Camelot) we created integration based on Stein Pedersen's idea.
+This was written with great help of Mads Nielsen:
+
+C64Debugger - KickAss format 
+------------------------------
+Here are the basic format. To make it easier to read I have given a param named 'values' that explains the values of the comma separated lists. 
+
+
+<C64debugger version="1.0">
+   <Sources values="INDEX,FILE">
+      0,KickAss.jar:/include/autoinclude.asm
+      1,/Users/Mads/Code/C64CodeRepos/C64Code/atari/lib/atarifile_4bank.h
+   <Sources/>
+
+   <Segment name="BANK1" values="START,END,FILE_IDX,LINE1,COL1,LINE2,COL2">
+      <Block name="Program">  
+         $1000,$1002,2,16,9,16,11
+      <Block/>
+      <Block name="Vectors">
+         $1ffa,$1ffb,2,11,3,11,7
+         $1ffc,$1ffd,2,12,9,12,13
+         $1ffe,$1fff,2,13,9,13,13
+      <Block/>
+   <Segment/>
+
+   <Segment name="BANK2" values="START,END,FILE_IDX,LINE1,COL1,LINE2,COL2">
+      <Block name="Program">
+         $1000,$1000,2,28,3,28,5
+         $1001,$1001,2,29,3,29,5
+         $1002,$1002,2,30,3,30,5
+         $1003,$1004,2,35,3,35,5
+         $1005,$1006,2,36,3,36,5
+  
+      <Block/>
+      <Block name="Vectors">
+         $1ffa,$1ffb,2,23,3,23,7
+         $1ffc,$1ffd,2,24,9,24,13
+         $1ffe,$1fff,2,25,9,25,13
+      <Block/>
+   <Segment/>
+
+   <Labels values="SEGMENT,ADDRESS,NAME">
+      Default,$d011,vic2_screen_control_register1
+   </Labels>
+
+   <Watches values="SEGMENT,ADDRESS,ARGUMENT">
+    	Default,$3000
+    	Default,$2001,2,hex8
+    	BANK2,$3000,,text
+   </Watches>
+
+   <Breakpoints values="SEGMENT,ADDRESS,ARGUMENT">
+      BANK1,$1000,nmi
+      BANK2,$1003,
+   <Breakpoints/>
+<C64debugger/>
+
+
+So everything is inside a <C64debugger> tag with a version number. Inside are different tags: 
+
+There will always be one <Sources> tag with all the source files and their indexs.
+
+There will be one or more <Segment> tags - one for each segment. Segments contains zero or more <Block> tags and inside these are the usual debug data. 
+
+There will always be one <Breakpoints> tag. It contains one line for each breakpoint. First arg is the segment it is defined in (so if you turn on and off segments you can switch breakpoints on an off too). Second argument is the address it is defined at (You will not need it in eg. .break "nmi", but it is always there). Third argument is whatever the user writes in the .break argument and might be empty. So .break "nmi" and .break "cia" will give nmi and cia. 
+
+<Labels> tag adds a label at address. First argument is the segment name, second argument is the address and last argument is label text.
+
+<Watches> is similar to labels but it will appear in watches view. First argument is the segment name, second argument is the address, then third argument is number of values to display, and fourth argument declares a representation which can be:
+hex8, hex16, hex32, or simply h, h8, h16, h32 is hex representation of value interpreted as 8, 16 or 32 bits.
+signed8, signed16, signed32, or simply s8, s16, s32 is a signed decimal representation of value interpreted as 8, 16 or 32 bits.
+unsigned8, unsigned16, unsigned32 or simply u8, u16, u32 is an unsigned decimal representation of value interpreted as 8, 16 or 32 bits.
+text signifies text representation.
+
+Please note that representation and number of values are not yet displayed in Watches view, this will be updated in upcoming version. Now, the Watches view displays only one hex 8-bit value.
+
 * JukeBox playlist and automated tests
 
 JukeBox playlist is a way to automate things in the C64 Debugger. The idea is that
@@ -689,6 +796,9 @@ to VIC synchronization frames, so the timings will be always exact and synced to
 refresh. The frame number depends on selected system (PAL, NTSC). Calls to move on
 with transitions, dumping memory and other actions are always synchronized to VIC and
 are performed at end of each VIC frame.
+
+You can use TheTom/Samar's site to create playlists:
+http://tomseditor.com/gallery/playlist
 
 JSON format is as follows:
 1. All "global" settings, such as if fast boot kernal patch should be included.
@@ -806,6 +916,17 @@ DumpDiskMemory=string
 DetachCartridge=true/false
 	Detach (remove) cartridge from slot
 
+SaveScreenshot=string
+	Save Screenshot as PNG to file specified by path
+
+ExportScreen=string
+	Export Screen as kla/art/raw text to file specified by path
+	The file extension will be added automatically based on current
+	C64 display mode
+
+Shutdown
+	Shutdown the C64 Debugger (Quit program)
+
 
 * Other notes
 
@@ -850,13 +971,12 @@ ready yet and is planned for next release.
 
 Add memory map zooming for Drive 1541.
 Add working on files directly instead of C64 memory (file adapter is ready),
-to view/edit files directly.
+to view/edit files directly on disks.
 Add custom layouts with layout editor.
 Add PAL CRT emulation.
-Add Save Screenshot keyboard shortcut.
 
 
-* Thanks for testing
+* Thanks for testing and ideas
 
 Mr Wegi/Elysium - valuable suggestions and cartridge knowledge
 ElfKaa/Avatar
@@ -868,6 +988,8 @@ Dr.J/Delysid
 Brush/Elysium
 Ruben Aparicio
 64 bites
+Stein Pedersen
+Mads Nielsen (Slammer/Camelot)
 
 
 * Beer Donation
@@ -1003,10 +1125,42 @@ mman-32
 libclipboard
 	Copyright (c) 2016 Jeremy Tan
 	https://github.com/jtanx/libclipboard
+	
+pugixml
+	Light-weight, simple and fast XML parser for C++ with XPath support
+	https://pugixml.org
+	
 
 *
 * Change log
 *
+
+v0.64.56
+Added: PALette palette.
+Added: CHARSET mode in VIC Display
+Added: Joystick keys can be defined as regular keyboard shortcut keys
+Added: New actions to JukeBox scripting: save screenshot, export screen to kla/art/raw, shutdown the C64 Debugger
+Added: Edit values of registers in VIC/SID/CIA/VIA state views
+Added: Quick disassemble mouse scroll with Shift pressed
+Added: Copy (Ctrl+C) and Paste (Ctrl+V) assembly line as text in Disassembly view
+Added: Copy (Ctrl+C) and Paste (Ctrl+V) value (or address with Shift pressed) in Memory Dump view
+Added: Create new Picture in VIC Editor using Ctrl+N
+Added: Export and import Charset in VIC Editor
+Added: Export and import Sprite in VIC Editor
+Added: New unrestricted image Reference layer in VIC Editor
+Added: TAP/T64 load and Tape menu in Settings (thanks to Pontus Berg and Josefin Svensson for reminding me this!)
+Added: Loading sources and debug info from new *.dbg file format. You can view diassembled code together with original source code in new Ctrl+Shift+F3 view. Thanks to Mads Nielsen for his valuable suggestions on the integration of the debug info file format in his KickAssembler. Idea by Stein Pedersen.
+Added: Atari 800/65XE emulator aka 65XE Debugger (early draft)
+Added Linux: New compile Makefile by Kuba Skrzypnik, Eclipse is no more needed to compile sources!
+Changed: Cycler layout (Ctrl+Shift+F2) now contains also memory dump
+Changed: Ctrl+O starts a generic file dialog to open any supported file
+Bug Fixed: Drive CPU status was not displayed in Monitor view when Drive device was selected (thanks to Javier Martin for bug report)
+Bug Fixed: Markers are cleared automatically after PRG load (thanks to Alex Goldblat for bug report)
+Bug Fixed: Zooming in memory map was sometimes blocked
+Bug Fixed: Command line -help option now properly displays message box on Windows (thanks to Timsa Uotila for bug report)
+Bug fixed: Painting on vertically-stretched multicolor sprite caused crash (thanks to Isildur/Samar for bug report)
+
+
 
 v0.64.2
 

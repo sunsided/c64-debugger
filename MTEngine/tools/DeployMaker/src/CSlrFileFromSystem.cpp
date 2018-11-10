@@ -75,6 +75,16 @@ bool CSlrFileFromSystem::Eof()
 	return feof(fp);
 }
 
+bool CSlrFileFromSystem::Exists()
+{
+	if (this->fp != NULL)
+	{
+		return true;
+	}
+	
+	return false;
+}
+
 void CSlrFileFromSystem::Close()
 {
 	LOGD("CSlrFileFromSystem::Close()");

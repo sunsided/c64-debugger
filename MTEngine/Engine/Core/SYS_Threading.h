@@ -15,7 +15,7 @@ public:
 	pthread_mutex_t mutex;
 
 	// for debug
-//	volatile bool isLocked;
+	volatile int lockedLevel;
 	
 	void Lock();
 	void Unlock();
@@ -26,9 +26,11 @@ class CSlrThread
 public:
 	pthread_t threadId;
 	volatile bool isRunning;
-	char threadName[32];
+	char threadName[256];
 	
 	CSlrThread();
+	CSlrThread(char *threadName);
+
 	~CSlrThread();
 
 	virtual void ThreadSetName(char *name);

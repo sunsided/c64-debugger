@@ -25,7 +25,7 @@ extern "C" {
 #include "CViewMemoryMap.h"
 #include "CViewC64StateSID.h"
 
-volatile int c64d_debug_mode = C64_DEBUG_RUNNING;
+volatile int c64d_debug_mode = DEBUGGER_MODE_RUNNING;
 
 int c64d_patch_kernal_fast_boot_flag = 0;
 int c64d_setting_run_sid_when_in_warp = 1;
@@ -50,23 +50,23 @@ void ViceWrapperInit(C64DebugInterfaceVice *debugInterface)
 
 void c64d_sound_init()
 {
-	if (debugInterfaceVice->viceAudioChannel == NULL)
+	if (debugInterfaceVice->audioChannel == NULL)
 	{
-		debugInterfaceVice->viceAudioChannel = new CViceAudioChannel(debugInterfaceVice);
-		SND_AddChannel(debugInterfaceVice->viceAudioChannel);
+		debugInterfaceVice->audioChannel = new CViceAudioChannel(debugInterfaceVice);
+		SND_AddChannel(debugInterfaceVice->audioChannel);
 	}
 	
-	debugInterfaceVice->viceAudioChannel->bypass = false;
+	debugInterfaceVice->audioChannel->bypass = false;
 }
 
 void c64d_sound_pause()
 {
-	debugInterfaceVice->viceAudioChannel->bypass = true;
+	debugInterfaceVice->audioChannel->bypass = true;
 }
 
 void c64d_sound_resume()
 {
-	debugInterfaceVice->viceAudioChannel->bypass = false;
+	debugInterfaceVice->audioChannel->bypass = false;
 }
 
 void mt_SYS_FatalExit(char *text)
@@ -99,55 +99,55 @@ void c64d_mark_c64_cell_write(uint16 addr, uint8 value)
 	
 	viewC64->viewC64MemoryMap->CellWrite(addr, value, viceCurrentC64PC, vicii.raster_line, vicii.raster_cycle);
 	
-	if (debugInterfaceVice->breakOnC64Memory)
+	if (debugInterfaceVice->breakOnMemory)
 	{
 		debugInterfaceVice->LockMutex();
 		
-		std::map<uint16, C64MemoryBreakpoint *>::iterator it = debugInterfaceVice->breakpointsC64Memory.find(addr);
-		if (it != debugInterfaceVice->breakpointsC64Memory.end())
+		std::map<uint16, CMemoryBreakpoint *>::iterator it = debugInterfaceVice->breakpointsMemory.find(addr);
+		if (it != debugInterfaceVice->breakpointsMemory.end())
 		{
-			C64MemoryBreakpoint *memoryBreakpoint = it->second;
+			CMemoryBreakpoint *memoryBreakpoint = it->second;
 			
-			if (memoryBreakpoint->breakpointType == C64_MEMORY_BREAKPOINT_EQUAL)
+			if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_EQUAL)
 			{
 				if (value == memoryBreakpoint->value)
 				{
-					debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
+					debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
 				}
 			}
-			else if (memoryBreakpoint->breakpointType == C64_MEMORY_BREAKPOINT_NOT_EQUAL)
+			else if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_NOT_EQUAL)
 			{
 				if (value != memoryBreakpoint->value)
 				{
-					debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
+					debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
 				}
 			}
-			else if (memoryBreakpoint->breakpointType == C64_MEMORY_BREAKPOINT_LESS)
+			else if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_LESS)
 			{
 				if (value < memoryBreakpoint->value)
 				{
-					debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
+					debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
 				}
 			}
-			else if (memoryBreakpoint->breakpointType == C64_MEMORY_BREAKPOINT_LESS_OR_EQUAL)
+			else if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_LESS_OR_EQUAL)
 			{
 				if (value <= memoryBreakpoint->value)
 				{
-					debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
+					debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
 				}
 			}
-			else if (memoryBreakpoint->breakpointType == C64_MEMORY_BREAKPOINT_GREATER)
+			else if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_GREATER)
 			{
 				if (value > memoryBreakpoint->value)
 				{
-					debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
+					debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
 				}
 			}
-			else if (memoryBreakpoint->breakpointType == C64_MEMORY_BREAKPOINT_GREATER_OR_EQUAL)
+			else if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_GREATER_OR_EQUAL)
 			{
 				if (value >= memoryBreakpoint->value)
 				{
-					debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
+					debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
 				}
 			}
 		}
@@ -177,51 +177,51 @@ void c64d_mark_disk_cell_write(uint16 addr, uint8 value)
 	{
 		debugInterfaceVice->LockMutex();
 		
-		std::map<uint16, C64MemoryBreakpoint *>::iterator it = debugInterfaceVice->breakpointsDrive1541Memory.find(addr);
+		std::map<uint16, CMemoryBreakpoint *>::iterator it = debugInterfaceVice->breakpointsDrive1541Memory.find(addr);
 		if (it != debugInterfaceVice->breakpointsDrive1541Memory.end())
 		{
-			C64MemoryBreakpoint *memoryBreakpoint = it->second;
+			CMemoryBreakpoint *memoryBreakpoint = it->second;
 			
-			if (memoryBreakpoint->breakpointType == C64_MEMORY_BREAKPOINT_EQUAL)
+			if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_EQUAL)
 			{
 				if (value == memoryBreakpoint->value)
 				{
-					debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
+					debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
 				}
 			}
-			else if (memoryBreakpoint->breakpointType == C64_MEMORY_BREAKPOINT_NOT_EQUAL)
+			else if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_NOT_EQUAL)
 			{
 				if (value != memoryBreakpoint->value)
 				{
-					debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
+					debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
 				}
 			}
-			else if (memoryBreakpoint->breakpointType == C64_MEMORY_BREAKPOINT_LESS)
+			else if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_LESS)
 			{
 				if (value < memoryBreakpoint->value)
 				{
-					debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
+					debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
 				}
 			}
-			else if (memoryBreakpoint->breakpointType == C64_MEMORY_BREAKPOINT_LESS_OR_EQUAL)
+			else if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_LESS_OR_EQUAL)
 			{
 				if (value <= memoryBreakpoint->value)
 				{
-					debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
+					debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
 				}
 			}
-			else if (memoryBreakpoint->breakpointType == C64_MEMORY_BREAKPOINT_GREATER)
+			else if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_GREATER)
 			{
 				if (value > memoryBreakpoint->value)
 				{
-					debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
+					debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
 				}
 			}
-			else if (memoryBreakpoint->breakpointType == C64_MEMORY_BREAKPOINT_GREATER_OR_EQUAL)
+			else if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_GREATER_OR_EQUAL)
 			{
 				if (value >= memoryBreakpoint->value)
 				{
-					debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
+					debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
 				}
 			}
 		}
@@ -357,7 +357,7 @@ void c64d_refresh_screen()
 	uint8 *srcScreenPtr = screenBuffer + (16*384);
 	uint8 *destScreenPtr = (uint8 *)debugInterfaceVice->screen->resultData;
 	
-	int screenHeight = debugInterfaceVice->GetC64ScreenSizeY();
+	int screenHeight = debugInterfaceVice->GetScreenSizeY();
 	for (int y = 0; y < screenHeight; y++)
 	{
 		for (int x = 0; x < 384; x++)
@@ -414,7 +414,7 @@ void c64d_refresh_dbuf()
 //	LOGD("c64d_refresh_dbuf");
 	int rasterY = vicii.raster_line - 16;
 
-	if (rasterY < 0 || rasterY > debugInterfaceVice->GetC64ScreenSizeY())
+	if (rasterY < 0 || rasterY > debugInterfaceVice->GetScreenSizeY())
 	{
 		return;
 	}
@@ -470,7 +470,7 @@ void c64d_refresh_cia()
 
 int c64d_is_debug_on_c64()
 {
-	if (debugInterfaceVice->debugOnC64)
+	if (debugInterfaceVice->isDebugOn)
 		return 1;
 	
 	return 0;
@@ -494,20 +494,20 @@ void c64d_c64_check_pc_breakpoint(uint16 pc)
 {
 	uint8 val;
 
-	if ((int)pc == debugInterfaceVice->temporaryC64BreakpointPC)
+	if ((int)pc == debugInterfaceVice->temporaryBreakpointPC)
 	{
-		debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
-		debugInterfaceVice->temporaryC64BreakpointPC = -1;
+		debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
+		debugInterfaceVice->temporaryBreakpointPC = -1;
 	}
-	else if (debugInterfaceVice->breakOnC64PC)
+	else if (debugInterfaceVice->breakOnPC)
 	{
 		debugInterfaceVice->LockMutex();
-		std::map<uint16, C64AddrBreakpoint *>::iterator it = debugInterfaceVice->breakpointsC64PC.find(pc);
-		if (it != debugInterfaceVice->breakpointsC64PC.end())
+		std::map<uint16, CAddrBreakpoint *>::iterator it = debugInterfaceVice->breakpointsPC.find(pc);
+		if (it != debugInterfaceVice->breakpointsPC.end())
 		{
-			C64AddrBreakpoint *addrBreakpoint = it->second;
+			CAddrBreakpoint *addrBreakpoint = it->second;
 			
-			if (IS_SET(addrBreakpoint->actions, C64_ADDR_BREAKPOINT_ACTION_SET_BACKGROUND))
+			if (IS_SET(addrBreakpoint->actions, ADDR_BREAKPOINT_ACTION_SET_BACKGROUND))
 			{
 				// VIC can't modify two registers at once
 				
@@ -541,9 +541,9 @@ void c64d_c64_check_pc_breakpoint(uint16 pc)
 				
 			}
 
-			if (IS_SET(addrBreakpoint->actions, C64_ADDR_BREAKPOINT_ACTION_STOP))
+			if (IS_SET(addrBreakpoint->actions, ADDR_BREAKPOINT_ACTION_STOP))
 			{
-				debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
+				debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
 			}
 		}
 		debugInterfaceVice->UnlockMutex();
@@ -554,17 +554,17 @@ void c64d_drive1541_check_pc_breakpoint(uint16 pc)
 {
 	if ((int)pc == debugInterfaceVice->temporaryDrive1541BreakpointPC)
 	{
-		debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
+		debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
 		debugInterfaceVice->temporaryDrive1541BreakpointPC = -1;
 		viceCurrentDiskPC[0] = pc;
 	}
 	else if (debugInterfaceVice->breakOnDrive1541PC)
 	{
 		debugInterfaceVice->LockMutex();
-		std::map<uint16, C64AddrBreakpoint *>::iterator it = debugInterfaceVice->breakpointsDrive1541PC.find(pc);
+		std::map<uint16, CAddrBreakpoint *>::iterator it = debugInterfaceVice->breakpointsDrive1541PC.find(pc);
 		if (it != debugInterfaceVice->breakpointsDrive1541PC.end())
 		{
-			debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
+			debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
 		}
 		debugInterfaceVice->UnlockMutex();
 	}
@@ -789,13 +789,13 @@ void c64d_c64_vicii_start_raster_line(uint16 rasterLine)
 void c64d_c64_check_raster_breakpoint(uint16 rasterLine)
 {
 //	LOGD("c64d_c64_check_raster_breakpoint rasterLine=%d", rasterLine);
-	if (debugInterfaceVice->breakOnC64Raster)
+	if (debugInterfaceVice->breakOnRaster)
 	{
 		debugInterfaceVice->LockMutex();
-		std::map<uint16, C64AddrBreakpoint *>::iterator it = debugInterfaceVice->breakpointsC64Raster.find(rasterLine);
-		if (it != debugInterfaceVice->breakpointsC64Raster.end())
+		std::map<uint16, CAddrBreakpoint *>::iterator it = debugInterfaceVice->breakpointsRaster.find(rasterLine);
+		if (it != debugInterfaceVice->breakpointsRaster.end())
 		{
-			debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
+			debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
 			//			TheCPU->lastValidPC = TheCPU->pc;
 		}
 		debugInterfaceVice->UnlockMutex();
@@ -814,7 +814,7 @@ void c64d_drive1541_check_irqiec_breakpoint()
 {
 	if (debugInterfaceVice->breakOnDrive1541IrqIEC)
 	{
-		debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
+		debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
 	}
 }
 
@@ -822,7 +822,7 @@ void c64d_drive1541_check_irqvia1_breakpoint()
 {
 	if (debugInterfaceVice->breakOnDrive1541IrqVIA1)
 	{
-		debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
+		debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
 	}
 }
 
@@ -831,7 +831,7 @@ void c64d_drive1541_check_irqvia2_breakpoint()
 {
 	if (debugInterfaceVice->breakOnDrive1541IrqVIA2)
 	{
-		debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
+		debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
 	}
 }
 
@@ -848,7 +848,7 @@ void c64d_c64_check_irqvic_breakpoint()
 {
 	if (debugInterfaceVice->breakOnC64IrqVIC)
 	{
-		debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED); //C64_DEBUG_RUN_ONE_INSTRUCTION);
+		debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED); //C64_DEBUG_RUN_ONE_INSTRUCTION);
 	}
 }
 
@@ -856,19 +856,27 @@ void c64d_c64_check_irqcia_breakpoint(int ciaNum)
 {
 	if (debugInterfaceVice->breakOnC64IrqCIA)
 	{
-		debugInterfaceVice->SetDebugMode(C64_DEBUG_PAUSED);
+		debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
+	}
+}
+
+void c64d_c64_check_irqnmi_breakpoint()
+{
+	if (debugInterfaceVice->breakOnC64IrqNMI)
+	{
+		debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
 	}
 }
 
 void c64d_debug_pause_check()
 {
-	if (c64d_debug_mode == C64_DEBUG_PAUSED)
+	if (c64d_debug_mode == DEBUGGER_MODE_PAUSED)
 	{		
 		c64d_refresh_previous_lines();
 		c64d_refresh_dbuf();
 		c64d_refresh_cia();
 		
-		while (c64d_debug_mode == C64_DEBUG_PAUSED)
+		while (c64d_debug_mode == DEBUGGER_MODE_PAUSED)
 		{
 			vsync_do_vsync(vicii.raster.canvas, 0, 1);
 			//mt_SYS_Sleep(50);

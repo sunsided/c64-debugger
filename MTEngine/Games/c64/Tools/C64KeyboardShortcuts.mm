@@ -4,6 +4,40 @@
 C64KeyboardShortcuts::C64KeyboardShortcuts()
 {
 	// keyboard shortcuts
+
+	kbsCopyToClipboard  = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Copy to clipboard", 'c', false, false, true);
+	AddShortcut(kbsCopyToClipboard);
+
+	kbsCopyAlternativeToClipboard  = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Copy alternative to clipboard", 'c', true, false, true);
+	AddShortcut(kbsCopyAlternativeToClipboard);
+
+	kbsPasteFromClipboard  = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Paste from clipboard", 'v', false, false, true);
+	AddShortcut(kbsPasteFromClipboard);
+
+	kbsPasteAlternativeFromClipboard  = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Paste alternative from clipboard", 'v', true, false, true);
+	AddShortcut(kbsPasteAlternativeFromClipboard);
+
+	// code segments symbols
+	kbsNextCodeSegmentSymbols  = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Next code symbols segment", ';', false, false, true);
+	AddShortcut(kbsNextCodeSegmentSymbols);
+
+	kbsPreviousCodeSegmentSymbols  = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Previous code symbols segment", '\'', false, false, true);
+	AddShortcut(kbsPreviousCodeSegmentSymbols);
+	
+	
+	// joystick
+	kbsJoystickUp = new CSlrKeyboardShortcut(KBZONE_SCREEN, "Joystick UP", MTKEY_ARROW_UP, false, false, false);
+	AddShortcut(kbsJoystickUp);
+	kbsJoystickDown = new CSlrKeyboardShortcut(KBZONE_SCREEN, "Joystick DOWN", MTKEY_ARROW_DOWN, false, false, false);
+	AddShortcut(kbsJoystickDown);
+	kbsJoystickLeft = new CSlrKeyboardShortcut(KBZONE_SCREEN, "Joystick LEFT", MTKEY_ARROW_LEFT, false, false, false);
+	AddShortcut(kbsJoystickLeft);
+	kbsJoystickRight = new CSlrKeyboardShortcut(KBZONE_SCREEN, "Joystick RIGHT", MTKEY_ARROW_RIGHT, false, false, false);
+	AddShortcut(kbsJoystickRight);
+	kbsJoystickFire = new CSlrKeyboardShortcut(KBZONE_SCREEN, "Joystick FIRE", MTKEY_RALT, false, true, false);
+	AddShortcut(kbsJoystickFire);
+	
+	//
 	kbsToggleBreakpoint = new CSlrKeyboardShortcut(KBZONE_DISASSEMBLE, "Toggle Breakpoint", '`', false, false, false);
 	AddShortcut(kbsToggleBreakpoint);
 	
@@ -20,6 +54,9 @@ C64KeyboardShortcuts::C64KeyboardShortcuts()
 	AddShortcut(kbsGoToAddress);
 	
 	// vic editor
+	kbsVicEditorCreateNewPicture = new CSlrKeyboardShortcut(KBZONE_VIC_EDITOR, "VIC Editor: New Picture", 'n', false, false, true);
+	AddShortcut(kbsVicEditorCreateNewPicture);
+
 	kbsVicEditorPreviewScale = new CSlrKeyboardShortcut(KBZONE_VIC_EDITOR, "VIC Editor: Preview scale", '/', false, false, false);
 	AddShortcut(kbsVicEditorPreviewScale);
 
@@ -62,7 +99,6 @@ C64KeyboardShortcuts::C64KeyboardShortcuts()
 	kbsVicEditorToggleAllWindows = new CSlrKeyboardShortcut(KBZONE_VIC_EDITOR, "Toggle all windows", 'f', false, false, false);
 	AddShortcut(kbsVicEditorToggleAllWindows);
 	
-	
 	kbsVicEditorToggleWindowPreview = new CSlrKeyboardShortcut(KBZONE_VIC_EDITOR, "Toggle preview", 'd', false, false, false);
 	AddShortcut(kbsVicEditorToggleWindowPreview);
 	
@@ -80,6 +116,13 @@ C64KeyboardShortcuts::C64KeyboardShortcuts()
 	
 	kbsVicEditorToggleSpriteFrames = new CSlrKeyboardShortcut(KBZONE_VIC_EDITOR, "Toggle sprite frames", 'g', false, false, true);
 	AddShortcut(kbsVicEditorToggleSpriteFrames);
+
+	kbsVicEditorToggleTopBar = new CSlrKeyboardShortcut(KBZONE_VIC_EDITOR, "Toggle top bar", 'b', false, false, true);
+	AddShortcut(kbsVicEditorToggleTopBar);
+
+	// TODO: toolbox is disabled in production
+//	kbsVicEditorToggleToolBox = new CSlrKeyboardShortcut(KBZONE_VIC_EDITOR, "Toggle toolbox", 't', false, false, false);
+//	AddShortcut(kbsVicEditorToggleToolBox);
 
 	
 	kbsVicEditorSelectNextLayer = new CSlrKeyboardShortcut(KBZONE_VIC_EDITOR, "Select next layer", '`', false, false, false);

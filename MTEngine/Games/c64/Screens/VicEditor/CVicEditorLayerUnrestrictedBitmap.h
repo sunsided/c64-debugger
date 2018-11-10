@@ -8,7 +8,7 @@
 class CVicEditorLayerUnrestrictedBitmap : public CVicEditorLayer
 {
 	public:
-	CVicEditorLayerUnrestrictedBitmap(CViewVicEditor *vicEditor);
+	CVicEditorLayerUnrestrictedBitmap(CViewVicEditor *vicEditor, char *layerName);
 	~CVicEditorLayerUnrestrictedBitmap();
 	
 	virtual void RenderMain(vicii_cycle_state_t *viciiState);
@@ -40,6 +40,7 @@ class CVicEditorLayerUnrestrictedBitmap : public CVicEditorLayer
 	int ditherMaskPosX;
 	int ditherMaskPosY;
 
+	bool LoadFrom(CImageData *imageData);
 	void UpdateBitmapFromMap();
 	
 	int NumVisiblePixels();

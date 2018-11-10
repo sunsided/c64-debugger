@@ -91,6 +91,7 @@ public:
 	CSlrKeyboardShortcut *kbsScreenLayout10;
 	CSlrKeyboardShortcut *kbsScreenLayout11;
 	CSlrKeyboardShortcut *kbsScreenLayout12;
+	CSlrKeyboardShortcut *kbsScreenLayout13;
 
 	CSlrKeyboardShortcut *kbsInsertD64;
 	CViewC64MenuItem *menuItemInsertD64;
@@ -140,20 +141,36 @@ public:
 
 	CSlrKeyboardShortcut *kbsSaveScreenImageAsPNG;
 	
+	std::list<CSlrString *> openFileExtensions;
 	std::list<CSlrString *> diskExtensions;
-	std::list<CSlrString *> prgExtensions;
+	std::list<CSlrString *> tapeExtensions;
 	std::list<CSlrString *> crtExtensions;
 	std::list<CSlrString *> jukeboxExtensions;
+	std::list<CSlrString *> romsFileExtensions;
 	
+	void LoadFile(CSlrString *path);
 	void OpenDialogInsertD64();
 	void InsertD64(CSlrString *path, bool updatePathToD64, bool autoRun, int autoRunEntryNum, bool showLoadAddressInfo);
 	void OpenDialogInsertCartridge();
 	void InsertCartridge(CSlrString *path, bool updatePathToCRT);
+	
 	void OpenDialogLoadPRG();
 	bool LoadPRG(CSlrString *path, bool autoStart, bool updatePRGFolderPath, bool showAddressInfo);
 	bool LoadPRG(CByteBuffer *byteBuffer, bool autoStart, bool showAddressInfo);
 	void LoadPRG(CByteBuffer *byteBuffer, u16 *startAddr, u16 *endAddr);
 	bool LoadPRGNotThreaded(CByteBuffer *byteBuffer, bool autoStart, bool showAddressInfo);
+
+	void OpenDialogInsertTape();
+	bool LoadTape(CSlrString *path, bool autoStart, bool updateTAPFolderPath, bool showAddressInfo);
+	void DetachTape();
+
+	//
+	CViewC64MenuItem *menuItemSetFolderWithAtariROMs;
+	void OpenDialogSetFolderWithAtariROMs();
+	
+	bool LoadXEX(CSlrString *path, bool autoStart, bool updatePRGFolderPath, bool showAddressInfo);
+	void InsertATR(CSlrString *path, bool updatePathToATR, bool autoRun, int autoRunEntryNum, bool showLoadAddressInfo);
+
 	void LoadLabelsAndWatches(CSlrString *pathToPRG);
 	void SetBasicEndAddr(int endAddr);
 

@@ -28,5 +28,6 @@ void SYS_SharedMemoryUnregisterCallback(CSharedMemorySignalCallback *callback);
 //
 
 CSlrString *SYS_GetClipboardAsSlrString();
+bool SYS_SetClipboardAsSlrString(CSlrString *str);
 
 #endif

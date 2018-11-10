@@ -370,7 +370,7 @@ CSlrString *SYS_GetClipboardAsSlrString()
 	// Try opening the clipboard
 	if (! OpenClipboard(NULL))
 	{
-		LOGError("Error while OpenClipboard");
+		LOGError("SYS_GetClipboardAsSlrString: Error while OpenClipboard");
 		return NULL;
 	}
 
@@ -392,7 +392,7 @@ CSlrString *SYS_GetClipboardAsSlrString()
 	// Save text in a string class instance
 	CSlrString *str = new CSlrString(pszText);
 
-	LOGD("Clipboard text='%s'", pszText);
+	LOGD("SYS_GetClipboardAsSlrString: Clipboard text='%s'", pszText);
 	str->DebugPrint("str=");
 
 	// Release the lock
@@ -404,3 +404,30 @@ CSlrString *SYS_GetClipboardAsSlrString()
 	return str;
 }
 
+bool SYS_SetClipboardAsSlrString(CSlrString *str)
+{
+	// Try opening the clipboard
+	if (! OpenClipboard(NULL))
+	{
+		LOGError("SYS_SetClipboardAsSlrString: Error while OpenClipboard");
+		return false;
+	}
+	
+	char *output = str->GetStdASCII();
+	const size_t len = strlen(output) + 1;
+
+	HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len);
+	memcpy(GlobalLock(hMem), output, len);
+	
+	GlobalUnlock(hMem);
+	
+	EmptyClipboard();
+	SetClipboardData(CF_TEXT, hMem);
+
+	delete [] output;
+
+	// Release the clipboard
+	CloseClipboard();
+	
+	return true;
+}

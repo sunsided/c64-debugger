@@ -3,11 +3,10 @@
 #include "CGuiMain.h"
 #include "CSlrString.h"
 #include "CViewC64.h"
-#include "CViewC64StateVIC.h"
 #include "C64DebugInterface.h"
 #include "CGuiEditHex.h"
 
-CViewBaseStateCPU::CViewBaseStateCPU(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, C64DebugInterface *debugInterface)
+CViewBaseStateCPU::CViewBaseStateCPU(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, CDebugInterface *debugInterface)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
 {
 	this->name = "CViewBaseStateCPU";
@@ -59,13 +58,8 @@ void CViewBaseStateCPU::Render()
 	float bg = 0.0f;
 	float bb = 0.0f;
 	
-	if (viewC64->viewC64StateVIC->isLockedState)
-	{
-		br = 0.2f; bg = 0.0f; bb = 0.0f;
-		BlitFilledRectangle(px-fontSize*0.3f, py-fontSize*0.3f, -1, fontSize*49.6f, fontSize*2.3f, br, bg, bb, 1.00f);
-	}
 	
-	if (debugInterface->GetDebugMode() != C64_DEBUG_RUNNING)
+	if (debugInterface->GetDebugMode() != DEBUGGER_MODE_RUNNING)
 	{
 		br = 0.33f; bg = 0.0f; bb = 0.0f;
 		BlitFilledRectangle(px-fontSize*0.3f, py-fontSize*0.3f, -1, fontSize*49.6f, fontSize*2.3f, br, bg, bb, 1.00f);

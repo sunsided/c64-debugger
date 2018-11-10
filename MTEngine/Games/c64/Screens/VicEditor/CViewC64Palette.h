@@ -2,7 +2,7 @@
 #define _CViewC64Palette_H_
 
 #include "SYS_Defs.h"
-#include "CGuiView.h"
+#include "CGuiWindow.h"
 #include "CGuiEditHex.h"
 #include "CGuiViewFrame.h"
 #include <vector>
@@ -15,10 +15,17 @@ class CSlrMutex;
 class C64DebugInterface;
 class CViewVicEditor;
 
-class CViewC64Palette : public CGuiView, CGuiEditHexCallback
+class CViewC64PaletteCallback
 {
 public:
-	CViewC64Palette(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, CViewVicEditor *vicEditor);
+	// callback from palette on change color
+	virtual void PaletteColorChanged(u8 colorSource, u8 newColorValue);
+};
+
+class CViewC64Palette : public CGuiWindow, public CGuiEditHexCallback
+{
+public:
+	CViewC64Palette(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, CViewC64PaletteCallback *callback);
 	
 	virtual bool KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl);
 	virtual bool KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl);
@@ -39,17 +46,18 @@ public:
 	virtual void DoLogic();
 	
 	virtual bool SetFocus(bool focus);
-	
+
+	void RenderPalette(bool renderBackgroundInformation);
+
 	//
-	CViewVicEditor *vicEditor;
+	CViewC64PaletteCallback *callback;
+	
+	void SetPaletteRectScale(float scale);
 	
 	int GetColorIndex(float x, float y);
 	
 	void SetColorLMB(u8 color);
 	void SetColorRMB(u8 color);
-	
-	//
-	CGuiViewFrame *viewFrame;
 	
 	bool isVertical;
 

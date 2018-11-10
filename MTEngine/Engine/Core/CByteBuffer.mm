@@ -131,7 +131,7 @@ CByteBuffer::CByteBuffer(CSlrFile *file)
 	this->wholeDataBufferSize = 0;
 	this->index = 0;
 	this->length = 0;
-	if (this->readFromFile(file) == false)
+	if (this->readFromFile(file, false) == false)
 	{
 		LOGError("CByteBuffer: file");
 		this->data = NULL;
@@ -1145,8 +1145,17 @@ bool CByteBuffer::loadFromTemp(CSlrString *fileName)
 
 bool CByteBuffer::storeToSettings(CSlrString *fileName)
 {
+	fileName->DebugPrint("fileName=");
+
+	gUTFPathToSettings->DebugPrint("gUTFPathToSettings=");
 	CSlrString *str = new CSlrString(gUTFPathToSettings);
+
+	str->DebugPrint("str=");
+	fileName->DebugPrint("fileName=");
+
 	str->Concatenate(fileName);
+	
+	str->DebugPrint("storeToFile, str=");
 	
 	bool ret = storeToFile(str);
 	delete str;
@@ -1424,6 +1433,23 @@ CSlrDate *CByteBuffer::GetDate()
 	uint8 hour = GetByte();
 	CSlrDate *d = new CSlrDate(day, month, year, second, minute, hour);
 	return d;
+}
+
+int CByteBuffer::GetNumberOfLines()
+{
+	LOGD("GetNumberOfLines, len=%d", this->length);
+	
+	int numLines = 0;
+	for (int i = 0; i < this->length; i++)
+	{
+		if (this->data[i] == '\n')
+		{
+			numLines++;
+		}
+	}
+	
+	LOGD("GetNumberOfLines: numLines=%d", numLines);
+	return numLines;
 }
 
 
