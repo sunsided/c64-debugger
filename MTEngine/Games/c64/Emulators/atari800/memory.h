@@ -118,6 +118,7 @@ void MEMORY_CartA0bfDisable(void);
 void MEMORY_CartA0bfEnable(void);
 #define MEMORY_CopyROM(addr1, addr2, src) memcpy(MEMORY_mem + (addr1), src, (addr2) - (addr1) + 1)
 void MEMORY_GetCharset(UBYTE *cs);
+void MEMORY_GetCharsetScreenCodes(UBYTE *cs);
 
 /* Mosaic and Axlon 400/800 RAM extensions */
 extern int MEMORY_mosaic_num_banks;

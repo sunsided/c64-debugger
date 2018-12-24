@@ -36,6 +36,11 @@ CSlrString *CDebugInterface::GetEmulatorVersionString()
 	return NULL;
 }
 
+CSlrString *CDebugInterface::GetPlatformNameString()
+{
+	return NULL;
+}
+
 void CDebugInterface::RunEmulationThread()
 {
 }
@@ -53,12 +58,24 @@ CSlrDataAdapter *CDebugInterface::GetDataAdapter()
 bool CDebugInterface::LoadExecutable(char *fullFilePath)
 {
 	SYS_FatalExit("CDebugInterface::LoadExecutable");
+	return false;
 }
 
 bool CDebugInterface::MountDisk(char *fullFilePath, int diskNo, bool readOnly)
 {
 	SYS_FatalExit("CDebugInterface::MountDisk");
+	return false;
 }
+
+bool CDebugInterface::LoadFullSnapshot(char *filePath)
+{
+	return false;
+}
+
+void CDebugInterface::SaveFullSnapshot(char *filePath)
+{
+}
+
 
 int CDebugInterface::GetScreenSizeX()
 {
@@ -143,6 +160,19 @@ bool CDebugInterface::GetSettingIsWarpSpeed()
 void CDebugInterface::SetSettingIsWarpSpeed(bool isWarpSpeed)
 {
 	LOGError("CDebugInterface::SetSettingIsWarpSpeed: not implemented");
+}
+
+//
+// make jmp without resetting CPU depending on dataAdapter
+void CDebugInterface::MakeJmpNoReset(CSlrDataAdapter *dataAdapter, uint16 addr)
+{
+	SYS_FatalExit("CDebugInterface::MakeJmpNoReset");
+}
+
+// make jmp and reset CPU
+void CDebugInterface::MakeJmpAndReset(uint16 addr)
+{
+	SYS_FatalExit("CDebugInterface::MakeJmpAndReset");
 }
 
 

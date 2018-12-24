@@ -36,6 +36,11 @@ enum muteSIDMode : u8
 	MUTE_SID_MODE_SKIP_EMULATION	= 1
 };
 
+enum atariVideoSystem : u8
+{
+	ATARI_VIDEO_SYSTEM_PAL = 0,
+	ATARI_VIDEO_SYSTEM_NTSC = 1
+};
 
 // settings
 extern bool c64SettingsSkipConfig;
@@ -116,6 +121,10 @@ extern CSlrString *c64SettingsPathToATR;
 extern CSlrString *c64SettingsDefaultATRFolder;
 extern CSlrString *c64SettingsPathToXEX;
 extern CSlrString *c64SettingsDefaultXEXFolder;
+extern CSlrString *c64SettingsPathToCAS;
+extern CSlrString *c64SettingsDefaultCASFolder;
+extern CSlrString *c64SettingsPathToAtariCartridge;
+extern CSlrString *c64SettingsDefaultAtariCartridgeFolder;
 
 extern CSlrString *c64SettingsPathToSymbols;
 extern CSlrString *c64SettingsPathToWatches;
@@ -177,6 +186,11 @@ extern int c64SettingsDoubleClickMS;
 extern bool c64SettingsLoadViceLabels;
 extern bool c64SettingsLoadWatches;
 extern bool c64SettingsLoadDebugInfo;
+
+// atari
+extern u8 c64SettingsAtariVideoSystem;
+extern u8 c64SettingsAtariMachineType;
+extern u8 c64SettingsAtariRamSizeOption;
 
 void C64DebuggerSetSettingInt(char *settingName, int param);
 void C64DebuggerSetSettingString(char *settingName, CSlrString *param);

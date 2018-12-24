@@ -11,7 +11,7 @@ class CImageData;
 class CDebugInterface;
 class C64DebugInterface;
 
-CSlrFontProportional *ProcessCBMFonts(uint8 *charsetData, bool useScreenCodes);
+CSlrFontProportional *ProcessFonts(uint8 *charsetData, bool useScreenCodes);
 void InvertCBMText(CSlrString *text);
 void ClearInvertCBMText(CSlrString *text);
 

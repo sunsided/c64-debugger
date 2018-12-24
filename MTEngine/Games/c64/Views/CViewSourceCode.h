@@ -84,6 +84,8 @@ public:
 	//
 	virtual bool IsInside(GLfloat x, GLfloat y);
 
+	virtual void RenderFocusBorder();
+
 };
 
 

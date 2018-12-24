@@ -44,6 +44,7 @@ class CC64DiskDirectRamDataAdapter;
 class C64Symbols;
 
 class CViewC64Screen;
+class CViewC64ScreenWrapper;
 
 class CViewMemoryMap;
 class CViewDataDump;
@@ -65,6 +66,10 @@ class CViewMonitorConsole;
 
 class CViewAtariScreen;
 class CViewAtariStateCPU;
+class CViewAtariStateANTIC;
+class CViewAtariStatePIA;
+class CViewAtariStateGTIA;
+class CViewAtariStatePOKEY;
 
 class CViewJukeboxPlaylist;
 class CViewMainMenu;
@@ -278,7 +283,23 @@ public:
 	float atariMemoryMapX, atariMemoryMapY;
 	float atariMemoryMapSizeX, atariMemoryMapSizeY;
 
+	bool atariStateANTICVisible;
+	float atariStateANTICX, atariStateANTICY;
+	float atariStateANTICFontSize;
 
+	bool atariStateGTIAVisible;
+	float atariStateGTIAX, atariStateGTIAY;
+	float atariStateGTIAFontSize;
+
+	bool atariStatePIAVisible;
+	float atariStatePIAX, atariStatePIAY;
+	float atariStatePIAFontSize;
+
+	bool atariStatePOKEYVisible;
+	float atariStatePOKEYX, atariStatePOKEYY;
+	float atariStatePOKEYFontSize;
+
+	
 };
 
 class CEmulationThreadC64 : public CSlrThread
@@ -363,6 +384,7 @@ public:
 	CSlrFont *fontDisassemble;
 	
 	CViewC64Screen *viewC64Screen;
+	CViewC64ScreenWrapper *viewC64ScreenWrapper;
 	
 	CViewMemoryMap *viewC64MemoryMap;
 	CViewMemoryMap *viewDrive1541MemoryMap;
@@ -380,7 +402,8 @@ public:
 	CViewDisassemble *viewAtariDisassemble;
 	CViewDataDump *viewAtariMemoryDataDump;
 	CViewMemoryMap *viewAtariMemoryMap;
-	
+	CViewBreakpoints *viewAtariBreakpoints;
+
 	
 	CViewC64StateCIA *viewC64StateCIA;
 	CViewC64StateSID *viewC64StateSID;
@@ -403,6 +426,11 @@ public:
 	// Atari
 	CViewAtariScreen *viewAtariScreen;
 	CViewAtariStateCPU *viewAtariStateCPU;
+	CViewAtariStateANTIC *viewAtariStateANTIC;
+	CViewAtariStatePIA *viewAtariStatePIA;
+	CViewAtariStateGTIA *viewAtariStateGTIA;
+	CViewAtariStatePOKEY *viewAtariStatePOKEY;
+	CViewSnapshots *viewAtariSnapshots;
 
 	// updated every render frame
 	vicii_cycle_state_t currentViciiState;
@@ -467,6 +495,8 @@ public:
 	CSlrFont *fontCBM1;
 	CSlrFont *fontCBM2;
 	CSlrFont *fontCBMShifted;
+	
+	CSlrFont *fontAtari;
 	
 	std::vector<CGuiView *> traversalOfViews;
 	bool CanSelectView(CGuiView *view);
@@ -571,6 +601,9 @@ void C64D_DragDropCallbackPNG(CSlrString *filePath);
 // atari
 void C64D_DragDropCallbackXEX(CSlrString *filePath);
 void C64D_DragDropCallbackATR(CSlrString *filePath);
+void C64D_DragDropCallbackCAS(CSlrString *filePath);
+void C64D_DragDropCallbackCAR(CSlrString *filePath);
+void C64D_DragDropCallbackA8S(CSlrString *filePath);
 
 // jukebox
 void C64D_DragDropCallbackJukeBox(CSlrString *filePath);

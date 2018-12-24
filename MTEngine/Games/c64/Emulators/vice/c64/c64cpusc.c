@@ -24,9 +24,12 @@
  *
  */
 
+//#define USE_CHAMP_PROFILER
+
 #include "vice.h"
 
 #include <stdio.h>
+#include <string.h>
 
 #include "cpmcart.h"
 #include "monitor.h"
@@ -810,6 +813,187 @@ BYTE *bank_base;
 int bank_start = 0;
 int bank_limit = 0;
 
+//
+// proof of concept of the profiler compatible with Champ, this needs to be moved
+// and generalised to be used also with other platforms not only C64
+//
+#if defined(USE_CHAMP_PROFILER)
+
+void c64d_profiler_init();
+void c64d_set_debug_mode(int newMode);
+
+typedef struct {
+	uint32_t index;
+	uint16_t pc;
+	uint8_t post;
+	enum {
+		u8, s8, u16, s16
+	} data_type;
+	enum
+	{
+		MEMORY,
+		REGISTER_A,
+		REGISTER_X,
+		REGISTER_Y
+	} type;
+	uint16_t memory_address;
+} r_watch;
+
+r_watch *profiler_watches = 0;
+uint8_t profiler_watches_allocated = 0;
+size_t profiler_watch_count = 0;
+int32_t profiler_watch_offset_for_pc_and_post[0x20000];
+
+uint16_t profiler_old_pc = 0x0000;
+uint8_t  profiler_trace_stack[0x100];
+uint8_t  profiler_trace_stack_pointer = 0xff;
+uint16_t profiler_trace_stack_function[0x100];
+uint64_t profiler_cycles_per_function[0x10000];
+uint64_t profiler_calls_per_function[0x10000];
+uint64_t profiler_cpu_total_cycles;
+int profiler_last_cycles = -1;
+
+int profiler_is_active = 0;
+FILE *profiler_file_out = NULL;
+int profiler_run_for_cycles = -1;
+
+int profiler_pause_cpu_when_finished = 1;
+
+// if numCycles == -1 run until stopped
+void c64d_profiler_activate(char *fileName, int runForNumCycles, int pauseCpuWhenFinished)
+{
+	LOGD("c64d_activate_profiler: fileName=%s runForNumCycles=%d", (fileName == NULL ? "NULL" : fileName), runForNumCycles);
+	if (fileName != NULL)
+	{
+		profiler_file_out = fopen(fileName, "wb");
+	}
+	profiler_run_for_cycles = runForNumCycles;
+	profiler_pause_cpu_when_finished = pauseCpuWhenFinished;
+	
+	c64d_profiler_init();
+}
+
+void c64d_profiler_deactivate()
+{
+	if (profiler_file_out)
+	{
+		fclose(profiler_file_out);
+		profiler_file_out = NULL;
+		profiler_run_for_cycles = -1;
+	}
+	
+	profiler_is_active = 0;
+	
+	if (profiler_pause_cpu_when_finished)
+	{
+		c64d_set_debug_mode(DEBUGGER_MODE_PAUSED);
+	}
+}
+
+void c64d_profiler_init()
+{
+	LOGD("c64d_profiler_init");
+	profiler_cpu_total_cycles = 0;
+	profiler_last_cycles = -1;
+	
+	memset(profiler_cycles_per_function, 0, sizeof(profiler_cycles_per_function));
+	memset(profiler_calls_per_function, 0, sizeof(profiler_calls_per_function));
+
+	profiler_is_active = 1;
+}
+
+void c64d_profiler_jsr(uint16_t target_address)
+{
+	//	LOGD("c64d_profiler_jsr: addr pc=%x", reg_pc);
+	if (profiler_is_active)
+	{
+		// push PC - 1 because target address has already been read
+		profiler_trace_stack_function[profiler_trace_stack_pointer] = target_address;
+		profiler_trace_stack[profiler_trace_stack_pointer] = reg_sp;
+		profiler_trace_stack_pointer--;
+		profiler_calls_per_function[target_address]++;
+		
+		if (profiler_file_out)
+		{
+			fprintf(profiler_file_out, "jsr 0x%04x %llu\n", target_address, profiler_cpu_total_cycles);
+			fflush(profiler_file_out);
+		}
+	}
+}
+
+void c64d_profiler_rts()
+{
+	//	LOGD("c64d_profiler_rts: addr pc=%x", reg_pc);
+	
+	if (profiler_is_active)
+	{
+		if (profiler_trace_stack[profiler_trace_stack_pointer + 1] == reg_sp + 2)
+		{
+
+			if (profiler_file_out)
+			{
+				fprintf(profiler_file_out, "rts %llu\n", profiler_cpu_total_cycles);
+				fflush(profiler_file_out);
+			}
+			profiler_trace_stack_pointer++;
+		}
+	}
+}
+
+void c64d_profiler_start_handle_cpu_instruction()
+{
+	if (profiler_is_active)
+	{
+		profiler_old_pc = reg_pc;
+	}
+}
+
+void c64d_profiler_end_cpu_instruction()
+{
+//	LOGD("c64d_c64_instruction_cycle=%d", c64d_c64_instruction_cycle);
+	if (profiler_is_active)
+	{
+		profiler_cpu_total_cycles += c64d_c64_instruction_cycle;
+		if (profiler_trace_stack_pointer < 0xff)
+		{
+			profiler_cycles_per_function[profiler_trace_stack_function[profiler_trace_stack_pointer + 1]] += c64d_c64_instruction_cycle;
+		}
+		
+		if (profiler_file_out)
+		{
+			fprintf(profiler_file_out, "log %04x %02x %02x %02x %04x %02x %02x\n",
+				   profiler_old_pc, reg_a, reg_x, reg_y, reg_pc, reg_sp,
+					reg_p | (flag_n & 0x80) | P_UNUSED | ( (!(flag_z)) ? P_ZERO : 0) );
+			if (profiler_cpu_total_cycles / 100000 != profiler_last_cycles)
+			{
+				profiler_last_cycles = profiler_cpu_total_cycles / 100000;
+				fprintf(profiler_file_out, "cycles %d\n", profiler_last_cycles * 100000);
+			}
+			fflush(profiler_file_out);
+		}
+		
+		if (profiler_run_for_cycles != -1)
+		{
+			if (profiler_cpu_total_cycles > profiler_run_for_cycles)
+			{
+				c64d_profiler_deactivate();
+			}
+		}
+	}
+}
+
+#else
+
+void c64d_profiler_init() {}
+void c64d_profiler_activate(char *fileName, int runForNumCycles, int pauseCpuWhenFinished) {}
+void c64d_profiler_deactivate() {}
+void c64d_profiler_jsr() {}
+void c64d_profiler_rts() {}
+void c64d_profiler_start_handle_cpu_instruction() {}
+void c64d_profiler_end_cpu_instruction() {}
+
+#endif
+
 void c64d_get_maincpu_regs(uint8 *a, uint8 *x, uint8 *y, uint8 *p, uint8 *sp, uint16 *pc,
 						   uint8 *instructionCycle)
 {
@@ -996,7 +1180,7 @@ void maincpu_mainloop(void)
 	//	BYTE *bank_base;
 	//	int bank_start = 0;
 	//	int bank_limit = 0;
-	
+
 	o_bank_base = &bank_base;
 	o_bank_start = &bank_start;
 	o_bank_limit = &bank_limit;
@@ -2161,6 +2345,7 @@ addr_msb = LOAD(reg_pc);                  \
 JSR_FIXUP_MSB(addr_msb);                  \
 dest_addr = (WORD)(p1 | (addr_msb << 8)); \
 CLK_INC();                                \
+c64d_profiler_jsr(dest_addr);								\
 JUMP(dest_addr);                          \
 } while (0)
 		
@@ -2384,6 +2569,7 @@ CLK_INC();            \
 LOAD(tmp);            \
 CLK_INC();            \
 tmp++;                \
+c64d_profiler_rts();			  \
 JUMP(tmp);            \
 } while (0)
 		
@@ -2597,7 +2783,7 @@ INC_PC(1);                \
 			{
 				viceCurrentC64PC = _c64d_new_pc;
 			}
-
+			
 #ifdef CHECK_AND_RUN_ALTERNATE_CPU
 			CHECK_AND_RUN_ALTERNATE_CPU
 #endif
@@ -2675,6 +2861,8 @@ INC_PC(1);                \
 			}
 			
 			{
+				c64d_profiler_start_handle_cpu_instruction();
+
 				if (c64d_debug_mode != DEBUGGER_MODE_RUN_ONE_INSTRUCTION
 					&& c64d_debug_mode != DEBUGGER_MODE_RUN_ONE_CYCLE)
 				{
@@ -3696,9 +3884,10 @@ INC_PC(1);                \
 		///
 		/// end of 6510dtvcore.c
 		
-
 		// c64d: mark cell execute
 		c64d_mark_c64_cell_execute(LAST_OPCODE_ADDR & 0xFFFF, LAST_OPCODE_INFO & 0xFF);
+		
+		c64d_profiler_end_cpu_instruction();
 		
 		c64d_c64_instruction_cycle = 0;
 		

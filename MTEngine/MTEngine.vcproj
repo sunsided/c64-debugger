@@ -8417,11 +8417,43 @@
 							>
 						</File>
 						<File
+							RelativePath=".\Games\c64\Views\CViewAtariStateANTIC.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Views\CViewAtariStateANTIC.mm"
+							>
+						</File>
+						<File
 							RelativePath=".\Games\c64\Views\CViewAtariStateCPU.h"
 							>
 						</File>
 						<File
 							RelativePath=".\Games\c64\Views\CViewAtariStateCPU.mm"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Views\CViewAtariStateGTIA.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Views\CViewAtariStateGTIA.mm"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Views\CViewAtariStatePIA.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Views\CViewAtariStatePIA.mm"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Views\CViewAtariStatePOKEY.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Views\CViewAtariStatePOKEY.mm"
 							>
 						</File>
 						<File
@@ -8438,6 +8470,14 @@
 						</File>
 						<File
 							RelativePath=".\Games\c64\Views\CViewC64Screen.mm"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Views\CViewC64ScreenWrapper.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Views\CViewC64ScreenWrapper.mm"
 							>
 						</File>
 						<File

@@ -20,12 +20,20 @@ void atrd_mark_atari_cell_execute(uint16 addr, uint8 opcode);
 void atrd_check_pc_breakpoint(uint16 pc);
 void atrd_debug_pause_check();
 
+void atrd_async_check();
+
+void atrd_async_load_snapshot(char *filePath);
+void atrd_async_save_snapshot(char *filePath);
+
 void atrd_sound_init();
 void atrd_sound_pause();
 void atrd_sound_resume();
 
 void atrd_sound_lock();
 void atrd_sound_unlock();
+
+void atrd_mutex_lock();
+void atrd_mutex_unlock();
 
 int atrd_is_debug_on_atari();
 

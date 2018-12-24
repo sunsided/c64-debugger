@@ -38,16 +38,14 @@ enum breakpointsCursorGroups
 //// TODO: change into TextHexEdits
 //// TODO: change into CButtonGroup
 
-CViewBreakpoints::CViewBreakpoints(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY)
+CViewBreakpoints::CViewBreakpoints(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, CDebugInterface *debugInterface)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
 {
 	this->name = "CViewBreakpoints";
 	
 	prevView = viewC64;
 	
-	// TODO: MAKE GENERIC
-	LOGTODO("CViewBreakpoints: make generic for Atari");
-	this->debugInterface = viewC64->debugInterfaceC64;
+	this->debugInterface = debugInterface;
 	
 	
 	font = viewC64->fontCBMShifted;
@@ -69,237 +67,246 @@ CViewBreakpoints::CViewBreakpoints(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 	float px = 22.0f;
 	float py = 32.0f;
 	
-	lblCommodore64 =	new CGuiLabel(new CSlrString("Commodore 64"), px, py, posZ, 120, fontHeight, LABEL_ALIGNED_LEFT, font, fontNumbersScale,
+	lblPlatform =	new CGuiLabel(debugInterface->GetPlatformNameString(), px, py, posZ, 120, fontHeight, LABEL_ALIGNED_LEFT, font, fontNumbersScale,
 									  0.0f, 0.0f, 0.0f, 0.0f,
 									  tr, tg, tb, 1.0f,
 									  0.0f, 0.0f, NULL);
-	lblCommodore64->image = NULL;
-	this->AddGuiElement(lblCommodore64);
-
-	px = sizeX - 142;
-	lbl1541Drive =	new CGuiLabel(new CSlrString("1541 Drive"), px, py, posZ, 120, fontHeight, LABEL_ALIGNED_RIGHT, font, fontNumbersScale,
-									  0.0f, 0.0f, 0.0f, 0.0f,
-									  tr, tg, tb, 1.0f,
-									  0.0f, 0.0f, NULL);
-	lbl1541Drive->image = NULL;
-	this->AddGuiElement(lbl1541Drive);
+	lblPlatform->image = NULL;
+	this->AddGuiElement(lblPlatform);
 
 	float startX = 30;
 	float startY = 50;
 	
-	px = startX;
-	py = startY;
 	float buttonSizeX = 73.0f;
 	float buttonSizeY = fontHeight + 4;
-	
-//	px += 120;
-	
-	/// left side
-	
-	btnBreakpointC64IrqVIC = new CGuiButtonSwitch(NULL, NULL, NULL,
-									   px, py, posZ, buttonSizeX, buttonSizeY,
-									   new CSlrString("  VIC  "),
-									   FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
-									   font, fontScale,
-									   1.0, 1.0, 1.0, 1.0,
-									   1.0, 1.0, 1.0, 1.0,
-									   0.3, 0.3, 0.3, 1.0,
-									   this);
-	btnBreakpointC64IrqVIC->SetOn(false);
-	this->AddGuiElement(btnBreakpointC64IrqVIC);
-	
-	px += buttonSizeX + 10;
-	
-	btnBreakpointC64IrqCIA = new CGuiButtonSwitch(NULL, NULL, NULL,
-											   px, py, posZ, buttonSizeX, buttonSizeY,
-											   new CSlrString("  CIA  "),
-											   FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
-											   font, fontScale,
-											   1.0, 1.0, 1.0, 1.0,
-											   1.0, 1.0, 1.0, 1.0,
-											   0.3, 0.3, 0.3, 1.0,
-											   this);
-	btnBreakpointC64IrqCIA->SetOn(false);
-	this->AddGuiElement(btnBreakpointC64IrqCIA);
 
-	px += buttonSizeX + 10;
-	
-	btnBreakpointC64IrqNMI = new CGuiButtonSwitch(NULL, NULL, NULL,
-											   px, py, posZ, buttonSizeX, buttonSizeY,
-											   new CSlrString("  NMI  "),
-											   FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
-											   font, fontScale,
-											   1.0, 1.0, 1.0, 1.0,
-											   1.0, 1.0, 1.0, 1.0,
-											   0.3, 0.3, 0.3, 1.0,
-											   this);
-	btnBreakpointC64IrqNMI->SetOn(false);
-	this->AddGuiElement(btnBreakpointC64IrqNMI);
+	// TODO: make this generic / abstract
+	if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
+	{
+		px = sizeX - 142;
+		lbl1541Drive =	new CGuiLabel(new CSlrString("1541 Drive"), px, py, posZ, 120, fontHeight, LABEL_ALIGNED_RIGHT, font, fontNumbersScale,
+									  0.0f, 0.0f, 0.0f, 0.0f,
+									  tr, tg, tb, 1.0f,
+									  0.0f, 0.0f, NULL);
+		lbl1541Drive->image = NULL;
+		this->AddGuiElement(lbl1541Drive);
 
+		/// left side
+
+		px = startX;
+		py = startY;
+
+		btnBreakpointC64IrqVIC = new CGuiButtonSwitch(NULL, NULL, NULL,
+													  px, py, posZ, buttonSizeX, buttonSizeY,
+													  new CSlrString("  VIC  "),
+													  FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
+													  font, fontScale,
+													  1.0, 1.0, 1.0, 1.0,
+													  1.0, 1.0, 1.0, 1.0,
+													  0.3, 0.3, 0.3, 1.0,
+													  this);
+		btnBreakpointC64IrqVIC->SetOn(false);
+		this->AddGuiElement(btnBreakpointC64IrqVIC);
+		
+		px += buttonSizeX + 10;
+		
+		btnBreakpointC64IrqCIA = new CGuiButtonSwitch(NULL, NULL, NULL,
+													  px, py, posZ, buttonSizeX, buttonSizeY,
+													  new CSlrString("  CIA  "),
+													  FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
+													  font, fontScale,
+													  1.0, 1.0, 1.0, 1.0,
+													  1.0, 1.0, 1.0, 1.0,
+													  0.3, 0.3, 0.3, 1.0,
+													  this);
+		btnBreakpointC64IrqCIA->SetOn(false);
+		this->AddGuiElement(btnBreakpointC64IrqCIA);
+		
+		px += buttonSizeX + 10;
+		
+		btnBreakpointC64IrqNMI = new CGuiButtonSwitch(NULL, NULL, NULL,
+													  px, py, posZ, buttonSizeX, buttonSizeY,
+													  new CSlrString("  NMI  "),
+													  FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
+													  font, fontScale,
+													  1.0, 1.0, 1.0, 1.0,
+													  1.0, 1.0, 1.0, 1.0,
+													  0.3, 0.3, 0.3, 1.0,
+													  this);
+		btnBreakpointC64IrqNMI->SetOn(false);
+		this->AddGuiElement(btnBreakpointC64IrqNMI);
+	}
+	
 	py += buttonSizeY + 5;
 	
 	px = startX;
 	btnBreakpointsPC = new CGuiButtonSwitch(NULL, NULL, NULL,
-											   px, py, posZ, buttonSizeX, buttonSizeY,
-											   new CSlrString(" CPU PC "),
-											   FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
-											   font, fontScale,
-											   1.0, 1.0, 1.0, 1.0,
-											   1.0, 1.0, 1.0, 1.0,
-											   0.3, 0.3, 0.3, 1.0,
-											   this);
+											px, py, posZ, buttonSizeX, buttonSizeY,
+											new CSlrString(" CPU PC "),
+											FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
+											font, fontScale,
+											1.0, 1.0, 1.0, 1.0,
+											1.0, 1.0, 1.0, 1.0,
+											0.3, 0.3, 0.3, 1.0,
+											this);
 	btnBreakpointsPC->SetOn(false);
 	this->AddGuiElement(btnBreakpointsPC);
 	
 	pcBreakpointsX = px;
 	pcBreakpointsY = py + buttonSizeY + 5;
-
+	
 	py = pcBreakpointsY + fontNumbersHeight * 10 + 3;
 	
 	//
 	
 	px = startX;
 	btnBreakpointsMemory = new CGuiButtonSwitch(NULL, NULL, NULL,
-											   px, py, posZ, buttonSizeX, buttonSizeY,
-											   new CSlrString(" MEMORY "),
-											   FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
-											   font, fontScale,
-											   1.0, 1.0, 1.0, 1.0,
-											   1.0, 1.0, 1.0, 1.0,
-											   0.3, 0.3, 0.3, 1.0,
-											   this);
+												px, py, posZ, buttonSizeX, buttonSizeY,
+												new CSlrString(" MEMORY "),
+												FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
+												font, fontScale,
+												1.0, 1.0, 1.0, 1.0,
+												1.0, 1.0, 1.0, 1.0,
+												0.3, 0.3, 0.3, 1.0,
+												this);
 	btnBreakpointsMemory->SetOn(false);
 	this->AddGuiElement(btnBreakpointsMemory);
 	
 	memoryBreakpointsX = px - 8;
 	memoryBreakpointsY = py + buttonSizeY + 5;
-
+	
 	py = memoryBreakpointsY + fontNumbersHeight * 10;
+	
+	//
+	// TODO: make this generic / abstract
+	if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
+	{
+		px = startX;
+		btnBreakpointsRaster = new CGuiButtonSwitch(NULL, NULL, NULL,
+													px, py, posZ, buttonSizeX, buttonSizeY,
+													new CSlrString(" RASTER "),
+													FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
+													font, fontScale,
+													1.0, 1.0, 1.0, 1.0,
+													1.0, 1.0, 1.0, 1.0,
+													0.3, 0.3, 0.3, 1.0,
+													this);
+		btnBreakpointsRaster->SetOn(false);
+		this->AddGuiElement(btnBreakpointsRaster);
+		
+		rasterBreakpointsX = px;
+		rasterBreakpointsY = py + buttonSizeY + 5;
+		
+		py = rasterBreakpointsY + fontNumbersHeight * 6;
+		
+		//
+		//
+		// right side
+		//
+		//
+		float sb = 20;
+		float scrsx = sizeX - sb*2.0f;
+		float cx = scrsx/2.0f + 11.0f + sb;
+		
+		float startX2 = cx;
+		
+		py = startY;
+		px = startX2;
+		
+		
+		/// left side
+		
+		btnBreakpointDrive1541IrqVIA1 = new CGuiButtonSwitch(NULL, NULL, NULL,
+															 px, py, posZ, buttonSizeX, buttonSizeY,
+															 new CSlrString("  VIA1  "),
+															 FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
+															 font, fontScale,
+															 1.0, 1.0, 1.0, 1.0,
+															 1.0, 1.0, 1.0, 1.0,
+															 0.3, 0.3, 0.3, 1.0,
+															 this);
+		btnBreakpointDrive1541IrqVIA1->SetOn(false);
+		this->AddGuiElement(btnBreakpointDrive1541IrqVIA1);
+		
+		px += buttonSizeX + 10;
+		
+		btnBreakpointDrive1541IrqVIA2 = new CGuiButtonSwitch(NULL, NULL, NULL,
+															 px, py, posZ, buttonSizeX, buttonSizeY,
+															 new CSlrString("  VIA2  "),
+															 FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
+															 font, fontScale,
+															 1.0, 1.0, 1.0, 1.0,
+															 1.0, 1.0, 1.0, 1.0,
+															 0.3, 0.3, 0.3, 1.0,
+															 this);
+		btnBreakpointDrive1541IrqVIA2->SetOn(false);
+		this->AddGuiElement(btnBreakpointDrive1541IrqVIA2);
+		
+		px += buttonSizeX + 10;
+		
+		btnBreakpointDrive1541IrqIEC = new CGuiButtonSwitch(NULL, NULL, NULL,
+															px, py, posZ, buttonSizeX, buttonSizeY,
+															new CSlrString("  IEC  "),
+															FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
+															font, fontScale,
+															1.0, 1.0, 1.0, 1.0,
+															1.0, 1.0, 1.0, 1.0,
+															0.3, 0.3, 0.3, 1.0,
+															this);
+		btnBreakpointDrive1541IrqIEC->SetOn(false);
+		this->AddGuiElement(btnBreakpointDrive1541IrqIEC);
+		
+		py += buttonSizeY + 5;
+		
+		px = startX2;
+		btnBreakpointsDrive1541PC = new CGuiButtonSwitch(NULL, NULL, NULL,
+														 px, py, posZ, buttonSizeX, buttonSizeY,
+														 new CSlrString(" CPU PC "),
+														 FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
+														 font, fontScale,
+														 1.0, 1.0, 1.0, 1.0,
+														 1.0, 1.0, 1.0, 1.0,
+														 0.3, 0.3, 0.3, 1.0,
+														 this);
+		btnBreakpointsDrive1541PC->SetOn(false);
+		this->AddGuiElement(btnBreakpointsDrive1541PC);
+		
+		Drive1541PCBreakpointsX = px;
+		Drive1541PCBreakpointsY = py + buttonSizeY + 5;
+		
+		py = Drive1541PCBreakpointsY + fontNumbersHeight * 10 + 3;
+		
+		//
+		
+		px = startX2;
+		btnBreakpointsDrive1541Memory = new CGuiButtonSwitch(NULL, NULL, NULL,
+															 px, py, posZ, buttonSizeX, buttonSizeY,
+															 new CSlrString(" MEMORY "),
+															 FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
+															 font, fontScale,
+															 1.0, 1.0, 1.0, 1.0,
+															 1.0, 1.0, 1.0, 1.0,
+															 0.3, 0.3, 0.3, 1.0,
+															 this);
+		btnBreakpointsDrive1541Memory->SetOn(false);
+		this->AddGuiElement(btnBreakpointsDrive1541Memory);
+		
+		Drive1541MemoryBreakpointsX = px - 8;
+		Drive1541MemoryBreakpointsY = py + buttonSizeY + 5;
+		
+		py = Drive1541MemoryBreakpointsY + fontNumbersHeight * 10;
+		
+		//
+		cursorGroup = CURSOR_GROUP_C64_IRQVIC; //CURSOR_GROUP_C64_IRQVIC;//CURSOR_GROUP_C64_MEMORY;CURSOR_GROUP_C64_ADDR_PC;//CURSOR_GROUP_C64_IRQVIC; //CURSOR_GROUP_C64_ADDR_PC;
 
-	//
-	
-	px = startX;
-	btnBreakpointsRaster = new CGuiButtonSwitch(NULL, NULL, NULL,
-											   px, py, posZ, buttonSizeX, buttonSizeY,
-											   new CSlrString(" RASTER "),
-											   FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
-											   font, fontScale,
-											   1.0, 1.0, 1.0, 1.0,
-											   1.0, 1.0, 1.0, 1.0,
-											   0.3, 0.3, 0.3, 1.0,
-											   this);
-	btnBreakpointsRaster->SetOn(false);
-	this->AddGuiElement(btnBreakpointsRaster);
-	
-	rasterBreakpointsX = px;
-	rasterBreakpointsY = py + buttonSizeY + 5;
-	
-	py = rasterBreakpointsY + fontNumbersHeight * 6;
-	
-	//
-	//
-	// right side
-	//
-	//
-	float sb = 20;
-	float scrsx = sizeX - sb*2.0f;
-	float cx = scrsx/2.0f + 11.0f + sb;
-
-	float startX2 = cx;
-	
-	py = startY;
-	px = startX2;
+	}
+	else
+	{
+		// atari
+		cursorGroup = CURSOR_GROUP_C64_ENABLE_PC; //CURSOR_GROUP_C64_IRQVIC;//CURSOR_GROUP_C64_MEMORY;CURSOR_GROUP_C64_ADDR_PC;//CURSOR_GROUP_C64_IRQVIC; //CURSOR_GROUP_C64_ADDR_PC;
+	}
 	
 	
-	/// left side
-	
-	btnBreakpointDrive1541IrqVIA1 = new CGuiButtonSwitch(NULL, NULL, NULL,
-												  px, py, posZ, buttonSizeX, buttonSizeY,
-												  new CSlrString("  VIA1  "),
-												  FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
-												  font, fontScale,
-												  1.0, 1.0, 1.0, 1.0,
-												  1.0, 1.0, 1.0, 1.0,
-												  0.3, 0.3, 0.3, 1.0,
-												  this);
-	btnBreakpointDrive1541IrqVIA1->SetOn(false);
-	this->AddGuiElement(btnBreakpointDrive1541IrqVIA1);
-	
-	px += buttonSizeX + 10;
-	
-	btnBreakpointDrive1541IrqVIA2 = new CGuiButtonSwitch(NULL, NULL, NULL,
-											   px, py, posZ, buttonSizeX, buttonSizeY,
-											   new CSlrString("  VIA2  "),
-											   FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
-											   font, fontScale,
-											   1.0, 1.0, 1.0, 1.0,
-											   1.0, 1.0, 1.0, 1.0,
-											   0.3, 0.3, 0.3, 1.0,
-											   this);
-	btnBreakpointDrive1541IrqVIA2->SetOn(false);
-	this->AddGuiElement(btnBreakpointDrive1541IrqVIA2);
-	
-	px += buttonSizeX + 10;
-	
-	btnBreakpointDrive1541IrqIEC = new CGuiButtonSwitch(NULL, NULL, NULL,
-											   px, py, posZ, buttonSizeX, buttonSizeY,
-											   new CSlrString("  IEC  "),
-											   FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
-											   font, fontScale,
-											   1.0, 1.0, 1.0, 1.0,
-											   1.0, 1.0, 1.0, 1.0,
-											   0.3, 0.3, 0.3, 1.0,
-											   this);
-	btnBreakpointDrive1541IrqIEC->SetOn(false);
-	this->AddGuiElement(btnBreakpointDrive1541IrqIEC);
-	
-	py += buttonSizeY + 5;
-	
-	px = startX2;
-	btnBreakpointsDrive1541PC = new CGuiButtonSwitch(NULL, NULL, NULL,
-											   px, py, posZ, buttonSizeX, buttonSizeY,
-											   new CSlrString(" CPU PC "),
-											   FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
-											   font, fontScale,
-											   1.0, 1.0, 1.0, 1.0,
-											   1.0, 1.0, 1.0, 1.0,
-											   0.3, 0.3, 0.3, 1.0,
-											   this);
-	btnBreakpointsDrive1541PC->SetOn(false);
-	this->AddGuiElement(btnBreakpointsDrive1541PC);
-	
-	Drive1541PCBreakpointsX = px;
-	Drive1541PCBreakpointsY = py + buttonSizeY + 5;
-	
-	py = Drive1541PCBreakpointsY + fontNumbersHeight * 10 + 3;
-	
-	//
-	
-	px = startX2;
-	btnBreakpointsDrive1541Memory = new CGuiButtonSwitch(NULL, NULL, NULL,
-												   px, py, posZ, buttonSizeX, buttonSizeY,
-												   new CSlrString(" MEMORY "),
-												   FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
-												   font, fontScale,
-												   1.0, 1.0, 1.0, 1.0,
-												   1.0, 1.0, 1.0, 1.0,
-												   0.3, 0.3, 0.3, 1.0,
-												   this);
-	btnBreakpointsDrive1541Memory->SetOn(false);
-	this->AddGuiElement(btnBreakpointsDrive1541Memory);
-	
-	Drive1541MemoryBreakpointsX = px - 8;
-	Drive1541MemoryBreakpointsY = py + buttonSizeY + 5;
-	
-	py = Drive1541MemoryBreakpointsY + fontNumbersHeight * 10;
-	
-	
-	
-	
-	//
-	
-	
-	cursorGroup = CURSOR_GROUP_C64_IRQVIC; //CURSOR_GROUP_C64_IRQVIC;//CURSOR_GROUP_C64_MEMORY;CURSOR_GROUP_C64_ADDR_PC;//CURSOR_GROUP_C64_IRQVIC; //CURSOR_GROUP_C64_ADDR_PC;
 	cursorElement = 0;      //0; //2;
 	cursorPosition = -1;
 	
@@ -326,13 +333,16 @@ void CViewBreakpoints::UpdateTheme()
 	tg = viewC64->colorsTheme->colorTextG;
 	tb = viewC64->colorsTheme->colorTextB;
 	
-	lblCommodore64->textColorR = tr;
-	lblCommodore64->textColorG = tg;
-	lblCommodore64->textColorB = tb;
+	lblPlatform->textColorR = tr;
+	lblPlatform->textColorG = tg;
+	lblPlatform->textColorB = tb;
 
-	lbl1541Drive->textColorR = tr;
-	lbl1541Drive->textColorG = tg;
-	lbl1541Drive->textColorB = tb;
+	if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
+	{
+		lbl1541Drive->textColorR = tr;
+		lbl1541Drive->textColorG = tg;
+		lbl1541Drive->textColorB = tb;
+	}
 	
 	CGuiView::UpdateTheme();
 }
@@ -957,22 +967,32 @@ void CViewBreakpoints::GuiEditHexEnteredValue(CGuiEditHex *editHex, u32 lastKeyC
 	if (cursorGroup == CURSOR_GROUP_C64_ADDR_PC)
 	{
 		GuiEditHexEnteredValueAddr(editHex, &(debugInterface->breakpointsPC));
+		this->btnBreakpointsPC->SetOn(true);
+		debugInterface->breakOnPC = true;
 	}
 	else if (cursorGroup == CURSOR_GROUP_C64_MEMORY)
 	{
 		GuiEditHexEnteredValueMemory(editHex, lastKeyCode, &(debugInterface->breakpointsMemory));
+		this->btnBreakpointsMemory->SetOn(true);
+		debugInterface->breakOnMemory = true;
 	}
 	else if (cursorGroup == CURSOR_GROUP_C64_RASTER)
 	{
 		GuiEditHexEnteredValueAddr(editHex, &(debugInterface->breakpointsRaster));
+		this->btnBreakpointsRaster->SetOn(true);
+		debugInterface->breakOnRaster = true;
 	}
 	else if (cursorGroup == CURSOR_GROUP_DRIVE1541_ADDR_PC)
 	{
 		GuiEditHexEnteredValueAddr(editHex, &(viewC64->debugInterfaceC64->breakpointsDrive1541PC));
+		this->btnBreakpointsDrive1541PC->SetOn(true);
+		((C64DebugInterface *)debugInterface)->breakOnDrive1541PC = true;
 	}
 	else if (cursorGroup == CURSOR_GROUP_DRIVE1541_MEMORY)
 	{
 		GuiEditHexEnteredValueMemory(editHex, lastKeyCode, &(viewC64->debugInterfaceC64->breakpointsDrive1541Memory));
+		this->btnBreakpointsDrive1541Memory->SetOn(true);
+		((C64DebugInterface *)debugInterface)->breakOnDrive1541Memory = true;
 	}
 
 	debugInterface->UnlockMutex();
@@ -1097,18 +1117,22 @@ void CViewBreakpoints::GuiEditHexEnteredValueMemory(CGuiEditHex *editHex, u32 la
 
 void CViewBreakpoints::ClearCursor()
 {
-	ClearInvertCBMText(btnBreakpointC64IrqVIC->textUTF);
-	ClearInvertCBMText(btnBreakpointC64IrqCIA->textUTF);
-	ClearInvertCBMText(btnBreakpointC64IrqNMI->textUTF);
 	ClearInvertCBMText(btnBreakpointsPC->textUTF);
 	ClearInvertCBMText(btnBreakpointsMemory->textUTF);
-	ClearInvertCBMText(btnBreakpointsRaster->textUTF);
 
-	ClearInvertCBMText(btnBreakpointDrive1541IrqVIA1->textUTF);
-	ClearInvertCBMText(btnBreakpointDrive1541IrqVIA2->textUTF);
-	ClearInvertCBMText(btnBreakpointDrive1541IrqIEC->textUTF);
-	ClearInvertCBMText(btnBreakpointsDrive1541PC->textUTF);
-	ClearInvertCBMText(btnBreakpointsDrive1541Memory->textUTF);
+	if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
+	{
+		ClearInvertCBMText(btnBreakpointC64IrqVIC->textUTF);
+		ClearInvertCBMText(btnBreakpointC64IrqCIA->textUTF);
+		ClearInvertCBMText(btnBreakpointC64IrqNMI->textUTF);
+		ClearInvertCBMText(btnBreakpointDrive1541IrqVIA1->textUTF);
+		ClearInvertCBMText(btnBreakpointDrive1541IrqVIA2->textUTF);
+		ClearInvertCBMText(btnBreakpointDrive1541IrqIEC->textUTF);
+		ClearInvertCBMText(btnBreakpointsDrive1541PC->textUTF);
+		ClearInvertCBMText(btnBreakpointsDrive1541Memory->textUTF);
+		ClearInvertCBMText(btnBreakpointsRaster->textUTF);
+	}
+
 }
 
 void CViewBreakpoints::UpdateCursor()
@@ -1199,32 +1223,55 @@ void CViewBreakpoints::UpdateCursor()
 
 void CViewBreakpoints::UpdateRenderBreakpoints()
 {
-	// update render breakpoints
-	viewC64->viewC64Disassemble->renderBreakpointsMutex->Lock();
-	viewC64->viewDrive1541Disassemble->renderBreakpointsMutex->Lock();
-	debugInterface->LockMutex();
+	// TODO: make this generic
 	
-	// c64
-	viewC64->viewC64Disassemble->renderBreakpoints.clear();
-	for (std::map<uint16, CAddrBreakpoint *>::iterator it = debugInterface->breakpointsPC.begin();
-		 it != debugInterface->breakpointsPC.end(); it++)
+	// update render breakpoints
+	if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
 	{
-		CAddrBreakpoint *breakpoint = it->second;
-		viewC64->viewC64Disassemble->renderBreakpoints[breakpoint->addr] = breakpoint->addr;
+		viewC64->viewC64Disassemble->renderBreakpointsMutex->Lock();
+		viewC64->viewDrive1541Disassemble->renderBreakpointsMutex->Lock();
+		debugInterface->LockMutex();
+		
+		// c64
+		viewC64->viewC64Disassemble->renderBreakpoints.clear();
+		for (std::map<uint16, CAddrBreakpoint *>::iterator it = debugInterface->breakpointsPC.begin();
+			 it != debugInterface->breakpointsPC.end(); it++)
+		{
+			CAddrBreakpoint *breakpoint = it->second;
+			viewC64->viewC64Disassemble->renderBreakpoints[breakpoint->addr] = breakpoint->addr;
+		}
+		// Drive1541
+		viewC64->viewDrive1541Disassemble->renderBreakpoints.clear();
+		for (std::map<uint16, CAddrBreakpoint *>::iterator it = viewC64->debugInterfaceC64->breakpointsDrive1541PC.begin();
+			 it != viewC64->debugInterfaceC64->breakpointsDrive1541PC.end(); it++)
+		{
+			CAddrBreakpoint *breakpoint = it->second;
+			viewC64->viewDrive1541Disassemble->renderBreakpoints[breakpoint->addr] = breakpoint->addr;
+		}
+		
+		debugInterface->UnlockMutex();
+		viewC64->viewC64Disassemble->renderBreakpointsMutex->Unlock();
+		viewC64->viewDrive1541Disassemble->renderBreakpointsMutex->Unlock();
+	}
+	else if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_ATARI800)
+	{
+		viewC64->viewAtariDisassemble->renderBreakpointsMutex->Lock();
+		debugInterface->LockMutex();
+
+		// atari
+		viewC64->viewAtariDisassemble->renderBreakpoints.clear();
+		for (std::map<uint16, CAddrBreakpoint *>::iterator it = debugInterface->breakpointsPC.begin();
+			 it != debugInterface->breakpointsPC.end(); it++)
+		{
+			CAddrBreakpoint *breakpoint = it->second;
+			viewC64->viewAtariDisassemble->renderBreakpoints[breakpoint->addr] = breakpoint->addr;
+		}
+
+		debugInterface->UnlockMutex();
+		viewC64->viewAtariDisassemble->renderBreakpointsMutex->Unlock();
 	}
 
-	// Drive1541
-	viewC64->viewDrive1541Disassemble->renderBreakpoints.clear();
-	for (std::map<uint16, CAddrBreakpoint *>::iterator it = viewC64->debugInterfaceC64->breakpointsDrive1541PC.begin();
-		 it != viewC64->debugInterfaceC64->breakpointsDrive1541PC.end(); it++)
-	{
-		CAddrBreakpoint *breakpoint = it->second;
-		viewC64->viewDrive1541Disassemble->renderBreakpoints[breakpoint->addr] = breakpoint->addr;
-	}
 
-	debugInterface->UnlockMutex();
-	viewC64->viewDrive1541Disassemble->renderBreakpointsMutex->Unlock();
-	viewC64->viewC64Disassemble->renderBreakpointsMutex->Unlock();
 }
 
 void CViewBreakpoints::SwitchBreakpointsScreen()
@@ -1240,18 +1287,22 @@ void CViewBreakpoints::SwitchBreakpointsScreen()
 		guiMain->SetView(this);
 		
 		// update
-		this->btnBreakpointC64IrqVIC->SetOn(viewC64->debugInterfaceC64->breakOnC64IrqVIC);
-		this->btnBreakpointC64IrqCIA->SetOn(viewC64->debugInterfaceC64->breakOnC64IrqCIA);
-		this->btnBreakpointC64IrqNMI->SetOn(viewC64->debugInterfaceC64->breakOnC64IrqNMI);
+		if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
+		{
+			this->btnBreakpointC64IrqVIC->SetOn(viewC64->debugInterfaceC64->breakOnC64IrqVIC);
+			this->btnBreakpointC64IrqCIA->SetOn(viewC64->debugInterfaceC64->breakOnC64IrqCIA);
+			this->btnBreakpointC64IrqNMI->SetOn(viewC64->debugInterfaceC64->breakOnC64IrqNMI);
+			this->btnBreakpointsRaster->SetOn(debugInterface->breakOnRaster);
+
+			this->btnBreakpointDrive1541IrqVIA1->SetOn(viewC64->debugInterfaceC64->breakOnDrive1541IrqVIA1);
+			this->btnBreakpointDrive1541IrqVIA2->SetOn(viewC64->debugInterfaceC64->breakOnDrive1541IrqVIA2);
+			this->btnBreakpointDrive1541IrqIEC->SetOn(viewC64->debugInterfaceC64->breakOnDrive1541IrqIEC);
+			this->btnBreakpointsDrive1541PC->SetOn(viewC64->debugInterfaceC64->breakOnDrive1541PC);
+			this->btnBreakpointsDrive1541Memory->SetOn(viewC64->debugInterfaceC64->breakOnDrive1541Memory);
+		}
+
 		this->btnBreakpointsPC->SetOn(debugInterface->breakOnPC);
 		this->btnBreakpointsMemory->SetOn(debugInterface->breakOnMemory);
-		this->btnBreakpointsRaster->SetOn(debugInterface->breakOnRaster);
-		
-		this->btnBreakpointDrive1541IrqVIA1->SetOn(viewC64->debugInterfaceC64->breakOnDrive1541IrqVIA1);
-		this->btnBreakpointDrive1541IrqVIA2->SetOn(viewC64->debugInterfaceC64->breakOnDrive1541IrqVIA2);
-		this->btnBreakpointDrive1541IrqIEC->SetOn(viewC64->debugInterfaceC64->breakOnDrive1541IrqIEC);
-		this->btnBreakpointsDrive1541PC->SetOn(viewC64->debugInterfaceC64->breakOnDrive1541PC);
-		this->btnBreakpointsDrive1541Memory->SetOn(viewC64->debugInterfaceC64->breakOnDrive1541Memory);
 	}
 }
 
@@ -1319,7 +1370,14 @@ void CViewBreakpoints::Render()
 	////
 	// render breakpoints
 
-	viewC64->viewC64Disassemble->renderBreakpointsMutex->Lock();
+	if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
+	{
+		viewC64->viewC64Disassemble->renderBreakpointsMutex->Lock();
+	}
+	else if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_ATARI800)
+	{
+		viewC64->viewAtariDisassemble->renderBreakpointsMutex->Lock();
+	}
 
 	// c64 pc breakpoints
 	RenderAddrBreakpoints(&(debugInterface->breakpointsPC), pcBreakpointsX, pcBreakpointsY, CURSOR_GROUP_C64_ADDR_PC,
@@ -1328,20 +1386,29 @@ void CViewBreakpoints::Render()
 	// c64 memory breakpoints
 	RenderMemoryBreakpoints(&(debugInterface->breakpointsMemory), memoryBreakpointsX, memoryBreakpointsY, CURSOR_GROUP_C64_MEMORY);
 	
-	//// c64 raster breakpoints
-	RenderAddrBreakpoints(&(debugInterface->breakpointsRaster), rasterBreakpointsX, rasterBreakpointsY,
-						  CURSOR_GROUP_C64_RASTER, " %3.3X", " ...");
-
-	///////////
-	// Drive1541 pc breakpoints
-	RenderAddrBreakpoints(&(viewC64->debugInterfaceC64->breakpointsDrive1541PC), Drive1541PCBreakpointsX, Drive1541PCBreakpointsY,
-						  CURSOR_GROUP_DRIVE1541_ADDR_PC, "%4.4X", "....");
-
-	// Drive1541 memory breakpoints
-	RenderMemoryBreakpoints(&(viewC64->debugInterfaceC64->breakpointsDrive1541Memory), Drive1541MemoryBreakpointsX, Drive1541MemoryBreakpointsY, CURSOR_GROUP_DRIVE1541_MEMORY);
-
+	if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
+	{
+		//// c64 raster breakpoints
+		RenderAddrBreakpoints(&(debugInterface->breakpointsRaster), rasterBreakpointsX, rasterBreakpointsY,
+							  CURSOR_GROUP_C64_RASTER, " %3.3X", " ...");
+		
+		///////////
+		// Drive1541 pc breakpoints
+		RenderAddrBreakpoints(&(viewC64->debugInterfaceC64->breakpointsDrive1541PC), Drive1541PCBreakpointsX, Drive1541PCBreakpointsY,
+							  CURSOR_GROUP_DRIVE1541_ADDR_PC, "%4.4X", "....");
+		
+		// Drive1541 memory breakpoints
+		RenderMemoryBreakpoints(&(viewC64->debugInterfaceC64->breakpointsDrive1541Memory), Drive1541MemoryBreakpointsX, Drive1541MemoryBreakpointsY, CURSOR_GROUP_DRIVE1541_MEMORY);
+	}
 	
-	viewC64->viewC64Disassemble->renderBreakpointsMutex->Unlock();
+	if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
+	{
+		viewC64->viewC64Disassemble->renderBreakpointsMutex->Unlock();
+	}
+	else if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_ATARI800)
+	{
+		viewC64->viewAtariDisassemble->renderBreakpointsMutex->Unlock();
+	}
 	
 	CGuiView::Render();
 }
@@ -1807,27 +1874,29 @@ bool CViewBreakpoints::DoTap(GLfloat x, GLfloat y)
 		return true;
 	}
 
-	if (CheckTapAddrBreakpoints(x, y, &(debugInterface->breakpointsRaster),
-								rasterBreakpointsX, rasterBreakpointsY,
-								CURSOR_GROUP_C64_RASTER))
+	if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
 	{
-		return true;
+		if (CheckTapAddrBreakpoints(x, y, &(debugInterface->breakpointsRaster),
+									rasterBreakpointsX, rasterBreakpointsY,
+									CURSOR_GROUP_C64_RASTER))
+		{
+			return true;
+		}
+		
+		if (CheckTapAddrBreakpoints(x, y, &(viewC64->debugInterfaceC64->breakpointsDrive1541PC),
+									Drive1541PCBreakpointsX, Drive1541PCBreakpointsY,
+									CURSOR_GROUP_DRIVE1541_ADDR_PC))
+		{
+			return true;
+		}
+		
+		if (CheckTapMemoryBreakpoints(x, y, &(viewC64->debugInterfaceC64->breakpointsDrive1541Memory),
+									  Drive1541MemoryBreakpointsX, Drive1541MemoryBreakpointsY,
+									  CURSOR_GROUP_DRIVE1541_MEMORY))
+		{
+			return true;
+		}
 	}
-	
-	if (CheckTapAddrBreakpoints(x, y, &(viewC64->debugInterfaceC64->breakpointsDrive1541PC),
-								Drive1541PCBreakpointsX, Drive1541PCBreakpointsY,
-								CURSOR_GROUP_DRIVE1541_ADDR_PC))
-	{
-		return true;
-	}
-	
-	if (CheckTapMemoryBreakpoints(x, y, &(viewC64->debugInterfaceC64->breakpointsDrive1541Memory),
-								  Drive1541MemoryBreakpointsX, Drive1541MemoryBreakpointsY,
-								  CURSOR_GROUP_DRIVE1541_MEMORY))
-	{
-		return true;
-	}
-	
 	
 	return CGuiView::DoTap(x, y);
 }

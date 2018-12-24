@@ -1059,6 +1059,12 @@ void MEMORY_GetCharset(UBYTE *cs)
 	memcpy(cs + 0x300, emuos_h + 0x300, 0x100); /* lowercase letters */
 }
 
+void MEMORY_GetCharsetScreenCodes(UBYTE *cs)
+{
+	memcpy(cs, emuos_h, 0x0800);
+}
+
+
 #ifndef PAGED_MEM
 UBYTE MEMORY_HwGetByte(UWORD addr, int no_side_effects)
 {

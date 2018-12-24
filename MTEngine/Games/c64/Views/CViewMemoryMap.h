@@ -178,6 +178,7 @@ public:
 	float textCodeWidth9h;
 	float textCodeWidth10h;
 	
+	bool isBeingMoved;
 	void UpdateMapPosition();
 	
 	// for double click

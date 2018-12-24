@@ -116,6 +116,12 @@ CSlrString *c64SettingsDefaultTAPFolder = NULL;
 CSlrString *c64SettingsPathToXEX = NULL;
 CSlrString *c64SettingsDefaultXEXFolder = NULL;
 
+CSlrString *c64SettingsPathToCAS = NULL;
+CSlrString *c64SettingsDefaultCASFolder = NULL;
+
+CSlrString *c64SettingsPathToAtariCartridge = NULL;
+CSlrString *c64SettingsDefaultAtariCartridgeFolder = NULL;
+
 CSlrString *c64SettingsPathToATR = NULL;
 CSlrString *c64SettingsDefaultATRFolder = NULL;
 
@@ -201,6 +207,10 @@ bool c64SettingsLoadWatches = true;
 // automatically load debug info if filename matched PRG (*.dbg)
 bool c64SettingsLoadDebugInfo = true;
 
+// atari
+u8 c64SettingsAtariVideoSystem = ATARI_VIDEO_SYSTEM_PAL;
+u8 c64SettingsAtariMachineType = 0;
+u8 c64SettingsAtariRamSizeOption = 0;
 
 void storeSettingBlock(CByteBuffer *byteBuffer, u8 value)
 {
@@ -296,6 +306,10 @@ void C64DebuggerStoreSettings()
 	storeSettingString(byteBuffer, "PathATR", c64SettingsPathToATR);
 	storeSettingString(byteBuffer, "FolderXEX", c64SettingsDefaultXEXFolder);
 	storeSettingString(byteBuffer, "PathXEX", c64SettingsPathToXEX);
+	storeSettingString(byteBuffer, "FolderCAS", c64SettingsDefaultCASFolder);
+	storeSettingString(byteBuffer, "PathCAS", c64SettingsPathToCAS);
+	storeSettingString(byteBuffer, "FolderAtariCart", c64SettingsDefaultAtariCartridgeFolder);
+	storeSettingString(byteBuffer, "PathAtariCart", c64SettingsPathToAtariCartridge);
 
 	storeSettingBool(byteBuffer, "AutoJmp", c64SettingsAutoJmp);
 	storeSettingBool(byteBuffer, "AutoJmpAlwaysToLoadedPRGAddress", c64SettingsAutoJmpAlwaysToLoadedPRGAddress);
@@ -368,6 +382,12 @@ void C64DebuggerStoreSettings()
 	storeSettingI32(byteBuffer, "DatasetteTapeWobble", c64SettingsDatasetteTapeWobble);
 	storeSettingBool(byteBuffer, "DatasetteResetWithCPU", c64SettingsDatasetteResetWithCPU);
 	
+#endif
+	
+#if defined(RUN_ATARI)
+	storeSettingU8(byteBuffer, "AtariVideoSystem", c64SettingsAtariVideoSystem);
+	storeSettingU8(byteBuffer, "AtariMachineType", c64SettingsAtariMachineType);
+	storeSettingU8(byteBuffer, "AtariRamSizeOption", c64SettingsAtariRamSizeOption);
 #endif
 
 	storeSettingBool(byteBuffer, "MemMapMultiTouch", c64SettingsUseMultiTouchInMemoryMap);
@@ -1143,6 +1163,99 @@ void C64DebuggerSetSetting(char *name, void *value)
 			}
 			return;
 		}
+		
+		else if (!strcmp(name, "FolderCAS"))
+		{
+			if (c64SettingsDefaultCASFolder != NULL)
+				delete c64SettingsDefaultCASFolder;
+			
+			c64SettingsDefaultCASFolder = new CSlrString((CSlrString*)value);
+			return;
+		}
+		else if (!strcmp(name, "PathCAS"))
+		{
+			if (c64SettingsPathToCAS != NULL)
+				delete c64SettingsPathToCAS;
+			
+			c64SettingsPathToCAS = new CSlrString((CSlrString*)value);
+			
+			// the setting will be updated later by c64PerformStartupTasksThreaded
+			if (viewC64->debugInterfaceAtari && viewC64->debugInterfaceAtari->isRunning)
+			{
+				viewC64->viewC64MainMenu->LoadCAS(c64SettingsPathToCAS, false, false, true);
+			}
+			return;
+		}
+
+		else if (!strcmp(name, "FolderAtariCart"))
+		{
+			if (c64SettingsDefaultAtariCartridgeFolder != NULL)
+				delete c64SettingsDefaultAtariCartridgeFolder;
+			
+			c64SettingsDefaultAtariCartridgeFolder = new CSlrString((CSlrString*)value);
+			return;
+		}
+		else if (!strcmp(name, "PathAtariCart"))
+		{
+			if (c64SettingsPathToAtariCartridge != NULL)
+				delete c64SettingsPathToAtariCartridge;
+			
+			c64SettingsPathToAtariCartridge = new CSlrString((CSlrString*)value);
+			
+			// the setting will be updated later by c64PerformStartupTasksThreaded
+			if (viewC64->debugInterfaceAtari && viewC64->debugInterfaceAtari->isRunning)
+			{
+				viewC64->viewC64MainMenu->InsertAtariCartridge(c64SettingsPathToAtariCartridge, false, false, true);
+			}
+			return;
+		}
+
+		
+		else if (!strcmp(name, "AtariVideoSystem"))
+		{
+			u8 v = *((u8*)value);
+			viewC64->viewC64SettingsMenu->menuItemAtariVideoSystem->SetSelectedOption(v, false);
+
+			c64SettingsAtariVideoSystem = v;
+			
+			// the setting will be updated later by c64PerformStartupTasksThreaded
+			if (viewC64->debugInterfaceAtari && viewC64->debugInterfaceAtari->isRunning)
+			{
+				viewC64->debugInterfaceAtari->SetVideoSystem(v);
+			}
+			return;
+		}
+		else if (!strcmp(name, "AtariMachineType"))
+		{
+			u8 v = *((u8*)value);
+			viewC64->viewC64SettingsMenu->menuItemAtariMachineType->SetSelectedOption(v, false);
+			viewC64->viewC64SettingsMenu->UpdateAtariRamSizeOptions();
+			
+			c64SettingsAtariMachineType = v;
+			
+			// the setting will be updated later by c64PerformStartupTasksThreaded
+			if (viewC64->debugInterfaceAtari && viewC64->debugInterfaceAtari->isRunning)
+			{
+				viewC64->debugInterfaceAtari->SetMachineType(v);
+			}
+			return;
+		}
+
+		else if (!strcmp(name, "AtariRamSizeOption"))
+		{
+			u8 v = *((u8*)value);
+			viewC64->viewC64SettingsMenu->menuItemAtariRamSize->SetSelectedOption(v, false);
+			
+			c64SettingsAtariRamSizeOption = v;
+			
+			// the setting will be updated later by c64PerformStartupTasksThreaded
+			if (viewC64->debugInterfaceAtari && viewC64->debugInterfaceAtari->isRunning)
+			{
+				viewC64->debugInterfaceAtari->SetRamSizeOption(v);
+			}
+			return;
+		}
+
 	}
 #endif
 

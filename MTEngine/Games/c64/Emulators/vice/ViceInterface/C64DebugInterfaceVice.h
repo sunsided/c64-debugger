@@ -221,6 +221,10 @@ public:
 	virtual void SetRunSIDEmulation(bool isSIDEmulationOn);
 	virtual void SetAudioVolume(float volume);
 	
+	// profiler
+	// if fileName is NULL no file will be created, if runForNumCycles is -1 it will run till ProfilerDeactivate
+	virtual void ProfilerActivate(char *fileName, int runForNumCycles, bool pauseCpuWhenFinished);
+	virtual void ProfilerDeactivate();
 
 };
 

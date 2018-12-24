@@ -7,6 +7,10 @@
 #include "CByteBuffer.h"
 #include "DebuggerDefs.h"
 
+
+
+
+
 extern "C"
 {
 #include "ViceWrapper.h"
@@ -32,7 +36,8 @@ public:
 	
 	virtual int GetEmulatorType();
 	virtual CSlrString *GetEmulatorVersionString();
-	
+	virtual CSlrString *GetPlatformNameString();
+
 	virtual void RunEmulationThread();
 	
 	virtual void InitKeyMap(C64KeyMap *keyMap);
@@ -143,6 +148,7 @@ public:
 	virtual void MakeJmpNoReset(CSlrDataAdapter *dataAdapter, uint16 addr);
 
 	// make jmp and reset CPU
+	virtual void MakeJmpAndReset(uint16 addr);
 	virtual void MakeJmpC64(uint16 addr);
 	
 	// make jmp without resetting CPU

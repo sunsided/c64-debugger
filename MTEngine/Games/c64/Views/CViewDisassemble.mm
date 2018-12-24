@@ -7,6 +7,7 @@
 #include "CViewMemoryMap.h"
 #include "SYS_KeyCodes.h"
 #include "CViewC64Screen.h"
+#include "CViewAtariScreen.h"
 #include "C64DebugInterface.h"
 #include "CGuiEditBoxText.h"
 #include "C64Tools.h"
@@ -2340,11 +2341,16 @@ bool CViewDisassemble::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 	
 	if (keyboardShortcut == viewC64->keyboardShortcuts->kbsMakeJmp)
 	{
-		LOGTODO("MAKEJMP: kbsMakeJmp should be in disassemble");
+		this->debugInterface->MakeJmpNoReset(this->dataAdapter, this->cursorAddress);
 		
-		viewC64->debugInterfaceC64->MakeJmpNoReset(this->dataAdapter, this->cursorAddress);
-		
-		viewC64->viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		if (viewC64->debugInterfaceC64)
+		{
+			viewC64->viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		}
+		if (viewC64->debugInterfaceAtari)
+		{
+			viewC64->viewAtariScreen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		}
 		return true;
 	}
 

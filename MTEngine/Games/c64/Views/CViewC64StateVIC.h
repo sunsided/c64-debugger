@@ -1,5 +1,5 @@
-#ifndef _CVIEWC64STATEVID_H_
-#define _CVIEWC64STATEVID_H_
+#ifndef _CVIEWC64STATEVIC_H_
+#define _CVIEWC64STATEVIC_H_
 
 #include "SYS_Defs.h"
 #include "CGuiView.h"

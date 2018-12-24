@@ -133,6 +133,16 @@ public:
 	CViewC64MenuItemOption *menuItemAutoJmpDoReset;
 	CViewC64MenuItemFloat  *menuItemAutoJmpWaitAfterReset;
 
+	// atari
+	CViewC64MenuItemOption *menuItemAtariVideoSystem;
+	CViewC64MenuItemOption *menuItemAtariMachineType;
+	std::vector<CSlrString *> *optionsAtariMachineTypes;
+	CViewC64MenuItemOption *menuItemAtariRamSize;
+	std::vector<CSlrString *> *optionsAtariRamSize800;
+	std::vector<CSlrString *> *optionsAtariRamSizeXL;
+	std::vector<CSlrString *> *optionsAtariRamSize5200;
+	void UpdateAtariRamSizeOptions();
+
 	void ToggleAutoLoadFromInsertedDisk();
 	
 	// tape

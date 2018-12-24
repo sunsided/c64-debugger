@@ -222,7 +222,7 @@ void GFX_WriteImage(char *saveFileName, CImageData *imageIn, u16 screenWidth, u1
 			LOGD("..original size RGBA=%d RGB=%d compressed=%d", numBytes, (rasterWidth * rasterHeight * 3), outSize);
 			
 			free(jpegBuf);
-			delete outBuffer;
+			delete [] outBuffer;
 		}
 
 		else SYS_FatalExit("GFX_WriteImage: unknown compression: %2.2x", compressionType);

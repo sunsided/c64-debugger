@@ -1001,7 +1001,7 @@ void CViewC64VicDisplay::Render()
 //				  this->sizeX, this->sizeY, 0.1f, 0.8f, 1.0f, 1.0f, 3.0f);
 	
 	
-	LOGG("CViewC64VicDisplay::Render: %s posX=%5.2f posY=%5.2f sizeX=%5.2f sizeY=%5.2f", this->name, posX, posY, sizeX, sizeY);
+//	LOGG("CViewC64VicDisplay::Render: %s posX=%5.2f posY=%5.2f sizeX=%5.2f sizeY=%5.2f", this->name, posX, posY, sizeX, sizeY);
 	BlitFilledRectangle(posX, posY, posZ, sizeX, sizeY, 0, 0, 0, 0.7f);
 
 	
@@ -1999,28 +1999,7 @@ bool CViewC64VicDisplay::DoTap(GLfloat x, GLfloat y)
 
 bool CViewC64VicDisplay::DoRightClick(GLfloat x, GLfloat y)
 {
-	// TODO: this is too nasty workaround, do something with this!
-	if (viewC64->currentScreenLayoutId == SCREEN_LAYOUT_C64_VIC_DISPLAY
-		&& guiMain->currentView == viewC64)
-	{
-		if (viewC64->viewC64Screen->IsInsideViewNonVisible(x, y))
-		{
-			if (viewC64->viewC64Screen->visible)
-			{
-				viewC64->viewC64Screen->showZoomedScreen = true;
-				viewC64->viewC64Screen->visible = false;
-			}
-			else
-			{
-				viewC64->viewC64Screen->showZoomedScreen = false;
-				viewC64->viewC64Screen->visible = true;
-			}
-			
-			return true;
-		}
-	}
-	
-	return false; //CGuiView::DoRightClick(x, y);
+	return CGuiView::DoRightClick(x, y);
 }
 
 

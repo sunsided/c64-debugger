@@ -375,6 +375,9 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 		|| [strExt isEqualToString:@"SNAP"] || [strExt isEqualToString:@"VCE"] || [strExt isEqualToString:@"PNG"]
 		|| [strExt isEqual:@"xex"] || [strExt isEqual:@"XEX"]
 		|| [strExt isEqual:@"atr"] || [strExt isEqualToString:@"ATR"]
+		|| [strExt isEqual:@"cas"] || [strExt isEqual:@"CAS"]
+		|| [strExt isEqual:@"car"] || [strExt isEqual:@"CAR"]
+		|| [strExt isEqual:@"a8s"] || [strExt isEqual:@"A8S"]
 		|| [strExt isEqual:@"c64jukebox"] || [strExt isEqualToString:@"C64JUKEBOX"] || [strExt isEqual:@"json"] || [strExt isEqualToString:@"JSON"])
 		
 	{
@@ -396,6 +399,9 @@ void C64D_DragDropCallbackD64(CSlrString *filePath);
 void C64D_DragDropCallbackCRT(CSlrString *filePath);
 void C64D_DragDropCallbackSNAP(CSlrString *filePath);
 void C64D_DragDropCallbackXEX(CSlrString *filePath);
+void C64D_DragDropCallbackCAS(CSlrString *filePath);
+void C64D_DragDropCallbackCAR(CSlrString *filePath);
+void C64D_DragDropCallbackA8S(CSlrString *filePath);
 void C64D_DragDropCallbackATR(CSlrString *filePath);
 void C64D_DragDropCallbackJukeBox(CSlrString *filePath);
 
@@ -419,6 +425,9 @@ enum
 	MACOS_OPEN_FILE_TYPE_VCE,
 	MACOS_OPEN_FILE_TYPE_PNG,
 	MACOS_OPEN_FILE_TYPE_XEX,
+	MACOS_OPEN_FILE_TYPE_CAS,
+	MACOS_OPEN_FILE_TYPE_CAR,
+	MACOS_OPEN_FILE_TYPE_A8S,
 	MACOS_OPEN_FILE_TYPE_ATR,
 	MACOS_OPEN_FILE_TYPE_JukeBox
 };
@@ -524,6 +533,33 @@ BOOL MACOS_OpenFile(NSString *strPath)
 		
 		return YES;
 	}
+	else if ([strExt isEqual:@"cas"] || [strExt isEqual:@"CAS"])
+	{
+		macOsThreadedOpenFileType = MACOS_OPEN_FILE_TYPE_CAS;
+		macOsThreadedOpenFilePath = FUN_ConvertNSStringToCSlrString(strPath);
+		
+		SYS_StartThread(macOsOpenFileThread);
+		
+		return YES;
+	}
+	else if ([strExt isEqual:@"car"] || [strExt isEqual:@"CAR"])
+	{
+		macOsThreadedOpenFileType = MACOS_OPEN_FILE_TYPE_CAR;
+		macOsThreadedOpenFilePath = FUN_ConvertNSStringToCSlrString(strPath);
+		
+		SYS_StartThread(macOsOpenFileThread);
+		
+		return YES;
+	}
+	else if ([strExt isEqual:@"a8s"] || [strExt isEqual:@"A8S"])
+	{
+		macOsThreadedOpenFileType = MACOS_OPEN_FILE_TYPE_A8S;
+		macOsThreadedOpenFilePath = FUN_ConvertNSStringToCSlrString(strPath);
+		
+		SYS_StartThread(macOsOpenFileThread);
+		
+		return YES;
+	}
 	else if ([strExt isEqual:@"atr"] || [strExt isEqual:@"ATR"])
 	{
 		macOsThreadedOpenFileType = MACOS_OPEN_FILE_TYPE_ATR;
@@ -589,6 +625,18 @@ void CMacOsOpenFileThread::ThreadRun(void *data)
 	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_XEX)
 	{
 		C64D_DragDropCallbackXEX(macOsThreadedOpenFilePath);
+	}
+	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_CAS)
+	{
+		C64D_DragDropCallbackCAS(macOsThreadedOpenFilePath);
+	}
+	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_CAR)
+	{
+		C64D_DragDropCallbackCAR(macOsThreadedOpenFilePath);
+	}
+	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_A8S)
+	{
+		C64D_DragDropCallbackA8S(macOsThreadedOpenFilePath);
 	}
 	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_ATR)
 	{

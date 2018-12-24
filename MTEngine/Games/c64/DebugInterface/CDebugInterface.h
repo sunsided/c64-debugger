@@ -21,6 +21,7 @@ public:
 	
 	virtual int GetEmulatorType();
 	virtual CSlrString *GetEmulatorVersionString();
+	virtual CSlrString *GetPlatformNameString();
 	
 	bool isRunning;
 	bool isSelected;
@@ -58,8 +59,21 @@ public:
 	virtual bool MountDisk(char *fullFilePath, int diskNo, bool readOnly);
 
 	//
+	virtual bool LoadFullSnapshot(char *filePath);
+	virtual void SaveFullSnapshot(char *filePath);
+
+	//
 	virtual bool GetSettingIsWarpSpeed();
 	virtual void SetSettingIsWarpSpeed(bool isWarpSpeed);
+
+	// cpu control
+
+	// make jmp without resetting CPU depending on dataAdapter
+	virtual void MakeJmpNoReset(CSlrDataAdapter *dataAdapter, uint16 addr);
+	
+	// make jmp and reset CPU
+	virtual void MakeJmpAndReset(uint16 addr);
+	
 
 	// breakpoints
 	bool isDebugOn;

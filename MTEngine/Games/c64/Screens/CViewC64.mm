@@ -15,6 +15,7 @@ extern "C"{
 
 #include "CViewC64.h"
 #include "CViewC64Screen.h"
+#include "CViewC64ScreenWrapper.h"
 #include "CViewAtariScreen.h"
 #include "VID_GLViewController.h"
 #include "VID_Blits.h"
@@ -39,8 +40,12 @@ extern "C"{
 #include "CViewC64VicDisplay.h"
 #include "CViewC64VicControl.h"
 #include "CViewC64StateCPU.h"
-#include "CViewAtariStateCPU.h"
 #include "CViewDriveStateCPU.h"
+#include "CViewAtariStateCPU.h"
+#include "CViewAtariStateANTIC.h"
+#include "CViewAtariStatePIA.h"
+#include "CViewAtariStateGTIA.h"
+#include "CViewAtariStatePOKEY.h"
 #include "CViewBreakpoints.h"
 #include "CViewMainMenu.h"
 #include "CViewSettingsMenu.h"
@@ -177,7 +182,7 @@ CViewC64::CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 	// loop of views for TAB & shift+TAB
 	if (debugInterfaceC64 != NULL)
 	{
-		traversalOfViews.push_back(viewC64Screen);
+		traversalOfViews.push_back(viewC64ScreenWrapper);
 	}
 	
 	traversalOfViews.push_back(viewC64Disassemble);
@@ -214,23 +219,39 @@ CViewC64::CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 	viewC64SettingsMenu = new CViewSettingsMenu(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	guiMain->AddGuiElement(viewC64SettingsMenu);
 	
-	viewFileD64 = new CViewFileD64(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT);
-	guiMain->AddGuiElement(viewFileD64);
-	
-	viewC64Breakpoints = new CViewBreakpoints(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT);
-	guiMain->AddGuiElement(viewC64Breakpoints);
-	
-	viewC64Snapshots = new CViewSnapshots(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT);
-	guiMain->AddGuiElement(viewC64Snapshots);
+	if (this->debugInterfaceC64 != NULL)
+	{
+		viewFileD64 = new CViewFileD64(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT);
+		guiMain->AddGuiElement(viewFileD64);
+		
+		viewC64Breakpoints = new CViewBreakpoints(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT, this->debugInterfaceC64);
+		guiMain->AddGuiElement(viewC64Breakpoints);
+		
+		viewC64Snapshots = new CViewSnapshots(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT, this->debugInterfaceC64);
+		guiMain->AddGuiElement(viewC64Snapshots);
+		
+		viewC64KeyMap = new CViewC64KeyMap(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT);
+		guiMain->AddGuiElement(viewC64KeyMap);
 
-	viewC64KeyMap = new CViewC64KeyMap(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT);
-	guiMain->AddGuiElement(viewC64KeyMap);
-
+//		viewColodore = new CViewColodore(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT);
+//		guiMain->AddGuiElement(viewColodore);
+	}
+	else
+	{
+		viewFileD64 = NULL;
+		viewC64Breakpoints = NULL;
+		viewC64Snapshots = NULL;
+		viewC64KeyMap = NULL;
+	}
+	
+	if (this->debugInterfaceAtari != NULL)
+	{
+		viewAtariSnapshots = new CViewSnapshots(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT, this->debugInterfaceAtari);
+		guiMain->AddGuiElement(viewAtariSnapshots);
+	}
+	
 	viewKeyboardShortcuts = new CViewKeyboardShortcuts(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	guiMain->AddGuiElement(viewKeyboardShortcuts);
-
-	viewColodore = new CViewColodore(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT);
-	guiMain->AddGuiElement(viewColodore);
 
 	viewAbout = new CViewAbout(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	guiMain->AddGuiElement(viewAbout);
@@ -308,12 +329,13 @@ CViewC64::CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 	if (debugInterfaceAtari != NULL)
 	{
 		emulationThreadAtari = new CEmulationThreadAtari();
+		
+		debugInterfaceAtari->SetMachineType(c64SettingsAtariMachineType);
+		debugInterfaceAtari->SetRamSizeOption(c64SettingsAtariRamSizeOption);
+		
 		SYS_StartThread(emulationThreadAtari, NULL);
 		
-		if (emulationThreadAtari != NULL)
-		{
-			this->selectedDebugInterface = debugInterfaceAtari;
-		}
+		this->selectedDebugInterface = debugInterfaceAtari;
 	}
 #endif
 
@@ -379,7 +401,7 @@ void CViewC64::InitJukebox(CSlrString *jukeboxJsonFilePath)
 {
 	guiMain->LockMutex();
 	
-//#ifdef MACOS
+#if defined(MACOS) || defined(LINUX)
 	// set current folder to jukebox path
 	
 	CSlrString *path = jukeboxJsonFilePath->GetFilePathWithoutFileNameComponentFromPath();
@@ -392,7 +414,7 @@ void CViewC64::InitJukebox(CSlrString *jukeboxJsonFilePath)
 	delete [] cPath;
 	delete path;
 	
-//#endif
+#endif
 	
 	if (this->viewJukeboxPlaylist == NULL)
 	{
@@ -503,12 +525,22 @@ void CViewC64::InitViews()
 	///
 	viewAtariScreen = new CViewAtariScreen(0, 0, posZ, sizeX, sizeY, debugInterfaceAtari);
 	this->AddGuiElement(viewAtariScreen);
+	
+	viewAtariBreakpoints = new CViewBreakpoints(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT, this->debugInterfaceAtari);
+	guiMain->AddGuiElement(viewAtariBreakpoints);
+	
 #endif
 	
 #ifdef RUN_COMMODORE64
+	
 	// create views
 	viewC64Screen = new CViewC64Screen(0, 0, posZ, sizeX, sizeY, debugInterfaceC64);
-	this->AddGuiElement(viewC64Screen);
+	//	this->AddGuiElement(viewC64Screen);   this will be added on the top
+
+	// create views
+	viewC64ScreenWrapper = new CViewC64ScreenWrapper(0, 0, posZ, sizeX, sizeY, debugInterfaceC64);
+	//	this->AddGuiElement(viewC64ScreenWrapper);   this will be added on the top
+	
 	
 	// views
 
@@ -527,11 +559,6 @@ void CViewC64::InitViews()
 													&(debugInterfaceC64->breakpointsDrive1541PC), debugInterfaceC64);
 	this->AddGuiElement(viewDrive1541Disassemble);
 	
-	
-	viewC64SourceCode = new CViewSourceCode(0, 0, posZ, SCREEN_WIDTH, SCREEN_HEIGHT,
-											 debugInterfaceC64->dataAdapterC64, viewC64MemoryMap, viewC64Disassemble, debugInterfaceC64);
-	this->AddGuiElement(viewC64SourceCode);
-
 	
 	viewC64MemoryDataDump = new CViewDataDump(10, 10, -1, 300, 300,
 											  debugInterfaceC64->dataAdapterC64, viewC64MemoryMap, viewC64Disassemble, debugInterfaceC64);
@@ -556,7 +583,11 @@ void CViewC64::InitViews()
 	
 	
 	//
+	viewC64SourceCode = new CViewSourceCode(0, 0, posZ, SCREEN_WIDTH, SCREEN_HEIGHT,
+											debugInterfaceC64->dataAdapterC64, viewC64MemoryMap, viewC64Disassemble, debugInterfaceC64);
+	this->AddGuiElement(viewC64SourceCode);
 	
+
 	//
 	
 	viewC64StateCIA = new CViewC64StateCIA(0, 0, posZ, SCREEN_WIDTH, SCREEN_HEIGHT, debugInterfaceC64);
@@ -585,6 +616,10 @@ void CViewC64::InitViews()
 	viewDriveStateCPU = new CViewDriveStateCPU(0, 0, posZ, SCREEN_WIDTH, SCREEN_HEIGHT, debugInterfaceC64);
 	this->AddGuiElement(viewDriveStateCPU);
 
+	// add c64 screen on top of all other views
+//	this->AddGuiElement(viewC64Screen);
+	this->AddGuiElement(viewC64ScreenWrapper);
+
 #endif
 
 	
@@ -610,6 +645,17 @@ void CViewC64::InitViews()
 												debugInterfaceAtari->dataAdapter, viewAtariMemoryMap, viewAtariDisassemble,
 												debugInterfaceAtari);
 	this->AddGuiElement(viewAtariMemoryDataDump);
+	
+	
+	viewAtariStateANTIC = new CViewAtariStateANTIC(0, 0, posZ, SCREEN_WIDTH, SCREEN_HEIGHT, debugInterfaceAtari);
+	this->AddGuiElement(viewAtariStateANTIC);
+	viewAtariStateGTIA = new CViewAtariStateGTIA(0, 0, posZ, SCREEN_WIDTH, SCREEN_HEIGHT, debugInterfaceAtari);
+	this->AddGuiElement(viewAtariStateGTIA);
+	viewAtariStatePIA = new CViewAtariStatePIA(0, 0, posZ, SCREEN_WIDTH, SCREEN_HEIGHT, debugInterfaceAtari);
+	this->AddGuiElement(viewAtariStatePIA);
+	viewAtariStatePOKEY = new CViewAtariStatePOKEY(0, 0, posZ, SCREEN_WIDTH, SCREEN_HEIGHT, debugInterfaceAtari);
+	this->AddGuiElement(viewAtariStatePOKEY);
+
 	
 #endif
 	
@@ -1147,12 +1193,20 @@ void CViewC64::InitLayouts()
 	screenPositions[m]->c64DataDumpShowCharacters = false;
 	screenPositions[m]->c64DataDumpShowSprites = false;
 	
-	screenPositions[m]->c64VicDisplayVisible = true;
-	screenPositions[m]->c64VicDisplayScale = 1.23f;
-	screenPositions[m]->c64VicDisplayX = screenPositions[m]->c64DisassembleFontSize * 25.0f + 10.5f;
-	screenPositions[m]->c64VicDisplayY = 13.0f;
-	screenPositions[m]->c64VicDisplayCanScrollDisassemble = false;
-	
+	scale = 0.90f;
+	screenPositions[m]->c64ScreenVisible = true;
+	screenPositions[m]->c64ScreenSizeX = (float)debugInterfaceC64->GetScreenSizeX() * scale;
+	screenPositions[m]->c64ScreenSizeY = (float)debugInterfaceC64->GetScreenSizeY() * scale;
+	screenPositions[m]->c64ScreenX = screenPositions[m]->c64DisassembleFontSize * 25.0f + 10.5f;
+	screenPositions[m]->c64ScreenY = 13.0f;
+
+	// user can now r-click on screen to switch modes
+	//	screenPositions[m]->c64VicDisplayVisible = false;
+	//	screenPositions[m]->c64VicDisplayScale = 1.23f;
+	//	screenPositions[m]->c64VicDisplayX = screenPositions[m]->c64DisassembleFontSize * 25.0f + 10.5f;
+	//	screenPositions[m]->c64VicDisplayY = 13.0f;
+	//	screenPositions[m]->c64VicDisplayCanScrollDisassemble = false;
+
 	screenPositions[m]->c64MemoryMapVisible = true;
 	screenPositions[m]->c64MemoryMapSizeX = 110.0f;
 	screenPositions[m]->c64MemoryMapSizeY = 99.0f;
@@ -1218,12 +1272,20 @@ void CViewC64::InitLayouts()
 //	screenPositions[m]->c64DataDumpShowCharacters = false;
 //	screenPositions[m]->c64DataDumpShowSprites = false;
 	
-	screenPositions[m]->c64VicDisplayVisible = true;
-	screenPositions[m]->c64VicDisplayScale = 0.35f;
-	screenPositions[m]->c64VicDisplayX = 470;
-	screenPositions[m]->c64VicDisplayY = 0.0f;
-	screenPositions[m]->c64VicDisplayCanScrollDisassemble = false;
-	
+	scale = 0.255f;
+	screenPositions[m]->c64ScreenVisible = true;
+	screenPositions[m]->c64ScreenSizeX = (float)debugInterfaceC64->GetScreenSizeX() * scale;
+	screenPositions[m]->c64ScreenSizeY = (float)debugInterfaceC64->GetScreenSizeY() * scale;
+	screenPositions[m]->c64ScreenX = 478;
+	screenPositions[m]->c64ScreenY = 0.0f;
+
+	// user can now r-click on screen to switch modes
+//		screenPositions[m]->c64VicDisplayVisible = true;
+//		screenPositions[m]->c64VicDisplayScale = 0.35f;
+//		screenPositions[m]->c64VicDisplayX = 470;
+//		screenPositions[m]->c64VicDisplayY = 0.0f;
+	screenPositions[m]->c64VicDisplayCanScrollDisassemble = true;
+
 //	screenPositions[m]->c64MemoryMapVisible = true;
 //	screenPositions[m]->c64MemoryMapSizeX = 110.0f;
 //	screenPositions[m]->c64MemoryMapSizeY = 99.0f;
@@ -1250,12 +1312,13 @@ void CViewC64::InitLayouts()
 	screenPositions[m]->atariScreenSizeY = (float)debugInterfaceAtari->GetScreenSizeY() * scale;
 	screenPositions[m]->atariScreenX = ((float)SCREEN_WIDTH-screenPositions[m]->atariScreenSizeX)/2.0f - 0.78f;
 	screenPositions[m]->atariScreenY = 0.0f;
-	
-	m = SCREEN_LAYOUT_ATARI_DATA_DUMP;
-	screenPositions[m] = new CScreenLayout();
 	screenPositions[m]->debugOnAtari = true;
 	screenPositions[m]->debugOnC64 = false;
 	screenPositions[m]->debugOnDrive1541 = false;
+	
+
+	m = SCREEN_LAYOUT_ATARI_DATA_DUMP;
+	screenPositions[m] = new CScreenLayout();
 	scale = 0.676f;
 	screenPositions[m]->atariScreenVisible = true;
 	screenPositions[m]->atariScreenY = 10.5f;
@@ -1296,7 +1359,11 @@ void CViewC64::InitLayouts()
 	screenPositions[m]->atariMemoryMapY = 1.0f;
 	screenPositions[m]->atariMemoryMapSizeX = 199.0f;
 	screenPositions[m]->atariMemoryMapSizeY = 192.0f;
+	screenPositions[m]->debugOnAtari = true;
+	screenPositions[m]->debugOnC64 = false;
+	screenPositions[m]->debugOnDrive1541 = false;
 	
+
 	m = SCREEN_LAYOUT_ATARI_DEBUGGER;
 	screenPositions[m] = new CScreenLayout();
 	///	scale = 1.3f;
@@ -1331,7 +1398,9 @@ void CViewC64::InitLayouts()
 	screenPositions[m]->atariDataDumpGapHexData = screenPositions[m]->atariDataDumpFontSize*0.5f;
 	screenPositions[m]->atariDataDumpGapDataCharacters = screenPositions[m]->atariDataDumpFontSize*0.5f;
 	screenPositions[m]->atariDataDumpNumberOfBytesPerLine = 16;
-	
+	screenPositions[m]->debugOnAtari = true;
+	screenPositions[m]->debugOnC64 = false;
+	screenPositions[m]->debugOnDrive1541 = false;
 	
 	m = SCREEN_LAYOUT_ATARI_MEMORY_MAP;
 	screenPositions[m] = new CScreenLayout();
@@ -1366,7 +1435,10 @@ void CViewC64::InitLayouts()
 	screenPositions[m]->atariDataDumpGapHexData = screenPositions[m]->atariDataDumpFontSize*0.36f;
 	screenPositions[m]->atariDataDumpGapDataCharacters = screenPositions[m]->atariDataDumpFontSize*0.5f;
 	screenPositions[m]->atariDataDumpNumberOfBytesPerLine = 8;
-	
+	screenPositions[m]->debugOnAtari = true;
+	screenPositions[m]->debugOnC64 = false;
+	screenPositions[m]->debugOnDrive1541 = false;
+
 	m = SCREEN_LAYOUT_ATARI_SHOW_STATES;
 	screenPositions[m] = new CScreenLayout();
 	scale = 0.676f;
@@ -1380,32 +1452,26 @@ void CViewC64::InitLayouts()
 	screenPositions[m]->atariCpuStateY = 0.0f;
 	screenPositions[m]->atariCpuStateFontSize = 5.0f;
 	
-//	screenPositions[m]->c64StateVICVisible = true;
-//	screenPositions[m]->c64StateVICFontSize = 5.0f;
-//	screenPositions[m]->c64StateVICX = 13.0f;
-//	screenPositions[m]->c64StateVICY = 13.0f;
-//	//	fontSize*62, fontSize*29
-//	screenPositions[m]->c64StateVICSizeX = 4.0f*58;
-//	screenPositions[m]->c64StateVICSizeY = 4.0f*31;
-//	screenPositions[m]->c64StateVICIsVertical = false;
-//	
-//	screenPositions[m]->c64StateSIDVisible = true;
-//	screenPositions[m]->c64StateSIDFontSize = 5.0f;
-//	screenPositions[m]->c64StateSIDX = 0.0f;
-//	screenPositions[m]->c64StateSIDY = 190.0f;//195.0f;
-//	
-//	screenPositions[m]->c64StateCIAVisible = true;
-//	screenPositions[m]->c64StateCIAFontSize = 5.0f;
-//	screenPositions[m]->c64StateCIAX = 190.0f;
-//	screenPositions[m]->c64StateCIAY = 200.0f;
-//	
-//	screenPositions[m]->c64StateDrive1541Visible = true;
-//	screenPositions[m]->c64StateDrive1541FontSize = 5.0f;
-//	screenPositions[m]->c64StateDrive1541X = 190.0f;
-//	screenPositions[m]->c64StateDrive1541Y = 265.0f;
-//	screenPositions[m]->c64StateDrive1541RenderVIA1 = true;
-//	screenPositions[m]->c64StateDrive1541RenderVIA2 = true;
-//	screenPositions[m]->c64StateDrive1541RenderDriveLED = true;
+	screenPositions[m]->atariStateANTICVisible = true;
+	screenPositions[m]->atariStateANTICFontSize = 5.0f;
+	screenPositions[m]->atariStateANTICX = 0.0f;
+	screenPositions[m]->atariStateANTICY = 0.0f;
+
+	screenPositions[m]->atariStateGTIAVisible = true;
+	screenPositions[m]->atariStateGTIAFontSize = 5.0f;
+	screenPositions[m]->atariStateGTIAX = 0.0f;
+	screenPositions[m]->atariStateGTIAY = 190.0f;
+
+	screenPositions[m]->atariStatePIAVisible = true;
+	screenPositions[m]->atariStatePIAFontSize = 5.0f;
+	screenPositions[m]->atariStatePIAX = 400.0f;
+	screenPositions[m]->atariStatePIAY = 190.0f;
+
+	screenPositions[m]->atariStatePOKEYVisible = true;
+	screenPositions[m]->atariStatePOKEYFontSize = 5.0f;
+	screenPositions[m]->atariStatePOKEYX = 0.0f;
+	screenPositions[m]->atariStatePOKEYY = 300.0f;
+
 //	
 //	screenPositions[m]->c64DataDumpVisible = false;
 //	screenPositions[m]->drive1541DataDumpVisible = false;
@@ -1413,7 +1479,10 @@ void CViewC64::InitLayouts()
 	screenPositions[m]->emulationStateVisible = true;
 	screenPositions[m]->emulationStateX = 371.0f;
 	screenPositions[m]->emulationStateY = 350.0f;
-	
+	screenPositions[m]->debugOnAtari = true;
+	screenPositions[m]->debugOnC64 = false;
+	screenPositions[m]->debugOnDrive1541 = false;
+
 	//
 	m = SCREEN_LAYOUT_ATARI_MONITOR_CONSOLE;
 	screenPositions[m] = new CScreenLayout();
@@ -1463,6 +1532,9 @@ void CViewC64::InitLayouts()
 	screenPositions[m]->atariMemoryMapSizeY = 164.0f;
 	screenPositions[m]->atariMemoryMapX = SCREEN_WIDTH-screenPositions[m]->atariMemoryMapSizeX;
 	screenPositions[m]->atariMemoryMapY = 195.5f;
+	screenPositions[m]->debugOnAtari = true;
+	screenPositions[m]->debugOnC64 = false;
+	screenPositions[m]->debugOnDrive1541 = false;
 
 #if defined(RUN_COMMODORE64)
 	//
@@ -1650,8 +1722,8 @@ void CViewC64::SwitchToScreenLayout(int newScreenLayoutId)
 	debugInterfaceC64->SetDebugOnDrive1541(screenLayout->debugOnDrive1541);
 
 	// screen
-	viewC64Screen->SetVisible(screenLayout->c64ScreenVisible);
-	viewC64Screen->SetPosition(screenLayout->c64ScreenX,
+	viewC64ScreenWrapper->SetVisible(screenLayout->c64ScreenVisible);
+	viewC64ScreenWrapper->SetPosition(screenLayout->c64ScreenX,
 							   screenLayout->c64ScreenY, posZ,
 							   screenLayout->c64ScreenSizeX,
 							   screenLayout->c64ScreenSizeY);
@@ -1854,6 +1926,22 @@ void CViewC64::SwitchToScreenLayout(int newScreenLayoutId)
 								  screenLayout->atariMemoryMapSizeX,
 								  screenLayout->atariMemoryMapSizeY);
 
+	viewAtariStateANTIC->SetVisible(screenLayout->atariStateANTICVisible);
+	viewAtariStateANTIC->SetPosition(screenLayout->atariStateANTICX, screenLayout->atariStateANTICY, posZ, 100, 100);
+	viewAtariStateANTIC->fontSize = screenLayout->atariStateANTICFontSize;
+
+	viewAtariStateGTIA->SetVisible(screenLayout->atariStateGTIAVisible);
+	viewAtariStateGTIA->SetPosition(screenLayout->atariStateGTIAX, screenLayout->atariStateGTIAY, posZ, 100, 100);
+	viewAtariStateGTIA->fontSize = screenLayout->atariStateGTIAFontSize;
+
+	viewAtariStatePIA->SetVisible(screenLayout->atariStatePIAVisible);
+	viewAtariStatePIA->SetPosition(screenLayout->atariStatePIAX, screenLayout->atariStatePIAY, posZ, 100, 100);
+	viewAtariStatePIA->fontSize = screenLayout->atariStatePIAFontSize;
+
+	viewAtariStatePOKEY->SetVisible(screenLayout->atariStatePOKEYVisible);
+	viewAtariStatePOKEY->SetPosition(screenLayout->atariStatePOKEYX, screenLayout->atariStatePOKEYY, posZ, 100, 100);
+	viewAtariStatePOKEY->fontSize = screenLayout->atariStatePOKEYFontSize;
+
 #endif
 	
 	//
@@ -1868,9 +1956,9 @@ void CViewC64::SwitchToScreenLayout(int newScreenLayoutId)
 	{
 		if (focusElement == NULL || (focusElement && focusElement->visible == false))
 		{
-			if (debugInterfaceC64 && viewC64Screen->visible)
+			if (debugInterfaceC64 && viewC64ScreenWrapper->visible)
 			{
-				SetFocus(viewC64Screen);
+				SetFocus(viewC64ScreenWrapper);
 			}
 			else if (debugInterfaceAtari && viewAtariScreen->visible)
 			{
@@ -1888,6 +1976,15 @@ void CViewC64::SwitchToScreenLayout(int newScreenLayoutId)
 	{
 		viewC64->viewMonitorConsole->ActivateView();
 	}
+	
+	if (debugInterfaceC64 != NULL)
+	{
+		if (viewC64->viewC64ScreenWrapper->visible)
+		{
+			viewC64->viewC64ScreenWrapper->ActivateView();
+		}
+	}
+	
 	
 	CheckMouseCursorVisibility();
 	
@@ -1908,6 +2005,8 @@ void CEmulationThreadC64::ThreadRun(void *data)
 
 	LOGD("CEmulationThreadC64::ThreadRun");
 	
+	((C64DebugInterfaceVice*)viewC64->debugInterfaceC64)->ProfilerActivate("/Users/mars/Desktop/test.pd", 200000, true);
+	
 	viewC64->debugInterfaceC64->RunEmulationThread();
 	
 	LOGD("CEmulationThreadC64::ThreadRun: finished");
@@ -1917,6 +2016,9 @@ void CEmulationThreadAtari::ThreadRun(void *data)
 {
 	ThreadSetName("atari");
 	
+	viewC64->debugInterfaceAtari->SetMachineType(c64SettingsAtariMachineType);
+	viewC64->debugInterfaceAtari->SetVideoSystem(c64SettingsAtariVideoSystem);
+
 	LOGD("CEmulationThreadAtari::ThreadRun");
 	
 	viewC64->debugInterfaceAtari->RunEmulationThread();
@@ -1973,7 +2075,7 @@ void CViewC64::Render()
 	
 //	if (frameCounter % 2 == 0)
 	{
-		//if (viewC64Screen->visible)   always do this anyway
+		//if (viewC64ScreenWrapper->visible)   always do this anyway
 		
 		if (debugInterfaceC64 && viewC64Screen)
 		{
@@ -2034,9 +2136,9 @@ void CViewC64::Render()
 	//
 	
 #ifdef RUN_COMMODORE64
-	if (isShowingRasterCross && viewC64->viewC64Screen->visible)
+	if (viewC64->viewC64ScreenWrapper->visible)
 	{
-		viewC64Screen->RenderRaster(rasterToShowX, rasterToShowY);
+		viewC64ScreenWrapper->RenderRaster(rasterToShowX, rasterToShowY);
 	}
 	
 	if (viewC64Screen->showZoomedScreen)
@@ -2183,8 +2285,22 @@ bool CViewC64::ProcessGlobalKeyboardShortcut(u32 keyCode, bool isShift, bool isA
 			viewAtariScreen->KeyUpModifierKeys(isShift, isAlt, isControl);
 		}
 	
-		if (viewC64Snapshots->ProcessKeyboardShortcut(shortcut))
-			return true;
+		if (viewC64Snapshots)
+		{
+			if (viewC64Snapshots->ProcessKeyboardShortcut(shortcut))
+			{
+				return true;
+			}
+		}
+
+		if (viewAtariSnapshots)
+		{
+			if (viewAtariSnapshots->ProcessKeyboardShortcut(shortcut))
+			{
+				return true;
+			}
+		}
+		
 		
 		if (shortcut == viewC64MainMenu->kbsMainMenuScreen)
 		{
@@ -2433,14 +2549,24 @@ bool CViewC64::ProcessGlobalKeyboardShortcut(u32 keyCode, bool isShift, bool isA
 			}
 			return true;
 		}
-		else if (shortcut == viewC64MainMenu->kbsBreakpoints)
+		else if (shortcut == viewC64MainMenu->kbsBreakpointsC64)
 		{
 			viewC64Breakpoints->SwitchBreakpointsScreen();
 			return true;
 		}
-		else if (shortcut == viewC64MainMenu->kbsSnapshots)
+		else if (shortcut == viewC64MainMenu->kbsBreakpointsAtari)
+		{
+			viewAtariBreakpoints->SwitchBreakpointsScreen();
+			return true;
+		}
+		else if (shortcut == viewC64MainMenu->kbsSnapshotsC64)
 		{
 			viewC64Snapshots->SwitchSnapshotsScreen();
+			return true;
+		}
+		else if (shortcut == viewC64MainMenu->kbsSnapshotsAtari)
+		{
+			viewAtariSnapshots->SwitchSnapshotsScreen();
 			return true;
 		}
 		else if (shortcut == viewC64SettingsMenu->kbsUseKeboardAsJoystick)
@@ -2498,16 +2624,23 @@ bool CViewC64::ProcessGlobalKeyboardShortcut(u32 keyCode, bool isShift, bool isA
 			viewC64SettingsMenu->ClearMemoryMarkers();
 			return true;
 		}
-		else if (shortcut == viewC64MainMenu->kbsBrowseD64)
+		
+		// TODO: refactoring generalize me
+		if (viewC64->debugInterfaceC64)
 		{
-			viewFileD64->StartBrowsingD64(0);
-			return true;
+			if (shortcut == viewC64MainMenu->kbsBrowseD64)
+			{
+				viewFileD64->StartBrowsingD64(0);
+				return true;
+			}
+			else if (shortcut == viewC64MainMenu->kbsStartFromDisk)
+			{
+				viewFileD64->StartDiskPRGEntry(0, true);
+				return true;
+			}
+			
 		}
-		else if (shortcut == viewC64MainMenu->kbsStartFromDisk)
-		{
-			viewFileD64->StartDiskPRGEntry(0, true);
-			return true;
-		}
+		
 		else if (shortcut == viewC64MainMenu->kbsSaveScreenImageAsPNG)
 		{
 			viewVicEditor->SaveScreenshotAsPNG();
@@ -2608,13 +2741,28 @@ void CViewC64::StepOverInstruction()
 void CViewC64::StepOneCycle()
 {
 	LOGTODO("CViewC64::StepOneCycle(): make generic");
-	if (debugInterfaceC64->GetDebugMode() == DEBUGGER_MODE_RUNNING)
+	if (debugInterfaceC64)
 	{
-		debugInterfaceC64->SetTemporaryBreakpointPC(-1);
-		debugInterfaceC64->SetTemporaryDrive1541BreakpointPC(-1);
+		if (debugInterfaceC64->GetDebugMode() == DEBUGGER_MODE_RUNNING)
+		{
+			debugInterfaceC64->SetTemporaryBreakpointPC(-1);
+			debugInterfaceC64->SetTemporaryDrive1541BreakpointPC(-1);
+		}
+		
+		debugInterfaceC64->SetDebugMode(DEBUGGER_MODE_RUN_ONE_CYCLE);
 	}
 	
-	debugInterfaceC64->SetDebugMode(DEBUGGER_MODE_RUN_ONE_CYCLE);
+	if (debugInterfaceAtari)
+	{
+		LOGTODO("CViewC64::StepOneCycle");
+//		if (debugInterfaceC64->GetDebugMode() == DEBUGGER_MODE_RUNNING)
+//		{
+//			debugInterfaceC64->SetTemporaryBreakpointPC(-1);
+//			debugInterfaceC64->SetTemporaryDrive1541BreakpointPC(-1);
+//		}
+//		
+//		debugInterfaceC64->SetDebugMode(DEBUGGER_MODE_RUN_ONE_CYCLE);
+	}
 }
 
 void CViewC64::RunContinueEmulation()
@@ -2890,9 +3038,9 @@ bool CViewC64::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 	
 	if (keyCode >= MTKEY_F1 && keyCode <= MTKEY_F8 && !isControl)
 	{
-		if (debugInterfaceC64 && viewC64Screen->hasFocus)
+		if (debugInterfaceC64 && viewC64ScreenWrapper->hasFocus)
 		{
-			return viewC64Screen->KeyDown(keyCode, isShift, isAlt, isControl);
+			return viewC64ScreenWrapper->KeyDown(keyCode, isShift, isAlt, isControl);
 		}
 		
 		if (debugInterfaceAtari && viewAtariScreen->hasFocus)
@@ -2950,9 +3098,9 @@ bool CViewC64::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 		}
 	}
 
-	if (debugInterfaceC64 && viewC64Screen->hasFocus)
+	if (debugInterfaceC64 && viewC64ScreenWrapper->hasFocus)
 	{
-		return viewC64Screen->KeyDown(keyCode, isShift, isAlt, isControl);
+		return viewC64ScreenWrapper->KeyDown(keyCode, isShift, isAlt, isControl);
 	}
 
 	if (debugInterfaceAtari && viewAtariScreen->hasFocus)
@@ -2970,9 +3118,9 @@ bool CViewC64::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 
 	if (keyCode >= MTKEY_F1 && keyCode <= MTKEY_F8 && !guiMain->isControlPressed)
 	{
-		if (debugInterfaceC64 && viewC64Screen->hasFocus)
+		if (debugInterfaceC64 && viewC64ScreenWrapper->hasFocus)
 		{
-			return viewC64Screen->KeyUp(keyCode, isShift, isAlt, isControl);
+			return viewC64ScreenWrapper->KeyUp(keyCode, isShift, isAlt, isControl);
 		}
 		
 		if (debugInterfaceAtari && viewAtariScreen->hasFocus)
@@ -3006,9 +3154,9 @@ bool CViewC64::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 		}
 	}
 	
-	if (debugInterfaceC64 && viewC64Screen->visible)
+	if (debugInterfaceC64 && viewC64ScreenWrapper->visible)
 	{
-		viewC64Screen->KeyUp(keyCode, isShift, isAlt, isControl);
+		viewC64ScreenWrapper->KeyUp(keyCode, isShift, isAlt, isControl);
 	}
 
 	if (debugInterfaceAtari && viewAtariScreen->visible)
@@ -3035,14 +3183,14 @@ bool CViewC64::DoTap(GLfloat x, GLfloat y)
 		{
 			if (viewC64Screen->IsInsideViewNonVisible(x, y))
 			{
-				guiMain->SetFocus(viewC64Screen);
-				this->focusElement = viewC64Screen;
-				return viewC64Screen->DoTap(x, y);
+				guiMain->SetFocus(viewC64ScreenWrapper);
+				this->focusElement = viewC64ScreenWrapper;
+				return viewC64ScreenWrapper->DoTap(x, y);
 			}
 			else
 			{
-				viewC64Screen->hasFocus = false;
-				if (guiMain->focusElement == viewC64Screen)
+				viewC64ScreenWrapper->hasFocus = false;
+				if (guiMain->focusElement == viewC64ScreenWrapper)
 				{
 					guiMain->focusElement = NULL;
 					this->focusElement = NULL;
@@ -3051,11 +3199,11 @@ bool CViewC64::DoTap(GLfloat x, GLfloat y)
 		}
 		else
 		{
-			if (viewC64Screen->IsInsideView(x, y) == false && viewC64Screen->hasFocus == true)
+			if (viewC64ScreenWrapper->IsInsideView(x, y) == false && viewC64ScreenWrapper->hasFocus == true)
 			{
-				viewC64Screen->hasFocus = false;
-				if (guiMain->focusElement == viewC64Screen
-					|| this->focusElement == viewC64Screen)
+				viewC64ScreenWrapper->hasFocus = false;
+				if (guiMain->focusElement == viewC64ScreenWrapper
+					|| this->focusElement == viewC64ScreenWrapper)
 				{
 					guiMain->focusElement = NULL;
 					this->focusElement = NULL;
@@ -3254,6 +3402,12 @@ void CViewC64::ApplicationEnteredForeground()
 	}
 }
 
+#if defined(RUN_ATARI)
+extern "C" {
+	void MEMORY_GetCharsetScreenCodes(u8 *cs);
+}
+#endif
+
 void CViewC64::CreateFonts()
 {
 //	u64 t1 = SYS_GetCurrentTimeInMillis();
@@ -3263,13 +3417,21 @@ void CViewC64::CreateFonts()
 	uint8 *charData;
 	
 	charData = charRom;
-	fontCBM1 = ProcessCBMFonts(charData, true);
+	fontCBM1 = ProcessFonts(charData, true);
 
 	charData = charRom + 0x0800;
-	fontCBM2 = ProcessCBMFonts(charData, true);
+	fontCBM2 = ProcessFonts(charData, true);
 
-	fontCBMShifted = ProcessCBMFonts(charData, false);
-
+	fontCBMShifted = ProcessFonts(charData, false);
+	
+	fontAtari = NULL;
+	
+#if defined(RUN_ATARI)
+	u8 charRomAtari[0x0800];
+	MEMORY_GetCharsetScreenCodes(charRomAtari);
+	fontAtari = ProcessFonts(charRomAtari, true);
+#endif
+	
 //	u64 t2 = SYS_GetCurrentTimeInMillis();
 //	LOGD("time=%u", t2-t1);
 	
@@ -3659,6 +3821,11 @@ CScreenLayout::CScreenLayout()
 	atariDisassembleShowCodeCycles = false;
 	atariDisassembleCodeCyclesOffset = -1.5f;
 	atariDisassembleShowLabels = false;
+	
+	atariStateANTICVisible = false;
+	atariStateGTIAVisible = false;
+	atariStatePIAVisible = false;
+	atariStatePOKEYVisible = false;
 
 }
 
@@ -3722,6 +3889,19 @@ void C64D_DragDropCallback(CSlrString *filePath)
 	else if (ext->CompareWith("atr") || ext->CompareWith("ATR"))
 	{
 		C64D_DragDropCallbackATR(filePath);
+	}
+	else if (ext->CompareWith("cas") || ext->CompareWith("CAS"))
+	{
+		C64D_DragDropCallbackCAS(filePath);
+	}
+	else if (ext->CompareWith("car") || ext->CompareWith("CAR")
+			 || ext->CompareWith("rom") || ext->CompareWith("ROM"))
+	{
+		C64D_DragDropCallbackCAR(filePath);
+	}
+	else if (ext->CompareWith("a8s") || ext->CompareWith("A8S"))
+	{
+		C64D_DragDropCallbackA8S(filePath);
 	}
 	// jukebox
 	else if (ext->CompareWith("c64jukebox") || ext->CompareWith("C64JUKEBOX")
@@ -3861,6 +4041,38 @@ void C64D_DragDropCallbackATR(CSlrString *filePath)
 	
 	C64DebuggerStoreSettings();
 }
+
+void C64D_DragDropCallbackCAS(CSlrString *filePath)
+{
+	LOGD("C64D_DragDropCallbackCAS");
+	filePath->DebugPrint("filePath=");
+	
+	viewC64->viewC64MainMenu->LoadCAS(filePath, true, false, true);
+	
+	C64DebuggerStoreSettings();
+}
+
+void C64D_DragDropCallbackCAR(CSlrString *filePath)
+{
+	LOGD("C64D_DragDropCallbackCAR");
+	filePath->DebugPrint("filePath=");
+	
+	viewC64->viewC64MainMenu->InsertAtariCartridge(filePath, true, false, true);
+	
+	C64DebuggerStoreSettings();
+}
+
+void C64D_DragDropCallbackA8S(CSlrString *filePath)
+{
+	LOGD("C64D_DragDropCallbackA8S");
+	filePath->DebugPrint("filePath=");
+	
+	viewC64->viewC64MainMenu->LoadAtariState(filePath);
+	
+	C64DebuggerStoreSettings();
+}
+
+
 
 void C64D_DragDropCallbackJukeBox(CSlrString *filePath)
 {

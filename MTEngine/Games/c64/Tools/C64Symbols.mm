@@ -73,6 +73,12 @@ void C64Symbols::ParseSymbols(CByteBuffer *byteBuffer, CDebugInterface *debugInt
 	
 	debugInterface->LockMutex();
 	
+	if (byteBuffer->length < 8)
+	{
+		LOGError("Empty symbols file");
+		return;
+	}
+	
 	byteBuffer->removeCRLFinQuotations();
 	
 	std_membuf mb(byteBuffer->data, byteBuffer->length);
@@ -297,6 +303,12 @@ void C64Symbols::ParseBreakpoints(CByteBuffer *byteBuffer, CDebugInterface *debu
 	
 	debugInterface->LockMutex();
 	
+	if (byteBuffer->length < 8)
+	{
+		LOGError("Empty breakpoints file");
+		return;
+	}
+
 	byteBuffer->removeCRLFinQuotations();
 	
 	std_membuf mb(byteBuffer->data, byteBuffer->length);

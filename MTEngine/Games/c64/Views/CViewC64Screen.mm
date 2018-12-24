@@ -53,6 +53,8 @@ CViewC64Screen::CViewC64Screen(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	
 	this->showGridLines = false;
 	
+	shiftDown = false;
+	
 	this->SetPosition(posX, posY, posZ, sizeX, sizeY);
 	
 //	/// debug
@@ -281,6 +283,16 @@ void CViewC64Screen::SetZoomedScreenPos(float zoomedScreenPosX, float zoomedScre
 
 void CViewC64Screen::SetZoomedScreenLevel(float zoomedScreenLevel)
 {
+	if (zoomedScreenLevel < 0.05f)
+	{
+		zoomedScreenLevel = 0.05f;
+	}
+	
+	if (zoomedScreenLevel > 25.0f)
+	{
+		zoomedScreenLevel = 25.0f;
+	}
+	
 	this->zoomedScreenLevel = zoomedScreenLevel;
 	
 	zoomedScreenImageSizeX = (float)debugInterface->GetScreenSizeX() * zoomedScreenLevel;
@@ -292,6 +304,29 @@ void CViewC64Screen::SetZoomedScreenLevel(float zoomedScreenLevel)
 	zoomedScreenRasterOffsetY = -15.500 * zoomedScreenRasterScaleFactorY;
 	
 }
+
+bool CViewC64Screen::DoScrollWheel(float deltaX, float deltaY)
+{
+	float newLevel = this->zoomedScreenLevel + deltaY*0.045f;
+	
+	SetZoomedScreenLevel(newLevel);
+	
+	return true;
+}
+
+bool CViewC64Screen::InitZoom()
+{
+	return CGuiView::InitZoom();
+}
+
+bool CViewC64Screen::DoZoomBy(GLfloat x, GLfloat y, GLfloat zoomValue, GLfloat difference)
+{
+	float newLevel = this->zoomedScreenLevel + difference * 0.06f;
+	SetZoomedScreenLevel(newLevel);
+	
+	return true;
+}
+
 
 void CViewC64Screen::CalcZoomedScreenTextureFromRaster(int rasterX, int rasterY)
 {
@@ -506,16 +541,6 @@ bool CViewC64Screen::FinishMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat dis
 	return CGuiView::FinishMove(x, y, distX, distY, accelerationX, accelerationY);
 }
 
-bool CViewC64Screen::InitZoom()
-{
-	return CGuiView::InitZoom();
-}
-
-bool CViewC64Screen::DoZoomBy(GLfloat x, GLfloat y, GLfloat zoomValue, GLfloat difference)
-{
-	return CGuiView::DoZoomBy(x, y, zoomValue, difference);
-}
-
 bool CViewC64Screen::DoMultiTap(COneTouchData *touch, float x, float y)
 {
 	return CGuiView::DoMultiTap(touch, x, y);
@@ -538,11 +563,39 @@ void CViewC64Screen::FinishTouches()
 
 int CViewC64Screen::GetJoystickAxis(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
+	// because Windows is totally messed up with right-Alt key, let's compare only keyCodes
 	if (c64SettingsJoystickIsOn)
 	{
+		if (viewC64->keyboardShortcuts->kbsJoystickFire->keyCode == keyCode)
+		{
+			return JOYPAD_FIRE;
+		}
+		if (viewC64->keyboardShortcuts->kbsJoystickUp->keyCode == keyCode)
+		{
+			return JOYPAD_N;
+		}
+		if (viewC64->keyboardShortcuts->kbsJoystickDown->keyCode == keyCode)
+		{
+			return JOYPAD_S;
+		}
+		if (viewC64->keyboardShortcuts->kbsJoystickLeft->keyCode == keyCode)
+		{
+			return JOYPAD_W;
+		}
+		if (viewC64->keyboardShortcuts->kbsJoystickRight->keyCode == keyCode)
+		{
+			return JOYPAD_E;
+		}
+	}
+	return JOYPAD_IDLE;
+
+	
+	/*
+	
+		// this does not work, let's skip possibility to select control keys with joystick keys
 		// workaround for fire (eg. fire+up = ALT+UP)
 		CSlrKeyboardShortcut *shortcut = NULL;
-		
+
 		if (viewC64->keyboardShortcuts->kbsJoystickFire->keyCode == keyCode
 			&& viewC64->keyboardShortcuts->kbsJoystickFire->isShift == isShift
 			&& viewC64->keyboardShortcuts->kbsJoystickFire->isAlt == isAlt
@@ -598,6 +651,8 @@ int CViewC64Screen::GetJoystickAxis(u32 keyCode, bool isShift, bool isAlt, bool 
 	}
 
 	return JOYPAD_IDLE;
+		
+		*/
 }
 
 
@@ -650,7 +705,11 @@ bool CViewC64Screen::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContr
 //	if (isShift)
 //		return true;
 	
-	
+	if (keyCode == MTKEY_LSHIFT
+		|| keyCode == MTKEY_RSHIFT)
+	{
+		shiftDown = true;
+	}
 	
 	debugInterface->KeyboardDown(keyCode); //bareKey);
 	debugInterface->UnlockIoMutex();
@@ -660,18 +719,22 @@ bool CViewC64Screen::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContr
 }
 
 
+extern "C"
+{
+	// workaround
+	void c64d_keyboard_force_key_up_latch(signed long key);
+}
 
 bool CViewC64Screen::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
-	LOGD(".......... CViewC64Screen::KeyUp: keyCode=%d isShift=%s isAlt=%s isControl=%s", keyCode,
-		 STRBOOL(isShift), STRBOOL(isAlt), STRBOOL(isControl));
+	LOGD(".......... CViewC64Screen::KeyUp: keyCode=%d isShift=%s isAlt=%s isControl=%s  shiftDown=%s", keyCode,
+		 STRBOOL(isShift), STRBOOL(isAlt), STRBOOL(isControl), STRBOOL(shiftDown));
 	
 	if (viewC64->currentScreenLayoutId == SCREEN_LAYOUT_C64_AND_ATARI)
 	{
 		viewC64->viewAtariScreen->KeyUp(keyCode, isShift, isAlt, isControl);
 	}
 	
-
 	int joyAxis = GetJoystickAxis(keyCode, isShift, isAlt, isControl);
 	
 	if (joyAxis != JOYPAD_IDLE)
@@ -708,6 +771,41 @@ bool CViewC64Screen::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl
 	LOGI(".........SYS_KeyCodeConvertSpecial converted key is ", keyCode);
 
 	debugInterface->KeyboardUp(keyCode); //bareKey);
+	
+	// workaround for keeping pressed shift
+	if (keyCode != MTKEY_LSHIFT
+		&& keyCode != MTKEY_RSHIFT
+		&& isShift)
+	{
+		if (guiMain->isLeftShiftPressed)
+		{
+			LOGD("workaround: send keydown MTKEY_LSHIFT");
+			debugInterface->KeyboardDown(MTKEY_LSHIFT);
+			shiftDown = true;
+		}
+		if (guiMain->isRightShiftPressed)
+		{
+			LOGD("workaround: send keydown MTKEY_RSHIFT");
+			debugInterface->KeyboardDown(MTKEY_RSHIFT);
+			shiftDown = true;
+		}
+	}
+	else if (!isShift && shiftDown)
+	{
+		LOGD("workaround: send key UP L/R SHIFT");
+		c64d_keyboard_force_key_up_latch(MTKEY_LSHIFT);
+		c64d_keyboard_force_key_up_latch(MTKEY_RSHIFT);
+		shiftDown = false;
+	}
+	
+	if ((keyCode == MTKEY_LALT || keyCode == MTKEY_RALT) && !isShift)
+	{
+		LOGD("workaround 2: send key UP L/R SHIFT");
+		c64d_keyboard_force_key_up_latch(MTKEY_LSHIFT);
+		c64d_keyboard_force_key_up_latch(MTKEY_RSHIFT);
+		shiftDown = false;
+	}
+	
 	debugInterface->UnlockIoMutex();
 	
 	return true;

@@ -274,6 +274,10 @@ BYTE vicii_fetch_graphics(void)
 
 BYTE vicii_fetch_sprite_pointer(int i)
 {
+//	int addr = v_fetch_addr(0x3f8 + i);
+//	int addr2 = ((addr + vicii.vbank_phi1) & vicii.vaddr_mask_phi1) | vicii.vaddr_offset_phi1;
+//	LOGD("addr %04x %04x", v_fetch_addr(0x3f8 + i), addr2);
+	
     vicii.sprite[i].pointer = fetch_phi1(v_fetch_addr(0x3f8 + i));
 
     return vicii.sprite[i].pointer;

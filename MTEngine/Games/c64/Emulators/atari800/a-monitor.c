@@ -714,7 +714,7 @@ static int parse_hex(const char *s, UWORD *hexval)
 
 /* Searches for a hexadecimal number in the command line. On success stores
    the number in HEXVAL and returns TRUE; otherwise returns FALSE. */
-static int get_hex(UWORD *hexval)
+int get_hex(UWORD *hexval)
 {
 	const char *t;
 	t = get_token();

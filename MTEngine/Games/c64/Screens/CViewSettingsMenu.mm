@@ -247,21 +247,78 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 		menuItemSubMenuAudio->AddMenuItem(menuItemSIDModel);
 	}
 	
+	if (viewC64->debugInterfaceAtari)
+	{
+		//
+		options = new std::vector<CSlrString *>();
+		options->push_back(new CSlrString("PAL"));
+		options->push_back(new CSlrString("NTSC"));
+		
+		menuItemAtariVideoSystem = new CViewC64MenuItemOption(fontHeight, new CSlrString("Video system: "),
+														 NULL, tr, tg, tb, options, font, fontScale);
+		menuItemAtariVideoSystem->SetSelectedOption(c64SettingsAtariVideoSystem, false);
+		menuItemSubMenuEmulation->AddMenuItem(menuItemAtariVideoSystem);
+
+		optionsAtariMachineTypes = new std::vector<CSlrString *>();
+		optionsAtariMachineTypes->push_back(new CSlrString("Atari 400 (16 KB)"));
+		optionsAtariMachineTypes->push_back(new CSlrString("Atari 800 (48 KB)"));
+		optionsAtariMachineTypes->push_back(new CSlrString("Atari 1200XL (64 KB)"));
+		optionsAtariMachineTypes->push_back(new CSlrString("Atari 600XL (16 KB)"));
+		optionsAtariMachineTypes->push_back(new CSlrString("Atari 800XL (64 KB)"));
+		optionsAtariMachineTypes->push_back(new CSlrString("Atari 130XE (128 KB)"));
+		optionsAtariMachineTypes->push_back(new CSlrString("Atari XEGS (64 KB)"));
+		optionsAtariMachineTypes->push_back(new CSlrString("Atari 5200 (16 KB)"));
+		menuItemAtariMachineType = new CViewC64MenuItemOption(fontHeight, new CSlrString("Machine type: "),
+															  NULL, tr, tg, tb, optionsAtariMachineTypes, font, fontScale);
+		menuItemAtariMachineType->SetSelectedOption(c64SettingsAtariMachineType, false);
+		menuItemSubMenuEmulation->AddMenuItem(menuItemAtariMachineType);
+
+		optionsAtariRamSize800 = new std::vector<CSlrString *>();
+		optionsAtariRamSize800->push_back(new CSlrString("8 KB"));
+		optionsAtariRamSize800->push_back(new CSlrString("16 KB"));
+		optionsAtariRamSize800->push_back(new CSlrString("24 KB"));
+		optionsAtariRamSize800->push_back(new CSlrString("32 KB"));
+		optionsAtariRamSize800->push_back(new CSlrString("40 KB"));
+		optionsAtariRamSize800->push_back(new CSlrString("48 KB"));
+		optionsAtariRamSize800->push_back(new CSlrString("52 KB"));
+
+		optionsAtariRamSizeXL = new std::vector<CSlrString *>();
+		optionsAtariRamSizeXL->push_back(new CSlrString("16 KB"));
+		optionsAtariRamSizeXL->push_back(new CSlrString("32 KB"));
+		optionsAtariRamSizeXL->push_back(new CSlrString("48 KB"));
+		optionsAtariRamSizeXL->push_back(new CSlrString("64 KB"));
+		optionsAtariRamSizeXL->push_back(new CSlrString("128 KB"));
+		optionsAtariRamSizeXL->push_back(new CSlrString("192 KB"));
+		optionsAtariRamSizeXL->push_back(new CSlrString("320 KB (Rambo)"));
+		optionsAtariRamSizeXL->push_back(new CSlrString("320 KB (Compy-Shop)"));
+		optionsAtariRamSizeXL->push_back(new CSlrString("576 KB"));
+		optionsAtariRamSizeXL->push_back(new CSlrString("1088 KB"));
+
+		optionsAtariRamSize5200 = new std::vector<CSlrString *>();
+		optionsAtariRamSize5200->push_back(new CSlrString("16 kB"));
+
+		menuItemAtariRamSize = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("Ram size: "),
+															  NULL, tr, tg, tb, options, font, fontScale);
+		menuItemSubMenuEmulation->AddMenuItem(menuItemAtariRamSize);
+		UpdateAtariRamSizeOptions();
+		menuItemAtariRamSize->SetSelectedOption(c64SettingsAtariRamSizeOption, false);
+
+	}
+	
 	//
 	menuItemAudioOutDevice = new CViewC64MenuItemOption(fontHeight, new CSlrString("Audio Out device: "),
 														NULL, tr, tg, tb, NULL, font, fontScale);
 	menuItemSubMenuAudio->AddMenuItem(menuItemAudioOutDevice);
 	
-	//
-	menuItemAudioVolume = new CViewC64MenuItemFloat(fontHeight, new CSlrString("VICE Audio volume: "),
-																	NULL, tr, tg, tb,
-																	0.0f, 100.0f, 1.0f, font, fontScale);
-	menuItemAudioVolume->numDecimalsDigits = 0;
-	menuItemAudioVolume->SetValue(100.0f, false);
-	menuItemSubMenuAudio->AddMenuItem(menuItemAudioVolume);
-	
 	if (viewC64->debugInterfaceC64)
 	{
+		menuItemAudioVolume = new CViewC64MenuItemFloat(fontHeight, new CSlrString("VICE Audio volume: "),
+														NULL, tr, tg, tb,
+														0.0f, 100.0f, 1.0f, font, fontScale);
+		menuItemAudioVolume->numDecimalsDigits = 0;
+		menuItemAudioVolume->SetValue(100.0f, false);
+		menuItemSubMenuAudio->AddMenuItem(menuItemAudioVolume);
+		
 		//
 		menuItemMuteSIDOnPause = new CViewC64MenuItemOption(fontHeight, new CSlrString("Mute SID on pause: "),
 															NULL, tr, tg, tb, optionsYesNo, font, fontScale);
@@ -876,7 +933,7 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 		
 
 	}
-
+	
 	menuItemDisassembleExecuteAware = new CViewC64MenuItemOption(fontHeight, new CSlrString("Execute-aware disassemble: "),
 																 NULL, tr, tg, tb, optionsYesNo, font, fontScale);
 	menuItemDisassembleExecuteAware->SetSelectedOption(c64SettingsRenderDisassembleExecuteAware, false);
@@ -1467,8 +1524,69 @@ void CViewSettingsMenu::MenuCallbackItemChanged(CGuiViewMenuItem *menuItem)
 		
 		SetEmulationMaximumSpeed(newMaximumSpeed);
 	}
+	else if (viewC64->debugInterfaceAtari)
+	{
+		if (menuItem == menuItemAtariVideoSystem)
+		{
+			C64DebuggerSetSetting("AtariVideoSystem", &(menuItemAtariVideoSystem->selectedOption));
+		}
+		else if (menuItem == menuItemAtariMachineType)
+		{
+			C64DebuggerSetSetting("AtariMachineType", &(menuItemAtariMachineType->selectedOption));
+			c64SettingsAtariRamSizeOption = menuItemAtariRamSize->selectedOption;
+		}
+		else if (menuItem == menuItemAtariRamSize)
+		{
+			C64DebuggerSetSetting("AtariRamSizeOption", &(menuItemAtariRamSize->selectedOption));
+		}
+	}
 	
 	C64DebuggerStoreSettings();
+}
+
+void CViewSettingsMenu::UpdateAtariRamSizeOptions()
+{
+	int optionNum = 0;
+	menuItemAtariRamSize->SetSelectedOption(optionNum, false);
+
+	switch(menuItemAtariMachineType->selectedOption)
+	{
+		case 0:
+			menuItemAtariRamSize->SetOptionsWithoutDelete(optionsAtariRamSize800);
+			optionNum = 1;
+			break;
+		case 1:
+			menuItemAtariRamSize->SetOptionsWithoutDelete(optionsAtariRamSize800);
+			optionNum = 5;
+			break;
+		default:
+		case 2:
+			menuItemAtariRamSize->SetOptionsWithoutDelete(optionsAtariRamSizeXL);
+			optionNum = 3;
+			break;
+		case 3:
+			menuItemAtariRamSize->SetOptionsWithoutDelete(optionsAtariRamSizeXL);
+			optionNum = 0;
+			break;
+		case 4:
+			menuItemAtariRamSize->SetOptionsWithoutDelete(optionsAtariRamSizeXL);
+			optionNum = 3;
+			break;
+		case 5:
+			menuItemAtariRamSize->SetOptionsWithoutDelete(optionsAtariRamSizeXL);
+			optionNum = 4;
+			break;
+		case 6:
+			menuItemAtariRamSize->SetOptionsWithoutDelete(optionsAtariRamSizeXL);
+			optionNum = 3;
+			break;
+		case 7:
+			menuItemAtariRamSize->SetOptionsWithoutDelete(optionsAtariRamSize5200);
+			optionNum = 0;
+			break;
+	}
+	
+	menuItemAtariRamSize->SetSelectedOption(optionNum, false);
 }
 
 void CViewSettingsMenu::SwitchNextMaximumSpeed()

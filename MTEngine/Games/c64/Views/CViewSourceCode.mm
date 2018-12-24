@@ -406,4 +406,9 @@ bool CViewSourceCode::DoScrollWheel(float deltaX, float deltaY)
 	return true;
 }
 
+void CViewSourceCode::RenderFocusBorder()
+{
+	// do not render border
+	
+}
 

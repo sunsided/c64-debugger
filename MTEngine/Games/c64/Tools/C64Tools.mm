@@ -396,7 +396,7 @@ void ConvertColorSpriteDataToImage(u8 *spriteData, CImageData *imageData, u8 col
 
 
 
-CSlrFontProportional *ProcessCBMFonts(u8 *charsetData, bool useScreenCodes)
+CSlrFontProportional *ProcessFonts(u8 *charsetData, bool useScreenCodes)
 {
 	LOGD("--- process fonts ---");
 	

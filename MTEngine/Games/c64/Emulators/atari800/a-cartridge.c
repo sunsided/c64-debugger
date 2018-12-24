@@ -1445,6 +1445,8 @@ static int InsertCartridge(const char *filename, CARTRIDGE_image_t *cart)
 	int type;
 	UBYTE header[16];
 
+	LOGD("Atari800 InsertCartridge: %s", filename);
+
 	/* open file */
 	fp = fopen(filename, "rb");
 	if (fp == NULL)
@@ -1463,7 +1465,7 @@ static int InsertCartridge(const char *filename, CARTRIDGE_image_t *cart)
 		/* alloc memory and read data */
 		cart->image = (UBYTE *) Util_malloc(len);
 		if (fread(cart->image, 1, len, fp) < len) {
-			Log_print("Error reading cartridge.\n");
+			LOGError("Error reading cartridge.\n");
 		}
 		fclose(fp);
 		/* find cart type */

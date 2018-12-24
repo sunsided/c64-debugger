@@ -20,6 +20,7 @@ public:
 	
 	virtual int GetEmulatorType();
 	virtual CSlrString *GetEmulatorVersionString();
+	virtual CSlrString *GetPlatformNameString();
 
 	virtual void RunEmulationThread();
 
@@ -55,100 +56,29 @@ public:
 
 	virtual bool LoadExecutable(char *fullFilePath);
 	virtual bool MountDisk(char *fullFilePath, int diskNo, bool readOnly);
+	virtual bool InsertCartridge(char *fullFilePath, bool readOnly);
+	virtual bool AttachTape(char *fullFilePath, bool readOnly);
+	
+	//
+	virtual bool LoadFullSnapshot(char *filePath);
+	virtual void SaveFullSnapshot(char *filePath);
 	
 	// state
 	virtual int GetCpuPC();
 	
 	virtual void GetWholeMemoryMap(uint8 *buffer);
 	virtual void GetWholeMemoryMapFromRam(uint8 *buffer);
-	
 
 	//
 	void GetCpuRegs(u16 *PC, u8 *A, u8 *X, u8 *Y, u8 *P, u8 *S, u8 *IRQ);
 	
 	int MapMTKeyToAKey(uint32 mtKeyCode, int shiftctrl, int key_control);
 	
+	void SetVideoSystem(u8 videoSystem);
+	void SetMachineType(u8 machineType);
+	void SetRamSizeOption(u8 ramSizeOption);
 	
-//	CViceAudioChannel *viceAudioChannel;
-	
-//	int screenHeight;
-//	
-//	int modelType;
-//	virtual int GetC64ModelType();
-//	
-//	virtual int GetEmulatorType();
-//	virtual CSlrString *GetEmulatorVersionString();
-//	virtual void RunEmulationThread();
-//	
-//	virtual uint8 *GetCharRom();
-//	
-//	volatile uint8 machineType;
-//	virtual uint8 GetC64MachineType();
-//	
-//	virtual int GetC64ScreenSizeX();
-//	virtual int GetC64ScreenSizeY();
-//	
-//	virtual CImageData *GetC64ScreenImageData();
-//	
-//	virtual void Reset();
-//	virtual void HardReset();
-//	virtual void DiskDriveReset();
-//	
-//	//
-//	virtual void KeyboardDown(uint32 mtKeyCode);
-//	virtual void KeyboardUp(uint32 mtKeyCode);
-//	
-//	virtual void JoystickDown(int port, uint32 axis);
-//	virtual void JoystickUp(int port, uint32 axis);
-//	
-//	virtual void KeyboardDownWithJoystickCheck(uint32 mtKeyCode);
-//	virtual void KeyboardUpWithJoystickCheck(uint32 mtKeyCode);
-//	
-//	//
-//	virtual int GetC64CpuPC();
-//	virtual int GetDrive1541PC();
-//	virtual void GetC64CpuState(C64StateCPU *state);
-//	virtual void GetDrive1541CpuState(C64StateCPU *state);
-//	virtual void GetVICState(C64StateVIC *state);
-//	
-//	virtual void GetDrive1541State(C64StateDrive1541 *state);
-//	
-//	virtual void InsertD64(CSlrString *path);
-//	virtual void DetachDriveDisk();
-//	
-//	virtual bool GetSettingIsWarpSpeed();
-//	virtual void SetSettingIsWarpSpeed(bool isWarpSpeed);
-//	virtual bool GetSettingUseKeyboardForJoystick();
-//	virtual void SetSettingUseKeyboardForJoystick(bool isJoystickOn);
-//	virtual void SetKeyboardJoystickPort(uint8 joystickPort);
-//	
-//	virtual void GetSidTypes(std::vector<CSlrString *> *sidTypes);
-//	virtual void SetSidType(int sidType);
-//	
-//	// samplingMethod: Fast=0, Interpolating=1, Resampling=2, Fast Resampling=3
-//	virtual void SetSidSamplingMethod(int samplingMethod);
-//	// emulateFilters: no=0, yes=1
-//	virtual void SetSidEmulateFilters(int emulateFilters);
-//	// passband: 0-90
-//	virtual void SetSidPassBand(int passband);
-//	// filterBias: -500 500
-//	virtual void SetSidFilterBias(int filterBias);
-//	
-//	// 0=none, 1=stereo, 2=triple
-//	virtual void SetSidStereo(int stereoMode);
-//	virtual void SetSidStereoAddress(uint16 sidAddress);
-//	virtual void SetSidTripleAddress(uint16 sidAddress);
-//	
-//	virtual void GetC64ModelTypes(std::vector<CSlrString *> *modelTypeNames, std::vector<int> *modelTypeIds);
-//	virtual void SetC64ModelType(int modelType);
-//	virtual void SetEmulationMaximumSpeed(int maximumSpeed);
-//	
-//	bool isJoystickEnabled;
-//	uint8 joystickPort;
-//	
-//	virtual void SetVSPBugEmulation(bool isVSPBugEmulation);
-//
-	
+
 	
 	
 	virtual void SetByte(uint16 addr, uint8 val);
@@ -163,6 +93,13 @@ public:
 
 	
 	virtual void GetMemory(uint8 *buffer, int addrStart, int addrEnd);
+
+	//
+	// make jmp without resetting CPU depending on dataAdapter
+	virtual void MakeJmpNoReset(CSlrDataAdapter *dataAdapter, uint16 addr);
+	
+	// make jmp and reset CPU
+	virtual void MakeJmpAndReset(uint16 addr);
 
 	
 	

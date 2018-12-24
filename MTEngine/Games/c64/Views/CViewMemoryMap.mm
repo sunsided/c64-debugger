@@ -315,6 +315,7 @@ CViewMemoryMap::CViewMemoryMap(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	this->imageHeight = imageHeight;
 	this->ramSize = ramSize;
 	
+	this->isBeingMoved = false;
 	this->isForcedMovingMap = false;
 	
 	this->font = viewC64->fontCBMShifted; //guiMain->fntConsole;
@@ -865,12 +866,15 @@ bool CViewMemoryMap::DoRightClick(GLfloat x, GLfloat y)
 	if (isFromDisk)
 		return false;
 
-
 	if (c64SettingsUseMultiTouchInMemoryMap == false)
 	{
-		this->accelerateX = 0.0f;
-		this->accelerateY = 0.0f;
-		return true;
+		if (IsInside(x, y))
+		{
+			this->accelerateX = 0.0f;
+			this->accelerateY = 0.0f;
+			isBeingMoved = true;
+			return true;
+		}
 	}
 	
 	return false;
@@ -902,10 +906,11 @@ bool CViewMemoryMap::FinishRightClickMove(GLfloat x, GLfloat y, GLfloat distX, G
 	if (isFromDisk)
 		return false;
 
-	if (c64SettingsUseMultiTouchInMemoryMap == false)
+	if (c64SettingsUseMultiTouchInMemoryMap == false && isBeingMoved)
 	{
 //		this->accelerateX = accelerationX / 10.0f;
 //		this->accelerateY = accelerationY / 10.0f;
+		isBeingMoved = false;
 		return true;
 	}
 	

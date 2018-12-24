@@ -3,6 +3,8 @@
  *
  */
 
+#include "C64D_Version.h"
+
 //#define DO_NOT_USE_AUDIO_QUEUE
 //#define USE_FAKE_CALLBACK
 
@@ -756,7 +758,7 @@ void CGuiMain::DoRightClickMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat dis
 		return;
 	}
 	
-	//	LOGF("--- DoRightClickMove ---");
+		LOGG("--- DoRightClickMove ---");
 	for (std::map<float, CGuiElement *, compareZdownwards>::iterator enumGuiElems =
 			guiElementsDownwards.begin();
 			enumGuiElems != guiElementsDownwards.end(); enumGuiElems++)
@@ -768,10 +770,10 @@ void CGuiMain::DoRightClickMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat dis
 		if (guiElement == windowOnTop)
 			continue;
 		
-		//		LOGF("DoRightClickMove %f: %s", (*enumGuiElems).first, guiElement->name);
+				LOGG("DoRightClickMove %f: %s", (*enumGuiElems).first, guiElement->name);
 		
 		bool consumed = guiElement->DoRightClickMove(x, y, distX, distY, diffX, diffY);
-		//		LOGF("   consumed=%d", consumed);
+				LOGG("   consumed=%d", consumed);
 		if (consumed)
 			return;
 	}
@@ -1530,8 +1532,13 @@ void CGuiMain::DoLogic()
 		showMessageCurrentScale -= 0.012 * 0.35; //0.025;
 		showMessageAlpha -= 0.02; //0.06;
 #else
+#if defined(RUN_ATARI)
+		showMessageCurrentScale -= 0.006 * 0.45; //0.025;
+		showMessageAlpha -= 0.02; //0.06;
+#else
 		showMessageCurrentScale -= 0.012 * 0.45; //0.025;
 		showMessageAlpha -= 0.03; //0.06;
+#endif
 #endif
 	}
 	else if (this->showMessage != NULL) {
@@ -2019,6 +2026,23 @@ void CGuiMain::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 		isControlPressed = true;
 		isRightControlPressed = true;
 	}
+
+	// sanity check
+	if (isShiftPressed == false)
+	{
+		isLeftShiftPressed = false;
+		isRightShiftPressed = false;
+	}
+	if (isAltPressed == false)
+	{
+		isLeftAltPressed = false;
+		isRightAltPressed = false;
+	}
+	if (isControlPressed == false)
+	{
+		isLeftControlPressed = false;
+		isRightControlPressed = false;
+	}
 	
 	this->repeatTime = 0;
 	isKeyDown = true;
@@ -2093,6 +2117,8 @@ void CGuiMain::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
 	LOGI("CGuiMain::KeyUp: keyCode=%d (0x%2.2x = %c) isShift=%s isAlt=%s isControl=%s", keyCode, keyCode, keyCode, STRBOOL(isShift), STRBOOL(isAlt), STRBOOL(isControl));
 	
+	UpdateControlKeys(keyCode);
+
 	this->repeatTime = 0;
 	isKeyDown = false;
 
@@ -2139,9 +2165,7 @@ void CGuiMain::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 			break;
 #endif
 
-	}
-	
-	UpdateControlKeys(keyCode);
+	}	
 }
 
 void CGuiMain::UpdateControlKeys(u32 keyCode)

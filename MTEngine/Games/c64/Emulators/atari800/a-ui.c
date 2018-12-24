@@ -336,6 +336,7 @@ static void SystemSettings(void)
 		{ Atari800_MACHINE_XLXE, 64, TRUE, FALSE, FALSE, FALSE, TRUE, TRUE },
 		{ Atari800_MACHINE_5200, 16, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE }
 	};
+	
 	static UI_tMenuItem machine_menu_array[] = {
 		UI_MENU_ACTION(0, "Atari 400 (16 KB)"),
 		UI_MENU_ACTION(1, "Atari 800 (48 KB)"),

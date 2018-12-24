@@ -273,28 +273,6 @@ void CViewAbout::RenderAtari800License()
 	font->BlitTextColor("Christian Groessler (Sega Dreamcast)", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
 	font->BlitTextColor("Andrey Dj           (Raspberry Pi)", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
 	
-//	font->BlitTextColor("Copyright C 2007-2008 Fabrizio Gennari", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
-//	font->BlitTextColor("Copyright C 1999-2007 Andreas Dehmel", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
-//	font->BlitTextColor("Copyright C 2003-2005 David Hansel", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
-//	font->BlitTextColor("Copyright C 2000-2004 Markus Brenner", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
-//	font->BlitTextColor("", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
-//	font->BlitTextColor("Copyright C 1999-2004 Thomas Bretz", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
-//	font->BlitTextColor("Copyright C 1997-2001 Daniel Sladic", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
-//	font->BlitTextColor("Copyright C 1996-1999 Ettore Perazzoli", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
-//	font->BlitTextColor("Copyright C 1996-1999 André Fachat", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
-//	font->BlitTextColor("Copyright C 1993-1994, 1997-1999 Teemu Rantanen", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
-//	font->BlitTextColor("Copyright C 1993-1996 Jouko Valta", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
-//	font->BlitTextColor("Copyright C 1993-1994 Jarkko Sonninen", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
-//	font->BlitTextColor("Copyright C 1999-2017 Martin Pottendorfer", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
-//	font->BlitTextColor("Copyright C 2007-2017 Fabrizio Gennari", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
-//	font->BlitTextColor("Copyright C 2009-2017 Groepaz", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
-//	font->BlitTextColor("Copyright C 2010-2017 Olaf Seibert", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
-//	font->BlitTextColor("Copyright C 2011-2017 Marcus Sutton", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
-//	font->BlitTextColor("Copyright C 2011-2017 Kajtar Zsolt", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
-//	font->BlitTextColor("Copyright C 2016-2017 AreaScout", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
-//	font->BlitTextColor("Copyright C 2016-2017 Bas Wassink", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
-	
-	
 //	font->BlitTextColor("", px, py, posZ, fontScale, tr, tg, tb, 1);
 	py += fontHeight;
 	

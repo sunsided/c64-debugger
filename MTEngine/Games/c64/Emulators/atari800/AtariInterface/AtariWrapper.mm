@@ -1,6 +1,6 @@
 extern "C" {
 #include "AtariWrapper.h"
-
+#include "statesav.h"
 volatile int atrd_debug_mode;
 }
 
@@ -15,16 +15,16 @@ volatile int atrd_debug_mode;
 #include "CViewC64.h"
 #include "CViewMemoryMap.h"
 #include "SND_SoundEngine.h"
+#include <string.h>
 
 extern "C" {
-char *ATRD_GetPathForRoms()
-{
-	// TODO: nasty implementation shortcut. needs to be addressed.
-	char *buf = viewC64->ATRD_GetPathForRoms_IMPL();
-	LOGD("ATRD_GetPathForRoms: %s", buf);
-	return buf;
-}
-	
+	char *ATRD_GetPathForRoms()
+	{
+		// TODO: nasty implementation shortcut. needs to be addressed.
+		char *buf = viewC64->ATRD_GetPathForRoms_IMPL();
+		LOGD("ATRD_GetPathForRoms: %s", buf);
+		return buf;
+	}
 }
 
 
@@ -153,10 +153,19 @@ extern "C" {
 int Atari800_GetPC();
 }
 
+#define ATRD_ASYNC_NO_COMMAND		0
+#define ATRD_ASYNC_LOAD_SNAPSHOT	1
+#define ATRD_ASYNC_SAVE_SNAPSHOT	2
+
+int atrd_async_command = ATRD_ASYNC_NO_COMMAND;
+void *atrd_async_data;
+
+void atrd_sync_load_snapshot(char *filePath);
+void atrd_sync_save_snapshot(char *filePath);
+
 void atrd_debug_pause_check()
 {
 //	LOGD("atrd_debug_pause_check, atrd_debug_mode=%d", atrd_debug_mode);
-	
 	if (atrd_debug_mode == DEBUGGER_MODE_PAUSED)
 	{
 		//		c64d_refresh_previous_lines();
@@ -180,6 +189,63 @@ int atrd_get_joystick_state(int joystickNum)
 {
 	return debugInterfaceAtari->joystickState[joystickNum];
 }
+
+//
+void atrd_async_check()
+{
+	atrd_mutex_lock();
+	if (atrd_async_command == ATRD_ASYNC_LOAD_SNAPSHOT)
+	{
+		char *fileName = (char *)atrd_async_data;
+		atrd_sync_load_snapshot(fileName);
+		free(fileName);
+		atrd_async_data = NULL;
+		atrd_async_command = ATRD_ASYNC_NO_COMMAND;
+	}
+	if (atrd_async_command == ATRD_ASYNC_SAVE_SNAPSHOT)
+	{
+		char *fileName = (char *)atrd_async_data;
+		atrd_sync_save_snapshot(fileName);
+		free(fileName);
+		atrd_async_data = NULL;
+		atrd_async_command = ATRD_ASYNC_NO_COMMAND;
+	}
+	
+	atrd_mutex_unlock();
+}
+
+void atrd_async_load_snapshot(char *filePath)
+{
+	char *fc = strdup(filePath);
+	atrd_async_data = (void*)fc;
+	atrd_async_command = ATRD_ASYNC_LOAD_SNAPSHOT;
+}
+
+void atrd_async_save_snapshot(char *filePath)
+{
+	char *fc = strdup(filePath);
+	atrd_async_data = (void*)fc;
+	atrd_async_command = ATRD_ASYNC_SAVE_SNAPSHOT;
+}
+
+void atrd_sync_load_snapshot(char *filePath)
+{
+	LOGD("atrd_sync_load_snapshot %s", filePath);
+	if (StateSav_ReadAtariState(filePath, "rb") == FALSE)
+	{
+		LOGError("atrd_sync_load_snapshot: failed");
+	}
+}
+
+void atrd_sync_save_snapshot(char *filePath)
+{
+	LOGD("atrd_sync_save_snapshot %s", filePath);
+	if (StateSav_SaveAtariState(filePath, "wb", TRUE) == FALSE)
+	{
+		LOGError("atrd_sync_save_snapshot: failed");
+	}
+}
+
 
 // sound
 void atrd_sound_init()
@@ -212,6 +278,16 @@ void atrd_sound_lock()
 void atrd_sound_unlock()
 {
 	gSoundEngine->UnlockMutex("atrd_sound_unlock");
+}
+
+void atrd_mutex_lock()
+{
+	debugInterfaceAtari->LockMutex();
+}
+
+void atrd_mutex_unlock()
+{
+	debugInterfaceAtari->UnlockMutex();
 }
 
 

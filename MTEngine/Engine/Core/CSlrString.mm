@@ -1011,7 +1011,9 @@ CSlrString *CSlrString::GetFilePathWithoutFileNameComponentFromPath()
 	
 	if (!strs->empty())
 	{
+#if !defined(WIN32)
 		fpath->Concatenate(SYS_FILE_SYSTEM_PATH_SEPARATOR);
+#endif
 		
 		for (int i = 0; i < strs->size()-1; i++)
 		{

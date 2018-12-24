@@ -7,6 +7,7 @@
 #include "CSlrString.h"
 #include "RES_ResourceManager.h"
 #include "C64DebugInterface.h"
+#include "AtariDebugInterface.h"
 #include "C64SettingsStorage.h"
 #include "C64SharedMemory.h"
 #include "CViewVicEditor.h"
@@ -377,77 +378,86 @@ void c64PerformStartupTasksThreaded()
 		return;
 	}
 	
-	// process, order is important
-	// we need to create new strings for path as they will be deleted and updated by loaders
-	if (c64SettingsPathToSnapshot != NULL)
+	if (viewC64->debugInterfaceC64)
 	{
-		viewC64->viewC64Snapshots->LoadSnapshot(c64SettingsPathToSnapshot, false);
-		
-		SYS_Sleep(150);
-	}
-	else
-	{
-		// DONE?: Is it possible to init VICE with proper Engines at startup to not re-create here?
-		// DONE?: Vice 3.1 by default starts with strange model (unknown=99), check cmdline parsing how it's handled in VICE
-		if (c64SettingsC64Model != 0)
+		// process, order is important
+		// we need to create new strings for path as they will be deleted and updated by loaders
+		if (c64SettingsPathToSnapshot != NULL)
 		{
-//			SYS_Sleep(300);
-//			viewC64->debugInterface->SetC64ModelType(c64SettingsC64Model);
+			viewC64->viewC64Snapshots->LoadSnapshot(c64SettingsPathToSnapshot, false);
+			SYS_Sleep(150);
 		}
-		
-		// setup SID
-		if (c64SettingsSIDEngineModel != 0)
+		else
 		{
-			viewC64->debugInterfaceC64->SetSidType(c64SettingsSIDEngineModel);
-		}
-		
-		//
-		if (c64SettingsPathToD64 != NULL)
-		{
-			LOGD("isPRGInCommandLine=%s", STRBOOL(isPRGInCommandLine));
-			if (isPRGInCommandLine == false && isD64InCommandLine == true)
+			// DONE?: Is it possible to init VICE with proper Engines at startup to not re-create here?
+			// DONE?: Vice 3.1 by default starts with strange model (unknown=99), check cmdline parsing how it's handled in VICE
+			if (c64SettingsC64Model != 0)
 			{
-				// start disk based on settings
-				if (c64SettingsAutoJmpFromInsertedDiskFirstPrg)
+	//			SYS_Sleep(300);
+	//			viewC64->debugInterface->SetC64ModelType(c64SettingsC64Model);
+			}
+			
+			// setup SID
+			if (c64SettingsSIDEngineModel != 0)
+			{
+				viewC64->debugInterfaceC64->SetSidType(c64SettingsSIDEngineModel);
+			}
+			
+			//
+			if (c64SettingsPathToD64 != NULL)
+			{
+				LOGD("isPRGInCommandLine=%s", STRBOOL(isPRGInCommandLine));
+				if (isPRGInCommandLine == false && isD64InCommandLine == true)
 				{
-					SYS_Sleep(100);
+					// start disk based on settings
+					if (c64SettingsAutoJmpFromInsertedDiskFirstPrg)
+					{
+						SYS_Sleep(100);
+					}
+					viewC64->viewC64MainMenu->InsertD64(c64SettingsPathToD64, false, c64SettingsAutoJmpFromInsertedDiskFirstPrg, 0, true);
 				}
-				viewC64->viewC64MainMenu->InsertD64(c64SettingsPathToD64, false, c64SettingsAutoJmpFromInsertedDiskFirstPrg, 0, true);
+				else
+				{
+					// just load disk, do not start, we will start PRG instead
+					viewC64->viewC64MainMenu->InsertD64(c64SettingsPathToD64, false, false, 0, false);
+				}
+				
 			}
-			else
-			{
-				// just load disk, do not start, we will start PRG instead
-				viewC64->viewC64MainMenu->InsertD64(c64SettingsPathToD64, false, false, 0, false);
-			}
-			
-		}
 
-		if (c64SettingsPathToTAP != NULL)
-		{
-//			LOGD("isPRGInCommandLine=%s", STRBOOL(isPRGInCommandLine));
-//			if (isPRGInCommandLine == false && isD64InCommandLine == true)
-//			{
-//				// start disk based on settings
-//				if (c64SettingsAutoJmpFromInsertedDiskFirstPrg)
-//				{
-//					SYS_Sleep(100);
-//				}
-//				viewC64->viewC64MainMenu->InsertD64(c64SettingsPathToD64, false, c64SettingsAutoJmpFromInsertedDiskFirstPrg, 0, true);
-//			}
-//			else
+			if (c64SettingsPathToTAP != NULL)
 			{
-				// just load tape, do not start
-				viewC64->viewC64MainMenu->LoadTape(c64SettingsPathToTAP, false, false, false);
+	//			LOGD("isPRGInCommandLine=%s", STRBOOL(isPRGInCommandLine));
+	//			if (isPRGInCommandLine == false && isD64InCommandLine == true)
+	//			{
+	//				// start disk based on settings
+	//				if (c64SettingsAutoJmpFromInsertedDiskFirstPrg)
+	//				{
+	//					SYS_Sleep(100);
+	//				}
+	//				viewC64->viewC64MainMenu->InsertD64(c64SettingsPathToD64, false, c64SettingsAutoJmpFromInsertedDiskFirstPrg, 0, true);
+	//			}
+	//			else
+				{
+					// just load tape, do not start
+					viewC64->viewC64MainMenu->LoadTape(c64SettingsPathToTAP, false, false, false);
+				}
+				
 			}
-			
-		}
 
-		if (c64SettingsPathToCartridge != NULL)
-		{
-			viewC64->viewC64MainMenu->InsertCartridge(c64SettingsPathToCartridge, false);
-			SYS_Sleep(666);
+			if (c64SettingsPathToCartridge != NULL)
+			{
+				viewC64->viewC64MainMenu->InsertCartridge(c64SettingsPathToCartridge, false);
+				SYS_Sleep(666);
+			}
 		}
 	}
+
+//	///////////
+//	if (viewC64->debugInterfaceAtari)
+//	{
+//		viewC64->debugInterfaceAtari->SetMachineType(c64SettingsAtariMachineType);
+//		viewC64->debugInterfaceAtari->SetVideoSystem(c64SettingsAtariVideoSystem);
+//	}
 	
 	///////////
 	

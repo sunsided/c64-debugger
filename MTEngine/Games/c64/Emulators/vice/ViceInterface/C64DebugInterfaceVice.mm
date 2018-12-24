@@ -787,9 +787,41 @@ extern "C" {
 	void sid_store_chip(WORD addr, BYTE value, int chipno);
 }
 
+struct SetSidRegisterData {
+	WORD registerNum;
+	BYTE value;
+	int sidId;
+};
+
+static void c64_set_sid_register_trap(WORD addr, void *v)
+{
+	guiMain->LockMutex();
+	debugInterfaceVice->LockMutex();
+	gSoundEngine->LockMutex("C64DebugInterfaceVice::SetSidRegister");
+	
+	SetSidRegisterData *setSidRegisterData = (SetSidRegisterData *)v;
+	
+	sid_store_chip(setSidRegisterData->registerNum, setSidRegisterData->value, setSidRegisterData->sidId);
+	
+	delete setSidRegisterData;
+	
+	gSoundEngine->UnlockMutex("C64DebugInterfaceVice::SetSidRegister");
+	debugInterfaceVice->UnlockMutex();
+	guiMain->UnlockMutex();
+}
+
+
 void C64DebugInterfaceVice::SetSidRegister(uint8 sidId, uint8 registerNum, uint8 value)
 {
-	sid_store_chip(registerNum, value, sidId);
+	this->LockMutex();
+	
+	SetSidRegisterData *setSidRegisterData = new SetSidRegisterData();
+	setSidRegisterData->sidId = sidId;
+	setSidRegisterData->registerNum = registerNum;
+	setSidRegisterData->value = value;
+	interrupt_maincpu_trigger_trap(c64_set_sid_register_trap, setSidRegisterData);
+
+	this->UnlockMutex();
 }
 
 u8 C64DebugInterfaceVice::GetSidRegister(uint8 sidId, uint8 registerNum)
@@ -1533,6 +1565,25 @@ void C64DebugInterfaceVice::SaveFullSnapshot(char *filePath)
 	{
 		c64d_set_debug_mode(DEBUGGER_MODE_RUN_ONE_INSTRUCTION);
 	}
+}
+
+// Profiler
+extern "C"
+{
+	void c64d_profiler_activate(char *fileName, int runForNumCycles, int pauseCpuWhenFinished);
+	void c64d_profiler_deactivate();	
+}
+
+// if fileName is NULL no file will be created, if runForNumCycles is -1 it will run till ProfilerDeactivate
+// TODO: select c64 cpu or disk drive cpu
+void C64DebugInterfaceVice::ProfilerActivate(char *fileName, int runForNumCycles, bool pauseCpuWhenFinished)
+{
+	c64d_profiler_activate(fileName, runForNumCycles, pauseCpuWhenFinished ? 1:0);
+}
+
+void C64DebugInterfaceVice::ProfilerDeactivate()
+{
+	c64d_profiler_deactivate();
 }
 
 

@@ -165,7 +165,10 @@ int AFILE_DetectFileType(const char *filename)
 
 int AFILE_OpenFile(const char *filename, int reboot, int diskno, int readonly)
 {
-	int type = AFILE_DetectFileType(filename);
+	int type;
+	LOGM("AFILE_OpenFile: filename=%s reboot=%d diskno=%d readonly=%d", filename, reboot, diskno, readonly);
+	
+	type = AFILE_DetectFileType(filename);
 	switch (type) {
 	case AFILE_ATR:
 	case AFILE_ATX:
@@ -207,11 +210,13 @@ int AFILE_OpenFile(const char *filename, int reboot, int diskno, int readonly)
 				return AFILE_ERROR;
 #else /* BASIC */
 				/* r > 0 */
-#ifndef ANDROID
-				CARTRIDGE_SetTypeAutoReboot(&CARTRIDGE_main, UI_SelectCartType(r));
-#else
+//#ifndef ANDROID
+//				CARTRIDGE_SetTypeAutoReboot(&CARTRIDGE_main, UI_SelectCartType(r));
+//#else
+				LOGError("Raw cartridge images are not supported in BASIC version.");
+
 				return (r << 8) | AFILE_ROM;
-#endif /* ANDROID */
+//#endif /* ANDROID */
 				break;
 #endif /* BASIC */
 			}

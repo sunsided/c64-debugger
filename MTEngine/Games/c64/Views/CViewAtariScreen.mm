@@ -188,7 +188,7 @@ void CViewAtariScreen::Render()
 		 sizeY,
 		 0.0f, 1.0f, screenTexEndX, screenTexEndY);
 	
-	if (true) //showGridLines)
+	if (showGridLines)
 	{
 		// raster screen in hex:
 		// startx = 68 (88) endx = 1e8 (1c8)
@@ -503,10 +503,43 @@ void CViewAtariScreen::FinishTouches()
 
 int CViewAtariScreen::GetJoystickAxis(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
+	// because Windows is totally messed up with right-Alt key, let's compare only keyCodes
+	if (c64SettingsJoystickIsOn)
+	{
+		if (viewC64->keyboardShortcuts->kbsJoystickFire->keyCode == keyCode)
+		{
+			return JOYPAD_FIRE;
+		}
+		if (viewC64->keyboardShortcuts->kbsJoystickUp->keyCode == keyCode)
+		{
+			return JOYPAD_N;
+		}
+		if (viewC64->keyboardShortcuts->kbsJoystickDown->keyCode == keyCode)
+		{
+			return JOYPAD_S;
+		}
+		if (viewC64->keyboardShortcuts->kbsJoystickLeft->keyCode == keyCode)
+		{
+			return JOYPAD_E;	// TODO: fix me?
+		}
+		if (viewC64->keyboardShortcuts->kbsJoystickRight->keyCode == keyCode)
+		{
+			return JOYPAD_W;	// TODO: fix me?
+		}
+	}
+	return JOYPAD_IDLE;
+
+	/*
 	if (c64SettingsJoystickIsOn)
 	{
 		// workaround for fire (eg. fire+up = ALT+UP)
 		CSlrKeyboardShortcut *shortcut = NULL;
+		
+		LOGD("CViewAtariScreen::GetJoystickAxis: (shortcut=pressed) keyCode: %08x=%08x isShift: %d=%d isAlt: %d=%d isControl: %d=%d",
+			 viewC64->keyboardShortcuts->kbsJoystickFire->keyCode, keyCode,
+			 viewC64->keyboardShortcuts->kbsJoystickFire->isShift, isShift,
+			 viewC64->keyboardShortcuts->kbsJoystickFire->isAlt, isAlt,
+			 viewC64->keyboardShortcuts->kbsJoystickFire->isControl, isControl);
 		
 		if (viewC64->keyboardShortcuts->kbsJoystickFire->keyCode == keyCode
 			&& viewC64->keyboardShortcuts->kbsJoystickFire->isShift == isShift
@@ -562,6 +595,7 @@ int CViewAtariScreen::GetJoystickAxis(u32 keyCode, bool isShift, bool isAlt, boo
 	}
 	
 	return JOYPAD_IDLE;
+	 */
 }
 
 bool CViewAtariScreen::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)

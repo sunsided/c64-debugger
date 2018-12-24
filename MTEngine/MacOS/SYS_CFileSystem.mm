@@ -1069,7 +1069,10 @@ void SYS_DialogOpenFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 		[panel setAllowsMultipleSelection:NO];
 		
 		if (extensionsArray != nil)
+		{
+			NSLog(@"SYS_DialogOpenFile: allowed file types=%@", extensionsArray);
 			[panel setAllowedFileTypes:extensionsArray];
+		}
 
 		// title was removed after OS X 10.11
 //		if (wtitle != nil)

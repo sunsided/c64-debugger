@@ -82,8 +82,12 @@ public:
 	std::list<CSlrImage *> spritesImages;
 
 	
+	CSlrFont *fontAtari;
 	CSlrFont *fontCBM1;
 	CSlrFont *fontCBM2;
+	
+	CSlrFont *fonts[3];
+
 	
 	CSlrMutex *mutex;
 	

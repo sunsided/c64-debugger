@@ -383,6 +383,11 @@ static UBYTE *SmallFont_DrawInt(UBYTE *screen, int n, UBYTE color1, UBYTE color2
 	return screen;
 }
 
+int c64d_get_atari_percent()
+{
+	
+}
+
 void Screen_DrawAtariSpeed(double cur_time)
 {
 	if (Screen_show_atari_speed) {

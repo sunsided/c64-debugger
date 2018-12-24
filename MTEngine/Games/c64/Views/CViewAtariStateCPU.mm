@@ -62,67 +62,45 @@ void CViewAtariStateCPU::RenderRegisters()
 }
 
 extern "C" {
-	void c64d_set_drivecpu_regs_no_trap(int driveNr, uint8 a, uint8 x, uint8 y, uint8 p, uint8 sp);
-	void c64d_set_drivecpu_pc_no_trap(int driveNr, uint16 pc);
+	void c64d_atari_set_cpu_pc(u16 addr);
+	void c64d_atari_set_cpu_reg_a(u8 val);
+	void c64d_atari_set_cpu_reg_x(u8 val);
+	void c64d_atari_set_cpu_reg_y(u8 val);
+	void c64d_atari_set_cpu_reg_p(u8 val);
+	void c64d_atari_set_cpu_reg_s(u8 val);
 }
+
 
 void CViewAtariStateCPU::SetRegisterValue(StateCPURegister reg, int value)
 {
-	LOGTODO("CViewAtariStateCPU::SetRegisterValue: reg=%d value=%d", reg, value);
+	debugInterface->LockMutex();
 	
-
-//	debugInterface->LockMutex();
-//	
-//	C64StateCPU diskCpuState;
-//	((C64DebugInterface*)debugInterface)->GetDrive1541CpuState(&diskCpuState);
-//
-//	uint8 a, x, y, p, sp;
-//	a = diskCpuState.a;
-//	x = diskCpuState.x;
-//	y = diskCpuState.y;
-//	p = diskCpuState.processorFlags;
-//	sp = diskCpuState.sp;
-//	
-//	switch (reg)
-//	{
-//		case STATE_CPU_REGISTER_PC:
-//			//if (debugInterface->GetDebugMode() != C64_DEBUG_RUNNING)
-//			{
-//				c64d_set_drivecpu_pc_no_trap(0, value);
-//			}
-//			return ((C64DebugInterface*)debugInterface)->MakeJmp1541(value);
-//		case STATE_CPU_REGISTER_A:
-//			a = value;
-//			((C64DebugInterface*)debugInterface)->SetRegisterA1541(value);
-//			break;
-//		case STATE_CPU_REGISTER_X:
-//			x = value;
-//			((C64DebugInterface*)debugInterface)->SetRegisterX1541(value);
-//			break;
-//		case STATE_CPU_REGISTER_Y:
-//			y = value;
-//			((C64DebugInterface*)debugInterface)->SetRegisterY1541(value);
-//			break;
-//		case STATE_CPU_REGISTER_SP:
-//			sp = value;
-//			((C64DebugInterface*)debugInterface)->SetStackPointer1541(value);
-//			break;
-//		case STATE_CPU_REGISTER_FLAGS:
-//			p = value;
-//			((C64DebugInterface*)debugInterface)->SetRegisterP1541(value);
-//			break;
-//		case STATE_CPU_REGISTER_NONE:
-//		default:
-//			return;
-//	}
-//	
-//	// this direct inject is to have the set reflected in UI immediately
-//	if (debugInterface->GetDebugMode() != DEBUGGER_MODE_RUNNING)
-//	{
-//		c64d_set_drivecpu_regs_no_trap(0, a, x, y, p, sp);
-//	}
-//	
-//	debugInterface->UnlockMutex();
+	
+	switch (reg)
+	{
+		case STATE_CPU_REGISTER_PC:
+			c64d_atari_set_cpu_pc(value);
+			break;
+		case STATE_CPU_REGISTER_A:
+			c64d_atari_set_cpu_reg_a(value);
+			break;
+		case STATE_CPU_REGISTER_X:
+			c64d_atari_set_cpu_reg_x(value);
+			break;
+		case STATE_CPU_REGISTER_Y:
+			c64d_atari_set_cpu_reg_y(value);
+			break;
+		case STATE_CPU_REGISTER_SP:
+			c64d_atari_set_cpu_reg_s(value);
+			break;
+		case STATE_CPU_REGISTER_FLAGS:
+			c64d_atari_set_cpu_reg_p(value);
+			break;
+		case STATE_CPU_REGISTER_NONE:
+		default:
+			return;
+	}
+	debugInterface->UnlockMutex();
 }
 
 int CViewAtariStateCPU::GetRegisterValue(StateCPURegister reg)

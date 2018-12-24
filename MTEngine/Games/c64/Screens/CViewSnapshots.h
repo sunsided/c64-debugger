@@ -23,7 +23,7 @@ public:
 class CViewSnapshots : public CGuiView, CGuiButtonCallback, CGuiViewMenuCallback, CSystemFileDialogCallback
 {
 public:
-	CViewSnapshots(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY);
+	CViewSnapshots(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, CDebugInterface *debugInterface);
 	virtual ~CViewSnapshots();
 
 	virtual void Render();
@@ -57,6 +57,8 @@ public:
 	virtual void ActivateView();
 	virtual void DeactivateView();
 
+	CDebugInterface *debugInterface;
+	
 	CSlrFont *font;
 	float fontScale;
 	float fontHeight;
@@ -131,6 +133,7 @@ public:
 	
 	CSnapshotUpdateThread *updateThread;
 
+	int debugRunModeWhileTakingSnapshot;
 };
 
 #endif //_VIEW_C64SNAPSHOTS_

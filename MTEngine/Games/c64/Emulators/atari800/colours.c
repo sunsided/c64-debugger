@@ -154,6 +154,8 @@ static void UpdateModeDependentPointers(int tv_mode)
 
 void Colours_SetVideoSystem(int mode)
 {
+	LOGD("Colours_SetVideoSystem: mode=%d", mode);
+	
 	UpdateModeDependentPointers(mode);
 	/* Apply changes */
 	Colours_Update();

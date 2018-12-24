@@ -114,11 +114,16 @@ public:
 	CViewC64MenuItem *menuItemHardReset;
 	CSlrKeyboardShortcut *kbsDiskDriveReset;
 
-	CSlrKeyboardShortcut *kbsSnapshots;
-	CViewC64MenuItem *menuItemSnapshots;
+	CSlrKeyboardShortcut *kbsSnapshotsC64;
+	CViewC64MenuItem *menuItemSnapshotsC64;
 
-	CSlrKeyboardShortcut *kbsBreakpoints;
-	CViewC64MenuItem *menuItemBreakpoints;
+	CSlrKeyboardShortcut *kbsSnapshotsAtari;
+	CViewC64MenuItem *menuItemSnapshotsAtari;
+
+	CSlrKeyboardShortcut *kbsBreakpointsC64;
+	CViewC64MenuItem *menuItemBreakpointsC64;
+	CSlrKeyboardShortcut *kbsBreakpointsAtari;
+	CViewC64MenuItem *menuItemBreakpointsAtari;
 
 	CSlrKeyboardShortcut *kbsInsertCartridge;
 	CViewC64MenuItem *menuItemInsertCartridge;
@@ -169,8 +174,13 @@ public:
 	void OpenDialogSetFolderWithAtariROMs();
 	
 	bool LoadXEX(CSlrString *path, bool autoStart, bool updatePRGFolderPath, bool showAddressInfo);
+	bool LoadCAS(CSlrString *path, bool autoStart, bool updatePRGFolderPath, bool showAddressInfo);
+	bool InsertAtariCartridge(CSlrString *path, bool autoStart, bool updatePRGFolderPath, bool showAddressInfo);
 	void InsertATR(CSlrString *path, bool updatePathToATR, bool autoRun, int autoRunEntryNum, bool showLoadAddressInfo);
-
+	
+	// move me
+	bool LoadAtariState(CSlrString *path);
+	
 	void LoadLabelsAndWatches(CSlrString *pathToPRG);
 	void SetBasicEndAddr(int endAddr);
 
@@ -229,6 +239,7 @@ public:
 						   std::vector<CSlrString *> *options, CSlrFont *font, float fontScale);
 	
 	void SetOptions(std::vector<CSlrString *> *options);
+	void SetOptionsWithoutDelete(std::vector<CSlrString *> *options);
 	
 	std::vector<CSlrString *> *options;
 	

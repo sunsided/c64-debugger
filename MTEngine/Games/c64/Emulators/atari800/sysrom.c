@@ -263,11 +263,10 @@ static int MatchByName(char const *filename, int len, int only_if_not_set)
 }
 
 int SYSROM_FindInDir(char const *directory, int only_if_not_set)
-{
-//	LOGD("SYSROM_FindInDir: directory=%s", (char*)directory);
-	
+{	
 	DIR *dir;
 	struct dirent *entry;
+	LOGD("SYSROM_FindInDir: directory=%s", (char*)directory);
 
 	if (only_if_not_set && num_unset_roms == 0)
 		/* No unset ROM paths left. */

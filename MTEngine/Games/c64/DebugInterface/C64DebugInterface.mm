@@ -51,6 +51,12 @@ CSlrString *C64DebugInterface::GetEmulatorVersionString()
 	return NULL;
 }
 
+CSlrString *C64DebugInterface::GetPlatformNameString()
+{
+	return new CSlrString("Commodore 64");
+}
+
+
 void C64DebugInterface::InitKeyMap(C64KeyMap *keyMap)
 {
 	SYS_FatalExit("C64DebugInterface::InitKeyMap");
@@ -405,6 +411,11 @@ void C64DebugInterface::MakeJmpNoReset(CSlrDataAdapter *dataAdapter, uint16 addr
 	{
 		this->MakeJmpNoReset1541(addr);
 	}
+}
+
+void C64DebugInterface::MakeJmpAndReset(uint16 addr)
+{
+	this->MakeJmpC64(addr);
 }
 
 void C64DebugInterface::MakeJmpC64(uint16 addr)

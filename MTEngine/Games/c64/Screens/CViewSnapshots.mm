@@ -23,6 +23,7 @@ extern "C" {
 #include "CGuiMain.h"
 #include "CViewMainMenu.h"
 
+#include "CDebugInterface.h"
 #include "C64DebugInterface.h"
 
 #define C64SNAPSHOT_MAGIC1		'S'
@@ -30,19 +31,29 @@ extern "C" {
 #define VIEWC64SNAPSHOTS_LOAD_SNAPSHOT	1
 #define VIEWC64SNAPSHOTS_SAVE_SNAPSHOT	2
 
-CViewSnapshots::CViewSnapshots(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY)
+CViewSnapshots::CViewSnapshots(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, CDebugInterface *debugInterface)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
 {
 	this->name = "CViewSnapshots";
 
 	prevView = viewC64;
+
+	this->debugInterface = debugInterface;
 	
 	font = viewC64->fontCBMShifted;
 	fontScale = 3;
 	fontHeight = font->GetCharHeight('@', fontScale) + 2;
 
-	snapshotExtensions.push_back(new CSlrString("snap"));
-	snapshotExtensions.push_back(new CSlrString("vsf"));
+	if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
+	{
+		snapshotExtensions.push_back(new CSlrString("snap"));
+		snapshotExtensions.push_back(new CSlrString("vsf"));
+	}
+	else if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_ATARI800)
+	{
+		snapshotExtensions.push_back(new CSlrString("a8s"));
+	}
+	
 //	pathToSnapshot = NULL;
 	
 	strHeader = new CSlrString("Snapshots");
@@ -226,7 +237,16 @@ void CViewSnapshots::QuickStoreFullSnapshot(int snapshotId)
 //	else
 	{
 		char *fname = SYS_GetCharBuf();
-		sprintf(fname, "/snapshot-%d.snap", snapshotId);
+		
+		if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
+		{
+			sprintf(fname, "/snapshot-%d.snap", snapshotId);
+		}
+		else if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_ATARI800)
+		{
+			sprintf(fname, "/snapshot-%d.a8s", snapshotId);
+		}
+		
 		CSlrString *path = new CSlrString();
 		path->Concatenate(gUTFPathToSettings);
 		path->Concatenate(fname);
@@ -270,27 +290,27 @@ void CViewSnapshots::QuickRestoreFullSnapshot(int snapshotId)
 //	}
 //	else
 	{
-		if (viewC64->debugInterfaceC64)
+		char *fname = SYS_GetCharBuf();
+		
+		if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
 		{
-			char *fname = SYS_GetCharBuf();
 			sprintf(fname, "/snapshot-%d.snap", snapshotId);
-			
-			CSlrString *path = new CSlrString();
-			path->Concatenate(gUTFPathToSettings);
-			path->Concatenate(fname);
-			
-			path->DebugPrint("QuickStoreFullSnapshot: path=");
-			
-			this->LoadSnapshot(path, false);
-			
-			SYS_ReleaseCharBuf(fname);
-			delete path;
 		}
-		else if (viewC64->debugInterfaceAtari)
+		else if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_ATARI800)
 		{
-			LOGTODO("CViewSnapshots::QuickRestoreFullSnapshot: not implemented");
+			sprintf(fname, "/snapshot-%d.a8s", snapshotId);
 		}
-			
+		
+		CSlrString *path = new CSlrString();
+		path->Concatenate(gUTFPathToSettings);
+		path->Concatenate(fname);
+		
+		path->DebugPrint("QuickStoreFullSnapshot: path=");
+		
+		this->LoadSnapshot(path, false);
+		
+		SYS_ReleaseCharBuf(fname);
+		delete path;
 	}
 }
 
@@ -331,6 +351,8 @@ void CViewSnapshots::OpenDialogSaveSnapshot()
 //		viewC64->debugInterface->UnlockMutex();
 //	}
 	
+	debugRunModeWhileTakingSnapshot = debugInterface->GetDebugMode();
+	debugInterface->SetDebugMode(DEBUGGER_MODE_PAUSED);
 	
 	CSlrString *defaultFileName = new CSlrString("snapshot");
 	
@@ -376,7 +398,20 @@ void CViewSnapshots::SystemDialogFileSaveSelected(CSlrString *path)
 		
 		c64SettingsDefaultSnapshotsFolder = path->GetFilePathWithoutFileNameComponentFromPath();
 		C64DebuggerStoreSettings();
+		
+		debugInterface->SetDebugMode(debugRunModeWhileTakingSnapshot);
 	}
+}
+
+void CViewSnapshots::SystemDialogFileSaveCancelled()
+{
+	if (snapshotBuffer != NULL)
+	{
+		delete snapshotBuffer;
+		snapshotBuffer = NULL;
+	}
+	
+	debugInterface->SetDebugMode(debugRunModeWhileTakingSnapshot);
 }
 
 void CViewSnapshots::LoadSnapshot(CSlrString *path, bool showMessage)
@@ -398,44 +433,53 @@ void CViewSnapshots::LoadSnapshot(CSlrString *path, bool showMessage)
 //	}
 //	else
 	
-	// TODO: make this generic and move to the interface of C64 UI 
-	if (viewC64->selectedDebugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
+	bool ret = debugInterface->LoadFullSnapshot(asciiPath);
+	
+	if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
 	{
-		bool ret = viewC64->debugInterfaceC64->LoadFullSnapshot(asciiPath);
-		
 		viewC64->viewC64MemoryMap->ClearExecuteMarkers();
 		viewC64->viewDrive1541MemoryMap->ClearExecuteMarkers();
-
-		if (showMessage)
-		{
-			if (ret == true)
-			{
-				//guiMain->ShowMessage("Snapshot restored");
-			}
-			else
-			{
-				guiMain->ShowMessage("Snapshot file is not supported");
-			}
-		}
-	}
-
-	viewC64->debugInterfaceC64->LockIoMutex();
-	if (updateThread->isRunning == false)
-	{
-		updateThread->snapshotLoadedTime = SYS_GetCurrentTimeInMillis();
-		SYS_StartThread(updateThread);
 	}
 	else
 	{
-		updateThread->snapshotLoadedTime = SYS_GetCurrentTimeInMillis();
+		viewC64->viewAtariMemoryMap->ClearExecuteMarkers();
 	}
-	viewC64->debugInterfaceC64->UnlockIoMutex();
+
+	if (showMessage)
+	{
+		if (ret == true)
+		{
+			//guiMain->ShowMessage("Snapshot restored");
+		}
+		else
+		{
+			guiMain->ShowMessage("Snapshot file is not supported");
+			return;
+		}
+	}
+
+	if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
+	{
+		// workaround for C64 Vice snapshot loading when machine is different than current
+		debugInterface->LockIoMutex();
+		if (updateThread->isRunning == false)
+		{
+			updateThread->snapshotLoadedTime = SYS_GetCurrentTimeInMillis();
+			SYS_StartThread(updateThread);
+		}
+		else
+		{
+			updateThread->snapshotLoadedTime = SYS_GetCurrentTimeInMillis();
+		}
+		debugInterface->UnlockIoMutex();
+	}
 	
 	delete asciiPath;
 }
 
 void CViewSnapshots::LoadSnapshot(CByteBuffer *buffer, bool showMessage)
 {
+	LOGTODO("LoadSnapshot: loading snapshot from buffer is not supported");
 //	u8 magic = buffer->GetByte();
 //	if (magic != C64SNAPSHOT_MAGIC1)
 //	{
@@ -494,15 +538,12 @@ void CViewSnapshots::SaveSnapshot(CSlrString *path)
 //	}
 //	else
 	
-	if (viewC64->debugInterfaceC64->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
-	{
-		char *asciiPath = path->GetStdASCII();
-		
-		viewC64->debugInterfaceC64->SaveFullSnapshot(asciiPath);
-				
-		delete asciiPath;
-	}
-
+	char *asciiPath = path->GetStdASCII();
+	
+	debugInterface->SaveFullSnapshot(asciiPath);
+	
+	delete asciiPath;
+	
 	guiMain->ShowMessage("Snapshot saved");
 }
 
@@ -510,15 +551,6 @@ void CViewSnapshots::SaveSnapshot(CSlrString *path)
 
 void CViewSnapshots::SystemDialogFileOpenCancelled()
 {
-}
-
-void CViewSnapshots::SystemDialogFileSaveCancelled()
-{
-	if (snapshotBuffer != NULL)
-	{
-		delete snapshotBuffer;
-		snapshotBuffer = NULL;
-	}
 }
 
 
@@ -735,6 +767,7 @@ CSnapshotUpdateThread::CSnapshotUpdateThread()
 	this->snapshotUpdatedTime = -1;
 }
 
+// workaround for C64 Vice snapshot loading when machine is different than current
 void CSnapshotUpdateThread::ThreadRun(void *data)
 {
 	LOGD("CSnapshotUpdateThread::ThreadRun");

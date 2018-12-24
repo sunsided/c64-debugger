@@ -1,18 +1,23 @@
-﻿C64 Debugger by SLAJEREK/SAMAR
-------------------------------
+﻿C64 Debugger and 65XE Debugger by SLAJEREK/SAMAR
+------------------------------------------------
 
-C64 Debugger (C) 2016-2017 Marcin Skoczylas
-Vice (C) 1993-2017 The VICE Team
+C64 Debugger (C) 2016 Marcin Skoczylas
+Vice (C) 1993 The VICE Team
+65XE Debugger (C) 2018 Marcin Skoczylas
+Atari800 emulator (C) The Atari800 emulator Team
+
+This is Commodore 64 and Atari XL/XE code and memory debugger 
+that works in real time. It is quick prototyping tool where you 
+can play with 8-bit machine and its internals.
+
+C64 Debugger embeds VICE v3.1 C64 emulation engine created by 
+the VICE Team and the Atari800 emulator created by the Atari800
+emulator Team.
+
+Atari XL/XE debugging interfaces are in alpha stage.
 
 
-This is Commodore 64 code and memory debugger that works in real time.
-It is quick prototyping tool where you can play with Commodore 64 machine
-and its internals.
-
-C64 Debugger embeds VICE v3.1 C64 emulation engine created by The VICE Team.
-
-
-See a promo video here: https://youtu.be/_s6s7qnXBx8
+See a promo video here: https://youtu.be/_s6s7qnXBx8 
 
 
 * Installation
@@ -257,11 +262,24 @@ When joystick is turned on then you can control selected ports using arrow keys,
 and right-alt as fire.
 
 
+* Atari XL/XE screen
+
+Additional keys in Atari:
+
+F2
+	Option key
+F3
+	Select key
+F4
+	Start key
+	
+
 * VIC state view
 
 This view shows state of VIC registers. You can lock colors using Mouse Left Click,
 or change them using Mouse Right Click, these will be reflected in previews like
 Memory Dump or VIC Display view.
+
 
 * SID state view
 
@@ -749,11 +767,11 @@ Here are the basic format. To make it easier to read I have given a param named 
       Default,$d011,vic2_screen_control_register1
    </Labels>
 
-   <Watches values="SEGMENT,ADDRESS,ARGUMENT">
+   <Watchpoints values="SEGMENT,ADDRESS,ARGUMENT">
     	Default,$3000
     	Default,$2001,2,hex8
     	BANK2,$3000,,text
-   </Watches>
+   </Watchpoints>
 
    <Breakpoints values="SEGMENT,ADDRESS,ARGUMENT">
       BANK1,$1000,nmi
@@ -766,19 +784,37 @@ So everything is inside a <C64debugger> tag with a version number. Inside are di
 
 There will always be one <Sources> tag with all the source files and their indexs.
 
-There will be one or more <Segment> tags - one for each segment. Segments contains zero or more <Block> tags and inside these are the usual debug data. 
+There will be one or more <Segment> tags - one for each segment. Segments contains zero 
+or more <Block> tags and inside these are the usual debug data. 
 
-There will always be one <Breakpoints> tag. It contains one line for each breakpoint. First arg is the segment it is defined in (so if you turn on and off segments you can switch breakpoints on an off too). Second argument is the address it is defined at (You will not need it in eg. .break "nmi", but it is always there). Third argument is whatever the user writes in the .break argument and might be empty. So .break "nmi" and .break "cia" will give nmi and cia. 
+There will always be one <Breakpoints> tag. It contains one line for each 
+breakpoint. First arg is the segment it is defined in (so if you turn on and off segments 
+you can switch breakpoints on an off too). Second argument is the address it is defined at 
+(You will not need it in eg. .break "nmi", but it is always there). 
 
-<Labels> tag adds a label at address. First argument is the segment name, second argument is the address and last argument is label text.
+Third argument is whatever the user writes in the .break argument and might be empty. 
+So .break "nmi" and .break "cia" will give nmi and cia. 
 
-<Watches> is similar to labels but it will appear in watches view. First argument is the segment name, second argument is the address, then third argument is number of values to display, and fourth argument declares a representation which can be:
+<Labels> tag adds a label at address. First argument is the segment name, second argument is 
+the address and last argument is label text.
+
+<Watchpoints> is similar to labels but it will appear in watches view. First argument is 
+the segment name, second argument is the address, then third argument is number of values 
+to display, and fourth argument declares a representation which can be:
 hex8, hex16, hex32, or simply h, h8, h16, h32 is hex representation of value interpreted as 8, 16 or 32 bits.
 signed8, signed16, signed32, or simply s8, s16, s32 is a signed decimal representation of value interpreted as 8, 16 or 32 bits.
 unsigned8, unsigned16, unsigned32 or simply u8, u16, u32 is an unsigned decimal representation of value interpreted as 8, 16 or 32 bits.
 text signifies text representation.
 
-Please note that representation and number of values are not yet displayed in Watches view, this will be updated in upcoming version. Now, the Watches view displays only one hex 8-bit value.
+Please note that representation and number of values are not yet displayed in Watches view, 
+this will be updated in upcoming version. Now, the Watches view displays only one hex 8-bit value.
+
+View to see disassembled code with the source code is available via the
+Ctrl+Shift+F3 key. It will display the disassembled code on the left, and
+source code on the right. On top near the disassemble you will see a segment
+name and a block name below. To switch segments you can click on the segment
+name or use keyboard shortcuts Ctrl+; or Ctrl+'
+
 
 * JukeBox playlist and automated tests
 
@@ -944,6 +980,13 @@ normally sent to the C64. Thus to let these key shortcuts work you need to first
 un-select the C64 Screen.
 
 
+* Note about Atari XL/XE
+
+Atari XL/XE debugger is using Atari800 emulator. This integration is still 
+in experimental version and a lot of features are not ready yet. There definitely 
+are bugs and other issues, however main features should be working.
+
+
 * Known bugs
 
 When snapshot is loaded then selected settings are not updated in the Settings 
@@ -966,6 +1009,11 @@ behaving incorrectly.
 When you move a Sprite in VIC Editor and Sprite is on top of other Sprite they will 
 'pile up', also there are no means to select Sprite below a Sprite... this is not
 ready yet and is planned for next release.
+
+Atari800 has troubles with saving and loading states when machine has more than 64kB
+of RAM memory selected. This seems to be a bug in Atari800 3.1.0, still under 
+investigation.
+
 
 * To do
 
@@ -1090,6 +1138,19 @@ the use of which is hereby acknowledged:
 The ROM files embedded in the source code are Copyright C by Commodore
  Business Machines.
 
+* Atari800 emulator license is GPL, credits below:
+
+Atari800 emulator version 3.1.0
+Petr Stehlik        (maintainer)
+Perry McFarlane     (core developer)
+Piotr Fusik         (core developer)
+Tomasz Krasuski     (core developer)
+Mark Grebe          (Mac OSX)
+Kostas Nakos        (Windows CE, Android)
+James Wilkinson     (DOS, BeOS, Win32)
+Christian Groessler (Sega Dreamcast)
+Andrey Dj           (Raspberry Pi)
+
 * Libraries
 
 libjpeg 
@@ -1125,7 +1186,6 @@ mman-32
 libclipboard
 	Copyright (c) 2016 Jeremy Tan
 	https://github.com/jtanx/libclipboard
-	
 pugixml
 	Light-weight, simple and fast XML parser for C++ with XPath support
 	https://pugixml.org
@@ -1135,7 +1195,21 @@ pugixml
 * Change log
 *
 
-v0.64.56
+v0.64.56.2 (2018/12/24), X-Mas maintenance release
+Added: You can right-click on a C64 Screen in any layout to change display mode: screen, zoomed raster, VIC Display
+Added Atari: ANTIC/GTIA/PIA/POKEY states view, loading and saving snapshots (a8s), breakpoints screen and a proper binary release
+Changed: Emulation is paused while saving snapshot (Ctrl+S)
+Bug Fixed: Tabs in source files were displayed as "A" (thanks to Scan/House)
+Bug Fixed: Breakpoint red markers in disassembly are now properly displayed when loaded from dbg symbols file (thanks to Scan/House)
+Bug Fixed: Breakpoints in some Segments from dbg symbols file were set on by default (thanks to Scan/House)
+Bug Fixed: NMI breakpoint is fixed (thanks to Scan/House)
+Bug Fixed: Crash when editing $d418 register with selected ReSID-fp emulation engine
+Bug Fixed: Adding a breakpoint on Breakpoints view did not set breakpoint switch
+Bug Fixed: Empty breakpoints.txt file could cause crash (thanks to Yugorin/Samar)
+Bug Fixed Windows: On some keyboards with AltGr (Polish, German, ...) the Right-Alt sends also Left-Ctrl keypress events. A workaround to skip bogus Left-Ctrl when Right-Alt is pressed was applied
+
+
+v0.64.56 (the X Party 2018 release)
 Added: PALette palette.
 Added: CHARSET mode in VIC Display
 Added: Joystick keys can be defined as regular keyboard shortcut keys

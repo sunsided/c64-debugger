@@ -2566,5 +2566,36 @@ void Atari800_GetCpuRegs(UWORD *ret_CPU_regPC,
 	
 }
 
+void c64d_atari_set_cpu_pc(u16 addr)
+{
+	CPU_regPC = addr;
+}
+
+void c64d_atari_set_cpu_reg_a(u8 val)
+{
+	CPU_regA = val;
+}
+
+void c64d_atari_set_cpu_reg_x(u8 val)
+{
+	CPU_regX = val;
+}
+
+void c64d_atari_set_cpu_reg_y(u8 val)
+{
+	CPU_regY = val;
+}
+
+void c64d_atari_set_cpu_reg_p(u8 val)
+{
+	CPU_regP = val;
+	CPU_PutStatus();
+}
+
+void c64d_atari_set_cpu_reg_s(u8 val)
+{
+	CPU_regS = val;
+}
+
 
 #endif

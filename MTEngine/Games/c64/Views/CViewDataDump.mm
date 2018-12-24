@@ -35,15 +35,25 @@ CViewDataDump::CViewDataDump(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 	
 	this->viewMemoryMap->SetViewC64DataDump(this);
 
-	fontCBM1 = viewC64->fontCBM1;
-	fontCBM2 = viewC64->fontCBM2;
+	if (this->debugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
+	{
+		fontAtari = NULL;
+		fontCBM1 = viewC64->fontCBM1;
+		fontCBM2 = viewC64->fontCBM2;
+		fontCharacters = fontCBM1;
+	}
+	else
+	{
+		fontAtari = viewC64->fontAtari;
+		fontCBM1 = viewC64->fontCBM1;
+		fontCBM2 = viewC64->fontCBM2;
+		fontCharacters = fontAtari;
+	}
 	
 	fontSize = 5.0f;
 	
 	fontBytes = guiMain->fntConsole;
 	
-	fontCharacters = fontCBM1;
-
 	dataShowStart = 0;
 	dataShowEnd = 0;
 	dataShowSize = 0;
@@ -767,7 +777,18 @@ bool CViewDataDump::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContro
 		{
 			fontCharacters = fontCBM2;
 		}
-		else
+		else if (fontCharacters == fontCBM2)
+		{
+			if (fontAtari != NULL)
+			{
+				fontCharacters = fontAtari;
+			}
+			else
+			{
+				fontCharacters = fontCBM1;
+			}
+		}
+		else if (fontCharacters == fontAtari)
 		{
 			fontCharacters = fontCBM1;
 		}

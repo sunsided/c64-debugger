@@ -7,6 +7,7 @@ extern "C" {
 #include "a-palette.h"
 #include "akey.h"
 #include "input.h"
+#include "statesav.h"
 #include "AtariWrapper.h"
 }
 
@@ -114,6 +115,11 @@ CSlrString *AtariDebugInterface::GetEmulatorVersionString()
 	return new CSlrString(Atari800_TITLE);
 }
 
+CSlrString *AtariDebugInterface::GetPlatformNameString()
+{
+	return new CSlrString("Atari");
+}
+
 void ADI_VIDEO_BlitNormal32(Uint32 *dest, Uint8 *src, int pitch, int width, int height, Uint32 *palette32)
 {
 		register Uint32 quad;
@@ -146,6 +152,8 @@ void AtariDebugInterface::RunEmulationThread()
 	
 	while (true)
 	{
+		atrd_async_check();
+
 //		INPUT_key_code = PLATFORM_Keyboard();
 		//SDL_INPUT_Mouse();
 		Atari800_Frame();
@@ -170,10 +178,9 @@ void AtariDebugInterface::RunEmulationThread()
 		
 		
 		// update screen
+		this->LockRenderScreenMutex();
 		
 		Uint8 *screenBuffer = (Uint8 *)Screen_atari;// + Screen_WIDTH * VIDEOMODE_src_offset_top + VIDEOMODE_src_offset_left;
-
-		this->LockRenderScreenMutex();
 		
 		// dest screen width is 512
 		
@@ -349,6 +356,26 @@ uint8 AtariDebugInterface::GetDebugMode()
 {
 	this->debugMode = atrd_debug_mode;
 	return debugMode;
+}
+
+extern "C" {
+	void c64d_atari_set_cpu_pc(u16 addr);
+}
+
+// make jmp without resetting CPU depending on dataAdapter
+void AtariDebugInterface::MakeJmpNoReset(CSlrDataAdapter *dataAdapter, uint16 addr)
+{
+	this->LockMutex();
+	
+	c64d_atari_set_cpu_pc(addr);
+	
+	this->UnlockMutex();
+}
+
+// make jmp and reset CPU
+void AtariDebugInterface::MakeJmpAndReset(uint16 addr)
+{
+	LOGTODO("AtariDebugInterface::MakeJmpAndReset");
 }
 
 int AtariDebugInterface::MapMTKeyToAKey(uint32 mtKeyCode, int shiftctrl, int key_control)
@@ -682,6 +709,7 @@ void AtariDebugInterface::JoystickUp(int port, uint32 axis)
 //
 extern "C" {
 	void CPU_Reset(void);
+	void Colours_SetVideoSystem(int mode);
 }
 void AtariDebugInterface::Reset()
 {
@@ -709,17 +737,200 @@ bool AtariDebugInterface::LoadExecutable(char *fullFilePath)
 	if (ret != 0)
 		return false;
 	
+//	Colours_SetVideoSystem(Atari800_tv_mode);
+
 	return true;
 }
 
 bool AtariDebugInterface::MountDisk(char *fullFilePath, int diskNo, bool readOnly)
 {
-	int reboot = 1;
-	int ret = AFILE_OpenFile(fullFilePath, reboot, diskNo, readOnly);
+	int reboot = 0;
+	int retType = AFILE_OpenFile(fullFilePath, reboot, diskNo, readOnly);
 
-	if (ret != 0)
-		return false;
+//	if (retType != ???)
+//		return false;
+	
+//	Colours_SetVideoSystem(Atari800_tv_mode);
 	
 	return true;
+}
+
+bool AtariDebugInterface::InsertCartridge(char *fullFilePath, bool readOnly)
+{
+	int reboot = 1;
+	int retType = AFILE_OpenFile(fullFilePath, reboot, 0, readOnly);
+	
+//	if (retType != ??)
+//		return false;
+	
+//	Colours_SetVideoSystem(Atari800_tv_mode);
+	
+	return true;
+}
+
+bool AtariDebugInterface::AttachTape(char *fullFilePath, bool readOnly)
+{
+	int reboot = 1;
+	int retType = AFILE_OpenFile(fullFilePath, reboot, 0, readOnly);
+	
+//	if (retType != ???)
+//		return false;
+	
+//	Colours_SetVideoSystem(Atari800_tv_mode);
+
+	return true;
+}
+
+extern "C" {
+	void atrd_async_load_snapshot(char *filePath);
+	void atrd_async_save_snapshot(char *filePath);
+}
+
+bool AtariDebugInterface::LoadFullSnapshot(char *filePath)
+{
+	guiMain->LockMutex();
+	this->LockMutex();
+	
+	atrd_async_load_snapshot(filePath);
+	
+	this->UnlockMutex();
+	guiMain->UnlockMutex();
+	return true;
+}
+
+void AtariDebugInterface::SaveFullSnapshot(char *filePath)
+{
+	LOGD("AtariDebugInterface::SaveFullSnapshot: %s", filePath);
+	guiMain->LockMutex();
+	this->LockMutex();
+	
+	atrd_async_save_snapshot(filePath);
+
+	this->UnlockMutex();
+	guiMain->UnlockMutex();
+}
+
+
+void AtariDebugInterface::SetVideoSystem(u8 videoSystem)
+{
+	LOGD("AtariDebugInterface::SetVideoSystem: %d", videoSystem);
+	if (videoSystem == ATARI_VIDEO_SYSTEM_PAL)
+	{
+		Atari800_SetTVMode(Atari800_TV_PAL);
+	}
+	else
+	{
+		Atari800_SetTVMode(Atari800_TV_NTSC);
+	}
+	Atari800_InitialiseMachine();
+}
+
+static struct {
+	int type;
+	int ram;
+	int basic;
+	int leds;
+	int f_keys;
+	int jumper;
+	int game;
+	int keyboard;
+} const atariMachinesDefs[] = {
+	{ Atari800_MACHINE_800, 16, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE },
+	{ Atari800_MACHINE_800, 48, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE },
+	{ Atari800_MACHINE_XLXE, 64, FALSE, TRUE, TRUE, TRUE, FALSE, FALSE },
+	{ Atari800_MACHINE_XLXE, 16, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE },
+	{ Atari800_MACHINE_XLXE, 64, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE },
+	{ Atari800_MACHINE_XLXE, 128, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE },
+	{ Atari800_MACHINE_XLXE, 64, TRUE, FALSE, FALSE, FALSE, TRUE, TRUE },
+	{ Atari800_MACHINE_5200, 16, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE }
+};
+
+void AtariDebugInterface::SetMachineType(u8 machineType)
+{
+	Atari800_machine_type = atariMachinesDefs[machineType].type;
+	MEMORY_ram_size = atariMachinesDefs[machineType].ram;
+	Atari800_builtin_basic = atariMachinesDefs[machineType].basic;
+	Atari800_keyboard_leds = atariMachinesDefs[machineType].leds;
+	Atari800_f_keys = atariMachinesDefs[machineType].f_keys;
+	if (!atariMachinesDefs[machineType].jumper)
+		Atari800_jumper = FALSE;
+	Atari800_builtin_game = atariMachinesDefs[machineType].game;
+	if (!atariMachinesDefs[machineType].keyboard)
+		Atari800_keyboard_detached = FALSE;
+	Atari800_InitialiseMachine();
+}
+
+void AtariDebugInterface::SetRamSizeOption(u8 ramSizeOption)
+{
+	if (Atari800_machine_type == Atari800_MACHINE_800)
+	{
+		switch(ramSizeOption)
+		{
+			case 0:
+			default:
+				MEMORY_ram_size = 8;
+				break;
+			case 1:
+				MEMORY_ram_size = 16;
+				break;
+			case 2:
+				MEMORY_ram_size = 24;
+				break;
+			case 3:
+				MEMORY_ram_size = 32;
+				break;
+			case 4:
+				MEMORY_ram_size = 40;
+				break;
+			case 5:
+				MEMORY_ram_size = 48;
+				break;
+			case 6:
+				MEMORY_ram_size = 52;
+				break;
+		}
+	}
+	else if (Atari800_machine_type == Atari800_MACHINE_XLXE)
+	{
+		switch(ramSizeOption)
+		{
+			case 0:
+			default:
+				MEMORY_ram_size = 16;
+				break;
+			case 1:
+				MEMORY_ram_size = 32;
+				break;
+			case 2:
+				MEMORY_ram_size = 48;
+				break;
+			case 3:
+				MEMORY_ram_size = 64;
+				break;
+			case 4:
+				MEMORY_ram_size = 128;
+				break;
+			case 5:
+				MEMORY_ram_size = 192;
+				break;
+			case 6:
+				MEMORY_ram_size = MEMORY_RAM_320_RAMBO;
+				break;
+			case 7:
+				MEMORY_ram_size = MEMORY_RAM_320_COMPY_SHOP;
+				break;
+			case 8:
+				MEMORY_ram_size = 576;
+				break;
+			case 9:
+				MEMORY_ram_size = 1088;
+				break;
+		}
+	}
+	else if (Atari800_machine_type == Atari800_MACHINE_5200)
+	{
+		MEMORY_ram_size = 16;
+	}
+
 }
 

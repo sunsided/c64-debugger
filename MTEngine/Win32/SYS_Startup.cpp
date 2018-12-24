@@ -49,8 +49,15 @@ u32 windowWidth;
 u32 windowHeight;
 int fullScreenWidth, fullScreenHeight, fullScreenColourBits, fullScreenRefreshRate;
 
+#if defined(RUN_COMMODORE64)
 //#define DEFAULT_WINDOW_CAPTION "C64 Debugger (" __DATE__ " " __TIME__ ")"
 #define DEFAULT_WINDOW_CAPTION "C64 Debugger v" C64DEBUGGER_VERSION_STRING
+
+#else if defined(RUN_ATARI)
+
+#define DEFAULT_WINDOW_CAPTION "65XE Debugger v" C64DEBUGGER_VERSION_STRING
+
+#endif
 
 HDC			hDC=NULL;		// Private GDI Device Context
 HGLRC		hRC=NULL;		// Permanent Rendering Context
@@ -62,7 +69,6 @@ DWORD		dwExStyle;				// Window Extended Style
 DWORD		dwStyle;				// Window Style
 RECT		WindowRect;				// Grabs Rectangle Upper Left / Lower Right Values
 
-bool	keys[256];			// Array Used For The Keyboard Routine
 bool	active=TRUE;		// Window Active Flag Set To TRUE By Default
 bool	fullscreen=TRUE;	// Fullscreen Flag Set To Fullscreen Mode By Default
 
@@ -574,196 +580,331 @@ void mtEngineHandleWM_USER();
 // I do not know why they switched the params (blame stackoverflow). 
 // anyway it is how it landed here:
 
-u32 mapKey(WPARAM wParamIn, LPARAM lParamIn, bool isShift, bool isAlt, bool isControl)
+u32 mapKey(DWORD vkCode, bool isShift, bool isAlt, bool isControl)
 {
-	// win32 compiler is not sane here
-	u32 wParam = wParamIn;
-	u32 lParam = lParamIn;
+	LOGM(".... > mapKey vkCode=%08x %s %s %s", vkCode, STRBOOL(isShift), STRBOOL(isAlt), STRBOOL(isControl));
 
-	bool isRightSideKey = (lParam & 0x01000000) != 0;
-
-	LOGM(".... > mapKey wParam=%8.8x lParam=%8.8x isRightSideKey=%d", wParamIn, lParamIn, isRightSideKey);
-
-	if (wParam == 0x73 && isAlt)
+	if (vkCode == 0x73 && isAlt)
 	{
 		_exit(0);
 	}
 
-	if (wParam == 0x10)
-	{
-		if (isRightSideKey)
-			return MTKEY_RSHIFT;
+	if (vkCode == VK_LSHIFT)
 		return MTKEY_LSHIFT;
-	}
-	if (wParam == 0x11)
-	{
-		if (isRightSideKey)
-			return MTKEY_RCONTROL;
+	if (vkCode == VK_RSHIFT)
+		return MTKEY_RSHIFT;
+	if (vkCode == VK_LCONTROL)
 		return MTKEY_LCONTROL;
-	}
-	if (wParam == 0x12)
-	{
-		if (isRightSideKey)
-			return MTKEY_RALT;
+	if (vkCode == VK_RCONTROL)
+		return MTKEY_RCONTROL;
+	if (vkCode == VK_LMENU)
 		return MTKEY_LALT;
-	}
-	if (wParam == 0x1B)
+	if (vkCode == VK_RMENU)
+		return MTKEY_RALT;
+
+	if (vkCode == 0x1B)
 		return MTKEY_ESC;
-	if (wParam == 0xC0)
+	if (vkCode == 0xC0)
 		return MTKEY_LEFT_APOSTROPHE;
-	if (wParam == 0x21)
+	if (vkCode == 0x21)
 		return MTKEY_PAGE_UP;
-	if (wParam == 0x22)
+	if (vkCode == 0x22)
 		return MTKEY_PAGE_DOWN;
 	
 	// remember isShift is first checked :)
 
-	if (wParam == 0xDB && isShift)
+	if (vkCode == 0xDB && isShift)
 		return '{';
-	if (wParam == 0xDB)
+	if (vkCode == 0xDB)
 		return '[';
-	if (wParam == 0xDD && isShift)
-		return '}';
-	if (wParam == 0xDD)
-		return ']';
-	if (wParam == 0xDE && isShift)
-		return '|';	
-	if (wParam == 0xDE)
-		return '\'';	
-	if (wParam == 0xDC)
+	if (vkCode == 0xDC && isShift)
+		return '|';
+	if (vkCode == 0xDC)
 		return '\\';
-	if (wParam == 0xBA && isShift)
+	if (vkCode == 0xDD && isShift)
+		return '}';
+	if (vkCode == 0xDD)
+		return ']';
+	if (vkCode == 0xDE && isShift)
+		return '\"';	
+	if (vkCode == 0xDE)
+		return '\'';	
+	if (vkCode == 0xBA && isShift)
 		return ':';
-	if (wParam == 0xBA)
+	if (vkCode == 0xBA)
 		return ';';
-	if (wParam == 0xBB && isShift)
+	if (vkCode == 0xBB && isShift)
 		return '+';
-	if (wParam == 0xBB)
+	if (vkCode == 0xBB)
 		return '=';
-	if (wParam == 0xBC && isShift)
+	if (vkCode == 0xBC && isShift)
 		return '<';
-	if (wParam == 0xBC)
+	if (vkCode == 0xBC)
 		return ',';
-	if (wParam == 0xBD && isShift)
+	if (vkCode == 0xBD && isShift)
 		return '_';
-	if (wParam == 0xBD)
+	if (vkCode == 0xBD)
 		return '-';
-	if (wParam == 0xBE && isShift)
+	if (vkCode == 0xBE && isShift)
 		return '>';
-	if (wParam == 0xBE)
+	if (vkCode == 0xBE)
 		return '.';
-	if (wParam == 0xBF && isShift)
+	if (vkCode == 0xBF && isShift)
 		return '?';
-	if (wParam == 0xBF)
+	if (vkCode == 0xBF)
 		return '/';
-	if (wParam == 0x31 && isShift)
+	if (vkCode == 0x31 && isShift)
 		return '!';
-	if (wParam == 0x32 && isShift)
+	if (vkCode == 0x32 && isShift)
 		return '@';
-	if (wParam == 0x33 && isShift)
+	if (vkCode == 0x33 && isShift)
 		return '#';
-	if (wParam == 0x34 && isShift)
+	if (vkCode == 0x34 && isShift)
 		return '$';
-	if (wParam == 0x35 && isShift)
+	if (vkCode == 0x35 && isShift)
 		return '%';
-	if (wParam == 0x36 && isShift)
+	if (vkCode == 0x36 && isShift)
 		return '^';
-	if (wParam == 0x37 && isShift)
+	if (vkCode == 0x37 && isShift)
 		return '&';
-	if (wParam == 0x38 && isShift)
+	if (vkCode == 0x38 && isShift)
 		return '*';
-	if (wParam == 0x39 && isShift)
+	if (vkCode == 0x39 && isShift)
 		return '(';
-	if (wParam == 0x30 && isShift)
+	if (vkCode == 0x30 && isShift)
 		return ')';
-	if (wParam == 0x14)
+	if (vkCode == 0x14)
 		return MTKEY_CAPS_LOCK;
-	if (wParam == 0x2C)
+	if (vkCode == 0x2C)
 		return MTKEY_PRINT_SCREEN;
-	if (wParam == 0x12)
+	if (vkCode == 0x12)
 		return MTKEY_PAUSE_BREAK;
-	if (wParam == 0x25)
+	if (vkCode == 0x25)
 		return MTKEY_ARROW_LEFT;
-	if (wParam == 0x27)
+	if (vkCode == 0x27)
 		return MTKEY_ARROW_RIGHT;
-	if (wParam == 0x26)
+	if (vkCode == 0x26)
 		return MTKEY_ARROW_UP;
-	if (wParam == 0x28)
+	if (vkCode == 0x28)
 		return MTKEY_ARROW_DOWN;
-	if (wParam == 0x2D)
+	if (vkCode == 0x2D)
 		return MTKEY_INSERT;
-	if (wParam == 0x2E)
+	if (vkCode == 0x2E)
 		return MTKEY_DELETE;
-	if (wParam == 0x70)
+	if (vkCode == 0x70)
 		return MTKEY_F1;
-	if (wParam == 0x71)
+	if (vkCode == 0x71)
 		return MTKEY_F2;
-	if (wParam == 0x72)
+	if (vkCode == 0x72)
 		return MTKEY_F3;
-	if (wParam == 0x73)
+	if (vkCode == 0x73)
 		return MTKEY_F4;
-	if (wParam == 0x74)
+	if (vkCode == 0x74)
 		return MTKEY_F5;
-	if (wParam == 0x75)
+	if (vkCode == 0x75)
 		return MTKEY_F6;
-	if (wParam == 0x76)
+	if (vkCode == 0x76)
 		return MTKEY_F7;
-	if (wParam == 0x77)
+	if (vkCode == 0x77)
 		return MTKEY_F8;
-	if (wParam == 0x78)
+	if (vkCode == 0x78)
 		return MTKEY_F9;
-	if (wParam == 0x79)
+	if (vkCode == 0x79)
 		return MTKEY_F10;
-	if (wParam == 0x7A)
+	if (vkCode == 0x7A)
 		return MTKEY_F11;
-	if (wParam == 0x7B)
+	if (vkCode == 0x7B)
 		return MTKEY_F12;
-	if (wParam == 0x90)
+	if (vkCode == 0x90)
 		return MTKEY_NUM_LOCK;
-	if (wParam == 0x6F)
+	if (vkCode == 0x6F)
 		return MTKEY_NUM_DIVIDE;
-	if (wParam == 0x6A)
+	if (vkCode == 0x6A)
 		return MTKEY_NUM_MULTIPLY;
-	if (wParam == 0x6D)
+	if (vkCode == 0x6D)
 		return MTKEY_NUM_MINUS;
-	if (wParam == 0x6D)
-		return MTKEY_NUM_MINUS;
-	if (wParam == 0x6B)
+	if (vkCode == 0x6B)
 		return MTKEY_NUM_PLUS;
-	if (wParam == 0x6E)
+	if (vkCode == 0x6E)
 		return MTKEY_NUM_DOT;
-	if (wParam == 0x60)
+	if (vkCode == 0x60)
 		return MTKEY_NUM_0;
-	if (wParam == 0x61)
+	if (vkCode == 0x61)
 		return MTKEY_NUM_1;
-	if (wParam == 0x62)
+	if (vkCode == 0x62)
 		return MTKEY_NUM_2;
-	if (wParam == 0x63)
+	if (vkCode == 0x63)
 		return MTKEY_NUM_3;
-	if (wParam == 0x64)
+	if (vkCode == 0x64)
 		return MTKEY_NUM_4;
-	if (wParam == 0x65)
+	if (vkCode == 0x65)
 		return MTKEY_NUM_5;
-	if (wParam == 0x66)
+	if (vkCode == 0x66)
 		return MTKEY_NUM_6;
-	if (wParam == 0x67)
+	if (vkCode == 0x67)
 		return MTKEY_NUM_7;
-	if (wParam == 0x68)
+	if (vkCode == 0x68)
 		return MTKEY_NUM_8;
-	if (wParam == 0x69)
+	if (vkCode == 0x69)
 		return MTKEY_NUM_9;
-	if (wParam == 0x21)
+	if (vkCode == 0x21)
 		return MTKEY_PAGE_UP;
-	if (wParam == 0x22)
+	if (vkCode == 0x22)
 		return MTKEY_PAGE_DOWN;
-	if (wParam == 0x24)
+	if (vkCode == 0x24)
 		return MTKEY_HOME;
-	if (wParam == 0x23)
+	if (vkCode == 0x23)
 		return MTKEY_END;
 
-	if (wParam >= 'A' && wParam <= 'Z')
-		return wParam + 0x20;
-	return wParam;
+	if (vkCode >= 'A' && vkCode <= 'Z')
+		return vkCode + 0x20;
+	return vkCode;
+}
+
+// this shows my LOVE TO WINDOWS
+static bool workaroundForWindowsShitIsRightAltPressed = false;
+
+void KeyboardParseProc(u32 msg, u32 wParam, u32 lParam)
+{
+	LOGD("KeyboardParseProc: msg=%x wParam=%x lParam=%x", msg, wParam, lParam);
+
+    WPARAM vkCode = wParam;
+    UINT scancode = (lParam & 0x00ff0000) >> 16;
+    int extended  = (lParam & 0x01000000) != 0;
+
+	int isFakeKey = (lParam & 0x20000000) != 0;
+
+	if (wParam == 0x00000011 && isFakeKey)
+		return;
+
+    switch (vkCode) 
+	{
+    case VK_SHIFT:
+        vkCode = MapVirtualKey(scancode, MAPVK_VSC_TO_VK_EX);
+        break;
+    case VK_CONTROL:
+        vkCode = extended ? VK_RCONTROL : VK_LCONTROL;
+        break;
+    case VK_MENU:
+        vkCode = extended ? VK_RMENU : VK_LMENU;
+        break;
+    default:
+        break;    
+    }
+
+	LOGD("KeyboardParseProc: vkCode=%x", vkCode);
+
+	bool isShift = true;
+	bool isAlt = true; 
+	bool isControl = true;
+	if (!GetAsyncKeyState(VK_MENU))
+	{
+		isAlt = false;
+	}
+	if (!GetAsyncKeyState(VK_CONTROL))
+	{
+		isControl = false;
+	}
+
+	if (!GetAsyncKeyState(VK_SHIFT))
+	{
+		isShift = false;
+	}
+
+	// ralt is lctrl on some keyboards
+	if (wParam == 0x00000011 && isAlt)
+	{
+		LOGD("skipping: wParam=%x && alt");
+		return;
+	}
+
+
+	// another workarounds for shitty windows event system
+	if (msg == WM_SYSKEYDOWN
+		|| msg == WM_KEYDOWN)
+	{
+		if (vkCode == VK_LMENU
+			|| vkCode == VK_RMENU
+			|| vkCode == VK_MENU)
+		{
+			isAlt = true;
+		}
+		
+		if (vkCode == VK_LCONTROL
+			|| vkCode == VK_RCONTROL
+			|| vkCode == VK_CONTROL)
+		{
+			isControl = true;
+		}
+
+		if (vkCode == VK_LSHIFT
+			|| vkCode == VK_RSHIFT
+			|| vkCode == VK_SHIFT)
+		{
+			isShift = true;
+		}
+	}
+
+	if (workaroundForWindowsShitIsRightAltPressed)
+	{
+		isControl = false;
+		isAlt = true;
+	}
+
+	u32 key = mapKey(vkCode, isShift, isAlt, isControl);
+
+	if (key == quitKeyCode && isShift == quitIsShift && isAlt == quitIsAlt && isControl == quitIsControl)
+	{
+		//UnhookWindowsHookEx(hKeyboardHook);
+		_exit(0);
+	}
+
+	if (workaroundForWindowsShitIsRightAltPressed)
+	{
+		if (key == MTKEY_LCONTROL || key == MTKEY_RCONTROL)
+		{
+			LOGM("workaroundForWindowsShitIsRightAltPressed & CTRL");
+			return;
+		}
+	}
+
+	// funny workaround to Windows SHITTY EVENT SYSTEM
+	if (key == MTKEY_RALT)
+	{
+		isControl = false;
+
+		if (msg == WM_SYSKEYDOWN
+			|| msg == WM_KEYDOWN) 
+		{
+			workaroundForWindowsShitIsRightAltPressed = true;
+		}
+		else if (msg == WM_SYSKEYUP
+			|| msg == WM_KEYUP)
+		{
+			workaroundForWindowsShitIsRightAltPressed = false;
+		}
+	}
+
+	LOGI("============ key=%d isShift=%s isAlt=%s isControl=%s", key, STRBOOL(isShift), STRBOOL(isAlt), STRBOOL(isControl));
+
+	if (isShift && key >= 0x61 && key <= 0x7A)
+	{
+		key -= 0x20;
+	}
+
+	switch (msg) 
+	{
+	case WM_KEYDOWN:
+	case WM_SYSKEYDOWN:
+		LOGM("-----> KEYDOWN %x shift=%s alt=%s ctrl=%s", key, STRBOOL(isShift), STRBOOL(isAlt), STRBOOL(isControl));
+		guiMain->KeyDown(key, isShift, isAlt, isControl);
+		break;
+	case WM_KEYUP:
+	case WM_SYSKEYUP:
+		LOGM("-----> KEYUP   %x shift=%s alt=%s ctrl=%s", key, STRBOOL(isShift), STRBOOL(isAlt), STRBOOL(isControl));
+		guiMain->KeyUp(key, isShift, isAlt, isControl);
+		break;
+	}
 }
 
 void C64D_DragDropCallback(char *filePath);
@@ -813,10 +954,14 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 			return 0;								// Jump Back
 		}
 
+		// 
 		case WM_KEYDOWN:							// Is A Key Being Held Down?
 		{
 			LOGI("WM_KEYDOWN: lParam=%8.8x wParam=%8.8x", lParam, wParam);
+			u32 vkCode = (u32)wParam;
+			KeyboardParseProc(WM_KEYDOWN, wParam, lParam);
 
+		/*
 			bool isShift = true;
 			bool isAlt = true; //isAltDown;
 			bool isControl = true;
@@ -834,7 +979,7 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 				isShift = false;
 			}
 
-			u32 key = mapKey(wParam, lParam, isShift, isAlt, isControl);
+			u32 key = mapKey(vkCode, isShift, isAlt, isControl);
 
 			if (key == quitKeyCode && isShift == quitIsShift && isAlt == quitIsAlt && isControl == quitIsControl)
 			{
@@ -849,7 +994,7 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 			}
 
 			guiMain->KeyDown(key, isShift, isAlt, isControl);
-			keys[wParam] = TRUE;					// If So, Mark It As TRUE
+			*/
 			return 0;								// Jump Back
 		}
 
@@ -862,6 +1007,10 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 				return 0;
 			}
 
+			u32 vkCode = (u32)wParam;
+			KeyboardParseProc(WM_KEYUP, wParam, lParam);
+
+			/*
 			bool isShift = true;
 			bool isAlt = true; //isAltDown;
 			bool isControl = true;
@@ -879,8 +1028,8 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 				isShift = false;
 			}
 
-
-			u32 key = mapKey(wParam, lParam, isShift, isAlt, isControl);
+			u32 vkCode = (u32)wParam;
+			u32 key = mapKey(vkCode, isShift, isAlt, isControl);
 
 			if (isShift && key >= 0x61 && key <= 0x7A)
 			{
@@ -888,7 +1037,7 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 			}
 
 			guiMain->KeyUp(key, isShift, isAlt, isControl);
-			keys[wParam] = FALSE;					// If So, Mark It As FALSE
+			*/
 			return 0;								// Jump Back
 		}
 
@@ -910,6 +1059,10 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 			{
 				isAltDown = true;
 
+				u32 vkCode = (u32)wParam;
+				KeyboardParseProc(WM_SYSKEYDOWN, wParam, lParam);
+
+				/*
 				bool isShift = true;
 				bool isAlt = true; //isAltDown;
 				bool isControl = true;
@@ -927,11 +1080,14 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 					isShift = false;
 				}
 
-				u32 key = mapKey(wParam, lParam, isShift, isAlt, isControl);
+				u32 vkCode = (u32)wParam;
+				u32 key = mapKey(vkCode, isShift, isAlt, isControl);
 
 				LOGI("============ key=%d isShift=%s isAlt=%s isControl=%s", key, STRBOOL(isShift), STRBOOL(isAlt), STRBOOL(isControl));
 				guiMain->KeyDown(key, isShift, isAlt, isControl);
-				keys[wParam] = TRUE;					// If So, Mark It As TRUE
+				*/
+
+				return 0;
 			}
 		}
 
@@ -961,14 +1117,21 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 					return 0;
 				}
 			}
+		
+			u32 vkCode = (u32)wParam;
+			KeyboardParseProc(WM_SYSKEYUP, wParam, lParam);
 
-			u32 key = mapKey(wParam, lParam, false, false, false);
+			/*
+			u32 vkCode = (u32)wParam;
+			u32 key = mapKey(vkCode, false, false, false);
 			guiMain->KeyUp(key, false, false, false);
-			keys[wParam] = FALSE;					// If So, Mark It As FALSE
+			*/
+
 			return 0;								// Jump Back
 
 			keyUpEaten = false;
 		}
+
 
 		case WM_LBUTTONDOWN:
 		{
@@ -1055,7 +1218,7 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 
 		case WM_MOUSEMOVE:
 		{
-			LOGI("WM_MOUSEMOVE: wParam=%x lParam=%x", wParam, lParam);
+			//LOGI("WM_MOUSEMOVE: wParam=%x lParam=%x", wParam, lParam);
 
 			bool isLeftButton = (wParam & MK_LBUTTON);
 			bool isRightButton = (wParam & MK_RBUTTON);
@@ -1068,7 +1231,7 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 
 				int xPos = (int)(((float)GET_X_LPARAM(lParam) - VIEW_START_X) / (float)SCREEN_SCALE);
 				int yPos = (int)(((float)GET_Y_LPARAM(lParam) - VIEW_START_Y) / (float)SCREEN_SCALE);
-				LOGI("     > VID_TouchesMoved: x=%d y=%d", xPos, yPos);
+				//LOGI("     > VID_TouchesMoved: x=%d y=%d", xPos, yPos);
 
 #if defined(EMULATE_ZOOM_WITH_ALT)
 				VID_TouchesMoved(xPos, yPos, (state < 0));
@@ -1182,6 +1345,49 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 
 void C64DebuggerParseCommandLine0();
 
+//HHOOK hKeyboardHook;
+
+/*
+// this does not work on slow computers:
+LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
+{	
+	if (nCode < 0)
+	{
+	    return CallNextHookEx(hKeyboardHook, nCode, wParam, lParam);
+	}
+
+	if (GetActiveWindow() != hWnd)
+	{
+	    return CallNextHookEx(hKeyboardHook, nCode, wParam, lParam);
+	}
+
+	PKBDLLHOOKSTRUCT keyData = (PKBDLLHOOKSTRUCT)lParam;
+	DWORD vkCode = keyData->vkCode;
+
+	// check if it is Numpad Enter
+	if (vkCode == 0x0d && (keyData->flags & LLKHF_EXTENDED) != 0) 
+	{ 
+		vkCode = 0x0e;
+	}
+	
+	LOGI("LowLevelKeyboardProc: vkCode=%x wParam=%x", vkCode, wParam);
+
+	// r-alt is not r-alt but l-control + r-alt
+	// ROTFL: "It's not a bug, it's a feature. That right Alt is actually the AltGr key of these keyboards. On Windows it is equivalent to Ctrl+Alt."
+	if (vkCode == VK_LCONTROL && (wParam == WM_SYSKEYDOWN 
+		|| wParam == WM_SYSKEYUP || workaroundForWindowsShitIsRightAltPressed))
+	{
+		// left alt double message
+	    return CallNextHookEx(hKeyboardHook, nCode, wParam, lParam);
+	}
+
+	//KeyboardParseProc(vkCode, WPARAM wParam, LPARAM lParam)
+
+	LOGD("LowLevelKeyboardProc finished");
+    return CallNextHookEx(hKeyboardHook, nCode, wParam, lParam);
+}
+*/
+
 int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 					HINSTANCE	hPrevInstance,		// Previous Instance
 					LPSTR		lpCmdLine,			// Command Line Parameters
@@ -1237,6 +1443,9 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 
 	SetVSyncOn();
 
+	// this does not work on slow computers (low level keyboard hook)
+	//hKeyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, hInstance, NULL);
+
 #ifdef CATCH_CRASH
 	__try 
 #endif
@@ -1283,7 +1492,7 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 #endif
 
 				// Draw The Scene.  Watch For ESC Key And Quit Messages From DrawGLScene()
-				if ((active && !DrawGLScene())) // || keys[VK_ESCAPE])	// Active?  Was There A Quit Received?
+				if ((active && !DrawGLScene())) 
 				{
 					done=TRUE;							// ESC or DrawGLScene Signalled A Quit
 				}
@@ -1291,19 +1500,6 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 				{
 					SwapBuffers(hDC);					// Swap Buffers (Double Buffering)
 				}
-
-				/*
-				if (keys[VK_F1])						// Is F1 Being Pressed?
-				{
-					keys[VK_F1]=FALSE;					// If So Make Key FALSE
-					KillGLWindow();						// Kill Our Current Window
-					fullscreen=!fullscreen;				// Toggle Fullscreen / Windowed Mode
-					// Recreate Our OpenGL Window
-					if (!CreateGLWindow("MTEngineAnimation editor",SCREEN_WIDTH*2,SCREEN_HEIGHT*2,16,fullscreen))
-					{
-						return 0;						// Quit If Window Was Not Created
-					}
-				}*/
 			}
 #ifdef LOG_SYSCALLS
 			LOGD("Sleep");
@@ -1332,6 +1528,8 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 
 	// Shutdown
 	//KillGLWindow();									// Kill The Window
+
+	//UnhookWindowsHookEx(hKeyboardHook);
 
 	LOG_Shutdown();
 
