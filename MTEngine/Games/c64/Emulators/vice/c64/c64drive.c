@@ -176,6 +176,8 @@ void machine_drive_port_default(struct drive_context_s *drv)
 
 void machine_drive_flush(void)
 {
+	LOGD("machine_drive_flush");
+	
     drive_gcr_data_writeback_all();
 }
 

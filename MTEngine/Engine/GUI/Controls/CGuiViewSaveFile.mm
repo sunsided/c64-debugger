@@ -105,7 +105,19 @@ void CGuiViewSaveFile::Init(UTFString *defaultFileName, UTFString *saveExtension
 		UTFRELEASE(this->saveDirectoryPath);
 	
 	this->defaultFileName = UTFALLOC(defaultFileName);
-	this->saveDirectoryPath = UTFALLOC(saveDirectoryPath);
+	
+	if (saveDirectoryPath != NULL && SYS_FileDirExists(saveDirectoryPath))
+	{
+		this->saveDirectoryPath = UTFALLOC(saveDirectoryPath);	//strdup
+	}
+	else
+	{
+		char buf[2];
+		buf[0] = SYS_FILE_SYSTEM_PATH_SEPARATOR;
+		buf[1] = 0x00;
+		this->saveDirectoryPath = UTFALLOC(buf);
+	}
+	
 	this->saveExtension = UTFALLOC(saveExtension);
 
 #if !defined(IOS)

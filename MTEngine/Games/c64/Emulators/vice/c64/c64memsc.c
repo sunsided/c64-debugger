@@ -1279,8 +1279,18 @@ void c64d_copy_ram_memory_c64(BYTE *buffer, int addrStart, int addrEnd)
 		*bufPtr++ = mem_ram[addr];
 	}
 	
-	buffer[0x0000] = pport.dir_read;
-	buffer[0x0001] = (pport.data_read & (0xff - (((!pport.data_set_bit6) << 6) + ((!pport.data_set_bit7) << 7))));
+	if (addrStart == 0)
+	{
+		buffer[0x0000] = pport.dir_read;
+		if (addrEnd != 1)
+		{
+			buffer[0x0001] = (pport.data_read & (0xff - (((!pport.data_set_bit6) << 6) + ((!pport.data_set_bit7) << 7))));
+		}
+	}
+	else if (addrStart == 1)
+	{
+		buffer[0x0001] = (pport.data_read & (0xff - (((!pport.data_set_bit6) << 6) + ((!pport.data_set_bit7) << 7))));
+	}
 }
 
 

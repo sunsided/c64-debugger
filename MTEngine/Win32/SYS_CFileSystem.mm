@@ -1369,6 +1369,18 @@ bool SYS_FileExists(CSlrString *path)
 	}
 }
 
+bool SYS_FileDirExists(char *cPath)
+{
+	struct stat info;
+	
+	if(stat( cPath, &info ) != 0)
+		return false;
+	else if(info.st_mode & S_IFDIR)
+		return true;
+	else
+		return false;
+}
+
 bool SYS_FileDirExists(CSlrString *path)
 {
 	char *cPath = path->GetStdASCII();

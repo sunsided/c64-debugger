@@ -9,7 +9,7 @@ class C64SpriteHires : public C64Sprite
 {
 public:
 	C64SpriteHires();
-	C64SpriteHires(CViewVicEditor *vicEditor, int x, int y, bool isStretchedHorizontally, bool isStretchedVertically, int pointerAddr);
+	C64SpriteHires(CViewVicEditor *vicEditor, int x, int y, bool isStretchedHorizontally, bool isStretchedVertically, int pointerValue, int pointerAddr);
 	C64SpriteHires(CViewVicEditor *vicEditor, CByteBuffer *byteBuffer);
 
 	virtual ~C64SpriteHires();

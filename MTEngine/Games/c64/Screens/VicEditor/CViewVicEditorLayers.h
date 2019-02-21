@@ -58,6 +58,7 @@ public:
 
 	void SelectNextLayer();
 
+	void SetLayerVisible(CVicEditorLayer *layer, bool isVisible);
 };
 
 

@@ -55,6 +55,7 @@ public:
 public:
 	CImageData(char *fileName);
 	CImageData(CByteBuffer *byteBuffer);
+	CImageData(int width, int height);
 	CImageData(int width, int height, byte type);
 	CImageData(int width, int height, byte type, bool allocTemp, bool allocResult);
 	CImageData(int width, int height, byte type, void *data);
@@ -90,6 +91,7 @@ public:
 	byte *getGrayscaleTemporaryData();
 	void setGrayscaleResultData(byte *data);
 	// rgb
+//	void GetPixel(int x, int y, byte *r, byte *g, byte *b);
 	void GetPixelResultRGB(int x, int y, byte *r, byte *g, byte *b);
 	void SetPixelResultRGB(int x, int y, byte r, byte g, byte b);
 	void GetPixelTemporaryRGB(int x, int y, byte *r, byte *g, byte *b);
@@ -97,7 +99,9 @@ public:
 	byte *getRGBResultData();
 	void setRGBResultData(byte *data);
 	// rgba
+	void GetPixel(int x, int y, byte *r, byte *g, byte *b, byte *a);
 	void GetPixelResultRGBA(int x, int y, byte *r, byte *g, byte *b, byte *a);
+	void SetPixel(int x, int y, byte r, byte g, byte b, byte a);
 	void SetPixelResultRGBA(int x, int y, byte r, byte g, byte b, byte a);
 	void GetPixelTemporaryRGBA(int x, int y, byte *r, byte *g, byte *b, byte *a);
 	void SetPixelTemporaryRGBA(int x, int y, byte r, byte g, byte b, byte a);

@@ -43,6 +43,8 @@
 
 - (bool)isWindowFullScreen;
 
+//- (void)windowWillClose:(NSNotification *)notification;
+
 //// payments
 //- (void) startPayment;
 //- (void) completeTransaction: (SKPaymentTransaction *)transaction;

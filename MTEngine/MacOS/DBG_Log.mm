@@ -60,7 +60,7 @@ static unsigned int logger_currentLogLevel = -1;
  DBGLVL_MAIN         | \
  DBGLVL_RES          | \
  DBGLVL_GUI          | \
- DBGLVL_FACEBOOK     | \
+ DBGLVL_PAINT        | \
  DBGLVL_FLURRY       | \
  DBGLVL_WEBSERVICE   | \
  DBGLVL_XML          | \
@@ -109,6 +109,8 @@ void LOG_Init(void)
 	LOG_SetLevel(DBGLVL_AUDIO, true);
 	LOG_SetLevel(DBGLVL_TODO, true);
 
+	LOG_SetLevel(DBGLVL_PAINT, false);
+	
 	LOG_SetLevel(DBGLVL_VICE_DEBUG, true);
 	LOG_SetLevel(DBGLVL_VICE_MAIN, true);
 	LOG_SetLevel(DBGLVL_VICE_VERBOSE, true);
@@ -429,8 +431,8 @@ const char *getLevelStr(unsigned int level)
 		return "[GUI  ]";
 	if (level == DBGLVL_MEMORY)
 		return "[MEM  ]";
-	if (level == DBGLVL_FACEBOOK)
-		return "[FB   ]";
+	if (level == DBGLVL_PAINT)
+		return "[PAINT]";
 	if (level == DBGLVL_FLURRY)
 		return "[LEVEL]";	//FLURRY
 	if (level == DBGLVL_WEBSERVICE)

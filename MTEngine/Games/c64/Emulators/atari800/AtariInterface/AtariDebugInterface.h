@@ -24,7 +24,6 @@ public:
 
 	virtual void RunEmulationThread();
 
-	CImageData *screenImage;
 	CAtariAudioChannel *audioChannel;
 	CSlrDataAdapter *dataAdapter;
 
@@ -35,8 +34,6 @@ public:
 	virtual void DoFrame();
 	virtual int GetScreenSizeX();
 	virtual int GetScreenSizeY();
-
-	virtual CImageData *GetScreenImageData();
 
 	// keyboard & joystick mapper
 	virtual void KeyboardDown(uint32 mtKeyCode);
@@ -78,20 +75,11 @@ public:
 	void SetMachineType(u8 machineType);
 	void SetRamSizeOption(u8 ramSizeOption);
 	
-
-	
-	
 	virtual void SetByte(uint16 addr, uint8 val);
-
-	
-	
 	//	virtual void SetByteToRamC64(uint16 addr, uint8 val);
 
-	
-	
 	virtual uint8 GetByte(uint16 addr);
 
-	
 	virtual void GetMemory(uint8 *buffer, int addrStart, int addrEnd);
 
 	//
@@ -101,7 +89,6 @@ public:
 	// make jmp and reset CPU
 	virtual void MakeJmpAndReset(uint16 addr);
 
-	
 	
 	//	virtual uint8 GetByteFromRamC64(uint16 addr);
 //	virtual void MakeJmpC64(uint16 addr);

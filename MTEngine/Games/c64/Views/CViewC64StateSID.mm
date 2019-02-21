@@ -357,8 +357,6 @@ void CViewC64StateSID::RenderStateSID(int sidNum, float posX, float posY, float 
 		
 		uint16 freq = (reg_freq_hi << 8) | reg_freq_lo;
 		
-		
-		
 		sprintf(buf, "Voice #%d", (voice+1));
 		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 		
@@ -565,7 +563,7 @@ void CViewC64StateSID::GuiEditHexEnteredValue(CGuiEditHex *editHex, u32 lastKeyC
 		byte v = editHex->value;
 		debugInterface->SetSidRegister(editingSIDIndex, editingRegisterValueIndex, v);
 		
-		editingRegisterValueIndex = -1;
+		editHex->SetCursorPos(0);
 	}
 	
 }

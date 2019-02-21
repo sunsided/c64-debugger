@@ -309,7 +309,7 @@ void c64d_clear_screen()
 {
 	debugInterfaceVice->LockRenderScreenMutex();
 	
-	uint8 *destScreenPtr = (uint8 *)debugInterfaceVice->screen->resultData;
+	uint8 *destScreenPtr = (uint8 *)debugInterfaceVice->screenImage->resultData;
 	
 	for (int y = 0; y < 512; y++)
 	{
@@ -332,9 +332,7 @@ void c64d_clear_screen()
 			*srcScreenPtr++ = 0x00;
 		}
 	}
-	
 
-	
 	debugInterfaceVice->UnlockRenderScreenMutex();
 
 }
@@ -350,30 +348,71 @@ void c64d_refresh_screen()
 	
 	debugInterfaceVice->LockRenderScreenMutex();
 	
-	// dest screen width is 512
-	// src  screen width is 384
+	volatile int superSample = debugInterfaceVice->screenSupersampleFactor;
 	
-	// skip 16 top lines
-	uint8 *srcScreenPtr = screenBuffer + (16*384);
-	uint8 *destScreenPtr = (uint8 *)debugInterfaceVice->screen->resultData;
-	
-	int screenHeight = debugInterfaceVice->GetScreenSizeY();
-	for (int y = 0; y < screenHeight; y++)
+	if (superSample == 1)
 	{
-		for (int x = 0; x < 384; x++)
+		// dest screen width is 512
+		// src  screen width is 384
+		//
+		// skip 16 top lines
+		uint8 *srcScreenPtr = screenBuffer + (16*384);
+		uint8 *destScreenPtr = (uint8 *)debugInterfaceVice->screenImage->resultData;
+	
+		int screenHeight = debugInterfaceVice->GetScreenSizeY();
+		for (int y = 0; y < screenHeight; y++)
 		{
-			byte v = *srcScreenPtr++;
-			*destScreenPtr++ = c64d_palette_red[v];
-			*destScreenPtr++ = c64d_palette_green[v];
-			*destScreenPtr++ = c64d_palette_blue[v];
-			*destScreenPtr++ = 255;
+			for (int x = 0; x < 384; x++)
+			{
+				byte v = *srcScreenPtr++;
+				*destScreenPtr++ = c64d_palette_red[v];
+				*destScreenPtr++ = c64d_palette_green[v];
+				*destScreenPtr++ = c64d_palette_blue[v];
+				*destScreenPtr++ = 255;
+			}
+	
+			destScreenPtr += (512-384)*4;
 		}
+	}
+	else
+	{
+		//	// dest screen width is 512
+		//	// src  screen width is 384
+		//
+		// skip 16 top lines
+		uint8 *srcScreenPtr = screenBuffer + (16*384);
+		uint8 *destScreenPtr = (uint8 *)debugInterfaceVice->screenImage->resultData;
 		
-		destScreenPtr += (512-384)*4;
+		int screenHeight = debugInterfaceVice->GetScreenSizeY();
+		for (int y = 0; y < screenHeight; y++)
+		{
+			for (int j = 0; j < superSample; j++)
+			{
+				uint8 *pScreenPtrSrc = srcScreenPtr;
+				uint8 *pScreenPtrDest = destScreenPtr;
+				for (int x = 0; x < 384; x++)
+				{
+					byte v = *pScreenPtrSrc++;
+					
+					for (int i = 0; i < superSample; i++)
+					{
+						*pScreenPtrDest++ = c64d_palette_red[v];
+						*pScreenPtrDest++ = c64d_palette_green[v];
+						*pScreenPtrDest++ = c64d_palette_blue[v];
+						*pScreenPtrDest++ = 255;
+					}
+				}
+				
+				destScreenPtr += (512)*superSample*4;
+			}
+			
+			srcScreenPtr += 384;
+		}
 	}
 	
 	debugInterfaceVice->UnlockRenderScreenMutex();
-
+	
+	debugInterfaceVice->DoFrame();
 }
 
 // this is called when debug is paused to refresh only part of screen
@@ -401,7 +440,15 @@ void c64d_refresh_previous_lines()
 			
 			//LOGD("r=%d g=%d b=%d", r, g, b);
 			
-			debugInterfaceVice->screen->SetPixelResultRGBA(x, y, c64d_palette_red[v], c64d_palette_green[v], c64d_palette_blue[v], 255);
+			for (int i = 0; i < debugInterfaceVice->screenSupersampleFactor; i++)
+			{
+				for (int j = 0; j < debugInterfaceVice->screenSupersampleFactor; j++)
+				{
+					debugInterfaceVice->screenImage->SetPixelResultRGBA(x * debugInterfaceVice->screenSupersampleFactor + j,
+																   y * debugInterfaceVice->screenSupersampleFactor + i,
+																   c64d_palette_red[v], c64d_palette_green[v], c64d_palette_blue[v], 255);
+				}
+			}
 		}
 	}
 	
@@ -443,7 +490,16 @@ void c64d_refresh_dbuf()
 			maxX = x;
 		
 		byte v = vicii.dbuf[l];
-		debugInterfaceVice->screen->SetPixelResultRGBA(x, rasterY, c64d_palette_red[v], c64d_palette_green[v], c64d_palette_blue[v], 255);
+		
+		for (int i = 0; i < debugInterfaceVice->screenSupersampleFactor; i++)
+		{
+			for (int j = 0; j < debugInterfaceVice->screenSupersampleFactor; j++)
+			{
+				debugInterfaceVice->screenImage->SetPixelResultRGBA(x * debugInterfaceVice->screenSupersampleFactor + j,
+															   rasterY * debugInterfaceVice->screenSupersampleFactor + i,
+															   c64d_palette_red[v], c64d_palette_green[v], c64d_palette_blue[v], 255);
+			}
+		}
 	}
 	
 //	LOGD("........ maxX=%d", maxX);

@@ -50,4 +50,11 @@ void RenderColorRectangle(float px, float py, float ledSizeX, float ledSizeY, fl
 //
 uint16 GetSidAddressByChipNum(int chipNum);
 
+// convert SID file to PRG, returns buffer with PRG
+CByteBuffer *ConvertSIDtoPRG(CByteBuffer *sidFileData);
+bool C64LoadSIDToRam(char *filePath, u16 *fromAddr, u16 *toAddr, u16 *initAddr, u16 *playAddr);
+
+//
+void C64ExomizerSave(u16 fromAddr, u16 toAddr, u16 jmpAddr, char *filePath);
+
 #endif

@@ -51,7 +51,7 @@ public:
 
 	virtual void ActivateView();
 	virtual void DeactivateView();
-
+	
 	CSlrImage *imageScreen;
 
 	CImageData *imageDataScreenDefault;
@@ -160,6 +160,8 @@ public:
 	
 	bool shiftDown;
 	
+	//
+	virtual void SetSupersampleFactor(int supersampleFactor);
 };
 
 #endif //_CVIEWC64SCREEN_H_

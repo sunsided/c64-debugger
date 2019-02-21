@@ -685,6 +685,28 @@ CImageData *IMG_CropImageRGBA(CImageData *image, int posX, int posY, int width, 
 	return result;
 }
 
+CImageData *IMG_CropSupersampleImageRGBA(CImageData *image, int supersamplingFactor, int posX, int posY, int width, int height)
+{
+	CImageData *result = new CImageData(width, height, IMG_TYPE_RGBA);
+	result->AllocImage(false, true);
+	
+	int sx = posX*supersamplingFactor;
+	int sy = posY*supersamplingFactor;
+	
+	for (int x = 0; x < width; x++)
+	{
+		for (int y = 0; y < height; y++)
+		{
+			byte r,g,b,a;
+			
+			image->GetPixelResultRGBA(sx + x*supersamplingFactor,
+									  sy + y*supersamplingFactor, &r, &g, &b, &a);
+			result->SetPixelResultRGBA(x, y, r, g, b, a);
+		}
+	}
+	return result;
+}
+
 void IMG_CircleSpot(CImageData *image)
 {
 	int spotX = image->width/2;

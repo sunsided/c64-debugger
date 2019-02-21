@@ -86,7 +86,7 @@ void CViewFileD64::StartFileEntry(DiskImageFileEntry *fileEntry, bool showLoadAd
 		UpdateDriveDiskID();
 		
 		// load the PRG
-		bool ret = viewC64->viewC64MainMenu->LoadPRG(byteBuffer, true, showLoadAddressInfo);
+		bool ret = viewC64->viewC64MainMenu->LoadPRG(byteBuffer, true, showLoadAddressInfo, false);
 		
 		if (ret == false)
 		{

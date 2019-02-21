@@ -23,6 +23,9 @@ INCLUDE_PATH          = \
 	`find Engine -iname "*.h" -printf "-I%h\n" | sort -u` \
 	`find Games -iname "*.h" -printf "-I%h\n" | sort -u` \
 	`find Linux -iname "*.h" -printf "-I%h\n" | sort -u` \
+	`find Engine -iname "*.hpp" -printf "-I%h\n" | sort -u` \
+	`find Games -iname "*.hpp" -printf "-I%h\n" | sort -u` \
+	`find Linux -iname "*.hpp" -printf "-I%h\n" | sort -u` \
 	`pkg-config --cflags gtk+-3.0 x11 gl`
 
 OBJS     = $(MM_SRCS:.mm=.o) $(C_SRCS:.c=.o) $(CXX_SRCS:.cpp=.o) $(CC_SRCS:.cc=.o)

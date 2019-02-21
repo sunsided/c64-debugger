@@ -78,8 +78,6 @@ public:
 	virtual int GetScreenSizeX();
 	virtual int GetScreenSizeY();
 	
-	virtual CImageData *GetScreenImageData();
-	
 	virtual void Reset();
 	virtual void HardReset();
 	virtual void DiskDriveReset();
@@ -276,6 +274,14 @@ public:
 	
 	//
 	virtual CSlrDataAdapter *GetDataAdapter();
+
+	//
+	virtual void Shutdown();
+	
+	// profiler
+	// if fileName is NULL no file will be created, if runForNumCycles is -1 it will run till ProfilerDeactivate
+	virtual void ProfilerActivate(char *fileName, int runForNumCycles, bool pauseCpuWhenFinished);
+	virtual void ProfilerDeactivate();
 
 };
 

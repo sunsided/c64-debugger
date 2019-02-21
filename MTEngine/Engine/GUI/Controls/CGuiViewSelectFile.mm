@@ -91,7 +91,18 @@ void CGuiViewSelectFile::Init(UTFString *directoryPath, std::list<UTFString *> *
 	
 	this->LockRenderMutex();
 	this->extensions = extensions;
-	this->currentDirectoryPath = UTFALLOC(directoryPath);	//strdup
+	
+	if (directoryPath != NULL && SYS_FileDirExists(directoryPath))
+	{
+		this->currentDirectoryPath = UTFALLOC(directoryPath);	//strdup
+	}
+	else
+	{
+		char buf[2];
+		buf[0] = SYS_FILE_SYSTEM_PATH_SEPARATOR;
+		buf[1] = 0x00;
+		this->currentDirectoryPath = UTFALLOC(buf);
+	}
 	
 	LOGD("directoryPath=");
 	LOGD(directoryPath);

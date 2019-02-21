@@ -8,7 +8,6 @@
 #include "CViewC64.h"
 #include "CViewMemoryMap.h"
 #include "C64Tools.h"
-#include "CViewC64Screen.h"
 #include "SYS_Threading.h"
 #include "CGuiEditHex.h"
 #include "VID_ImageBinding.h"
@@ -18,8 +17,12 @@
 #include "C64KeyboardShortcuts.h"
 #include "SYS_SharedMemory.h"
 #include "CViewC64VicDisplay.h"
-#include "CViewAtariScreen.h"
 #include <math.h>
+
+
+#include "CViewC64Screen.h"
+#include "CViewAtariScreen.h"
+#include "CViewNesScreen.h"
 
 CViewDataDump::CViewDataDump(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
 							 CSlrDataAdapter *dataAdapter, CViewMemoryMap *viewMemoryMap, CViewDisassemble *viewDisassemble,
@@ -42,12 +45,19 @@ CViewDataDump::CViewDataDump(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 		fontCBM2 = viewC64->fontCBM2;
 		fontCharacters = fontCBM1;
 	}
-	else
+	else if (this->debugInterface->GetEmulatorType() == EMULATOR_TYPE_ATARI800)
 	{
 		fontAtari = viewC64->fontAtari;
 		fontCBM1 = viewC64->fontCBM1;
 		fontCBM2 = viewC64->fontCBM2;
 		fontCharacters = fontAtari;
+	}
+	else if (this->debugInterface->GetEmulatorType() == EMULATOR_TYPE_NESTOPIA)
+	{
+		fontAtari = viewC64->fontAtari;
+		fontCBM1 = viewC64->fontCBM1;
+		fontCBM2 = viewC64->fontCBM2;
+		fontCharacters = fontCBM1;
 	}
 	
 	fontSize = 5.0f;
@@ -824,10 +834,14 @@ bool CViewDataDump::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContro
 		{
 			viewC64->viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
 		}
-		
 		if (viewC64->debugInterfaceAtari)
 		{
 			viewC64->viewAtariScreen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		}
+
+		if (viewC64->debugInterfaceNes)
+		{
+			viewC64->viewNesScreen->KeyUpModifierKeys(isShift, isAlt, isControl);
 		}
 		return true;
 	}

@@ -602,6 +602,8 @@ void drive_move_head(int step, drive_t *drive)
 
 void drive_gcr_data_writeback(drive_t *drive)
 {
+//	LOGD("drive_gcr_data_writeback");
+	
     int extend;
     unsigned int half_track, track;
     int tmp;
@@ -622,6 +624,8 @@ void drive_gcr_data_writeback(drive_t *drive)
     if (!(drive->GCR_dirty_track)) {
         return;
     }
+	
+//	LOGD("drive_gcr_data_writeback: DIRTY TRACK");
 
     if ((drive->image->type == DISK_IMAGE_TYPE_G64)
         || (drive->image->type == DISK_IMAGE_TYPE_G71)) {
@@ -669,6 +673,8 @@ void drive_gcr_data_writeback(drive_t *drive)
 
 void drive_gcr_data_writeback_all(void)
 {
+//	LOGD("drive_gcr_data_writeback_all");
+	
     drive_t *drive;
     unsigned int i;
 

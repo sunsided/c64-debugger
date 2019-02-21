@@ -515,7 +515,15 @@
 /* #undef HAVE_STDLIB_H */
 
 /* Define to 1 if you have the `strcasecmp' function. */
+#if !defined(WIN32)
 #define HAVE_STRCASECMP 1
+/* Define to 1 if you have the `strncasecmp' function. */
+#define HAVE_STRNCASECMP 1
+#else
+#undef HAVE_STRCASECMP
+#define HAVE_STRICMP
+#define HAVE_STRNICMP
+#endif
 
 /* Define to 1 if you have the `strdup' function. */
 #define HAVE_STRDUP /**/
@@ -530,9 +538,6 @@
 
 /* Define to 1 if you have the <string.h> header file. */
 /* #undef HAVE_STRING_H */
-
-/* Define to 1 if you have the `strncasecmp' function. */
-#define HAVE_STRNCASECMP 1
 
 /* Define to 1 if you have the `swab' function. */
 #define HAVE_SWAB 1
@@ -929,3 +934,15 @@
 
 #define snprintf _snprintf
 #endif
+
+#ifdef WIN32
+typedef signed char int8_t;
+typedef unsigned char  uint8_t;
+typedef short int16_t;
+typedef unsigned short uint16_t;
+typedef int  int32_t;
+typedef unsigned uint32_t;
+typedef long long int64_t;
+typedef unsigned long long uint64_t;
+#endif
+

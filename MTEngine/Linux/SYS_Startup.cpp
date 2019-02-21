@@ -29,7 +29,14 @@
 #include "SYS_CommandLine.h"
 #include <gtk/gtk.h>
 
+#if defined(RUN_COMMODORE64)
 #define DEFAULT_WINDOW_CAPTION "C64 Debugger v" C64DEBUGGER_VERSION_STRING
+#elif defined(RUN_ATARI)
+#define DEFAULT_WINDOW_CAPTION "65XE Debugger v" C64DEBUGGER_VERSION_STRING
+#elif defined(RUN_NES)
+#define DEFAULT_WINDOW_CAPTION "NES Debugger v" C64DEBUGGER_VERSION_STRING
+#endif
+
 //" (" __DATE__ " " __TIME__ ")"
 
 int quitKeyCode = -1;

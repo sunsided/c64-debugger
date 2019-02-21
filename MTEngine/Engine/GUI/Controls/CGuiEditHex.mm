@@ -174,6 +174,12 @@ void CGuiEditHex::KeyDown(u32 keyCode)
 	return;
 }
 
+void CGuiEditHex::SetCursorPos(int newPos)
+{
+	this->cursorPos = newPos;
+	UpdateCursor();
+}
+
 void CGuiEditHex::UpdateCursor()
 {
 	textWithCursor->Clear();

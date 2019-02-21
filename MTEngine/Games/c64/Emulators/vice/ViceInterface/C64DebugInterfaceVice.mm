@@ -45,6 +45,7 @@ extern "C" {
 #include "CViewC64.h"
 #include "CViewC64StateSID.h"
 #include "CViceAudioChannel.h"
+#include "CDebuggerEmulatorPlugin.h"
 
 extern "C" {
 	void vsync_suspend_speed_eval(void);
@@ -74,8 +75,7 @@ C64DebugInterfaceVice::C64DebugInterfaceVice(CViewC64 *viewC64, uint8 *c64memory
 {
 	LOGM("C64DebugInterfaceVice: VICE %s init", VERSION);
 
-	screen = new CImageData(512, 512, IMG_TYPE_RGBA);
-	screen->AllocImage(false, true);
+	CreateScreenData();
 
 	audioChannel = NULL;
 
@@ -194,6 +194,7 @@ extern "C" {
 void C64DebugInterfaceVice::RunEmulationThread()
 {
 	LOGM("C64DebugInterfaceVice::RunEmulationThread");
+	CDebugInterface::RunEmulationThread();
 
 	this->isRunning = true;
 
@@ -208,11 +209,51 @@ void C64DebugInterfaceVice::RunEmulationThread()
 	}
 #endif
 	
+	// vice blocks d64 for read when mounted and does the flush only on disk unmount or quit. this leads to not saved data immediately.
+	// thus, we do not block d64 for read and avoid that data is not flushed we check periodically if there's a need to flush data
+	this->driveFlushThread = new CViceDriveFlushThread(this, 2500); // every 2.5s
+	SYS_StartThread(this->driveFlushThread);
+	
 	vice_main_loop_run();
 	
 	audioChannel->Stop();
 
 	LOGM("C64DebugInterfaceVice::RunEmulationThread: finished");
+}
+
+void C64DebugInterfaceVice::DoFrame()
+{
+	CDebugInterface::DoFrame();
+}
+
+CViceDriveFlushThread::CViceDriveFlushThread(C64DebugInterfaceVice *debugInterface, int flushCheckIntervalInMS)
+{
+	this->debugInterface = debugInterface;
+	this->flushCheckIntervalInMS = flushCheckIntervalInMS;
+}
+
+void CViceDriveFlushThread::ThreadRun(void *data)
+{
+//	LOGD("CViceDriveFlushThread started");
+	while(true)
+	{
+		SYS_Sleep(this->flushCheckIntervalInMS);
+
+		this->debugInterface->LockMutex();
+//		LOGD("CViceDriveFlushThread: flushing drive");
+		drive_gcr_data_writeback_all();
+		this->debugInterface->UnlockMutex();
+	}
+	
+}
+
+void C64DebugInterfaceVice::Shutdown()
+{
+	this->LockMutex();
+	drive_gcr_data_writeback_all();
+	this->UnlockMutex();
+	
+	C64DebugInterface::Shutdown();
 }
 
 void C64DebugInterfaceVice::InitKeyMap(C64KeyMap *keyMap)
@@ -254,11 +295,6 @@ int C64DebugInterfaceVice::GetScreenSizeX()
 int C64DebugInterfaceVice::GetScreenSizeY()
 {
 	return screenHeight;
-}
-
-CImageData *C64DebugInterfaceVice::GetScreenImageData()
-{
-	return screen;
 }
 
 bool C64DebugInterfaceVice::IsCpuJam()
@@ -325,11 +361,29 @@ extern "C" {
 
 void C64DebugInterfaceVice::KeyboardDown(uint32 mtKeyCode)
 {
+	for (std::list<CDebuggerEmulatorPlugin *>::iterator it = this->plugins.begin(); it != this->plugins.end(); it++)
+	{
+		CDebuggerEmulatorPlugin *plugin = *it;
+		mtKeyCode = plugin->KeyDown(mtKeyCode);
+		
+		if (mtKeyCode == 0)
+			return;
+	}
+	
 	keyboard_key_pressed((unsigned long)mtKeyCode);
 }
 
 void C64DebugInterfaceVice::KeyboardUp(uint32 mtKeyCode)
 {
+	for (std::list<CDebuggerEmulatorPlugin *>::iterator it = this->plugins.begin(); it != this->plugins.end(); it++)
+	{
+		CDebuggerEmulatorPlugin *plugin = *it;
+		mtKeyCode = plugin->KeyUp(mtKeyCode);
+		
+		if (mtKeyCode == 0)
+			return;
+	}
+	
 	keyboard_key_released((unsigned long)mtKeyCode);
 }
 
@@ -1101,6 +1155,11 @@ void C64DebugInterfaceVice::GetWholeMemoryMapFromRam1541(uint8 *buffer)
 void C64DebugInterfaceVice::GetMemoryC64(uint8 *buffer, int addrStart, int addrEnd)
 {
 	c64d_peek_memory_c64(buffer, addrStart, addrEnd);
+}
+
+void C64DebugInterfaceVice::GetMemoryFromRam(uint8 *buffer, int addrStart, int addrEnd)
+{
+	c64d_copy_ram_memory_c64(buffer, addrStart, addrEnd);
 }
 
 void C64DebugInterfaceVice::GetMemoryFromRamC64(uint8 *buffer, int addrStart, int addrEnd)

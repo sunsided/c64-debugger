@@ -22,13 +22,16 @@ C64SpriteHires::C64SpriteHires()
 }
 
 // copy from hires bitmap
-C64SpriteHires::C64SpriteHires(CViewVicEditor *vicEditor, int x, int y, bool isStretchedHorizontally, bool isStretchedVertically, int pointerAddr)
+C64SpriteHires::C64SpriteHires(CViewVicEditor *vicEditor, int x, int y, bool isStretchedHorizontally, bool isStretchedVertically, int pointerValue, int pointerAddr)
 : C64Sprite(vicEditor, 24, 21, false)
 {
 	this->posX = x;
 	this->posY = y;
 	this->isStretchedHorizontally = isStretchedHorizontally;
 	this->isStretchedVertically = isStretchedVertically;
+
+	this->pointerValue = pointerValue;
+	this->pointerAddr = pointerAddr;
 
 	pixels = new u8[this->sizeX*this->sizeY];
 	

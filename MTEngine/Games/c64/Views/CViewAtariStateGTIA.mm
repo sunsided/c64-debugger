@@ -1,6 +1,12 @@
+#include "C64D_Version.h"
+#if defined(RUN_ATARI)
+
 extern "C" {
 #include "gtia.h"
 }
+
+#endif
+
 #include "CViewAtariStateGTIA.h"
 #include "SYS_Main.h"
 #include "RES_ResourceManager.h"
@@ -16,6 +22,8 @@ extern "C" {
 #include "SYS_Threading.h"
 #include "CGuiEditHex.h"
 #include "VID_ImageBinding.h"
+
+#if defined(RUN_ATARI)
 
 CViewAtariStateGTIA::CViewAtariStateGTIA(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, AtariDebugInterface *debugInterface)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
@@ -169,7 +177,7 @@ void CViewAtariStateGTIA::GuiEditHexEnteredValue(CGuiEditHex *editHex, u32 lastK
 		byte v = editHex->value;
 		debugInterface->SetCiaRegister(editingCIAIndex, editingRegisterValueIndex, v);
 		
-		editingRegisterValueIndex = -1;
+		editHex->SetCursorPos(0);
 	}
 	 */
 
@@ -247,3 +255,20 @@ void CViewAtariStateGTIA::RenderFocusBorder()
 	//
 }
 
+#else
+//dummy
+
+CViewAtariStateGTIA::CViewAtariStateGTIA(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, AtariDebugInterface *debugInterface)
+: CGuiView(posX, posY, posZ, sizeX, sizeY) {}
+void CViewAtariStateGTIA::SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY) {}
+void CViewAtariStateGTIA::DoLogic() {}
+void CViewAtariStateGTIA::Render() {}
+void CViewAtariStateGTIA::RenderState(float px, float py, float posZ, CSlrFont *fontBytes, float fontSize, int ciaId) {}
+bool CViewAtariStateGTIA::DoTap(GLfloat x, GLfloat y) { return false; }
+void CViewAtariStateGTIA::GuiEditHexEnteredValue(CGuiEditHex *editHex, u32 lastKeyCode, bool isCancelled) {}
+bool CViewAtariStateGTIA::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl) { return false; }
+bool CViewAtariStateGTIA::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl) { return false; }
+bool CViewAtariStateGTIA::SetFocus(bool focus) { return true; }
+void CViewAtariStateGTIA::RenderFocusBorder() {}
+
+#endif

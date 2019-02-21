@@ -288,8 +288,8 @@ bool CSlrString::CompareWith(char *text)
 {
 	u32 len = GetLength();
 
-//	LOGD("CSlrString::CompareWith: text='%s'", text);
-//	this->DebugPrint("CSlrString::CompareWith: this=");
+	LOGD("CSlrString::CompareWith: text='%s'", text);
+	this->DebugPrint("CSlrString::CompareWith: this=");
 	
 	u32 len2 = strlen(text);
 
@@ -298,11 +298,11 @@ bool CSlrString::CompareWith(char *text)
 //		LOGD(" ... i=%d ch=%04x '%c'", i, GetChar(i), GetChar(i));
 //	}
 //	
-//	if (len != len2)
-//	{
-//		LOGD("len=%d len2=%d", len, len2);
-//		return false;
-//	}
+	if (len != len2)
+	{
+		LOGD("len=%d len2=%d", len, len2);
+		return false;
+	}
 
 	for (u32 i = 0; i < len; i++)
 	{

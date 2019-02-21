@@ -1299,6 +1299,27 @@ bool SYS_FileDirExists(CSlrString *path)
 	}
 }
 
+bool SYS_FileDirExists(char *cPath)
+{
+	struct stat info;
+	
+	if(stat( cPath, &info ) != 0)
+	{
+		delete [] cPath;
+		return false;
+	}
+	else if(info.st_mode & S_IFDIR)
+	{
+		delete [] cPath;
+		return true;
+	}
+	else
+	{
+		delete [] cPath;
+		return false;
+	}
+}
+
 uint8 *SYS_MapMemoryToFile(int memorySize, char *filePath, void **fileDescriptor)
 {
 	int *fileHandle = (int*)malloc(sizeof(int));

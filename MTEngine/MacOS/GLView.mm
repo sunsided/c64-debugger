@@ -1,5 +1,7 @@
 #import "GLView.h"
 #import "GLViewController.h"
+#import <AppKit/AppKit.h>
+#import <AppKit/NSEvent.h>
 #include "SND_SoundEngine.h"
 #include "SYS_Threading.h"
 #include "CSlrString.h"
@@ -147,6 +149,20 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 	[[controller scene] initGL:backingBounds];
 	
 	[[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
+	
+	//
+	[NSEvent addLocalMonitorForEventsMatchingMask:NSKeyDownMask handler:^(NSEvent *event)
+	{
+		[controller keyDown:event];
+		return event;
+	}];
+
+	[NSEvent addLocalMonitorForEventsMatchingMask:NSKeyUpMask handler:^(NSEvent *event)
+	 {
+		 [controller keyUp:event];
+		 return event;
+	 }];
+
 }
 
 - (void) lockFocus
@@ -244,13 +260,11 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 - (void) keyDown:(NSEvent *)theEvent
 {
     // Delegate to the controller object for handling key events
-    [controller keyDown:theEvent];
 }
 
 - (void) keyUp:(NSEvent *)theEvent
 {
     // Delegate to the controller object for handling key events
-    [controller keyUp:theEvent];
 }
 
 - (void)mouseDown:(NSEvent *)theEvent
@@ -373,11 +387,13 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 		|| [strExt isEqualToString:@"snap"] || [strExt isEqualToString:@"vce"] || [strExt isEqualToString:@"png"]
 		|| [strExt isEqual:@"PRG"] || [strExt isEqual:@"D64"] || [strExt isEqual:@"CRT"] || [strExt isEqual:@"TAP"] || [strExt isEqual:@"T64"]
 		|| [strExt isEqualToString:@"SNAP"] || [strExt isEqualToString:@"VCE"] || [strExt isEqualToString:@"PNG"]
+		|| [strExt isEqual:@"sid"] || [strExt isEqual:@"SID"]
 		|| [strExt isEqual:@"xex"] || [strExt isEqual:@"XEX"]
 		|| [strExt isEqual:@"atr"] || [strExt isEqualToString:@"ATR"]
 		|| [strExt isEqual:@"cas"] || [strExt isEqual:@"CAS"]
 		|| [strExt isEqual:@"car"] || [strExt isEqual:@"CAR"]
 		|| [strExt isEqual:@"a8s"] || [strExt isEqual:@"A8S"]
+		|| [strExt isEqual:@"nes"] || [strExt isEqual:@"NES"]
 		|| [strExt isEqual:@"c64jukebox"] || [strExt isEqualToString:@"C64JUKEBOX"] || [strExt isEqual:@"json"] || [strExt isEqualToString:@"JSON"])
 		
 	{
@@ -397,12 +413,14 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 void C64D_DragDropCallbackPRG(CSlrString *filePath);
 void C64D_DragDropCallbackD64(CSlrString *filePath);
 void C64D_DragDropCallbackCRT(CSlrString *filePath);
+void C64D_DragDropCallbackSID(CSlrString *filePath);
 void C64D_DragDropCallbackSNAP(CSlrString *filePath);
 void C64D_DragDropCallbackXEX(CSlrString *filePath);
+void C64D_DragDropCallbackATR(CSlrString *filePath);
 void C64D_DragDropCallbackCAS(CSlrString *filePath);
 void C64D_DragDropCallbackCAR(CSlrString *filePath);
 void C64D_DragDropCallbackA8S(CSlrString *filePath);
-void C64D_DragDropCallbackATR(CSlrString *filePath);
+void C64D_DragDropCallbackNES(CSlrString *filePath);
 void C64D_DragDropCallbackJukeBox(CSlrString *filePath);
 
 - (void)concludeDragOperation:(id <NSDraggingInfo>)sender
@@ -421,14 +439,16 @@ enum
 	MACOS_OPEN_FILE_TYPE_D64,
 	MACOS_OPEN_FILE_TYPE_TAP,
 	MACOS_OPEN_FILE_TYPE_CRT,
+	MACOS_OPEN_FILE_TYPE_SID,
 	MACOS_OPEN_FILE_TYPE_SNAP,
 	MACOS_OPEN_FILE_TYPE_VCE,
 	MACOS_OPEN_FILE_TYPE_PNG,
 	MACOS_OPEN_FILE_TYPE_XEX,
+	MACOS_OPEN_FILE_TYPE_ATR,
 	MACOS_OPEN_FILE_TYPE_CAS,
 	MACOS_OPEN_FILE_TYPE_CAR,
 	MACOS_OPEN_FILE_TYPE_A8S,
-	MACOS_OPEN_FILE_TYPE_ATR,
+	MACOS_OPEN_FILE_TYPE_NES,
 	MACOS_OPEN_FILE_TYPE_JukeBox
 };
 
@@ -496,6 +516,17 @@ BOOL MACOS_OpenFile(NSString *strPath)
 		SYS_StartThread(macOsOpenFileThread);
 		return YES;
 	}
+	else if ([strExt isEqual:@"sid"] || [strExt isEqual:@"SID"])
+	{
+		//NSLog(@"%@", strPath);
+		c64SettingsAutoJmp = false;
+		
+		macOsThreadedOpenFileType = MACOS_OPEN_FILE_TYPE_SID;
+		macOsThreadedOpenFilePath = FUN_ConvertNSStringToCSlrString(strPath);
+		
+		SYS_StartThread(macOsOpenFileThread);
+		return YES;
+	}
 	else if ([strExt isEqual:@"snap"] || [strExt isEqual:@"SNAP"]
 			 || [strExt isEqual:@"vsf"] || [strExt isEqual:@"VSF"])
 	{
@@ -533,6 +564,15 @@ BOOL MACOS_OpenFile(NSString *strPath)
 		
 		return YES;
 	}
+	else if ([strExt isEqual:@"atr"] || [strExt isEqual:@"ATR"])
+	{
+		macOsThreadedOpenFileType = MACOS_OPEN_FILE_TYPE_ATR;
+		macOsThreadedOpenFilePath = FUN_ConvertNSStringToCSlrString(strPath);
+		
+		SYS_StartThread(macOsOpenFileThread);
+		
+		return YES;
+	}
 	else if ([strExt isEqual:@"cas"] || [strExt isEqual:@"CAS"])
 	{
 		macOsThreadedOpenFileType = MACOS_OPEN_FILE_TYPE_CAS;
@@ -560,9 +600,9 @@ BOOL MACOS_OpenFile(NSString *strPath)
 		
 		return YES;
 	}
-	else if ([strExt isEqual:@"atr"] || [strExt isEqual:@"ATR"])
+	else if ([strExt isEqual:@"nes"] || [strExt isEqual:@"NES"])
 	{
-		macOsThreadedOpenFileType = MACOS_OPEN_FILE_TYPE_ATR;
+		macOsThreadedOpenFileType = MACOS_OPEN_FILE_TYPE_NES;
 		macOsThreadedOpenFilePath = FUN_ConvertNSStringToCSlrString(strPath);
 		
 		SYS_StartThread(macOsOpenFileThread);
@@ -610,6 +650,10 @@ void CMacOsOpenFileThread::ThreadRun(void *data)
 	{
 		C64D_DragDropCallbackCRT(macOsThreadedOpenFilePath);
 	}
+	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_SID)
+	{
+		C64D_DragDropCallbackSID(macOsThreadedOpenFilePath);
+	}
 	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_SNAP)
 	{
 		C64D_DragDropCallbackSNAP(macOsThreadedOpenFilePath);
@@ -626,6 +670,10 @@ void CMacOsOpenFileThread::ThreadRun(void *data)
 	{
 		C64D_DragDropCallbackXEX(macOsThreadedOpenFilePath);
 	}
+	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_ATR)
+	{
+		C64D_DragDropCallbackATR(macOsThreadedOpenFilePath);
+	}
 	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_CAS)
 	{
 		C64D_DragDropCallbackCAS(macOsThreadedOpenFilePath);
@@ -638,9 +686,9 @@ void CMacOsOpenFileThread::ThreadRun(void *data)
 	{
 		C64D_DragDropCallbackA8S(macOsThreadedOpenFilePath);
 	}
-	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_ATR)
+	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_NES)
 	{
-		C64D_DragDropCallbackATR(macOsThreadedOpenFilePath);
+		C64D_DragDropCallbackNES(macOsThreadedOpenFilePath);
 	}
 	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_JukeBox)
 	{
@@ -655,11 +703,9 @@ void CMacOsOpenFileThread::ThreadRun(void *data)
 }
 
 
-void SYS_PrepareShutdown();
-
 - (void) dealloc
 {
-	SYS_PrepareShutdown();
+	SYS_ApplicationShutdown();
 	
 	// stop playing audio
 	gSoundEngine->LockMutex("shutdown");

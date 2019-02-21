@@ -39,6 +39,11 @@ C64DebugInterface::~C64DebugInterface()
 {
 }
 
+void C64DebugInterface::Shutdown()
+{
+	CDebugInterface::Shutdown();
+}
+
 int C64DebugInterface::GetEmulatorType()
 {
 	SYS_FatalExit("C64DebugInterface::GetEmulatorType");
@@ -71,6 +76,7 @@ uint8 *C64DebugInterface::GetCharRom()
 
 void C64DebugInterface::RunEmulationThread()
 {
+	CDebugInterface::RunEmulationThread();
 	SYS_FatalExit("C64DebugInterface::RunEmulationThread");
 }
 
@@ -148,12 +154,6 @@ void C64DebugInterface::SetTemporaryDrive1541BreakpointPC(int address)
 int C64DebugInterface::GetTemporaryDrive1541BreakpointPC()
 {
 	return this->temporaryDrive1541BreakpointPC;
-}
-
-CImageData *C64DebugInterface::GetScreenImageData()
-{
-	SYS_FatalExit("C64DebugInterface::GetScreenImageData");
-	return NULL;
 }
 
 void C64DebugInterface::Reset()
@@ -752,6 +752,16 @@ void C64DebugInterface::SetRunSIDEmulation(bool isSIDEmulationOn)
 void C64DebugInterface::SetAudioVolume(float volume)
 {
 	SYS_FatalExit("C64DebugInterface::SetAudioVolume");
+}
+
+void C64DebugInterface::ProfilerActivate(char *fileName, int runForNumCycles, bool pauseCpuWhenFinished)
+{
+	SYS_FatalExit("C64DebugInterface::ProfilerActivate");
+}
+
+void C64DebugInterface::ProfilerDeactivate()
+{
+	SYS_FatalExit("C64DebugInterface::ProfilerDeactivate");
 }
 
 CSlrDataAdapter *C64DebugInterface::GetDataAdapter()

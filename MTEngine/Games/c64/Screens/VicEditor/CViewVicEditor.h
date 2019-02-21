@@ -11,6 +11,7 @@
 #include "CGlobalOSWindowChangedCallback.h"
 #include "CViewVicEditorDisplayPreview.h"
 #include "CGuiViewToolBox.h"
+#include "DebuggerDefs.h"
 #include <list>
 
 class CSlrKeyboardShortcut;
@@ -163,6 +164,9 @@ public:
 	u8 PaintBrush(CImageData *brush, int rx, int ry, u8 colorSource);
 	void PaintBrushWithMessage(CImageData *brush, int rx, int ry, u8 colorSource);
 	u8 PaintPixel(int rx, int ry, u8 colorSource);
+	u8 PaintPixelColor(bool forceColorReplace, int rx, int ry, u8 color, int selectedChar);
+	u8 PaintPixelColor(int rx, int ry, u8 color);
+
 	
 	bool GetColorAtRasterPos(int rx, int ry, u8 *color);
 	

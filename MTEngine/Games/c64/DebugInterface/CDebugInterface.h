@@ -6,10 +6,13 @@
 #include "CByteBuffer.h"
 #include "DebuggerDefs.h"
 #include <map>
+#include <list>
 
 class CViewC64;
 class CSlrMutex;
 class CImageData;
+
+class CDebuggerEmulatorPlugin;
 
 // abstract class
 class CDebugInterface
@@ -28,10 +31,15 @@ public:
 	
 	virtual void RunEmulationThread();
 	
+	virtual void InitPlugins();
 	virtual void DoFrame();
 	virtual int GetScreenSizeX();
 	virtual int GetScreenSizeY();
 	
+	CImageData *screenImage;
+	virtual void CreateScreenData();
+	int screenSupersampleFactor;
+	virtual void SetSupersampleFactor(int factor);
 	virtual CImageData *GetScreenImageData();
 	
 	// keyboard & joystick mapper
@@ -98,6 +106,15 @@ public:
 
 	virtual CSlrDataAdapter *GetDataAdapter();
 
+	//
+	
+	virtual void Shutdown();
+
+	//
+	std::list<CDebuggerEmulatorPlugin *> plugins;
+	void RegisterPlugin(CDebuggerEmulatorPlugin *plugin);
+	void RemovePlugin(CDebuggerEmulatorPlugin *plugin);
+	
 	//
 	CSlrMutex *breakpointsMutex;
 	virtual void LockMutex();

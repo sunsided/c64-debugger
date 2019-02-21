@@ -1068,8 +1068,8 @@ void CViewC64StateVIC::GuiEditHexEnteredValue(CGuiEditHex *editHex, u32 lastKeyC
 		byte v = editHex->value;
 		debugInterface->SetVicRegister(editingRegisterValueIndex, v);
 		
-		editingRegisterValueIndex = -1;
-	}	
+		editHex->SetCursorPos(0);
+	}
 }
 
 

@@ -28,6 +28,7 @@ void IMG_SpotRotate(CImageData *image, float angle);
 CImageData *IMG_CropToBoundingBox(CImageData *image);
 CImageData *IMG_CropImage(CImageData *image, int posX, int posY, int width, int height);
 CImageData *IMG_CropImageRGBA(CImageData *image, int posX, int posY, int width, int height);
+CImageData *IMG_CropSupersampleImageRGBA(CImageData *image, int supersamplingFactor, int posX, int posY, int width, int height);
 CImageData *IMG_SpotCropImage(CImageData *image, int posX, int posY, int spotRadius);
 void IMG_CircleSpot(CImageData *image);
 CImageData * IMG_MorphologicalGradient(CImageData *cielabRaster);

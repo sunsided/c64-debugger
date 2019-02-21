@@ -109,10 +109,10 @@ u8 C64VicDisplayCanvasExtendedText::PutCharacterAt(int charColumn, int charRow, 
 	
 	int offset = charColumn + charRow * 40;
 	
-	LOGD("1     poke %04x %02x", screenBase + offset, charValue);
+//	LOGF("1     poke %04x %02x", screenBase + offset, charValue);
 	debugInterface->SetByteC64(screenBase + offset, charValue);
 	
-	LOGD("2     poke %04x %02x", 0xD800 + offset, color);
+//	LOGF("2     poke %04x %02x", 0xD800 + offset, color);
 	debugInterface->SetByteC64(0xD800 + offset, color);
 	
 	return PAINT_RESULT_OK;
@@ -316,7 +316,7 @@ u8 C64VicDisplayCanvasExtendedText::PaintDither(bool forceColorReplace, int x, i
 		{
 			if (ditherMaskPosX == -1 || ditherMaskPosY == -1)
 			{
-				LOGD("******** START DITHER ********");
+				LOGF("******** START DITHER ********");
 				// start dither painting
 				if (colorSource == VICEDITOR_COLOR_SOURCE_LMB)
 				{
@@ -335,7 +335,7 @@ u8 C64VicDisplayCanvasExtendedText::PaintDither(bool forceColorReplace, int x, i
 			
 			int d = (dX + dY) % 2;
 			
-			LOGD("==================== dX=%d dY=%d d=%d", dX, dY, d);
+			LOGF("==================== dX=%d dY=%d d=%d", dX, dY, d);
 			
 			if (d != 0)
 			{
@@ -394,7 +394,7 @@ u8 C64VicDisplayCanvasExtendedText::ConvertFrom(CImageData *imageData)
 	C64CharsetHires *charset = new C64CharsetHires();
 	charset->CreateFromCharset(chargen_ptr);
 	
-	LOGD("...matching chars...");
+	LOGF("...matching chars...");
 	
 	C64CharHires *bitmapChr = new C64CharHires();
 	
@@ -404,7 +404,7 @@ u8 C64VicDisplayCanvasExtendedText::ConvertFrom(CImageData *imageData)
 	{
 		for (int xc = 0; xc < 40; xc++)
 		{
-			LOGD(" xc=%d yc=%d", xc, yc);
+			LOGF(" xc=%d yc=%d", xc, yc);
 			int x = xc * 8;
 			int y = yc * 8;
 			
@@ -523,7 +523,7 @@ u8 C64VicDisplayCanvasExtendedText::ConvertFrom(CImageData *imageData)
 				}
 			}
 			
-			LOGD("  xc=%2d yc=%2d .. c=%02x (fit=%d) '%c'", xc, yc, c, max, c);
+			LOGF("  xc=%2d yc=%2d .. c=%02x (fit=%d) '%c'", xc, yc, c, max, c);
 			
 			//
 			if (backgroundColorNum == 0)

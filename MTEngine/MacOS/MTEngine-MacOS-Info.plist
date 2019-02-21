@@ -192,6 +192,34 @@
 				<string>pl.rabidus.C64Debugger.A8S</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>nes</string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>NES Debugger Cartridge</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>pl.rabidus.C64Debugger.NES</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>sid</string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>Commodore 64 SID</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>pl.rabidus.C64Debugger.SID</string>
+			</array>
+		</dict>
 	</array>
 	<key>CFBundleExecutable</key>
 	<string>${EXECUTABLE_NAME}</string>
@@ -204,11 +232,11 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.64.56.2</string>
+	<string>0.64.56.4</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>0.64.56.2</string>
+	<string>0.64.56.4</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.productivity</string>
 	<key>LSMinimumSystemVersion</key>
@@ -467,6 +495,44 @@
 				<key>public.filename-extension</key>
 				<array>
 					<string>a8s</string>
+				</array>
+			</dict>
+		</dict>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>NES Debugger Cartridge</string>
+			<key>UTTypeIdentifier</key>
+			<string>pl.rabidus.C64Debugger.NES</string>
+			<key>UTTypeReferenceURL</key>
+			<string>https://sourceforge.net/projects/c64-debugger/</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>nes</string>
+				</array>
+			</dict>
+		</dict>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Commodore 64 SID</string>
+			<key>UTTypeIdentifier</key>
+			<string>pl.rabidus.C64Debugger.SID</string>
+			<key>UTTypeReferenceURL</key>
+			<string>https://sourceforge.net/projects/c64-debugger/</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>sid</string>
 				</array>
 			</dict>
 		</dict>

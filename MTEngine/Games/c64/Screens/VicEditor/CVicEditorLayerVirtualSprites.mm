@@ -488,14 +488,14 @@ void CVicEditorLayerVirtualSprites::FullScanSpritesInThisFrame()
 						{
 							sprite = new C64SpriteMulti(this->vicEditor,
 														spriteDisplayX, spriteDisplayY, stretchedX, stretchedY,
-														pointerAddr);
+														viciiState->sprite[i].pointer, pointerAddr);
 							sprite->spriteId = i;
 						}
 						else
 						{
 							sprite = new C64SpriteHires(this->vicEditor,
 														spriteDisplayX, spriteDisplayY, stretchedX, stretchedY,
-														pointerAddr);
+														viciiState->sprite[i].pointer, pointerAddr);
 							sprite->spriteId = i;
 						}
 
@@ -690,14 +690,14 @@ void CVicEditorLayerVirtualSprites::SimpleScanSpritesInThisFrame()
 						{
 							sprite = new C64SpriteMulti(this->vicEditor,
 														spriteDisplayX, spriteDisplayY, stretchedX, stretchedY,
-														pointerAddr);
+														viciiState->sprite[i].pointer, pointerAddr);
 							sprite->spriteId = i;
 						}
 						else
 						{
 							sprite = new C64SpriteHires(this->vicEditor,
 														spriteDisplayX, spriteDisplayY, stretchedX, stretchedY,
-														pointerAddr);
+														viciiState->sprite[i].pointer, pointerAddr);
 							sprite->spriteId = i;
 						}
 						
@@ -718,6 +718,7 @@ void CVicEditorLayerVirtualSprites::SimpleScanSpritesInThisFrame()
 						{
 							sprite->rasterLine = y;
 							sprite->rasterCycle = cycle;
+							sprite->pointerValue = viciiState->sprite[i].pointer;
 							sprite->pointerAddr = pointerAddr;
 							
 							this->sprites.push_back(sprite);
@@ -1054,6 +1055,7 @@ u8 CVicEditorLayerVirtualSprites::ReplaceColor(int rx, int ry, int spriteId, int
 	if (colorNum == 0)
 	{
 		// not supported
+		LOGError("CVicEditorLayerVirtualSprites::ReplaceColor: colorNum=0 not supported");
 		return PAINT_RESULT_ERROR;
 	}
 	else if (colorNum == 1)

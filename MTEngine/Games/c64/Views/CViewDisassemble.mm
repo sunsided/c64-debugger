@@ -6,8 +6,6 @@
 #include "CViewC64.h"
 #include "CViewMemoryMap.h"
 #include "SYS_KeyCodes.h"
-#include "CViewC64Screen.h"
-#include "CViewAtariScreen.h"
 #include "C64DebugInterface.h"
 #include "CGuiEditBoxText.h"
 #include "C64Tools.h"
@@ -20,6 +18,10 @@
 #include "CViewDisassemble.h"
 #include "C64Symbols.h"
 #include "C64AsmSourceSymbols.h"
+
+#include "CViewC64Screen.h"
+#include "CViewAtariScreen.h"
+#include "CViewNesScreen.h"
 
 #define byte unsigned char
 
@@ -2343,6 +2345,7 @@ bool CViewDisassemble::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 	{
 		this->debugInterface->MakeJmpNoReset(this->dataAdapter, this->cursorAddress);
 		
+		// TODO: make generic and iterate over interfaces
 		if (viewC64->debugInterfaceC64)
 		{
 			viewC64->viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
@@ -2350,6 +2353,10 @@ bool CViewDisassemble::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 		if (viewC64->debugInterfaceAtari)
 		{
 			viewC64->viewAtariScreen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		}
+		if (viewC64->debugInterfaceNes)
+		{
+			viewC64->viewNesScreen->KeyUpModifierKeys(isShift, isAlt, isControl);
 		}
 		return true;
 	}
@@ -2479,15 +2486,6 @@ bool CViewDisassemble::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 		StartEditingAtCursorPosition(EDIT_CURSOR_POS_MNEMONIC, false);
 		return true;
 	}
-	
-	// TODO: fix me, this is workaround
-	if (viewC64->currentScreenLayoutId == SCREEN_LAYOUT_C64_VIC_DISPLAY)
-	{
-		if (viewC64->viewC64VicDisplay->KeyDown(keyCode, isShift, isAlt, isControl))
-			return true;
-	}
-
-	
 	
 	return CGuiView::KeyDown(keyCode, isShift, isAlt, isControl);
 }
@@ -2870,7 +2868,7 @@ int CViewDisassemble::Assemble(int assembleAddress, char *lineBuffer, bool showM
 
 #define FAIL(ErrorMessage)  		delete textParser; \
 									strcpy(errorMessageBuf, (ErrorMessage)); \
-									LOGError("CViewDisassemble::error: %s", (ErrorMessage)); \
+									LOGError("CViewDisassemble::error: %s lineBuffer=%s", (ErrorMessage), lineBuffer); \
 									isErrorCode = true; \
 									return -1;
 

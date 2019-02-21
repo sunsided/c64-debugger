@@ -17,8 +17,6 @@
 #define GLOBAL_DEBUG_OFF
 //#undef GLOBAL_DEBUG_OFF
 
-#define byte unsigned char
-
 #define DBGLVL_ALL_OFF	0x0000
 #define DBGLVL_ALL_ON	0xFFFF
 #define DBGLVL_FATAL	(1 << 0)

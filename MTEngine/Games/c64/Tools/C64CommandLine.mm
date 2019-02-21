@@ -472,7 +472,7 @@ void c64PerformStartupTasksThreaded()
 		}
 		else //if (isPRGInCommandLine == true)
 		{
-			viewC64->viewC64MainMenu->LoadPRG(c64SettingsPathToPRG, c64SettingsAutoJmp, false, true);
+			viewC64->viewC64MainMenu->LoadPRG(c64SettingsPathToPRG, c64SettingsAutoJmp, false, true, false);
 		}
 	}
 	
@@ -924,7 +924,7 @@ void c64PerformNewConfigurationTasksThreaded(CByteBuffer *byteBuffer)
 		else if (t == C64D_PASS_CONFIG_DATA_PATH_TO_PRG)
 		{
 			CSlrString *str = byteBuffer->GetSlrString();
-			viewC64->viewC64MainMenu->LoadPRG(str, c64SettingsAutoJmp, false, true);
+			viewC64->viewC64MainMenu->LoadPRG(str, c64SettingsAutoJmp, false, true, false);
 			delete str;
 		}
 		else if (t == C64D_PASS_CONFIG_DATA_LAYOUT)

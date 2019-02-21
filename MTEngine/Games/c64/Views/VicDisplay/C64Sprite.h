@@ -27,6 +27,7 @@ public:
 	bool isStretchedHorizontally;
 	bool isStretchedVertically;
 	
+	int pointerValue;
 	int pointerAddr;
 	
 	virtual bool IsEqual(C64Sprite *otherSprite);

@@ -178,7 +178,7 @@ bool CVicEditorLayerImage::GetColorAtPixel(int x, int y, u8 *color)
 
 u8 CVicEditorLayerImage::PutPixelImage(int x, int y, u8 paintColor)
 {
-	LOGD(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> PutPixelImage %d %d %02x", x, y, paintColor);
+	LOGF(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> PutPixelImage %d %d %02x", x, y, paintColor);
 	
 	int x2 = x+C64_SCREEN_OFFSET_X;
 	int y2 = y+C64_SCREEN_OFFSET_Y;
@@ -266,6 +266,27 @@ u8 CVicEditorLayerImage::PutColorAtPixel(int x, int y, u8 colorLMB, u8 colorRMB,
 	}
 }
 
+u8 CVicEditorLayerImage::PutPixelImage(int x, int y, u8 r, u8 g, u8 b, u8 a)
+{
+	LOGF(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> PutPixelImage %d %d %02x%02x%02x%02x", x, y, r, g, b, a);
+	
+	int x2 = x+C64_SCREEN_OFFSET_X;
+	int y2 = y+C64_SCREEN_OFFSET_Y;
+	
+	if (x2 < 0 || x2 > 383
+		|| y2 < 0 || y2 > 271)
+		return PAINT_RESULT_OUTSIDE;
+	
+	u8 result = PAINT_RESULT_OK;
+	
+	C64DebugInterface *debugInterface = vicEditor->viewVicDisplayMain->debugInterface;
+	
+	imageData->SetPixelResultRGBA(x2, y2, r, g, b, a);
+	
+	return result;
+}
+
+
 void CVicEditorLayerImage::ClearDitherMask()
 {
 	ditherMaskPosX = -1;
@@ -305,6 +326,38 @@ bool CVicEditorLayerImage::LoadFrom(CImageData *imageDataLoad)
 		return true;
 	}
 	return false;
+}
+
+CImageData *CVicEditorLayerImage::GetFullDisplayImage()
+{
+	CImageData *imgDataSave = new CImageData(384, 272);
+	for (int x = 0; x < 384; x++)
+	{
+		for (int y = 0; y < 272; y++)
+		{
+			u8 r,g,b,a;
+			imageData->GetPixelResultRGBA(x, y, &r, &g, &b, &a);
+			imgDataSave->SetPixelResultRGBA(x, y, r, g, b, a);
+		}
+	}
+	
+	return imgDataSave;
+}
+
+CImageData *CVicEditorLayerImage::GetScreenImage()
+{
+	CImageData *imgDataSave = new CImageData(320, 200);
+	for (int x = 0; x < 320; x++)
+	{
+		for (int y = 0; y < 200; y++)
+		{
+			u8 r,g,b,a;
+			imageData->GetPixelResultRGBA(x + C64_SCREEN_OFFSET_X, y + C64_SCREEN_OFFSET_Y, &r, &g, &b, &a);
+			imgDataSave->SetPixelResultRGBA(x, y, r, g, b, a);
+		}
+	}
+	
+	return imgDataSave;
 }
 
 

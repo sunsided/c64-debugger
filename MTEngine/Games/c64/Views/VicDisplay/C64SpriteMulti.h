@@ -9,7 +9,7 @@ class C64SpriteMulti : public C64Sprite
 {
 public:
 	C64SpriteMulti();
-	C64SpriteMulti(CViewVicEditor *vicEditor, int x, int y, bool isStretchedHorizontally, bool isStretchedVertically, int pointerAddr);
+	C64SpriteMulti(CViewVicEditor *vicEditor, int x, int y, bool isStretchedHorizontally, bool isStretchedVertically, int pointerValue, int pointerAddr);
 	C64SpriteMulti(CViewVicEditor *vicEditor, CByteBuffer *byteBuffer);
 	virtual ~C64SpriteMulti();
 

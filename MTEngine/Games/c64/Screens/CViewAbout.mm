@@ -35,6 +35,8 @@ CViewAbout::CViewAbout(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, 
 	strHeader = new CSlrString("About C64 Debugger");
 #elif defined(RUN_ATARI)
 	strHeader = new CSlrString("About 65XE Debugger");
+#elif defined(RUN_NES)
+	strHeader = new CSlrString("About NES Debugger");
 #else
 	SYS_FatalExit("Unknown version");
 #endif

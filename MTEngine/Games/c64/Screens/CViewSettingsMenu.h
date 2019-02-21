@@ -76,9 +76,10 @@ public:
 
 	CSlrKeyboardShortcut *kbsDetachEverything;
 	CViewC64MenuItem *menuItemDetachEverything;
-	void DetachEverything();
+	void DetachEverything(bool showMessage, bool storeSettings);
 	void DetachCartridge(bool showMessage);
 	void DetachDiskImage();
+	void DetachTape(bool showMessage);
 
 	CSlrKeyboardShortcut *kbsDetachDiskImage;
 	CViewC64MenuItem *menuItemDetachDiskImage;
@@ -117,6 +118,17 @@ public:
 	CViewC64MenuItem *menuItemMapC64MemoryToFile;
 	void UpdateMapC64MemoryToFileLabels();
 
+	CViewC64MenuItem *menuItemC64CpuProfilerFilePath;
+	void UpdateC64CpuProfilerFilePath();
+	CSlrKeyboardShortcut *kbsC64CpuProfilerStartStop;
+	CViewC64MenuItem *menuItemC64CpuProfilerStartStop;
+	void OpenDialogSetC64ProfilerFileOutputPath();
+	void SetC64ProfilerOutputFile(CSlrString *path);
+	void C64CpuProfilerStartStop();
+	bool isProfilingC64;
+
+	//
+	
 	CViewC64MenuItemOption *menuItemMemoryCellsColorStyle;
 	CViewC64MenuItemOption *menuItemMemoryMarkersColorStyle;
 	CViewC64MenuItemOption *menuItemMultiTouchMemoryMap;
@@ -215,6 +227,7 @@ public:
 	CViewC64MenuItemOption *menuItemRunSIDEmulation;
 	CViewC64MenuItemFloat *menuItemAudioVolume;
 	CViewC64MenuItemOption *menuItemMuteSIDMode;
+	CViewC64MenuItemOption *menuItemSIDImportMode;
 	
 	CSlrKeyboardShortcut *kbsSwitchSoundOnOff;  // mojzesh
 	
@@ -232,7 +245,9 @@ public:
 	CViewC64MenuItemOption *menuItemDisassemblyNonExecuteColor;
 
 	CViewC64MenuItemOption *menuItemVicPalette;
-	CViewC64MenuItemOption *menuItemRenderScreenNearest;
+	CViewC64MenuItemOption *menuItemRenderScreenInterpolation;
+	CViewC64MenuItemOption *menuItemRenderScreenSupersample;
+
 	
 	CViewC64MenuItemOption *menuItemMaximumSpeed;
 	CSlrKeyboardShortcut *kbsSwitchNextMaximumSpeed;
@@ -256,6 +271,7 @@ public:
 	
 	std::list<CSlrString *> memoryExtensions;
 	std::list<CSlrString *> csvExtensions;
+	std::list<CSlrString *> profilerExtensions;
 	
 	virtual void SystemDialogFileSaveSelected(CSlrString *path);
 	virtual void SystemDialogFileSaveCancelled();

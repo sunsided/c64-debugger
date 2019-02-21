@@ -11,10 +11,14 @@
 #define C64D_SETTINGS_FILE_PATH				"/settings.dat"
 #define C64D_KEYBOARD_SHORTCUTS_FILE_PATH	"/shortcuts.dat"
 #define C64D_KEYMAP_FILE_PATH				"/keymap.dat"
-#else
+#elif defined(RUN_ATARI)
 #define C64D_SETTINGS_FILE_PATH				"/settings-atari.dat"
 #define C64D_KEYBOARD_SHORTCUTS_FILE_PATH	"/shortcuts-atari.dat"
 #define C64D_KEYMAP_FILE_PATH				"/keymap-atari.dat"
+#elif defined(RUN_NES)
+#define C64D_SETTINGS_FILE_PATH				"/settings-nes.dat"
+#define C64D_KEYBOARD_SHORTCUTS_FILE_PATH	"/shortcuts-nes.dat"
+#define C64D_KEYMAP_FILE_PATH				"/keymap-nes.dat"
 #endif
 
 // settings that need to be initialized pre-launch
@@ -36,6 +40,12 @@ enum muteSIDMode : u8
 	MUTE_SID_MODE_SKIP_EMULATION	= 1
 };
 
+enum c64SIDImportMode : u8
+{
+	SID_IMPORT_MODE_DIRECT_COPY		= 0,
+	SID_IMPORT_MODE_PSID64			= 1
+};
+
 enum atariVideoSystem : u8
 {
 	ATARI_VIDEO_SYSTEM_PAL = 0,
@@ -48,6 +58,8 @@ extern bool c64SettingsPassConfigToRunningInstance;
 
 extern int c64SettingsDefaultScreenLayoutId;
 extern bool c64SettingsIsInVicEditor;
+
+extern int c64SettingsScreenSupersampleFactor;
 
 extern uint8 c64SettingsMemoryValuesStyle;
 extern uint8 c64SettingsMemoryMarkersStyle;
@@ -126,12 +138,21 @@ extern CSlrString *c64SettingsDefaultCASFolder;
 extern CSlrString *c64SettingsPathToAtariCartridge;
 extern CSlrString *c64SettingsDefaultAtariCartridgeFolder;
 
+extern CSlrString *c64SettingsPathToNES;
+extern CSlrString *c64SettingsDefaultNESFolder;
+
 extern CSlrString *c64SettingsPathToSymbols;
 extern CSlrString *c64SettingsPathToWatches;
 extern CSlrString *c64SettingsPathToBreakpoints;
 extern CSlrString *c64SettingsPathToDebugInfo;
 
 extern CSlrString *c64SettingsPathToJukeboxPlaylist;
+
+// profiler
+extern CSlrString *c64SettingsC64ProfilerFileOutputPath;
+
+// sid import
+extern u8 c64SettingsC64SidImportMode;
 
 extern CSlrString *c64SettingsAudioOutDevice;
 

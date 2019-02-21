@@ -32,6 +32,9 @@ extern "C"
 class CDebugInterface;
 class C64DebugInterface;
 class AtariDebugInterface;
+class NesDebugInterface;
+
+class CDebuggerEmulatorPlugin;
 
 class C64KeyboardShortcuts;
 class CSlrFontProportional;
@@ -70,6 +73,9 @@ class CViewAtariStateANTIC;
 class CViewAtariStatePIA;
 class CViewAtariStateGTIA;
 class CViewAtariStatePOKEY;
+
+class CViewNesScreen;
+class CViewNesStateCPU;
 
 class CViewJukeboxPlaylist;
 class CViewMainMenu;
@@ -110,6 +116,10 @@ enum screenLayouts
 	SCREEN_LAYOUT_ATARI_MEMORY_MAP,
 	SCREEN_LAYOUT_ATARI_MONITOR_CONSOLE,
 
+	// nes
+	SCREEN_LAYOUT_NES_ONLY,
+	SCREEN_LAYOUT_NES_DATA_DUMP,
+	
 	// other
 	SCREEN_LAYOUT_C64_AND_ATARI,
 	
@@ -126,6 +136,9 @@ public:
 	bool debugOnC64;
 	bool debugOnDrive1541;
 
+	// move the below to respective classes (CScreenLayoutC64, CScreenLayoutAtari, CScreenLayoutNES)
+	// using one interface get layout specs from emulator
+	
 	bool c64ScreenVisible;
 	float c64ScreenX, c64ScreenY;
 	float c64ScreenSizeX, c64ScreenSizeY;
@@ -299,7 +312,48 @@ public:
 	float atariStatePOKEYX, atariStatePOKEYY;
 	float atariStatePOKEYFontSize;
 
+	///////
+	bool debugOnNes;
 	
+	bool nesScreenVisible;
+	float nesScreenX, nesScreenY;
+	float nesScreenSizeX, nesScreenSizeY;
+	bool nesScreenShowGridLines;
+	bool nesScreenShowZoomedScreen;
+	float nesScreenZoomedX, nesScreenZoomedY;
+	float nesScreenZoomedSizeX, nesScreenZoomedSizeY;
+
+	bool nesCpuStateVisible;
+	float nesCpuStateX, nesCpuStateY;
+	float nesCpuStateFontSize;
+	
+	bool nesDisassembleVisible;
+	float nesDisassembleX, nesDisassembleY;
+	float nesDisassembleSizeX, nesDisassembleSizeY;
+	float nesDisassembleFontSize;
+	int nesDisassembleNumberOfLines;
+	float nesDisassembleCodeMnemonicsOffset;
+	bool nesDisassembleShowHexCodes;
+	bool nesDisassembleShowCodeCycles;
+	float nesDisassembleCodeCyclesOffset;
+	bool nesDisassembleShowLabels;
+	bool nesDisassembleShowSourceCode;
+	int nesDisassembleNumberOfLabelCharacters;
+
+	bool nesDataDumpVisible;
+	float nesDataDumpX, nesDataDumpY;
+	float nesDataDumpSizeX, nesDataDumpSizeY;
+	float nesDataDumpFontSize;
+	float nesDataDumpGapAddress;
+	float nesDataDumpGapHexData;
+	float nesDataDumpGapDataCharacters;
+	bool nesDataDumpShowCharacters;
+	bool nesDataDumpShowSprites;
+	int nesDataDumpNumberOfBytesPerLine;
+	
+	bool nesMemoryMapVisible;
+	float nesMemoryMapX, nesMemoryMapY;
+	float nesMemoryMapSizeX, nesMemoryMapSizeY;
 };
 
 class CEmulationThreadC64 : public CSlrThread
@@ -308,6 +362,11 @@ class CEmulationThreadC64 : public CSlrThread
 };
 
 class CEmulationThreadAtari : public CSlrThread
+{
+	void ThreadRun(void *data);
+};
+
+class CEmulationThreadNes : public CSlrThread
 {
 	void ThreadRun(void *data);
 };
@@ -361,7 +420,13 @@ public:
 
 	AtariDebugInterface *debugInterfaceAtari;
 	CEmulationThreadAtari *emulationThreadAtari;
-	
+
+	NesDebugInterface *debugInterfaceNes;
+	CEmulationThreadNes *emulationThreadNes;
+
+	//
+	CDebugInterface *GetDebugInterface(u8 emulatorType);
+
 	CColorsTheme *colorsTheme;
 	
 	CGuiButton *btnDone;
@@ -432,6 +497,15 @@ public:
 	CViewAtariStatePOKEY *viewAtariStatePOKEY;
 	CViewSnapshots *viewAtariSnapshots;
 
+	// NES
+	CViewNesScreen *viewNesScreen;
+	CViewNesStateCPU *viewNesStateCPU;
+	CViewDisassemble *viewNesDisassemble;
+	CViewDataDump *viewNesMemoryDataDump;
+	CViewMemoryMap *viewNesMemoryMap;
+	CViewBreakpoints *viewNesBreakpoints;
+	CViewSnapshots *viewNesSnapshots;
+
 	// updated every render frame
 	vicii_cycle_state_t currentViciiState;
 	
@@ -455,6 +529,7 @@ public:
 	//
 	void InitViceC64();
 	void InitAtari800();
+	void InitNestopia();
 
 	void InitViews();
 	void InitLayouts();
@@ -514,6 +589,7 @@ public:
 	
 	virtual void ApplicationEnteredBackground();
 	virtual void ApplicationEnteredForeground();
+	virtual void ApplicationShutdown();
 
 	
 	// TODO: move this below to proper debug interfaces:
@@ -576,6 +652,10 @@ public:
 	void UpdateWatchVisible();
 	
 	//
+	void CreateEmulatorPlugins();
+	void RegisterEmulatorPlugin(CDebuggerEmulatorPlugin *emuPlugin);
+	
+	//
 	
 	char *ATRD_GetPathForRoms_IMPL();
 
@@ -594,6 +674,7 @@ void C64D_DragDropCallbackPRG(CSlrString *filePath);
 void C64D_DragDropCallbackD64(CSlrString *filePath);
 void C64D_DragDropCallbackTAP(CSlrString *filePath);
 void C64D_DragDropCallbackCRT(CSlrString *filePath);
+void C64D_DragDropCallbackSID(CSlrString *filePath);
 void C64D_DragDropCallbackSNAP(CSlrString *filePath);
 void C64D_DragDropCallbackVCE(CSlrString *filePath);
 void C64D_DragDropCallbackPNG(CSlrString *filePath);
@@ -604,6 +685,9 @@ void C64D_DragDropCallbackATR(CSlrString *filePath);
 void C64D_DragDropCallbackCAS(CSlrString *filePath);
 void C64D_DragDropCallbackCAR(CSlrString *filePath);
 void C64D_DragDropCallbackA8S(CSlrString *filePath);
+
+// nes
+void C64D_DragDropCallbackNES(CSlrString *filePath);
 
 // jukebox
 void C64D_DragDropCallbackJukeBox(CSlrString *filePath);

@@ -1,6 +1,11 @@
+#include "C64D_Version.h"
+#if defined(RUN_ATARI)
+
 extern "C" {
 #include "antic.h"
 }
+#endif
+
 #include "CViewAtariStateANTIC.h"
 #include "SYS_Main.h"
 #include "RES_ResourceManager.h"
@@ -16,6 +21,8 @@ extern "C" {
 #include "SYS_Threading.h"
 #include "CGuiEditHex.h"
 #include "VID_ImageBinding.h"
+
+#if defined(RUN_ATARI)
 
 CViewAtariStateANTIC::CViewAtariStateANTIC(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, AtariDebugInterface *debugInterface)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
@@ -50,14 +57,14 @@ void CViewAtariStateANTIC::Render()
 //	if (debugInterface->GetSettingIsWarpSpeed() == true)
 //		return;
 
-	this->RenderStateANTIC(posX, posY, posZ, fontBytes, fontSize, 1);
+	this->RenderState(posX, posY, posZ, fontBytes, fontSize, 1);
 }
 
 extern "C" {
 	int get_hex(UWORD *hexval);
 }
 
-void CViewAtariStateANTIC::RenderStateANTIC(float px, float py, float posZ, CSlrFont *fontBytes, float fontSize, int ciaId)
+void CViewAtariStateANTIC::RenderState(float px, float py, float posZ, CSlrFont *fontBytes, float fontSize, int ciaId)
 {
 	float startY = py;
 	char buf[256];
@@ -350,7 +357,7 @@ void CViewAtariStateANTIC::GuiEditHexEnteredValue(CGuiEditHex *editHex, u32 last
 		byte v = editHex->value;
 		debugInterface->SetCiaRegister(editingCIAIndex, editingRegisterValueIndex, v);
 		
-		editingRegisterValueIndex = -1;
+		editHex->SetCursorPos(0);
 	}
 	 */
 
@@ -428,3 +435,19 @@ void CViewAtariStateANTIC::RenderFocusBorder()
 	//
 }
 
+#else
+
+CViewAtariStateANTIC::CViewAtariStateANTIC(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, AtariDebugInterface *debugInterface)
+: CGuiView(posX, posY, posZ, sizeX, sizeY) {}
+void CViewAtariStateANTIC::SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY) {}
+void CViewAtariStateANTIC::DoLogic() {}
+void CViewAtariStateANTIC::Render() {}
+void CViewAtariStateANTIC::RenderState(float px, float py, float posZ, CSlrFont *fontBytes, float fontSize, int ciaId) {}
+bool CViewAtariStateANTIC::DoTap(GLfloat x, GLfloat y) { return false; }
+void CViewAtariStateANTIC::GuiEditHexEnteredValue(CGuiEditHex *editHex, u32 lastKeyCode, bool isCancelled) {}
+bool CViewAtariStateANTIC::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl) { return false; }
+bool CViewAtariStateANTIC::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl) { return false; }
+bool CViewAtariStateANTIC::SetFocus(bool focus) { return true; }
+void CViewAtariStateANTIC::RenderFocusBorder() {}
+
+#endif

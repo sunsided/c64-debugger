@@ -1,7 +1,12 @@
+#include "C64D_Version.h"
+#if defined(RUN_ATARI)
+
 extern "C" {
 #include "pokey.h"
 #include "pokeysnd.h"
 }
+#endif
+
 #include "CViewAtariStatePOKEY.h"
 #include "SYS_Main.h"
 #include "RES_ResourceManager.h"
@@ -17,6 +22,8 @@ extern "C" {
 #include "SYS_Threading.h"
 #include "CGuiEditHex.h"
 #include "VID_ImageBinding.h"
+
+#if defined(RUN_ATARI)
 
 CViewAtariStatePOKEY::CViewAtariStatePOKEY(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, AtariDebugInterface *debugInterface)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
@@ -218,7 +225,7 @@ void CViewAtariStatePOKEY::GuiEditHexEnteredValue(CGuiEditHex *editHex, u32 last
 		byte v = editHex->value;
 		debugInterface->SetCiaRegister(editingCIAIndex, editingRegisterValueIndex, v);
 		
-		editingRegisterValueIndex = -1;
+		editHex->SetCursorPos(0);
 	}
 	 */
 
@@ -296,3 +303,23 @@ void CViewAtariStatePOKEY::RenderFocusBorder()
 	//
 }
 
+#else
+// dummy
+
+CViewAtariStatePOKEY::CViewAtariStatePOKEY(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, AtariDebugInterface *debugInterface)
+: CGuiView(posX, posY, posZ, sizeX, sizeY)
+{
+}
+
+void CViewAtariStatePOKEY::SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY) {}
+void CViewAtariStatePOKEY::DoLogic() {}
+void CViewAtariStatePOKEY::Render() {}
+void CViewAtariStatePOKEY::RenderState(float px, float py, float posZ, CSlrFont *fontBytes, float fontSize, int ciaId) {}
+bool CViewAtariStatePOKEY::DoTap(GLfloat x, GLfloat y) { return false; }
+void CViewAtariStatePOKEY::GuiEditHexEnteredValue(CGuiEditHex *editHex, u32 lastKeyCode, bool isCancelled) {}
+bool CViewAtariStatePOKEY::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl) { return false; }
+bool CViewAtariStatePOKEY::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl) { return false; }
+bool CViewAtariStatePOKEY::SetFocus(bool focus) { return true; }
+void CViewAtariStatePOKEY::RenderFocusBorder() {}
+
+#endif

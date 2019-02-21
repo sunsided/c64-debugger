@@ -61,7 +61,7 @@ public:
 
 	CViewC64Palette *viewPalette;
 	
-	void CreateNewPicture(u8 mode);
+	void CreateNewPicture(u8 mode, u8 backgroundColor, bool storeUndo);
 	
 	//
 	CGuiLabel *lblPictureMode;

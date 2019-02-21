@@ -2510,20 +2510,34 @@ bool CViewC64VicDisplay::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isC
 
 		if (keyCode == MTKEY_ARROW_LEFT)
 		{
-			for (int i = 0; i < 8; i++)
+			if (isControl)
+			{
 				RasterCursorLeft();
-			
-			if (isShift)
+			}
+			else if (isShift)
 			{
 				for (int i = 0; i < 8*4; i++)
 					RasterCursorLeft();
 			}
+			else
+			{
+				for (int i = 0; i < 8; i++)
+					RasterCursorLeft();
+			}
+			
 		}
 		else if (keyCode == MTKEY_ARROW_RIGHT)
 		{
-			for (int i = 0; i < 8; i++)
+			if (isControl)
+			{
 				RasterCursorRight();
-			if (isShift)
+			}
+			else if (isShift)
+			{
+				for (int i = 0; i < 8; i++)
+					RasterCursorRight();
+			}
+			else
 			{
 				for (int i = 0; i < 8; i++)
 					RasterCursorRight();

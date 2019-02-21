@@ -27,7 +27,7 @@ C64SpriteMulti::C64SpriteMulti()
 }
 
 // copy from multi bitmap
-C64SpriteMulti::C64SpriteMulti(CViewVicEditor *vicEditor, int x, int y, bool isStretchedHorizontally, bool isStretchedVertically, int pointerAddr)
+C64SpriteMulti::C64SpriteMulti(CViewVicEditor *vicEditor, int x, int y, bool isStretchedHorizontally, bool isStretchedVertically, int pointerValue, int pointerAddr)
 : C64Sprite(vicEditor, 12, 21, true)
 {
 	this->posX = x;
@@ -35,6 +35,7 @@ C64SpriteMulti::C64SpriteMulti(CViewVicEditor *vicEditor, int x, int y, bool isS
 	this->isStretchedHorizontally = isStretchedHorizontally;
 	this->isStretchedVertically = isStretchedVertically;
 	
+	this->pointerValue = pointerValue;
 	this->pointerAddr = pointerAddr;
 	
 	pixels = new u8[sizeX*sizeY];

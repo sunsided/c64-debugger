@@ -816,6 +816,29 @@ name and a block name below. To switch segments you can click on the segment
 name or use keyboard shortcuts Ctrl+; or Ctrl+'
 
 
+* Champ-6502 profiler
+
+C64 Debugger allows to create a profile file that can be then used to create
+profile reports in HTML format. This feature is still in development,
+however it is usable. Note that profile labels, watches and screen dump are not
+completed yet. Champ uses Ruby and GraphViz thus you need to install these
+packages first. You have to run the C64-debugger compatible version
+of Champ ruby source which is available to download from SourceForge C64 Debugger
+project.
+
+To start generating profile file go to Settings/Emulation and select file
+path. The debugger will dump all profile data needed for the Champ in this
+file, default file extension for profile data is *.pd 
+
+When you finished running code that you want to profile next step is to
+create profile report using command line:
+
+$ c64d-champ.rb <file.pd>
+
+Champ will create a report.html with report-files folder that you can view
+using standard web browser.
+
+
 * JukeBox playlist and automated tests
 
 JukeBox playlist is a way to automate things in the C64 Debugger. The idea is that
@@ -1151,6 +1174,23 @@ James Wilkinson     (DOS, BeOS, Win32)
 Christian Groessler (Sega Dreamcast)
 Andrey Dj           (Raspberry Pi)
 
+* NestopiaUE emulator engine license is GPL, credits below:
+
+Nestopia is Copyright © 2003-2008 by Martin Freij.
+NES is either a trademark or registered trademark of Nintendo of America Inc.
+Famicom is either a trademark or registered trademark of Nintendo Co., LTD.
+All other trademarks are property of their respective owners.
+Nestopia is not affiliated with or endorsed by any of the companies mentioned.
+
+Authors: [yang], Alexander Roshal, Andrea Mazzoleni, Bootgod, Brad Taylor, 
+CaH4e3, Chris Covell, Christophe Thibault, Derek Liauw Kie Fa, Enri, FireBug, 
+Gilles Vollant, Goroh, hap, Hellsbane, Igor Pavlov, Jean-loup Gailly, 
+Jeremy Chadwick, John West, Kevin Horton, Ki, Loopy, MAME dev. team, 
+Marat Fayzullin, Mark Adler, Mark Knibbs, Marko Mäkelä, Matthew Conte, 
+Maxim Stepin, NewRisingSun, Norix, Pongbashi, Quietust, Richard Hoelscher, 
+Shay Green (aka blargg), The Mad Dumper, Xodnizel
+
+
 * Libraries
 
 libjpeg 
@@ -1186,14 +1226,57 @@ mman-32
 libclipboard
 	Copyright (c) 2016 Jeremy Tan
 	https://github.com/jtanx/libclipboard
+md5
+	Copyright (C) 1999 Aladdin Enterprises.  All rights reserved.
+	This code has been derived by Michael Schwendt <mschwendt@yahoo.com>
+	from original work by L. Peter Deutsch <ghost@aladdin.com>
 pugixml
 	Light-weight, simple and fast XML parser for C++ with XPath support
 	https://pugixml.org
-	
+psid64
+	Create a C64 executable from a PSID file
+    Copyright (C) 2001-2003  Roland Hermans <rolandh@users.sourceforge.net>
+	PSID64 contains the following contributed or derived work. In the order they
+	first supplied contributions or code was derived from their work:
+    Dag Lem           - PSID driver reference implementation
+    Simon White       - SidUtils library
+    Michael Schwendt  - SidTune library
+    LaLa              - STILView library
+    Magnus Lind       - Exomizer compressor
+Champ 65c02 Profiler
+	A 6502/65C02 emulator / profiler that enables you to really get to know 
+	your APPLE ][ HiRes Graphics Mode Demo.
+	(C) Micha Specht. https://github.com/specht/champ
 
 *
 * Change log
 *
+
+v0.64.56.4 (2019/02/22), celebration of my 40th birthday 
+                         and 2 years duration of the project! Cheers!
+Added: Sprite view in VIC Editor also shows sprite pointer value (requested by Dr.J)
+Added: You can zoom in and out using mouse wheel within zoomed screen view
+Added: You can set C64 screen texture supersampling factor in Settings
+Added: Opening SID tunes: conversion is done using psid64 by Roland Hermans! 
+       You can now drag & drop SID tune onto debugger's window and it will be played. 
+       You can also just load the SID into RAM. Select preferred behavior in Settings.
+Added: Simple debugger emulation API to create own plugins for code proof of concepts 
+       (early draft)
+Added: Champ 6502 profiler integration (early draft)
+Added: NestopiaUE emulator engine aka NES Debugger (early draft)
+Bug Fixed: Comparing commands in monitor was not properly matching command names 
+           that overlap
+Bug Fixed: Memory dump to file was not properly reading values of address $00 and $01 
+           (thanks to Bacchus/Fairlight)
+Bug Fixed: Detach tape was not saving settings and tape was always reattached again 
+           after restart (thanks to Bacchus/Fairlight)
+Bug Fixed: Saving on d64 disk was not flushing data on quit, now a periodic check is 
+           performed that flushes data (thanks to Isildur/Samar)
+Bug Fixed Linux: When system open/file dialogs were not used and folder was not 
+                 existing a fatal error was thrown (thanks to Tetsuo/Samar)
+Bug Fixed MacOS: Sometimes a mixture of CMD key and other key does not send KeyUp 
+                 event to the application in MacOS, workaround applied
+
 
 v0.64.56.2 (2018/12/24), X-Mas maintenance release
 Added: You can right-click on a C64 Screen in any layout to change display mode: screen, zoomed raster, VIC Display
@@ -1233,7 +1316,6 @@ Bug Fixed: Markers are cleared automatically after PRG load (thanks to Alex Gold
 Bug Fixed: Zooming in memory map was sometimes blocked
 Bug Fixed: Command line -help option now properly displays message box on Windows (thanks to Timsa Uotila for bug report)
 Bug fixed: Painting on vertically-stretched multicolor sprite caused crash (thanks to Isildur/Samar for bug report)
-
 
 
 v0.64.2

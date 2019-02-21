@@ -166,6 +166,20 @@ bool CViewVicEditorLayers::ButtonSwitchChanged(CGuiButtonSwitch *button)
 	return false;
 }
 
+void CViewVicEditorLayers::SetLayerVisible(CVicEditorLayer *layer, bool isVisible)
+{
+	LOGD("CViewVicEditorLayers::SetLayerVisible");
+	
+	layer->isVisible = isVisible;
+
+	if (layer == (CVicEditorLayer*)vicEditor->layerReferenceImage)
+	{
+		vicEditor->UpdateReferenceLayers();
+	}
+	
+	UpdateVisibleSwitchButtons();
+}
+
 void CViewVicEditorLayers::ListElementSelected(CGuiList *listBox)
 {
 	LOGD("CViewVicEditorLayers::ListElementSelected");

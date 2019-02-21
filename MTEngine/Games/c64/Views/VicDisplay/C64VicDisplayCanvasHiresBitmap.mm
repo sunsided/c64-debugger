@@ -319,14 +319,14 @@ void C64VicDisplayCanvasHiresBitmap::ClearScreen(u8 charValue, u8 colorValue)
 
 C64CharHires *C64VicDisplayCanvasHiresBitmap::GetBitCharHiresBitmap(int x, int y)
 {
-	LOGD("C64CharHires ============================ GetBitCharHiresBitmap %d %d", x, y);
+	LOGF("C64CharHires ============================ GetBitCharHiresBitmap %d %d", x, y);
 	
 	return new C64CharHires(vicDisplay, x, y);
 }
 
 u8 C64VicDisplayCanvasHiresBitmap::GetBitPixelHiresBitmap(int x, int y)
 {
-	LOGD("C64CharHires ============================ GetBitPixelHiresBitmap %d %d", x, y);
+	LOGF("C64CharHires ============================ GetBitPixelHiresBitmap %d %d", x, y);
 	
 	u8 *screen_ptr;
 	u8 *color_ram_ptr;
@@ -377,7 +377,7 @@ u8 C64VicDisplayCanvasHiresBitmap::GetBitPixelHiresBitmap(int x, int y)
 
 void C64VicDisplayCanvasHiresBitmap::ReplaceColorHiresBitmapRaster(int x, int y, u8 colorNum, u8 paintColor)
 {
-	LOGD("............. ReplaceColorHiresBitmapRaster %d %d colorNum=%d paintColor=%02x", x, y, colorNum, paintColor);
+	LOGF("............. ReplaceColorHiresBitmapRaster %d %d colorNum=%d paintColor=%02x", x, y, colorNum, paintColor);
 	int charColumn = floor((float)((float)x / 8.0f));
 	int charRow = floor((float)((float)y / 8.0f));
 	
@@ -386,7 +386,7 @@ void C64VicDisplayCanvasHiresBitmap::ReplaceColorHiresBitmapRaster(int x, int y,
 
 void C64VicDisplayCanvasHiresBitmap::ReplaceColorHiresBitmapCharacter(int charColumn, int charRow, u8 colorNum, u8 paintColor)
 {
-	LOGD("............. ReplaceColorHiresBitmapCharacter %d %d colorNum=%d paintColor=%02x", charColumn, charRow, colorNum, paintColor);
+	LOGF("............. ReplaceColorHiresBitmapCharacter %d %d colorNum=%d paintColor=%02x", charColumn, charRow, colorNum, paintColor);
 	
 	int offset = charColumn + charRow * 40;
 
@@ -410,18 +410,18 @@ void C64VicDisplayCanvasHiresBitmap::ReplaceColorHiresBitmapCharacter(int charCo
 		{
 			u8 val = screen_ptr[(charRow * 40) + charColumn];	//this->debugInterface->GetByteC64(screenBase + offset)
 			
-			LOGD("addr=%04x v=%02x", screenBase + offset, val);
+			LOGF("addr=%04x v=%02x", screenBase + offset, val);
 			
 			u8 color2 = val & 0x0F; //screen_ptr[(charRow * 40) + charColumn] & 0xf;
 			//			u8 color2 = this->debugInterface->GetByteC64(screenBase + offset) & 0x0f;
 			
-			LOGD("color2=%02x", color2);
+			LOGF("color2=%02x", color2);
 			
 			u8 newColor1 = ((paintColor & 0x0F) << 4) | (color2 & 0x0F);
 			
-			LOGD("newColor1=%02x", newColor1);
+			LOGF("newColor1=%02x", newColor1);
 			
-			LOGD("1     poke %04x %02x", screenBase + offset, newColor1);
+			LOGF("1     poke %04x %02x", screenBase + offset, newColor1);
 			debugInterface->SetByteC64(screenBase + offset, newColor1);
 			
 			screen_ptr[(charRow * 40) + charColumn] = newColor1;
@@ -431,20 +431,20 @@ void C64VicDisplayCanvasHiresBitmap::ReplaceColorHiresBitmapCharacter(int charCo
 		{
 			u8 val = screen_ptr[(charRow * 40) + charColumn];	//this->debugInterface->GetByteC64(screenBase + offset)
 			
-			LOGD("addr=%04x v=%02x", screenBase + offset, val);
+			LOGF("addr=%04x v=%02x", screenBase + offset, val);
 			
 			
 			u8 color1 = (screen_ptr[(charRow * 40) + charColumn] & 0xF0) >> 4;
 			//			u8 color1 = this->debugInterface->GetByteC64(screenBase + offset) >> 4;
 			
-			LOGD("color2=%02x", color1);
+			LOGF("color2=%02x", color1);
 			
 			u8 newColor2 = (paintColor & 0x0F) | ((color1 & 0x0F) << 4);
 			
-			LOGD("newColor2=%02x", newColor2);
+			LOGF("newColor2=%02x", newColor2);
 			
 			debugInterface->SetByteC64(screenBase + offset, newColor2);
-			LOGD("2     poke %04x %02x", screenBase + offset, newColor2);
+			LOGF("2     poke %04x %02x", screenBase + offset, newColor2);
 			
 			screen_ptr[(charRow * 40) + charColumn] = newColor2;
 			
@@ -465,7 +465,7 @@ void C64VicDisplayCanvasHiresBitmap::PutBitPixelHiresBitmapRaster(int x, int y, 
 	vicDisplay->GetViciiPointers(this->viciiState, &screen_ptr, &color_ram_ptr, &chargen_ptr, &bitmap_low_ptr, &bitmap_high_ptr, colors);
 	
 	
-	LOGD("============================ PutBitPixelHiresBitmapRaster %d %d | %d", x, y, bitColor);
+	LOGF("============================ PutBitPixelHiresBitmapRaster %d %d | %d", x, y, bitColor);
 	
 	u16 bitmapBase = vicDisplay->bitmapAddress;
 	u16 screenBase = vicDisplay->screenAddress;
@@ -478,7 +478,7 @@ void C64VicDisplayCanvasHiresBitmap::PutBitPixelHiresBitmapRaster(int x, int y, 
 	
 	int offset = charColumn*8 + charRow * 40*8 + pixelCharY;
 	
-	LOGD("charColumn=%d pixelNum=%d  |  charRow=%d pixelCharY=%d  | offset=%d",
+	LOGF("charColumn=%d pixelNum=%d  |  charRow=%d pixelCharY=%d  | offset=%d",
 		 charColumn, pixelNum,
 		 charRow, pixelCharY,
 		 offset);
@@ -544,18 +544,18 @@ u8 C64VicDisplayCanvasHiresBitmap::PutColorAtPixel(bool forceColorReplace, int x
 
 u8 C64VicDisplayCanvasHiresBitmap::PutPixelHiresBitmap(bool forceColorReplace, int x, int y, u8 paintColor)
 {
-	LOGD(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> PutPixelHiresBitmap %d %d %02x", x, y, paintColor);
+	LOGF(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> PutPixelHiresBitmap %d %d %02x", x, y, paintColor);
 	
 	u8 result = PAINT_RESULT_OK;
 	
 	u8 prevColor = GetBitPixelHiresBitmap(x, y);
-	LOGD("prevColor=%02x", prevColor);
+	LOGF("prevColor=%02x", prevColor);
 	
 	C64CharHires *bitChar = GetBitCharHiresBitmap(x, y);
 	
 	u8 prevPaintColor = bitChar->colors[prevColor];
 	
-	LOGD("prevPaintColor=%02x", prevPaintColor);
+	LOGF("prevPaintColor=%02x", prevPaintColor);
 	
 	bitChar->DebugPrint();
 	
@@ -568,7 +568,7 @@ u8 C64VicDisplayCanvasHiresBitmap::PutPixelHiresBitmap(bool forceColorReplace, i
 	{
 		if (bitChar->colors[i] == paintColor)
 		{
-			LOGD("    found the same color paintColor=%02x at colors[%d]", paintColor, i);
+			LOGF("    found the same color paintColor=%02x at colors[%d]", paintColor, i);
 			newColor = i;
 			break;
 		}
@@ -590,7 +590,7 @@ u8 C64VicDisplayCanvasHiresBitmap::PutPixelHiresBitmap(bool forceColorReplace, i
 			}
 		}
 		
-		LOGD("   minColorCount=%d newColor=%02x minColor=%02x", minColorCount, newColor, minColor);
+		LOGF("   minColorCount=%d newColor=%02x minColor=%02x", minColorCount, newColor, minColor);
 		
 		if (minColorCount != 0)
 		{
@@ -612,12 +612,12 @@ u8 C64VicDisplayCanvasHiresBitmap::PutPixelHiresBitmap(bool forceColorReplace, i
 		}
 	}
 	
-	LOGD("prevColor=%02x prevPaintColor=%02x | newColor=%02x paintColor=%02x",
+	LOGF("prevColor=%02x prevPaintColor=%02x | newColor=%02x paintColor=%02x",
 		 prevColor, prevPaintColor, newColor, paintColor);
 	
 	if (prevColor != newColor)
 	{
-		LOGD("  != newColor=%02x", newColor);
+		LOGF("  != newColor=%02x", newColor);
 		PutBitPixelHiresBitmapRaster(x, y, newColor);
 		
 		ReplaceColorHiresBitmapRaster(x, y, newColor, paintColor);
@@ -654,7 +654,7 @@ u8 C64VicDisplayCanvasHiresBitmap::PaintDither(bool forceColorReplace, int x, in
 		{
 			if (ditherMaskPosX == -1 || ditherMaskPosY == -1)
 			{
-				LOGD("******** START DITHER ********");
+				LOGF("******** START DITHER ********");
 				// start dither painting
 				if (colorSource == VICEDITOR_COLOR_SOURCE_LMB)
 				{
@@ -673,7 +673,7 @@ u8 C64VicDisplayCanvasHiresBitmap::PaintDither(bool forceColorReplace, int x, in
 			
 			int d = (dX + dY) % 2;
 			
-			LOGD("==================== dX=%d dY=%d d=%d", dX, dY, d);
+			LOGF("==================== dX=%d dY=%d d=%d", dX, dY, d);
 			
 			if (d != 0)
 			{
@@ -758,7 +758,7 @@ u8 C64VicDisplayCanvasHiresBitmap::ConvertFrom(CImageData *imageData)
 	
 	u8 backgroundColor = (*colors)[0]->color;
 	
-	LOGD("backgroundColor = %d", backgroundColor);
+	LOGF("backgroundColor = %d", backgroundColor);
 	
 	DeleteColorsHistogram(colors);
 	
@@ -771,7 +771,7 @@ u8 C64VicDisplayCanvasHiresBitmap::ConvertFrom(CImageData *imageData)
 	{
 		for (int xc = 0; xc < 40; xc++)
 		{
-			LOGD(" xc=%d yc=%d", xc, yc);
+			LOGF(" xc=%d yc=%d", xc, yc);
 			int x = xc * 8;
 			int y = yc * 8;
 			
@@ -793,7 +793,7 @@ u8 C64VicDisplayCanvasHiresBitmap::ConvertFrom(CImageData *imageData)
 			
 			for (int i = 0; i < 16; i++)
 			{
-				LOGD(" histogram[%d] = %d", i, histogram[i]);
+				LOGF(" histogram[%d] = %d", i, histogram[i]);
 				
 				if (histogram[i] > max)
 				{
@@ -808,7 +808,7 @@ u8 C64VicDisplayCanvasHiresBitmap::ConvertFrom(CImageData *imageData)
 			
 			for (int i = 0; i < 16; i++)
 			{
-				LOGD(" histogram[%d] = %d", i, histogram[i]);
+				LOGF(" histogram[%d] = %d", i, histogram[i]);
 				
 				if (i == colorBackground)
 					continue;

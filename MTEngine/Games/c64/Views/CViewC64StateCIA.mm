@@ -294,7 +294,7 @@ void CViewC64StateCIA::GuiEditHexEnteredValue(CGuiEditHex *editHex, u32 lastKeyC
 		byte v = editHex->value;
 		debugInterface->SetCiaRegister(editingCIAIndex, editingRegisterValueIndex, v);
 		
-		editingRegisterValueIndex = -1;
+		editHex->SetCursorPos(0);
 	}
 
 }

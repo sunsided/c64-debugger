@@ -63,6 +63,28 @@ CImageData::CImageData(CByteBuffer *byteBuffer)
 	//LOGD("pool test CImageData: %d", ++poolTestCImageData);
 }
 
+// assuming type RGBA
+CImageData::CImageData(int width, int height)
+{
+	this->width = width;
+	this->height = height;
+	//this->originalHeight = height;
+	//this->originalWidth = width;
+	//this->origData = NULL;
+	this->tempData = NULL;
+	this->resultData = NULL;
+	this->row_pointers = NULL;
+	this->type = IMG_TYPE_RGBA;
+	this->mask = NULL;
+	
+#ifdef USE_BUFFER_OFFSETS
+	this->bufferOffsets = IMG_GetBufferOffsets(this->type, this->height, this->width);
+#endif
+	
+	this->AllocImage(false, true);
+	
+	//LOGD("pool test CImageData: %d", ++poolTestCImageData);
+}
 
 CImageData::CImageData(int width, int height, byte type)
 {
@@ -1291,6 +1313,13 @@ void CImageData::setLongIntResultData(long unsigned int *data)
 }
 
 // rgb
+
+// this might be confusing with rgba
+//void CImageData::GetPixel(int x, int y, byte *r, byte *g, byte *b)
+//{
+//	GetPixelResultRGB(x, y, r, g, b);
+//}
+
 void CImageData::GetPixelResultRGB(int x, int y, byte *r, byte *g, byte *b)
 {
 #ifdef PEDANTIC
@@ -1325,6 +1354,11 @@ void CImageData::GetPixelResultRGB(int x, int y, byte *r, byte *g, byte *b)
 	*r = imageData[offset++];
 	*g = imageData[offset++];
 	*b = imageData[offset];
+}
+
+void CImageData::SetPixel(int x, int y, byte r, byte g, byte b, byte a)
+{
+	SetPixelResultRGBA(x, y, r, g, b, a);
 }
 
 void CImageData::SetPixelResultRGB(int x, int y, byte r, byte g, byte b)
@@ -1463,6 +1497,11 @@ void CImageData::setRGBResultData(byte *data)
 
 /////////////////RGBA
 // rgb
+void CImageData::GetPixel(int x, int y, byte *r, byte *g, byte *b, byte *a)
+{
+	GetPixelResultRGBA(x, y, r, g, b, a);
+}
+
 void CImageData::GetPixelResultRGBA(int x, int y, byte *r, byte *g, byte *b, byte *a)
 {
 #ifdef PEDANTIC

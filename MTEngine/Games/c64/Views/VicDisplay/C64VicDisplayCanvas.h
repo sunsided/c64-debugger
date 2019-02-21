@@ -9,26 +9,10 @@ class CViewC64VicDisplay;
 class C64DebugInterface;
 class CImageData;
 
-enum c64CanvasType : u8
-{
-	C64_CANVAS_TYPE_BLANK	= 0,
-	C64_CANVAS_TYPE_BITMAP	= 1,
-	C64_CANVAS_TYPE_TEXT	= 2,
-};
-
 enum
 {
 	VICEDITOR_COLOR_SOURCE_LMB = 1,
 	VICEDITOR_COLOR_SOURCE_RMB = 2
-};
-
-enum
-{
-	PAINT_RESULT_ERROR			= 0,
-	PAINT_RESULT_OUTSIDE		= 1,
-	PAINT_RESULT_BLOCKED		= 2,
-	PAINT_RESULT_OK				= 10,
-	PAINT_RESULT_REPLACED_COLOR	= 11,
 };
 
 class C64ColorsHistogramElement

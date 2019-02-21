@@ -14,11 +14,13 @@
 #include "CViewBreakpoints.h"
 #include "CViewSnapshots.h"
 #include "CViewAbout.h"
-#include "C64DebugInterface.h"
-#include "AtariDebugInterface.h"
 #include "CViewMemoryMap.h"
 #include "CViewFileD64.h"
 #include "CViewKeyboardShortcuts.h"
+
+#include "C64DebugInterface.h"
+#include "AtariDebugInterface.h"
+#include "NesDebugInterface.h"
 
 #include "C64SettingsStorage.h"
 
@@ -68,6 +70,7 @@ CViewMainMenu::CViewMainMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 		openFileExtensions.push_back(new CSlrString("tap"));
 		openFileExtensions.push_back(new CSlrString("t64"));
 		openFileExtensions.push_back(new CSlrString("crt"));
+		openFileExtensions.push_back(new CSlrString("sid"));
 	}
 	
 	if (viewC64->debugInterfaceAtari)
@@ -78,6 +81,11 @@ CViewMainMenu::CViewMainMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 		openFileExtensions.push_back(new CSlrString("cas"));
 		openFileExtensions.push_back(new CSlrString("car"));
 		openFileExtensions.push_back(new CSlrString("snap"));
+	}
+
+	if (viewC64->debugInterfaceNes)
+	{
+		openFileExtensions.push_back(new CSlrString("nes"));
 	}
 
 	openFileExtensions.push_back(new CSlrString("c64jukebox"));
@@ -104,6 +112,10 @@ CViewMainMenu::CViewMainMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 	{
 		sprintf(buf, "65XE Debugger v%s by Slajerek/Samar", C64DEBUGGER_VERSION_STRING);
 	}
+	else if (viewC64->debugInterfaceNes)
+	{
+		sprintf(buf, "NES Debugger v%s by Slajerek/Samar", C64DEBUGGER_VERSION_STRING);
+	}
 	strHeader = new CSlrString(buf);
 
 	SYS_ReleaseCharBuf(buf);
@@ -115,6 +127,10 @@ CViewMainMenu::CViewMainMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 	else if (viewC64->debugInterfaceAtari)
 	{
 		strHeader2 = viewC64->debugInterfaceAtari->GetEmulatorVersionString();
+	}
+	else if (viewC64->debugInterfaceNes)
+	{
+		strHeader2 = viewC64->debugInterfaceNes->GetEmulatorVersionString();
 	}
 	
 	/// colors
@@ -205,10 +221,10 @@ CViewMainMenu::CViewMainMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 
 	//
 	
-	kbsLoadPRG = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Load", 'o', false, false, true);
-	viewC64->keyboardShortcuts->AddShortcut(kbsLoadPRG);
-	menuItemLoadPRG = new CViewC64MenuItem(fontHeight*2.5, new CSlrString("Load..."), kbsLoadPRG, tr, tg, tb);
-	viewMenu->AddMenuItem(menuItemLoadPRG);
+	kbsOpenFile = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Load", 'o', false, false, true);
+	viewC64->keyboardShortcuts->AddShortcut(kbsOpenFile);
+	menuItemOpenFile = new CViewC64MenuItem(fontHeight*2.5, new CSlrString("Load..."), kbsOpenFile, tr, tg, tb);
+	viewMenu->AddMenuItem(menuItemOpenFile);
 		
 	if (viewC64->debugInterfaceC64)
 	{
@@ -269,6 +285,22 @@ CViewMainMenu::CViewMainMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 		viewC64->keyboardShortcuts->AddShortcut(kbsBreakpointsAtari);
 		menuItemBreakpointsAtari = new CViewC64MenuItem(fontHeight*1.7, new CSlrString("Breakpoints..."), kbsBreakpointsAtari, tr, tg, tb);
 		viewMenu->AddMenuItem(menuItemBreakpointsAtari);
+	}
+	
+	if (viewC64->debugInterfaceNes)
+	{
+		menuItemSetFolderWithNesROMs = new CViewC64MenuItem(fontHeight*2, new CSlrString("Set ROMs folder"), NULL, tr, tg, tb);
+		viewMenu->AddMenuItem(menuItemSetFolderWithNesROMs);
+		
+		kbsSnapshotsNes = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Snapshots screen", 's', true, false, true);
+		viewC64->keyboardShortcuts->AddShortcut(kbsSnapshotsNes);
+		menuItemSnapshotsNes = new CViewC64MenuItem(fontHeight*1.7, new CSlrString("Snapshots..."), kbsSnapshotsNes, tr, tg, tb);
+		viewMenu->AddMenuItem(menuItemSnapshotsNes);
+		
+//		kbsBreakpointsAtari = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Breakpoints screen", 'b', false, false, true);
+//		viewC64->keyboardShortcuts->AddShortcut(kbsBreakpointsAtari);
+//		menuItemBreakpointsAtari = new CViewC64MenuItem(fontHeight*1.7, new CSlrString("Breakpoints..."), kbsBreakpointsAtari, tr, tg, tb);
+//		viewMenu->AddMenuItem(menuItemBreakpointsAtari);
 	}
 	
 
@@ -342,9 +374,9 @@ void CViewMainMenu::MenuCallbackItemEntered(CGuiViewMenuItem *menuItem)
 	{
 		OpenDialogInsertCartridge();
 	}
-	else if (menuItem == menuItemLoadPRG)
+	else if (menuItem == menuItemOpenFile)
 	{
-		OpenDialogLoadPRG();
+		OpenDialogOpenFile();
 	}
 	else if (menuItem == menuItemSetFolderWithAtariROMs)
 	{
@@ -392,6 +424,13 @@ void CViewMainMenu::MenuCallbackItemEntered(CGuiViewMenuItem *menuItem)
 		if (viewC64->debugInterfaceAtari)
 		{
 			viewC64->viewAtariSnapshots->SwitchSnapshotsScreen();
+		}
+	}
+	else if (menuItem == menuItemSnapshotsNes)
+	{
+		if (viewC64->debugInterfaceNes)
+		{
+			viewC64->viewNesSnapshots->SwitchSnapshotsScreen();
 		}
 	}
 	else if (menuItem == menuItemReloadAndRestart)
@@ -446,9 +485,9 @@ void CViewMainMenu::OpenDialogInsertTape()
 	delete windowTitle;
 }
 
-void CViewMainMenu::OpenDialogLoadPRG()
+void CViewMainMenu::OpenDialogOpenFile()
 {
-	LOGM("OpenDialogLoadPRG");
+	LOGM("OpenDialogOpenFile");
 	openDialogFunction = VIEWC64SETTINGS_OPEN_FILE;
 	
 	CSlrString *windowTitle = new CSlrString("Open file");
@@ -499,7 +538,7 @@ void CViewMainMenu::SystemDialogFileOpenSelected(CSlrString *path)
 	}
 	else if (openDialogFunction == VIEWC64SETTINGS_OPEN_PRG)
 	{
-		LoadPRG(path, true, true, true);
+		LoadPRG(path, true, true, true, false);
 		C64DebuggerStoreSettings();
 	}
 	else if (openDialogFunction == VIEWC64SETTINGS_OPEN_JUKEBOX)
@@ -547,7 +586,7 @@ void CViewMainMenu::LoadFile(CSlrString *path)
 	
 	if (ext->CompareWith("prg"))
 	{
-		LoadPRG(path, true, true, true);
+		LoadPRG(path, true, true, true, false);
 	}
 	else if (ext->CompareWith("d64") ||
 			 ext->CompareWith("x64") ||
@@ -559,6 +598,10 @@ void CViewMainMenu::LoadFile(CSlrString *path)
 	else if (ext->CompareWith("crt"))
 	{
 		InsertCartridge(path, true);
+	}
+	else if (ext->CompareWith("sid"))
+	{
+		LoadSID(path);
 	}
 	else if (ext->CompareWith("snap") ||
 			 ext->CompareWith("vsf"))
@@ -581,6 +624,10 @@ void CViewMainMenu::LoadFile(CSlrString *path)
 	else if (ext->CompareWith("a8s"))
 	{
 		viewC64->viewAtariSnapshots->LoadSnapshot(path, true);
+	}
+	else if (ext->CompareWith("nes"))
+	{
+		LoadNES(path, true);
 	}
 	else if (ext->CompareWith("c64jukebox") ||
 			 ext->CompareWith("json"))
@@ -700,11 +747,11 @@ void CViewMainMenu::InsertCartridge(CSlrString *path, bool updatePathToCRT)
 	delete asciiPath;
 }
 
-bool CViewMainMenu::LoadPRG(CSlrString *path, bool autoStart, bool updatePRGFolderPath, bool showAddressInfo)
+bool CViewMainMenu::LoadPRG(CSlrString *path, bool autoStart, bool updatePRGFolderPath, bool showAddressInfo, bool forceFastReset)
 {
 	path->DebugPrint("CViewMainMenu::LoadPRG: path=");
 	
-	LOGD("   >>> LoadPRG, autostart=%d", autoStart);
+	LOGD("   >>> LoadPRG, autostart=%d forceFastReset=%d", autoStart);
 	
 	// TODO: p00 http://vice-emu.sourceforge.net/vice_15.html#SEC299
 	
@@ -746,10 +793,10 @@ bool CViewMainMenu::LoadPRG(CSlrString *path, bool autoStart, bool updatePRGFold
 	char *fname = SYS_GetFileNameFromFullPath(asciiPath);
 	
 	guiMain->LockMutex();
-	if (menuItemLoadPRG->str2 != NULL)
-		delete menuItemLoadPRG->str2;
+	if (menuItemOpenFile->str2 != NULL)
+		delete menuItemOpenFile->str2;
 	
-	menuItemLoadPRG->str2 = new CSlrString(fname);
+	menuItemOpenFile->str2 = new CSlrString(fname);
 	delete fname;
 	
 	LoadLabelsAndWatches(path);
@@ -757,7 +804,7 @@ bool CViewMainMenu::LoadPRG(CSlrString *path, bool autoStart, bool updatePRGFold
 
 	//
 	CByteBuffer *byteBuffer = new CByteBuffer(file, false);
-	LoadPRG(byteBuffer, autoStart, showAddressInfo);
+	LoadPRG(byteBuffer, autoStart, showAddressInfo, forceFastReset);
 	
 	delete asciiPath;
 	delete file;
@@ -766,6 +813,56 @@ bool CViewMainMenu::LoadPRG(CSlrString *path, bool autoStart, bool updatePRGFold
 	
 	return true;
 }
+
+bool CViewMainMenu::LoadSID(CSlrString *filePath)
+{
+	filePath->DebugPrint("CViewMainMenu::LoadSID: path=");
+	
+	// TODO: make CSlrFileFromOS support UTF paths
+	char *asciiPath = filePath->GetStdASCII();
+	
+	LOGD("asciiPath='%s'", asciiPath);
+	
+	CSlrFileFromOS *file = new CSlrFileFromOS(asciiPath);
+	if (!file->Exists())
+	{
+		delete file;
+		guiMain->ShowMessage("Error loading PRG file");
+		return false;
+	}
+	
+	if (c64SettingsC64SidImportMode == SID_IMPORT_MODE_PSID64)
+	{
+		CByteBuffer *byteBufferSID = new CByteBuffer(file, false);
+		CByteBuffer *byteBufferPRG = ConvertSIDtoPRG(byteBufferSID);
+		
+		LoadPRG(byteBufferPRG, true, false, true);
+		
+		delete byteBufferPRG;
+		delete byteBufferSID;
+	}
+	else if (c64SettingsC64SidImportMode == SID_IMPORT_MODE_DIRECT_COPY)
+	{
+		u16 fromAddr;
+		u16 toAddr;
+		u16 initAddr;
+		u16 playAddr;
+		C64LoadSIDToRam(asciiPath, &fromAddr, &toAddr, &initAddr, &playAddr);
+		
+		char *buf = SYS_GetCharBuf();
+		sprintf(buf, "SID from $%04X to $%04X. Init $%04X Play $%04X.", fromAddr, toAddr, initAddr, playAddr);
+		guiMain->ShowMessage(buf);
+		SYS_ReleaseCharBuf(buf);
+	}
+	
+	delete asciiPath;
+	delete file;
+	
+	
+	return true;
+
+}
+
 
 extern "C" {
 	int tape_image_attach(unsigned int unit, const char *name);
@@ -1116,37 +1213,35 @@ void CViewMainMenu::InsertATR(CSlrString *path, bool updatePathToATR, bool autoR
 //	}
 }
 
-//
-bool CViewMainMenu::LoadAtariState(CSlrString *path)
+bool CViewMainMenu::LoadNES(CSlrString *path, bool updateNESFolderPath)
 {
-	path->DebugPrint("CViewMainMenu::LoadAtariState: path=");
+	path->DebugPrint("CViewMainMenu::LoadNES: path=");
 	
-	LOGD("   >>> LoadAtariState");
+	LOGD("   >>> LoadNES");
 	
-	/*
-	if (c64SettingsPathToAtariCartridge != path)
+	if (c64SettingsPathToNES != path)
 	{
-		if (c64SettingsPathToAtariCartridge != NULL)
-			delete c64SettingsPathToAtariCartridge;
-		c64SettingsPathToAtariCartridge = new CSlrString(path);
+		if (c64SettingsPathToNES != NULL)
+			delete c64SettingsPathToNES;
+		c64SettingsPathToNES = new CSlrString(path);
 	}
 	
-	if (updateAtariCartridgeFolderPath)
+	if (updateNESFolderPath)
 	{
-		LOGD("...updateAtariCartridgeFolderPath");
-		if (c64SettingsDefaultAtariCartridgeFolder != NULL)
-			delete c64SettingsDefaultAtariCartridgeFolder;
-		c64SettingsDefaultAtariCartridgeFolder = path->GetFilePathWithoutFileNameComponentFromPath();
+		LOGD("...updateNESFolderPath");
+		if (c64SettingsDefaultNESFolder != NULL)
+			delete c64SettingsDefaultNESFolder;
+		c64SettingsDefaultNESFolder = path->GetFilePathWithoutFileNameComponentFromPath();
 		
-		c64SettingsDefaultAtariCartridgeFolder->DebugPrint("c64SettingsDefaultAtariCartridgeFolder=");
+		c64SettingsDefaultNESFolder->DebugPrint("c64SettingsDefaultNESFolder=");
 	}
-	*/
-	LOGD("... LoadAtariState (2)");
 	
-//	c64SettingsPathToAtariCartridge->DebugPrint("c64SettingsPathToAtariCartridge=");
+	LOGD("... LoadNES (2)");
+	
+	c64SettingsPathToNES->DebugPrint("c64SettingsPathToNES=");
 	
 	// TODO: make CSlrFileFromOS support UTF paths
-	char *asciiPath = path->GetStdASCII();
+	char *asciiPath = c64SettingsPathToNES->GetStdASCII();
 	
 	LOGD("asciiPath='%s'", asciiPath);
 	
@@ -1154,13 +1249,14 @@ bool CViewMainMenu::LoadAtariState(CSlrString *path)
 	if (!file->Exists())
 	{
 		delete file;
-		guiMain->ShowMessage("Error loading state file");
+		guiMain->ShowMessage("Error loading NES file");
 		return false;
 	}
 	
 	// display file name in menu
 	//	char *fname = SYS_GetFileNameFromFullPath(asciiPath);
-//	LOGTODO("AtariState: load labels/symbols/watches & update menu item");
+	
+	LOGTODO("NES: load labels/symbols/watches & update menu item");
 	
 	/*
 	 guiMain->LockMutex();
@@ -1176,15 +1272,17 @@ bool CViewMainMenu::LoadAtariState(CSlrString *path)
 	 */
 	
 	//
-	debugInterfaceAtari->LockMutex();
-	viewC64->debugInterfaceAtari->LoadFullSnapshot(asciiPath);
-	debugInterfaceAtari->UnlockMutex();
+	debugInterfaceNes->LockMutex();
+	viewC64->debugInterfaceNes->InsertCartridge(asciiPath);
+	debugInterfaceNes->UnlockMutex();
 	
 	delete asciiPath;
 	delete file;
 	
 	return true;
 }
+
+
 
 void CViewMainMenu::LoadLabelsAndWatches(CSlrString *pathToPRG)
 {
@@ -1263,12 +1361,13 @@ void CViewMainMenu::LoadLabelsAndWatches(CSlrString *pathToPRG)
 	delete fPath;
 }
 
-bool CViewMainMenu::LoadPRG(CByteBuffer *byteBuffer, bool autoStart, bool showAddressInfo)
+bool CViewMainMenu::LoadPRG(CByteBuffer *byteBuffer, bool autoStart, bool showAddressInfo, bool forceFastReset)
 {
-	LOGM("CViewMainMenu::LoadPRG: autoStart=%d showAddressInfo=%d c64SettingsAutoJmpDoReset=%d", autoStart, showAddressInfo, c64SettingsAutoJmpDoReset);
+	LOGM("CViewMainMenu::LoadPRG: autoStart=%d showAddressInfo=%d c64SettingsAutoJmpDoReset=%d forceFastReset=%d", autoStart, showAddressInfo, c64SettingsAutoJmpDoReset, forceFastReset);
 	this->loadPrgByteBuffer = new CByteBuffer(byteBuffer);
 	this->loadPrgAutoStart = autoStart;
 	this->loadPrgShowAddressInfo = showAddressInfo;
+	this->loadPrgForceFastReset = forceFastReset;
 	
 	viewC64->viewC64MemoryMap->ClearExecuteMarkers();
 	viewC64->viewDrive1541MemoryMap->ClearExecuteMarkers();
@@ -1287,23 +1386,41 @@ void CViewMainMenu::ThreadRun(void *data)
 	
 	LOGTODO("CViewMainMenu::ThreadRun: MAKE PASS WORK FOR ATARI");
 	
-	if (loadPrgAutoStart && c64SettingsAutoJmpDoReset != MACHINE_RESET_NONE)
+	if (loadPrgForceFastReset)
 	{
+		// force fast reset
 		viewC64->debugInterfaceC64->SetDebugMode(DEBUGGER_MODE_RUNNING);
 		viewC64->debugInterfaceC64->SetPatchKernalFastBoot(true);
-
-		if (c64SettingsAutoJmpDoReset == MACHINE_RESET_SOFT)
-		{
-			viewC64->debugInterfaceC64->Reset();
-		}
-		else if (c64SettingsAutoJmpDoReset == MACHINE_RESET_HARD)
-		{
-			viewC64->debugInterfaceC64->HardReset();
-		}
-		
-		SYS_Sleep(c64SettingsAutoJmpWaitAfterReset);
+	
+		viewC64->debugInterfaceC64->HardReset();
+		SYS_Sleep(350);
 		
 		viewC64->viewFileD64->UpdateDriveDiskID();
+		viewC64->debugInterfaceC64->SetPatchKernalFastBoot(c64SettingsFastBootKernalPatch);
+		
+	}
+	else
+	{
+		// do regular check, depends on user's setting
+		if (loadPrgAutoStart && c64SettingsAutoJmpDoReset != MACHINE_RESET_NONE)
+		{
+			viewC64->debugInterfaceC64->SetDebugMode(DEBUGGER_MODE_RUNNING);
+			viewC64->debugInterfaceC64->SetPatchKernalFastBoot(true);
+			
+			if (c64SettingsAutoJmpDoReset == MACHINE_RESET_SOFT)
+			{
+				viewC64->debugInterfaceC64->Reset();
+			}
+			else if (c64SettingsAutoJmpDoReset == MACHINE_RESET_HARD)
+			{
+				viewC64->debugInterfaceC64->HardReset();
+			}
+			
+			SYS_Sleep(c64SettingsAutoJmpWaitAfterReset);
+			
+			viewC64->viewFileD64->UpdateDriveDiskID();
+			viewC64->debugInterfaceC64->SetPatchKernalFastBoot(c64SettingsFastBootKernalPatch);
+		}
 	}
 	
 	LoadPRGNotThreaded(loadPrgByteBuffer, loadPrgAutoStart, loadPrgShowAddressInfo);
@@ -1608,7 +1725,7 @@ void CViewMainMenu::ReloadAndRestartPRG()
 		guiMain->UnlockMutex();
 
 		CByteBuffer *byteBuffer = new CByteBuffer(file, false);
-		LoadPRG(byteBuffer, true, false);
+		LoadPRG(byteBuffer, true, false, false);
 		
 		delete asciiPath;
 		delete file;

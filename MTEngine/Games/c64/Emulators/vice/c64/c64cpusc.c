@@ -24,12 +24,13 @@
  *
  */
 
-//#define USE_CHAMP_PROFILER
+#define USE_CHAMP_PROFILER
 
 #include "vice.h"
 
 #include <stdio.h>
 #include <string.h>
+#include <stdint.h>
 
 #include "cpmcart.h"
 #include "monitor.h"
@@ -827,7 +828,7 @@ typedef struct {
 	uint16_t pc;
 	uint8_t post;
 	enum {
-		u8, s8, u16, s16
+		dataType_u8, dataType_s8, dataType_u16, dataType_s16
 	} data_type;
 	enum
 	{

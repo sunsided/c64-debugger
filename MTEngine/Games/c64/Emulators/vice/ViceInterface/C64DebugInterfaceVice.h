@@ -3,6 +3,7 @@
 
 #include "C64DebugInterface.h"
 #include "ViceWrapper.h"
+#include "SYS_Threading.h"
 
 //HAVE_NETWORK  ?
 
@@ -24,6 +25,16 @@ enum shift_type {
 
 
 class CViceAudioChannel;
+class C64DebugInterfaceVice;
+
+class CViceDriveFlushThread : public CSlrThread
+{
+public:
+	CViceDriveFlushThread(C64DebugInterfaceVice *debugInterface, int flushCheckIntervalInMS);
+	int flushCheckIntervalInMS;
+	C64DebugInterfaceVice *debugInterface;
+	virtual void ThreadRun(void *data);
+};
 
 class C64DebugInterfaceVice : public C64DebugInterface
 {
@@ -33,8 +44,6 @@ public:
 	
 	virtual void InitKeyMap(C64KeyMap *keyMap);
 
-	CImageData *screen;
-	
 	CViceAudioChannel *audioChannel;
 	
 	int screenHeight;
@@ -46,6 +55,9 @@ public:
 	virtual CSlrString *GetEmulatorVersionString();
 	
 	virtual void RunEmulationThread();
+	virtual void DoFrame();
+
+	virtual void Shutdown();
 	
 	virtual uint8 *GetCharRom();
 
@@ -55,8 +67,6 @@ public:
 	virtual int GetScreenSizeX();
 	virtual int GetScreenSizeY();
 	
-	virtual CImageData *GetScreenImageData();
-
 	virtual void Reset();
 	virtual void HardReset();
 	virtual void DiskDriveReset();
@@ -145,6 +155,7 @@ public:
 	virtual void GetWholeMemoryMapFromRam1541(uint8 *buffer);
 
 	virtual void GetMemoryC64(uint8 *buffer, int addrStart, int addrEnd);
+	virtual void GetMemoryFromRam(uint8 *buffer, int addrStart, int addrEnd);
 	virtual void GetMemoryFromRamC64(uint8 *buffer, int addrStart, int addrEnd);
 	virtual void GetMemoryDrive1541(uint8 *buffer, int addrStart, int addrEnd);
 	virtual void GetMemoryFromRamDrive1541(uint8 *buffer, int addrStart, int addrEnd);
@@ -220,12 +231,14 @@ public:
 	//
 	virtual void SetRunSIDEmulation(bool isSIDEmulationOn);
 	virtual void SetAudioVolume(float volume);
-	
+		
 	// profiler
 	// if fileName is NULL no file will be created, if runForNumCycles is -1 it will run till ProfilerDeactivate
 	virtual void ProfilerActivate(char *fileName, int runForNumCycles, bool pauseCpuWhenFinished);
 	virtual void ProfilerDeactivate();
 
+	// drive flush thread
+	CViceDriveFlushThread *driveFlushThread;
 };
 
 extern C64DebugInterfaceVice *debugInterfaceVice;

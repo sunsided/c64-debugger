@@ -490,6 +490,48 @@ void CSlrImage::LoadImage(CImageData *origImageData, byte resourcePriority, bool
 	this->resourceState = RESOURCE_STATE_PRELOADING;
 }
 
+void CSlrImage::RefreshImageParameters(CImageData *origImageData, byte resourcePriority, bool flipImageVertically)
+{
+	if(origImageData->getImageType() != IMG_TYPE_RGBA)
+	{
+		SYS_FatalExit("Image type is %2.2x (should be %2.2x)",
+				origImageData->getImageType(), IMG_TYPE_RGBA);
+	}
+
+	// scale is 2 because width /2
+	gfxScale = 2.0f;
+
+	this->loadImgWidth = origImageData->width;
+	this->loadImgHeight = origImageData->height;
+	this->rasterWidth = NextPow2(loadImgWidth);
+	this->rasterHeight = NextPow2(loadImgHeight);
+	this->origRasterWidth = rasterWidth;
+	this->origRasterHeight = rasterHeight;
+	this->width = loadImgWidth/2.0;
+	this->height = loadImgHeight/2.0;
+
+	this->defaultTexStartX = 0.0f;
+	this->defaultTexEndX = ((GLfloat)loadImgWidth / (GLfloat)rasterWidth);
+	this->defaultTexStartY = 0.0f;
+	this->defaultTexEndY = ((GLfloat)loadImgHeight / (GLfloat)rasterHeight);
+
+	this->loadImageData = new CImageData(rasterWidth, rasterHeight, IMG_TYPE_RGBA);
+	this->loadImageData->AllocImage(false, true);
+
+	this->widthD2 = this->width/2.0;
+	this->heightD2 = this->height/2.0;
+	this->widthM2 = this->width*2.0;
+	this->heightM2 = this->height*2.0;
+
+	this->resourcePriority = resourcePriority;
+	this->resourceLoadingSize = rasterWidth * rasterHeight * 4 * 2;
+	this->resourceIdleSize = rasterWidth * rasterHeight * 4;
+
+	this->resourceIsActive = false;
+	this->resourceState = RESOURCE_STATE_PRELOADING;
+}
+
+
 // be careful, it is a hack
 void CSlrImage::SetLoadImageData(CImageData *imageData)
 {

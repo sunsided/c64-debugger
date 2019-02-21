@@ -324,7 +324,7 @@ CSlrKeyboardShortcut *CSlrKeyboardShortcuts::FindShortcut(std::list<u32> zones, 
 		}
 	}
 
-	LOGI("... shortcut not found");
+	LOGI("... global shortcut not found");
 	return NULL;
 }
 

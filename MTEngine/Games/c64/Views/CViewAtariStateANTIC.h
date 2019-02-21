@@ -38,7 +38,7 @@ public:
 	virtual bool SetFocus(bool focus);
 	
 	//
-	virtual void RenderStateANTIC(float px, float py, float posZ, CSlrFont *fontBytes, float fontSize, int ciaId);
+	virtual void RenderState(float px, float py, float posZ, CSlrFont *fontBytes, float fontSize, int ciaId);
 	
 	// editing registers
 	bool showRegistersOnly;

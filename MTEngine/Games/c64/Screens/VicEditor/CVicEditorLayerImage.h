@@ -21,7 +21,7 @@ class CVicEditorLayerImage : public CVicEditorLayer
 	float screenTexEndX, screenTexEndY;
 	
 	u8 PutPixelImage(int x, int y, u8 paintColor);
-	
+	u8 PutPixelImage(int x, int y, u8 r, u8 g, u8 b, u8 a);
 	u8 PutColorAtPixel(int x, int y, u8 colorLMB, u8 colorRMB, u8 colorSource);
 	u8 PaintDither(int x, int y, u8 colorLMB, u8 colorRMB, u8 colorSource);
 	
@@ -36,6 +36,8 @@ class CVicEditorLayerImage : public CVicEditorLayer
 	int ditherMaskPosY;
 
 	bool LoadFrom(CImageData *imageData);
+	CImageData *GetFullDisplayImage();
+	CImageData *GetScreenImage();
 	
 	int NumVisiblePixels();
 	

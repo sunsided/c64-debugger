@@ -218,7 +218,7 @@ void CViewC64Sprite::Render()
 			if (sprx < 0)
 				sprx += 504;
 			
-			sprintf(buf, "%3d %3d", sprx, spry);
+			sprintf(buf, "%02x    %3d %3d", viciiState->sprite[sprite->spriteId].pointer, sprx, spry);
 			guiMain->fntConsole->BlitText(buf, px, py2, -1, 5);
 			
 			int addr = addr2;

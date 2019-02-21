@@ -53,9 +53,13 @@ int fullScreenWidth, fullScreenHeight, fullScreenColourBits, fullScreenRefreshRa
 //#define DEFAULT_WINDOW_CAPTION "C64 Debugger (" __DATE__ " " __TIME__ ")"
 #define DEFAULT_WINDOW_CAPTION "C64 Debugger v" C64DEBUGGER_VERSION_STRING
 
-#else if defined(RUN_ATARI)
+#elif defined(RUN_ATARI)
 
 #define DEFAULT_WINDOW_CAPTION "65XE Debugger v" C64DEBUGGER_VERSION_STRING
+
+#elif defined(RUN_NES)
+
+#define DEFAULT_WINDOW_CAPTION "NES Debugger v" C64DEBUGGER_VERSION_STRING
 
 #endif
 

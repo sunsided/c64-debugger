@@ -1,6 +1,8 @@
 #include "CDebugInterface.h"
 #include "CViewC64.h"
 #include "SYS_Threading.h"
+#include "C64SettingsStorage.h"
+#include "CDebuggerEmulatorPlugin.h"
 
 CDebugInterface::CDebugInterface(CViewC64 *viewC64)
 {
@@ -17,6 +19,8 @@ CDebugInterface::CDebugInterface(CViewC64 *viewC64)
 	breakOnMemory = false;
 	breakOnRaster = false;
 
+	screenSupersampleFactor = c64SettingsScreenSupersampleFactor;
+	
 	temporaryBreakpointPC = -1;
 
 	this->debugMode = DEBUGGER_MODE_RUNNING;
@@ -24,6 +28,11 @@ CDebugInterface::CDebugInterface(CViewC64 *viewC64)
 
 CDebugInterface::~CDebugInterface()
 {
+}
+
+void CDebugInterface::Shutdown()
+{
+	this->SetDebugMode(DEBUGGER_MODE_SHUTDOWN);
 }
 
 int CDebugInterface::GetEmulatorType()
@@ -45,8 +54,46 @@ void CDebugInterface::RunEmulationThread()
 {
 }
 
+void CDebugInterface::InitPlugins()
+{
+	for (std::list<CDebuggerEmulatorPlugin *>::iterator it = this->plugins.begin(); it != this->plugins.end(); it++)
+	{
+		CDebuggerEmulatorPlugin *plugin = *it;
+		plugin->Init();
+	}
+}
+
 void CDebugInterface::DoFrame()
 {
+	for (std::list<CDebuggerEmulatorPlugin *>::iterator it = this->plugins.begin(); it != this->plugins.end(); it++)
+	{
+		CDebuggerEmulatorPlugin *plugin = *it;
+		plugin->DoFrame();
+	}
+}
+
+void CDebugInterface::CreateScreenData()
+{
+	screenImage = new CImageData(512 * this->screenSupersampleFactor, 512 * this->screenSupersampleFactor, IMG_TYPE_RGBA);
+	screenImage->AllocImage(false, true);
+}
+
+void CDebugInterface::SetSupersampleFactor(int factor)
+{
+	LOGM("CDebugInterface::SetSupersampleFactor: %d", factor);
+	this->LockRenderScreenMutex();
+	
+	this->screenSupersampleFactor = factor;
+	
+	delete screenImage;
+	CreateScreenData();
+	
+	this->UnlockRenderScreenMutex();
+}
+
+CImageData *CDebugInterface::GetScreenImageData()
+{
+	return this->screenImage;
 }
 
 CSlrDataAdapter *CDebugInterface::GetDataAdapter()
@@ -85,11 +132,6 @@ int CDebugInterface::GetScreenSizeX()
 int CDebugInterface::GetScreenSizeY()
 {
 	return -1;
-}
-	
-CImageData *CDebugInterface::GetScreenImageData()
-{
-	return NULL;
 }
 
 // keyboard & joystick mapper
@@ -254,6 +296,16 @@ int CDebugInterface::GetTemporaryBreakpointPC()
 	return this->temporaryBreakpointPC;
 }
 
+//
+void CDebugInterface::RegisterPlugin(CDebuggerEmulatorPlugin *plugin)
+{
+	this->plugins.push_back(plugin);
+}
+
+void CDebugInterface::RemovePlugin(CDebuggerEmulatorPlugin *plugin)
+{
+	this->plugins.remove(plugin);
+}
 
 //
 void CDebugInterface::LockMutex()

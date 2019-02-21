@@ -30,6 +30,9 @@ public:
 	CSlrKeyboardShortcut *kbsJoystickLeft;
 	CSlrKeyboardShortcut *kbsJoystickRight;
 	CSlrKeyboardShortcut *kbsJoystickFire;
+	CSlrKeyboardShortcut *kbsJoystickFireB;
+	CSlrKeyboardShortcut *kbsJoystickStart;
+	CSlrKeyboardShortcut *kbsJoystickSelect;
 	
 	// disassemble
 	CSlrKeyboardShortcut *kbsToggleBreakpoint;

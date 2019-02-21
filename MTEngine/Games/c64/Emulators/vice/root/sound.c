@@ -1638,8 +1638,11 @@ double sound_flush(int isPaused)
             /* Fresh start for vsync. */
            //if (drained_warning_count < 25)
 		   {
-                log_warning(sound_log, "Audio Buffer drained: used=%d < fragsize=%d", used, snddata.fragsize);
-                drained_warning_count++;
+			   if (c64d_setting_run_sid_emulation)
+			   {
+				   log_warning(sound_log, "Audio Buffer drained: used=%d < fragsize=%d", used, snddata.fragsize);
+				   drained_warning_count++;
+			   }
 		   }
 //		   else
 //		   {

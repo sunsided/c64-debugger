@@ -98,7 +98,9 @@ CViewVicEditor::CViewVicEditor(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	importFileExtensions.push_back(new CSlrString("d64"));
 	importFileExtensions.push_back(new CSlrString("prg"));
 	importFileExtensions.push_back(new CSlrString("crt"));
-
+	importFileExtensions.push_back(new CSlrString("snap"));
+	importFileExtensions.push_back(new CSlrString("vsf"));
+	importFileExtensions.push_back(new CSlrString("sid"));
 	
 	exportVCEFileExtensions.push_back(new CSlrString("vce"));
 	exportHyperBitmapFileExtensions.push_back(new CSlrString("bin"));
@@ -777,6 +779,41 @@ u8 CViewVicEditor::PaintPixel(int rx, int ry, u8 colorSource)
 	
 	return result;
 }
+
+// pure pixel paiting (for external API)
+u8 CViewVicEditor::PaintPixelColor(bool forceColorReplace, int rx, int ry, u8 color, int selectedChar)
+{
+	guiMain->LockMutex();
+	
+	int result;
+	
+	result = viewVicDisplayMain->currentCanvas->Paint(forceColorReplace, false,
+													  rx, ry,
+													  color, color, VICEDITOR_COLOR_SOURCE_LMB,
+													  selectedChar);
+	
+	guiMain->UnlockMutex();
+	
+	return result;
+}
+
+// pure pixel paiting (for external API)
+u8 CViewVicEditor::PaintPixelColor(int rx, int ry, u8 color)
+{
+	guiMain->LockMutex();
+	
+	int result;
+	
+	result = viewVicDisplayMain->currentCanvas->Paint(true, false,
+													  rx, ry,
+													  color, color, VICEDITOR_COLOR_SOURCE_LMB,
+													  0x00);
+	
+	guiMain->UnlockMutex();
+	
+	return result;
+}
+
 
 //@returns is consumed
 bool CViewVicEditor::DoTap(GLfloat x, GLfloat y)
@@ -3284,7 +3321,9 @@ bool CViewVicEditor::ExportPNG(CSlrString *path)
 	
 	// refresh texture of C64's screen
 	CImageData *c64Screen = viewC64->debugInterfaceC64->GetScreenImageData();
-	CImageData *imageCrop = IMG_CropImageRGBA(c64Screen, 0, 0, 384, 272);
+	CImageData *imageCrop = IMG_CropSupersampleImageRGBA(c64Screen,
+														 viewC64->debugInterfaceC64->screenSupersampleFactor,
+														 0, 0, 384, 272);
 
 	viewVicDisplayMain->RefreshScreenImageData(&(viewC64->viciiStateToShow), 255, 255);
 	layerVirtualSprites->SimpleScanSpritesInThisFrame();

@@ -6,6 +6,8 @@
 #include "CAtariAudioChannel.h"
 #include "AtariWrapper.h"
 
+#include "C64D_Version.h"
+
 extern "C" {
 	void Sound_Callback(uint8 *buffer, unsigned int size);
 }
@@ -21,8 +23,10 @@ CAtariAudioChannel::CAtariAudioChannel(AtariDebugInterface *debugInterface)
 
 void CAtariAudioChannel::FillBuffer(int *mixBuffer, u32 numSamples)
 {
+#if defined(RUN_ATARI)
 	Sound_Callback((uint8*)monoBuffer, numSamples*2);
-
+#endif
+	
 //	memset(mixBuffer, 0, numSamples*4);
 
 	

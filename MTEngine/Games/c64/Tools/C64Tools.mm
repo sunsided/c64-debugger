@@ -1,3 +1,4 @@
+#include "psid64.h"
 #include "SYS_Main.h"
 #include "RES_ResourceManager.h"
 #include "CSlrFontProportional.h"
@@ -8,6 +9,9 @@
 #include "C64SIDFrequencies.h"
 #include "C64SettingsStorage.h"
 #include "CColorsTheme.h"
+#include "CViewC64.h"
+#include "exomizer.h"
+#include "SidTuneMod.h"
 #include <float.h>
 
 u8 ConvertPetsciiToSreenCode(u8 chr)
@@ -1055,3 +1059,81 @@ uint16 GetSidAddressByChipNum(int chipNum)
 	return 0xD400;
 }
 
+CByteBuffer *ConvertSIDtoPRG(CByteBuffer *sidFileData)
+{
+	Psid64 psid64;
+	
+	psid64.load(sidFileData->data, sidFileData->length);
+	if (!psid64.convert())
+	{
+		return NULL;
+	}
+	
+	psid64.setCompress(false);
+	
+	unsigned int length;
+	u8 *data = psid64.getProgramDataBuffer(&length);
+	
+	CByteBuffer *byteBuffer = new CByteBuffer(length);
+	byteBuffer->putBytes(data, length);
+	byteBuffer->Rewind();
+	
+	return byteBuffer;
+}
+
+bool C64LoadSIDToRam(char *filePath, u16 *fromAddr, u16 *toAddr, u16 *initAddr, u16 *playAddr)
+{
+	SidTuneMod sidTune(0);
+	if (!sidTune.load(filePath))
+	{
+		LOGError("C64LoadSIDToRam: load failed %s", sidTune.getInfo().statusString);
+		return false;
+	}
+	
+	u8 *sidBuf = new u8[0x10000];
+	sidTune.placeSidTuneInC64mem(sidBuf);
+	
+	*fromAddr = sidTune.getInfo().loadAddr;
+	*toAddr = sidTune.getInfo().loadAddr + sidTune.getInfo().c64dataLen;
+	
+	for (int i = *fromAddr; i < *toAddr; i++)
+	{
+		viewC64->debugInterfaceC64->SetByteToRamC64(i, sidBuf[i]);
+	}
+	
+	*initAddr = sidTune.getInfo().initAddr;
+	*playAddr = sidTune.getInfo().playAddr;
+	
+	delete [] sidBuf;
+	
+	return true;
+}
+
+void C64ExomizerSave(u16 fromAddr, u16 toAddr, u16 jmpAddr, char *filePath)
+{
+	int dataSize = toAddr - fromAddr;
+	u8 *data = new u8[dataSize];
+	int i = 0;
+	for (int d = fromAddr; d < toAddr; d++)
+	{
+		data[i++] = viewC64->debugInterfaceC64->GetByteFromRamC64(d);
+	}
+	
+	u8 *compressedData = new u8[0x10000];
+	int prgSize = exomizer(data, dataSize,
+						   fromAddr, jmpAddr, compressedData);
+	
+	int lineNumber = 666;
+	// set BASIC line number
+	compressedData[4] = (u8) (lineNumber & 0xff);
+	compressedData[5] = (u8) (lineNumber >> 8);
+	
+	FILE *fp = fopen(filePath, "wb");
+	fwrite(compressedData, prgSize, 1, fp);
+	fclose(fp);
+	
+	delete [] compressedData;
+	delete [] data;
+	
+	LOGD("C64ExomizerSave: stored to %s", filePath);
+}

@@ -104,8 +104,8 @@ public:
 	CSlrKeyboardShortcut *kbsRestartPRG;
 	//CViewC64MenuItem *menuItemRestartPRG;
 	
-	CSlrKeyboardShortcut *kbsLoadPRG;
-	CViewC64MenuItem *menuItemLoadPRG;
+	CSlrKeyboardShortcut *kbsOpenFile;
+	CViewC64MenuItem *menuItemOpenFile;
 	CSlrKeyboardShortcut *kbsReloadAndRestart;
 	CViewC64MenuItem *menuItemReloadAndRestart;
 	CSlrKeyboardShortcut *kbsSoftReset;
@@ -119,6 +119,9 @@ public:
 
 	CSlrKeyboardShortcut *kbsSnapshotsAtari;
 	CViewC64MenuItem *menuItemSnapshotsAtari;
+
+	CSlrKeyboardShortcut *kbsSnapshotsNes;
+	CViewC64MenuItem *menuItemSnapshotsNes;
 
 	CSlrKeyboardShortcut *kbsBreakpointsC64;
 	CViewC64MenuItem *menuItemBreakpointsC64;
@@ -152,19 +155,22 @@ public:
 	std::list<CSlrString *> crtExtensions;
 	std::list<CSlrString *> jukeboxExtensions;
 	std::list<CSlrString *> romsFileExtensions;
-	
+
+	void OpenDialogOpenFile();
+
 	void LoadFile(CSlrString *path);
 	void OpenDialogInsertD64();
 	void InsertD64(CSlrString *path, bool updatePathToD64, bool autoRun, int autoRunEntryNum, bool showLoadAddressInfo);
 	void OpenDialogInsertCartridge();
 	void InsertCartridge(CSlrString *path, bool updatePathToCRT);
 	
-	void OpenDialogLoadPRG();
-	bool LoadPRG(CSlrString *path, bool autoStart, bool updatePRGFolderPath, bool showAddressInfo);
-	bool LoadPRG(CByteBuffer *byteBuffer, bool autoStart, bool showAddressInfo);
+	bool LoadPRG(CSlrString *path, bool autoStart, bool updatePRGFolderPath, bool showAddressInfo, bool forceFastReset);
+	bool LoadPRG(CByteBuffer *byteBuffer, bool autoStart, bool showAddressInfo, bool forceFastReset);
 	void LoadPRG(CByteBuffer *byteBuffer, u16 *startAddr, u16 *endAddr);
 	bool LoadPRGNotThreaded(CByteBuffer *byteBuffer, bool autoStart, bool showAddressInfo);
 
+	bool LoadSID(CSlrString *filePath);
+	
 	void OpenDialogInsertTape();
 	bool LoadTape(CSlrString *path, bool autoStart, bool updateTAPFolderPath, bool showAddressInfo);
 	void DetachTape();
@@ -178,8 +184,12 @@ public:
 	bool InsertAtariCartridge(CSlrString *path, bool autoStart, bool updatePRGFolderPath, bool showAddressInfo);
 	void InsertATR(CSlrString *path, bool updatePathToATR, bool autoRun, int autoRunEntryNum, bool showLoadAddressInfo);
 	
-	// move me
-	bool LoadAtariState(CSlrString *path);
+	//
+	CViewC64MenuItem *menuItemSetFolderWithNesROMs;
+	void OpenDialogSetFolderWithNesROMs();
+
+	bool LoadNES(CSlrString *path, bool updateNESFolderPath);
+
 	
 	void LoadLabelsAndWatches(CSlrString *pathToPRG);
 	void SetBasicEndAddr(int endAddr);
@@ -190,6 +200,7 @@ public:
 	CByteBuffer *loadPrgByteBuffer;
 	bool loadPrgAutoStart;
 	bool loadPrgShowAddressInfo;
+	bool loadPrgForceFastReset;
 	virtual void ThreadRun(void *data);
 	
 	void ReloadAndRestartPRG();

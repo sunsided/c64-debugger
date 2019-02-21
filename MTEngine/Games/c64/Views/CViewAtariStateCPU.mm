@@ -1,8 +1,11 @@
+#include "C64D_Version.h"
 #include "CViewAtariStateCPU.h"
 #include "SYS_Main.h"
 #include "CSlrFont.h"
 #include "CViewC64.h"
 #include "AtariDebugInterface.h"
+
+#if defined(RUN_ATARI)
 
 register_def atari_cpu_regs[7] = {
 	{	STATE_CPU_REGISTER_PC,		0.0,  4 },
@@ -70,7 +73,6 @@ extern "C" {
 	void c64d_atari_set_cpu_reg_s(u8 val);
 }
 
-
 void CViewAtariStateCPU::SetRegisterValue(StateCPURegister reg, int value)
 {
 	debugInterface->LockMutex();
@@ -135,3 +137,12 @@ int CViewAtariStateCPU::GetRegisterValue(StateCPURegister reg)
 	return 0x00FA;
 }
 
+#else
+
+CViewAtariStateCPU::CViewAtariStateCPU(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, AtariDebugInterface *debugInterface)
+: CViewBaseStateCPU(posX, posY, posZ, sizeX, sizeY, debugInterface) {}
+void CViewAtariStateCPU::RenderRegisters() {}
+void CViewAtariStateCPU::SetRegisterValue(StateCPURegister reg, int value) {}
+int CViewAtariStateCPU::GetRegisterValue(StateCPURegister reg) { return -1; }
+
+#endif

@@ -16,8 +16,8 @@ CViewAtariScreen::CViewAtariScreen(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 	
 	this->debugInterface = debugInterface;
 	
-	int w = 512;
-	int h = 512;
+	int w = 512 * debugInterface->screenSupersampleFactor;
+	int h = 512 * debugInterface->screenSupersampleFactor;
 	imageDataScreenDefault = new CImageData(w, h, IMG_TYPE_RGBA);
 	imageDataScreenDefault->AllocImage(false, true);
 	
@@ -59,6 +59,21 @@ CViewAtariScreen::CViewAtariScreen(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 
 	InitRasterColorsFromScheme();
 }
+
+void CViewAtariScreen::SetSupersampleFactor(int supersampleFactor)
+{
+	guiMain->LockMutex();
+	debugInterface->LockRenderScreenMutex();
+	
+	debugInterface->SetSupersampleFactor(supersampleFactor);
+	
+	CImageData *screenData = debugInterface->GetScreenImageData();
+	this->imageScreen->RefreshImageParameters(screenData,  RESOURCE_PRIORITY_STATIC, false);
+	VID_PostImageBinding(imageScreenDefault, NULL);
+	debugInterface->UnlockRenderScreenMutex();
+	guiMain->UnlockMutex();
+}
+
 
 CViewAtariScreen::~CViewAtariScreen()
 {

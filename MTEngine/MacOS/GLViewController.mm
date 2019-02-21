@@ -273,6 +273,13 @@
 
 }
 
+- (void)windowWillClose:(NSNotification *)notification
+{
+	LOGM("windowWillClose");
+	
+	SYS_ApplicationShutdown();
+}
+
 - (bool)isWindowFullScreen
 {
 	NSWindow *mainWindow = [openGLView window];
@@ -571,6 +578,7 @@ bool wasKeyDownControl = false;
 		if (key == quitKeyCode && isShift == quitIsShift && isAlt == quitIsAlt && isControl == quitIsControl)
 		{
 			LOGM("QUIT.");
+			SYS_ApplicationShutdown();
 			gSoundEngine->StopAudioUnit();
 			[self stopAnimation];
 			//exit(0);
@@ -589,6 +597,7 @@ bool wasKeyDownControl = false;
 		if (keyCode == quitKeyCode && isShift == quitIsShift && isAlt == quitIsAlt && isControl == quitIsControl)
 		{
 			LOGM("QUIT.");
+			SYS_ApplicationShutdown();
 			gSoundEngine->StopAudioUnit();
 			[self stopAnimation];
 			//exit(0);
@@ -1013,6 +1022,11 @@ bool wasKeyDownControl = false;
 {
 	return YES;
 }
+
+//- (void)windowWillClose:(NSNotification *)notification
+//{
+//	
+//}
 
 - (BOOL)application:(NSApplication *)sender openFile:(NSString *)filename
 {

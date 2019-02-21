@@ -33,6 +33,7 @@ public:
 	void KeyDown(u32 keyCode);
 	void FinalizeEntering(u32 keyCode, bool isCancelled);
 	void UpdateValue();
+	void SetCursorPos(int newPos);
 	void UpdateCursor();
 	
 	CGuiEditHexCallback *callback;

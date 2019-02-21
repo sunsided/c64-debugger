@@ -53,6 +53,10 @@ CViewSnapshots::CViewSnapshots(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	{
 		snapshotExtensions.push_back(new CSlrString("a8s"));
 	}
+	else if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_NESTOPIA)
+	{
+		snapshotExtensions.push_back(new CSlrString("sav"));
+	}
 	
 //	pathToSnapshot = NULL;
 	
@@ -246,6 +250,10 @@ void CViewSnapshots::QuickStoreFullSnapshot(int snapshotId)
 		{
 			sprintf(fname, "/snapshot-%d.a8s", snapshotId);
 		}
+		else if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_NESTOPIA)
+		{
+			sprintf(fname, "/snapshot-%d.sav", snapshotId);
+		}
 		
 		CSlrString *path = new CSlrString();
 		path->Concatenate(gUTFPathToSettings);
@@ -299,6 +307,10 @@ void CViewSnapshots::QuickRestoreFullSnapshot(int snapshotId)
 		else if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_ATARI800)
 		{
 			sprintf(fname, "/snapshot-%d.a8s", snapshotId);
+		}
+		else if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_NESTOPIA)
+		{
+			sprintf(fname, "/snapshot-%d.sav", snapshotId);
 		}
 		
 		CSlrString *path = new CSlrString();
@@ -440,9 +452,14 @@ void CViewSnapshots::LoadSnapshot(CSlrString *path, bool showMessage)
 		viewC64->viewC64MemoryMap->ClearExecuteMarkers();
 		viewC64->viewDrive1541MemoryMap->ClearExecuteMarkers();
 	}
-	else
+	else if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_ATARI800)
 	{
 		viewC64->viewAtariMemoryMap->ClearExecuteMarkers();
+	}
+	else if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_NESTOPIA)
+	{
+		LOGTODO("....................... >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> TODO viewC64->viewNesMemoryMap->ClearExecuteMarkers();");
+//		viewC64->viewNesMemoryMap->ClearExecuteMarkers();
 	}
 
 	if (showMessage)

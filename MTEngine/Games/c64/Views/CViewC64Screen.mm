@@ -18,9 +18,9 @@ CViewC64Screen::CViewC64Screen(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	this->name = "CViewC64Screen";
 	
 	this->debugInterface = debugInterface;
-	
-	int w = 512;
-	int h = 512;
+		
+	int w = 512 * debugInterface->screenSupersampleFactor;
+	int h = 512 * debugInterface->screenSupersampleFactor;
 	imageDataScreenDefault = new CImageData(w, h, IMG_TYPE_RGBA);
 	imageDataScreenDefault->AllocImage(false, true);
 	
@@ -69,6 +69,20 @@ CViewC64Screen::CViewC64Screen(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 
 CViewC64Screen::~CViewC64Screen()
 {
+}
+
+void CViewC64Screen::SetSupersampleFactor(int supersampleFactor)
+{
+	guiMain->LockMutex();
+	debugInterface->LockRenderScreenMutex();
+	
+	debugInterface->SetSupersampleFactor(supersampleFactor);
+	
+	CImageData *screenData = debugInterface->GetScreenImageData();
+	this->imageScreen->RefreshImageParameters(screenData,  RESOURCE_PRIORITY_STATIC, false);
+	VID_PostImageBinding(imageScreenDefault, NULL);
+	debugInterface->UnlockRenderScreenMutex();
+	guiMain->UnlockMutex();
 }
 
 void CViewC64Screen::SetupScreenColodore()
@@ -221,14 +235,16 @@ void CViewC64Screen::Render()
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 		}
 	}
-	
+
+	// blit texture of the screen
 	Blit(imageScreen,
 		 posX,
 		 posY, -1,
 		 sizeX,
 		 sizeY,
 		 0.0f, 1.0f, screenTexEndX, screenTexEndY);
-	
+
+	// and any other stuff on top of the screen
 	if (showGridLines)
 	{
 		// raster screen in hex:

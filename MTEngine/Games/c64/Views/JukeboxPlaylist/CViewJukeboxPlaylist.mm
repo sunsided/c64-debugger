@@ -298,7 +298,7 @@ void CViewJukeboxPlaylist::ThreadRun(void *data)
 		CSlrString *ext = entry->filePath->GetFileExtensionComponentFromPath();
 		if (ext->CompareWith("prg") || ext->CompareWith("PRG"))
 		{
-			viewC64->viewC64MainMenu->LoadPRG(entry->filePath, currentEntry->autoRun, false, this->playlist->showLoadAddressInfo);
+			viewC64->viewC64MainMenu->LoadPRG(entry->filePath, currentEntry->autoRun, false, this->playlist->showLoadAddressInfo, false);
 		}
 		else if (ext->CompareWith("d64") || ext->CompareWith("D64"))
 		{

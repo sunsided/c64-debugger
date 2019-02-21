@@ -1,8 +1,10 @@
+#include "SYS_Main.h"
 #include "C64SIDFrequencies.h"
 #include "FUN_IntervalTree.h"
 
 // SID frequencies, based on 440Hz A-4  (should it be based on 435Hz?)
-static const sid_frequency_t sidFrequencies[98] =
+#define NUM_SID_FREQUENCIES		98
+static const sid_frequency_t sidFrequencies[NUM_SID_FREQUENCIES] =
 {
 	{ "   ",	 0.0	,	-1 },
 	{ "C-0",	16.4	,	0x0115 },
@@ -101,30 +103,37 @@ static const sid_frequency_t sidFrequencies[98] =
 	{ "A-7",	3520.0	,	0xE8ED },
 	{ "A#7",	3729.3	,	0xF6C6 },
 	{ "B-7",	3951.0	,	0xFFFF },
-	{ "   ",	   0.0	,	0x10000 },
+	{ "   ",       0.0	,	0x10000 },
 	
 };
 
-ITNode *sidFrequenciesITRoot = NULL;
+static const sid_frequency_t *sidFrequenciesTable[0x10000];
 
 void SID_FrequenciesInit()
 {
+	LOGD("SID_FrequenciesInit");
 	
-}
+	// getting SID frequency is called 3x for each SID in frame, we can use interval tree which is fast
+	// but faster will be just to keep 64kB table as it is not that much
 
-// TODO: this is quick POC draft to check if it is feasible feature and such mapping makes sense
-// 1) use interval tree
-// 2) update / change values to allow de-tuning (select middle between notes)
-const sid_frequency_t *SidValueToNote(uint16 sidValue)
-{
-	for (int i = 0; i < 98; i++)
+	// TODO: update / change values to allow de-tuning (select middle between notes)
+
+	int currentFreqIndex = 0;
+	int nextFreqVal = sidFrequencies[currentFreqIndex+1].sidValue;
+	
+	for (int i = 0; i < 0x10000; i++)
 	{
-		if (sidValue <= sidFrequencies[i].sidValue)
+		sidFrequenciesTable[i] = &(sidFrequencies[currentFreqIndex]);
+
+		if (i == nextFreqVal)
 		{
-			// OK this was tested with my MIDI synth keyboard
-			return &(sidFrequencies[i-1]);
+			currentFreqIndex++;
+			nextFreqVal = sidFrequencies[currentFreqIndex+1].sidValue;
 		}
 	}
-	
-	return &(sidFrequencies[96]);
+}
+
+const sid_frequency_t *SidValueToNote(uint16 sidValue)
+{
+	return sidFrequenciesTable[sidValue];
 }

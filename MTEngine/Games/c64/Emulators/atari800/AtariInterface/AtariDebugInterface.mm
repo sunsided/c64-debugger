@@ -1,3 +1,6 @@
+#include "C64D_Version.h"
+
+#if defined(RUN_ATARI)
 extern "C" {
 #include "atari.h"
 #include "memory.h"
@@ -10,6 +13,7 @@ extern "C" {
 #include "statesav.h"
 #include "AtariWrapper.h"
 }
+#endif
 
 #include "AtariDebugInterface.h"
 #include "RES_ResourceManager.h"
@@ -25,9 +29,13 @@ extern "C" {
 #include "C64SettingsStorage.h"
 #include "CViewC64.h"
 #include "SND_Main.h"
+#include "CDebuggerEmulatorPlugin.h"
+
 #include "CAtariAudioChannel.h"
 
 AtariDebugInterface *debugInterfaceAtari;
+
+#if defined(RUN_ATARI)
 
 AtariDebugInterface::AtariDebugInterface(CViewC64 *viewC64) //, uint8 *memory)
 : CDebugInterface(viewC64)
@@ -36,8 +44,7 @@ AtariDebugInterface::AtariDebugInterface(CViewC64 *viewC64) //, uint8 *memory)
 	
 	debugInterfaceAtari = this;
 	
-	screenImage = new CImageData(512, 512, IMG_TYPE_RGBA);
-	screenImage->AllocImage(false, true);
+	CreateScreenData();
 	
 	audioChannel = NULL;
 	
@@ -147,7 +154,8 @@ void SDL_VIDEO_GL_PaletteUpdate(void);
 void AtariDebugInterface::RunEmulationThread()
 {
 	LOGM("AtariDebugInterface::RunEmulationThread");
-	
+	CDebugInterface::RunEmulationThread();
+
 	this->isRunning = true;
 	
 	while (true)
@@ -187,39 +195,77 @@ void AtariDebugInterface::RunEmulationThread()
 		uint8 *srcScreenPtr = screenBuffer;
 		uint8 *destScreenPtr = (uint8 *)this->screenImage->resultData;
 		
-		
 		int screenHeight = this->GetScreenSizeY();
 		
 		int *palette = SDL_PALETTE_tab[VIDEOMODE_MODE_NORMAL].palette;
 
-		for (int y = 0; y < screenHeight; y++)
+		int superSample = this->screenSupersampleFactor;
+		
+		if (superSample == 1)
 		{
-			for (int x = 0; x < this->GetScreenSizeX(); x++)
+			for (int y = 0; y < screenHeight; y++)
 			{
-				byte v = *srcScreenPtr++;
+				for (int x = 0; x < this->GetScreenSizeX(); x++)
+				{
+					byte v = *srcScreenPtr++;
 
-				int i  = v;
-				u8 r, g, b;
+					int i  = v;
+					u8 r, g, b;
 
-				u32 rgb = palette[i];
-				r = (rgb & 0x00ff0000) >> 16;
-				g = (rgb & 0x0000ff00) >> 8;
-				b = (rgb & 0x000000ff) >> 0;
+					u32 rgb = palette[i];
+					r = (rgb & 0x00ff0000) >> 16;
+					g = (rgb & 0x0000ff00) >> 8;
+					b = (rgb & 0x000000ff) >> 0;
 
-				*destScreenPtr++ = r;
-				*destScreenPtr++ = g;
-				*destScreenPtr++ = b;
-				*destScreenPtr++ = 255;
+					*destScreenPtr++ = r;
+					*destScreenPtr++ = g;
+					*destScreenPtr++ = b;
+					*destScreenPtr++ = 255;
+				}
+				
+				destScreenPtr += (512-384)*4;
 			}
-			
-			destScreenPtr += (512-384)*4;
 		}
-		
-		
+		else
+		{
+			for (int y = 0; y < screenHeight; y++)
+			{
+				for (int j = 0; j < superSample; j++)
+				{
+					uint8 *pScreenPtrSrc = srcScreenPtr;
+					uint8 *pScreenPtrDest = destScreenPtr;
+					
+					for (int x = 0; x < this->GetScreenSizeX(); x++)
+					{
+						byte v = *pScreenPtrSrc++;
+						
+						int i  = v;
+						u8 r, g, b;
+						
+						u32 rgb = palette[i];
+						r = (rgb & 0x00ff0000) >> 16;
+						g = (rgb & 0x0000ff00) >> 8;
+						b = (rgb & 0x000000ff) >> 0;
+						
+						for (int i = 0; i < superSample; i++)
+						{
+							*pScreenPtrDest++ = r;
+							*pScreenPtrDest++ = g;
+							*pScreenPtrDest++ = b;
+							*pScreenPtrDest++ = 255;
+						}
+					}
+					destScreenPtr += (512)*superSample*4;
+				}
+				
+				srcScreenPtr += 384;
+			}
+		}
 		
 		this->UnlockRenderScreenMutex();
 
-		
+		this->DoFrame();
+				
 		
 ////		for (int i = 0; i < 256; i++)
 ////		{
@@ -249,8 +295,7 @@ void AtariDebugInterface::RunEmulationThread()
 
 void AtariDebugInterface::DoFrame()
 {
-
-	
+	CDebugInterface::DoFrame();
 }
 
 //	UBYTE MEMORY_mem[65536 + 2];
@@ -336,11 +381,6 @@ int AtariDebugInterface::GetScreenSizeX()
 int AtariDebugInterface::GetScreenSizeY()
 {
 	return ATARI_DEFAULT_SCREEN_HEIGHT;
-}
-
-CImageData *AtariDebugInterface::GetScreenImageData()
-{
-	return screenImage;
 }
 
 //
@@ -601,6 +641,16 @@ void AtariDebugInterface::KeyboardDown(uint32 mtKeyCode)
 {
 	LOGD("AtariDebugInterface::KeyboardDown: mtKeyCode=%04x INPUT_key_consol=%02x", mtKeyCode, INPUT_key_consol);
 
+	for (std::list<CDebuggerEmulatorPlugin *>::iterator it = this->plugins.begin(); it != this->plugins.end(); it++)
+	{
+		CDebuggerEmulatorPlugin *plugin = *it;
+		mtKeyCode = plugin->KeyDown(mtKeyCode);
+		
+		if (mtKeyCode == 0)
+			return;
+	}
+	
+	
 
 	int shiftctrl = 0;
 
@@ -657,6 +707,16 @@ void AtariDebugInterface::KeyboardDown(uint32 mtKeyCode)
 void AtariDebugInterface::KeyboardUp(uint32 mtKeyCode)
 {
 	LOGD("AtariDebugInterface::KeyboardUp: mtKeyCode=%04x INPUT_key_consol=%02x", mtKeyCode, INPUT_key_consol);
+	
+	for (std::list<CDebuggerEmulatorPlugin *>::iterator it = this->plugins.begin(); it != this->plugins.end(); it++)
+	{
+		CDebuggerEmulatorPlugin *plugin = *it;
+		mtKeyCode = plugin->KeyUp(mtKeyCode);
+		
+		if (mtKeyCode == 0)
+			return;
+	}
+	
 	
 	// OPTION / SELECT / START keys
 	if (mtKeyCode == MTKEY_F2)
@@ -934,3 +994,48 @@ void AtariDebugInterface::SetRamSizeOption(u8 ramSizeOption)
 
 }
 
+#else
+// dummy interface for atari
+
+AtariDebugInterface::AtariDebugInterface(CViewC64 *viewC64) //, uint8 *memory)
+: CDebugInterface(viewC64)
+{
+}
+AtariDebugInterface::~AtariDebugInterface() {}
+void AtariDebugInterface::RestartEmulation() {}
+int AtariDebugInterface::GetEmulatorType() { return EMULATOR_TYPE_ATARI800; }
+CSlrString *AtariDebugInterface::GetEmulatorVersionString() { return NULL; }
+CSlrString *AtariDebugInterface::GetPlatformNameString() { return NULL; }
+void AtariDebugInterface::RunEmulationThread() {}
+void AtariDebugInterface::DoFrame() {}
+void AtariDebugInterface::SetByte(uint16 addr, uint8 val) {}
+uint8 AtariDebugInterface::GetByte(uint16 addr) { return 0; }
+void AtariDebugInterface::GetMemory(uint8 *buffer, int addrStart, int addrEnd) {}
+int AtariDebugInterface::GetCpuPC() { return -1; }
+void AtariDebugInterface::GetWholeMemoryMap(uint8 *buffer) {}
+void AtariDebugInterface::GetWholeMemoryMapFromRam(uint8 *buffer) {}
+void AtariDebugInterface::GetCpuRegs(u16 *PC, u8 *A,u8 *X, u8 *Y, u8 *P,u8 *S,u8 *IRQ) {}
+int AtariDebugInterface::GetScreenSizeX() { return -1; }
+int AtariDebugInterface::GetScreenSizeY() { return -1; }
+void AtariDebugInterface::SetDebugMode(uint8 debugMode) {}
+uint8 AtariDebugInterface::GetDebugMode() { return 0; }
+void AtariDebugInterface::MakeJmpNoReset(CSlrDataAdapter *dataAdapter, uint16 addr) {}
+void AtariDebugInterface::MakeJmpAndReset(uint16 addr) {}
+int AtariDebugInterface::MapMTKeyToAKey(uint32 mtKeyCode, int shiftctrl, int key_control) { return -1; }
+void AtariDebugInterface::KeyboardDown(uint32 mtKeyCode) {}
+void AtariDebugInterface::KeyboardUp(uint32 mtKeyCode) {}
+void AtariDebugInterface::JoystickDown(int port, uint32 axis) {}
+void AtariDebugInterface::JoystickUp(int port, uint32 axis) {}
+void AtariDebugInterface::Reset() {}
+void AtariDebugInterface::HardReset() {}
+bool AtariDebugInterface::LoadExecutable(char *fullFilePath) { return false; }
+bool AtariDebugInterface::MountDisk(char *fullFilePath, int diskNo, bool readOnly) { return false; }
+bool AtariDebugInterface::InsertCartridge(char *fullFilePath, bool readOnly) { return false; }
+bool AtariDebugInterface::AttachTape(char *fullFilePath, bool readOnly) { return false; }
+bool AtariDebugInterface::LoadFullSnapshot(char *filePath) { return false; }
+void AtariDebugInterface::SaveFullSnapshot(char *filePath) {}
+void AtariDebugInterface::SetVideoSystem(u8 videoSystem) {}
+void AtariDebugInterface::SetMachineType(u8 machineType) {}
+void AtariDebugInterface::SetRamSizeOption(u8 ramSizeOption) {}
+
+#endif
