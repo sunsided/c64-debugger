@@ -242,7 +242,7 @@ void CViewC64ScreenWrapper::FinishTouches()
 
 bool CViewC64ScreenWrapper::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
-	LOGD(".......... CViewC64ScreenWrapper::KeyDown: keyCode=%d isShift=%s isAlt=%s isControl=%s", keyCode,
+	LOGI(".......... CViewC64ScreenWrapper::KeyDown: keyCode=%d isShift=%s isAlt=%s isControl=%s", keyCode,
 		 STRBOOL(isShift), STRBOOL(isAlt), STRBOOL(isControl));
 	
 	viewC64->viewC64Screen->KeyDown(keyCode, isShift, isAlt, isControl);
@@ -256,7 +256,7 @@ bool CViewC64ScreenWrapper::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool 
 
 bool CViewC64ScreenWrapper::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
-	LOGD(".......... CViewC64ScreenWrapper::KeyUp: keyCode=%d isShift=%s isAlt=%s isControl=%s", keyCode,
+	LOGI(".......... CViewC64ScreenWrapper::KeyUp: keyCode=%d isShift=%s isAlt=%s isControl=%s", keyCode,
 		 STRBOOL(isShift), STRBOOL(isAlt), STRBOOL(isControl));
 	
 	viewC64->viewC64Screen->KeyUp(keyCode, isShift, isAlt, isControl);

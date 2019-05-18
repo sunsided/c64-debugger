@@ -44,6 +44,8 @@ extern "C" {
 #define VIEWC64SETTINGS_ATTACH_TAPE						6
 #define VIEWC64SETTINGS_SET_C64_PROFILER_OUTPUT			7
 
+int settingsReuSizes[8] = { 128, 256, 512, 1024, 2048, 4096, 8192, 16384 };
+
 CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
 {
@@ -103,12 +105,21 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 		viewMenu->AddMenuItem(menuItemSubMenuTape);
 		
 		menuItemSubMenuTape->DebugPrint();
+
+		//
+		menuItemSubMenuReu = new CViewC64MenuItem(fontHeight, new CSlrString("REU >>"),
+												   NULL, tr, tg, tb, viewMenu);
+		viewMenu->AddMenuItem(menuItemSubMenuReu);
 		
+		menuItemSubMenuReu->DebugPrint();
 		
+		//
+
 		menuItemBackSubMenu = new CViewC64MenuItem(fontHeight*2.0f, new CSlrString("<< BACK to Settings"),
 												   NULL, tr, tg, tb);
 		menuItemBackSubMenu->subMenu = viewMenu;
 		menuItemSubMenuTape->subMenu->AddMenuItem(menuItemBackSubMenu);
+		menuItemSubMenuReu->subMenu->AddMenuItem(menuItemBackSubMenu);
 		
 		menuItemBackSubMenu->DebugPrint();
 	}
@@ -827,6 +838,41 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 																   NULL, tr, tg, tb, optionsYesNo, font, fontScale);
 		menuItemSubMenuTape->AddMenuItem(menuItemDatasetteResetWithCPU);
 
+		/// REU
+		menuItemReuEnabled = new CViewC64MenuItemOption(fontHeight, new CSlrString("REU Enabled: "),
+																 NULL, tr, tg, tb, optionsYesNo, font, fontScale);
+		menuItemSubMenuReu->AddMenuItem(menuItemReuEnabled);
+
+		options = new std::vector<CSlrString *>();
+		options->push_back(new CSlrString("128"));
+		options->push_back(new CSlrString("256"));
+		options->push_back(new CSlrString("512"));
+		options->push_back(new CSlrString("1024"));
+		options->push_back(new CSlrString("2048"));
+		options->push_back(new CSlrString("4096"));
+		options->push_back(new CSlrString("8192"));
+		options->push_back(new CSlrString("16384"));
+
+		menuItemReuSize = new CViewC64MenuItemOption(fontHeight, new CSlrString("REU Size: "),
+													 NULL, tr, tg, tb, options, font, fontScale);
+		
+		menuItemSubMenuReu->AddMenuItem(menuItemReuSize);
+
+		// REU menu
+//		kbsReuAttach = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Attach REU", 'r', true, false, true);
+//		viewC64->keyboardShortcuts->AddShortcut(kbsReuAttach);
+		menuItemReuAttach = new CViewC64MenuItem(fontHeight*3, new CSlrString("Attach REU"),
+													 NULL, tr, tg, tb);
+		menuItemSubMenuReu->AddMenuItem(menuItemReuAttach);
+		
+		// TODO: add showing path when reu is attached
+//		kbsReuDetach = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Save REU", 'i', true, true, true);
+//		viewC64->keyboardShortcuts->AddShortcut(kbsReuDetach);
+		
+		menuItemReuSave = new CViewC64MenuItem(fontHeight, new CSlrString("Save REU"),
+													 NULL, tr, tg, tb);
+		menuItemSubMenuReu->AddMenuItem(menuItemReuSave);
+		
 	}
 	
 	//
@@ -870,7 +916,9 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 	menuItemClearMemoryMarkers = new CViewC64MenuItem(fontHeight*2, new CSlrString("Clear Memory markers"),
 															  kbsClearMemoryMarkers, tr, tg, tb);
 	menuItemSubMenuMemory->AddMenuItem(menuItemClearMemoryMarkers);
-
+	
+	//
+	
 	
 	//
 //	options = new std::vector<CSlrString *>();
@@ -910,19 +958,31 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 													   kbsCartridgeFreezeButton, tr, tg, tb);
 		menuItemSubMenuEmulation->AddMenuItem(menuItemCartridgeFreeze);
 		
+		//
+		kbsResetCpuCycleAndFrameCounters = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Reset cycle/frame counters", MTKEY_BACKSPACE, true, false, false);
+		viewC64->keyboardShortcuts->AddShortcut(kbsResetCpuCycleAndFrameCounters);
+		menuItemResetCpuCycleAndFrameCounters = new CViewC64MenuItem(fontHeight*2, new CSlrString("Reset cycle/frame counters"),
+																kbsResetCpuCycleAndFrameCounters, tr, tg, tb);
+		menuItemSubMenuEmulation->AddMenuItem(menuItemResetCpuCycleAndFrameCounters);
+		
 		// champ profiler output
 		isProfilingC64 = false;
-		menuItemC64CpuProfilerFilePath = new CViewC64MenuItem(fontHeight*2, NULL,
+		menuItemC64ProfilerFilePath = new CViewC64MenuItem(fontHeight*2, NULL,
 															  NULL, tr, tg, tb);
-		menuItemSubMenuEmulation->AddMenuItem(menuItemC64CpuProfilerFilePath);
+		menuItemSubMenuEmulation->AddMenuItem(menuItemC64ProfilerFilePath);
 		
-		UpdateC64CpuProfilerFilePath();
+		UpdateC64ProfilerFilePath();
+		
+		menuItemC64ProfilerDoVic = new CViewC64MenuItemOption(fontHeight, new CSlrString("Perform VIC profiling: "),
+																			 NULL, tr, tg, tb, optionsYesNo, font, fontScale);
+		menuItemC64ProfilerDoVic->SetSelectedOption(c64SettingsC64ProfilerDoVicProfile, false);
+		menuItemSubMenuEmulation->AddMenuItem(menuItemC64ProfilerDoVic);
 
-		kbsC64CpuProfilerStartStop = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Start/Stop profiling C64", 'i', true, false, true);
-		viewC64->keyboardShortcuts->AddShortcut(kbsC64CpuProfilerStartStop);
-		menuItemC64CpuProfilerStartStop = new CViewC64MenuItem(fontHeight*2.0f, new CSlrString("Start profiling C64"),
-													   kbsC64CpuProfilerStartStop, tr, tg, tb);
-		menuItemSubMenuEmulation->AddMenuItem(menuItemC64CpuProfilerStartStop);
+		kbsC64ProfilerStartStop = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Start/Stop profiling C64", 'i', true, false, true);
+		viewC64->keyboardShortcuts->AddShortcut(kbsC64ProfilerStartStop);
+		menuItemC64ProfilerStartStop = new CViewC64MenuItem(fontHeight*2.0f, new CSlrString("Start profiling C64"),
+													   kbsC64ProfilerStartStop, tr, tg, tb);
+		menuItemSubMenuEmulation->AddMenuItem(menuItemC64ProfilerStartStop);
 
 		
 		
@@ -933,15 +993,19 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 		menuItemAutoJmp->SetSelectedOption(c64SettingsAutoJmp, false);
 		//menuItemSubMenuEmulation->AddMenuItem(menuItemAutoJmp);
 		
+		//
+		kbsAutoJmpAlwaysToLoadedPRGAddress = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Always JMP to loaded addr", 'j', true, false, true);
+		viewC64->keyboardShortcuts->AddShortcut(kbsAutoJmpAlwaysToLoadedPRGAddress);
+
 		menuItemAutoJmpAlwaysToLoadedPRGAddress = new CViewC64MenuItemOption(fontHeight, new CSlrString("Always JMP to loaded addr: "),
-																			 NULL, tr, tg, tb, optionsYesNo, font, fontScale);
+																			 kbsAutoJmpAlwaysToLoadedPRGAddress, tr, tg, tb, optionsYesNo, font, fontScale);
 		menuItemAutoJmpAlwaysToLoadedPRGAddress->SetSelectedOption(c64SettingsAutoJmpAlwaysToLoadedPRGAddress, false);
 		menuItemSubMenuEmulation->AddMenuItem(menuItemAutoJmpAlwaysToLoadedPRGAddress);
 		
 		
+		//
 		kbsAutoJmpFromInsertedDiskFirstPrg = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Auto load first PRG from D64", 'a', true, false, true);
 		viewC64->keyboardShortcuts->AddShortcut(kbsAutoJmpFromInsertedDiskFirstPrg);
-		
 		menuItemAutoJmpFromInsertedDiskFirstPrg = new CViewC64MenuItemOption(fontHeight, new CSlrString("Load first PRG from D64: "),
 																			 kbsAutoJmpFromInsertedDiskFirstPrg, tr, tg, tb, optionsYesNo, font, fontScale);
 		menuItemAutoJmpFromInsertedDiskFirstPrg->SetSelectedOption(c64SettingsAutoJmpFromInsertedDiskFirstPrg, false);
@@ -951,8 +1015,12 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 		options->push_back(new CSlrString("No"));
 		options->push_back(new CSlrString("Soft"));
 		options->push_back(new CSlrString("Hard"));
+
+		kbsAutoJmpDoReset = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Reset C64 before PRG load", 'h', true, false, true);
+		viewC64->keyboardShortcuts->AddShortcut(kbsAutoJmpDoReset);
+
 		menuItemAutoJmpDoReset = new CViewC64MenuItemOption(fontHeight, new CSlrString("Reset C64 before PRG load: "),
-													  NULL, tr, tg, tb, options, font, fontScale);
+													  kbsAutoJmpDoReset, tr, tg, tb, options, font, fontScale);
 		menuItemAutoJmpDoReset->SetSelectedOption(c64SettingsAutoJmpDoReset, false);
 		menuItemSubMenuEmulation->AddMenuItem(menuItemAutoJmpDoReset);
 		
@@ -1038,6 +1106,38 @@ void CViewSettingsMenu::ToggleAutoLoadFromInsertedDisk()
 	}
 }
 
+void CViewSettingsMenu::ToggleAutoJmpAlwaysToLoadedPRGAddress()
+{
+	if (c64SettingsAutoJmpAlwaysToLoadedPRGAddress)
+	{
+		menuItemAutoJmpAlwaysToLoadedPRGAddress->SetSelectedOption(0, true);
+		guiMain->ShowMessage("Auto JMP to loaded address is OFF");
+	}
+	else
+	{
+		menuItemAutoJmpAlwaysToLoadedPRGAddress->SetSelectedOption(1, true);
+		guiMain->ShowMessage("Auto JMP to loaded address is ON");
+	}
+}
+
+void CViewSettingsMenu::ToggleAutoJmpDoReset()
+{
+	if (c64SettingsAutoJmpDoReset == MACHINE_RESET_HARD)
+	{
+		menuItemAutoJmpDoReset->SetSelectedOption(0, true);
+		guiMain->ShowMessage("Do not Reset before PRG load");
+	}
+	else if (c64SettingsAutoJmpDoReset == MACHINE_RESET_NONE)
+	{
+		menuItemAutoJmpDoReset->SetSelectedOption(1, true);
+		guiMain->ShowMessage("Soft Reset before PRG load");
+	}
+	else if (c64SettingsAutoJmpDoReset == MACHINE_RESET_SOFT)
+	{
+		menuItemAutoJmpDoReset->SetSelectedOption(2, true);
+		guiMain->ShowMessage("Hard Reset before PRG load");
+	}
+}
 
 void CViewSettingsMenu::UpdateMapC64MemoryToFileLabels()
 {
@@ -1068,30 +1168,30 @@ void CViewSettingsMenu::UpdateMapC64MemoryToFileLabels()
 	guiMain->UnlockMutex();
 }
 
-void CViewSettingsMenu::UpdateC64CpuProfilerFilePath()
+void CViewSettingsMenu::UpdateC64ProfilerFilePath()
 {
 	guiMain->LockMutex();
 	
 	if (c64SettingsC64ProfilerFileOutputPath == NULL)
 	{
-		menuItemC64CpuProfilerFilePath->SetString(new CSlrString("Set C64 profiler file"));
-		if (menuItemC64CpuProfilerFilePath->str2 != NULL)
-		delete menuItemC64CpuProfilerFilePath->str2;
-		menuItemC64CpuProfilerFilePath->str2 = NULL;
+		menuItemC64ProfilerFilePath->SetString(new CSlrString("Set C64 profiler file"));
+		if (menuItemC64ProfilerFilePath->str2 != NULL)
+		delete menuItemC64ProfilerFilePath->str2;
+		menuItemC64ProfilerFilePath->str2 = NULL;
 	}
 	else
 	{
-		menuItemC64CpuProfilerFilePath->SetString(new CSlrString("Set C64 profiler file:"));
+		menuItemC64ProfilerFilePath->SetString(new CSlrString("Set C64 profiler file:"));
 		
 		char *asciiPath = c64SettingsC64ProfilerFileOutputPath->GetStdASCII();
 		
 		// display file name in menu
 		char *fname = SYS_GetFileNameFromFullPath(asciiPath);
 		
-		if (menuItemC64CpuProfilerFilePath->str2 != NULL)
-		delete menuItemC64CpuProfilerFilePath->str2;
+		if (menuItemC64ProfilerFilePath->str2 != NULL)
+		delete menuItemC64ProfilerFilePath->str2;
 		
-		menuItemC64CpuProfilerFilePath->str2 = new CSlrString(fname);
+		menuItemC64ProfilerFilePath->str2 = new CSlrString(fname);
 		delete fname;
 	}
 	
@@ -1332,6 +1432,18 @@ void CViewSettingsMenu::MenuCallbackItemChanged(CGuiViewMenuItem *menuItem)
 		bool v = menuItemEmulateVSPBug->selectedOption == 0 ? false : true;
 		C64DebuggerSetSetting("EmulateVSPBug", &(v));
 	}
+	else if (menuItem == menuItemReuEnabled)
+	{
+		bool v = menuItemReuEnabled->selectedOption == 0 ? false : true;
+		
+		LOGD("menuItemReuEnabled: %s", STRBOOL(v));
+		C64DebuggerSetSetting("ReuEnabled", &(v));
+	}
+	else if (menuItem == menuItemReuSize)
+	{
+		int reuSize = settingsReuSizes[menuItemReuSize->selectedOption];
+		C64DebuggerSetSetting("ReuSize", &(reuSize));
+	}
 	
 	else if (menuItem == menuItemAutoJmp)
 	{
@@ -1356,6 +1468,11 @@ void CViewSettingsMenu::MenuCallbackItemChanged(CGuiViewMenuItem *menuItem)
 	{
 		int v = menuItemAutoJmpWaitAfterReset->value;
 		C64DebuggerSetSetting("AutoJmpWaitAfterReset", &v);
+	}
+	else if (menuItem == menuItemC64ProfilerDoVic)
+	{
+		bool v = menuItemC64ProfilerDoVic->selectedOption == 0 ? false : true;
+		C64DebuggerSetSetting("C64ProfilerDoVic", &(v));
 	}
 	else if (menuItem == menuItemDisassembleExecuteAware)
 	{
@@ -1800,12 +1917,8 @@ void CViewSettingsMenu::SetEmulationMaximumSpeed(int maximumSpeed)
 
 void CViewSettingsMenu::DetachEverything(bool showMessage, bool storeSettings)
 {
-	void DetachEverything();
-	
-	// detach drive & cartridge
-	viewC64->debugInterfaceC64->DetachCartridge();
-	viewC64->debugInterfaceC64->DetachDriveDisk();
-	viewC64->debugInterfaceC64->DetachTape();
+	// detach drive, cartridge & tape
+	viewC64->debugInterfaceC64->DetachEverything();
 	
 	guiMain->LockMutex();
 	
@@ -1966,6 +2079,14 @@ void CViewSettingsMenu::MenuCallbackItemEntered(CGuiViewMenuItem *menuItem)
 		viewC64->debugInterfaceC64->DatasetteReset();
 		guiMain->ShowMessage("Datasette RESET");
 	}
+	else if (menuItem == menuItemReuAttach)
+	{
+		viewC64->viewC64MainMenu->OpenDialogAttachReu();
+	}
+	else if (menuItem == menuItemReuSave)
+	{
+		viewC64->viewC64MainMenu->OpenDialogSaveReu();
+	}
 	else if (menuItem == menuItemDumpC64Memory)
 	{
 		OpenDialogDumpC64Memory();
@@ -2001,13 +2122,13 @@ void CViewSettingsMenu::MenuCallbackItemEntered(CGuiViewMenuItem *menuItem)
 			guiMain->ShowMessage("Please restart debugger to unmap file");
 		}
 	}
-	else if (menuItem == menuItemC64CpuProfilerFilePath)
+	else if (menuItem == menuItemC64ProfilerFilePath)
 	{
 		OpenDialogSetC64ProfilerFileOutputPath();
 	}
-	else if (menuItem == menuItemC64CpuProfilerStartStop)
+	else if (menuItem == menuItemC64ProfilerStartStop)
 	{
-		C64CpuProfilerStartStop();
+		C64ProfilerStartStop();
 	}
 	else if (menuItem == menuItemSetC64KeyboardMapping)
 	{
@@ -2020,6 +2141,10 @@ void CViewSettingsMenu::MenuCallbackItemEntered(CGuiViewMenuItem *menuItem)
 	else if (menuItem == menuItemClearMemoryMarkers)
 	{
 		ClearMemoryMarkers();
+	}
+	else if (menuItem == menuItemResetCpuCycleAndFrameCounters)
+	{
+		ResetMainCpuCycleAndFrameCounters();
 	}
 	else if (menuItem == menuItemStartJukeboxPlaylist)
 	{
@@ -2053,20 +2178,42 @@ void CViewSettingsMenu::MenuCallbackItemEntered(CGuiViewMenuItem *menuItem)
 	}
 }
 
+void CViewSettingsMenu::ResetMainCpuCycleAndFrameCounters()
+{
+	ResetMainCpuCycleCounter();
+	ResetEmulationFrameCounter();
+}
+
+void CViewSettingsMenu::ResetMainCpuCycleCounter()
+{
+	if (viewC64->debugInterfaceC64)
+	{
+		viewC64->debugInterfaceC64->ResetMainCpuCycleCounter();
+	}
+}
+
+void CViewSettingsMenu::ResetEmulationFrameCounter()
+{
+	if (viewC64->debugInterfaceC64)
+	{
+		viewC64->debugInterfaceC64->ResetEmulationFrameCounter();
+	}
+}
+
 void CViewSettingsMenu::ClearMemoryMarkers()
 {
 	viewC64->viewC64MemoryMap->ClearExecuteMarkers();
 	viewC64->viewDrive1541MemoryMap->ClearExecuteMarkers();
 	
-	guiMain->ShowMessage("Memory markers cleared");
+//	guiMain->ShowMessage("Memory markers cleared");
 }
 
-void CViewSettingsMenu::C64CpuProfilerStartStop()
+void CViewSettingsMenu::C64ProfilerStartStop()
 {
 	if (isProfilingC64)
 	{
 		viewC64->debugInterfaceC64->ProfilerDeactivate();
-		menuItemC64CpuProfilerStartStop->SetString(new CSlrString("Start profiling C64"));
+		menuItemC64ProfilerStartStop->SetString(new CSlrString("Start profiling C64"));
 		guiMain->ShowMessage("C64 Profiler stopped");
 		isProfilingC64 = false;
 		return;
@@ -2089,7 +2236,7 @@ void CViewSettingsMenu::C64CpuProfilerStartStop()
 	
 	// TODO: add option to run profiler for selected number of cycles
 	viewC64->debugInterfaceC64->ProfilerActivate(path, -1, false);
-	menuItemC64CpuProfilerStartStop->SetString(new CSlrString("Stop profiling C64"));
+	menuItemC64ProfilerStartStop->SetString(new CSlrString("Stop profiling C64"));
 	isProfilingC64 = true;
 	guiMain->ShowMessage("C64 Profiler started");
 }
@@ -2450,7 +2597,7 @@ void CViewSettingsMenu::SetC64ProfilerOutputFile(CSlrString *path)
 	delete c64SettingsDefaultMemoryDumpFolder;
 	c64SettingsDefaultMemoryDumpFolder = path->GetFilePathWithoutFileNameComponentFromPath();
 	
-	UpdateC64CpuProfilerFilePath();
+	UpdateC64ProfilerFilePath();
 	
 	C64DebuggerStoreSettings();
 }
@@ -2678,6 +2825,25 @@ void CViewSettingsMenu::ActivateView()
 		//
 		int modelType = viewC64->debugInterfaceC64->GetC64ModelType();
 		this->SetOptionC64ModelType(modelType);
+		
+		LOGD("c64SettingsReuEnabled=%s", STRBOOL(c64SettingsReuEnabled));
+		if (c64SettingsReuEnabled)
+		{
+			menuItemReuEnabled->SetSelectedOption(1, false);
+		}
+		else
+		{
+			menuItemReuEnabled->SetSelectedOption(0, false);
+		}
+		
+		for (int i = 0; i < 8; i++)
+		{
+			if (settingsReuSizes[i] == c64SettingsReuSize)
+			{
+				viewC64->viewC64SettingsMenu->menuItemReuSize->SetSelectedOption(i, false);
+				break;
+			}
+		}
 	}
 
 	UpdateAudioOutDevices();

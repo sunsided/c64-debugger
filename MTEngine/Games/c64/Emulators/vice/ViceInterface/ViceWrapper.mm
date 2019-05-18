@@ -11,6 +11,8 @@ extern "C" {
 #include "gcr.h"
 #include "c64.h"
 #include "cia.h"
+#include "maincpu.h"
+#include "snapshot.h"
 }
 
 #include "C64DebugInterfaceVice.h"
@@ -19,6 +21,7 @@ extern "C" {
 #include "SND_Main.h"
 #include "SYS_Main.h"
 #include "SYS_Types.h"
+#include "C64SettingsStorage.h"
 #include "SYS_CommandLine.h"
 #include "CGuiMain.h"
 #include "CViewC64.h"
@@ -34,6 +37,11 @@ int c64d_setting_run_sid_emulation = 1;
 
 uint16 viceCurrentC64PC;
 uint16 viceCurrentDiskPC[4];
+
+extern "C" {
+extern int c64d_profiler_is_active;
+extern FILE *c64d_profiler_file_out;
+}
 
 void ViceWrapperInit(C64DebugInterfaceVice *debugInterface)
 {
@@ -524,6 +532,22 @@ void c64d_refresh_cia()
 	cia_update_tb(machine_context.cia2, *(machine_context.cia2->clk_ptr));
 }
 
+void c64d_reset_counters()
+{
+	if (c64SettingsResetCountersOnAutoRun)
+	{
+		viewC64->viewC64SettingsMenu->ResetMainCpuCycleCounter();
+		viewC64->viewC64SettingsMenu->ResetEmulationFrameCounter();
+	}
+}
+
+unsigned int c64d_get_frame_num()
+{
+	return debugInterfaceVice->GetEmulationFrameNumber();
+}
+
+//
+
 int c64d_is_debug_on_c64()
 {
 	if (debugInterfaceVice->isDebugOn)
@@ -653,6 +677,7 @@ extern "C" {
 	BYTE c64d_peek_memory0001();
 };
 
+/* Profiler call */
 void c64d_vicii_copy_state(vicii_cycle_state_t *viciiCopy)
 {
 	memcpy(viciiCopy->regs, vicii.regs, 64);
@@ -710,8 +735,6 @@ void c64d_vicii_copy_state(vicii_cycle_state_t *viciiCopy)
 	
 	//LOGD("mem01=%02x", c64d_peek_memory0001());
 	viciiCopy->memory0001 = c64d_peek_memory0001();
-
-	
 }
 
 void c64d_vicii_copy_state_data(vicii_cycle_state_t *viciiDest, vicii_cycle_state_t *viciiSrc)
@@ -802,8 +825,8 @@ void c64d_c64_vicii_start_frame()
 	//viciiFrameCycleNum = 0;
 	
 	// TODO: frame counter + breakpoint on defined frame
-	
-	viewC64->EmulationStartFrameCallback();
+
+	debugInterfaceVice->DoVSync();
 }
 
 void c64d_c64_vicii_cycle()
@@ -826,6 +849,26 @@ void c64d_c64_vicii_cycle()
 		vicii_cycle_state_t *viciiCopy = &viciiStateForCycle[rasterLine][rasterCycle];
 		c64d_vicii_copy_state(viciiCopy);
 	}
+	
+	// profiler
+	if (c64SettingsC64ProfilerDoVicProfile)
+	{
+//		LOGD("c64SettingsC64ProfilerDoVicProfile");
+		if (c64d_profiler_is_active && c64d_profiler_file_out)
+		{
+			unsigned int frameNum = c64d_get_frame_num();
+			unsigned int raster_line = vicii.raster_line;
+			unsigned int raster_cycle = vicii.raster_cycle;
+			unsigned int bad_line = vicii.bad_line;
+			unsigned int sprite_dma = vicii.sprite_dma;
+			unsigned int raster_irq_line = vicii.raster_irq_line;
+			
+			fprintf(c64d_profiler_file_out, "vic %u %u %d %d %d %d %d\n",
+					c64d_maincpu_clk, frameNum, raster_line, raster_cycle, bad_line,
+					sprite_dma, raster_irq_line);
+		}
+	}
+	
 }
 
 void c64d_c64_vicii_start_raster_line(uint16 rasterLine)
@@ -940,6 +983,16 @@ void c64d_debug_pause_check()
 	}
 }
 
+void c64d_lock_mutex()
+{
+	debugInterfaceVice->LockIoMutex();
+}
+
+void c64d_unlock_mutex()
+{
+	debugInterfaceVice->UnlockIoMutex();
+}
+
 ////////////
 
 // sid
@@ -957,3 +1010,64 @@ void c64d_sid_channels_data(int sidNumber, int v1, int v2, int v3, short mix)
 	viewC64->viewC64StateSID->AddWaveformData(sidNumber, v1, v2, v3, mix);
 }
 
+//
+#define C64D_SNAPSHOT_VER_MAJOR   0
+#define C64D_SNAPSHOT_VER_MINOR   0
+
+extern "C" {
+	
+int c64d_snapshot_write_module(snapshot_t *s)
+{
+	snapshot_module_t *m;
+	
+	m = snapshot_module_create(s, "DEBUGGER", C64D_SNAPSHOT_VER_MAJOR, C64D_SNAPSHOT_VER_MINOR);
+ 
+	if (m == NULL) {
+		return -1;
+	}
+	
+	if (SMW_DW(m, c64d_maincpu_clk) < 0) {
+		snapshot_module_close(m);
+		return -1;
+	}
+	
+	if (SMW_DW(m, debugInterfaceVice->emulationFrameCounter) < 0) {
+		snapshot_module_close(m);
+		return -1;
+	}
+	
+	snapshot_module_close(m);
+	
+	return 0;
+}
+
+int c64d_snapshot_read_module(snapshot_t *s)
+{
+	BYTE major_version, minor_version;
+	snapshot_module_t *m;
+	
+	m = snapshot_module_open(s, "DEBUGGER", &major_version, &minor_version);
+	if (m == NULL) {
+		return 0;	// no debugger module, skip it
+	}
+	
+	if (major_version != C64D_SNAPSHOT_VER_MAJOR || minor_version != C64D_SNAPSHOT_VER_MINOR) {
+		snapshot_module_close(m);
+		return -1;
+	}
+	
+	if (SMR_DW_UINT(m, (unsigned int *)&c64d_maincpu_clk) < 0) {
+		snapshot_module_close(m);
+		return -1;
+	}
+	
+	if (SMR_DW_UINT(m, &(debugInterfaceVice->emulationFrameCounter)) < 0) {
+		snapshot_module_close(m);
+		return -1;
+	}
+	
+	snapshot_module_close(m);
+	return 0;
+}
+
+}

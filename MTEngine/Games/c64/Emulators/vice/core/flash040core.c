@@ -394,8 +394,10 @@ void flash040core_store(flash040_context_t *flash040_context, unsigned int addr,
 {
     if (maincpu_rmw_flag) {
         maincpu_clk--;
+		c64d_maincpu_clk--;
         flash040core_store_internal(flash040_context, addr, flash040_context->last_read);
         maincpu_clk++;
+		c64d_maincpu_clk++;
     }
 
     flash040core_store_internal(flash040_context, addr, byte);

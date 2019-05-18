@@ -98,14 +98,18 @@ int c64SettingsDatasetteZeroGapDelay = 20000;
 int c64SettingsDatasetteTapeWobble = 10;
 bool c64SettingsDatasetteResetWithCPU = false;
 
+//
+bool c64SettingsReuEnabled = false;
+int c64SettingsReuSize = 16384;
+
 bool c64SettingsMuteSIDOnPause = false;
 
 int c64SettingsAudioVolume = 100;				// percentage
 bool c64SettingsRunSIDEmulation = true;
 uint8 c64SettingsMuteSIDMode = MUTE_SID_MODE_ZERO_VOLUME;
 
-
 uint16 c64SettingsVicPalette = 0;
+bool c64SettingsC64ProfilerDoVicProfile = false;
 
 int c64SettingsWaitOnStartup = 0; //500;
 
@@ -123,6 +127,11 @@ CSlrString *c64SettingsDefaultSnapshotsFolder = NULL;
 
 CSlrString *c64SettingsPathToTAP = NULL;
 CSlrString *c64SettingsDefaultTAPFolder = NULL;
+
+CSlrString *c64SettingsPathToReu = NULL;
+CSlrString *c64SettingsDefaultReuFolder = NULL;
+
+CSlrString *c64SettingsDefaultVicEditorFolder = NULL;
 
 CSlrString *c64SettingsPathToXEX = NULL;
 CSlrString *c64SettingsDefaultXEXFolder = NULL;
@@ -183,6 +192,8 @@ u8 c64SettingsAutoJmpDoReset = MACHINE_RESET_NONE;
 int c64SettingsAutoJmpWaitAfterReset = 1300;				// this is to let c64 drive finish reset
 
 bool c64SettingsForceUnpause = false;						// unpause debugger on jmp if code is stopped
+
+bool c64SettingsResetCountersOnAutoRun = true;
 
 bool c64SettingsRunSIDWhenInWarp = true;
 
@@ -311,12 +322,15 @@ void C64DebuggerStoreSettings()
 	storeSettingString(byteBuffer, "FolderPRG", c64SettingsDefaultPRGFolder);
 	storeSettingString(byteBuffer, "FolderCRT", c64SettingsDefaultCartridgeFolder);
 	storeSettingString(byteBuffer, "FolderTAP", c64SettingsDefaultTAPFolder);
+	storeSettingString(byteBuffer, "FolderREU", c64SettingsDefaultReuFolder);
+	storeSettingString(byteBuffer, "FolderVicEditor", c64SettingsDefaultVicEditorFolder);
 	storeSettingString(byteBuffer, "FolderSnaps", c64SettingsDefaultSnapshotsFolder);
 	storeSettingString(byteBuffer, "FolderMemDumps", c64SettingsDefaultMemoryDumpFolder);
 	storeSettingString(byteBuffer, "PathD64", c64SettingsPathToD64);
 	storeSettingString(byteBuffer, "PathPRG", c64SettingsPathToPRG);
 	storeSettingString(byteBuffer, "PathCRT", c64SettingsPathToCartridge);
 	storeSettingString(byteBuffer, "PathTAP", c64SettingsPathToTAP);
+	storeSettingString(byteBuffer, "PathREU", c64SettingsPathToReu);
 
 	storeSettingString(byteBuffer, "FolderAtariROMs", c64SettingsPathToAtariROMs);
 	storeSettingString(byteBuffer, "FolderATR", c64SettingsDefaultATRFolder);
@@ -333,7 +347,7 @@ void C64DebuggerStoreSettings()
 	storeSettingBool(byteBuffer, "AutoJmp", c64SettingsAutoJmp);
 	storeSettingBool(byteBuffer, "AutoJmpAlwaysToLoadedPRGAddress", c64SettingsAutoJmpAlwaysToLoadedPRGAddress);
 	storeSettingBool(byteBuffer, "AutoJmpFromInsertedDiskFirstPrg", c64SettingsAutoJmpFromInsertedDiskFirstPrg);
-	
+
 	storeSettingString(byteBuffer, "PathMemMapFile", c64SettingsPathToC64MemoryMapFile);
 
 	storeSettingString(byteBuffer, "AudioOutDevice", c64SettingsAudioOutDevice);
@@ -360,6 +374,7 @@ void C64DebuggerStoreSettings()
 #if defined(RUN_COMMODORE64)
 	storeSettingU8(byteBuffer, "C64Model", c64SettingsC64Model);
 	storeSettingString(byteBuffer, "C64ProfilerOutputPath", c64SettingsC64ProfilerFileOutputPath);
+	storeSettingBool(byteBuffer, "C64ProfilerDoVic", c64SettingsC64ProfilerDoVicProfile);
 #endif
 	
 	storeSettingBlock(byteBuffer, C64DEBUGGER_BLOCK_POSTLAUNCH);
@@ -407,6 +422,9 @@ void C64DebuggerStoreSettings()
 	storeSettingI32(byteBuffer, "DatasetteZeroGapDelay", c64SettingsDatasetteZeroGapDelay);
 	storeSettingI32(byteBuffer, "DatasetteTapeWobble", c64SettingsDatasetteTapeWobble);
 	storeSettingBool(byteBuffer, "DatasetteResetWithCPU", c64SettingsDatasetteResetWithCPU);
+	
+	storeSettingBool(byteBuffer, "ReuEnabled", c64SettingsReuEnabled);
+	storeSettingI32(byteBuffer, "ReuSize", c64SettingsReuSize);
 #endif
 	
 #if defined(RUN_ATARI)
@@ -1156,6 +1174,34 @@ void C64DebuggerSetSetting(char *name, void *value)
 			viewC64->debugInterfaceC64->DatasetteSetResetWithCPU(v);
 			return;
 		}
+		else if (!strcmp(name, "ReuEnabled"))
+		{
+			bool v = *((bool*)value);
+			c64SettingsReuEnabled = v;
+			
+			LOGD("c64SettingsReuEnabled=%s", STRBOOL(c64SettingsReuEnabled));
+			viewC64->viewC64SettingsMenu->menuItemReuEnabled->SetSelectedOption(v ? 1:0, false);
+			
+			viewC64->debugInterfaceC64->SetReuEnabled(v);
+			return;
+		}
+		else if (!strcmp(name, "ReuSize"))
+		{
+			int v = *((int*)value);
+			c64SettingsReuSize = v;
+
+			for (int i = 0; i < 8; i++)
+			{
+				if (settingsReuSizes[i] == v)
+				{
+					viewC64->viewC64SettingsMenu->menuItemReuSize->SetSelectedOption(i, false);
+					break;
+				}
+			}
+			
+			viewC64->debugInterfaceC64->SetReuSize(v);
+			return;
+		}
 		else if (!strcmp(name, "C64ProfilerOutputPath"))
 		{
 			if (c64SettingsC64ProfilerFileOutputPath != NULL)
@@ -1164,6 +1210,12 @@ void C64DebuggerSetSetting(char *name, void *value)
 			}
 			
 			c64SettingsC64ProfilerFileOutputPath = new CSlrString((CSlrString*)value);
+			return;
+		}
+		else if (!strcmp(name, "C64ProfilerDoVic"))
+		{
+			bool v = *((bool*)value);
+			c64SettingsC64ProfilerDoVicProfile = v;
 			return;
 		}
 	}

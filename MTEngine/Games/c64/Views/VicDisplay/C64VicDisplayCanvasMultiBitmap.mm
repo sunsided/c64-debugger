@@ -424,6 +424,7 @@ void C64VicDisplayCanvasMultiBitmap::ReplaceColorMultiBitmapRaster(int x, int y,
 	ReplaceColorMultiBitmapCharacter(charColumn, charRow, colorNum, paintColor);
 }
 
+// colorNum: 0=$D021, 1=char ram x0  2=char ram 0x  3=D800
 void C64VicDisplayCanvasMultiBitmap::ReplaceColorMultiBitmapCharacter(int charColumn, int charRow, u8 colorNum, u8 paintColor)
 {
 	LOGF("............. ReplaceColorMultiBitmapRaster %d %d colorNum=%d paintColor=%02x", charColumn, charRow, colorNum, paintColor);
@@ -754,6 +755,10 @@ u8 C64VicDisplayCanvasMultiBitmap::PaintDither(bool forceColorReplace, int x, in
 //
 u8 C64VicDisplayCanvasMultiBitmap::ConvertFrom(CImageData *imageData)
 {
+	// TODO: 'forced colors mode'
+	// TODO: 'bit align mode' to always align colors the same way in each char
+//	return ConvertFromWithForcedColors(imageData, 0x00, 0x0F, 0x0B, 0x08);
+	
 	C64DebugInterface *debugInterface = vicDisplay->debugInterface;
 	
 	CImageData *image = ReducePalette(imageData);
@@ -883,6 +888,61 @@ u8 C64VicDisplayCanvasMultiBitmap::ConvertFrom(CImageData *imageData)
 	DeleteColorsHistogram(colors);
 	delete colors;
 
+	delete image;
+	return PAINT_RESULT_OK;
+}
+
+u8 C64VicDisplayCanvasMultiBitmap::ConvertFromWithForcedColors(CImageData *imageData,
+															   u8 backgroundColor, u8 colorForeground1, u8 colorForeground2, u8 colorForeground3)
+{
+	C64DebugInterface *debugInterface = vicDisplay->debugInterface;
+	
+	CImageData *image = ReducePalette(imageData);
+	
+	int histogram[16];
+	
+	for (int yc = 0; yc < 25; yc++)
+	{
+		for (int xc = 0; xc < 40; xc++)
+		{
+			LOGF(" xc=%d yc=%d", xc, yc);
+			int x = xc * 8;
+			int y = yc * 8;
+			
+			ReplaceColorMultiBitmapCharacter(xc, yc, 1, colorForeground1);
+			ReplaceColorMultiBitmapCharacter(xc, yc, 2, colorForeground2);
+			ReplaceColorMultiBitmapCharacter(xc, yc, 3, colorForeground3);
+			
+			for (int yb = 0; yb < 8; yb++)
+			{
+				for (int xb = 0; xb < 8; xb++)
+				{
+					u8 v = image->GetPixelResultByte(x + xb, y + yb);
+					
+					float distances[4];
+					distances[0] = GetC64ColorDistance(v, backgroundColor, debugInterface);
+					distances[1] = GetC64ColorDistance(v, colorForeground1, debugInterface);
+					distances[2] = GetC64ColorDistance(v, colorForeground2, debugInterface);
+					distances[3] = GetC64ColorDistance(v, colorForeground3, debugInterface);
+					
+					float minDistance = FLT_MAX;
+					int minColorNum = 0;
+					for (int i = 0; i < 4; i++)
+					{
+						if (distances[i] < minDistance)
+						{
+							minDistance = distances[i];
+							minColorNum = i;
+						}
+					}
+					
+					PutBitPixelMultiBitmap(x + xb, y + yb, minColorNum);
+					
+				}
+			}
+		}
+	}
+	
 	delete image;
 	return PAINT_RESULT_OK;
 }

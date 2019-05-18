@@ -80,13 +80,13 @@ void CGuiView::SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat siz
 // TODO: change window frame movements to use CGuiAnimation and glTranslate
 void CGuiView::SetPositionElements(GLfloat posX, GLfloat posY)
 {
-	LOGD("CGuiView::SetPositionElements: px=%f py=%f", posX, posY);
+	LOGG("CGuiView::SetPositionElements: px=%f py=%f", posX, posY);
 	for (std::map<float, CGuiElement *, compareZupwards>::iterator enumGuiElems = guiElementsUpwards.begin();
 		 enumGuiElems != guiElementsUpwards.end(); enumGuiElems++)
 	{
 		CGuiElement *pElement = (*enumGuiElems).second;
 		
-		LOGD("pElement '%s' offset=%f %f", pElement->name, pElement->offsetPosX, pElement->offsetPosY);
+		LOGG("pElement '%s' offset=%f %f", pElement->name, pElement->offsetPosX, pElement->offsetPosY);
 		pElement->SetPosition(this->posX + pElement->offsetPosX, this->posY + pElement->offsetPosY);
 	}
 	
@@ -231,11 +231,11 @@ void CGuiView::DoLogic()
 //@returns is consumed
 bool CGuiView::DoTap(GLfloat x, GLfloat y)
 {
-	//LOGD("CGuiView::DoTap: '%s' x=%f y=%f", this->name, x, y);
+	//LOGG("CGuiView::DoTap: '%s' x=%f y=%f", this->name, x, y);
 	if (CGuiView::DoTapNoBackground(x, y))
 		return true;
 
-	//LOGD("done");
+	//LOGG("done");
 	
 	if (consumeTapBackground)
 	{
@@ -252,7 +252,7 @@ bool CGuiView::DoTapNoBackground(GLfloat x, GLfloat y)
 		 enumGuiElems != guiElementsDownwards.end(); enumGuiElems++)
 	{
 		CGuiElement *guiElement = (*enumGuiElems).second;
-		LOGD("CGuiView::DoTap: %s", guiElement->name);
+		LOGG("CGuiView::DoTap: %s", guiElement->name);
 		if (!guiElement->visible)
 			continue;
 
@@ -714,7 +714,7 @@ bool CGuiView::DoMultiTapNoBackground(COneTouchData *touch, float x, float y)
 		 enumGuiElems != guiElementsDownwards.end(); enumGuiElems++)
 	{
 		CGuiElement *guiElement = (*enumGuiElems).second;
-		//LOGD("CGuiView::DoTap: %s", guiElement->name);
+		//LOGG("CGuiView::DoTap: %s", guiElement->name);
 		if (!guiElement->visible)
 			continue;
 		

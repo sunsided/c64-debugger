@@ -47,15 +47,7 @@ typedef enum {			/* JPEG marker codes */
   M_RST5  = 0xd5,
   M_RST6  = 0xd6,
   M_RST7  = 0xd7,
-
-#if !defined(MTENGINE_JPEG_MARKER)
-// original JPEG SOI
-  M_SOI   = 0xd8,
-#else
-// MTEngine JPEG SOI
-  M_SOI   = 0x4D,
-#endif
-	
+  M_SOI   = 0xd8,	
   M_EOI   = 0xd9,
   M_SOS   = 0xda,
   M_DQT   = 0xdb,

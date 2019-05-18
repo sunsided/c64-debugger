@@ -4,6 +4,8 @@
 #include "CViewVicEditor.h"
 #include "C64VicDisplayCanvas.h"
 #include "CVicEditorLayerC64Canvas.h"
+#include "CVicEditorLayerImage.h"
+#include "C64DebugInterface.h"
 #include "VID_Main.h"
 
 CVicEditorLayerC64Screen::CVicEditorLayerC64Screen(CViewVicEditor *vicEditor)
@@ -48,6 +50,65 @@ void CVicEditorLayerC64Screen::RenderMain(vicii_cycle_state_t *viciiState)
 //				  vicEditor->viewVicDisplayMain->displaySizeX,
 //				  vicEditor->viewVicDisplayMain->displaySizeY, 1.0f, 0.0f, 0.0f, 1.0f, 1.5f);
 
+}
+
+CImageData *CVicEditorLayerC64Screen::GetScreenImage(int *width, int *height)
+{
+	CViewC64Screen *viewC64Screen = viewC64->viewC64Screen;
+
+	viewC64Screen->debugInterface->LockRenderScreenMutex();
+	
+	// refresh texture of C64's screen
+	CImageData *imageData = viewC64Screen->debugInterface->GetScreenImageData();
+
+	viewC64Screen->debugInterface->UnlockRenderScreenMutex();
+
+	*width = viewC64Screen->debugInterface->GetScreenSizeX();
+	*height = viewC64Screen->debugInterface->GetScreenSizeY();
+	CImageData *imgDataSave = new CImageData(*width, *height);
+	for (int x = 0; x < *width; x++)
+	{
+		for (int y = 0; y < *height; y++)
+		{
+			int tx = x * viewC64Screen->debugInterface->screenSupersampleFactor;
+			int ty = y * viewC64Screen->debugInterface->screenSupersampleFactor;
+
+			u8 r,g,b,a;
+			imageData->GetPixelResultRGBA(tx, ty, &r, &g, &b, &a);
+			imgDataSave->SetPixelResultRGBA(x, y, r, g, b, a);
+		}
+	}
+	
+	viewC64Screen->debugInterface->UnlockRenderScreenMutex();
+
+	return imgDataSave;
+}
+
+CImageData *CVicEditorLayerC64Screen::GetInteriorScreenImage()
+{
+	CViewC64Screen *viewC64Screen = viewC64->viewC64Screen;
+	
+	viewC64Screen->debugInterface->LockRenderScreenMutex();
+	
+	// refresh texture of C64's screen
+	CImageData *imageData = viewC64Screen->debugInterface->GetScreenImageData();
+	
+	CImageData *imgDataSave = new CImageData(320, 200);
+	for (int x = 0; x < 320; x++)
+	{
+		for (int y = 0; y < 200; y++)
+		{
+			int tx = (x + C64_SCREEN_OFFSET_X) * viewC64Screen->debugInterface->screenSupersampleFactor;
+			int ty = (y + C64_SCREEN_OFFSET_Y) * viewC64Screen->debugInterface->screenSupersampleFactor;
+			u8 r,g,b,a;
+			imageData->GetPixelResultRGBA(tx, ty, &r, &g, &b, &a);
+			imgDataSave->SetPixelResultRGBA(x, y, r, g, b, a);
+		}
+	}
+	
+	viewC64Screen->debugInterface->UnlockRenderScreenMutex();
+
+	return imgDataSave;
 }
 
 

@@ -10,6 +10,8 @@
 class CSlrKeyboardShortcut;
 class CViewC64MenuItem;
 
+extern int settingsReuSizes[8];
+
 class CViewSettingsMenu : public CGuiView, CGuiButtonCallback, CGuiViewMenuCallback, CSystemFileDialogCallback
 {
 public:
@@ -72,6 +74,7 @@ public:
 	CViewC64MenuItem *menuItemSubMenuAudio;
 	CViewC64MenuItem *menuItemSubMenuMemory;
 	CViewC64MenuItem *menuItemSubMenuTape;
+	CViewC64MenuItem *menuItemSubMenuReu;
 	CViewC64MenuItem *menuItemSubMenuUI;
 
 	CSlrKeyboardShortcut *kbsDetachEverything;
@@ -104,6 +107,13 @@ public:
 	CSlrKeyboardShortcut *kbsCartridgeFreezeButton;
 	CViewC64MenuItem *menuItemCartridgeFreeze;
 
+	//
+	CSlrKeyboardShortcut *kbsResetCpuCycleAndFrameCounters;
+	CViewC64MenuItem *menuItemResetCpuCycleAndFrameCounters;
+	void ResetMainCpuCycleAndFrameCounters();
+	void ResetMainCpuCycleCounter();
+	void ResetEmulationFrameCounter();
+
 	CSlrKeyboardShortcut *kbsDumpC64Memory;
 	CViewC64MenuItem *menuItemDumpC64Memory;
 	CSlrKeyboardShortcut *kbsDumpDrive1541Memory;
@@ -118,13 +128,14 @@ public:
 	CViewC64MenuItem *menuItemMapC64MemoryToFile;
 	void UpdateMapC64MemoryToFileLabels();
 
-	CViewC64MenuItem *menuItemC64CpuProfilerFilePath;
-	void UpdateC64CpuProfilerFilePath();
-	CSlrKeyboardShortcut *kbsC64CpuProfilerStartStop;
-	CViewC64MenuItem *menuItemC64CpuProfilerStartStop;
+	CViewC64MenuItem *menuItemC64ProfilerFilePath;
+	CViewC64MenuItemOption *menuItemC64ProfilerDoVic;
+	void UpdateC64ProfilerFilePath();
+	CSlrKeyboardShortcut *kbsC64ProfilerStartStop;
+	CViewC64MenuItem *menuItemC64ProfilerStartStop;
 	void OpenDialogSetC64ProfilerFileOutputPath();
 	void SetC64ProfilerOutputFile(CSlrString *path);
-	void C64CpuProfilerStartStop();
+	void C64ProfilerStartStop();
 	bool isProfilingC64;
 
 	//
@@ -139,9 +150,11 @@ public:
 	
 	//
 	CViewC64MenuItemOption *menuItemAutoJmp;
+	CSlrKeyboardShortcut *kbsAutoJmpAlwaysToLoadedPRGAddress;
 	CViewC64MenuItemOption *menuItemAutoJmpAlwaysToLoadedPRGAddress;
 	CSlrKeyboardShortcut *kbsAutoJmpFromInsertedDiskFirstPrg;
 	CViewC64MenuItemOption *menuItemAutoJmpFromInsertedDiskFirstPrg;
+	CSlrKeyboardShortcut *kbsAutoJmpDoReset;
 	CViewC64MenuItemOption *menuItemAutoJmpDoReset;
 	CViewC64MenuItemFloat  *menuItemAutoJmpWaitAfterReset;
 
@@ -156,6 +169,8 @@ public:
 	void UpdateAtariRamSizeOptions();
 
 	void ToggleAutoLoadFromInsertedDisk();
+	void ToggleAutoJmpAlwaysToLoadedPRGAddress();
+	void ToggleAutoJmpDoReset();
 	
 	// tape
 	CSlrKeyboardShortcut *kbsTapeAttach;
@@ -181,6 +196,13 @@ public:
 	CViewC64MenuItemFloat *menuItemDatasetteTapeWobble;
 	CViewC64MenuItemOption *menuItemDatasetteResetWithCPU;
 	
+	// REU
+	CViewC64MenuItemOption *menuItemReuEnabled;
+	CSlrKeyboardShortcut *kbsReuAttach;
+	CViewC64MenuItem *menuItemReuAttach;
+	CViewC64MenuItem *menuItemReuSave;
+	CViewC64MenuItemOption *menuItemReuSize;
+
 	
 	//
 	CViewC64MenuItemFloat *menuItemScreenGridLinesAlpha;

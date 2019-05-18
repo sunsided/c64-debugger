@@ -1333,12 +1333,12 @@ void machine_change_timing(int timeval, int border_mode)
 
 int machine_write_snapshot(const char *name, int save_roms, int save_disks, int event_mode)
 {
-    return c64_snapshot_write(name, save_roms, save_disks, event_mode);
+    return c64_snapshot_write(name, save_roms, save_disks, event_mode, 1);
 }
 
 int machine_read_snapshot(const char *name, int event_mode)
 {
-    return c64_snapshot_read(name, event_mode);
+    return c64_snapshot_read(name, event_mode, 1, 1, 1);
 }
 
 /* ------------------------------------------------------------------------- */

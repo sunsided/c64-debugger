@@ -595,6 +595,13 @@ CSlrFile *RES_GetFile(char *fileName, byte fileType)
 	if (file->Exists())
 		return file;
 	
+	delete file;
+	file = new CSlrFileFromOS(fileName);
+	if (file->Exists())
+		return file;
+	
+	delete file;
+	
 	return NULL;
 }
 

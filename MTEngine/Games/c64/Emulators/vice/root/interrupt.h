@@ -318,6 +318,7 @@ extern void interrupt_set_nmi_trap_func(interrupt_cpu_status_t *cs,
 
 extern interrupt_cpu_status_t *maincpu_int_status;
 extern CLOCK maincpu_clk;
+extern CLOCK c64d_maincpu_clk;
 
 /* For convenience...  */
 

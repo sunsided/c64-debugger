@@ -10,6 +10,7 @@
 #include "SYS_Funct.h"
 #include "SYS_Main.h"
 #include "SYS_CFileSystem.h"
+#include <string.h>
 
 #if !defined(WIN32) && !defined(ANDROID)
 #include <execinfo.h>
@@ -287,7 +288,8 @@ char *SYS_GetFileNameFromFullPath(char *fileNameFull)
 	// path sign is not found, just dup the original path as filename
 	if (foundPathSign == false)
 	{
-		char *ret = strdup(fileNameFull);
+		char *ret = new char[len];
+		strcpy(ret, fileNameFull);
 		return ret;
 	}
 	
@@ -310,8 +312,9 @@ char *SYS_GetFileNameFromFullPath(char *fileNameFull)
 	}
 	fileName[j] = 0x00;
 
-	char *ret = strdup(fileName);
-	
+	char *ret = new char[len];
+	strcpy(ret, fileName);
+
 	SYS_ReleaseCharBuf(fileName);
 	
 	return ret;

@@ -838,6 +838,17 @@ $ c64d-champ.rb <file.pd>
 Champ will create a report.html with report-files folder that you can view
 using standard web browser.
 
+The report log file consists of these types of events:
+cpu <emulation cycle> <frame number> <previous PC> <register A> <register X> <register Y> <PC> <SP> <processor flags> <profile cpu cycles> <raster line> <raster cycle> <is bad line>
+
+vic <emulation cycle> <frame number> <raster line> <raster cycle> <is bad line> <is sprite dma> <raster irq line>
+
+jsr 0x<hex addr> <cycles>
+
+rts <cycles>
+
+cycles <cycles>
+
 
 * JukeBox playlist and automated tests
 
@@ -1252,8 +1263,26 @@ Champ 65c02 Profiler
 * Change log
 *
 
-v0.64.56.4 (2019/02/22), celebration of my 40th birthday 
-                         and 2 years duration of the project! Cheers!
+v0.64.56.6 (2019/05/17), released at Moonshine Dragons demo party
+Bug Fixed: Changing SID register was not reflected when CPU emulation 
+           was paused in some SID emulation engines
+Bug Fixed: Detach everything was not detaching cartridge
+Bug Fixed: 1541 Drive memory map was showing pixels based on C64 memory map
+Bug Fixed: Disassemble command in monitor console was sometimes not adding
+           a new line character (thanks to Alex Goldblat)
+Added: REU settings menu and REU registers view in Ctrl+F5
+Added: Timestamp, frame number and cycle number counters shown in in Ctrl+F5 
+       (zero by Shift+Backspace)
+Added: Frame number, cycle number, raster line, raster cycle and a fetch line
+       ("bad line") state added to profiler log. Note, the event name has 
+       been changed from 'log' to 'cpu'
+Added: Settings switch to also do VIC profiling (event 'vic')
+Added: Keyboard shortcut to switch auto load reset and jump modes
+Added: Some more Debugger API functionalities and a dummy plugin example
+
+
+v0.64.56.4 (2019/02/22), a celebration of my 40th birthday 
+                         and 3 years duration of the project! Cheers!
 Added: Sprite view in VIC Editor also shows sprite pointer value (requested by Dr.J)
 Added: You can zoom in and out using mouse wheel within zoomed screen view
 Added: You can set C64 screen texture supersampling factor in Settings
@@ -1262,7 +1291,7 @@ Added: Opening SID tunes: conversion is done using psid64 by Roland Hermans!
        You can also just load the SID into RAM. Select preferred behavior in Settings.
 Added: Simple debugger emulation API to create own plugins for code proof of concepts 
        (early draft)
-Added: Champ 6502 profiler integration (early draft)
+Added: Champ 6502 profiler integration (early draft, , thanks to Brush/Elysium for the idea)
 Added: NestopiaUE emulator engine aka NES Debugger (early draft)
 Bug Fixed: Comparing commands in monitor was not properly matching command names 
            that overlap

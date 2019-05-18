@@ -679,7 +679,11 @@ void drive_gcr_data_writeback_all(void)
     unsigned int i;
 
     for (i = 0; i < DRIVE_NUM; i++) {
+		if (drive_context[i] == NULL)
+			continue;
         drive = drive_context[i]->drive;
+		if (drive == NULL)
+			continue;
         drive_gcr_data_writeback(drive);
         if (drive->P64_image_loaded && drive->image && drive->image->p64) {
             if (drive->image->type == DISK_IMAGE_TYPE_P64) {

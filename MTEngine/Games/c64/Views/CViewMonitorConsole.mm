@@ -11,6 +11,7 @@
 #include "CViewMemoryMap.h"
 #include "CViewC64StateCPU.h"
 #include "CViewDriveStateCPU.h"
+#include "C64Tools.h"
 #include "C64D_Version.h"
 
 #define C64DEBUGGER_MONITOR_HISTORY_FILE_VERSION	1
@@ -891,6 +892,8 @@ bool CViewMonitorConsole::DoMemoryDumpToFile(int addrStart, int addrEnd, bool is
 	// get file path
 	char *cFilePath = filePath->GetStdASCII();
 	
+	C64SaveMemory(addrStart, addrEnd, isPRG, dataAdapter, cFilePath);
+	
 	FILE *fp;
 	fp = fopen(cFilePath, "wb");
 
@@ -1357,6 +1360,7 @@ bool CViewMonitorConsole::DoDisassembleMemory(int startAddress, int endAddress, 
 			{
 				opcode = memory[addr ];	//% memoryLength
 				renderAddress += DisassembleLine(renderAddress, op[0], op[1], op[2], byteBuffer);
+				byteBuffer->PutByte('\n');
 			}
 			else
 			{
@@ -1369,10 +1373,12 @@ bool CViewMonitorConsole::DoDisassembleMemory(int startAddress, int endAddress, 
 					if (opcodes[opcode].addressingLength == 1)
 					{
 						DisassembleLine(renderAddress, op[0], op[1], op[2], byteBuffer);
+						byteBuffer->PutByte('\n');
 					}
 					else
 					{
 						DisassembleHexLine(renderAddress, byteBuffer);
+						byteBuffer->PutByte('\n');
 					}
 					
 					renderAddress += 1;
@@ -1390,6 +1396,7 @@ bool CViewMonitorConsole::DoDisassembleMemory(int startAddress, int endAddress, 
 					
 					opcode = memory[ (renderAddress) ];	//% memoryLength
 					renderAddress += DisassembleLine(renderAddress, op[0], op[1], op[2], byteBuffer);
+					byteBuffer->PutByte('\n');
 				}
 				else
 				{
@@ -1402,13 +1409,16 @@ bool CViewMonitorConsole::DoDisassembleMemory(int startAddress, int endAddress, 
 						if (opcodes[opcode].addressingLength == 2)
 						{
 							renderAddress += DisassembleLine(renderAddress, op[0], op[1], op[2], byteBuffer);
+							byteBuffer->PutByte('\n');
 						}
 						else
 						{
 							DisassembleHexLine(renderAddress, byteBuffer);
+							byteBuffer->PutByte('\n');
 							renderAddress += 1;
 							
 							DisassembleHexLine(renderAddress, byteBuffer);
+							byteBuffer->PutByte('\n');
 							renderAddress += 1;
 						}
 						
@@ -1425,6 +1435,7 @@ bool CViewMonitorConsole::DoDisassembleMemory(int startAddress, int endAddress, 
 						
 						opcode = memory[ (renderAddress) ];	//% memoryLength
 						renderAddress += DisassembleLine(renderAddress, op[0], op[1], op[2], byteBuffer);
+						byteBuffer->PutByte('\n');
 					}
 					else
 					{
@@ -1432,19 +1443,19 @@ bool CViewMonitorConsole::DoDisassembleMemory(int startAddress, int endAddress, 
 						{
 							// execute not found, just render line
 							renderAddress += DisassembleLine(renderAddress, op[0], op[1], op[2], byteBuffer);
+							byteBuffer->PutByte('\n');
 						}
 						else
 						{
 							// it is argument
 							DisassembleHexLine(renderAddress, byteBuffer);
+							byteBuffer->PutByte('\n');
 							renderAddress++;
 						}
 					}
 				}
 			}
 		}
-		
-		byteBuffer->PutByte('\n');
 		
 		if (renderAddress >= endAddress)
 			break;

@@ -8,9 +8,6 @@
 #include "CVicEditorLayerC64Canvas.h"
 #include "C64Tools.h"
 
-#define C64_SCREEN_OFFSET_X 32
-#define C64_SCREEN_OFFSET_Y 35
-
 CVicEditorLayerImage::CVicEditorLayerImage(CViewVicEditor *vicEditor, char *layerName)
 : CVicEditorLayer(vicEditor, layerName)
 {

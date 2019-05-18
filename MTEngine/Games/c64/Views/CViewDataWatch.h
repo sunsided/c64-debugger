@@ -14,23 +14,6 @@ class CSlrFont;
 class CViewMemoryMap;
 class CSlrDataAdapter;
 
-enum watchRepresentation : uint8
-{
-	WATCH_REPRESENTATION_HEX = 0,
-	WATCH_REPRESENTATION_BIN,
-	WATCH_REPRESENTATION_UNSIGNED_DEC,
-	WATCH_REPRESENTATION_SIGNED_DEC,
-	WATCH_REPRESENTATION_TEXT
-//	WATCH_REPRESENTATION_OCT,		// not used
-};
-
-enum watchNumberOfBits : uint8
-{
-	WATCH_BITS_8,
-	WATCH_BITS_16,
-	WATCH_BITS_32	// not used
-};
-
 class CDataWatchDetails
 {
 public:

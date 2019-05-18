@@ -152,7 +152,7 @@ void CViewVicEditorLayers::UpdateVisibleSwitchButtons()
 
 bool CViewVicEditorLayers::ButtonSwitchChanged(CGuiButtonSwitch *button)
 {
-	LOGD("CViewVicEditorLayers::ButtonSwitchChanged");
+	LOGG("CViewVicEditorLayers::ButtonSwitchChanged");
 	
 	CVicEditorLayer *layer = (CVicEditorLayer *)button->userData;
 	
@@ -168,7 +168,7 @@ bool CViewVicEditorLayers::ButtonSwitchChanged(CGuiButtonSwitch *button)
 
 void CViewVicEditorLayers::SetLayerVisible(CVicEditorLayer *layer, bool isVisible)
 {
-	LOGD("CViewVicEditorLayers::SetLayerVisible");
+	LOGG("CViewVicEditorLayers::SetLayerVisible");
 	
 	layer->isVisible = isVisible;
 
@@ -182,7 +182,7 @@ void CViewVicEditorLayers::SetLayerVisible(CVicEditorLayer *layer, bool isVisibl
 
 void CViewVicEditorLayers::ListElementSelected(CGuiList *listBox)
 {
-	LOGD("CViewVicEditorLayers::ListElementSelected");
+	LOGG("CViewVicEditorLayers::ListElementSelected");
 	
 	if (listBox->selectedElement == -1)
 	{
@@ -210,7 +210,7 @@ void CViewVicEditorLayers::SelectLayer(CVicEditorLayer *layer)
 
 void CViewVicEditorLayers::SelectNextLayer()
 {
-	LOGD("CViewVicEditorLayers::SelectNextLayer");
+	LOGG("CViewVicEditorLayers::SelectNextLayer");
 	
 	int el = this->lstLayers->selectedElement;
 	

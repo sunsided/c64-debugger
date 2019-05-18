@@ -38,6 +38,11 @@ public:
 	virtual CSlrString *GetEmulatorVersionString();
 	virtual CSlrString *GetPlatformNameString();
 
+	virtual void ResetMainCpuCycleCounter();
+	virtual unsigned int GetMainCpuCycleCounter();
+	virtual void ResetEmulationFrameCounter();
+	virtual unsigned int GetEmulationFrameNumber();
+
 	virtual void RunEmulationThread();
 	
 	virtual void InitKeyMap(C64KeyMap *keyMap);
@@ -220,6 +225,15 @@ public:
 	virtual void DatasetteSetZeroGapDelay(int zeroGapDelay);
 	virtual void DatasetteSetResetWithCPU(bool resetWithCPU);
 	virtual void DatasetteSetTapeWobble(int tapeWobble);
+
+	// reu
+	virtual void SetReuEnabled(bool isEnabled);
+	virtual void SetReuSize(int reuSize);
+	virtual bool LoadReu(char *filePath);
+	virtual bool SaveReu(char *filePath);
+
+	//
+	virtual void DetachEverything();
 
 	// snapshots
 	virtual bool LoadFullSnapshot(CByteBuffer *snapshotBuffer);

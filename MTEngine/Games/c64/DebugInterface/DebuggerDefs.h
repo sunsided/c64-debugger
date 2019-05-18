@@ -49,6 +49,24 @@ enum MemoryBreakpointType
 	MEMORY_BREAKPOINT_LAST
 };
 
+enum watchRepresentation
+{
+	WATCH_REPRESENTATION_HEX = 0,
+	WATCH_REPRESENTATION_BIN,
+	WATCH_REPRESENTATION_UNSIGNED_DEC,
+	WATCH_REPRESENTATION_SIGNED_DEC,
+	WATCH_REPRESENTATION_TEXT
+	//	WATCH_REPRESENTATION_OCT,		// not used
+};
+
+enum watchNumberOfBits
+{
+	WATCH_BITS_8,
+	WATCH_BITS_16,
+	WATCH_BITS_32	// not used
+};
+
+
 // below are all ANSI C definitions that belong to a proper *.h file from the interface, keeping here for now due to inconsistency:
 
 //

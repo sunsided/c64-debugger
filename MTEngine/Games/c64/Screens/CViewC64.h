@@ -64,6 +64,8 @@ class CViewC64VicControl;
 class CViewVicEditor;
 class CViewDriveStateCPU;
 class CViewDrive1541StateVIA;
+class CViewC64StateREU;
+class CViewC64EmulationCounters;
 class CViewEmulationState;
 class CViewMonitorConsole;
 
@@ -227,6 +229,12 @@ public:
 	bool c64StateVICIsVertical;
 	bool c64StateVICShowSprites;
 	int c64StateVICNumValuesPerColumn;
+	bool c64StateREUVisible;
+	float c64StateREUX, c64StateREUY;
+	float c64StateREUFontSize;
+	bool c64EmulationCountersVisible;
+	float c64EmulationCountersX, c64EmulationCountersY;
+	float c64EmulationCountersFontSize;
 	
 	bool drive1541StateVIAVisible;
 	float drive1541StateVIAX, drive1541StateVIAY;
@@ -474,7 +482,9 @@ public:
 	CViewC64StateSID *viewC64StateSID;
 	CViewC64StateVIC *viewC64StateVIC;
 	CViewDrive1541StateVIA *viewDrive1541StateVIA;
-	
+	CViewC64StateREU *viewC64StateREU;
+	CViewC64EmulationCounters *viewC64EmulationCounters;
+
 	CViewEmulationState *viewEmulationState;
 	
 	CViewC64VicDisplay *viewC64VicDisplay;
@@ -542,7 +552,6 @@ public:
 //	int nextScreenUpdateFrame;
 	
 	//
-	long emulationFrameCounter;
 	void EmulationStartFrameCallback();
 	
 	//

@@ -35,7 +35,9 @@
 #define VIEWC64SETTINGS_OPEN_PRG	4
 #define VIEWC64SETTINGS_OPEN_JUKEBOX	5
 #define VIEWC64SETTINGS_OPEN_TAPE	6
-#define VIEWC64SETTINGS_SET_ATARI_ROMS_FOLDER	7
+#define VIEWC64SETTINGS_OPEN_REU	7
+#define VIEWC64SETTINGS_SAVE_REU	8
+#define VIEWC64SETTINGS_SET_ATARI_ROMS_FOLDER	9
 
 CViewMainMenu::CViewMainMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
@@ -60,6 +62,10 @@ CViewMainMenu::CViewMainMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 		tapeExtensions.push_back(new CSlrString("t64"));
 
 		crtExtensions.push_back(new CSlrString("crt"));
+		crtExtensions.push_back(new CSlrString("reu"));
+		
+		reuExtensions.push_back(new CSlrString("reu"));
+		reuExtensions.push_back(new CSlrString("bin"));
 		
 		// Open dialog
 		openFileExtensions.push_back(new CSlrString("prg"));
@@ -71,6 +77,7 @@ CViewMainMenu::CViewMainMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 		openFileExtensions.push_back(new CSlrString("t64"));
 		openFileExtensions.push_back(new CSlrString("crt"));
 		openFileExtensions.push_back(new CSlrString("sid"));
+		openFileExtensions.push_back(new CSlrString("reu"));
 	}
 	
 	if (viewC64->debugInterfaceAtari)
@@ -485,6 +492,29 @@ void CViewMainMenu::OpenDialogInsertTape()
 	delete windowTitle;
 }
 
+void CViewMainMenu::OpenDialogAttachReu()
+{
+	LOGM("OpenDialogAttachReu");
+	openDialogFunction = VIEWC64SETTINGS_OPEN_REU;
+	
+	CSlrString *windowTitle = new CSlrString("Open REU image");
+	windowTitle->DebugPrint("windowTitle=");
+	viewC64->ShowDialogOpenFile(this, &reuExtensions, c64SettingsDefaultReuFolder, windowTitle);
+	delete windowTitle;
+}
+
+void CViewMainMenu::OpenDialogSaveReu()
+{
+	LOGM("OpenDialogSaveReu");
+	openDialogFunction = VIEWC64SETTINGS_OPEN_REU;
+	
+	CSlrString *windowTitle = new CSlrString("Save REU image");
+	windowTitle->DebugPrint("windowTitle=");
+	CSlrString *defaultFileName = new CSlrString("image");
+	viewC64->ShowDialogSaveFile(this, &reuExtensions, defaultFileName, c64SettingsDefaultReuFolder, windowTitle);
+	delete windowTitle;
+}
+
 void CViewMainMenu::OpenDialogOpenFile()
 {
 	LOGM("OpenDialogOpenFile");
@@ -541,6 +571,11 @@ void CViewMainMenu::SystemDialogFileOpenSelected(CSlrString *path)
 		LoadPRG(path, true, true, true, false);
 		C64DebuggerStoreSettings();
 	}
+	else if (openDialogFunction == VIEWC64SETTINGS_OPEN_REU)
+	{
+		AttachReu(path, true, true);
+		C64DebuggerStoreSettings();
+	}
 	else if (openDialogFunction == VIEWC64SETTINGS_OPEN_JUKEBOX)
 	{
 		viewC64->InitJukebox(path);
@@ -578,6 +613,25 @@ void CViewMainMenu::SystemDialogFileOpenSelected(CSlrString *path)
 	
 	openDialogFunction = VIEWC64SETTINGS_OPEN_NONE;
 }
+
+void CViewMainMenu::SystemDialogFileSaveSelected(CSlrString *path)
+{
+	LOGM("CViewMainMenu::SystemDialogFileSaveSelected, path=%x", path);
+	path->DebugPrint("path=");
+	
+	if (openDialogFunction == VIEWC64SETTINGS_SAVE_REU)
+	{
+		SaveReu(path, true, true);
+		C64DebuggerStoreSettings();
+	}
+
+	openDialogFunction = VIEWC64SETTINGS_OPEN_NONE;
+}
+
+void CViewMainMenu::SystemDialogFileSaveCancelled()
+{
+}
+
 
 void CViewMainMenu::LoadFile(CSlrString *path)
 {
@@ -692,7 +746,7 @@ void CViewMainMenu::InsertD64(CSlrString *path, bool updatePathToD64, bool autoR
 	guiMain->UnlockMutex();
 
 	LOGM("Inserted new d64: %s", asciiPath);
-	delete asciiPath;
+	delete [] asciiPath;
 	
 	if (guiMain->currentView == viewC64->viewFileD64)
 		viewC64->viewFileD64->StartSelectedDiskImageBrowsing();
@@ -701,6 +755,124 @@ void CViewMainMenu::InsertD64(CSlrString *path, bool updatePathToD64, bool autoR
 	{
 		viewC64->viewFileD64->StartDiskPRGEntry(autoRunEntryNum, showLoadAddressInfo);
 	}
+}
+
+bool CViewMainMenu::AttachReu(CSlrString *path, bool updatePathToReu, bool showDetails)
+{
+	LOGD("CViewMainMenu::AttachReu: path=%x");
+	
+	if (SYS_FileExists(path) == false)
+	{
+		if (c64SettingsPathToReu != NULL)
+			delete c64SettingsPathToReu;
+		
+		c64SettingsPathToReu = NULL;
+		LOGError("AttachReu: file not found, skipping");
+		return false;
+	}
+	
+	if (c64SettingsPathToReu != path)
+	{
+		if (c64SettingsPathToReu != NULL)
+			delete c64SettingsPathToReu;
+		c64SettingsPathToReu = new CSlrString(path);
+	}
+	
+	if (updatePathToReu)
+	{
+		LOGD("...updatePathToReu");
+		if (c64SettingsDefaultReuFolder != NULL)
+			delete c64SettingsDefaultReuFolder;
+		c64SettingsDefaultReuFolder = path->GetFilePathWithoutFileNameComponentFromPath();
+		
+		c64SettingsDefaultReuFolder->DebugPrint("c64SettingsDefaultReuFolder=");
+	}
+	
+	// insert REU
+	char *asciiPath = c64SettingsPathToReu->GetStdASCII();
+	
+	bool ret = viewC64->debugInterfaceC64->LoadReu(asciiPath);
+	
+	// display file name in menu
+	char *fname = SYS_GetFileNameFromFullPath(asciiPath);
+	
+	guiMain->LockMutex();
+	
+	if (viewC64->viewC64SettingsMenu->menuItemReuAttach->str2 != NULL)
+		delete viewC64->viewC64SettingsMenu->menuItemReuAttach->str2;
+	
+	viewC64->viewC64SettingsMenu->menuItemReuAttach->str2 = new CSlrString(fname);
+	
+	guiMain->UnlockMutex();
+	
+	LOGM("%s REU: %s", (ret ? "Attached" : "Failed to attach"), asciiPath);
+	delete [] asciiPath;
+	
+	if (showDetails)
+	{
+		char *buf = SYS_GetCharBuf();
+		sprintf(buf, "%s REU: %s", (ret ? "Attached" : "Failed to attach"), fname);
+		guiMain->ShowMessage(buf);
+		SYS_ReleaseCharBuf(buf);
+	}
+
+	delete [] fname;
+	
+	return ret;
+}
+
+bool CViewMainMenu::SaveReu(CSlrString *path, bool updatePathToReu, bool showDetails)
+{
+	LOGD("CViewMainMenu::SaveReu: path=%x");
+	
+	if (updatePathToReu)
+	{
+		LOGD("...updatePathToReu");
+		if (c64SettingsPathToReu != path)
+		{
+			if (c64SettingsPathToReu != NULL)
+				delete c64SettingsPathToReu;
+			c64SettingsPathToReu = new CSlrString(path);
+		}
+		
+		if (c64SettingsDefaultReuFolder != NULL)
+			delete c64SettingsDefaultReuFolder;
+		c64SettingsDefaultReuFolder = path->GetFilePathWithoutFileNameComponentFromPath();
+		
+		c64SettingsDefaultReuFolder->DebugPrint("c64SettingsDefaultReuFolder=");
+	}
+	
+	// save REU
+	char *asciiPath = c64SettingsPathToReu->GetStdASCII();
+	
+	bool ret = viewC64->debugInterfaceC64->SaveReu(asciiPath);
+	
+	
+	// display file name in menu
+	char *fname = SYS_GetFileNameFromFullPath(asciiPath);
+	
+	guiMain->LockMutex();
+	if (viewC64->viewC64SettingsMenu->menuItemReuAttach->str2 != NULL)
+		delete viewC64->viewC64SettingsMenu->menuItemReuAttach->str2;
+
+	viewC64->viewC64SettingsMenu->menuItemReuAttach->str2 = new CSlrString(fname);
+	
+	guiMain->UnlockMutex();
+	
+	LOGM("%s REU: %s", (ret ? "Saved" : "Failed to save"), asciiPath);
+	delete [] asciiPath;
+	
+	if (showDetails)
+	{
+		char *buf = SYS_GetCharBuf();
+		sprintf(buf, "%s REU: %s", (ret ? "Saved" : "Failed to save"), fname);
+		guiMain->ShowMessage(buf);
+		SYS_ReleaseCharBuf(buf);
+	}
+	
+	delete [] fname;
+	
+	return true;
 }
 
 void CViewMainMenu::InsertCartridge(CSlrString *path, bool updatePathToCRT)
@@ -1602,6 +1774,13 @@ bool CViewMainMenu::LoadPRGNotThreaded(CByteBuffer *byteBuffer, bool autoStart, 
 	if (autoStart && c64SettingsAutoJmpAlwaysToLoadedPRGAddress && !foundBasicSys) // && !isRunBasicCompatibleMode)
 	{
 		LOGD("LoadPRG: c64SettingsAutoJmpAlwaysToLoadedPRGAddress");
+		
+		if (c64SettingsResetCountersOnAutoRun)
+		{
+			viewC64->viewC64SettingsMenu->ResetEmulationFrameCounter();
+			viewC64->viewC64SettingsMenu->ResetMainCpuCycleCounter();
+		}
+		
 		viewC64->debugInterfaceC64->MakeJsrC64(startAddr);
 		viewC64->ShowMainScreen();
 		
@@ -1744,7 +1923,6 @@ void CViewMainMenu::ReloadAndRestartPRG()
 void CViewMainMenu::SystemDialogFileOpenCancelled()
 {
 }
-
 
 void CViewMainMenu::DoLogic()
 {

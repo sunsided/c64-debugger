@@ -321,6 +321,9 @@ void C64DebugInterfaceVice::Reset()
 	keyboard_clear_keymatrix();
 
 	machine_trigger_reset(MACHINE_RESET_MODE_SOFT);
+	this->ResetEmulationFrameCounter();
+	c64d_maincpu_clk = 6;
+
 	c64d_update_c64_model();
 
 	if (c64d_is_cpu_in_jam_state == 1)
@@ -338,6 +341,9 @@ void C64DebugInterfaceVice::HardReset()
 	keyboard_clear_keymatrix();
 
 	machine_trigger_reset(MACHINE_RESET_MODE_HARD);
+	this->ResetEmulationFrameCounter();
+	c64d_maincpu_clk = 6;
+
 	c64d_update_c64_model();
 
 	if (c64d_is_cpu_in_jam_state == 1)
@@ -352,6 +358,26 @@ void C64DebugInterfaceVice::DiskDriveReset()
 	LOGM("C64DebugInterfaceVice::DiskDriveReset()");
 	
 	drivecpu_reset(drive_context[0]);
+}
+
+void C64DebugInterfaceVice::ResetMainCpuCycleCounter()
+{
+	c64d_maincpu_clk = 0;
+}
+
+unsigned int C64DebugInterfaceVice::GetMainCpuCycleCounter()
+{
+	return c64d_maincpu_clk;
+}
+
+void C64DebugInterfaceVice::ResetEmulationFrameCounter()
+{
+	C64DebugInterface::ResetEmulationFrameCounter();
+}
+
+unsigned int C64DebugInterfaceVice::GetEmulationFrameNumber()
+{
+	return C64DebugInterface::GetEmulationFrameNumber();
 }
 
 extern "C" {
@@ -467,6 +493,45 @@ void C64DebugInterfaceVice::DetachDriveDisk()
 {
 	file_system_detach_disk(8);
 }
+
+// REU
+extern "C" {
+	int set_reu_enabled(int value, void *param);
+	int set_reu_size(int val, void *param);
+	int set_reu_filename(const char *name, void *param);
+	int reu_bin_save(const char *filename);
+};
+
+void C64DebugInterfaceVice::SetReuEnabled(bool isEnabled)
+{
+	LOGD("C64DebugInterfaceVice::SetReuEnabled: %s", STRBOOL(isEnabled));
+	set_reu_enabled((isEnabled ? 1:0), NULL);
+}
+
+void C64DebugInterfaceVice::SetReuSize(int reuSize)
+{
+	set_reu_size(reuSize, NULL);
+}
+
+bool C64DebugInterfaceVice::LoadReu(char *filePath)
+{
+	resources_set_string("REUfilename", filePath);
+
+//	if (set_reu_filename(filePath, NULL) == 0)
+//		return true;
+//	return false;
+	
+	return true;
+}
+
+bool C64DebugInterfaceVice::SaveReu(char *filePath)
+{
+	if (reu_bin_save(filePath) == 0)
+		return true;
+	
+	return false;
+}
+
 
 extern "C" {
 	int c64d_get_warp_mode();
@@ -856,7 +921,6 @@ static void c64_set_sid_register_trap(WORD addr, void *v)
 	SetSidRegisterData *setSidRegisterData = (SetSidRegisterData *)v;
 	
 	sid_store_chip(setSidRegisterData->registerNum, setSidRegisterData->value, setSidRegisterData->sidId);
-	
 	delete setSidRegisterData;
 	
 	gSoundEngine->UnlockMutex("C64DebugInterfaceVice::SetSidRegister");
@@ -864,16 +928,24 @@ static void c64_set_sid_register_trap(WORD addr, void *v)
 	guiMain->UnlockMutex();
 }
 
-
 void C64DebugInterfaceVice::SetSidRegister(uint8 sidId, uint8 registerNum, uint8 value)
 {
 	this->LockMutex();
 	
-	SetSidRegisterData *setSidRegisterData = new SetSidRegisterData();
-	setSidRegisterData->sidId = sidId;
-	setSidRegisterData->registerNum = registerNum;
-	setSidRegisterData->value = value;
-	interrupt_maincpu_trigger_trap(c64_set_sid_register_trap, setSidRegisterData);
+	if (this->GetDebugMode() == DEBUGGER_MODE_PAUSED)
+	{ 
+		this->LockIoMutex();
+		sid_store_chip(registerNum, value, sidId);
+		this->UnlockIoMutex();
+	}
+	else
+	{
+		SetSidRegisterData *setSidRegisterData = new SetSidRegisterData();
+		setSidRegisterData->sidId = sidId;
+		setSidRegisterData->registerNum = registerNum;
+		setSidRegisterData->value = value;
+		interrupt_maincpu_trigger_trap(c64_set_sid_register_trap, setSidRegisterData);
+	}
 
 	this->UnlockMutex();
 }
@@ -1218,7 +1290,7 @@ void C64DebugInterfaceVice::GetFloatCBMColor(uint8 colorNum, float *r, float *g,
 
 void C64DebugInterfaceVice::SetDebugMode(uint8 debugMode)
 {
-	//LOGD("C64DebugInterfaceVice::SetDebugMode: %d", debugMode);
+	LOGD("C64DebugInterfaceVice::SetDebugMode: %d", debugMode);
 	
 	c64d_set_debug_mode(debugMode);
 	
@@ -1265,7 +1337,6 @@ void C64DebugInterfaceVice::DetachTape()
 {
 	interrupt_maincpu_trigger_trap(tape_detach_trap, NULL);
 }
-
 
 void C64DebugInterfaceVice::DatasettePlay()
 {
@@ -1340,6 +1411,8 @@ static void cartridge_detach_trap(WORD addr, void *v)
 	// -1 means all slots
 	cartridge_detach_image(-1);
 	machine_trigger_reset(MACHINE_RESET_MODE_HARD);
+	debugInterfaceVice->ResetEmulationFrameCounter();
+	c64d_maincpu_clk = 6;
 }
 
 void C64DebugInterfaceVice::AttachCartridge(CSlrString *filePath)
@@ -1391,6 +1464,26 @@ void C64DebugInterfaceVice::GetC64CartridgeState(C64StateCartridge *cartridgeSta
 {
 	c64d_get_exrom_game(&(cartridgeState->exrom), &(cartridgeState)->game);
 }
+
+static void trap_detach_everything(WORD addr, void *v)
+{
+	// -1 means all slots
+	cartridge_detach_image(-1);
+	machine_trigger_reset(MACHINE_RESET_MODE_HARD);
+	debugInterfaceVice->ResetEmulationFrameCounter();
+	c64d_maincpu_clk = 6;
+
+	tape_image_detach(1);
+	
+	file_system_detach_disk(8);
+}
+
+
+void C64DebugInterfaceVice::DetachEverything()
+{
+	interrupt_maincpu_trigger_trap(trap_detach_everything, NULL);
+}
+
 
 extern "C" {
 	void c64d_c64_set_vicii_record_state_mode(uint8 recordMode);
@@ -1516,6 +1609,8 @@ static void load_snapshot_trap(WORD addr, void *v)
 {
 	LOGD("load_snapshot_trap");
 	
+	debugInterfaceVice->LockMutex();
+	
 	char *filePath = (char*)v;
 	//int ret =
 
@@ -1523,13 +1618,14 @@ static void load_snapshot_trap(WORD addr, void *v)
 	if (!fp)
 	{
 		guiMain->ShowMessage("Snapshot not found");
+		debugInterfaceVice->UnlockMutex();
 		return;
 	}
 	fclose(fp);
 	
 	gSoundEngine->LockMutex("load_snapshot_trap");
 
-	if (c64_snapshot_read(filePath, 0) < 0)
+	if (c64_snapshot_read(filePath, 0, 1, 1, 1) < 0)
 	{
 		guiMain->ShowMessage("Snapshot loading failed");
 		
@@ -1571,6 +1667,8 @@ static void load_snapshot_trap(WORD addr, void *v)
 	SYS_ReleaseCharBuf(filePath);
 	
 	viewC64->viewC64SettingsMenu->UpdateSidSettings();
+
+	debugInterfaceVice->UnlockMutex();
 }
 
 
@@ -1595,15 +1693,19 @@ static void save_snapshot_trap(WORD addr, void *v)
 {
 	LOGD("save_snapshot_trap");
 	
+	debugInterfaceVice->LockMutex();
+
 	char *filePath = (char*)v;
 	
 	gSoundEngine->LockMutex("save_snapshot_trap");
 	
-	c64_snapshot_write(filePath, 0, 1, 0);
+	c64_snapshot_write(filePath, 0, 1, 0, 1);
 	
 	gSoundEngine->UnlockMutex("save_snapshot_trap");
 	
 	SYS_ReleaseCharBuf(filePath);
+	
+	debugInterfaceVice->UnlockMutex();	
 }
 
 void C64DebugInterfaceVice::SaveFullSnapshot(char *filePath)

@@ -48,6 +48,8 @@ CLOCK maincpu_clk = 0L;
 /* if != 0, exit when this many cycles have been executed */
 CLOCK maincpu_clk_limit = 0L;
 
+CLOCK c64d_maincpu_clk = 0L;
+
 #define REWIND_FETCH_OPCODE(clock) /*clock-=2*/
 
 /* Mask: BA low */
@@ -65,6 +67,7 @@ int c64d_c64_instruction_cycle = 0;
 #define CLK_INC()                                  \
 	interrupt_delay();                             \
 	maincpu_clk++;                                 \
+	c64d_maincpu_clk++;                            \
 	maincpu_ba_low_flags &= ~MAINCPU_BA_LOW_VICII; \
 	maincpu_ba_low_flags |= c64d_c64_do_cycle()
 
@@ -715,6 +718,7 @@ static void cpu_reset(void)
 	}
 	
 	maincpu_clk = 6; /* # of clock cycles needed for RESET.  */
+	c64d_maincpu_clk = 6;
 	
 	/* CPU specific extra reset routine, currently only used
 	 for 8502 fast mode refresh cycle. */
@@ -840,22 +844,22 @@ typedef struct {
 	uint16_t memory_address;
 } r_watch;
 
-r_watch *profiler_watches = 0;
-uint8_t profiler_watches_allocated = 0;
-size_t profiler_watch_count = 0;
-int32_t profiler_watch_offset_for_pc_and_post[0x20000];
+r_watch *c64d_profiler_watches = 0;
+uint8_t c64d_profiler_watches_allocated = 0;
+size_t c64d_profiler_watch_count = 0;
+int32_t c64d_profiler_watch_offset_for_pc_and_post[0x20000];
 
-uint16_t profiler_old_pc = 0x0000;
-uint8_t  profiler_trace_stack[0x100];
-uint8_t  profiler_trace_stack_pointer = 0xff;
-uint16_t profiler_trace_stack_function[0x100];
-uint64_t profiler_cycles_per_function[0x10000];
-uint64_t profiler_calls_per_function[0x10000];
-uint64_t profiler_cpu_total_cycles;
-int profiler_last_cycles = -1;
+uint16_t c64d_profiler_old_pc = 0x0000;
+uint8_t  c64d_profiler_trace_stack[0x100];
+uint8_t  c64d_profiler_trace_stack_pointer = 0xff;
+uint16_t c64d_profiler_trace_stack_function[0x100];
+uint64_t c64d_profiler_cycles_per_function[0x10000];
+uint64_t c64d_profiler_calls_per_function[0x10000];
+uint64_t c64d_profiler_cpu_total_cycles;
+int c64d_profiler_last_cycles = -1;
 
-int profiler_is_active = 0;
-FILE *profiler_file_out = NULL;
+int c64d_profiler_is_active = 0;
+FILE *c64d_profiler_file_out = NULL;
 int profiler_run_for_cycles = -1;
 
 int profiler_pause_cpu_when_finished = 1;
@@ -866,7 +870,7 @@ void c64d_profiler_activate(char *fileName, int runForNumCycles, int pauseCpuWhe
 	LOGD("c64d_activate_profiler: fileName=%s runForNumCycles=%d", (fileName == NULL ? "NULL" : fileName), runForNumCycles);
 	if (fileName != NULL)
 	{
-		profiler_file_out = fopen(fileName, "wb");
+		c64d_profiler_file_out = fopen(fileName, "wb");
 	}
 	profiler_run_for_cycles = runForNumCycles;
 	profiler_pause_cpu_when_finished = pauseCpuWhenFinished;
@@ -876,14 +880,14 @@ void c64d_profiler_activate(char *fileName, int runForNumCycles, int pauseCpuWhe
 
 void c64d_profiler_deactivate()
 {
-	if (profiler_file_out)
+	if (c64d_profiler_file_out)
 	{
-		fclose(profiler_file_out);
-		profiler_file_out = NULL;
+		fclose(c64d_profiler_file_out);
+		c64d_profiler_file_out = NULL;
 		profiler_run_for_cycles = -1;
 	}
 	
-	profiler_is_active = 0;
+	c64d_profiler_is_active = 0;
 	
 	if (profiler_pause_cpu_when_finished)
 	{
@@ -894,30 +898,30 @@ void c64d_profiler_deactivate()
 void c64d_profiler_init()
 {
 	LOGD("c64d_profiler_init");
-	profiler_cpu_total_cycles = 0;
-	profiler_last_cycles = -1;
+	c64d_profiler_cpu_total_cycles = 0;
+	c64d_profiler_last_cycles = -1;
 	
-	memset(profiler_cycles_per_function, 0, sizeof(profiler_cycles_per_function));
-	memset(profiler_calls_per_function, 0, sizeof(profiler_calls_per_function));
+	memset(c64d_profiler_cycles_per_function, 0, sizeof(c64d_profiler_cycles_per_function));
+	memset(c64d_profiler_calls_per_function, 0, sizeof(c64d_profiler_calls_per_function));
 
-	profiler_is_active = 1;
+	c64d_profiler_is_active = 1;
 }
 
 void c64d_profiler_jsr(uint16_t target_address)
 {
 	//	LOGD("c64d_profiler_jsr: addr pc=%x", reg_pc);
-	if (profiler_is_active)
+	if (c64d_profiler_is_active)
 	{
 		// push PC - 1 because target address has already been read
-		profiler_trace_stack_function[profiler_trace_stack_pointer] = target_address;
-		profiler_trace_stack[profiler_trace_stack_pointer] = reg_sp;
-		profiler_trace_stack_pointer--;
-		profiler_calls_per_function[target_address]++;
+		c64d_profiler_trace_stack_function[c64d_profiler_trace_stack_pointer] = target_address;
+		c64d_profiler_trace_stack[c64d_profiler_trace_stack_pointer] = reg_sp;
+		c64d_profiler_trace_stack_pointer--;
+		c64d_profiler_calls_per_function[target_address]++;
 		
-		if (profiler_file_out)
+		if (c64d_profiler_file_out)
 		{
-			fprintf(profiler_file_out, "jsr 0x%04x %llu\n", target_address, profiler_cpu_total_cycles);
-			fflush(profiler_file_out);
+			fprintf(c64d_profiler_file_out, "jsr 0x%04x %llu\n", target_address, c64d_profiler_cpu_total_cycles);
+			fflush(c64d_profiler_file_out);
 		}
 	}
 }
@@ -926,56 +930,67 @@ void c64d_profiler_rts()
 {
 	//	LOGD("c64d_profiler_rts: addr pc=%x", reg_pc);
 	
-	if (profiler_is_active)
+	if (c64d_profiler_is_active)
 	{
-		if (profiler_trace_stack[profiler_trace_stack_pointer + 1] == reg_sp + 2)
+		if (c64d_profiler_trace_stack[c64d_profiler_trace_stack_pointer + 1] == reg_sp + 2)
 		{
 
-			if (profiler_file_out)
+			if (c64d_profiler_file_out)
 			{
-				fprintf(profiler_file_out, "rts %llu\n", profiler_cpu_total_cycles);
-				fflush(profiler_file_out);
+				fprintf(c64d_profiler_file_out, "rts %llu\n", c64d_profiler_cpu_total_cycles);
+				fflush(c64d_profiler_file_out);
 			}
-			profiler_trace_stack_pointer++;
+			c64d_profiler_trace_stack_pointer++;
 		}
 	}
 }
 
 void c64d_profiler_start_handle_cpu_instruction()
 {
-	if (profiler_is_active)
+	if (c64d_profiler_is_active)
 	{
-		profiler_old_pc = reg_pc;
+		c64d_profiler_old_pc = reg_pc;
 	}
 }
 
 void c64d_profiler_end_cpu_instruction()
 {
 //	LOGD("c64d_c64_instruction_cycle=%d", c64d_c64_instruction_cycle);
-	if (profiler_is_active)
+	if (c64d_profiler_is_active)
 	{
-		profiler_cpu_total_cycles += c64d_c64_instruction_cycle;
-		if (profiler_trace_stack_pointer < 0xff)
+		c64d_profiler_cpu_total_cycles += c64d_c64_instruction_cycle;
+		if (c64d_profiler_trace_stack_pointer < 0xff)
 		{
-			profiler_cycles_per_function[profiler_trace_stack_function[profiler_trace_stack_pointer + 1]] += c64d_c64_instruction_cycle;
+			c64d_profiler_cycles_per_function[c64d_profiler_trace_stack_function[c64d_profiler_trace_stack_pointer + 1]] += c64d_c64_instruction_cycle;
 		}
 		
-		if (profiler_file_out)
+		if (c64d_profiler_file_out)
 		{
-			fprintf(profiler_file_out, "log %04x %02x %02x %02x %04x %02x %02x\n",
-				   profiler_old_pc, reg_a, reg_x, reg_y, reg_pc, reg_sp,
-					reg_p | (flag_n & 0x80) | P_UNUSED | ( (!(flag_z)) ? P_ZERO : 0) );
-			if (profiler_cpu_total_cycles / 100000 != profiler_last_cycles)
+			int raster_line = vicii.raster_line;
+			int raster_cycle = vicii.raster_cycle;
+			//int raster_irq_line = vicii.raster_irq_line;
+			int bad_line = vicii.bad_line;
+			
+
+			unsigned int frameNum = c64d_get_frame_num();
+			fprintf(c64d_profiler_file_out, "cpu %u %u %04x %02x %02x %02x %04x %02x %02x %llu %d %d %d\n",
+					c64d_maincpu_clk,
+					frameNum,
+				   c64d_profiler_old_pc, reg_a, reg_x, reg_y, reg_pc, reg_sp,
+					reg_p | (flag_n & 0x80) | P_UNUSED | ( (!(flag_z)) ? P_ZERO : 0),
+					c64d_profiler_cpu_total_cycles,
+					raster_line, raster_cycle, bad_line);
+			if (c64d_profiler_cpu_total_cycles / 100000 != c64d_profiler_last_cycles)
 			{
-				profiler_last_cycles = profiler_cpu_total_cycles / 100000;
-				fprintf(profiler_file_out, "cycles %d\n", profiler_last_cycles * 100000);
+				c64d_profiler_last_cycles = c64d_profiler_cpu_total_cycles / 100000;
+				fprintf(c64d_profiler_file_out, "cycles %d\n", c64d_profiler_last_cycles * 100000);
 			}
-			fflush(profiler_file_out);
+			fflush(c64d_profiler_file_out);
 		}
 		
 		if (profiler_run_for_cycles != -1)
 		{
-			if (profiler_cpu_total_cycles > profiler_run_for_cycles)
+			if (c64d_profiler_cpu_total_cycles > profiler_run_for_cycles)
 			{
 				c64d_profiler_deactivate();
 			}
@@ -1022,6 +1037,10 @@ void c64d_set_maincpu_regs_no_trap(uint8 a, uint8 x, uint8 y, uint8 p, uint8 sp)
 	reg_sp = sp;
 }
 
+unsigned int c64d_get_maincpu_clock()
+{
+	return c64d_maincpu_clk;
+}
 
 void interrupt_maincpu_trigger_trap(void (*trap_func)(WORD, void *data),
 									void *data);
@@ -1152,6 +1171,8 @@ void _c64d_maincpu_make_basic_run_trap(WORD addr, void *data)
 	maincpu_regs.sp = 0xFB;
 	maincpu_regs.pc = 0xA659;
 	_c64d_new_pc = -1;
+	
+	c64d_reset_counters();
 
 	LOGD("_c64d_maincpu_make_basic_run_trap done");
 }

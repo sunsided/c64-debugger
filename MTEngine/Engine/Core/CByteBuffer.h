@@ -42,6 +42,7 @@ public:
 	CByteBuffer(uint8  *buffer, int size);
 	CByteBuffer(int size);
 	CByteBuffer(char *fileName);
+	CByteBuffer(char *fileName, bool hasHeader);
 	CByteBuffer(CSlrFile *file);
 	CByteBuffer(CSlrFile *file, bool readHeader);
 	CByteBuffer(char *filePath, uint8 fileType);

@@ -260,7 +260,7 @@ void CViewC64VicDisplay::SetShowDisplayBorderType(u8 borderType)
 {
 	this->showDisplayBorderType = borderType;
 	
-	LOGD("SetShowDisplayBorderType: %d", this->showDisplayBorderType);
+	LOGG("SetShowDisplayBorderType: %d", this->showDisplayBorderType);
 	
 	// update positions based on visibility of the border
 	this->SetPosition(this->posX, this->posY);
@@ -321,7 +321,7 @@ void CViewC64VicDisplay::SetDisplayPosition(float posX, float posY, float scale,
 		this->SetScreenAndDisplaySize(posX, posY, sx, sy);
 	}
 
-	LOGD("CViewC64VicDisplay::SetDisplayPosition %s: posX=%f posY=%f", this->name, posX, posY);
+	LOGG("CViewC64VicDisplay::SetDisplayPosition %s: posX=%f posY=%f", this->name, posX, posY);
 	CGuiView::SetPosition(posX, posY, posZ, sx, sy);
 	
 	UpdateRasterCrossFactors();

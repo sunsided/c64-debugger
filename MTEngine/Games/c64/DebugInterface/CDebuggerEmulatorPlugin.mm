@@ -40,3 +40,23 @@ u32 CDebuggerEmulatorPlugin::KeyUp(u32 keyCode)
 	return keyCode;
 }
 
+bool CDebuggerEmulatorPlugin::WindowMouseDown(float x, float y)
+{
+	return false;
+}
+
+bool CDebuggerEmulatorPlugin::WindowMouseUp(float x, float y)
+{
+	return false;
+}
+
+bool CDebuggerEmulatorPlugin::ScreenMouseDown(float x, float y)
+{
+	return false;
+}
+
+bool CDebuggerEmulatorPlugin::ScreenMouseUp(float x, float y)
+{
+	return false;
+}
+

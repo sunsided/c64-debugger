@@ -56,7 +56,7 @@
 #include "vdrive-snapshot.h"
 #include "zfile.h"
 #include "p64.h"
-
+#include "ViceWrapper.h"
 
 /* Currently the drive snapshot only handles 2 drives.  */
 
@@ -254,35 +254,35 @@ int drive_snapshot_write_module(snapshot_t *s, int save_disks, int save_roms)
         }
     }
 
-    if (save_disks) {
-        if (GCR_image[0] > 0) {
-            if (drive_snapshot_write_gcrimage_module(s, 0) < 0) {
-                return -1;
-            }
-        } else if (P64_image[0] > 0) {
-            if (drive_snapshot_write_p64image_module(s, 0) < 0) {
-                return -1;
-            }
-        } else {
-            if (drive_snapshot_write_image_module(s, 0) < 0) {
-                return -1;
-            }
-        }
-        if (GCR_image[1] > 0) {
-            if (drive_snapshot_write_gcrimage_module(s, 1) < 0) {
-                return -1;
-            }
-        } else if (P64_image[1] > 0) {
-            if (drive_snapshot_write_p64image_module(s, 1) < 0) {
-                return -1;
-            }
-        } else {
-            if (drive_snapshot_write_image_module(s, 1) < 0) {
-                return -1;
-            }
-        }
-    }
-
+	if (save_disks) {
+		if (GCR_image[0] > 0) {
+			if (drive_snapshot_write_gcrimage_module(s, 0) < 0) {
+				return -1;
+			}
+		} else if (P64_image[0] > 0) {
+			if (drive_snapshot_write_p64image_module(s, 0) < 0) {
+				return -1;
+			}
+		} else {
+			if (drive_snapshot_write_image_module(s, 0) < 0) {
+				return -1;
+			}
+		}
+		if (GCR_image[1] > 0) {
+			if (drive_snapshot_write_gcrimage_module(s, 1) < 0) {
+				return -1;
+			}
+		} else if (P64_image[1] > 0) {
+			if (drive_snapshot_write_p64image_module(s, 1) < 0) {
+				return -1;
+			}
+		} else {
+			if (drive_snapshot_write_image_module(s, 1) < 0) {
+				return -1;
+			}
+		}
+	}
+	
     for (i = 0; i < 2; i++) {
         drive = drive_context[i]->drive;
         if (save_roms && drive->enable) {
@@ -295,7 +295,7 @@ int drive_snapshot_write_module(snapshot_t *s, int save_disks, int save_roms)
     return 0;
 }
 
-int drive_snapshot_read_module(snapshot_t *s)
+int drive_snapshot_read_module(snapshot_t *s, int read_roms, int read_disks)
 {
     BYTE major_version, minor_version;
     int i;
@@ -643,22 +643,29 @@ int drive_snapshot_read_module(snapshot_t *s)
         }
     }
 
-    if (drive_snapshot_read_image_module(s, 0) < 0
-        || drive_snapshot_read_gcrimage_module(s, 0) < 0
-        || drive_snapshot_read_p64image_module(s, 0) < 0) {
-        return -1;
-    }
-    if (drive_snapshot_read_image_module(s, 1) < 0
-        || drive_snapshot_read_gcrimage_module(s, 1) < 0
-        || drive_snapshot_read_p64image_module(s, 1) < 0) {
-        return -1;
-    }
-    if (driverom_snapshot_read(s, drive_context[0]->drive) < 0) {
-        return -1;
-    }
-    if (driverom_snapshot_read(s, drive_context[1]->drive) < 0) {
-        return -1;
-    }
+	if (read_disks)
+	{
+		if (drive_snapshot_read_image_module(s, 0) < 0
+			|| drive_snapshot_read_gcrimage_module(s, 0) < 0
+			|| drive_snapshot_read_p64image_module(s, 0) < 0) {
+			return -1;
+		}
+		if (drive_snapshot_read_image_module(s, 1) < 0
+			|| drive_snapshot_read_gcrimage_module(s, 1) < 0
+			|| drive_snapshot_read_p64image_module(s, 1) < 0) {
+			return -1;
+		}
+	}
+	
+	if (read_roms)
+	{
+		if (driverom_snapshot_read(s, drive_context[0]->drive) < 0) {
+			return -1;
+		}
+		if (driverom_snapshot_read(s, drive_context[1]->drive) < 0) {
+			return -1;
+		}
+	}
 
     for (i = 0; i < 2; i++) {
         drive = drive_context[i]->drive;

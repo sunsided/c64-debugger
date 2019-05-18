@@ -297,6 +297,7 @@ public:
 	CSlrImage *imgToolPen;
 	CSlrImage *imgToolRectangle;
 
+	void SetSpritesFramesVisible(bool showSpriteFrames);
 	void SetTopBarVisible(bool isTopBarVisible);
 	
 	virtual void ToolBoxIconPressed(CSlrImage *imgIcon);

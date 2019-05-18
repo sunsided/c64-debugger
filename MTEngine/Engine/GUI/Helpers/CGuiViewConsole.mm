@@ -157,7 +157,12 @@ bool CGuiViewConsole::KeyDown(u32 keyCode)
 		{
 			char *s = commandLine + commandLineCursorPos;
 			char *d = commandLine + commandLineCursorPos-1;
-			memcpy(d, s, MAX_CONSOLE_LINE_LENGTH-commandLineCursorPos-1);
+			for (int i = 0; i < MAX_CONSOLE_LINE_LENGTH-commandLineCursorPos-1; i++)
+			{
+				*d = *s;
+				d++; s++;
+			}
+			
 			commandLine[MAX_CONSOLE_LINE_LENGTH-commandLineCursorPos-1] = 0x00;
 			commandLineCursorPos--;
 		}

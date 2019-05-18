@@ -11377,6 +11377,14 @@
 							>
 						</File>
 						<File
+							RelativePath=".\Games\c64\Views\CViewC64EmulationCounters.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Views\CViewC64EmulationCounters.mm"
+							>
+						</File>
+						<File
 							RelativePath=".\Games\c64\Views\CViewC64Screen.h"
 							>
 						</File>
@@ -11406,6 +11414,14 @@
 						</File>
 						<File
 							RelativePath=".\Games\c64\Views\CViewC64StateCPU.mm"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Views\CViewC64StateREU.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Views\CViewC64StateREU.mm"
 							>
 						</File>
 						<File

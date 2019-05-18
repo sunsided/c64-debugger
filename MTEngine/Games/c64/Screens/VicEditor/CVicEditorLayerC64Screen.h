@@ -4,6 +4,8 @@
 #include "SYS_Defs.h"
 #include "CVicEditorLayer.h"
 
+class CImageData;
+
 class CVicEditorLayerC64Screen : public CVicEditorLayer
 {
 public:
@@ -15,6 +17,9 @@ public:
 
 	virtual u8 Paint(bool forceColorReplace, bool isDither, int x, int y, u8 colorLMB, u8 colorRMB, u8 colorSource, int charValue);
 	virtual bool GetColorAtPixel(int x, int y, u8 *color);
+	
+	virtual CImageData *GetScreenImage(int *width, int *height);
+	virtual CImageData *GetInteriorScreenImage();
 
 	virtual void Serialise(CByteBuffer *byteBuffer);
 	virtual void Deserialise(CByteBuffer *byteBuffer, int version);

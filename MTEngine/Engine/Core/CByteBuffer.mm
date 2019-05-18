@@ -211,6 +211,34 @@ CByteBuffer::CByteBuffer(char *fileName)
 	}
 }
 
+CByteBuffer::CByteBuffer(char *fileName, bool hasHeader)
+{
+	error = false;
+	
+	this->data = NULL;
+	this->wholeDataBufferSize = 0;
+	this->index = 0;
+	this->length = 0;
+	
+	if (hasHeader)
+	{
+		if (this->readFromFile(fileName) == false)
+		{
+			LOGError("CByteBuffer: file not found '%s'", fileName);
+			this->data = NULL;
+		}
+	}
+	else
+	{
+		if (this->readFromFileNoHeader(fileName) == false)
+		{
+			LOGError("CByteBuffer: file not found '%s'", fileName);
+			this->data = NULL;
+		}
+	}
+}
+
+
 CByteBuffer::~CByteBuffer()
 {
 	if (this->data)
@@ -1000,9 +1028,14 @@ bool CByteBuffer::readFromFile(CSlrFile *file, bool readHeader)
 
 bool CByteBuffer::readFromFileNoHeader(char *fileName)
 {
-	FixFileNameSlashes(fileName);
+	char *buf = SYS_GetCharBuf();
+	strcpy(buf, fileName);
+	
+	FixFileNameSlashes(buf);
 
-	CSlrFile *file = RES_GetFile(fileName, DEPLOY_FILE_TYPE_DATA);
+	CSlrFile *file = RES_GetFile(buf, DEPLOY_FILE_TYPE_DATA);
+	SYS_ReleaseCharBuf(buf);
+
 	if (!file)
 		return false;
 	if (!file->Exists())
@@ -1023,8 +1056,13 @@ bool CByteBuffer::storeToFileNoHeader(char *fileName)
 {
 	LOGD("CByteBuffer::storeToFileNoHeader: '%s'", fileName);
 	
-	FixFileNameSlashes(fileName);
-	FILE *fp = fopen(fileName, "wb");
+	char *buf = SYS_GetCharBuf();
+	strcpy(buf, fileName);
+	
+	FixFileNameSlashes(buf);
+	FILE *fp = fopen(buf, "wb");
+	SYS_ReleaseCharBuf(buf);
+
 	if (fp == NULL)
 	{
 		LOGError("fp NULL");
@@ -1033,7 +1071,7 @@ bool CByteBuffer::storeToFileNoHeader(char *fileName)
 	
 	fwrite(this->data, 1, this->length, fp);
 	fclose(fp);
-	
+
 	return true;
 }
 

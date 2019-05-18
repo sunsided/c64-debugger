@@ -1597,6 +1597,8 @@
 		4152D71C1C970F7900EBA9E5 /* CViewSnapshots.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D7121C970F7900EBA9E5 /* CViewSnapshots.mm */; };
 		4152D71E1C970F7900EBA9E5 /* CViewBreakpoints.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D7141C970F7900EBA9E5 /* CViewBreakpoints.mm */; };
 		4152D7221C970FA900EBA9E5 /* CViewC64.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D7201C970FA900EBA9E5 /* CViewC64.mm */; };
+		41563324228DBB4100FC3415 /* C64DebuggerPluginDummy.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41563320228DBB4100FC3415 /* C64DebuggerPluginDummy.mm */; };
+		41563325228DBB4100FC3415 /* C64D_InitPlugins.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41563322228DBB4100FC3415 /* C64D_InitPlugins.mm */; };
 		41579F4C1FD70C4300234FBB /* CViewColodore.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41579F4B1FD70C4300234FBB /* CViewColodore.mm */; };
 		41579F4F1FD715CF00234FBB /* C64ColodoreScreen.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41579F4E1FD715CF00234FBB /* C64ColodoreScreen.mm */; };
 		415838571DC9E89100A56E0E /* C64AsmSourceSymbols.mm in Sources */ = {isa = PBXBuildFile; fileRef = 415838551DC9E89100A56E0E /* C64AsmSourceSymbols.mm */; };
@@ -2087,6 +2089,7 @@
 		41CFB03E21F75422002D2702 /* exomizer-match.c in Sources */ = {isa = PBXBuildFile; fileRef = 41CFB03321F75422002D2702 /* exomizer-match.c */; };
 		41CFB03F21F75422002D2702 /* exomizer.c in Sources */ = {isa = PBXBuildFile; fileRef = 41CFB03621F75422002D2702 /* exomizer.c */; };
 		41CFB04021F75422002D2702 /* exomizer-chunkpool.c in Sources */ = {isa = PBXBuildFile; fileRef = 41CFB03821F75422002D2702 /* exomizer-chunkpool.c */; };
+		41D56FAB2271A32400F15B8B /* CViewC64EmulationCounters.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41D56FA92271A32400F15B8B /* CViewC64EmulationCounters.mm */; };
 		41DDCABF1D0EF01000C03F39 /* C64KeyboardShortcuts.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41DDCABE1D0EF01000C03F39 /* C64KeyboardShortcuts.mm */; };
 		41DDCAC21D0F19C500C03F39 /* CViewKeyboardShortcuts.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41DDCAC01D0F19C500C03F39 /* CViewKeyboardShortcuts.mm */; };
 		41E0AC3B18AC2F740065DCAD /* internalJSONNode.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41E0AC1318AC2F740065DCAD /* internalJSONNode.mm */; };
@@ -2113,6 +2116,7 @@
 		41EB74F21E8F8EEB00492B27 /* CDiskImageD64.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41EB74F01E8F8EEB00492B27 /* CDiskImageD64.mm */; };
 		41EC74FD1CDB22CA00D0E99F /* CViewMainMenu.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41EC74FB1CDB22CA00D0E99F /* CViewMainMenu.mm */; };
 		41EC75001CE1E51F00D0E99F /* C64SettingsStorage.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41EC74FE1CE1E51F00D0E99F /* C64SettingsStorage.mm */; };
+		41EF00B02260DB550031F708 /* CViewC64StateREU.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41EF00AE2260DB550031F708 /* CViewC64StateREU.mm */; };
 		41F2A9D91E9D0E6B00ADE8DF /* actionreplay.c in Sources */ = {isa = PBXBuildFile; fileRef = 41F2A94B1E9D0E6B00ADE8DF /* actionreplay.c */; };
 		41F2A9DA1E9D0E6B00ADE8DF /* actionreplay2.c in Sources */ = {isa = PBXBuildFile; fileRef = 41F2A94D1E9D0E6B00ADE8DF /* actionreplay2.c */; };
 		41F2A9DB1E9D0E6B00ADE8DF /* actionreplay3.c in Sources */ = {isa = PBXBuildFile; fileRef = 41F2A94F1E9D0E6B00ADE8DF /* actionreplay3.c */; };
@@ -3711,6 +3715,10 @@
 		4152D71A1C970F7900EBA9E5 /* CViewSnapshots.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewSnapshots.h; path = ../Games/c64/Screens/CViewSnapshots.h; sourceTree = "<group>"; };
 		4152D7201C970FA900EBA9E5 /* CViewC64.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewC64.mm; path = ../Games/c64/Screens/CViewC64.mm; sourceTree = "<group>"; };
 		4152D7211C970FA900EBA9E5 /* CViewC64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewC64.h; path = ../Games/c64/Screens/CViewC64.h; sourceTree = "<group>"; };
+		41563320228DBB4100FC3415 /* C64DebuggerPluginDummy.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64DebuggerPluginDummy.mm; path = ../Games/Plugins/C64DebuggerPluginDummy.mm; sourceTree = "<group>"; };
+		41563321228DBB4100FC3415 /* C64DebuggerPluginDummy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64DebuggerPluginDummy.h; path = ../Games/Plugins/C64DebuggerPluginDummy.h; sourceTree = "<group>"; };
+		41563322228DBB4100FC3415 /* C64D_InitPlugins.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64D_InitPlugins.mm; path = ../Games/Plugins/C64D_InitPlugins.mm; sourceTree = "<group>"; };
+		41563323228DBB4100FC3415 /* C64D_InitPlugins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64D_InitPlugins.h; path = ../Games/Plugins/C64D_InitPlugins.h; sourceTree = "<group>"; };
 		41579F4A1FD70C4300234FBB /* CViewColodore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewColodore.h; path = ../Games/c64/Screens/CViewColodore.h; sourceTree = "<group>"; };
 		41579F4B1FD70C4300234FBB /* CViewColodore.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewColodore.mm; path = ../Games/c64/Screens/CViewColodore.mm; sourceTree = "<group>"; };
 		41579F4D1FD715CF00234FBB /* C64ColodoreScreen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64ColodoreScreen.h; path = ../Games/c64/Tools/C64ColodoreScreen.h; sourceTree = "<group>"; };
@@ -4701,6 +4709,8 @@
 		41CFB03621F75422002D2702 /* exomizer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = exomizer.c; path = ../Games/c64/Tools/exomizer/exomizer.c; sourceTree = "<group>"; };
 		41CFB03721F75422002D2702 /* exomizer-chunkpool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "exomizer-chunkpool.h"; path = "../Games/c64/Tools/exomizer/exomizer-chunkpool.h"; sourceTree = "<group>"; };
 		41CFB03821F75422002D2702 /* exomizer-chunkpool.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "exomizer-chunkpool.c"; path = "../Games/c64/Tools/exomizer/exomizer-chunkpool.c"; sourceTree = "<group>"; };
+		41D56FA92271A32400F15B8B /* CViewC64EmulationCounters.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewC64EmulationCounters.mm; path = ../Games/c64/Views/CViewC64EmulationCounters.mm; sourceTree = "<group>"; };
+		41D56FAA2271A32400F15B8B /* CViewC64EmulationCounters.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewC64EmulationCounters.h; path = ../Games/c64/Views/CViewC64EmulationCounters.h; sourceTree = "<group>"; };
 		41DDCABE1D0EF01000C03F39 /* C64KeyboardShortcuts.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64KeyboardShortcuts.mm; path = ../Games/c64/Tools/C64KeyboardShortcuts.mm; sourceTree = "<group>"; };
 		41DDCAC01D0F19C500C03F39 /* CViewKeyboardShortcuts.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewKeyboardShortcuts.mm; path = ../Games/c64/Screens/CViewKeyboardShortcuts.mm; sourceTree = "<group>"; };
 		41DDCAC11D0F19C500C03F39 /* CViewKeyboardShortcuts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewKeyboardShortcuts.h; path = ../Games/c64/Screens/CViewKeyboardShortcuts.h; sourceTree = "<group>"; };
@@ -4767,6 +4777,8 @@
 		41EC74FC1CDB22CA00D0E99F /* CViewMainMenu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewMainMenu.h; path = ../Games/c64/Screens/CViewMainMenu.h; sourceTree = "<group>"; };
 		41EC74FE1CE1E51F00D0E99F /* C64SettingsStorage.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64SettingsStorage.mm; path = ../Games/c64/Tools/C64SettingsStorage.mm; sourceTree = "<group>"; };
 		41EC74FF1CE1E51F00D0E99F /* C64SettingsStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64SettingsStorage.h; path = ../Games/c64/Tools/C64SettingsStorage.h; sourceTree = "<group>"; };
+		41EF00AE2260DB550031F708 /* CViewC64StateREU.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewC64StateREU.mm; path = ../Games/c64/Views/CViewC64StateREU.mm; sourceTree = "<group>"; };
+		41EF00AF2260DB550031F708 /* CViewC64StateREU.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewC64StateREU.h; path = ../Games/c64/Views/CViewC64StateREU.h; sourceTree = "<group>"; };
 		41F2A94B1E9D0E6B00ADE8DF /* actionreplay.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = actionreplay.c; sourceTree = "<group>"; };
 		41F2A94C1E9D0E6B00ADE8DF /* actionreplay.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = actionreplay.h; sourceTree = "<group>"; };
 		41F2A94D1E9D0E6B00ADE8DF /* actionreplay2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = actionreplay2.c; sourceTree = "<group>"; };
@@ -5730,6 +5742,11 @@
 		4114BB1D1C89CB8A00E5F0A1 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				41D56FA92271A32400F15B8B /* CViewC64EmulationCounters.mm */,
+				41D56FAA2271A32400F15B8B /* CViewC64EmulationCounters.h */,
+				41706DB71F9A71BB00B1B2BA /* JukeboxPlaylist */,
+				41F8106E1EC1A97D00E2F9AD /* VicDisplay */,
+				41C2EFE91E7060C200E8779A /* VicEditor */,
 				417B3D6B21FD4A5200D9721D /* CViewNesStateCPU.h */,
 				417B3D6C21FD4A5200D9721D /* CViewNesStateCPU.mm */,
 				418C856C21E8FEA3003F7648 /* CViewNesScreen.mm */,
@@ -5750,9 +5767,6 @@
 				41FBA78E21A98283009FEF5C /* CViewC64ScreenWrapper.h */,
 				4152D6FE1C970F3E00EBA9E5 /* CViewC64Screen.mm */,
 				4152D7021C970F3E00EBA9E5 /* CViewC64Screen.h */,
-				41706DB71F9A71BB00B1B2BA /* JukeboxPlaylist */,
-				41F8106E1EC1A97D00E2F9AD /* VicDisplay */,
-				41C2EFE91E7060C200E8779A /* VicEditor */,
 				410250A71CF5A89F00F6681D /* CViewEmulationState.mm */,
 				410250A61CF5A89F00F6681D /* CViewEmulationState.h */,
 				4160B20D1CEB1FC400EAD217 /* CViewMonitorConsole.mm */,
@@ -5763,6 +5777,8 @@
 				4152D7071C970F3E00EBA9E5 /* CViewC64StateSID.h */,
 				4152D6FC1C970F3E00EBA9E5 /* CViewC64StateVIC.mm */,
 				4152D7081C970F3E00EBA9E5 /* CViewC64StateVIC.h */,
+				41EF00AE2260DB550031F708 /* CViewC64StateREU.mm */,
+				41EF00AF2260DB550031F708 /* CViewC64StateREU.h */,
 				41F99E871F9A4871006E31DC /* CViewBaseStateCPU.mm */,
 				41F99E881F9A4871006E31DC /* CViewBaseStateCPU.h */,
 				41CF59D31F975C9E002171B1 /* CViewC64StateCPU.mm */,
@@ -8909,6 +8925,10 @@
 		41FA0AAF2215C02B0091F64A /* Plugins */ = {
 			isa = PBXGroup;
 			children = (
+				41563320228DBB4100FC3415 /* C64DebuggerPluginDummy.mm */,
+				41563321228DBB4100FC3415 /* C64DebuggerPluginDummy.h */,
+				41563322228DBB4100FC3415 /* C64D_InitPlugins.mm */,
+				41563323228DBB4100FC3415 /* C64D_InitPlugins.h */,
 			);
 			name = Plugins;
 			sourceTree = "<group>";
@@ -10141,6 +10161,7 @@
 				4145376D1CB2D1A300020916 /* vdrive-internal.c in Sources */,
 				414537251CB2D1A300020916 /* resid-filter.cc in Sources */,
 				419737F8173B9A37007654BD /* pa_front.c in Sources */,
+				41563325228DBB4100FC3415 /* C64D_InitPlugins.mm in Sources */,
 				4172F0E221F2B490003F49FB /* NstVideoFilterHqX.cpp in Sources */,
 				41706DBA1F9A71EA00B1B2BA /* CViewJukeboxPlaylist.mm in Sources */,
 				39042A6A186892A800B570B1 /* pngwutil.c in Sources */,
@@ -11029,6 +11050,7 @@
 				4172F0FC21F2B490003F49FB /* NesWrapper.mm in Sources */,
 				413B5F381DC213B300852EA4 /* SYS_SharedMemory.mm in Sources */,
 				41F2A9E21E9D0E6B00ADE8DF /* comal80.c in Sources */,
+				41EF00B02260DB550031F708 /* CViewC64StateREU.mm in Sources */,
 				41F2AAB31E9D0EAC00ADE8DF /* via1d2031.c in Sources */,
 				4172F0DD21F2B490003F49FB /* NstVector.cpp in Sources */,
 				414535D61CB2D1A300020916 /* mousedrv.c in Sources */,
@@ -11120,6 +11142,7 @@
 				411C4C8021F2B36F00356433 /* ide.c in Sources */,
 				41188F881E9EA7FF00040048 /* cx85.c in Sources */,
 				414535C41CB2D1A300020916 /* menu_network.c in Sources */,
+				41D56FAB2271A32400F15B8B /* CViewC64EmulationCounters.mm in Sources */,
 				411C4C7521F2B36F00356433 /* colours_external.c in Sources */,
 				414537881CB2D1A300020916 /* render2x2pal.c in Sources */,
 				4172F09921F2B48F003F49FB /* NstBoardWaixingSgz.cpp in Sources */,
@@ -11158,6 +11181,7 @@
 				39042A61186892A800B570B1 /* pngread.c in Sources */,
 				41E0AC4418AC2F740065DCAD /* JSONStream.mm in Sources */,
 				41925DAE1B1DD82F00B33B7F /* rdrle.c in Sources */,
+				41563324228DBB4100FC3415 /* C64DebuggerPluginDummy.mm in Sources */,
 				41925DA91B1DD82F00B33B7F /* jutils.c in Sources */,
 				414536DA1CB2D1A300020916 /* asm6502dtv.c in Sources */,
 				4145377E1CB2D1A300020916 /* vicii-timing.c in Sources */,

@@ -1393,7 +1393,7 @@ void c64d_reset_sound_clk()
 // and do not care about main cpu clock sync
 int c64d_sound_run_sound_when_paused(void)
 {
-	//LOGD("c64d_sound_run_sound_when_paused: run sid");
+//	LOGD("c64d_sound_run_sound_when_paused: run sid");
 	
 	int nr = 0, i;
 	int delta_t = 0;
@@ -1450,12 +1450,16 @@ int c64d_sound_run_sound_when_paused(void)
 		
 		nr = (int)((19656) / snddata.clkstep);
 		
-		if (!nr) {
+		if (!nr)
+		{
 			return 0;
 		}
-		if (snddata.bufptr + nr > SOUND_BUFSIZE) {
+		
+		if (snddata.bufptr + nr > SOUND_BUFSIZE)
+		{
 			return sound_error(translate_text(IDGS_SOUND_BUFFER_OVERFLOW));
 		}
+		
 		bufferptr = snddata.buffer + snddata.bufptr * snddata.sound_output_channels;
 		sound_machine_calculate_samples(snddata.psid,
 										bufferptr,
@@ -1509,6 +1513,10 @@ static void prevent_clk_overflow_callback(CLOCK sub, void *data)
     }
 }
 
+void c64d_lock_mutex();
+void c64d_unlock_mutex();
+
+
 /* flush all generated samples from buffer to sounddevice. adjust sid runspeed
    to match real running speed of program */
 #ifdef __MSDOS__
@@ -1551,10 +1559,15 @@ double sound_flush(int isPaused)
 	}
 	else
 	{
+		c64d_lock_mutex();
+
 		if (c64d_sound_run_sound_when_paused())
 		{
+			c64d_unlock_mutex();
 			return  0;
 		}
+		
+		c64d_unlock_mutex();
 	}
 	
     if (sid_state_changed) {

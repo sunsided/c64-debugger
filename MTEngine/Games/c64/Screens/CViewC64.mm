@@ -34,6 +34,8 @@ extern "C"{
 #include "CViewC64ScreenWrapper.h"
 
 #include "CViewC64StateCIA.h"
+#include "CViewC64StateREU.h"
+#include "CViewC64EmulationCounters.h"
 #include "CViewC64StateSID.h"
 #include "CViewC64StateVIC.h"
 #include "CViewDrive1541StateVIA.h"
@@ -82,10 +84,12 @@ extern "C"{
 #include "SYS_Threading.h"
 #include "C64AsmSourceSymbols.h"
 #include "CDebuggerEmulatorPlugin.h"
+#include "C64D_InitPlugins.h"
 
 #include "C64DebugInterfaceVice.h"
 #include "AtariDebugInterface.h"
 #include "NesDebugInterface.h"
+
 
 CViewC64 *viewC64 = NULL;
 
@@ -678,6 +682,10 @@ void CViewC64::InitViews()
 	this->AddGuiElement(viewC64StateSID);
 	viewC64StateVIC = new CViewC64StateVIC(0, 0, posZ, SCREEN_WIDTH, SCREEN_HEIGHT, debugInterfaceC64);
 	this->AddGuiElement(viewC64StateVIC);
+	viewC64StateREU = new CViewC64StateREU(0, 0, posZ, SCREEN_WIDTH, SCREEN_HEIGHT, debugInterfaceC64);
+	this->AddGuiElement(viewC64StateREU);
+	viewC64EmulationCounters = new CViewC64EmulationCounters(0, 0, posZ, SCREEN_WIDTH, SCREEN_HEIGHT, debugInterfaceC64);
+	this->AddGuiElement(viewC64EmulationCounters);
 	viewDrive1541StateVIA = new CViewDrive1541StateVIA(0, 0, posZ, SCREEN_WIDTH, SCREEN_HEIGHT, debugInterfaceC64);
 	this->AddGuiElement(viewDrive1541StateVIA);
 	viewEmulationState = new CViewEmulationState(0, 0, posZ, SCREEN_WIDTH, SCREEN_HEIGHT, debugInterfaceC64);
@@ -1048,6 +1056,16 @@ void CViewC64::InitLayouts()
 	screenPositions[m]->c64StateCIAX = 190.0f;
 	screenPositions[m]->c64StateCIAY = 200.0f;
 
+	screenPositions[m]->c64StateREUVisible = true;
+	screenPositions[m]->c64StateREUFontSize = 5.0f;
+	screenPositions[m]->c64StateREUX = 315.0f;
+	screenPositions[m]->c64StateREUY = 315.0f;
+
+	screenPositions[m]->c64EmulationCountersVisible = true;
+	screenPositions[m]->c64EmulationCountersFontSize = 5.0f;
+	screenPositions[m]->c64EmulationCountersX = 496.0f;
+	screenPositions[m]->c64EmulationCountersY = 335.0f;
+	
 	screenPositions[m]->drive1541StateVIAVisible = true;
 	screenPositions[m]->drive1541StateVIAFontSize = 5.0f;
 	screenPositions[m]->drive1541StateVIAX = 190.0f;
@@ -1794,7 +1812,6 @@ void CViewC64::InitLayouts()
 	
 #endif
 
-	emulationFrameCounter = 0;
 	guiRenderFrameCounter = 0;
 	
 	isShowingRasterCross = false;
@@ -1818,8 +1835,10 @@ void CViewC64::SwitchToScreenLayout(int newScreenLayoutId)
 		return;
 	}
 	
+	// TODO: MOVE ME:
+	
 	// TODO: TEMPORARY FORCE ATARI AND MAP C64 LAYOUTS
-//	LOGTODO("atari layout - how to handle that?");
+//	LOGTODO("atari & c64 & nes layout to be done by emu switch");
 //	newScreenLayoutId = SCREEN_LAYOUT_C64_AND_ATARI;
 	
 #if defined(RUN_ATARI)
@@ -1858,13 +1877,13 @@ void CViewC64::SwitchToScreenLayout(int newScreenLayoutId)
 			case SCREEN_LAYOUT_C64_DATA_DUMP:
 				newScreenLayoutId = SCREEN_LAYOUT_NES_DATA_DUMP; break;
 //			case SCREEN_LAYOUT_C64_DEBUGGER:
-//				newScreenLayoutId = SCREEN_LAYOUT_ATARI_DEBUGGER; break;
+//				newScreenLayoutId = SCREEN_LAYOUT_NES_DEBUGGER; break;
 //			case SCREEN_LAYOUT_C64_SHOW_STATES:
-//				newScreenLayoutId = SCREEN_LAYOUT_ATARI_SHOW_STATES; break;
+//				newScreenLayoutId = SCREEN_LAYOUT_NES_SHOW_STATES; break;
 //			case SCREEN_LAYOUT_C64_MEMORY_MAP:
-//				newScreenLayoutId = SCREEN_LAYOUT_ATARI_MEMORY_MAP; break;
+//				newScreenLayoutId = SCREEN_LAYOUT_NES_MEMORY_MAP; break;
 //			case SCREEN_LAYOUT_C64_MONITOR_CONSOLE:
-//				newScreenLayoutId = SCREEN_LAYOUT_ATARI_MONITOR_CONSOLE; break;
+//				newScreenLayoutId = SCREEN_LAYOUT_NES_MONITOR_CONSOLE; break;
 			default:
 				break;
 		}
@@ -2022,6 +2041,14 @@ void CViewC64::SwitchToScreenLayout(int newScreenLayoutId)
 	viewC64StateVIC->showSprites = screenLayout->c64StateVICShowSprites;
 	viewC64StateVIC->numValuesPerColumn = screenLayout->c64StateVICNumValuesPerColumn;
 	viewC64StateVIC->SetPosition(screenLayout->c64StateVICX, screenLayout->c64StateVICY, screenLayout->c64StateVICSizeX, screenLayout->c64StateVICSizeY);
+
+	viewC64StateREU->SetVisible(screenLayout->c64StateREUVisible);
+	viewC64StateREU->SetPosition(screenLayout->c64StateREUX, screenLayout->c64StateREUY, posZ, 380, 58);
+	viewC64StateREU->fontSize = screenLayout->c64StateREUFontSize;
+
+	viewC64EmulationCounters->SetVisible(screenLayout->c64EmulationCountersVisible);
+	viewC64EmulationCounters->SetPosition(screenLayout->c64EmulationCountersX, screenLayout->c64EmulationCountersY, posZ, 380, 58);
+	viewC64EmulationCounters->fontSize = screenLayout->c64EmulationCountersFontSize;
 
 	viewDrive1541StateVIA->SetVisible(screenLayout->drive1541StateVIAVisible);
 	viewDrive1541StateVIA->SetPosition(screenLayout->drive1541StateVIAX, screenLayout->drive1541StateVIAY, posZ, 240, 50);
@@ -2202,7 +2229,7 @@ void CViewC64::SwitchToScreenLayout(int newScreenLayoutId)
 	
 	
 	//
-	// bunch of workarounds must be here, as always
+	// bunch of ux workarounds must be here, as always
 	//
 
 	if (newScreenLayoutId == SCREEN_LAYOUT_C64_MONITOR_CONSOLE)
@@ -2250,7 +2277,7 @@ void CViewC64::SwitchToScreenLayout(int newScreenLayoutId)
 	
 	UpdateWatchVisible();
 
-	// end of workarounds
+	// end of ux workarounds
 	
 	if (guiMain->currentView != this)
 		guiMain->SetView(this);
@@ -2936,9 +2963,15 @@ bool CViewC64::ProcessGlobalKeyboardShortcut(u32 keyCode, bool isShift, bool isA
 			debugInterfaceC64->CartridgeFreezeButtonPressed();
 			return true;
 		}
+		// TODO: move this to viewC64SettingsMenu key shortcut checks
 		else if (shortcut == viewC64SettingsMenu->kbsClearMemoryMarkers)
 		{
 			viewC64SettingsMenu->ClearMemoryMarkers();
+			return true;
+		}
+		else if (shortcut == viewC64SettingsMenu->kbsResetCpuCycleAndFrameCounters)
+		{
+			viewC64SettingsMenu->ResetMainCpuCycleAndFrameCounters();
 			return true;
 		}
 		
@@ -2955,9 +2988,9 @@ bool CViewC64::ProcessGlobalKeyboardShortcut(u32 keyCode, bool isShift, bool isA
 				viewFileD64->StartDiskPRGEntry(0, true);
 				return true;
 			}
-			else if (shortcut == viewC64SettingsMenu->kbsC64CpuProfilerStartStop)
+			else if (shortcut == viewC64SettingsMenu->kbsC64ProfilerStartStop)
 			{
-				viewC64SettingsMenu->C64CpuProfilerStartStop();
+				viewC64SettingsMenu->C64ProfilerStartStop();
 				return true;
 			}
 		}
@@ -2985,6 +3018,16 @@ bool CViewC64::ProcessGlobalKeyboardShortcut(u32 keyCode, bool isShift, bool isA
 		else if (shortcut == viewC64SettingsMenu->kbsAutoJmpFromInsertedDiskFirstPrg)
 		{
 			viewC64SettingsMenu->ToggleAutoLoadFromInsertedDisk();
+			return true;
+		}
+		else if (shortcut == viewC64SettingsMenu->kbsAutoJmpAlwaysToLoadedPRGAddress)
+		{
+			viewC64SettingsMenu->ToggleAutoJmpAlwaysToLoadedPRGAddress();
+			return true;
+		}
+		else if (shortcut == viewC64SettingsMenu->kbsAutoJmpDoReset)
+		{
+			viewC64SettingsMenu->ToggleAutoJmpDoReset();
 			return true;
 		}
 		else if (shortcut == viewC64SettingsMenu->kbsSwitchSoundOnOff)
@@ -3623,6 +3666,8 @@ bool CViewC64::DoTap(GLfloat x, GLfloat y)
 		
 		// TODO: end of crude workaround
 		//
+		
+		viewC64->debugInterfaceC64->MouseDown(x, y);
 	}
 
 	
@@ -3708,6 +3753,12 @@ bool CViewC64::DoScrollWheel(float deltaX, float deltaY)
 bool CViewC64::DoFinishTap(GLfloat x, GLfloat y)
 {
 	LOGG("CViewC64::DoFinishTap: %f %f", x, y);
+	
+	if (viewC64->debugInterfaceC64)
+	{
+		viewC64->debugInterfaceC64->MouseUp(x, y);
+	}
+	
 	return CGuiView::DoFinishTap(x, y);
 }
 
@@ -3727,6 +3778,11 @@ bool CViewC64::DoFinishDoubleTap(GLfloat x, GLfloat y)
 
 bool CViewC64::DoMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat distY, GLfloat diffX, GLfloat diffY)
 {
+	if (viewC64->debugInterfaceC64)
+	{
+		viewC64->debugInterfaceC64->MouseMove(x, y);
+	}
+
 	return CGuiView::DoMove(x, y, distX, distY, diffX, diffY);
 }
 
@@ -3857,15 +3913,17 @@ void CViewC64::CreateFonts()
 	
 }
 
-///
+// TODO: this is called by emulator code when frame is started (i.e. after VSync)
+//       note that this assumes we have *ONE* emulator working (the C64 Vice is supported by now)
+//       this *MUST* be refactored as different emulation engines will have different frame rates/syncs
 void CViewC64::EmulationStartFrameCallback()
 {
-	emulationFrameCounter++;
-	
 	if (viewJukeboxPlaylist != NULL)
 	{
 		viewJukeboxPlaylist->EmulationStartFrame();
 	}
+	
+	// TODO: we have a plugin->DoFrame() on frame canvas refresh, shall we have a VSync too?
 }
 
 ///
@@ -4186,6 +4244,8 @@ CScreenLayout::CScreenLayout()
 	c64StateCIAVisible = false;
 	c64StateSIDVisible = false;
 	c64StateVICVisible = false;
+	c64StateREUVisible = false;
+	c64EmulationCountersVisible = false;
 	drive1541StateVIAVisible = false;
 	monitorConsoleVisible = false;
 	emulationStateVisible = false;
@@ -4196,7 +4256,7 @@ CScreenLayout::CScreenLayout()
 	atariDataDumpVisible = false;
 	atariMemoryMapVisible = false;
 	
-	c64ScreenX = c64ScreenY = c64ScreenSizeX = c64ScreenSizeY = c64CpuStateX = c64CpuStateY = drive1541CpuStateX = drive1541CpuStateY = c64DisassembleX = c64DisassembleY = drive1541DisassembleX = drive1541DisassembleY = c64SourceCodeX = c64SourceCodeY = c64MemoryMapX = c64MemoryMapY = c64MemoryMapSizeX = c64MemoryMapSizeY = drive1541MemoryMapX = drive1541MemoryMapY = drive1541MemoryMapSizeX = drive1541MemoryMapSizeY = c64DataDumpX = c64DataDumpY = c64DataDumpSizeX = c64DataDumpSizeY = c64StateCIAX = c64StateCIAY = c64StateSIDX = c64StateSIDY = c64StateVICX = c64StateVICY = c64StateVICSizeX = c64StateVICSizeY = drive1541StateVIAX = drive1541StateVIAY = c64VicDisplayX = c64VicDisplayY = monitorConsoleX = monitorConsoleY = emulationStateX = emulationStateY = atariScreenX = atariScreenY = atariDisassembleSizeX = atariDisassembleSizeY = nesScreenX = nesScreenY
+	c64ScreenX = c64ScreenY = c64ScreenSizeX = c64ScreenSizeY = c64CpuStateX = c64CpuStateY = drive1541CpuStateX = drive1541CpuStateY = c64DisassembleX = c64DisassembleY = drive1541DisassembleX = drive1541DisassembleY = c64SourceCodeX = c64SourceCodeY = c64MemoryMapX = c64MemoryMapY = c64MemoryMapSizeX = c64MemoryMapSizeY = drive1541MemoryMapX = drive1541MemoryMapY = drive1541MemoryMapSizeX = drive1541MemoryMapSizeY = c64DataDumpX = c64DataDumpY = c64DataDumpSizeX = c64DataDumpSizeY = c64StateCIAX = c64StateCIAY = c64StateSIDX = c64StateSIDY = c64StateVICX = c64StateVICY = c64StateVICSizeX = c64StateVICSizeY = c64StateREUX = c64StateREUY = c64EmulationCountersX = c64EmulationCountersY = drive1541StateVIAX = drive1541StateVIAY = c64VicDisplayX = c64VicDisplayY = monitorConsoleX = monitorConsoleY = emulationStateX = emulationStateY = atariScreenX = atariScreenY = atariDisassembleSizeX = atariDisassembleSizeY = nesScreenX = nesScreenY
 	= 0;
 
 	c64ScreenShowGridLines = false;
@@ -4243,7 +4303,7 @@ CScreenLayout::CScreenLayout()
 	drive1541DisassembleShowLabels = false;
 	drive1541DisassembleShowSourceCode = false;
 	
-	c64StateCIAFontSize = c64StateSIDFontSize = c64StateVICFontSize = drive1541StateVIAFontSize = 5.0f;
+	c64StateCIAFontSize = c64StateSIDFontSize = c64StateVICFontSize = c64StateREUFontSize = c64EmulationCountersFontSize = drive1541StateVIAFontSize = 5.0f;
 	
 	c64StateCIARenderCIA1 = true;
 	c64StateCIARenderCIA2 = true;
@@ -4577,9 +4637,9 @@ void C64D_DragDropCallbackNES(CSlrString *filePath)
 //
 void CViewC64::CreateEmulatorPlugins()
 {
-//	// example
-//	C64DebuggerPluginSpiral *pluginSpiral = new C64DebuggerPluginSpiral();
-//	this->RegisterEmulatorPlugin(pluginSpiral);
+#if defined(RUN_COMMODORE64)
+	C64D_InitPlugins();
+#endif
 }
 
 

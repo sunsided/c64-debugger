@@ -71,6 +71,9 @@ extern uint8 c64SettingsC64Model;
 extern int c64SettingsEmulationMaximumSpeed;
 extern bool c64SettingsFastBootKernalPatch;
 
+extern bool c64SettingsReuEnabled;
+extern int c64SettingsReuSize;
+
 extern uint8 c64SettingsSIDEngineModel;
 extern uint8 c64SettingsRESIDSamplingMethod;
 extern bool c64SettingsRESIDEmulateFilters;
@@ -127,6 +130,11 @@ extern CSlrString *c64SettingsPathToC64MemoryMapFile;
 extern CSlrString *c64SettingsPathToTAP;
 extern CSlrString *c64SettingsDefaultTAPFolder;
 
+extern CSlrString *c64SettingsPathToReu;
+extern CSlrString *c64SettingsDefaultReuFolder;
+
+extern CSlrString *c64SettingsDefaultVicEditorFolder;
+
 extern CSlrString *c64SettingsPathToAtariROMs;
 
 extern CSlrString *c64SettingsPathToATR;
@@ -150,6 +158,8 @@ extern CSlrString *c64SettingsPathToJukeboxPlaylist;
 
 // profiler
 extern CSlrString *c64SettingsC64ProfilerFileOutputPath;
+extern bool c64SettingsC64ProfilerDoVicProfile;
+
 
 // sid import
 extern u8 c64SettingsC64SidImportMode;
@@ -170,6 +180,8 @@ extern int c64SettingsDatasetteSpeedTuning;
 extern int c64SettingsDatasetteZeroGapDelay;
 extern int c64SettingsDatasetteTapeWobble;
 extern bool c64SettingsDatasetteResetWithCPU;
+
+extern bool c64SettingsResetCountersOnAutoRun;
 
 extern bool c64SettingsRunSIDWhenInWarp;
 

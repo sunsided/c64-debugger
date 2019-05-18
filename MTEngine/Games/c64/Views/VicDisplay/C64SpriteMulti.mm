@@ -24,6 +24,21 @@ C64SpriteMulti::C64SpriteMulti()
 	memset(pixels, 0x00, this->sizeX*this->sizeY);
 	memset(colors, 0x00, 4);
 	memset(histogram, 0x00, 4);
+	
+	vicEditor = NULL;
+}
+
+C64SpriteMulti::C64SpriteMulti(CViewVicEditor *vicEditor)
+: C64Sprite(vicEditor, 12, 21, true)
+{
+	pixels = new u8[this->sizeX*this->sizeY];
+	
+	colors = new u8[4];
+	histogram = new u8[4];
+	
+	memset(pixels, 0x00, this->sizeX*this->sizeY);
+	memset(colors, 0x00, 4);
+	memset(histogram, 0x00, 4);
 }
 
 // copy from multi bitmap

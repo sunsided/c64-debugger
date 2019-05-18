@@ -39,6 +39,7 @@ public:
 	virtual void ClearScreen(u8 charValue, u8 colorValue);
 
 	virtual u8 ConvertFrom(CImageData *imageData);
+	virtual u8 ConvertFromWithForcedColors(CImageData *imageData, u8 backgroundColor, u8 colorForeground1, u8 colorForeground2, u8 colorForeground3);
 };
 
 #endif

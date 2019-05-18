@@ -22,6 +22,8 @@ CDebugInterface::CDebugInterface(CViewC64 *viewC64)
 	screenSupersampleFactor = c64SettingsScreenSupersampleFactor;
 	
 	temporaryBreakpointPC = -1;
+	
+	emulationFrameCounter = 0;
 
 	this->debugMode = DEBUGGER_MODE_RUNNING;
 }
@@ -63,6 +65,16 @@ void CDebugInterface::InitPlugins()
 	}
 }
 
+// all cycles in frame finished, vsync
+void CDebugInterface::DoVSync()
+{
+	emulationFrameCounter++;
+		
+	viewC64->EmulationStartFrameCallback();
+
+}
+
+// frame is painted on canvas and ready to be consumed
 void CDebugInterface::DoFrame()
 {
 	for (std::list<CDebuggerEmulatorPlugin *>::iterator it = this->plugins.begin(); it != this->plugins.end(); it++)
@@ -70,6 +82,28 @@ void CDebugInterface::DoFrame()
 		CDebuggerEmulatorPlugin *plugin = *it;
 		plugin->DoFrame();
 	}
+}
+
+void CDebugInterface::ResetMainCpuCycleCounter()
+{
+	LOGError("CDebugInterface::ResetMainCpuCycleCounter: not implemented");
+}
+
+unsigned int CDebugInterface::GetMainCpuCycleCounter()
+{
+	LOGError("CDebugInterface::GetMainCpuCycleCounter: not implemented");
+	return 0;
+}
+
+void CDebugInterface::ResetEmulationFrameCounter()
+{
+	this->emulationFrameCounter = 0;
+}
+
+
+unsigned int CDebugInterface::GetEmulationFrameNumber()
+{
+	return this->emulationFrameCounter;
 }
 
 void CDebugInterface::CreateScreenData()
@@ -148,6 +182,18 @@ void CDebugInterface::JoystickDown(int port, uint32 axis)
 }
 
 void CDebugInterface::JoystickUp(int port, uint32 axis)
+{
+}
+
+void CDebugInterface::MouseDown(float x, float y)
+{
+}
+
+void CDebugInterface::MouseMove(float x, float y)
+{
+}
+
+void CDebugInterface::MouseUp(float x, float y)
 {
 }
 

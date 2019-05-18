@@ -3105,6 +3105,11 @@ int CViewDisassemble::Assemble(int assembleAddress, char *lineBuffer, int *instr
 	if (*instructionOpCode == -1)
 	{
 		*instructionOpCode = AssembleFindOp(mnemonic, addressingMode);
+		
+		if (*instructionOpCode == -1)
+		{
+			*instructionOpCode = AssembleFindOp(mnemonic, ADDR_ABS);
+		}
 	}
 
 	// found opcode?

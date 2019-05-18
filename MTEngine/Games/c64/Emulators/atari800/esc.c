@@ -104,8 +104,8 @@ void ESC_Run(UBYTE esc_code)
 //	char buf[256];
 //	sprintf(buf, "Invalid ESC code %02x at address %04x", esc_code, CPU_regPC - 2);
 	
-	c64d_show_message("CPU JAM has occured");
 	Log_print("Invalid ESC code %02x at address %04x", esc_code, CPU_regPC - 2);
+	c64d_show_message("CPU JAM has occured");
 
 	
 	/*

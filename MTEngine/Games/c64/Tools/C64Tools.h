@@ -10,6 +10,7 @@ class CSlrString;
 class CImageData;
 class CDebugInterface;
 class C64DebugInterface;
+class CSlrDataAdapter;
 
 CSlrFontProportional *ProcessFonts(uint8 *charsetData, bool useScreenCodes);
 void InvertCBMText(CSlrString *text);
@@ -55,6 +56,8 @@ CByteBuffer *ConvertSIDtoPRG(CByteBuffer *sidFileData);
 bool C64LoadSIDToRam(char *filePath, u16 *fromAddr, u16 *toAddr, u16 *initAddr, u16 *playAddr);
 
 //
-void C64ExomizerSave(u16 fromAddr, u16 toAddr, u16 jmpAddr, char *filePath);
+bool C64SaveMemory(int fromAddr, int toAddr, bool isPRG, CSlrDataAdapter *dataAdapter, char *filePath);
+bool C64SaveMemoryExomizerPRG(int fromAddr, int toAddr, int jmpAddr, char *filePath);
+
 
 #endif

@@ -29,10 +29,23 @@ public:
 	bool isRunning;
 	bool isSelected;
 	
+	unsigned int emulationFrameCounter;
+
 	virtual void RunEmulationThread();
 	
 	virtual void InitPlugins();
+	
+	// all cycles in frame finished, vsync
+	virtual void DoVSync();
+
+	// frame is painted on canvas and ready to be consumed
 	virtual void DoFrame();
+	
+	virtual void ResetMainCpuCycleCounter();
+	virtual unsigned int GetMainCpuCycleCounter();
+	virtual void ResetEmulationFrameCounter();
+	virtual unsigned int GetEmulationFrameNumber();
+	
 	virtual int GetScreenSizeX();
 	virtual int GetScreenSizeY();
 	
@@ -48,6 +61,11 @@ public:
 	
 	virtual void JoystickDown(int port, uint32 axis);
 	virtual void JoystickUp(int port, uint32 axis);
+	
+	// TODO: mouse
+	virtual void MouseDown(float x, float y);
+	virtual void MouseMove(float x, float y);
+	virtual void MouseUp(float x, float y);
 	
 	// state
 	virtual int GetCpuPC();

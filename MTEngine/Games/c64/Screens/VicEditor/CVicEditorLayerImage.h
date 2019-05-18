@@ -5,6 +5,9 @@
 #include "CVicEditorLayer.h"
 #include "CSlrImage.h"
 
+#define C64_SCREEN_OFFSET_X 32
+#define C64_SCREEN_OFFSET_Y 35
+
 class CVicEditorLayerImage : public CVicEditorLayer
 {
 	public:

@@ -211,7 +211,7 @@ bool CViewC64Charset::DoRightClick(GLfloat x, GLfloat y)
 
 bool CViewC64Charset::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
-	LOGD("CViewC64Charset::KeyDown: %d", keyCode);
+	LOGI("CViewC64Charset::KeyDown: %d", keyCode);
 	
 	return false;
 }

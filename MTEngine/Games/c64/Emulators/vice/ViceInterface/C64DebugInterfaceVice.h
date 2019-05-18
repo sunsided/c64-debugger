@@ -71,6 +71,11 @@ public:
 	virtual void HardReset();
 	virtual void DiskDriveReset();
 
+	virtual void ResetMainCpuCycleCounter();
+	virtual unsigned int GetMainCpuCycleCounter();
+	virtual void ResetEmulationFrameCounter();
+	virtual unsigned int GetEmulationFrameNumber();
+	
 	//
 	virtual void KeyboardDown(uint32 mtKeyCode);
 	virtual void KeyboardUp(uint32 mtKeyCode);
@@ -197,6 +202,14 @@ public:
 	virtual void DetachCartridge();
 	virtual void CartridgeFreezeButtonPressed();
 	virtual void GetC64CartridgeState(C64StateCartridge *cartridgeState);
+
+	virtual void DetachEverything();
+	
+	// reu
+	virtual void SetReuEnabled(bool isEnabled);
+	virtual void SetReuSize(int reuSize);
+	virtual bool LoadReu(char *filePath);
+	virtual bool SaveReu(char *filePath);
 
 	//
 	virtual void SetVicRegister(uint8 registerNum, uint8 value);

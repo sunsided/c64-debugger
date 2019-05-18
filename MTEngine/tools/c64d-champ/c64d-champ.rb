@@ -130,10 +130,10 @@ class Champ
                     pc = parts.shift.to_i(16)
                     message = parts.join(' ')
                     @error = {:pc => pc, :message => message}
-                elsif parts.first == 'log'
+                elsif parts.first == 'cpu'
                     parts.shift
                     if @execution_log.length == 0
-                    	start_pc = parts[0].to_i(16)
+                    	start_pc = parts[2].to_i(16)
 	                    puts "Start PC: #{start_pc}"
                     end
                     log = parts.map { |x| x.to_i(16) }

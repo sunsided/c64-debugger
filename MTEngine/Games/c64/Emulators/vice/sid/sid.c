@@ -143,8 +143,10 @@ static BYTE sid_read_chip(WORD addr, int chipno)
             /* Account for that read functions in VICE are called _before_
                incrementing the clock. */
             maincpu_clk++;
+			c64d_maincpu_clk++;
             val = sid_read_func(addr, chipno);
             maincpu_clk--;
+			c64d_maincpu_clk--;
         }
 #ifdef HAVE_MOUSE
     }
@@ -187,8 +189,10 @@ void sid_store_chip(WORD addr, BYTE value, int chipno)
 
     if (maincpu_rmw_flag) {
         maincpu_clk--;
+		c64d_maincpu_clk--;
         sid_store_func(addr, lastsidread, chipno);
         maincpu_clk++;
+		c64d_maincpu_clk++;
     }
 
     sid_store_func(addr, value, chipno);

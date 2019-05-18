@@ -1407,7 +1407,7 @@ bool CViewVicEditor::DoNotTouchedMove(GLfloat x, GLfloat y)
 
 void CViewVicEditor::MoveDisplayDiff(float diffX, float diffY)
 {
-	LOGD("CViewVicEditor::MoveDisplayDiff: diffX=%f diffY=%f posX=%f posY=%f posOffsetX=%f posOffsetY=%f", diffX, diffY, viewVicDisplayMain->posX, viewVicDisplayMain->posY, viewVicDisplayMain->posOffsetX, viewVicDisplayMain->posOffsetY);
+	LOGG("CViewVicEditor::MoveDisplayDiff: diffX=%f diffY=%f posX=%f posY=%f posOffsetX=%f posOffsetY=%f", diffX, diffY, viewVicDisplayMain->posX, viewVicDisplayMain->posY, viewVicDisplayMain->posOffsetX, viewVicDisplayMain->posOffsetY);
 	float px = viewVicDisplayMain->posX - mainDisplayPosX - viewVicDisplayMain->posOffsetX;
 	float py = viewVicDisplayMain->posY - mainDisplayPosY - viewVicDisplayMain->posOffsetY;
 	
@@ -1419,7 +1419,7 @@ void CViewVicEditor::MoveDisplayDiff(float diffX, float diffY)
 
 void CViewVicEditor::MoveDisplayToScreenPos(float px, float py)
 {
-	LOGD("CViewVicEditor::MoveDisplayToScreenPos: %f %f", px, py);
+	LOGG("CViewVicEditor::MoveDisplayToScreenPos: %f %f", px, py);
 
 	guiMain->LockMutex();
 	
@@ -1460,7 +1460,7 @@ void CViewVicEditor::MoveDisplayToScreenPos(float px, float py)
 		py = mainDisplaySizeY - (mainDisplayPosY + viewVicDisplayMain->visibleScreenSizeY);
 	}
 	
-	LOGD("------> SetPosition: px=%f py=%f", px, py);
+	LOGG("------> SetPosition: px=%f py=%f", px, py);
 	viewVicDisplayMain->SetPosition(px, py);
 	UpdateDisplayFrame();
 	
@@ -1576,6 +1576,13 @@ void CViewVicEditor::SaveScreenshotAsPNG()
 {
 	exportMode = VICEDITOR_EXPORT_PNG;
 	this->OpenDialogExportFile();
+}
+
+void CViewVicEditor::SetSpritesFramesVisible(bool showSpriteFrames)
+{
+	viewVicDisplayMain->showSpritesFrames = showSpriteFrames;
+	viewVicDisplaySmall->showSpritesFrames = showSpriteFrames;
+	layerVirtualSprites->showSpriteFrames = showSpriteFrames;
 }
 
 void CViewVicEditor::SetTopBarVisible(bool isTopBarVisible)
@@ -1860,9 +1867,7 @@ bool CViewVicEditor::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContr
 	else if (shortcut == viewC64->keyboardShortcuts->kbsVicEditorToggleSpriteFrames)
 	{
 		bool show = !viewVicDisplayMain->showSpritesFrames;
-		viewVicDisplayMain->showSpritesFrames = show;
-		viewVicDisplaySmall->showSpritesFrames = show;
-		layerVirtualSprites->showSpriteFrames = show;
+		SetSpritesFramesVisible(show);		
 		return true;
 	}
 	else if (shortcut == viewC64->keyboardShortcuts->kbsVicEditorSelectNextLayer)
@@ -2239,7 +2244,7 @@ void CViewVicEditor::OpenDialogImportFile()
 	LOGM("OpenDialogImportFile");
 	CSlrString *windowTitle = new CSlrString("Open image file to import");
 	windowTitle->DebugPrint("windowTitle=");
-	viewC64->ShowDialogOpenFile(this, &importFileExtensions, NULL, windowTitle);
+	viewC64->ShowDialogOpenFile(this, &importFileExtensions, c64SettingsDefaultVicEditorFolder, windowTitle);
 	delete windowTitle;
 }
 
@@ -2248,6 +2253,12 @@ void CViewVicEditor::SystemDialogFileOpenSelected(CSlrString *path)
 	LOGM("CViewVicEditor::SystemDialogFileOpenSelected, path=%x", path);
 	path->DebugPrint("path=");
 	
+	if (c64SettingsDefaultVicEditorFolder != NULL)
+		delete c64SettingsDefaultVicEditorFolder;
+	c64SettingsDefaultVicEditorFolder = path->GetFilePathWithoutFileNameComponentFromPath();
+	c64SettingsDefaultVicEditorFolder->DebugPrint("c64SettingsDefaultVicEditorFolder=");
+	C64DebuggerStoreSettings();
+
 	CSlrString *ext = path->GetFileExtensionComponentFromPath();
 	
 	if (ext->CompareWith("png") || ext->CompareWith("PNG"))
@@ -2390,7 +2401,7 @@ void CViewVicEditor::OpenDialogExportFile()
 		exportFileDialogMode = VICEDITOR_EXPORT_HYPER;
 
 		CSlrString *windowTitle = new CSlrString("Export HyperScreen Picture");
-		viewC64->ShowDialogSaveFile(this, &exportHyperBitmapFileExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
+		viewC64->ShowDialogSaveFile(this, &exportHyperBitmapFileExtensions, defaultFileName, c64SettingsDefaultVicEditorFolder, windowTitle);
 		delete windowTitle;
 		delete defaultFileName;
 		return;
@@ -2404,7 +2415,7 @@ void CViewVicEditor::OpenDialogExportFile()
 		exportFileDialogMode = VICEDITOR_EXPORT_PNG;
 		
 		CSlrString *windowTitle = new CSlrString("Export screen to PNG");
-		viewC64->ShowDialogSaveFile(this, &exportPNGFileExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
+		viewC64->ShowDialogSaveFile(this, &exportPNGFileExtensions, defaultFileName, c64SettingsDefaultVicEditorFolder, windowTitle);
 		delete windowTitle;
 		delete defaultFileName;
 		return;
@@ -2422,7 +2433,7 @@ void CViewVicEditor::OpenDialogExportFile()
 		exportFileDialogMode = VICEDITOR_EXPORT_KOALA;
 
 		CSlrString *windowTitle = new CSlrString("Export Multi-Color KOALA Picture");
-		viewC64->ShowDialogSaveFile(this, &exportMultiBitmapFileExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
+		viewC64->ShowDialogSaveFile(this, &exportMultiBitmapFileExtensions, defaultFileName, c64SettingsDefaultVicEditorFolder, windowTitle);
 		delete windowTitle;
 		delete defaultFileName;
 		return;
@@ -2436,7 +2447,7 @@ void CViewVicEditor::OpenDialogExportFile()
 		exportFileDialogMode = VICEDITOR_EXPORT_ART_STUDIO;
 
 		CSlrString *windowTitle = new CSlrString("Export Hires ART STUDIO Picture");
-		viewC64->ShowDialogSaveFile(this, &exportHiresBitmapFileExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
+		viewC64->ShowDialogSaveFile(this, &exportHiresBitmapFileExtensions, defaultFileName, c64SettingsDefaultVicEditorFolder, windowTitle);
 		delete windowTitle;
 		delete defaultFileName;
 		return;
@@ -2450,7 +2461,7 @@ void CViewVicEditor::OpenDialogExportFile()
 		exportFileDialogMode = VICEDITOR_EXPORT_RAW_TEXT;
 
 		CSlrString *windowTitle = new CSlrString("Export RAW TEXT Picture");
-		viewC64->ShowDialogSaveFile(this, &exportHiresTextFileExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
+		viewC64->ShowDialogSaveFile(this, &exportHiresTextFileExtensions, defaultFileName, c64SettingsDefaultVicEditorFolder, windowTitle);
 		delete windowTitle;
 		delete defaultFileName;
 		return;
@@ -2468,7 +2479,7 @@ void CViewVicEditor::OpenDialogSaveVCE()
 	exportFileDialogMode = VICEDITOR_EXPORT_VCE;
 		
 	CSlrString *windowTitle = new CSlrString("Export VicEditor Picture");
-	viewC64->ShowDialogSaveFile(this, &exportVCEFileExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
+	viewC64->ShowDialogSaveFile(this, &exportVCEFileExtensions, defaultFileName, c64SettingsDefaultVicEditorFolder, windowTitle);
 	delete windowTitle;
 	delete defaultFileName;
 }
@@ -2478,6 +2489,12 @@ void CViewVicEditor::SystemDialogFileSaveSelected(CSlrString *path)
 	LOGD("CViewVicEditor::SystemDialogFileSaveSelected");
 	path->DebugPrint("path=");
 	
+	if (c64SettingsDefaultVicEditorFolder != NULL)
+		delete c64SettingsDefaultVicEditorFolder;
+	c64SettingsDefaultVicEditorFolder = path->GetFilePathWithoutFileNameComponentFromPath();
+	c64SettingsDefaultVicEditorFolder->DebugPrint("c64SettingsDefaultVicEditorFolder=");
+	C64DebuggerStoreSettings();
+
 	if (exportFileDialogMode == VICEDITOR_EXPORT_VCE)
 	{
 		ExportVCE(path);

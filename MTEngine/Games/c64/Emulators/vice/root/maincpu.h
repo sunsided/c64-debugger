@@ -56,6 +56,8 @@ extern int maincpu_rmw_flag;
 extern CLOCK maincpu_clk;
 extern CLOCK maincpu_clk_limit;
 
+extern CLOCK c64d_maincpu_clk;
+
 /* 8502 cycle stretch indicator */
 extern int maincpu_stretch;
 

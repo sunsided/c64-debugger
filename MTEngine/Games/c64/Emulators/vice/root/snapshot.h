@@ -63,6 +63,40 @@
 typedef struct snapshot_module_s snapshot_module_t;
 typedef struct snapshot_s snapshot_t;
 
+struct snapshot_s {
+	/* File descriptor.  */
+	//    FILE *file;
+	
+	unsigned char *data;
+	long data_size;
+	long pos;
+	
+	/* Offset of the first module.  */
+	long first_module_offset;
+	
+	/* Flag: are we writing it?  */
+	int write_mode;
+};
+
+struct snapshot_module_s {
+	/* File descriptor.  */
+	//    FILE *file;
+	
+	snapshot_t *sn;
+	
+	/* Flag: are we writing it?  */
+	int write_mode;
+	
+	/* Size of the module.  */
+	DWORD size;
+	
+	/* Offset of the module in the file.  */
+	long offset;
+	
+	/* Offset of the size field in the file.  */
+	long size_offset;
+};
+
 extern void snapshot_display_error(void);
 
 extern int snapshot_module_write_byte(snapshot_module_t *m, BYTE data);
@@ -138,11 +172,26 @@ extern int snapshot_module_close(snapshot_module_t *m);
 
 extern snapshot_t *snapshot_create(const char *filename,
                                    BYTE major_version, BYTE minor_version,
-                                   const char *snapshot_machine_name);
+                                   const char *snapshot_machine_name,
+								   int snapshot_size);
 extern snapshot_t *snapshot_open(const char *filename,
                                  BYTE *major_version_return,
                                  BYTE *minor_version_return,
                                  const char *snapshot_machine_name);
+
+// NOTE: snapshot data is not freed by snapshot_close if current_filename is NULL
+//       i.e. when snapshot is stored to memory, then caller should free data by himself
+extern snapshot_t *snapshot_create_in_memory(BYTE major_version,
+											 BYTE minor_version,
+											 const char *snapshot_machine_name,
+											 int snapshot_size);
+
+extern snapshot_t *snapshot_open_from_memory(BYTE *major_version_return,
+											 BYTE *minor_version_return,
+											 const char *snapshot_machine_name,
+											 BYTE *snapshot_data,
+											 int snapshot_size);
+
 extern int snapshot_close(snapshot_t *s);
 
 extern void snapshot_set_error(int error);

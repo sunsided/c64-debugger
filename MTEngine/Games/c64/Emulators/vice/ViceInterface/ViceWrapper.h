@@ -171,6 +171,12 @@ extern int c64d_setting_run_sid_emulation;
 //// render transparent c64 screen (for Vic Display), transparent color = $d021
 //extern int c64d_setting_render_transparent_screen;
 
+unsigned int c64d_get_frame_num();
+void c64d_reset_counters();
+
+void c64d_lock_mutex();
+void c64d_unlock_mutex();
+
 
 #endif
 

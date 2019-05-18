@@ -1109,8 +1109,14 @@ bool C64LoadSIDToRam(char *filePath, u16 *fromAddr, u16 *toAddr, u16 *initAddr, 
 	return true;
 }
 
-void C64ExomizerSave(u16 fromAddr, u16 toAddr, u16 jmpAddr, char *filePath)
+bool C64SaveMemoryExomizerPRG(int fromAddr, int toAddr, int jmpAddr, char *filePath)
 {
+	FILE *fp = fopen(filePath, "wb");
+	if (!fp)
+	{
+		return false;
+	}
+
 	int dataSize = toAddr - fromAddr;
 	u8 *data = new u8[dataSize];
 	int i = 0;
@@ -1128,12 +1134,55 @@ void C64ExomizerSave(u16 fromAddr, u16 toAddr, u16 jmpAddr, char *filePath)
 	compressedData[4] = (u8) (lineNumber & 0xff);
 	compressedData[5] = (u8) (lineNumber >> 8);
 	
-	FILE *fp = fopen(filePath, "wb");
 	fwrite(compressedData, prgSize, 1, fp);
 	fclose(fp);
 	
 	delete [] compressedData;
 	delete [] data;
 	
-	LOGD("C64ExomizerSave: stored to %s", filePath);
+	LOGD("C64SaveMemoryExomizerPRG: stored to %s", filePath);
+	
+	return true;
+}
+
+bool C64SaveMemory(int fromAddr, int toAddr, bool isPRG, CSlrDataAdapter *dataAdapter, char *filePath)
+{
+	FILE *fp;
+	fp = fopen(filePath, "wb");
+	
+	if (!fp)
+	{
+		return false;
+	}
+
+	int len = toAddr - fromAddr;
+	uint8 *memoryBuffer = new uint8[0x10000];
+	dataAdapter->AdapterReadBlockDirect(memoryBuffer, fromAddr, toAddr);
+	
+	uint8 *writeBuffer = new uint8[len];
+	memcpy(writeBuffer, memoryBuffer + fromAddr, len);
+	
+	if (isPRG)
+	{
+		// write header
+		uint8 buf[2];
+		buf[0] = fromAddr & 0x00FF;
+		buf[1] = (fromAddr >> 8) & 0x00FF;
+		
+		fwrite(buf, 1, 2, fp);
+	}
+	
+	
+	int lenWritten = fwrite(writeBuffer, 1, len, fp);
+	fclose(fp);
+	
+	delete [] writeBuffer;
+	delete [] memoryBuffer;
+	
+	if (lenWritten != len)
+	{
+		return false;
+	}
+
+	return true;
 }

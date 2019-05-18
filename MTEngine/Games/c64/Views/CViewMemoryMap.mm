@@ -13,6 +13,7 @@
 #include "CViewDisassemble.h"
 #include "C64DebugInterface.h"
 #include "AtariDebugInterface.h"
+#include "C64DebugInterfaceVice.h"
 #include "C64SettingsStorage.h"
 #include "C64KeyboardShortcuts.h"
 #include "C64Opcodes.h"
@@ -389,17 +390,17 @@ void CViewMemoryMap::UpdateWholeMap()
 	
 	uint16 pc;
 	
-	pc = debugInterface->GetCpuPC();
 	
-	
-//	if (isFromDisk == false)
-//	{
-//		pc = debugInterface->GetC64CpuPC();
-//	}
-//	else
-//	{
-//		pc = debugInterface->GetDrive1541PC();
-//	}
+	if (isFromDisk == false)
+	{
+		pc = debugInterface->GetCpuPC();
+	}
+	else
+	{
+		// TODO: generalise this
+		C64DebugInterfaceVice *debugInterfaceVice = (C64DebugInterfaceVice *)debugInterface;
+		pc = debugInterfaceVice->GetDrive1541PC();
+	}
 	
 
 	// use bitmap
@@ -407,38 +408,39 @@ void CViewMemoryMap::UpdateWholeMap()
 	int vy = 0;
 	
 
-	if (isDataDirectlyFromRAM)
-	{
-		debugInterface->GetWholeMemoryMapFromRam(memoryBuffer);
-	}
-	else
-	{
-		debugInterface->GetWholeMemoryMap(memoryBuffer);
-	}
-
-//	if (isFromDisk == false)
+//	if (isDataDirectlyFromRAM)
 //	{
-//		if (isDataDirectlyFromRAM)
-//		{
-//			debugInterface->GetWholeMemoryMapFromRam(memoryBuffer);
-//		}
-//		else
-//		{
-//			debugInterface->GetWholeMemoryMap(memoryBuffer);
-//		}
+//		debugInterface->GetWholeMemoryMapFromRam(memoryBuffer);
 //	}
 //	else
 //	{
-//		if (isDataDirectlyFromRAM)
-//		{
-//			debugInterface->GetWholeMemoryMapFromRam1541(memoryBuffer);
-//		}
-//		else
-//		{
-//			debugInterface->GetWholeMemoryMap1541(memoryBuffer);
-//		}
+//		debugInterface->GetWholeMemoryMap(memoryBuffer);
 //	}
-//	
+
+	if (isFromDisk == false)
+	{
+		if (isDataDirectlyFromRAM)
+		{
+			debugInterface->GetWholeMemoryMapFromRam(memoryBuffer);
+		}
+		else
+		{
+			debugInterface->GetWholeMemoryMap(memoryBuffer);
+		}
+	}
+	else
+	{
+		C64DebugInterfaceVice *debugInterfaceVice = (C64DebugInterfaceVice *)debugInterface;
+		if (isDataDirectlyFromRAM)
+		{
+			debugInterfaceVice->GetWholeMemoryMapFromRam1541(memoryBuffer);
+		}
+		else
+		{
+			debugInterfaceVice->GetWholeMemoryMap1541(memoryBuffer);
+		}
+	}
+	
 	
 	u16 addr = 0x0000;
 	

@@ -552,6 +552,7 @@ void vicii_steal_cycles(void)
 
     do {
         maincpu_clk++;
+		c64d_maincpu_clk++;
         ba_low = vicii_cycle();
     } while (ba_low);
 }

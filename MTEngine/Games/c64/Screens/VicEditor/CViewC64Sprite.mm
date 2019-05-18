@@ -584,7 +584,7 @@ bool CViewC64Sprite::DoRightClick(GLfloat x, GLfloat y)
 
 bool CViewC64Sprite::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
-	LOGD("CViewC64Sprite::KeyDown: %d", keyCode);
+	LOGI("CViewC64Sprite::KeyDown: %d", keyCode);
 	
 	if ((keyCode == '1' && isShift && !isAlt && !isControl)
 		|| keyCode == '!')

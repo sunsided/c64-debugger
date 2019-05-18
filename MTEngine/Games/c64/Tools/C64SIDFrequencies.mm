@@ -114,7 +114,7 @@ void SID_FrequenciesInit()
 	LOGD("SID_FrequenciesInit");
 	
 	// getting SID frequency is called 3x for each SID in frame, we can use interval tree which is fast
-	// but faster will be just to keep 64kB table as it is not that much
+	// but faster will be just to keep 64kB lookup table as it is not that much
 
 	// TODO: update / change values to allow de-tuning (select middle between notes)
 

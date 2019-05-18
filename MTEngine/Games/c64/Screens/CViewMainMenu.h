@@ -153,6 +153,7 @@ public:
 	std::list<CSlrString *> diskExtensions;
 	std::list<CSlrString *> tapeExtensions;
 	std::list<CSlrString *> crtExtensions;
+	std::list<CSlrString *> reuExtensions;
 	std::list<CSlrString *> jukeboxExtensions;
 	std::list<CSlrString *> romsFileExtensions;
 
@@ -176,6 +177,12 @@ public:
 	void DetachTape();
 
 	//
+	void OpenDialogAttachReu();
+	void OpenDialogSaveReu();
+	bool AttachReu(CSlrString *path, bool updatePathToReu, bool showDetails);
+	bool SaveReu(CSlrString *path, bool updatePathToReu, bool showDetails);
+
+	//
 	CViewC64MenuItem *menuItemSetFolderWithAtariROMs;
 	void OpenDialogSetFolderWithAtariROMs();
 	
@@ -183,7 +190,7 @@ public:
 	bool LoadCAS(CSlrString *path, bool autoStart, bool updatePRGFolderPath, bool showAddressInfo);
 	bool InsertAtariCartridge(CSlrString *path, bool autoStart, bool updatePRGFolderPath, bool showAddressInfo);
 	void InsertATR(CSlrString *path, bool updatePathToATR, bool autoRun, int autoRunEntryNum, bool showLoadAddressInfo);
-	
+		
 	//
 	CViewC64MenuItem *menuItemSetFolderWithNesROMs;
 	void OpenDialogSetFolderWithNesROMs();
@@ -210,8 +217,8 @@ public:
 	
 	virtual void SystemDialogFileOpenSelected(CSlrString *path);
 	virtual void SystemDialogFileOpenCancelled();
-//	virtual void SystemDialogFileSaveSelected(CSlrString *path);
-//	virtual void SystemDialogFileSaveCancelled();
+	virtual void SystemDialogFileSaveSelected(CSlrString *path);
+	virtual void SystemDialogFileSaveCancelled();
 	
 	void SwitchMainMenuScreen();
 	

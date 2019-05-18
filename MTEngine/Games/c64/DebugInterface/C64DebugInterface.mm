@@ -61,6 +61,25 @@ CSlrString *C64DebugInterface::GetPlatformNameString()
 	return new CSlrString("Commodore 64");
 }
 
+void C64DebugInterface::ResetMainCpuCycleCounter()
+{
+	CDebugInterface::ResetMainCpuCycleCounter();
+}
+
+unsigned int C64DebugInterface::GetMainCpuCycleCounter()
+{
+	return CDebugInterface::GetMainCpuCycleCounter();
+}
+
+void C64DebugInterface::ResetEmulationFrameCounter()
+{
+	CDebugInterface::ResetEmulationFrameCounter();
+}
+
+unsigned int C64DebugInterface::GetEmulationFrameNumber()
+{
+	return CDebugInterface::GetEmulationFrameNumber();
+}
 
 void C64DebugInterface::InitKeyMap(C64KeyMap *keyMap)
 {
@@ -737,6 +756,35 @@ void C64DebugInterface::CartridgeFreezeButtonPressed()
 void C64DebugInterface::GetC64CartridgeState(C64StateCartridge *cartridgeState)
 {
 	SYS_FatalExit("C64DebugInterface::GetC64CartridgeState");
+}
+
+// REU
+void C64DebugInterface::SetReuEnabled(bool isEnabled)
+{
+	SYS_FatalExit("C64DebugInterface::SetReuEnabled");
+}
+
+void C64DebugInterface::SetReuSize(int reuSize)
+{
+	SYS_FatalExit("C64DebugInterface::SetReuSize");
+}
+
+bool C64DebugInterface::LoadReu(char *filePath)
+{
+	SYS_FatalExit("C64DebugInterface::LoadReu");
+	return false;
+}
+
+bool C64DebugInterface::SaveReu(char *filePath)
+{
+	SYS_FatalExit("C64DebugInterface::SaveReu");
+	return false;
+}
+
+//
+void C64DebugInterface::DetachEverything()
+{
+	SYS_FatalExit("C64DebugInterface::DetachEverything");
 }
 
 void C64DebugInterface::SetPalette(uint8 *palette)
