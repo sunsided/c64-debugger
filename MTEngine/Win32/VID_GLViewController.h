@@ -175,6 +175,8 @@ bool VID_IsWindowFullScreen();
 void VID_ShowMouseCursor();
 void VID_HideMouseCursor();
 
+void VID_StoreMainWindowPosition();
+
 void BlitTexture(GLuint tex, GLfloat destX, GLfloat destY, GLfloat z, GLfloat sizeX, GLfloat sizeY);
 void BlitTexture(GLuint tex, GLfloat destX, GLfloat destY, GLfloat z, GLfloat sizeX, GLfloat sizeY,
 				 GLfloat texStartX, GLfloat texStartY,

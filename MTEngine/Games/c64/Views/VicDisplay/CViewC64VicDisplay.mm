@@ -258,9 +258,8 @@ bool CViewC64VicDisplay::IsInside(GLfloat x, GLfloat y)
 
 void CViewC64VicDisplay::SetShowDisplayBorderType(u8 borderType)
 {
+	LOGD("SetShowDisplayBorderType: %d", borderType);
 	this->showDisplayBorderType = borderType;
-	
-	LOGG("SetShowDisplayBorderType: %d", this->showDisplayBorderType);
 	
 	// update positions based on visibility of the border
 	this->SetPosition(this->posX, this->posY);
@@ -339,7 +338,7 @@ void CViewC64VicDisplay::SetDisplayScale(float scale)
 
 void CViewC64VicDisplay::SetScreenAndDisplaySize(float dPosX, float dPosY, float dSizeX, float dSizeY)
 {
-	//LOGD("CViewC64VicDisplay::SetScreenAndDisplaySize: %f %f %f %f", dPosX, dPosY, dSizeX, dSizeY);
+	LOGG("CViewC64VicDisplay::SetScreenAndDisplaySize: %f %f %f %f", dPosX, dPosY, dSizeX, dSizeY);
 	
 	if (showDisplayBorderType == VIC_DISPLAY_SHOW_BORDER_FULL)
 	{
@@ -1001,7 +1000,8 @@ void CViewC64VicDisplay::Render()
 //				  this->sizeX, this->sizeY, 0.1f, 0.8f, 1.0f, 1.0f, 3.0f);
 	
 	
-//	LOGG("CViewC64VicDisplay::Render: %s posX=%5.2f posY=%5.2f sizeX=%5.2f sizeY=%5.2f", this->name, posX, posY, sizeX, sizeY);
+//	LOGD("CViewC64VicDisplay::Render: %s posX=%5.2f posY=%5.2f sizeX=%5.2f sizeY=%5.2f | fullScanScreenPosX=%5.2f fullScanScreenPosY=%5.2f fullScanScreenSizeX=%5.2f fullScanScreenSizeY=%5.2f", this->name, posX, posY, sizeX, sizeY, fullScanScreenPosX, fullScanScreenPosY, fullScanScreenSizeX, fullScanScreenSizeY);
+	
 	BlitFilledRectangle(posX, posY, posZ, sizeX, sizeY, 0, 0, 0, 0.7f);
 
 	
@@ -1831,7 +1831,7 @@ void CViewC64VicDisplay::Render(GLfloat posX, GLfloat posY)
 
 bool CViewC64VicDisplay::ScrollMemoryAndDisassembleToRasterPosition(float rx, float ry, bool isForced)
 {
-	LOGD("ScrollMemoryAndDisassembleToRasterPosition: %f %f %d", rx, ry, isForced);
+//	LOGD("ScrollMemoryAndDisassembleToRasterPosition: %f %f %d", rx, ry, isForced);
 
 	// check if outside
 	int addr = -1;

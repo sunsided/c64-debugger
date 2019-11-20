@@ -111,9 +111,9 @@ void LOG_Init(void)
 
 	LOG_SetLevel(DBGLVL_PAINT, false);
 	
-	LOG_SetLevel(DBGLVL_VICE_DEBUG, true);
-	LOG_SetLevel(DBGLVL_VICE_MAIN, true);
-	LOG_SetLevel(DBGLVL_VICE_VERBOSE, true);
+	LOG_SetLevel(DBGLVL_VICE_DEBUG, false);
+	LOG_SetLevel(DBGLVL_VICE_MAIN, false);
+	LOG_SetLevel(DBGLVL_VICE_VERBOSE, false);
 
 	LOG_SetLevel(DBGLVL_ATARI_MAIN, true);
 	LOG_SetLevel(DBGLVL_ATARI_DEBUG, true);

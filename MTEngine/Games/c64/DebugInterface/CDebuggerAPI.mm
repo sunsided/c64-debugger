@@ -20,7 +20,8 @@
 
 CDebuggerAPI::CDebuggerAPI()
 {
-	
+	this->byteBufferAssembleText = new CByteBuffer();
+	assembleTarget = ASSEMBLE_TARGET_MAIN_CPU;
 }
 
 void CDebuggerAPI::StartThread(CSlrThread *run)
@@ -216,9 +217,120 @@ void CDebuggerAPI::ClearRAM(int startAddr, int endAddr, u8 value)
 	}
 }
 
-int CDebuggerAPI::Assemble(int addr, char *buf)
+void CDebuggerAPI::SetAssembleTarget(u8 target)
 {
-	return viewC64->viewC64Disassemble->Assemble(addr, buf, false);
+	this->assembleTarget = target;
+}
+
+extern "C" {
+	unsigned char *assemble_64tass(void *userData, char *assembleText, int assembleTextSize, int *codeStartAddr, int *codeSize);
+}
+
+void CDebuggerAPI::Assemble64Tass(char *assembleText, int *codeStartAddr, int *codeSize)
+{
+	u8 *buf = assemble_64tass((void*)this, assembleText, strlen(assembleText), codeStartAddr, codeSize);
+	
+	if (buf == NULL)
+	{
+		*codeStartAddr = 0;
+		*codeSize = 0;
+		LOGError("CDebuggerAPI::Assemble64Tass: assemble failed");
+		return;
+	}
+
+	int addr = *codeStartAddr;
+	for (int i = 0; i < *codeSize; i++)
+	{
+		this->SetByteToRam(addr, buf[i]);
+		addr++;
+	}
+	free(buf);
+}
+
+void CDebuggerAPI::Assemble64TassAddLine(char *assembleText)
+{
+	char *ptr = assembleText;
+	while (*ptr != '\0')
+	{
+		byteBufferAssembleText->PutU8(*ptr);
+		ptr++;
+	}
+	byteBufferAssembleText->PutU8('\n');
+}
+
+#define STORE_ASSEMBLE_TEXT
+void CDebuggerAPI::Assemble64Tass(int *codeStartAddr, int *codeSize)
+{
+	byteBufferAssembleText->PutU8(0x00);
+	
+	char *assembleText = (char*)byteBufferAssembleText->data;
+	
+#ifdef STORE_ASSEMBLE_TEXT
+	FILE *fp = fopen("/Users/mars/Desktop/asm.asm", "wb");
+	fprintf(fp, "%s", assembleText);
+	fclose(fp);
+#endif
+	
+	LOGD("assembleText='%s'", assembleText);
+	
+	u8 *buf = assemble_64tass((void*)this, assembleText, byteBufferAssembleText->length-1, codeStartAddr, codeSize);
+	
+	if (buf == NULL)
+	{
+		*codeStartAddr = 0;
+		*codeSize = 0;
+		LOGError("CDebuggerAPI::Assemble64Tass: assemble failed");
+		return;
+	}
+	
+	/* TODO:
+	if (assembleTarget == ASSEMBLE_TARGET_NONE)
+	{
+		int addr = *codeStartAddr;
+		for (int i = 0; i < *codeSize; i++)
+		{
+			this->SetByteToRam(addr, buf[i]);
+			addr++;
+		}
+		free(buf);
+	}*/
+	
+	byteBufferAssembleText->Reset();
+}
+
+extern "C" {
+	void c64debugger_set_assemble_result_to_memory(void *userData, int addr, unsigned char v)
+	{
+//		LOGD("c64debugger_set_assemble_result_to_memory: %04x %02x", addr, v);
+		
+		CDebuggerAPI *debuggerAPI = (CDebuggerAPI*)userData;
+		if (debuggerAPI->assembleTarget == ASSEMBLE_TARGET_NONE)
+		{
+			// skip
+		}
+		else if (debuggerAPI->assembleTarget == ASSEMBLE_TARGET_MAIN_CPU)
+		{
+			debuggerAPI->SetByteToRamC64(addr, v);
+		}
+		else
+		{
+			SYS_FatalExit("TODO: assemble target");
+		}
+	}
+};
+
+
+int CDebuggerAPI::Assemble(int addr, char *assembleText)
+{
+	if (assembleTarget == ASSEMBLE_TARGET_MAIN_CPU)
+	{
+		return viewC64->viewC64Disassemble->Assemble(addr, assembleText, false);
+	}
+	else if (assembleTarget == ASSEMBLE_TARGET_DISK_DRIVE1)
+	{
+		return viewC64->viewDrive1541Disassemble->Assemble(addr, assembleText, false);
+	}
+	return -1;
 }
 
 void CDebuggerAPI::AddWatch(CSlrString *segmentName, int address, CSlrString *watchName, uint8 representation, int numberOfValues, uint8 bits)
@@ -295,11 +407,20 @@ bool CDebuggerAPI::LoadSID(char *filePath, u16 *fromAddr, u16 *toAddr, u16 *init
 
 void CDebuggerAPI::SaveExomizerPRG(u16 fromAddr, u16 toAddr, u16 jmpAddr, char *filePath)
 {
+	LOGM("SaveExomizerPRG: fromAddr=%04x toAddr=%04x jmpAddr=%04x filePath='%s'", fromAddr, toAddr, jmpAddr, filePath);
 	C64SaveMemoryExomizerPRG(fromAddr, toAddr, jmpAddr, filePath);
 }
 
+u8 *CDebuggerAPI::ExomizerMemoryRaw(u16 fromAddr, u16 toAddr, int *compressedSize)
+{
+	return C64ExomizeMemoryRaw(fromAddr, toAddr, compressedSize);
+}
+
+
+
 void CDebuggerAPI::SavePRG(u16 fromAddr, u16 toAddr, char *filePath)
 {
+	LOGM("SavePRG: fromAddr=%04x toAddr=%04x filePath='%s'", fromAddr, toAddr, filePath);
 	C64SaveMemory(fromAddr, toAddr, true, viewC64->debugInterfaceC64->dataAdapterC64DirectRam, filePath);
 }
 
@@ -308,6 +429,10 @@ void CDebuggerAPI::SaveBinary(u16 fromAddr, u16 toAddr, char *filePath)
 	C64SaveMemory(fromAddr, toAddr, false, viewC64->debugInterfaceC64->dataAdapterC64DirectRam, filePath);
 }
 
+int CDebuggerAPI::LoadBinary(u16 fromAddr, char *filePath)
+{
+	return C64LoadMemory(fromAddr, viewC64->debugInterfaceC64->dataAdapterC64DirectRam, filePath);
+}
 
 void CDebuggerAPI::BasicUpStart(u16 jmpAddr)
 {

@@ -57,7 +57,8 @@ bool C64LoadSIDToRam(char *filePath, u16 *fromAddr, u16 *toAddr, u16 *initAddr, 
 
 //
 bool C64SaveMemory(int fromAddr, int toAddr, bool isPRG, CSlrDataAdapter *dataAdapter, char *filePath);
+int C64LoadMemory(int fromAddr, CSlrDataAdapter *dataAdapter, char *filePath);
 bool C64SaveMemoryExomizerPRG(int fromAddr, int toAddr, int jmpAddr, char *filePath);
-
+u8 *C64ExomizeMemoryRaw(int fromAddr, int toAddr, int *compressedSize);
 
 #endif

@@ -24,6 +24,8 @@ extern "C"{
 #include "CSlrKeyboardShortcuts.h"
 #include "SYS_KeyCodes.h"
 #include "C64SettingsStorage.h"
+#include "SYS_PIPE.h"
+
 #include "CViewDataDump.h"
 #include "CViewDataWatch.h"
 #include "CViewMemoryMap.h"
@@ -60,6 +62,7 @@ extern "C"{
 #include "CViewSettingsMenu.h"
 #include "CViewFileD64.h"
 #include "CViewC64KeyMap.h"
+#include "CViewC64AllGraphics.h"
 #include "CViewKeyboardShortcuts.h"
 #include "CViewMonitorConsole.h"
 #include "CViewSnapshots.h"
@@ -84,12 +87,14 @@ extern "C"{
 #include "SYS_Threading.h"
 #include "C64AsmSourceSymbols.h"
 #include "CDebuggerEmulatorPlugin.h"
+#include "CSnapshotsManager.h"
 #include "C64D_InitPlugins.h"
 
 #include "C64DebugInterfaceVice.h"
 #include "AtariDebugInterface.h"
 #include "NesDebugInterface.h"
 
+#include "C64DebuggerPluginSpiral.h"
 
 CViewC64 *viewC64 = NULL;
 
@@ -350,6 +355,13 @@ CViewC64::CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 	RES_SetStateIdle();
 	VID_SetFPS(FRAMES_PER_SECOND);
 
+	//
+	// Start PIPE integration
+	if (c64SettingsUsePipeIntegration)
+	{
+		PIPE_Init();
+	}
+	
 	//
 	// Create plugins
 	this->CreateEmulatorPlugins();
@@ -706,6 +718,12 @@ void CViewC64::InitViews()
 	viewDriveStateCPU = new CViewDriveStateCPU(0, 0, posZ, SCREEN_WIDTH, SCREEN_HEIGHT, debugInterfaceC64);
 	this->AddGuiElement(viewDriveStateCPU);
 
+	//
+	viewC64AllGraphics = new CViewC64AllGraphics(0, 0, posZ, SCREEN_WIDTH, SCREEN_HEIGHT, debugInterfaceC64);
+	this->AddGuiElement(viewC64AllGraphics);
+
+	
+	
 	// add c64 screen on top of all other views
 //	this->AddGuiElement(viewC64Screen);
 	this->AddGuiElement(viewC64ScreenWrapper);
@@ -1198,7 +1216,7 @@ void CViewC64::InitLayouts()
 	screenPositions[m]->c64DataDumpVisible = true;
 	screenPositions[m]->c64DataDumpX = 0.0f;
 	screenPositions[m]->c64DataDumpY = SCREEN_HEIGHT/2.0f + screenPositions[m]->c64DisassembleFontSize*5 + 2;
-	screenPositions[m]->c64DataDumpSizeX = SCREEN_WIDTH - 110.0f;
+	screenPositions[m]->c64DataDumpSizeX = 313.0f;
 	screenPositions[m]->c64DataDumpSizeY = SCREEN_HEIGHT - screenPositions[m]->c64DataDumpY;
 	screenPositions[m]->c64DataDumpFontSize = 5.3f;
 	screenPositions[m]->c64DataDumpGapAddress = screenPositions[m]->c64DataDumpFontSize;
@@ -1423,6 +1441,27 @@ void CViewC64::InitLayouts()
 //	screenPositions[m]->c64MemoryMapX = SCREEN_WIDTH-screenPositions[m]->c64MemoryMapSizeX-2.5f;
 //	screenPositions[m]->c64MemoryMapY = 260;
 	
+	
+	//
+	m = SCREEN_LAYOUT_C64_ALL_GRAPHICS;
+	screenPositions[m] = new CScreenLayout();
+	screenPositions[m]->c64DisassembleVisible = false;
+	
+	screenPositions[m]->c64CpuStateVisible = true;
+	screenPositions[m]->c64CpuStateX = 220;
+	screenPositions[m]->c64CpuStateY = 2.5f;
+	screenPositions[m]->c64CpuStateFontSize = 5.0f;
+	
+	scale = 0.255f;
+	screenPositions[m]->c64ScreenVisible = true;
+	screenPositions[m]->c64ScreenSizeX = (float)debugInterfaceC64->GetScreenSizeX() * scale;
+	screenPositions[m]->c64ScreenSizeY = (float)debugInterfaceC64->GetScreenSizeY() * scale;
+	screenPositions[m]->c64ScreenX = 478;
+	screenPositions[m]->c64ScreenY = 0.0f;
+	
+	screenPositions[m]->c64AllGraphicsVisible = true;
+	screenPositions[m]->c64AllGraphicsX = 0.0f;
+	screenPositions[m]->c64AllGraphicsY = 0.0f;
 	
 #endif
 	// ^^ RUN_COMMODOREC64 ^^
@@ -2086,6 +2125,10 @@ void CViewC64::SwitchToScreenLayout(int newScreenLayoutId)
 	viewDriveStateCPU->SetVisible(screenLayout->drive1541CpuStateVisible);
 	viewDriveStateCPU->SetPosition(screenLayout->drive1541CpuStateX, screenLayout->drive1541CpuStateY);
 	viewDriveStateCPU->SetFont(this->fontDisassemble, screenLayout->drive1541CpuStateFontSize);
+	
+	// all graphics
+	viewC64AllGraphics->SetVisible(screenLayout->c64AllGraphicsVisible);
+	viewC64AllGraphics->SetPosition(screenLayout->c64AllGraphicsX, screenLayout->c64AllGraphicsY);
 	
 #endif
 	
@@ -2769,6 +2812,12 @@ bool CViewC64::ProcessGlobalKeyboardShortcut(u32 keyCode, bool isShift, bool isA
 			C64DebuggerStoreSettings();
 			return true;
 		}
+		else if (shortcut == viewC64MainMenu->kbsScreenLayout14)
+		{
+			SwitchToScreenLayout(SCREEN_LAYOUT_C64_ALL_GRAPHICS);
+			C64DebuggerStoreSettings();
+			return true;
+		}
 		else if (shortcut == viewC64MainMenu->kbsInsertCartridge)
 		{
 			viewC64MainMenu->OpenDialogInsertCartridge();
@@ -2863,54 +2912,12 @@ bool CViewC64::ProcessGlobalKeyboardShortcut(u32 keyCode, bool isShift, bool isA
 		}
 		else if (shortcut == viewC64MainMenu->kbsSoftReset)
 		{
-			// TODO: make a list of avaliable interfaces and iterate
-			if (debugInterfaceC64)
-			{
-				debugInterfaceC64->Reset();
-			}
-			
-			if (debugInterfaceAtari)
-			{
-				debugInterfaceAtari->Reset();
-			}
-
-			if (debugInterfaceNes)
-			{
-				debugInterfaceNes->Reset();
-			}
-			
-			if (c64SettingsIsInVicEditor)
-			{
-				viewC64->viewC64VicControl->UnlockAll();
-			}
+			SoftReset();
 			return true;
 		}
 		else if (shortcut == viewC64MainMenu->kbsHardReset)
 		{
-			if (debugInterfaceC64)
-			{
-				debugInterfaceC64->HardReset();
-				viewC64MemoryMap->ClearExecuteMarkers();
-				viewC64->viewDrive1541MemoryMap->ClearExecuteMarkers();
-			}
-
-			if (debugInterfaceAtari)
-			{
-				debugInterfaceAtari->HardReset();
-				viewAtariMemoryMap->ClearExecuteMarkers();
-			}
-
-			if (debugInterfaceNes)
-			{
-				debugInterfaceNes->HardReset();
-				LOGTODO("                           viewNesMemoryMap                     !!!!!!!!!! ");
-//				viewNesMemoryMap->ClearExecuteMarkers();
-			}
-			
-			if (c64SettingsIsInVicEditor)
-			{
-				viewC64->viewC64VicControl->UnlockAll();
-			}
+			HardReset();
 			return true;
 		}
 		else if (shortcut == viewC64SettingsMenu->kbsUseKeboardAsJoystick)
@@ -3139,6 +3146,84 @@ void CViewC64::StepOneCycle()
 	}
 }
 
+void CViewC64::HardReset()
+{
+	if (debugInterfaceC64)
+	{
+		debugInterfaceC64->HardReset();
+		viewC64MemoryMap->ClearExecuteMarkers();
+		viewC64->viewDrive1541MemoryMap->ClearExecuteMarkers();
+	}
+	
+	if (debugInterfaceAtari)
+	{
+		debugInterfaceAtari->HardReset();
+		viewAtariMemoryMap->ClearExecuteMarkers();
+	}
+	
+	if (debugInterfaceNes)
+	{
+		debugInterfaceNes->HardReset();
+		LOGTODO("                           viewNesMemoryMap                     !!!!!!!!!! ");
+		//				viewNesMemoryMap->ClearExecuteMarkers();
+	}
+	
+	if (c64SettingsIsInVicEditor)
+	{
+		viewC64->viewC64VicControl->UnlockAll();
+	}
+}
+
+void CViewC64::SoftReset()
+{
+	// TODO: make a list of avaliable interfaces and iterate
+	if (debugInterfaceC64)
+	{
+		debugInterfaceC64->Reset();
+	}
+	
+	if (debugInterfaceAtari)
+	{
+		debugInterfaceAtari->Reset();
+	}
+	
+	if (debugInterfaceNes)
+	{
+		debugInterfaceNes->Reset();
+	}
+	
+	if (c64SettingsIsInVicEditor)
+	{
+		viewC64->viewC64VicControl->UnlockAll();
+	}
+}
+
+CViewDisassemble *CViewC64::GetActiveDisassembleView()
+{
+	if (debugInterfaceC64)
+	{
+		if (viewC64Disassemble->visible)
+			return viewC64Disassemble;
+		
+		if (viewDrive1541Disassemble->visible)
+			return viewDrive1541Disassemble;
+	}
+	
+	if (debugInterfaceAtari)
+	{
+		if (viewAtariDisassemble->visible)
+			return viewAtariDisassemble;
+	}
+	
+	if (debugInterfaceNes)
+	{
+		if (viewNesDisassemble)
+			return viewNesDisassemble;
+	}
+	
+	return NULL;
+}
+
 void CViewC64::RunContinueEmulation()
 {
 	LOGTODO("CViewC64::RunContinueEmulation(): make generic");
@@ -3334,9 +3419,76 @@ bool CViewC64::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 //#if defined(DEBUG_TEST_CODE)
 //	if (keyCode == 'a' && isControl)
 //	{
-//		guiMain->ShowMessage("force drive flush");
-//		machine_drive_flush();
+//		VID_TestMenu();
 //	}
+	
+	// TODO: CREATE KEY SHORTCUT
+	if (keyCode == MTKEY_F10 && isAlt)
+	{
+		guiMain->LockMutex();
+		debugInterfaceVice->snapshotsManager->RestoreSnapshotBackstepInstruction();
+		guiMain->UnlockMutex();
+		return true;
+	}
+	
+	if (keyCode == MTKEY_ARROW_LEFT && isControl && isShift && isAlt)
+	{
+		guiMain->LockMutex();
+		LOGD(">>>>>>>>>................ REWIND -1");
+		debugInterfaceVice->snapshotsManager->RestoreSnapshotByNumFramesOffset(-1);
+		guiMain->UnlockMutex();
+		return true;
+	}
+	if (keyCode == MTKEY_ARROW_LEFT && isControl && isShift)
+	{
+		guiMain->LockMutex();
+//		guiMain->ShowMessage("REWIND -5s");
+		
+		// TODO: get FPS
+		LOGD(">>>>>>>>>................ REWIND -5s");
+		debugInterfaceVice->snapshotsManager->RestoreSnapshotByNumFramesOffset(-50*5);
+		guiMain->UnlockMutex();
+		return true;
+	}
+	if (keyCode == MTKEY_ARROW_LEFT && isControl)
+	{
+		guiMain->LockMutex();
+//		guiMain->ShowMessage("REWIND -1s");
+		// TODO: get FPS
+		LOGD(">>>>>>>>>................ REWIND -1s");
+		debugInterfaceVice->snapshotsManager->RestoreSnapshotByNumFramesOffset(-10);
+		guiMain->UnlockMutex();
+		return true;
+	}
+
+	if (keyCode == MTKEY_ARROW_RIGHT && isControl && isShift && isAlt)
+	{
+		guiMain->LockMutex();
+		LOGD(">>>>>>>>>................ FORWARD +1");
+		debugInterfaceVice->snapshotsManager->RestoreSnapshotByNumFramesOffset(+1);
+		guiMain->UnlockMutex();
+		return true;
+	}
+	if (keyCode == MTKEY_ARROW_RIGHT && isControl && isShift)
+	{
+		guiMain->LockMutex();
+//		guiMain->ShowMessage("FORWARD +5s");
+		LOGD(">>>>>>>>>................ FORWARD +5s");
+		debugInterfaceVice->snapshotsManager->RestoreSnapshotByNumFramesOffset(50*5);
+		guiMain->UnlockMutex();
+		return true;
+	}
+	if (keyCode == MTKEY_ARROW_RIGHT && isControl)
+	{
+		guiMain->LockMutex();
+//		guiMain->ShowMessage("FORWARD +1s");
+		LOGD(">>>>>>>>>................ FORWARD +1s");
+		debugInterfaceVice->snapshotsManager->RestoreSnapshotByNumFramesOffset(+10);
+		guiMain->UnlockMutex();
+		return true;
+	}
+
+
 //#endif
 	
 #if defined(RUN_ATARI) && defined(RUN_COMMODORE64)
@@ -3838,7 +3990,7 @@ void CViewC64::DeactivateView()
 
 void CViewC64::ApplicationEnteredBackground()
 {
-	LOGD("CViewC64::ApplicationEnteredBackground");
+	LOGG("CViewC64::ApplicationEnteredBackground");
 	
 	// workaround for alt+tab
 	if (this->debugInterfaceC64)
@@ -3859,7 +4011,7 @@ void CViewC64::ApplicationEnteredBackground()
 
 void CViewC64::ApplicationEnteredForeground()
 {
-	LOGD("CViewC64::ApplicationEnteredForeground");
+	LOGG("CViewC64::ApplicationEnteredForeground");
 
 	// workaround for alt+tab
 	if (this->debugInterfaceC64)
@@ -4324,6 +4476,10 @@ CScreenLayout::CScreenLayout()
 	c64VicControlVisible = false;
 	c64VicControlFontSize = 8.0f;
 
+	c64AllGraphicsVisible = false;
+	c64AllGraphicsX = 0.0f;
+	c64AllGraphicsY = 0.0f;
+	
 	monitorConsoleFontScale = 1.5f;
 	monitorConsoleNumLines = 20;
 	
@@ -4387,7 +4543,8 @@ void C64D_DragDropCallback(CSlrString *filePath)
 	{
 		C64D_DragDropCallbackPRG(filePath);
 	}
-	else if (ext->CompareWith("d64") || ext->CompareWith("D64"))
+	else if (ext->CompareWith("d64") || ext->CompareWith("D64")
+			 || ext->CompareWith("g64") || ext->CompareWith("G64"))
 	{
 		C64D_DragDropCallbackD64(filePath);
 	}

@@ -1179,6 +1179,7 @@ void CViewC64VicControl::SwitchBorderType()
 	
 	this->vicDisplay->SetShowDisplayBorderType(borderType);
 	
+	c64SettingsVicDisplayBorderType = borderType;
 	C64DebuggerStoreSettings();
 
 }

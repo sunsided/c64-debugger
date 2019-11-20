@@ -202,6 +202,9 @@ CViewMainMenu::CViewMainMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 	kbsScreenLayout13 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Layout #13", MTKEY_F3, true, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsScreenLayout13);
 
+	kbsScreenLayout14 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Layout #14", MTKEY_F7, true, false, true);
+	viewC64->keyboardShortcuts->AddShortcut(kbsScreenLayout14);
+
 	//
 	
 	kbsVicEditorScreen = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "VIC Editor screen", MTKEY_F6, true, false, true);
@@ -731,7 +734,7 @@ void CViewMainMenu::InsertD64(CSlrString *path, bool updatePathToD64, bool autoR
 
 	
 	// TODO: support UTF paths
-	char *asciiPath = c64SettingsPathToD64->GetStdASCII();
+	char *asciiPath = path->GetStdASCII();
 	
 	// display file name in menu
 	char *fname = SYS_GetFileNameFromFullPath(asciiPath);

@@ -182,6 +182,10 @@ public:
 
 	void StepOverJsr();
 	
+	void MakeJMPToCursor();
+	void MakeJMPToAddress(u16 address);
+	void SetBreakpointPC(u16 address, bool setOn);
+	
 	addrPosition_t *addrPositions;
 	void CreateAddrPositions();
 	int addrPositionCounter;

@@ -107,7 +107,7 @@ static int residfp_init(sound_t *psid, int speed, int cycles_per_sec, int factor
 
     passband = speed * passband_percentage / 200.f;
  
-    /* Some mostly-common settings for all modes abstracted here. */
+    /* Some mostly-common settings for all modes abstracted here. */	
     psid->sid->input(0);
 
 	psid->sid->set_chip_number(psid->chipNo);

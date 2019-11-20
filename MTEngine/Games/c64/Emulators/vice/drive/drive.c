@@ -208,6 +208,7 @@ int drive_init(void)
         drive->byte_ready_level = 1;
         drive->byte_ready_edge = 1;
         drive->GCR_dirty_track = 0;
+		drive->GCR_dirty_track_for_snapshot = 0;
         drive->GCR_write_value = 0x55;
         drive->GCR_track_start_ptr = NULL;
         drive->GCR_current_track_size = 0;
@@ -220,6 +221,7 @@ int drive_init(void)
         drive->GCR_image_loaded = 0;
         drive->P64_image_loaded = 0;
         drive->P64_dirty = 0;
+		drive->P64_dirty_for_snapshot = 0;
         drive->read_only = 0;
         drive->clock_frequency = 1;
         drive->led_last_change_clk = *(drive->clk);

@@ -20,6 +20,8 @@
 
 #include "..\\resource.h"
 
+#define CATCH_CRASH
+
 #ifdef _MSC_VER
 #   pragma comment(lib, "pthreadVC2-static.lib")
 #endif
@@ -1401,6 +1403,26 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	BOOL	done=FALSE;								// Bool Variable To Exit Loop
 
 	pthread_win32_process_attach_np();
+	
+	if (SetProcessPriorityBoost(GetCurrentProcess(), true) == 0)
+	{
+		LOGError("SetProcessPriorityBoost failed");
+		//MessageBox(NULL, "SetProcessPriorityBoost failed", "Error", MB_OK);
+	}
+	else
+	{
+		//MessageBox(NULL, "SetProcessPriorityBoost OK", "OK", MB_OK);
+	}
+	
+	if (SetPriorityClass(GetCurrentProcess(), ABOVE_NORMAL_PRIORITY_CLASS) == 0)
+	{
+		LOGError("SetPriorityClass failed");
+		//MessageBox(NULL, "SetPriorityClass failed", "Error", MB_OK);
+	}
+	else
+	{
+		//MessageBox(NULL, "SetPriorityClass OK", "OK", MB_OK);
+	}
 
 	SYS_InitCharBufPool();
 	SYS_InitStrings();

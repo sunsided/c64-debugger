@@ -35,7 +35,7 @@ CSoundEngine::CSoundEngine()
 {
 	LOGA("CSoundEngine init");
 	
-	audioEngineMutex = new CSlrMutex();
+	audioEngineMutex = new CSlrMutex("CSoundEngine");
 	
 #if defined(WRITE_AUDIO_OUT_TO_FILE)
 	char fpath[1024];

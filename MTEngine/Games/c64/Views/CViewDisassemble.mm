@@ -73,7 +73,7 @@ CViewDisassemble::CViewDisassemble(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 	
 	this->CreateAddrPositions();
 	
-	renderBreakpointsMutex = new CSlrMutex();
+	renderBreakpointsMutex = new CSlrMutex("CViewDisassemble::renderBreakpointsMutex");
 	
 	this->editCursorPos = EDIT_CURSOR_POS_NONE;
 	
@@ -1600,6 +1600,8 @@ int CViewDisassemble::UpdateDisassembleOpcodeLine(float py, int addr, uint8 op, 
 	addrPositions[addrPositionCounter].y = py;
 	addrPositionCounter++;
 	
+//	LOGD("addrPositionCounter=%d", addrPositionCounter);
+	
 	int numBytesPerOp = opcodes[op].addressingLength;
 	
 	int newAddress = addr + numBytesPerOp;
@@ -1698,7 +1700,7 @@ void CViewDisassemble::UpdateDisassemble(int startAddress, int endAddress)
 	
 	do
 	{
-		//LOGD("renderAddress=%4.4x l=%4.4x", renderAddress, memoryLength);
+//		LOGD("renderAddress=%4.4x l=%4.4x addrPositionCounter=%d py=%f posEndY=%f", renderAddress, memoryLength, addrPositionCounter, py, posEndY);
 		if (renderAddress >= memoryLength)
 			break;
 		
@@ -2071,10 +2073,11 @@ void CViewDisassemble::StartEditingAtCursorPosition(int newCursorPos, bool goLef
 			}
 		}
 		
-		int cp = newCursorPos-EDIT_CURSOR_POS_HEX1;
-		
-		editHex->SetValue(op[cp], 2);
-
+		if (newCursorPos != EDIT_CURSOR_POS_MNEMONIC)
+		{
+			int cp = newCursorPos-EDIT_CURSOR_POS_HEX1;
+			editHex->SetValue(op[cp], 2);
+		}
 	}
 	
 	if (newCursorPos == EDIT_CURSOR_POS_MNEMONIC)
@@ -2343,7 +2346,7 @@ bool CViewDisassemble::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 	
 	if (keyboardShortcut == viewC64->keyboardShortcuts->kbsMakeJmp)
 	{
-		this->debugInterface->MakeJmpNoReset(this->dataAdapter, this->cursorAddress);
+		MakeJMPToCursor();
 		
 		// TODO: make generic and iterate over interfaces
 		if (viewC64->debugInterfaceC64)
@@ -2777,6 +2780,64 @@ bool CViewDisassemble::DoScrollWheel(float deltaX, float deltaY)
 	return false;
 }
 
+void CViewDisassemble::MakeJMPToCursor()
+{
+	this->debugInterface->MakeJmpNoReset(this->dataAdapter, this->cursorAddress);
+}
+
+void CViewDisassemble::MakeJMPToAddress(u16 address)
+{
+	this->debugInterface->MakeJmpNoReset(this->dataAdapter, address);
+}
+
+void CViewDisassemble::SetBreakpointPC(u16 address, bool setOn)
+{
+	debugInterface->LockMutex();
+	
+	bool found = false;
+	
+	// keep local copy to not lock mutex during rendering
+	std::map<uint16, uint16>::iterator it2 = renderBreakpoints.find(address);
+	if (it2 != renderBreakpoints.end())
+	{
+		if (setOn)
+		{
+			// breakpoint is already there, do not create new
+			LOGError("CViewDisassemble::SetBreakpointPC: breakpoint already existing addr=%04x", address);
+		}
+		else
+		{
+			// remove breakpoint
+			LOGD("CViewDisassemble::SetBreakpointPC: remove breakpoint addr=%04x", address);
+			
+			renderBreakpoints.erase(it2);
+			debugInterface->RemoveAddrBreakpoint(breakpointsMap, address);
+		}
+		
+		found = true;
+	}
+	
+	if (found == false)
+	{
+		if (setOn)
+		{
+			// add breakpoint
+			LOGD("CViewDisassemble::SetBreakpointPC: add breakpoint addr=%04x", address);
+			renderBreakpoints[address] = address;
+			
+			CAddrBreakpoint *breakpoint = new CAddrBreakpoint(address);
+			breakpoint->actions = ADDR_BREAKPOINT_ACTION_STOP;
+			
+			debugInterface->AddAddrBreakpoint(breakpointsMap, breakpoint);
+		}
+		else
+		{
+			LOGError("CViewDisassemble::SetBreakpointPC: breakpoint not found addr=%04x", address);
+		}
+	}
+	
+	debugInterface->UnlockMutex();
+}
 
 void CViewDisassemble::Assemble(int assembleAddress)
 {
@@ -3204,7 +3265,17 @@ void CViewDisassemble::CreateAddrPositions()
 	if (addrPositions != NULL)
 		delete [] addrPositions;
 	
-	addrPositions = new addrPosition_t[(numberOfLinesBack*5)+1];
+	int numVisibleLines = (sizeY / fontSize);
+	int numLines = numVisibleLines*2 + numberOfLinesBack + 1;	// additional for scrolling
+	if (numLines >= 0)
+	{
+//		addrPositions = new addrPosition_t[(numberOfLinesBack*5)+3];
+		addrPositions = new addrPosition_t[numLines];
+	}
+	else
+	{
+		addrPositions = NULL;
+	}
 }
 
 

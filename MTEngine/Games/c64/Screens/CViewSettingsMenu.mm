@@ -28,6 +28,8 @@
 #include "AtariDebugInterface.h"
 #include "NesDebugInterface.h"
 
+#include "CSnapshotsManager.h"
+
 
 #if defined(WIN32)
 extern "C" {
@@ -196,6 +198,8 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 	optionsColors->push_back(new CSlrString("yellow"));
 	optionsColors->push_back(new CSlrString("cyan"));
 	optionsColors->push_back(new CSlrString("magenta"));
+	optionsColors->push_back(new CSlrString("orange"));
+	optionsColors->push_back(new CSlrString("mid gray"));
 
 	
 	if (viewC64->debugInterfaceC64)
@@ -1201,6 +1205,7 @@ void CViewSettingsMenu::UpdateC64ProfilerFilePath()
 void CViewSettingsMenu::UpdateAudioOutDevices()
 {
 	guiMain->LockMutex();
+	viewC64->debugInterfaceC64->snapshotsManager->LockMutex();
 	
 	std::list<CSlrString *> *audioDevicesList = NULL;
 	audioDevicesList = gSoundEngine->EnumerateAvailableOutputDevices();
@@ -1232,6 +1237,7 @@ void CViewSettingsMenu::UpdateAudioOutDevices()
 		i++;
 	}
 	
+	viewC64->debugInterfaceC64->snapshotsManager->UnlockMutex();
 	guiMain->UnlockMutex();
 }
 
@@ -2174,6 +2180,7 @@ void CViewSettingsMenu::MenuCallbackItemEntered(CGuiViewMenuItem *menuItem)
 	}
 	else if (menuItem == menuItemBack)
 	{
+		this->DeactivateView();
 		guiMain->SetView(viewC64->viewC64MainMenu);
 	}
 }
@@ -2769,6 +2776,7 @@ void CViewSettingsMenu::SwitchMainMenuScreen()
 {
 	if (guiMain->currentView == this)
 	{
+		this->DeactivateView();
 		viewC64->ShowMainScreen();
 	}
 	else
@@ -2822,6 +2830,8 @@ void CViewSettingsMenu::ActivateView()
 	
 	if (viewC64->debugInterfaceC64)
 	{
+		viewC64->debugInterfaceC64->snapshotsManager->LockMutex();
+		
 		//
 		int modelType = viewC64->debugInterfaceC64->GetC64ModelType();
 		this->SetOptionC64ModelType(modelType);
@@ -2844,6 +2854,8 @@ void CViewSettingsMenu::ActivateView()
 				break;
 			}
 		}
+		
+		viewC64->debugInterfaceC64->snapshotsManager->UnlockMutex();
 	}
 
 	UpdateAudioOutDevices();
@@ -2852,6 +2864,9 @@ void CViewSettingsMenu::ActivateView()
 void CViewSettingsMenu::DeactivateView()
 {
 	LOGG("CViewSettingsMenu::DeactivateView()");
+	
+//	// restart saving snapshots
+//	viewC64->debugInterfaceC64->snapshotsManager->ClearSnapshotsHistory();
 }
 
 //

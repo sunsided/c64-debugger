@@ -15,7 +15,7 @@
 #include <stdarg.h>
 #include <string>
 
-#define GLOBAL_DEBUG_OFF
+//#define GLOBAL_DEBUG_OFF
 
 #define byte unsigned char
 
@@ -51,6 +51,7 @@
 #define DBGLVL_VICE_VERBOSE	(1 << 25)
 #define DBGLVL_ATARI_DEBUG	(1 << 26)
 #define DBGLVL_ATARI_MAIN	(1 << 27)
+#define DBGLVL_PAINT		(1 << 28)
 
 void LOG_Init(void);
 void LOG_Shutdown(void);
@@ -63,9 +64,14 @@ void LOG_Shutdown(void);
 #define LOGVV LOGD
 #define LOGVM LOGD
 
-void LOGF(int level, std::string *what);
-void LOGF(int level, char *fmt, ... );
-void LOGF(int level, const char *fmt, ... );
+void _LOGF(int level, std::string *what);
+void _LOGF(int level, char *fmt, ... );
+void _LOGF(int level, const char *fmt, ... );
+
+// 
+void LOGF(std::string *what);
+void LOGF(char *fmt, ... );
+void LOGF(const char *fmt, ... );
 
 // GUI
 void LOGG(std::string *what);

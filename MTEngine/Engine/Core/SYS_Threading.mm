@@ -1,9 +1,11 @@
 #include "SYS_Threading.h"
 #include "SYS_Main.h"
-
+#include "VID_GLViewController.h"
 #include <signal.h>
 
-void CSlrThread::ThreadRun(void *data)
+#define DEBUG_MUTEX
+
+void CSlrThread::ThreadRun(void *passData)
 {
 }
 
@@ -16,9 +18,9 @@ public:
 };
 
 
-void *ThreadStarterFuncRun(void *data)
+void *ThreadStarterFuncRun(void *dataToPassWithArg)
 {
-	CThreadPassData *passArg = (CThreadPassData *)data;
+	CThreadPassData *passArg = (CThreadPassData *)dataToPassWithArg;
 
 #if defined(IPHONE) || defined(MACOS)
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
@@ -159,8 +161,10 @@ void SYS_SetThreadName(char *name)
 #endif
 }
 
-CSlrMutex::CSlrMutex()
+CSlrMutex::CSlrMutex(char *name)
 {
+	strcpy(this->name, name);
+	
 //#if defined(LINUX)
 
 	pthread_mutexattr_t attr;
@@ -198,8 +202,26 @@ void CSlrMutex::Lock()
 //	EnterCriticalSection((CRITICAL_SECTION *)mutex);
 //#endif
 	
+#if defined(DEBUG_MUTEX)
+	long timeout = SYS_GetCurrentTimeInMillis() + 5000;
+	
+	while (pthread_mutex_trylock(&mutex) == EBUSY)
+	{
+		long now = SYS_GetCurrentTimeInMillis();
+		if (now >= timeout)
+		{
+			LOGError("Mutex lock timeout, name=%s", this->name);
+			return;
+		}
+		
+		SYS_Sleep(5);
+	}
+	
+#else
 	pthread_mutex_lock(&mutex);
 	lockedLevel++;
+#endif
+	
 }
 
 void CSlrMutex::Unlock()
@@ -213,5 +235,14 @@ void CSlrMutex::Unlock()
 	
 	lockedLevel--;
 	pthread_mutex_unlock(&mutex);
+}
+
+unsigned long SYS_GetProcessId()
+{
+#if defined(WIN32)
+	return GetCurrentProcessId();
+#else
+	return getpid();
+#endif
 }
 

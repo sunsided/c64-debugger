@@ -92,7 +92,7 @@ void RES_Init(u16 destScreenWidth)
 	gCurrentResourceMemoryTaken = 0;
 	lastResourceId = 0;
 
-	resourceManagerMutex = new CSlrMutex();
+	resourceManagerMutex = new CSlrMutex("resourceManagerMutex");
 	
 	gResourceManagerState = RESOURCE_MANAGER_STATE_IDLE;
 	

@@ -44,6 +44,11 @@ bool quitIsAlt = false;
 bool quitIsControl = false;
 bool quitIsShift = false;
 
+Cursor cur;
+void X11SetFullscreen(bool isFullscreen);
+void X11CreateCursor();
+void X11HideCursor(bool shouldHide);
+
 void SYS_SetQuitKey(int keyCode, bool isShift, bool isAlt, bool isControl)
 {
 	quitKeyCode = keyCode;
@@ -71,6 +76,16 @@ void C64DebuggerParseCommandLine0();
 
 void SYS_InitCharBufPool();
 void SYS_InitStrings();
+void SYS_SetFullScreen(bool setFullScreen);
+
+bool VID_isFullScreen = false;
+
+void SYS_ToggleFullScreen()
+{
+	SYS_SetFullScreen(!VID_isFullScreen);
+}
+
+bool keyUpEaten = false;
 
 int main(int argc, char *argv[])
 {
@@ -164,6 +179,8 @@ int main(int argc, char *argv[])
 	glEnable(GL_DEPTH_TEST);
 
 	VID_InitGL();
+	
+	X11CreateCursor();
 
 	volatile bool quit = false;
 
@@ -314,11 +331,14 @@ int main(int argc, char *argv[])
 				else
 				{
 					//LOGD("xev.xkey.state=%d type=%d", xev.xkey.state, xev.type);
-
+					
 					bool isControl = (xev.xkey.state & ControlMask) != 0;
 					bool isAlt = ((xev.xkey.state & Mod1Mask) != 0) || ((xev.xkey.state & Mod5Mask) != 0);
 					bool isShift = (xev.xkey.state & ShiftMask) != 0;
 
+					//if (xev.type == KeyPress)
+					//	SYS_ToggleFullScreen();
+					
 					// check quit
 					if (key == quitKeyCode && isControl == quitIsControl && isAlt == quitIsAlt && isShift == quitIsShift)
 					{
@@ -330,14 +350,29 @@ int main(int argc, char *argv[])
 						altPressed = isAlt;
 
 						int key2 = mapKey(isAlt, isControl, isShift, key);
-
+						
 						if (xev.type == KeyPress)
 						{
-							guiMain->KeyDown(key2, isShift, isAlt, isControl);
+							if (isAlt && key2 == MTKEY_ENTER)
+							{
+								keyUpEaten = true;
+								SYS_ToggleFullScreen();
+							}
+							else
+							{
+								guiMain->KeyDown(key2, isShift, isAlt, isControl);
+							}
 						}
 						else if (xev.type == KeyRelease)
 						{
-							guiMain->KeyUp(key2, isShift, isAlt, isControl);
+							if (keyUpEaten == true)
+							{
+								keyUpEaten = false;
+							}
+							else
+							{
+								guiMain->KeyUp(key2, isShift, isAlt, isControl);
+							}
 						}
 					}
 				}
@@ -587,5 +622,64 @@ void X11SetAlwaysOnTop(bool isAlwaysOnTop)
 	      SubstructureRedirectMask | SubstructureNotifyMask,
 	      (XEvent *)&xclient );
 	XFlush(dpy);
+}
+
+void X11SetFullScreen(bool isFullScreen)
+{
+	XClientMessageEvent xclient;
+	memset( &xclient, 0, sizeof (xclient) );
+	
+	xclient.type = ClientMessage;
+	xclient.window = win;
+	xclient.message_type = XInternAtom( dpy, "_NET_WM_STATE", False );
+	xclient.format = 32;
+	xclient.data.l[0] = isFullScreen ? _NET_WM_STATE_ADD : _NET_WM_STATE_REMOVE;
+	xclient.data.l[1] = XInternAtom(dpy, "_NET_WM_STATE_FULLSCREEN", False);
+	xclient.data.l[2] = 0;
+	xclient.data.l[3] = 0;
+	xclient.data.l[4] = 0;
+	
+	XFlush(dpy);
+	XSendEvent( dpy,
+			   DefaultRootWindow( dpy ),
+			   False,
+			   SubstructureRedirectMask | SubstructureNotifyMask,
+			   (XEvent *)&xclient );
+	XFlush(dpy);
+	
+	VID_isFullScreen = isFullScreen;
+}
+
+bool X11IsFullScreen()
+{
+	return VID_isFullScreen;
+}
+
+void X11CreateCursor()
+{
+	Pixmap bitmap;
+	XColor color;
+	char noData[] = { 0 };
+	
+	bitmap = XCreateBitmapFromData(dpy, win, noData, 1, 1);
+	cur = XCreatePixmapCursor(dpy, bitmap, bitmap, &color, &color, 0, 0);
+	XFreePixmap(dpy, bitmap);
+}
+
+void X11HideCursor(bool shouldHide)
+{
+	if (shouldHide)
+	{
+		XDefineCursor(dpy, win, cur);
+	}
+	else
+	{
+		XUndefineCursor(dpy, win);
+	}
+}
+
+void SYS_SetFullScreen(bool isFullScreen)
+{
+	X11SetFullScreen(isFullScreen);
 }
 

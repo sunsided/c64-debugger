@@ -128,6 +128,11 @@ void CViewC64StateVIC::RenderColorRectangle(float px, float py, float ledSizeX, 
 	BlitRectangle(px, py - gap, posZ, ledSizeX, ledSizeY,
 				  colorR, colorG, colorB, 1.0f, gap);
 	
+	// blit hex color code
+	char buf[2];
+	Byte2Hex1digitR(color, buf);
+	buf[1] = 0x00;
+	guiMain->fntConsole->BlitText(buf, px + ledSizeX/2.0f - fontSize/2.0f, py+0.5f, posZ, fontSize);
 }
 
 void CViewC64StateVIC::Render()

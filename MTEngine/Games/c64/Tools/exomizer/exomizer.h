@@ -33,6 +33,7 @@ extern "C" {
 
 
 int exomizer(unsigned char *srcbuf, int len, int load, int start, unsigned char *destbuf);
+int exomizer_raw_backwards(unsigned char *srcbuf, int len, unsigned char *outbuf);
 
 #ifdef __cplusplus
 }

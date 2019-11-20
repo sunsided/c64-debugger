@@ -15,6 +15,17 @@ GLView *glView;
 
 #define MACOS_SUPPORT_RETINA
 
+//-(BOOL)wantsLayer
+//{
+//	return YES;
+//}
+//
+//-(id)makeBackingLayer
+//{
+//	[[CALayer layer] setBackgroundColor:(CGColorRef _Nullable)
+//	return [CALayer layer];
+//}
+//
 - (NSOpenGLContext*) openGLContext
 {
 	return openGLContext;
@@ -66,6 +77,8 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 	CGLContextObj cglContext = [[self openGLContext] CGLContextObj];
 	CGLPixelFormatObj cglPixelFormat = [[self pixelFormat] CGLPixelFormatObj];
 	CVDisplayLinkSetCurrentCGDisplayFromOpenGLContext(displayLink, cglContext, cglPixelFormat);
+	
+	
 	
 }
 
@@ -189,16 +202,19 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 - (void)updateSize
 {
 	//NSLog(@"updateSize");
-	
-#if defined(MACOS_SUPPORT_RETINA)
-	NSRect backingBounds = [self convertRectToBacking:[self bounds]];
-#else
-	NSRect backingBounds = [self bounds];
-#endif
+	dispatch_async(dispatch_get_main_queue(), ^{
 
-	viewWidth = backingBounds.size.width;
-	viewHeight = backingBounds.size.height;
-	[[controller scene] setViewportRect:backingBounds];
+	#if defined(MACOS_SUPPORT_RETINA)
+		NSRect backingBounds = [self convertRectToBacking:[self bounds]];
+	#else
+		NSRect backingBounds = [self bounds];
+	#endif
+
+		viewWidth = backingBounds.size.width;
+		viewHeight = backingBounds.size.height;
+		[[controller scene] setViewportRect:backingBounds];
+		
+	});
 }
 
 //https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/CocoaPerformance/Articles/CocoaLiveResize.html
@@ -224,19 +240,26 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 	
 	// Make sure we draw to the right context
 	[[self openGLContext] makeCurrentContext];
-	
-#if defined(MACOS_SUPPORT_RETINA)
-	NSRect backingBounds = [self convertRectToBacking:[self bounds]];
-#else
-	NSRect backingBounds = [self bounds];
-#endif
-	
-	if (viewWidth != backingBounds.size.width
-		|| viewHeight != backingBounds.size.height)
+	if ([NSOpenGLContext currentContext] != openGLContext)
 	{
-		[self updateSize];
+		[openGLContext makeCurrentContext];
+		[openGLContext update];
 	}
+	
+	dispatch_async(dispatch_get_main_queue(), ^{
+	#if defined(MACOS_SUPPORT_RETINA)
+		NSRect backingBounds = [self convertRectToBacking:[self bounds]];
+	#else
+		NSRect backingBounds = [self bounds];
+	#endif
 		
+		if (viewWidth != backingBounds.size.width
+			|| viewHeight != backingBounds.size.height)
+		{
+			[self updateSize];
+		}
+	});
+	
 	// Delegate to the scene object for rendering
     [[controller scene] render];
 	
@@ -354,6 +377,21 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 	}
 }
 
+- (void)storeMainWindowPosition
+{
+	[controller storeMainWindowPosition];
+}
+
+- (void)restoreMainWindowPosition
+{
+	[controller restoreMainWindowPosition];
+}
+
+- (void)testMenu
+{
+	NSLog(@"TEST MENU");
+}
+
 // drag&drop
 - (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender
 {
@@ -383,9 +421,11 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 	
 	NSString *strExt = [[draggedFilenames objectAtIndex:0] pathExtension];
 
-	if ([strExt isEqual:@"prg"] || [strExt isEqual:@"d64"] || [strExt isEqual:@"crt"] || [strExt isEqual:@"tap"] || [strExt isEqual:@"t64"]
+	if ([strExt isEqual:@"prg"] || [strExt isEqual:@"d64"] || [strExt isEqual:@"g64"]
+		|| [strExt isEqual:@"crt"] || [strExt isEqual:@"tap"] || [strExt isEqual:@"t64"]
 		|| [strExt isEqualToString:@"snap"] || [strExt isEqualToString:@"vce"] || [strExt isEqualToString:@"png"]
-		|| [strExt isEqual:@"PRG"] || [strExt isEqual:@"D64"] || [strExt isEqual:@"CRT"] || [strExt isEqual:@"TAP"] || [strExt isEqual:@"T64"]
+		|| [strExt isEqual:@"PRG"] || [strExt isEqual:@"D64"] || [strExt isEqual:@"G64"]
+		|| [strExt isEqual:@"CRT"] || [strExt isEqual:@"TAP"] || [strExt isEqual:@"T64"]
 		|| [strExt isEqualToString:@"SNAP"] || [strExt isEqualToString:@"VCE"] || [strExt isEqualToString:@"PNG"]
 		|| [strExt isEqual:@"sid"] || [strExt isEqual:@"SID"]
 		|| [strExt isEqual:@"xex"] || [strExt isEqual:@"XEX"]
@@ -482,7 +522,8 @@ BOOL MACOS_OpenFile(NSString *strPath)
 		
 		return YES;
 	}
-	else if ([strExt isEqual:@"d64"] || [strExt isEqual:@"D64"])
+	else if ([strExt isEqual:@"d64"] || [strExt isEqual:@"D64"]
+			 || [strExt isEqual:@"g64"] || [strExt isEqual:@"G64"])
 	{
 		//NSLog(@"%@", strPath);
 		c64SettingsAutoJmp = false;

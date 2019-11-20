@@ -115,8 +115,8 @@ void CViewFileD64::UpdateDriveDiskID()
 		viewC64->debugInterfaceC64->SetByte1541(0x0012, diskImage->diskId[2]);
 		viewC64->debugInterfaceC64->SetByte1541(0x0013, diskImage->diskId[3]);
 		
-		//		viewC64->debugInterface->SetByte1541(0x0016, diskImage->diskId[2]);
-		//		viewC64->debugInterface->SetByte1541(0x0017, diskImage->diskId[3]);		
+		viewC64->debugInterfaceC64->SetByte1541(0x0016, diskImage->diskId[2]);
+		viewC64->debugInterfaceC64->SetByte1541(0x0017, diskImage->diskId[3]);
 	}
 }
 

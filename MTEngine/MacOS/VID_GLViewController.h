@@ -123,6 +123,12 @@ bool VID_IsWindowFullScreen();
 void VID_ShowMouseCursor();
 void VID_HideMouseCursor();
 
+void VID_StoreMainWindowPosition();
+void VID_RestoreMainWindowPosition();
+
+void VID_TestMenu();
+
+
 // TODO: fix me
 #define VID_SetClipping SetClipping
 #define VID_ResetClipping ResetClipping

@@ -9,8 +9,10 @@
 class CSlrMutex
 {
 public:
-	CSlrMutex();
+	CSlrMutex(char *name);
 	~CSlrMutex();
+	
+	char name[64];
 	
 	pthread_mutex_t mutex;
 
@@ -34,7 +36,7 @@ public:
 	~CSlrThread();
 
 	virtual void ThreadSetName(char *name);
-	virtual void ThreadRun(void *data);
+	virtual void ThreadRun(void *passData);
 };
 
 void SYS_StartThread(CSlrThread *run, void *passData, float priority);
@@ -44,6 +46,8 @@ void SYS_KillThread(CSlrThread *run);
 
 void SYS_SetThreadPriority(float priority);
 void SYS_SetThreadName(char *name);
+
+unsigned long SYS_GetProcessId();
 
 #endif
 //_SYS_THREADING_H_

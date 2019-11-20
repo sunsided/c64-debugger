@@ -2512,7 +2512,7 @@ void cartridge_mmu_translate(unsigned int addr, BYTE **base, int *start, int *li
 #define C64CART_DUMP_VER_MINOR   1
 #define SNAP_MODULE_NAME  "C64CART"
 
-int cartridge_snapshot_write_modules(struct snapshot_s *s, int store_reu_data)
+int cartridge_snapshot_write_modules(struct snapshot_s *s, int store_reu_data, int save_cart_roms)
 {
     snapshot_module_t *m;
 
@@ -2712,7 +2712,7 @@ int cartridge_snapshot_write_modules(struct snapshot_s *s, int store_reu_data)
                 }
                 break;
             case CARTRIDGE_EASYFLASH:
-                if (easyflash_snapshot_write_module(s) < 0) {
+                if (easyflash_snapshot_write_module(s, save_cart_roms) < 0) {
                     return -1;
                 }
                 break;
@@ -3005,7 +3005,7 @@ fail:
     return -1;
 }
 
-int cartridge_snapshot_read_modules(struct snapshot_s *s, int read_reu_data)
+int cartridge_snapshot_read_modules(struct snapshot_s *s, int read_reu_data, int read_cart_roms)
 {
     snapshot_module_t *m;
     BYTE vmajor, vminor;
@@ -3203,7 +3203,7 @@ int cartridge_snapshot_read_modules(struct snapshot_s *s, int read_reu_data)
                 }
                 break;
             case CARTRIDGE_EASYFLASH:
-                if (easyflash_snapshot_read_module(s) < 0) {
+                if (easyflash_snapshot_read_module(s, read_cart_roms) < 0) {
                     goto fail2;
                 }
                 break;

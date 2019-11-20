@@ -17,7 +17,7 @@ CViewJukeboxPlaylist::CViewJukeboxPlaylist(GLfloat posX, GLfloat posY, GLfloat p
 {
 	this->name = "CViewJukeboxPlaylist";
 	
-	this->mutex = new CSlrMutex();
+	this->mutex = new CSlrMutex("CViewJukeboxPlaylist");
 	this->font = viewC64->fontDisassemble;
 	fontSize = 5.0f;
 
@@ -300,7 +300,8 @@ void CViewJukeboxPlaylist::ThreadRun(void *data)
 		{
 			viewC64->viewC64MainMenu->LoadPRG(entry->filePath, currentEntry->autoRun, false, this->playlist->showLoadAddressInfo, false);
 		}
-		else if (ext->CompareWith("d64") || ext->CompareWith("D64"))
+		else if (ext->CompareWith("d64") || ext->CompareWith("D64")
+				 || ext->CompareWith("g64") || ext->CompareWith("G64"))
 		{
 			viewC64->viewC64MainMenu->InsertD64(entry->filePath, false,
 												currentEntry->autoRun, currentEntry->runFileNum-1,

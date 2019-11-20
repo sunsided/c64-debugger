@@ -131,6 +131,9 @@ void VID_ResetLogicClock()
 bool VID_isAlwaysOnTop = false;
 
 void X11SetAlwaysOnTop(bool isAlwaysOnTop);
+void X11SetFullScreen(bool isFullScreen);
+bool X11IsFullScreen();
+void X11HideCursor(bool shouldHide);
 
 void VID_SetWindowAlwaysOnTop(bool isAlwaysOnTop)
 {
@@ -151,18 +154,17 @@ bool VID_IsWindowAlwaysOnTop()
 
 bool VID_IsWindowFullScreen()
 {
-    // TODO: not implemented
-    return false;
+	return X11IsFullScreen();
 }
 
 void VID_HideMouseCursor()
 {
-    // TODO: not implemented
+	X11HideCursor(true);
 }
 
 void VID_ShowMouseCursor()
 {
-    // TODO: not implemented
+	X11HideCursor(false);
 }
 
 void VID_ApplicationPreloadingFinished()

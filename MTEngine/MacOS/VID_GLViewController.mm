@@ -1215,13 +1215,31 @@ bool VID_IsWindowFullScreen()
 void VID_ShowMouseCursor()
 {
 	LOGM("VID_ShowMouseCursor");
-	[NSCursor unhide];
+	dispatch_async(dispatch_get_main_queue(), ^{
+		[NSCursor unhide];
+	});
 }
 
 void VID_HideMouseCursor()
 {
 	LOGM("VID_HideMouseCursor");
-	[NSCursor hide];
+	dispatch_async(dispatch_get_main_queue(), ^{
+		[NSCursor hide];
+	});
 }
 
+void VID_StoreMainWindowPosition()
+{
+	[glView storeMainWindowPosition];
+}
+
+void VID_RestoreMainWindowPosition()
+{
+	[glView restoreMainWindowPosition];
+}
+
+void VID_TestMenu()
+{
+	[glView testMenu];
+}
 

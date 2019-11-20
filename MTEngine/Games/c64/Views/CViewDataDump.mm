@@ -89,8 +89,6 @@ CViewDataDump::CViewDataDump(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 	
 	strTemp = new CSlrString();
 
-	mutex = new CSlrMutex();
-
 	renderDataWithColors = false;
 	
 	// init images for characters
@@ -776,7 +774,7 @@ void CViewDataDump::ScrollToAddress(int address)
 
 bool CViewDataDump::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
-	LOGD("CViewDataDump::keyDown=%4.4x", keyCode);
+//	LOGD("CViewDataDump::keyDown=%4.4x", keyCode);
 	
 	u32 bareKey = SYS_GetBareKey(keyCode, isShift, isAlt, isControl);
 	

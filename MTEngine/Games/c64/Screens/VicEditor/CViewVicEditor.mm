@@ -96,6 +96,7 @@ CViewVicEditor::CViewVicEditor(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	importFileExtensions.push_back(new CSlrString("ddl"));
 	importFileExtensions.push_back(new CSlrString("kla"));
 	importFileExtensions.push_back(new CSlrString("d64"));
+	importFileExtensions.push_back(new CSlrString("g64"));
 	importFileExtensions.push_back(new CSlrString("prg"));
 	importFileExtensions.push_back(new CSlrString("crt"));
 	importFileExtensions.push_back(new CSlrString("snap"));
@@ -3202,6 +3203,7 @@ bool CViewVicEditor::ExportRawText(CSlrString *path)
 	file->Write(color_ram_ptr, 0x03E8);
 
 	file->WriteByte(d020colors[1]);
+	file->WriteByte(d020colors[0]);
 	
 	file->Close();
 	

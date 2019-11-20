@@ -38,6 +38,8 @@ public:
 	virtual CSlrString *GetEmulatorVersionString();
 	virtual CSlrString *GetPlatformNameString();
 
+	virtual float GetEmulationFPS();
+
 	virtual void ResetMainCpuCycleCounter();
 	virtual unsigned int GetMainCpuCycleCounter();
 	virtual void ResetEmulationFrameCounter();
@@ -240,6 +242,17 @@ public:
 	virtual void SaveFullSnapshot(CByteBuffer *snapshotBuffer);
 	virtual bool LoadFullSnapshot(char *filePath);
 	virtual void SaveFullSnapshot(char *filePath);
+
+	// these calls should be synced with CPU IRQ so snapshot store or restore is allowed
+	// store CHIPS only snapshot, not including DISK DATA
+	virtual bool LoadChipsSnapshotSynced(CByteBuffer *byteBuffer);
+	virtual bool SaveChipsSnapshotSynced(CByteBuffer *byteBuffer);
+	// store DISK DATA only snapshot, without CHIPS
+	virtual bool LoadDiskDataSnapshotSynced(CByteBuffer *byteBuffer);
+	virtual bool SaveDiskDataSnapshotSynced(CByteBuffer *byteBuffer);
+
+	virtual bool IsDriveDirtyForSnapshot();
+	virtual void ClearDriveDirtyForSnapshotFlag();
 
 	// from emulator to debugger
 	virtual void MarkC64CellRead(uint16 addr);

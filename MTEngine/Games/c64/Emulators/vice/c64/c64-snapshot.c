@@ -53,13 +53,13 @@
 #include "vice-event.h"
 #include "vicii.h"
 
-int c64d_snapshot_write_module(snapshot_t *s);
+int c64d_snapshot_write_module(snapshot_t *s, int save_screen);
 int c64d_snapshot_read_module(snapshot_t *s);
 
 #define SNAP_MAJOR 1
 #define SNAP_MINOR 1
 
-int c64_snapshot_write(const char *name, int save_roms, int save_disks, int event_mode, int save_reu_data)
+int c64_snapshot_write(const char *name, int save_roms, int save_disks, int event_mode, int save_reu_data, int save_cart_roms, int save_screen)
 {
     snapshot_t *s;
 
@@ -74,7 +74,7 @@ int c64_snapshot_write(const char *name, int save_roms, int save_disks, int even
     drive_cpu_execute_all(maincpu_clk);
 
     if (maincpu_snapshot_write_module(s) < 0
-        || c64_snapshot_write_module(s, save_roms, save_reu_data) < 0
+        || c64_snapshot_write_module(s, save_roms, save_reu_data, save_cart_roms) < 0
         || ciacore_snapshot_write_module(machine_context.cia1, s) < 0
         || ciacore_snapshot_write_module(machine_context.cia2, s) < 0
         || sid_snapshot_write_module(s) < 0
@@ -88,7 +88,7 @@ int c64_snapshot_write(const char *name, int save_roms, int save_disks, int even
         || joyport_snapshot_write_module(s, JOYPORT_1) < 0
         || joyport_snapshot_write_module(s, JOYPORT_2) < 0
         || userport_snapshot_write_module(s) < 0
-		|| c64d_snapshot_write_module(s) < 0)
+		|| c64d_snapshot_write_module(s, save_screen) < 0)
 	{
         snapshot_close(s);
         ioutil_remove(name);
@@ -99,7 +99,8 @@ int c64_snapshot_write(const char *name, int save_roms, int save_disks, int even
     return 0;
 }
 
-int c64_snapshot_write_in_memory(int save_roms, int save_disks, int event_mode, int save_reu_data)
+int c64_snapshot_write_in_memory(int save_chips, int save_roms, int save_disks, int event_mode, int save_reu_data, int save_cart_roms, int save_screen,
+								 int *snapshot_size, unsigned char **snapshot_data)
 {
 	snapshot_t *s;
 	
@@ -113,34 +114,74 @@ int c64_snapshot_write_in_memory(int save_roms, int save_disks, int event_mode, 
 	/* Execute drive CPUs to get in sync with the main CPU.  */
 	drive_cpu_execute_all(maincpu_clk);
 	
-	if (maincpu_snapshot_write_module(s) < 0
-		|| c64_snapshot_write_module(s, save_roms, save_reu_data) < 0
-		|| ciacore_snapshot_write_module(machine_context.cia1, s) < 0
-		|| ciacore_snapshot_write_module(machine_context.cia2, s) < 0
-		|| sid_snapshot_write_module(s) < 0
-		|| drive_snapshot_write_module(s, save_disks, save_roms) < 0
-		|| vicii_snapshot_write_module(s) < 0
-		|| c64_glue_snapshot_write_module(s) < 0
-		|| event_snapshot_write_module(s, event_mode) < 0
-		|| memhacks_snapshot_write_modules(s) < 0
-		|| tapeport_snapshot_write_module(s, save_disks) < 0
-		|| keyboard_snapshot_write_module(s) < 0
-		|| joyport_snapshot_write_module(s, JOYPORT_1) < 0
-		|| joyport_snapshot_write_module(s, JOYPORT_2) < 0
-		|| userport_snapshot_write_module(s) < 0
-		|| c64d_snapshot_write_module(s) < 0)
+	if (save_chips == 0)
 	{
-		lib_free(s->data);
-		snapshot_close(s);
-		return -1;
+		if (save_roms == 1 || save_reu_data == 1)
+		{
+			if (c64_snapshot_write_module(s, save_roms, save_reu_data, save_cart_roms) < 0)
+			{
+				lib_free(s->data);
+				//snapshot_close(s);
+				lib_free(s);
+				*snapshot_data = NULL;
+				*snapshot_size = -1;
+				return -1;
+			}
+		}
+		if (save_disks == 1)
+		{
+			if (drive_snapshot_write_module(s, save_disks, save_roms) < 0)
+			{
+				lib_free(s->data);
+				//snapshot_close(s);
+				lib_free(s);
+				*snapshot_data = NULL;
+				*snapshot_size = -1;
+				return -1;
+			}
+		}
 	}
+	else
+	{
+		if (maincpu_snapshot_write_module(s) < 0
+			|| c64_snapshot_write_module(s, save_roms, save_reu_data, save_cart_roms) < 0
+			|| ciacore_snapshot_write_module(machine_context.cia1, s) < 0
+			|| ciacore_snapshot_write_module(machine_context.cia2, s) < 0
+			|| sid_snapshot_write_module(s) < 0
+			|| drive_snapshot_write_module(s, save_disks, save_roms) < 0
+			|| vicii_snapshot_write_module(s) < 0
+			|| c64_glue_snapshot_write_module(s) < 0
+			|| event_snapshot_write_module(s, event_mode) < 0
+			|| memhacks_snapshot_write_modules(s) < 0
+			|| tapeport_snapshot_write_module(s, save_disks) < 0
+			|| keyboard_snapshot_write_module(s) < 0
+			|| joyport_snapshot_write_module(s, JOYPORT_1) < 0
+			|| joyport_snapshot_write_module(s, JOYPORT_2) < 0
+			|| userport_snapshot_write_module(s) < 0
+			|| c64d_snapshot_write_module(s, save_screen) < 0)
+		{
+			lib_free(s->data);
+			//snapshot_close(s);
+			lib_free(s);
+			*snapshot_data = NULL;
+			*snapshot_size = -1;
+			return -1;
+		}
+	}
+
 	
-	snapshot_close(s);
+	*snapshot_size = s->pos;
+	*snapshot_data = s->data;
+	s->data = NULL;
+	
+//	snapshot_close(s);
+	lib_free(s);
+
 	return 0;
 }
 
 
-int c64_snapshot_read(const char *name, int event_mode, int read_roms, int read_disks, int read_reu_data)
+int c64_snapshot_read(const char *name, int event_mode, int read_roms, int read_disks, int read_reu_data, int read_cart_roms)
 {
     snapshot_t *s;
     BYTE minor, major;
@@ -161,7 +202,7 @@ int c64_snapshot_read(const char *name, int event_mode, int read_roms, int read_
     joyport_clear_devices();
 
     if (maincpu_snapshot_read_module(s) < 0
-        || c64_snapshot_read_module(s, read_reu_data) < 0
+        || c64_snapshot_read_module(s, read_reu_data, read_cart_roms) < 0
         || ciacore_snapshot_read_module(machine_context.cia1, s) < 0
         || ciacore_snapshot_read_module(machine_context.cia2, s) < 0
         || sid_snapshot_read_module(s) < 0
@@ -195,7 +236,8 @@ fail:
     return -1;
 }
 
-int c64_snapshot_read_from_memory(int event_mode, int read_roms, int read_disks, int read_reu_data, unsigned char *snapshot_data, int snapshot_size)
+int c64_snapshot_read_from_memory(int read_chips, int read_roms, int read_disks, int event_mode, int read_reu_data, int read_cart_roms,
+								  unsigned char *snapshot_data, int snapshot_size)
 {
 	snapshot_t *s;
 	BYTE minor, major;
@@ -216,7 +258,7 @@ int c64_snapshot_read_from_memory(int event_mode, int read_roms, int read_disks,
 	joyport_clear_devices();
 	
 	if (maincpu_snapshot_read_module(s) < 0
-		|| c64_snapshot_read_module(s, read_reu_data) < 0
+		|| c64_snapshot_read_module(s, read_reu_data, read_cart_roms) < 0
 		|| ciacore_snapshot_read_module(machine_context.cia1, s) < 0
 		|| ciacore_snapshot_read_module(machine_context.cia2, s) < 0
 		|| sid_snapshot_read_module(s) < 0

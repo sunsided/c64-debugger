@@ -46,6 +46,7 @@ extern "C" {
 #include "CViewC64StateSID.h"
 #include "CViceAudioChannel.h"
 #include "CDebuggerEmulatorPlugin.h"
+#include "CSnapshotsManager.h"
 
 extern "C" {
 	void vsync_suspend_speed_eval(void);
@@ -78,6 +79,7 @@ C64DebugInterfaceVice::C64DebugInterfaceVice(CViewC64 *viewC64, uint8 *c64memory
 	CreateScreenData();
 
 	audioChannel = NULL;
+	snapshotsManager = new CSnapshotsManager(this);
 
 	ViceWrapperInit(this);
 	
@@ -96,6 +98,7 @@ C64DebugInterfaceVice::C64DebugInterfaceVice(CViewC64 *viewC64, uint8 *c64memory
 	// PAL
 	screenHeight = 272;
 	machineType = MACHINE_TYPE_PAL;
+	debugInterfaceVice->numEmulationFPS = 50;
 
 	// init C64 memory, will be attached to a memmaped file if needed
 	if (c64memory == NULL)
@@ -114,7 +117,7 @@ C64DebugInterfaceVice::C64DebugInterfaceVice(CViewC64 *viewC64, uint8 *c64memory
 	{
 		SYS_FatalExit("Vice failed, err=%d", ret);
 	}
-
+	
 	this->dataAdapterC64 = new C64DataAdapterVice(this);
 	this->dataAdapterC64DirectRam = new C64DirectRamDataAdapterVice(this);
 	this->dataAdapterDrive1541 = new C64DiskDataAdapterVice(this);
@@ -129,6 +132,11 @@ extern "C" {
 	void c64d_un_patch_kernal_fast_boot();
 	void c64d_update_rom();
 };
+
+float C64DebugInterfaceVice::GetEmulationFPS()
+{
+	return this->numEmulationFPS;
+}
 
 void C64DebugInterfaceVice::SetPatchKernalFastBoot(bool isPatchKernal)
 {
@@ -211,8 +219,10 @@ void C64DebugInterfaceVice::RunEmulationThread()
 	
 	// vice blocks d64 for read when mounted and does the flush only on disk unmount or quit. this leads to not saved data immediately.
 	// thus, we do not block d64 for read and avoid that data is not flushed we check periodically if there's a need to flush data
-	this->driveFlushThread = new CViceDriveFlushThread(this, 2500); // every 2.5s
-	SYS_StartThread(this->driveFlushThread);
+
+	// TODO: ISILDUR
+//	this->driveFlushThread = new CViceDriveFlushThread(this, 2500); // every 2.5s
+//	SYS_StartThread(this->driveFlushThread);
 	
 	vice_main_loop_run();
 	
@@ -238,11 +248,20 @@ void CViceDriveFlushThread::ThreadRun(void *data)
 	while(true)
 	{
 		SYS_Sleep(this->flushCheckIntervalInMS);
+		
+		if (debugInterface->snapshotsManager->snapshotToRestore
+			|| debugInterface->snapshotsManager->pauseNumFrame != -1)
+		{
+			SYS_Sleep(this->flushCheckIntervalInMS * 4);
+			continue;
+		}
 
-		this->debugInterface->LockMutex();
 //		LOGD("CViceDriveFlushThread: flushing drive");
+		this->debugInterface->LockMutex();
 		drive_gcr_data_writeback_all();
 		this->debugInterface->UnlockMutex();
+//		LOGD("CViceDriveFlushThread: flushing drive finished");
+		
 	}
 	
 }
@@ -372,6 +391,7 @@ unsigned int C64DebugInterfaceVice::GetMainCpuCycleCounter()
 
 void C64DebugInterfaceVice::ResetEmulationFrameCounter()
 {
+	this->snapshotsManager->ClearSnapshotsHistory();
 	C64DebugInterface::ResetEmulationFrameCounter();
 }
 
@@ -510,7 +530,9 @@ void C64DebugInterfaceVice::SetReuEnabled(bool isEnabled)
 
 void C64DebugInterfaceVice::SetReuSize(int reuSize)
 {
+	snapshotsManager->LockMutex();
 	set_reu_size(reuSize, NULL);
+	snapshotsManager->UnlockMutex();
 }
 
 bool C64DebugInterfaceVice::LoadReu(char *filePath)
@@ -526,9 +548,14 @@ bool C64DebugInterfaceVice::LoadReu(char *filePath)
 
 bool C64DebugInterfaceVice::SaveReu(char *filePath)
 {
+	snapshotsManager->LockMutex();
 	if (reu_bin_save(filePath) == 0)
+	{
+		snapshotsManager->UnlockMutex();
 		return true;
+	}
 	
+	snapshotsManager->UnlockMutex();
 	return false;
 }
 
@@ -576,6 +603,7 @@ void C64DebugInterfaceVice::GetSidTypes(std::vector<CSlrString *> *sidTypes)
 
 void C64DebugInterfaceVice::SetSidType(int sidType)
 {
+	snapshotsManager->LockMutex();
 	switch(sidType)
 	{
 		default:
@@ -624,48 +652,62 @@ void C64DebugInterfaceVice::SetSidType(int sidType)
 		case 14:
 			sid_set_engine_model(SID_ENGINE_RESID_FP, SID_MODEL_8580R5_1489D);
 			break;
-
 	}
+	snapshotsManager->UnlockMutex();
 }
 
 // samplingMethod: Fast=0, Interpolating=1, Resampling=2, Fast Resampling=3
 void C64DebugInterfaceVice::SetSidSamplingMethod(int samplingMethod)
 {
+	snapshotsManager->LockMutex();
 	c64d_sid_set_sampling_method(samplingMethod);
+	snapshotsManager->UnlockMutex();
 }
 
 // emulateFilters: no=0, yes=1
 void C64DebugInterfaceVice::SetSidEmulateFilters(int emulateFilters)
 {
+	snapshotsManager->LockMutex();
 	c64d_sid_set_emulate_filters(emulateFilters);
+	snapshotsManager->UnlockMutex();
 }
 
 // passband: 0-90
 void C64DebugInterfaceVice::SetSidPassBand(int passband)
 {
+	snapshotsManager->LockMutex();
 	c64d_sid_set_passband(passband);
+	snapshotsManager->UnlockMutex();
 }
 
 // filterBias: -500 500
 void C64DebugInterfaceVice::SetSidFilterBias(int filterBias)
 {
+	snapshotsManager->LockMutex();
 	c64d_sid_set_filter_bias(filterBias);
+	snapshotsManager->UnlockMutex();
 }
 
 // 0=none, 1=stereo, 2=triple
 void C64DebugInterfaceVice::SetSidStereo(int stereoMode)
 {
+	snapshotsManager->LockMutex();
 	c64d_sid_set_stereo(stereoMode);
+	snapshotsManager->UnlockMutex();
 }
 
 void C64DebugInterfaceVice::SetSidStereoAddress(uint16 sidAddress)
 {
+	snapshotsManager->LockMutex();
 	c64d_sid_set_stereo_address(sidAddress);
+	snapshotsManager->UnlockMutex();
 }
 
 void C64DebugInterfaceVice::SetSidTripleAddress(uint16 sidAddress)
 {
+	snapshotsManager->LockMutex();
 	c64d_sid_set_triple_address(sidAddress);
+	snapshotsManager->UnlockMutex();
 }
 
 
@@ -751,6 +793,9 @@ static void c64_change_model_trap(WORD addr, void *v)
 	c64d_clear_screen();
 	
 	debugInterfaceVice->UnlockRenderScreenMutex();
+	
+	debugInterfaceVice->ResetEmulationFrameCounter();
+
 	guiMain->UnlockMutex();
 }
 
@@ -776,7 +821,10 @@ uint8 C64DebugInterfaceVice::GetC64MachineType()
 
 int C64DebugInterfaceVice::GetC64ModelType()
 {
-	return c64model_get();
+	snapshotsManager->LockMutex();
+	int model = c64model_get();
+	snapshotsManager->UnlockMutex();
+	return model;
 }
 
 void C64DebugInterfaceVice::SetEmulationMaximumSpeed(int maximumSpeed)
@@ -930,6 +978,8 @@ static void c64_set_sid_register_trap(WORD addr, void *v)
 
 void C64DebugInterfaceVice::SetSidRegister(uint8 sidId, uint8 registerNum, uint8 value)
 {
+	snapshotsManager->LockMutex();
+
 	this->LockMutex();
 	
 	if (this->GetDebugMode() == DEBUGGER_MODE_PAUSED)
@@ -948,6 +998,8 @@ void C64DebugInterfaceVice::SetSidRegister(uint8 sidId, uint8 registerNum, uint8
 	}
 
 	this->UnlockMutex();
+	
+	snapshotsManager->UnlockMutex();
 }
 
 u8 C64DebugInterfaceVice::GetSidRegister(uint8 sidId, uint8 registerNum)
@@ -1404,6 +1456,7 @@ static void cartridge_attach_trap(WORD addr, void *v)
 	
 	SYS_ReleaseCharBuf(filePath);
 
+	debugInterfaceVice->ResetEmulationFrameCounter();
 }
 
 static void cartridge_detach_trap(WORD addr, void *v)
@@ -1443,6 +1496,8 @@ void C64DebugInterfaceVice::AttachCartridge(CSlrString *filePath)
 	
 //	SYS_Sleep(1000);
 //	this->SetDebugMode(C64_DEBUG_RUNNING);
+	
+	debugInterfaceVice->ResetEmulationFrameCounter();
 }
 
 void C64DebugInterfaceVice::DetachCartridge()
@@ -1567,6 +1622,7 @@ void c64d_update_c64_machine_from_model_type(int modelType)
 		case 11:
 			// PAL, 312 lines
 			debugInterfaceVice->machineType = MACHINE_TYPE_PAL;
+			debugInterfaceVice->numEmulationFPS = 50;
 			break;
 		case 3:
 		case 4:
@@ -1575,6 +1631,7 @@ void c64d_update_c64_machine_from_model_type(int modelType)
 		case 12:
 			// NTSC, 275 lines
 			debugInterfaceVice->machineType = MACHINE_TYPE_NTSC;
+			debugInterfaceVice->numEmulationFPS = 60;
 			break;
 	}
 }
@@ -1625,11 +1682,12 @@ static void load_snapshot_trap(WORD addr, void *v)
 	
 	gSoundEngine->LockMutex("load_snapshot_trap");
 
-	if (c64_snapshot_read(filePath, 0, 1, 1, 1) < 0)
+	if (c64_snapshot_read(filePath, 0, 1, 1, 1, 1) < 0)
 	{
 		guiMain->ShowMessage("Snapshot loading failed");
 		
 		debugInterfaceVice->machineType = MACHINE_TYPE_UNKNOWN;
+		debugInterfaceVice->numEmulationFPS = 1;
 		debugInterfaceVice->screenHeight = 0;
 		
 		c64d_clear_screen();
@@ -1668,6 +1726,8 @@ static void load_snapshot_trap(WORD addr, void *v)
 	
 	viewC64->viewC64SettingsMenu->UpdateSidSettings();
 
+	debugInterfaceVice->snapshotsManager->ClearSnapshotsHistory();
+
 	debugInterfaceVice->UnlockMutex();
 }
 
@@ -1678,7 +1738,8 @@ bool C64DebugInterfaceVice::LoadFullSnapshot(char *filePath)
 	strcpy(buf, filePath);
 	
 	this->machineType = MACHINE_TYPE_LOADING_SNAPSHOT;
-	
+	debugInterfaceVice->numEmulationFPS = 1;
+
 	interrupt_maincpu_trigger_trap(load_snapshot_trap, buf);
 	
 	if (c64d_debug_mode == DEBUGGER_MODE_PAUSED)
@@ -1699,7 +1760,7 @@ static void save_snapshot_trap(WORD addr, void *v)
 	
 	gSoundEngine->LockMutex("save_snapshot_trap");
 	
-	c64_snapshot_write(filePath, 0, 1, 0, 1);
+	c64_snapshot_write(filePath, 0, 1, 0, 1, 1, 1);
 	
 	gSoundEngine->UnlockMutex("save_snapshot_trap");
 	
@@ -1726,6 +1787,114 @@ void C64DebugInterfaceVice::SaveFullSnapshot(char *filePath)
 	{
 		c64d_set_debug_mode(DEBUGGER_MODE_RUN_ONE_INSTRUCTION);
 	}
+}
+
+// these calls should be synced with CPU IRQ so snapshot store or restore is allowed
+bool C64DebugInterfaceVice::LoadChipsSnapshotSynced(CByteBuffer *byteBuffer)
+{
+//	extern int c64_snapshot_read_from_memory(int event_mode, int read_roms, int read_disks, int read_reu_data,
+//											 unsigned char *snapshot_data, int snapshot_size);
+
+	LOGD("LoadChipsSnapshotSynced");
+	debugInterfaceVice->LockMutex();
+	gSoundEngine->LockMutex("LoadChipsSnapshotSynced");
+
+	int ret = c64_snapshot_read_from_memory(1, 0, 0, 0, 0, 0, byteBuffer->data, byteBuffer->length);
+	if (ret != 0)
+	{
+		LOGError("C64DebugInterfaceVice::LoadFullSnapshotSynced: failed");
+
+		debugInterfaceVice->UnlockMutex();
+		gSoundEngine->UnlockMutex("LoadChipsSnapshotSynced");
+		return false;
+	}
+	
+	debugInterfaceVice->UnlockMutex();
+	gSoundEngine->UnlockMutex("LoadChipsSnapshotSynced");
+	return true;
+}
+
+bool C64DebugInterfaceVice::SaveChipsSnapshotSynced(CByteBuffer *byteBuffer)
+{
+	// TODO: check if data changed and store snapshot with data accordingly
+	return this->SaveFullSnapshotSynced(byteBuffer, true, false, false, false, false, false, true);
+}
+
+bool C64DebugInterfaceVice::LoadDiskDataSnapshotSynced(CByteBuffer *byteBuffer)
+{
+	//	extern int c64_snapshot_read_from_memory(int event_mode, int read_roms, int read_disks, int read_reu_data,
+	//											 unsigned char *snapshot_data, int snapshot_size);
+	
+	LOGD("LoadDiskDataSnapshotSynced");
+	debugInterfaceVice->LockMutex();
+	gSoundEngine->LockMutex("LoadDiskDataSnapshotSynced");
+	
+//	int ret = c64_snapshot_read_from_memory(0, 0, 1, 0, 0, byteBuffer->data, byteBuffer->length);
+	int ret = c64_snapshot_read_from_memory(0, 0, 1, 0, 0, 1, byteBuffer->data, byteBuffer->length);
+	if (ret != 0)
+	{
+		LOGError("C64DebugInterfaceVice::LoadFullSnapshotSynced: failed");
+		
+		debugInterfaceVice->UnlockMutex();
+		gSoundEngine->UnlockMutex("LoadDiskDataSnapshotSynced");
+		return false;
+	}
+	
+	debugInterfaceVice->UnlockMutex();
+	gSoundEngine->UnlockMutex("LoadDiskDataSnapshotSynced");
+	return true;
+}
+
+bool C64DebugInterfaceVice::SaveDiskDataSnapshotSynced(CByteBuffer *byteBuffer)
+{
+	// TODO: check if data changed and store snapshot with data accordingly
+	return this->SaveFullSnapshotSynced(byteBuffer,
+										true, false, true, false, false, true, false);
+}
+
+bool C64DebugInterfaceVice::SaveFullSnapshotSynced(CByteBuffer *byteBuffer,
+												   bool saveChips, bool saveRoms, bool saveDisks, bool eventMode,
+												   bool saveReuData, bool saveCartRoms, bool saveScreen)
+{
+	int snapshotSize = 0;
+	u8 *snapshotData = NULL;
+
+	debugInterfaceVice->LockMutex();
+	gSoundEngine->LockMutex("SaveFullSnapshotSynced");
+
+	// TODO: reuse byteBuffer->data
+	int ret = c64_snapshot_write_in_memory(saveChips ? 1:0, saveRoms ? 1:0, saveDisks ? 1:0, eventMode ? 1:0,
+										   saveReuData ? 1:0, saveCartRoms ? 1:0, saveScreen ? 1:0,
+										   &snapshotSize, &snapshotData);
+
+	gSoundEngine->UnlockMutex("SaveFullSnapshotSynced");
+	debugInterfaceVice->UnlockMutex();
+
+//	LOGD("C64DebugInterfaceVice::SaveFullSnapshotSynced: snapshotData=%x snapshotSize=%d", snapshotData, snapshotSize);
+	
+	if (ret == 0)
+	{
+		byteBuffer->SetData(snapshotData, snapshotSize);
+		return true;
+	}
+	
+	if (snapshotData != NULL)
+	{
+		lib_free(snapshotData);
+	}
+	
+	LOGError("C64DebugInterfaceVice::SaveFullSnapshotSynced: failed");
+	return false;
+}
+
+bool C64DebugInterfaceVice::IsDriveDirtyForSnapshot()
+{
+	return c64d_is_drive_dirty_for_snapshot() == 0 ? false : true;
+}
+
+void C64DebugInterfaceVice::ClearDriveDirtyForSnapshotFlag()
+{
+	c64d_clear_drive_dirty_for_snapshot();
 }
 
 // Profiler

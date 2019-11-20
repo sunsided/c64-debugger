@@ -767,12 +767,28 @@ u8 C64VicDisplayCanvasMultiBitmap::ConvertFrom(CImageData *imageData)
 	
 	u8 backgroundColor = (*colors)[0]->color;
 	
-	LOGF("backgroundColor = %d", backgroundColor);
+	LOGF("backgroundColor = %d numColors=%d", backgroundColor, colors->size());
 	
 	debugInterface->SetByteC64(0xD020, backgroundColor);
 	debugInterface->SetByteC64(0xD021, backgroundColor);
 	
 	int histogram[16];
+	
+	// remember which index had color, to keep the same over all image if possible
+	// TODO: find best combination knowing all histograms of all 8x8 chars, create indexes-colors map first and then parse image
+	int commonIndexByColor[16];
+	for (int i = 0; i < 16; i++)
+	{
+		commonIndexByColor[i] = -1;
+	}
+	
+	int commonColorByIndex[4];
+	for (int i = 0; i < 4; i++)
+	{
+		commonColorByIndex[i] = -1;
+	}
+	
+	std::list<C64VicDisplayCanvasMultiBitmapMissingIndexes *> missingIndexes;
 	
 	for (int yc = 0; yc < 25; yc++)
 	{
@@ -794,13 +810,15 @@ u8 C64VicDisplayCanvasMultiBitmap::ConvertFrom(CImageData *imageData)
 				}
 			}
 			
+			int colorForeground[3] = { 0, 0, 0 };
+			
 			// find second max color (foreground 1)
 			int max = 0;
-			u8 colorForeground1 = 0;
+			colorForeground[0] = -1;
 			
 			for (int i = 0; i < 16; i++)
 			{
-				LOGF(" histogram[%d] = %d", i, histogram[i]);
+//				LOGF(" histogram[%d] = %d", i, histogram[i]);
 				
 				if (i == backgroundColor)
 					continue;
@@ -808,52 +826,144 @@ u8 C64VicDisplayCanvasMultiBitmap::ConvertFrom(CImageData *imageData)
 				if (histogram[i] > max)
 				{
 					max = histogram[i];
-					colorForeground1 = i;
+					colorForeground[0] = i;
 				}
 			}
 
 			// find third max color (foreground 2)
 			max = 0;
-			u8 colorForeground2 = 0;
+			colorForeground[1] = -1;
 			
 			for (int i = 0; i < 16; i++)
 			{
 				LOGF(" histogram[%d] = %d", i, histogram[i]);
 				
 				if (i == backgroundColor
-					|| i == colorForeground1)
+					|| i == colorForeground[0])
 					continue;
 				
 				if (histogram[i] > max)
 				{
 					max = histogram[i];
-					colorForeground2 = i;
+					colorForeground[1] = i;
 				}
 			}
 
 			// find fourth max color (foreground 3)
 			max = 0;
-			u8 colorForeground3 = 0;
+			colorForeground[2] = -1;
 			
 			for (int i = 0; i < 16; i++)
 			{
-				LOGF(" histogram[%d] = %d", i, histogram[i]);
+//				LOGF(" histogram[%d] = %d", i, histogram[i]);
 				
 				if (i == backgroundColor
-					|| i == colorForeground1
-					|| i == colorForeground2)
+					|| i == colorForeground[0]
+					|| i == colorForeground[1])
 					continue;
 				
 				if (histogram[i] > max)
 				{
 					max = histogram[i];
-					colorForeground3 = i;
+					colorForeground[2] = i;
 				}
 			}
 			
-			ReplaceColorMultiBitmapCharacter(xc, yc, 1, colorForeground1);
-			ReplaceColorMultiBitmapCharacter(xc, yc, 2, colorForeground2);
-			ReplaceColorMultiBitmapCharacter(xc, yc, 3, colorForeground3);
+			int colorsToAssign[3];
+			for (int i = 0; i < 3; i++)
+			{
+				colorsToAssign[i] = colorForeground[i];
+			}
+			
+			LOGF("...checking commons");
+			int colorByIndex[3] = { -1, -1, -1 };
+			for (int i = 0; i < 3; i++)
+			{
+				if (colorForeground[i] == -1)
+				{
+					continue;
+				}
+				
+				int commonColorIndex = commonIndexByColor[colorForeground[i]];
+				LOGF("i=%d colorForeground[%d]=%02x commonColorIndex=%d", i, i, colorForeground[i], commonColorIndex);
+				
+				if (commonColorIndex != -1)
+				{
+					if (colorByIndex[commonColorIndex] == -1)
+					{
+						colorByIndex[commonColorIndex] = colorForeground[i];
+						colorsToAssign[i] = -1;
+						
+						LOGF("---> set colorByIndex[%d]=%02x", commonColorIndex, colorForeground[i]);
+					}
+				}
+			}
+			
+			LOGF("...checking if all are set");
+			for (int i = 0; i < 3; i++)
+			{
+				if (colorByIndex[i] == -1)
+				{
+					for (int j = 0; j < 3; j++)
+					{
+						if (colorsToAssign[j] != -1)
+						{
+							LOGF("---> set colorByIndex[%d]=%02x", i, colorsToAssign[j]);
+							colorByIndex[i] = colorsToAssign[j];
+							colorsToAssign[j] = -1;
+							break;
+						}
+					}
+				}
+			}
+			
+			for (int i = 0; i < 3; i++)
+			{
+				int color = colorByIndex[i];
+				if (color != -1)
+				{
+					if (commonIndexByColor[color] == -1)
+					{
+						commonIndexByColor[color] = i;
+					}
+				}
+				
+				if (commonColorByIndex[i] == -1)
+				{
+					commonColorByIndex[i] = colorByIndex[i];
+				}
+				
+				if (colorByIndex[i] == -1)
+				{
+					if (commonColorByIndex[i] != -1)
+					{
+						colorByIndex[i] = commonColorByIndex[i];
+					}
+					else
+					{
+						colorByIndex[i] = backgroundColor;
+						C64VicDisplayCanvasMultiBitmapMissingIndexes *missingIndex = new C64VicDisplayCanvasMultiBitmapMissingIndexes();
+						missingIndex->xc = xc;
+						missingIndex->yc = yc;
+						missingIndex->index = i;
+						missingIndexes.push_back(missingIndex);
+						LOGD(".. added missing index %d %d index=%d", xc, yc, i);
+					}
+				}
+			}
+			
+			LOGF("xc=%d yc=%d | colors: %02x %02x %02x %02x", xc, yc, backgroundColor, colorByIndex[0], colorByIndex[1], colorByIndex[2]);
+			
+//			for (int i = 0; i < 16; i++)
+//			{
+//				LOGF("commonIndexByColor[%01x] = %d", i, commonIndexByColor[i]);
+//			}
+			
+			// TODO: go through colors and replace background with common index
+			
+			ReplaceColorMultiBitmapCharacter(xc, yc, 1, colorByIndex[0]);
+			ReplaceColorMultiBitmapCharacter(xc, yc, 2, colorByIndex[1]);
+			ReplaceColorMultiBitmapCharacter(xc, yc, 3, colorByIndex[2]);
 			
 			for (int yb = 0; yb < 8; yb++)
 			{
@@ -863,9 +973,9 @@ u8 C64VicDisplayCanvasMultiBitmap::ConvertFrom(CImageData *imageData)
 
 					float distances[4];
 					distances[0] = GetC64ColorDistance(v, backgroundColor, debugInterface);
-					distances[1] = GetC64ColorDistance(v, colorForeground1, debugInterface);
-					distances[2] = GetC64ColorDistance(v, colorForeground2, debugInterface);
-					distances[3] = GetC64ColorDistance(v, colorForeground3, debugInterface);
+					distances[1] = GetC64ColorDistance(v, colorByIndex[0], debugInterface);
+					distances[2] = GetC64ColorDistance(v, colorByIndex[1], debugInterface);
+					distances[3] = GetC64ColorDistance(v, colorByIndex[2], debugInterface);
 
 					float minDistance = FLT_MAX;
 					int minColorNum = 0;
@@ -883,6 +993,23 @@ u8 C64VicDisplayCanvasMultiBitmap::ConvertFrom(CImageData *imageData)
 				}
 			}
 		}
+	}
+	
+	// update missing indexes
+	LOGF("..update missing indexes");
+	while(!missingIndexes.empty())
+	{
+		C64VicDisplayCanvasMultiBitmapMissingIndexes *missingIndex = missingIndexes.front();
+		missingIndexes.pop_front();
+		
+		if (commonColorByIndex[missingIndex->index] != -1)
+		{
+			LOGF("replace: %d %d index=%d with %02x",
+				 missingIndex->xc, missingIndex->yc, missingIndex->index, commonColorByIndex[missingIndex->index]);
+			ReplaceColorMultiBitmapCharacter(missingIndex->xc, missingIndex->yc, missingIndex->index+1, commonColorByIndex[missingIndex->index]);
+		}
+		
+		delete missingIndex;
 	}
 	
 	DeleteColorsHistogram(colors);

@@ -1151,6 +1151,11 @@ void fastsid_state_read(struct sound_s *psid, struct sid_fastsid_snapshot_state_
 {
     int i;
 
+	if (psid == NULL)
+	{
+//		LOGError("fastsid_state_read: psid NULL");
+		return;
+	}
     sid_state->factor = (DWORD)psid->factor;
 
     for (i = 0; i < 32; ++i) {

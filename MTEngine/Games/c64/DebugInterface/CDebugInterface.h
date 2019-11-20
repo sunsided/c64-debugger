@@ -13,6 +13,7 @@ class CSlrMutex;
 class CImageData;
 
 class CDebuggerEmulatorPlugin;
+class CSnapshotsManager;
 
 // abstract class
 class CDebugInterface
@@ -22,9 +23,13 @@ public:
 	~CDebugInterface();
 	CViewC64 *viewC64;
 	
+	CSnapshotsManager *snapshotsManager;
+	
 	virtual int GetEmulatorType();
 	virtual CSlrString *GetEmulatorVersionString();
 	virtual CSlrString *GetPlatformNameString();
+	
+	virtual float GetEmulationFPS();
 	
 	bool isRunning;
 	bool isSelected;
@@ -87,6 +92,20 @@ public:
 	//
 	virtual bool LoadFullSnapshot(char *filePath);
 	virtual void SaveFullSnapshot(char *filePath);
+
+	// these calls should be synced with CPU IRQ so snapshot store or restore is allowed
+	// store CHIPS only snapshot, not including DISK DATA
+	virtual bool LoadChipsSnapshotSynced(CByteBuffer *byteBuffer);
+	virtual bool SaveChipsSnapshotSynced(CByteBuffer *byteBuffer);
+	// store DISK DATA only snapshot, without CHIPS
+	virtual bool LoadDiskDataSnapshotSynced(CByteBuffer *byteBuffer);
+	virtual bool SaveDiskDataSnapshotSynced(CByteBuffer *byteBuffer);
+	
+	// controls if we should also store disk drive snapshot when snapshot interval is hit
+	// this is to allow only periodic disk drive snapshot storing, only when disk was changed or new data on disk was saved
+	// when we restore snapshot, we will restore disk contents first
+	virtual bool IsDriveDirtyForSnapshot();
+	virtual void ClearDriveDirtyForSnapshotFlag();
 
 	//
 	virtual bool GetSettingIsWarpSpeed();

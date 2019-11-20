@@ -636,18 +636,29 @@ void CViewMonitorConsole::CommandHunt()
 		return;
 	}
 
-	std::list<uint8> values;
+	std::list<int> values;
 
 	int val;
 	
 	while (GetTokenValueHex(&val))
 	{
-		if (val < 0x00 || val > 0xFF)
+		if (val >= 0x00 && val <= 0xFF)
+		{
+			values.push_back(val);
+		}
+		else if (val >= 0x0100 && val <= 0xFFFF)
+		{
+			u8 val1 = val & 0x00FF;
+			u8 val2 = (val & 0xFF00) >> 8;
+			
+			values.push_back(val1);
+			values.push_back(val2);
+		}
+		else
 		{
 			this->viewConsole->PrintLine("Bad hunt value.");
 			return;
 		}
-		values.push_back(val);
 	}
 	
 	if (values.size() == 0)
@@ -673,7 +684,7 @@ void CViewMonitorConsole::CommandHunt()
 
 		int addr = i;
 		
-		for (std::list<uint8>::iterator it = values.begin(); it != values.end(); it++)
+		for (std::list<int>::iterator it = values.begin(); it != values.end(); it++)
 		{
 			uint8 v;
 			dataAdapter->AdapterReadByte(addr, &v, &a);

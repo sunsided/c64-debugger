@@ -1145,6 +1145,27 @@ bool C64SaveMemoryExomizerPRG(int fromAddr, int toAddr, int jmpAddr, char *fileP
 	return true;
 }
 
+u8 *C64ExomizeMemoryRaw(int fromAddr, int toAddr, int *compressedSize)
+{
+	int dataSize = toAddr - fromAddr;
+	u8 *data = new u8[dataSize];
+	int i = 0;
+	for (int d = fromAddr; d < toAddr; d++)
+	{
+		data[i++] = viewC64->debugInterfaceC64->GetByteFromRamC64(d);
+	}
+	
+	u8 *compressedData = new u8[0x10000];
+	*compressedSize = exomizer_raw_backwards(data, dataSize, compressedData);
+	
+	delete [] data;
+	
+	LOGD("C64ExomizeMemoryRaw: dataSize=%d compressedSize=%d", dataSize, compressedSize);
+	
+	return compressedData;
+}
+
+
 bool C64SaveMemory(int fromAddr, int toAddr, bool isPRG, CSlrDataAdapter *dataAdapter, char *filePath)
 {
 	FILE *fp;
@@ -1185,4 +1206,28 @@ bool C64SaveMemory(int fromAddr, int toAddr, bool isPRG, CSlrDataAdapter *dataAd
 	}
 
 	return true;
+}
+
+int C64LoadMemory(int fromAddr, CSlrDataAdapter *dataAdapter, char *filePath)
+{
+	FILE *fp;
+	fp = fopen(filePath, "rb");
+	
+	if (!fp)
+	{
+		return -1;
+	}
+	
+	u16 addr = fromAddr;
+	int len = 0;
+	while(!feof(fp))
+	{
+		u8 c = getc(fp);
+		dataAdapter->AdapterWriteByte(addr, c);
+		addr++;
+		len++;
+	}
+
+	fclose(fp);
+	return len;
 }

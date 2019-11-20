@@ -102,7 +102,7 @@ void CGuiMain::Startup()
 	globalConfig = new CConfigStorage();
 #endif
 
-	renderMutex = new CSlrMutex();
+	renderMutex = new CSlrMutex("CGuiMain::renderMutex");
 
 	LOGM("sound engine init");
 	SYS_InitSoundEngine();

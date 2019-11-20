@@ -99,6 +99,10 @@ void CViewC64ScreenWrapper::UpdateC64ScreenPosition()
 		
 		viewC64->viewC64VicDisplay->SetShowDisplayBorderType(VIC_DISPLAY_SHOW_BORDER_VISIBLE_AREA);
 	}
+	else
+	{
+		viewC64->viewC64VicDisplay->SetShowDisplayBorderType(c64SettingsVicDisplayBorderType);
+	}
 
 	if (viewC64->currentScreenLayoutId != SCREEN_LAYOUT_C64_FULL_SCREEN_ZOOM
 		&& viewC64->currentScreenLayoutId != SCREEN_LAYOUT_C64_CYCLER)

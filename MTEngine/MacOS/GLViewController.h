@@ -43,6 +43,9 @@
 
 - (bool)isWindowFullScreen;
 
+- (void)storeMainWindowPosition;
+- (void)restoreMainWindowPosition;
+
 //- (void)windowWillClose:(NSNotification *)notification;
 
 //// payments

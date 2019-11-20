@@ -20,7 +20,7 @@ CGuiViewConsole::CGuiViewConsole(float posX, float posY, float posZ, float sizeX
 	
 	maxCharsInLine = 61;
 		
-	mutex = new CSlrMutex();
+	mutex = new CSlrMutex("CGuiViewConsole");
 	
 	lineHeight = font->GetLineHeight();
 

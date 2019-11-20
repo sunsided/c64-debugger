@@ -13,7 +13,6 @@
 #include "VID_GLViewController.h"
 #include "ConstantsAndMacros.h"
 #include "DBG_LOG.h"
-#include <pthread.h>
 #include "CGuiMain.h"
 //#include "SYS_Main.h"	// for EXEC_ON_VALGRIND
 #include "VID_ImageBinding.h"
@@ -91,16 +90,14 @@ CSlrImage *imgZoomSign;
 
 void VID_SetOrthoDefault();
 
-pthread_mutex_t gRenderMutex;
-
 void SYS_LockRenderMutex()
 {
-	pthread_mutex_lock(&gRenderMutex);
+	guiMain->LockMutex();
 }
 
 void SYS_UnlockRenderMutex()
 {
-	pthread_mutex_unlock(&gRenderMutex);
+	guiMain->UnlockMutex();
 }
 
 long SYS_RandomSeed()
@@ -412,8 +409,6 @@ void VID_UpdateViewPort(float newWidth, float newHeight)
 void VID_InitGL()
 {
 	LOGM("initGL");
-
-	pthread_mutex_init(&gRenderMutex, NULL);
 
 	SYS_InitStrings();
 	SYS_InitPlatformSettings();
@@ -3725,5 +3720,10 @@ void VID_HideMouseCursor()
 		if (ShowCursor(FALSE) < 0)
 			break;
 	}
+}
+
+// TODO:
+void VID_StoreMainWindowPosition()
+{
 }
 

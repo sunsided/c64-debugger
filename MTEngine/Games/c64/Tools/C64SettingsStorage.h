@@ -61,6 +61,8 @@ extern bool c64SettingsIsInVicEditor;
 
 extern int c64SettingsScreenSupersampleFactor;
 
+extern bool c64SettingsUsePipeIntegration;
+
 extern uint8 c64SettingsMemoryValuesStyle;
 extern uint8 c64SettingsMemoryMarkersStyle;
 extern bool c64SettingsUseMultiTouchInMemoryMap;
@@ -103,7 +105,6 @@ extern bool c64SettingsRenderDisassembleExecuteAware;
 
 extern bool c64SettingsWindowAlwaysOnTop;
 
-//// NEW
 extern float c64SettingsScreenGridLinesAlpha;
 extern uint8 c64SettingsScreenGridLinesColorScheme;
 extern float c64SettingsScreenRasterViewfinderScale;
@@ -160,6 +161,12 @@ extern CSlrString *c64SettingsPathToJukeboxPlaylist;
 extern CSlrString *c64SettingsC64ProfilerFileOutputPath;
 extern bool c64SettingsC64ProfilerDoVicProfile;
 
+// snapshots recorder
+extern bool c64SettingsRecordSnapshots;
+// storing interval
+extern int c64SettingsSnapshotsIntervalNumFrames;
+// max number of snapshots
+extern int c64SettingsSnapshotsLimit;
 
 // sid import
 extern u8 c64SettingsC64SidImportMode;

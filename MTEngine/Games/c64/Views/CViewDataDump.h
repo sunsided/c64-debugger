@@ -89,8 +89,6 @@ public:
 	CSlrFont *fonts[3];
 
 	
-	CSlrMutex *mutex;
-	
 	bool isEditingValue;
 	CGuiEditHex *editHex;
 	virtual void GuiEditHexEnteredValue(CGuiEditHex *editHex, u32 lastKeyCode, bool isCancelled);

@@ -180,7 +180,8 @@ void C64DebuggerParseCommandLine0()
 
 				return;
 			}
-			else if (ext->CompareWith("d64") || ext->CompareWith("D64"))
+			else if (ext->CompareWith("d64") || ext->CompareWith("D64")
+					 || ext->CompareWith("g64") || ext->CompareWith("G64"))
 			{
 				isD64InCommandLine = true;
 				
@@ -421,7 +422,6 @@ void c64PerformStartupTasksThreaded()
 					// just load disk, do not start, we will start PRG instead
 					viewC64->viewC64MainMenu->InsertD64(c64SettingsPathToD64, false, false, 0, false);
 				}
-				
 			}
 
 			if (c64SettingsPathToTAP != NULL)

@@ -106,8 +106,7 @@ u8 C64VicDisplayCanvas::ConvertFrom(CImageData *imageData)
 	return PAINT_RESULT_ERROR;
 }
 
-struct colorPairLess_t {
-	bool operator()(const C64ColorsHistogramElement *a, const C64ColorsHistogramElement *b) const
+struct colorPairLess_t {	bool operator()(const C64ColorsHistogramElement *a, const C64ColorsHistogramElement *b) const
 	{
 		return a->num > b->num;
 	}

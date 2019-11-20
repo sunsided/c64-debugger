@@ -8,12 +8,14 @@ CDebugInterface::CDebugInterface(CViewC64 *viewC64)
 {
 	this->viewC64 = viewC64;
 
+	snapshotsManager = NULL;
+
 	isRunning = false;
 	isSelected = false;
 	
-	breakpointsMutex = new CSlrMutex();
-	renderScreenMutex = new CSlrMutex();
-	ioMutex = new CSlrMutex();
+	breakpointsMutex = new CSlrMutex("CDebugInterface::breakpointsMutex");
+	renderScreenMutex = new CSlrMutex("CDebugInterface::renderScreenMutex");
+	ioMutex = new CSlrMutex("CDebugInterface::ioMutex");
 	
 	breakOnPC = false;
 	breakOnMemory = false;
@@ -52,6 +54,11 @@ CSlrString *CDebugInterface::GetPlatformNameString()
 	return NULL;
 }
 
+float CDebugInterface::GetEmulationFPS()
+{
+	return -1;
+}
+
 void CDebugInterface::RunEmulationThread()
 {
 }
@@ -69,7 +76,9 @@ void CDebugInterface::InitPlugins()
 void CDebugInterface::DoVSync()
 {
 	emulationFrameCounter++;
-		
+	
+//	LOGD("DoVSync: frame=%d", emulationFrameCounter);
+	
 	viewC64->EmulationStartFrameCallback();
 
 }
@@ -127,6 +136,7 @@ void CDebugInterface::SetSupersampleFactor(int factor)
 
 CImageData *CDebugInterface::GetScreenImageData()
 {
+//	LOGD("CDebugInterface::GetScreenImageData");
 	return this->screenImage;
 }
 
@@ -157,6 +167,36 @@ void CDebugInterface::SaveFullSnapshot(char *filePath)
 {
 }
 
+bool CDebugInterface::LoadChipsSnapshotSynced(CByteBuffer *byteBuffer)
+{
+	return false;
+}
+
+bool CDebugInterface::SaveChipsSnapshotSynced(CByteBuffer *byteBuffer)
+{
+	return false;
+}
+
+bool CDebugInterface::LoadDiskDataSnapshotSynced(CByteBuffer *byteBuffer)
+{
+	return false;
+}
+
+bool CDebugInterface::SaveDiskDataSnapshotSynced(CByteBuffer *byteBuffer)
+{
+	return false;
+}
+
+bool CDebugInterface::IsDriveDirtyForSnapshot()
+{
+	SYS_FatalExit("CDebugInterface::IsDriveDirtyForSnapshot");
+	return false;
+}
+
+void CDebugInterface::ClearDriveDirtyForSnapshotFlag()
+{
+	SYS_FatalExit("CDebugInterface::ClearDriveDirtyForSnapshotFlag");
+}
 
 int CDebugInterface::GetScreenSizeX()
 {

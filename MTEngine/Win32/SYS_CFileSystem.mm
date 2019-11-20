@@ -66,7 +66,7 @@ void SYS_InitFileSystem()
 
 	sysInitFileSystemDone = true;
 
-	LOGF(DBGLVL_MAIN, "SYS_InitFileSystem\n");
+	LOGM("SYS_InitFileSystem\n");
 
 	TCHAR curDir[MAX_PATH];
 	DWORD dwRet;
@@ -82,20 +82,17 @@ void SYS_InitFileSystem()
 
 	gPathToResources = new char[MAX_PATH];
 	sprintf(gPathToResources, "%s\\Resources\\", curDir);
-	LOGF(DBGLVL_MAIN, "pathToResource=");
-	LOGF(DBGLVL_MAIN, gPathToResources);
+	LOGM("pathToResource=%s", gPathToResources);
 
 	gPathToDocuments = new char[MAX_PATH];
 	sprintf(gPathToDocuments, "%s\\Documents\\", curDir);
-	LOGF(DBGLVL_MAIN, "pathToDocuments=");
-	LOGF(DBGLVL_MAIN, gPathToDocuments);
+	LOGM("pathToDocuments=%s", gPathToDocuments);
 	gCPathToDocuments = gPathToDocuments;
 	gUTFPathToDocuments = new CSlrString(gCPathToDocuments);
 
 	gPathToTemp = new char[MAX_PATH];
 	sprintf(gPathToTemp, "%s\\Temp\\", curDir);
-	LOGF(DBGLVL_MAIN, "gPathToTemp=");
-	LOGF(DBGLVL_MAIN, gPathToTemp);
+	LOGM("gPathToTemp=%s", gPathToTemp);
 	gCPathToTemp = gPathToTemp;
 	gUTFPathToTemp = new CSlrString(gCPathToTemp);
 
@@ -122,8 +119,7 @@ void SYS_InitFileSystem()
 		strcat(gPathToSettings, "\\");
 	}
 
-	LOGF(DBGLVL_MAIN, "pathToSettings=");
-	LOGF(DBGLVL_MAIN, gPathToSettings);
+	LOGM("pathToSettings=%s", gPathToSettings);
 
 	gCPathToSettings = gPathToSettings;
 	gUTFPathToSettings = new CSlrString(gCPathToSettings);

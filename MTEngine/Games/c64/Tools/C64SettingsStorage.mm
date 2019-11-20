@@ -60,6 +60,8 @@ bool c64SettingsPassConfigToRunningInstance = false;
 
 int c64SettingsScreenSupersampleFactor = 1;
 
+bool c64SettingsUsePipeIntegration = true;
+
 uint8 c64SettingsJoystickPort = 0;
 bool c64SettingsJoystickIsOn = false;
 
@@ -112,6 +114,13 @@ uint16 c64SettingsVicPalette = 0;
 bool c64SettingsC64ProfilerDoVicProfile = false;
 
 int c64SettingsWaitOnStartup = 0; //500;
+
+// snapshots recorder
+bool c64SettingsRecordSnapshots = true;
+// snapshots interval
+int c64SettingsSnapshotsIntervalNumFrames = 2;
+// max number of snapshots
+int c64SettingsSnapshotsLimit = 7500;
 
 CSlrString *c64SettingsPathToD64 = NULL;
 CSlrString *c64SettingsDefaultD64Folder = NULL;
@@ -344,6 +353,8 @@ void C64DebuggerStoreSettings()
 	storeSettingString(byteBuffer, "FolderNES", c64SettingsDefaultNESFolder);
 	storeSettingString(byteBuffer, "PathNES", c64SettingsPathToNES);
 
+	storeSettingBool(byteBuffer, "UsePipeIntegration", c64SettingsUsePipeIntegration);
+	
 	storeSettingBool(byteBuffer, "AutoJmp", c64SettingsAutoJmp);
 	storeSettingBool(byteBuffer, "AutoJmpAlwaysToLoadedPRGAddress", c64SettingsAutoJmpAlwaysToLoadedPRGAddress);
 	storeSettingBool(byteBuffer, "AutoJmpFromInsertedDiskFirstPrg", c64SettingsAutoJmpFromInsertedDiskFirstPrg);
@@ -471,6 +482,10 @@ void C64DebuggerStoreSettings()
 	storeSettingFloat (byteBuffer, "PaintGridPixelsColorA", c64SettingsPaintGridPixelsColorA);
 	
 	storeSettingFloat (byteBuffer, "PaintGridShowZoomLevel", c64SettingsPaintGridShowZoomLevel);
+	
+//	storeSettingBool(byteBuffer, "RecordSnapshots", c64SettingsRecordSnapshots);
+//	storeSettingI32(byteBuffer, "SnapshotsIntervalNumFrames", c64SettingsSnapshotsIntervalNumFrames);
+//	storeSettingI32(byteBuffer, "SnapshotsLimit", c64SettingsSnapshotsLimit);
 	
 	storeSettingBlock(byteBuffer, C64DEBUGGER_BLOCK_EOF);
 
@@ -758,6 +773,12 @@ void C64DebuggerSetSetting(char *name, void *value)
 		{
 			viewC64->viewNesScreen->SetSupersampleFactor(c64SettingsScreenSupersampleFactor);
 		}
+		return;
+	}
+	else if (!strcmp(name, "UsePipeIntegration"))
+	{
+		bool v = *((bool*)value);
+		c64SettingsUsePipeIntegration = v;
 		return;
 	}
 	else if (!strcmp(name, "AutoJmpFromInsertedDiskFirstPrg"))
@@ -1794,7 +1815,34 @@ void C64DebuggerSetSetting(char *name, void *value)
 		}
 		return;
 	}
-
+	/*
+	else if (!strcmp(name, "RecordSnapshots"))
+	{
+		bool v = *((bool*)value);
+		c64SettingsRecordSnapshots = v;
+		
+		LOGD("c64SettingsRecordSnapshots=%s", STRBOOL(c64SettingsRecordSnapshots));
+//		viewC64->viewC64SettingsMenu->menuItemRecordSnapshots->SetSelectedOption(v ? 1:0, false);
+//		
+//		viewC64->debugInterfaceC64->SetRecordSnapshotsParameters(c64SettingsRecordSnapshots, c64SettingsSnapshotsIntervalNumFrames, c64SettingsSnapshotsLimit);
+		return;
+	}
+	else if (!strcmp(name, "SnapshotsIntervalNumFrames"))
+	{
+		i32 v = *((i32*)value);
+		c64SettingsSnapshotsIntervalNumFrames = v;
+			// TODO: set menu
+		return;
+	}
+	else if (!strcmp(name, "SnapshotsLimit"))
+	{
+		i32 v = *((i32*)value);
+		c64SettingsSnapshotsLimit = v;
+		// TODO: set menu
+		return;
+	}
+*/
+	
 	LOGError("C64DebuggerSetSetting: unknown setting '%s'", name);
 }
 

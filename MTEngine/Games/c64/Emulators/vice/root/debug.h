@@ -37,7 +37,7 @@
 #endif
 
 /* configure defined, not valid when using an IDE */
-#if 1 && !defined(IDE_COMPILE)
+#if 0 && !defined(IDE_COMPILE)
 /* This enables debugging.  Attention: It makes things a bit slower.  */
 #define DEBUG
 #endif

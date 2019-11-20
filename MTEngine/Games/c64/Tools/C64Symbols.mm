@@ -306,6 +306,7 @@ void C64Symbols::ParseBreakpoints(CByteBuffer *byteBuffer, CDebugInterface *debu
 	if (byteBuffer->length < 8)
 	{
 		LOGError("Empty breakpoints file");
+		debugInterface->UnlockMutex();
 		return;
 	}
 

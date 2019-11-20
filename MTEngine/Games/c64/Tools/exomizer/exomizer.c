@@ -104,6 +104,8 @@ generate_output(match_ctx ctx,
 
     output_bits_flush(out);
 
+	///
+	
     output_word(out, (unsigned short int) (load + len));
 
     len = output_get_pos(out);
@@ -121,6 +123,93 @@ generate_output(match_ctx ctx,
 
     return len;
 }
+
+static
+int
+do_output(match_ctx ctx,
+				search_nodep snp,
+				encode_match_f * f,
+				encode_match_data emd,
+				unsigned char *buf)
+{
+	int pos;
+	int pos_diff;
+	int max_diff;
+	int diff;
+	static output_ctx out;
+	output_ctxp old;
+	
+	output_ctx_init(out);
+	
+	old = emd->out;
+	emd->out = out;
+	
+	pos = output_get_pos(out);
+	
+	pos_diff = pos;
+	max_diff = 0;
+	
+	output_gamma_code(out, 16);
+	output_bits(out, 1, 0); /* 1 bit out */
+	
+	diff = output_get_pos(out) - pos_diff;
+	if(diff > max_diff)
+	{
+		max_diff = diff;
+	}
+	
+	while (snp != NULL)
+	{
+		const_matchp mp;
+		
+		mp = snp->match;
+		if (mp != NULL && mp->len > 0)
+		{
+			if (mp->offset == 0)
+			{
+				/* literal */
+				output_byte(out, ctx->buf[snp->index]);
+				output_bits(out, 1, 1);
+			} else
+			{
+				f(mp, emd);
+				output_bits(out, 1, 0);
+			}
+			
+			pos_diff += mp->len;
+			diff = output_get_pos(out) - pos_diff;
+			if(diff > max_diff)
+			{
+				max_diff = diff;
+			}
+		}
+		snp = snp->prev;
+	}
+	
+	/* output header here */
+	optimal_out(out, emd);
+	
+	output_bits_flush(out);
+	
+	///
+	
+//	output_word(out, (unsigned short int) (load + len));
+	int len = output_get_pos(out);
+//	decr->load(out, (unsigned short int) load - max_diff);
+//	output_copy_bytes(out, 0, len);
+//	
+//	/* second stage of decruncher */
+//	decr->stages(out, (unsigned short int) start);
+//	
+//	/*len = output_ctx_close(out, of);*/
+//	len = out->pos - out->start;
+//	memcpy(buf, out->buf + out->start, len);
+	
+	emd->out = old;
+	
+	return len;
+}
+
 
 static
 search_nodep
@@ -217,3 +306,35 @@ int exomizer(unsigned char *srcbuf, int len, int load, int start, unsigned char 
 
     return destlen;
 }
+
+int exomizer_raw_backwards(unsigned char *srcbuf, int len, unsigned char *outbuf)
+{
+	int destlen;
+	int max_offset = 65536;
+	int max_passes = 65536;
+	static match_ctx ctx;
+	encode_match_data emd;
+	encode_match_priv optimal_priv;
+	search_nodep snp;
+	
+	match_ctx_init(ctx, srcbuf, len, max_offset);
+	
+	emd->out = NULL;
+	emd->priv = optimal_priv;
+	
+	optimal_init(emd);
+	
+	snp = do_compress(ctx, emd, max_passes);
+	
+	destlen = do_output(ctx, snp, optimal_encode, emd, outbuf);
+	optimal_free(emd);
+	
+#if 0 /* RH */
+	search_node_free(snp);
+#endif /* RH */
+	match_ctx_free(ctx);
+	
+	return destlen;
+}
+
+

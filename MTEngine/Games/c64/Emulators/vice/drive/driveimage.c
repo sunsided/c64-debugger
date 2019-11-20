@@ -166,15 +166,25 @@ int drive_image_attach(disk_image_t *image, unsigned int unit)
     drive->image->gcr = drive->gcr;
     drive->image->p64 = (void*)drive->p64;
 
-    if (disk_image_read_image(drive->image) < 0) {
+    if (disk_image_read_image(drive->image) < 0)
+	{
+		LOGD("disk_image_read_image failed");
         drive->image = NULL;
         return -1;
     }
-    if (drive->image->type == DISK_IMAGE_TYPE_P64) {
+	
+	if (drive->image->type == DISK_IMAGE_TYPE_P64)
+	{
+		LOGD("P64_image_loaded drive=%x", drive);
         drive->P64_image_loaded = 1;
         drive->P64_dirty = 0;
-    } else {
+		drive->P64_dirty_for_snapshot = 1;
+    }
+	else
+	{
+		LOGD("GCR_image_loaded drive=%x", drive);
         drive->GCR_image_loaded = 1;
+		drive->GCR_dirty_track_for_snapshot = 1;
     }
     drive->complicated_image_loaded = ((drive->image->type == DISK_IMAGE_TYPE_P64)
                                        || (drive->image->type == DISK_IMAGE_TYPE_G64)
@@ -231,6 +241,8 @@ int drive_image_detach(disk_image_t *image, unsigned int unit)
     drive->detach_clk = drive_clk[dnr];
     drive->GCR_image_loaded = 0;
     drive->P64_image_loaded = 0;
+	drive->GCR_dirty_track_for_snapshot = 1;
+	drive->P64_dirty_for_snapshot = 1;
     drive->read_only = 0;
     drive->image = NULL;
     drive_set_half_track(drive->current_half_track, drive->side, drive);

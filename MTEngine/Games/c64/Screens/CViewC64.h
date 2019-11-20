@@ -66,6 +66,7 @@ class CViewDriveStateCPU;
 class CViewDrive1541StateVIA;
 class CViewC64StateREU;
 class CViewC64EmulationCounters;
+class CViewC64AllGraphics;
 class CViewEmulationState;
 class CViewMonitorConsole;
 
@@ -109,6 +110,7 @@ enum screenLayouts
 	SCREEN_LAYOUT_C64_VIC_DISPLAY_LITE = 10,
 	SCREEN_LAYOUT_C64_FULL_SCREEN_ZOOM = 11,
 	SCREEN_LAYOUT_C64_SOURCE_CODE = 12,
+	SCREEN_LAYOUT_C64_ALL_GRAPHICS = 13,
 
 	// atari
 	SCREEN_LAYOUT_ATARI_ONLY,
@@ -252,6 +254,9 @@ public:
 	bool c64VicControlVisible;
 	float c64VicControlX, c64VicControlY;
 	float c64VicControlFontSize;
+	
+	bool c64AllGraphicsVisible;
+	float c64AllGraphicsX, c64AllGraphicsY;
 	
 	bool monitorConsoleVisible;
 	float monitorConsoleX, monitorConsoleY;
@@ -477,7 +482,6 @@ public:
 	CViewMemoryMap *viewAtariMemoryMap;
 	CViewBreakpoints *viewAtariBreakpoints;
 
-	
 	CViewC64StateCIA *viewC64StateCIA;
 	CViewC64StateSID *viewC64StateSID;
 	CViewC64StateVIC *viewC64StateVIC;
@@ -489,6 +493,8 @@ public:
 	
 	CViewC64VicDisplay *viewC64VicDisplay;
 	CViewC64VicControl *viewC64VicControl;
+	
+	CViewC64AllGraphics *viewC64AllGraphics;
 
 	CViewMonitorConsole *viewMonitorConsole;
 	
@@ -572,8 +578,13 @@ public:
 	void StepOverInstruction();
 	void StepOneCycle();
 	void RunContinueEmulation();
+	void HardReset();
+	void SoftReset();
 	
 	void SwitchIsDataDirectlyFromRam();
+	
+	//
+	CViewDisassemble *GetActiveDisassembleView();
 	
 	// fonts
 	CSlrFont *fontCBM1;

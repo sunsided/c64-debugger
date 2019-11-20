@@ -8,6 +8,12 @@
 #include "SYS_Threading.h"
 #include "CImageData.h"
 
+enum {
+	ASSEMBLE_TARGET_NONE,
+	ASSEMBLE_TARGET_MAIN_CPU,
+	ASSEMBLE_TARGET_DISK_DRIVE1
+};
+
 class CDebuggerAPI
 {
 public:
@@ -69,7 +75,14 @@ public:
 	void ClearRAM(int startAddr, int endAddr, u8 value);
 	
 	//
-	int Assemble(int addr, char *buf);
+	u8 assembleTarget;
+	void SetAssembleTarget(u8 target);
+	int Assemble(int addr, char *assembleText);
+	
+	CByteBuffer *byteBufferAssembleText;
+	void Assemble64Tass(char *assembleText, int *codeStartAddr, int *codeSize);
+	void Assemble64Tass(int *codeStartAddr, int *codeSize);
+	void Assemble64TassAddLine(char *assembleText);
 	
 	//
 	void AddWatch(CSlrString *segmentName, int address, CSlrString *watchName, uint8 representation, int numberOfValues, uint8 bits);
@@ -84,7 +97,10 @@ public:
 	void SaveExomizerPRG(u16 fromAddr, u16 toAddr, u16 jmpAddr, char *fileName);
 	void SavePRG(u16 fromAddr, u16 toAddr, char *fileName);
 	void SaveBinary(u16 fromAddr, u16 toAddr, char *fileName);
+	int LoadBinary(u16 fromAddr, char *filePath);
 
+	u8 *ExomizerMemoryRaw(u16 fromAddr, u16 toAddr, int *compressedSize);
+	
 	//
 	void Sleep(long milliseconds);
 };

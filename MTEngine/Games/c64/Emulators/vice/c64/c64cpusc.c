@@ -1183,6 +1183,9 @@ void c64d_maincpu_make_basic_run(uint8 *a, uint8 *x, uint8 *y, uint8 *p, uint8 *
 	interrupt_maincpu_trigger_trap(_c64d_maincpu_make_basic_run_trap, NULL);
 }
 
+int debug_iterations_after_restore = 0;
+int debug_prev_iteration_pc = 0;
+
 void maincpu_mainloop(void)
 {
 	LOGD("maincpu_mainloop");
@@ -1233,6 +1236,7 @@ do {                                                              \
 unsigned int tmp;                                             \
 \
 EXPORT_REGISTERS();                                           \
+LOGError("CPU JAM: PC=%04x opcode=%x LAST_OPCODE_ADDR=%04x debug_iterations_after_restore=%d debug_prev_iteration_pc=%04x", reg_pc, opcode, LAST_OPCODE_ADDR, debug_iterations_after_restore, debug_prev_iteration_pc);									\
 tmp = machine_jam("   " CPU_STR ": JAM at $%04X   ", reg_pc); \
 switch (tmp) {                                                \
 case JAM_RESET:                                           \
@@ -1567,107 +1571,107 @@ JUMP(addr);                                                                     
    execute NMI.  */
 		/* FIXME: LOCAL_STATUS() should check byte ready first.  */
 #define DO_INTERRUPT(int_kind)                                                 \
-do {                                                                       \
-BYTE ik = (int_kind);                                                  \
-WORD addr;                                                             \
-\
-if (ik & (IK_IRQ | IK_IRQPEND | IK_NMI)) {                             \
-if ((ik & IK_NMI)                                                  \
-&& interrupt_check_nmi_delay(CPU_INT_STATUS, CLK)) {           \
-TRACE_NMI();                                                   \
-if (monitor_mask[CALLER] & (MI_STEP)) {                        \
-monitor_check_icount_interrupt();                          \
-}                                                              \
-interrupt_ack_nmi(CPU_INT_STATUS);                             \
-if (!SKIP_CYCLE) {                                             \
-LOAD(reg_pc);                                              \
-CLK_INC();                                                 \
-LOAD(reg_pc);                                              \
-CLK_INC();                                                 \
-}                                                              \
-LOCAL_SET_BREAK(0);                                            \
-PUSH(reg_pc >> 8);                                             \
-CLK_INC();                                                     \
-PUSH(reg_pc & 0xff);                                           \
-CLK_INC();                                                     \
-PUSH(LOCAL_STATUS());                                          \
-CLK_INC();                                                     \
-addr = LOAD(0xfffa);                                           \
-CLK_INC();                                                     \
-addr |= (LOAD(0xfffb) << 8);                                   \
-CLK_INC();                                                     \
-LOCAL_SET_INTERRUPT(1);                                        \
-JUMP(addr);                                                    \
-SET_LAST_OPCODE(0);                                            \
-} else if ((ik & (IK_IRQ | IK_IRQPEND))                            \
-&& (!LOCAL_INTERRUPT()                                    \
-|| OPINFO_DISABLES_IRQ(LAST_OPCODE_INFO))             \
-&& interrupt_check_irq_delay(CPU_INT_STATUS, CLK)) {      \
-TRACE_IRQ();                                                   \
-if (monitor_mask[CALLER] & (MI_STEP)) {                        \
-monitor_check_icount_interrupt();                          \
-}                                                              \
-interrupt_ack_irq(CPU_INT_STATUS);                             \
-if (!SKIP_CYCLE) {                                             \
-LOAD(reg_pc);                                              \
-CLK_INC();                                                 \
-LOAD(reg_pc);                                              \
-CLK_INC();                                                 \
-}                                                              \
-LOCAL_SET_BREAK(0);                                            \
-DO_IRQBRK();                                                   \
-SET_LAST_OPCODE(0);                                            \
-}                                                                  \
-}                                                                      \
-if (ik & (IK_TRAP | IK_RESET)) {                                       \
-if (ik & IK_TRAP) {                                                \
-EXPORT_REGISTERS();                                            \
-interrupt_do_trap(CPU_INT_STATUS, (WORD)reg_pc);               \
-IMPORT_REGISTERS();                                            \
-if (CPU_INT_STATUS->global_pending_int & IK_RESET) {           \
-ik |= IK_RESET;                                            \
-}                                                              \
-}                                                                  \
-if (ik & IK_RESET) {                                               \
-interrupt_ack_reset(CPU_INT_STATUS);                           \
-cpu_reset();                                                   \
-addr = LOAD(0xfffc);                                           \
-addr |= (LOAD(0xfffd) << 8);                                   \
-bank_start = bank_limit = 0; /* prevent caching */             \
-JUMP(addr);                                                    \
-DMA_ON_RESET;                                                  \
-}                                                                  \
-}                                                                      \
-if (ik & (IK_MONITOR | IK_DMA)) {                                      \
-if (ik & IK_MONITOR) {                                             \
-if (monitor_force_import(CALLER)) {                            \
-IMPORT_REGISTERS();                                        \
-}                                                              \
-if (monitor_mask[CALLER]) {                                    \
-EXPORT_REGISTERS();                                        \
-}                                                              \
-if (monitor_mask[CALLER] & (MI_STEP)) {                        \
-monitor_check_icount((WORD)reg_pc);                        \
-IMPORT_REGISTERS();                                        \
-}                                                              \
-if (monitor_mask[CALLER] & (MI_BREAK)) {                       \
-if (monitor_check_breakpoints(CALLER, (WORD)reg_pc)) {     \
-monitor_startup(CALLER);                               \
-IMPORT_REGISTERS();                                    \
-}                                                          \
-}                                                              \
-if (monitor_mask[CALLER] & (MI_WATCH)) {                       \
-monitor_check_watchpoints(LAST_OPCODE_ADDR, (WORD)reg_pc); \
-IMPORT_REGISTERS();                                        \
-}                                                              \
-}                                                                  \
-if (ik & IK_DMA) {                                                 \
-EXPORT_REGISTERS();                                            \
-DMA_FUNC;                                                      \
-interrupt_ack_dma(CPU_INT_STATUS);                             \
-IMPORT_REGISTERS();                                            \
-}                                                                  \
-}                                                                      \
+	do {                                                                       \
+		BYTE ik = (int_kind);                                                  \
+		WORD addr;                                                             \
+		\
+		if (ik & (IK_IRQ | IK_IRQPEND | IK_NMI)) {                             \
+			if ((ik & IK_NMI)                                                  \
+				&& interrupt_check_nmi_delay(CPU_INT_STATUS, CLK)) {           \
+				TRACE_NMI();                                                   \
+				if (monitor_mask[CALLER] & (MI_STEP)) {                        \
+					monitor_check_icount_interrupt();                          \
+				}                                                              \
+				interrupt_ack_nmi(CPU_INT_STATUS);                             \
+				if (!SKIP_CYCLE) {                                             \
+					LOAD(reg_pc);                                              \
+					CLK_INC();                                                 \
+					LOAD(reg_pc);                                              \
+					CLK_INC();                                                 \
+				}                                                              \
+				LOCAL_SET_BREAK(0);                                            \
+				PUSH(reg_pc >> 8);                                             \
+				CLK_INC();                                                     \
+				PUSH(reg_pc & 0xff);                                           \
+				CLK_INC();                                                     \
+				PUSH(LOCAL_STATUS());                                          \
+				CLK_INC();                                                     \
+				addr = LOAD(0xfffa);                                           \
+				CLK_INC();                                                     \
+				addr |= (LOAD(0xfffb) << 8);                                   \
+				CLK_INC();                                                     \
+				LOCAL_SET_INTERRUPT(1);                                        \
+				JUMP(addr);                                                    \
+				SET_LAST_OPCODE(0);                                            \
+			} else if ((ik & (IK_IRQ | IK_IRQPEND))                            \
+					&& (!LOCAL_INTERRUPT()                                    \
+						|| OPINFO_DISABLES_IRQ(LAST_OPCODE_INFO))             \
+					&& interrupt_check_irq_delay(CPU_INT_STATUS, CLK)) {      \
+				TRACE_IRQ();                                                   \
+				if (monitor_mask[CALLER] & (MI_STEP)) {                        \
+					monitor_check_icount_interrupt();                          \
+				}                                                              \
+				interrupt_ack_irq(CPU_INT_STATUS);                             \
+				if (!SKIP_CYCLE) {                                             \
+					LOAD(reg_pc);                                              \
+					CLK_INC();                                                 \
+					LOAD(reg_pc);                                              \
+					CLK_INC();                                                 \
+				}                                                              \
+				LOCAL_SET_BREAK(0);                                            \
+				DO_IRQBRK();                                                   \
+				SET_LAST_OPCODE(0);                                            \
+			}                                                                  \
+		}                                                                      \
+		if (ik & (IK_TRAP | IK_RESET)) {                                       \
+			if (ik & IK_TRAP) {                                                \
+				EXPORT_REGISTERS();                                            \
+				interrupt_do_trap(CPU_INT_STATUS, (WORD)reg_pc);               \
+				IMPORT_REGISTERS();                                            \
+				if (CPU_INT_STATUS->global_pending_int & IK_RESET) {           \
+					ik |= IK_RESET;                                            \
+				}                                                              \
+			}                                                                  \
+			if (ik & IK_RESET) {                                               \
+				interrupt_ack_reset(CPU_INT_STATUS);                           \
+				cpu_reset();                                                   \
+				addr = LOAD(0xfffc);                                           \
+				addr |= (LOAD(0xfffd) << 8);                                   \
+				bank_start = bank_limit = 0; /* prevent caching */             \
+				JUMP(addr);                                                    \
+				DMA_ON_RESET;                                                  \
+			}                                                                  \
+		}                                                                      \
+		if (ik & (IK_MONITOR | IK_DMA)) {                                      \
+			if (ik & IK_MONITOR) {                                             \
+				if (monitor_force_import(CALLER)) {                            \
+					IMPORT_REGISTERS();                                        \
+				}                                                              \
+				if (monitor_mask[CALLER]) {                                    \
+					EXPORT_REGISTERS();                                        \
+				}                                                              \
+				if (monitor_mask[CALLER] & (MI_STEP)) {                        \
+					monitor_check_icount((WORD)reg_pc);                        \
+					IMPORT_REGISTERS();                                        \
+				}                                                              \
+				if (monitor_mask[CALLER] & (MI_BREAK)) {                       \
+					if (monitor_check_breakpoints(CALLER, (WORD)reg_pc)) {     \
+						monitor_startup(CALLER);                               \
+						IMPORT_REGISTERS();                                    \
+					}                                                          \
+				}                                                              \
+				if (monitor_mask[CALLER] & (MI_WATCH)) {                       \
+					monitor_check_watchpoints(LAST_OPCODE_ADDR, (WORD)reg_pc); \
+					IMPORT_REGISTERS();                                        \
+				}                                                              \
+			}                                                                  \
+			if (ik & IK_DMA) {                                                 \
+				EXPORT_REGISTERS();                                            \
+				DMA_FUNC;                                                      \
+				interrupt_ack_dma(CPU_INT_STATUS);                             \
+				IMPORT_REGISTERS();                                            \
+			}                                                                  \
+		}                                                                      \
 } while (0)
 		
 		/* ------------------------------------------------------------------------- */
@@ -2806,6 +2810,9 @@ INC_PC(1);                \
 				viceCurrentC64PC = _c64d_new_pc;
 			}
 			
+			c64d_previous2_instruction_maincpu_clk = c64d_previous_instruction_maincpu_clk;
+			c64d_previous_instruction_maincpu_clk = maincpu_clk;
+			
 #ifdef CHECK_AND_RUN_ALTERNATE_CPU
 			CHECK_AND_RUN_ALTERNATE_CPU
 #endif
@@ -2823,11 +2830,12 @@ INC_PC(1);                \
 					interrupt_ack_irq(CPU_INT_STATUS);
 				}
 				
+				c64d_check_cpu_snapshot_manager_store();
+				
 				pending_interrupt = CPU_INT_STATUS->global_pending_int;
 				if (pending_interrupt != IK_NONE)
 				{
 					DO_INTERRUPT(pending_interrupt);
-					
 					
 					if ((pending_interrupt & IK_NMI)
 						&& (CLK >= (CPU_INT_STATUS->nmi_clk + INTERRUPT_DELAY)))
@@ -2891,7 +2899,8 @@ INC_PC(1);                \
 					// c64d check PC breakpoint after IRQ or trap
 					c64d_c64_check_pc_breakpoint(reg_pc);
 					viceCurrentC64PC = reg_pc;
-					c64d_debug_pause_check();
+					c64d_debug_pause_check(1);
+					debug_iterations_after_restore = 0;
 				}
 			}
 			
@@ -2905,6 +2914,8 @@ INC_PC(1);                \
 				memmap_state |= (MEMMAP_STATE_INSTR | MEMMAP_STATE_OPCODE);
 #endif
 				
+				debug_iterations_after_restore++;
+				debug_prev_iteration_pc = reg_pc;
 				SET_LAST_ADDR(reg_pc);
 				
 				// c64 debugger fix
@@ -2917,7 +2928,6 @@ INC_PC(1);                \
 					}
 				}
 				///
-
 				FETCH_OPCODE(opcode);
 				
 #ifdef FEATURE_CPUMEMHISTORY
@@ -3919,13 +3929,15 @@ INC_PC(1);                \
 			if (c64d_debug_mode == DEBUGGER_MODE_RUN_ONE_INSTRUCTION)
 			{
 				c64d_debug_mode = DEBUGGER_MODE_PAUSED;
+				LOGD("maincpuclk=%d previous=%d previous2=%d",
+					 maincpu_clk, c64d_previous_instruction_maincpu_clk, c64d_previous2_instruction_maincpu_clk);
 			}
 			
 			//c64d_c64_check_pc_breakpoint(reg_pc);
 			
 			viceCurrentC64PC = reg_pc;
 			
-			c64d_debug_pause_check();
+			c64d_debug_pause_check(0);
 		}
 		
 		//		if (c64d_debug_mode == C64_DEBUG_SHUTDOWN)
@@ -3953,6 +3965,7 @@ INC_PC(1);                \
 
 void c64d_set_debug_mode(int newMode)
 {
+	LOGD("c64d_set_debug_mode: %d", newMode);
 	c64d_debug_mode = newMode;
 }
 
@@ -3975,7 +3988,7 @@ int c64d_c64_do_cycle()
 			return vicii_cycle();
 		}
 		
-		c64d_debug_pause_check();
+		c64d_debug_pause_check(0);
 	}
 	
 	return vicii_cycle();
@@ -4139,6 +4152,109 @@ fail:
 	return -1;
 }
 
+void c64d_check_cpu_snapshot_manager_restore()
+{
+	if (c64d_check_snapshot_restore())
+	{
+		enum cpu_int pending_interrupt;
+
+//		EXPORT_REGISTERS();                                            \
+//		interrupt_do_trap(CPU_INT_STATUS, (WORD)reg_pc);               \
+//		IMPORT_REGISTERS();                                            \
+//		if (CPU_INT_STATUS->global_pending_int & IK_RESET) {           \
+//			ik |= IK_RESET;                                            \
+//		}
+		
+		LOGD("GLOBAL_REGS.pc=%04x", GLOBAL_REGS.pc);
+		
+		IMPORT_REGISTERS();
+		viceCurrentC64PC = maincpu_get_pc();
+		
+		LOGD("viceCurrentC64PC=%04x reg_pc=%04x", viceCurrentC64PC, reg_pc);
+		
+		// TODO: this is copy-pasted from CPU emulation, make generic function
+		pending_interrupt = CPU_INT_STATUS->global_pending_int;
+		if (pending_interrupt != IK_NONE)
+		{
+			DO_INTERRUPT(pending_interrupt);
+			
+			if ((pending_interrupt & IK_NMI)
+				&& (CLK >= (CPU_INT_STATUS->nmi_clk + INTERRUPT_DELAY)))
+			{
+				c64d_c64_check_irqnmi_breakpoint();
+				viceCurrentC64PC = reg_pc;
+			}
+			
+			// c64 debugger - check interrupt breakpoints when irq is ack'ed
+			if ((pending_interrupt & IK_IRQ) && ((reg_p & P_INTERRUPT) == P_INTERRUPT))
+			{
+				if (c64d_c64_is_checking_irq_breakpoints_enabled() == 1)
+				{
+					if (vicii.c64d_irq_flag == 1)
+					{
+						c64d_c64_check_irqvic_breakpoint();
+						vicii.c64d_irq_flag = 0;
+						viceCurrentC64PC = reg_pc;
+					}
+					
+					if (machine_context.cia1->irq_enabled)
+					{
+						if (machine_context.cia1->c64d_irq_flag == 1)
+						{
+							c64d_c64_check_irqcia_breakpoint(1);
+							machine_context.cia1->c64d_irq_flag = 0;
+							viceCurrentC64PC = reg_pc;
+						}
+					}
+					
+					if (machine_context.cia2->irq_enabled)
+					{
+						if (machine_context.cia2->c64d_irq_flag == 1)
+						{
+							c64d_c64_check_irqcia_breakpoint(2);
+							machine_context.cia2->c64d_irq_flag = 0;
+							viceCurrentC64PC = reg_pc;
+						}
+					}
+				}
+			}
+			/////
+			
+			if (!(CPU_INT_STATUS->global_pending_int & IK_IRQ)
+				&& CPU_INT_STATUS->global_pending_int & IK_IRQPEND) {
+				CPU_INT_STATUS->global_pending_int &= ~IK_IRQPEND;
+			}
+			while (CLK >= alarm_context_next_pending_clk(ALARM_CONTEXT)) {
+				alarm_context_dispatch(ALARM_CONTEXT, CLK);
+			}
+		}
+
+		
+		
+		
+			/* OLD
+		if (!(CPU_INT_STATUS->global_pending_int & IK_IRQ)
+			&& CPU_INT_STATUS->global_pending_int & IK_IRQPEND) {
+			CPU_INT_STATUS->global_pending_int &= ~IK_IRQPEND;
+		}
+		while (CLK >= alarm_context_next_pending_clk(ALARM_CONTEXT)) {
+			alarm_context_dispatch(ALARM_CONTEXT, CLK);
+		}
+			 */
+		
+		LOGD("after alarm_context_dispatch: viceCurrentC64PC=%04x reg_pc=%04x cycle=", viceCurrentC64PC, reg_pc, maincpu_clk);
+		
+		return;
+	}
+}
+
+void c64d_check_cpu_snapshot_manager_store()
+{
+	// check snapshot interval by snapshot manager
+	EXPORT_REGISTERS();
+	c64d_check_snapshot_interval();
+	IMPORT_REGISTERS();
+}
 
 
 /// "../mainc64cpu.c" ends here

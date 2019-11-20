@@ -59,13 +59,8 @@ void CViewC64EmulationCounters::RenderEmulationCounters(float px, float py, floa
 	sprintf(buf, "FRAME: %9d", frameNum);
 	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 
-	uint8 machineType = viewC64->debugInterfaceC64->GetC64MachineType();
-	float emulationFPS = 50.0f;
-	if (machineType == MACHINE_TYPE_NTSC)
-	{
-		emulationFPS = 60.0f;
-	}
-
+	float emulationFPS = viewC64->debugInterfaceC64->GetEmulationFPS();
+	
 	float t = (float)frameNum / emulationFPS;
 	float mins = floor(t / 60.0f);
 	float secs = t - mins*60.0f;

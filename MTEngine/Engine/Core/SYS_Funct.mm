@@ -257,7 +257,7 @@ void SYS_PrintMemoryUsed()
 	PPROCESS_MEMORY_COUNTERS pMemCountr = new PROCESS_MEMORY_COUNTERS;
 	if( GetProcessMemoryInfo(GetCurrentProcess(), pMemCountr, sizeof(PROCESS_MEMORY_COUNTERS)))
 	{
-		LOGF(DBGLVL_MEMORY, "MEMORY=%d", pMemCountr->WorkingSetSize);
+		LOGM("MEMORY=%d", pMemCountr->WorkingSetSize);
 	}
 	delete pMemCountr;
 #elif !defined(ANDROID) && !defined(IPHONE)

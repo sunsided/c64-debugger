@@ -5,6 +5,12 @@
 
 class C64CharMulti;
 
+class C64VicDisplayCanvasMultiBitmapMissingIndexes
+{
+public:
+	int xc, yc, index;
+};
+
 class C64VicDisplayCanvasMultiBitmap : public C64VicDisplayCanvas
 {
 public:

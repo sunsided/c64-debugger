@@ -674,7 +674,7 @@ int CViewC64Screen::GetJoystickAxis(u32 keyCode, bool isShift, bool isAlt, bool 
 
 bool CViewC64Screen::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
-	LOGD(".......... CViewC64Screen::KeyDown: keyCode=%d isShift=%s isAlt=%s isControl=%s", keyCode,
+	LOGG(".......... CViewC64Screen::KeyDown: keyCode=%d isShift=%s isAlt=%s isControl=%s", keyCode,
 		 STRBOOL(isShift), STRBOOL(isAlt), STRBOOL(isControl));
 	
 	if (viewC64->currentScreenLayoutId == SCREEN_LAYOUT_C64_AND_ATARI)
@@ -743,7 +743,7 @@ extern "C"
 
 bool CViewC64Screen::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
-	LOGD(".......... CViewC64Screen::KeyUp: keyCode=%d isShift=%s isAlt=%s isControl=%s  shiftDown=%s", keyCode,
+	LOGG(".......... CViewC64Screen::KeyUp: keyCode=%d isShift=%s isAlt=%s isControl=%s  shiftDown=%s", keyCode,
 		 STRBOOL(isShift), STRBOOL(isAlt), STRBOOL(isControl), STRBOOL(shiftDown));
 	
 	if (viewC64->currentScreenLayoutId == SCREEN_LAYOUT_C64_AND_ATARI)
@@ -795,20 +795,20 @@ bool CViewC64Screen::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl
 	{
 		if (guiMain->isLeftShiftPressed)
 		{
-			LOGD("workaround: send keydown MTKEY_LSHIFT");
+			LOGI("workaround: send keydown MTKEY_LSHIFT");
 			debugInterface->KeyboardDown(MTKEY_LSHIFT);
 			shiftDown = true;
 		}
 		if (guiMain->isRightShiftPressed)
 		{
-			LOGD("workaround: send keydown MTKEY_RSHIFT");
+			LOGI("workaround: send keydown MTKEY_RSHIFT");
 			debugInterface->KeyboardDown(MTKEY_RSHIFT);
 			shiftDown = true;
 		}
 	}
 	else if (!isShift && shiftDown)
 	{
-		LOGD("workaround: send key UP L/R SHIFT");
+		LOGI("workaround: send key UP L/R SHIFT");
 		c64d_keyboard_force_key_up_latch(MTKEY_LSHIFT);
 		c64d_keyboard_force_key_up_latch(MTKEY_RSHIFT);
 		shiftDown = false;
@@ -816,7 +816,7 @@ bool CViewC64Screen::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl
 	
 	if ((keyCode == MTKEY_LALT || keyCode == MTKEY_RALT) && !isShift)
 	{
-		LOGD("workaround 2: send key UP L/R SHIFT");
+		LOGI("workaround 2: send key UP L/R SHIFT");
 		c64d_keyboard_force_key_up_latch(MTKEY_LSHIFT);
 		c64d_keyboard_force_key_up_latch(MTKEY_RSHIFT);
 		shiftDown = false;

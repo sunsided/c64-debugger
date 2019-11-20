@@ -92,8 +92,11 @@ void ESC_Remove(UBYTE esc_code)
 	esc_function[esc_code] = NULL;
 }
 
+int c64d_is_cpu_in_jam_state;
+
 void ESC_Run(UBYTE esc_code)
 {
+	char buf[256];
 	if (esc_address[esc_code] == CPU_regPC - 2 && esc_function[esc_code] != NULL) {
 		esc_function[esc_code]();
 		return;
@@ -101,11 +104,12 @@ void ESC_Run(UBYTE esc_code)
 	
 	CPU_cim_encountered = 1;
 	
-//	char buf[256];
-//	sprintf(buf, "Invalid ESC code %02x at address %04x", esc_code, CPU_regPC - 2);
+	sprintf(buf, "Invalid ESC code %02x at address %04x", esc_code, CPU_regPC - 2);
 	
-	Log_print("Invalid ESC code %02x at address %04x", esc_code, CPU_regPC - 2);
-	c64d_show_message("CPU JAM has occured");
+//	Log_print("Invalid ESC code %02x at address %04x", esc_code, CPU_regPC - 2);
+	
+	c64d_is_cpu_in_jam_state = 1;
+	c64d_show_message(buf); //"CPU JAM has occured");
 
 	
 	/*

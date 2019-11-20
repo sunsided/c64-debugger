@@ -10,7 +10,7 @@ CGuiViewResourceManager::CGuiViewResourceManager(GLfloat posX, GLfloat posY, GLf
 {
 	this->name = "CGuiViewResourceManager";
 	
-	this->mutex = new CSlrMutex();
+	this->mutex = new CSlrMutex("CGuiViewResourceManager");
 	
 	viewDataTable = new CGuiViewDataTable(10, 15, posZ, SCREEN_WIDTH-20, SCREEN_HEIGHT-20);
 	this->AddGuiElement(viewDataTable);

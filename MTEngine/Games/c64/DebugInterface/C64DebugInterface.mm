@@ -61,6 +61,11 @@ CSlrString *C64DebugInterface::GetPlatformNameString()
 	return new CSlrString("Commodore 64");
 }
 
+float C64DebugInterface::GetEmulationFPS()
+{
+	return -1;
+}
+
 void C64DebugInterface::ResetMainCpuCycleCounter()
 {
 	CDebugInterface::ResetMainCpuCycleCounter();
@@ -549,6 +554,42 @@ bool C64DebugInterface::LoadFullSnapshot(char *filePath)
 void C64DebugInterface::SaveFullSnapshot(char *filePath)
 {
 	SYS_FatalExit("C64DebugInterface::SaveFullSnapshot");	
+}
+
+// this call should be synced with CPU IRQ so snapshot store or restore is allowed
+bool C64DebugInterface::LoadChipsSnapshotSynced(CByteBuffer *byteBuffer)
+{
+	SYS_FatalExit("C64DebugInterface::LoadChipsSnapshotSynced");
+	return false;
+}
+
+bool C64DebugInterface::SaveChipsSnapshotSynced(CByteBuffer *byteBuffer)
+{
+	SYS_FatalExit("C64DebugInterface::SaveChipsSnapshotSynced");
+	return false;
+}
+
+bool C64DebugInterface::LoadDiskDataSnapshotSynced(CByteBuffer *byteBuffer)
+{
+	SYS_FatalExit("C64DebugInterface::LoadDiskDataSnapshotSynced");
+	return false;
+}
+
+bool C64DebugInterface::SaveDiskDataSnapshotSynced(CByteBuffer *byteBuffer)
+{
+	SYS_FatalExit("C64DebugInterface::SaveDiskDataSnapshotSynced");
+	return false;
+}
+
+bool C64DebugInterface::IsDriveDirtyForSnapshot()
+{
+	SYS_FatalExit("C64DebugInterface::IsDriveDirtyForSnapshot");
+	return false;
+}
+
+void C64DebugInterface::ClearDriveDirtyForSnapshotFlag()
+{
+	SYS_FatalExit("C64DebugInterface::ClearDriveDirtyForSnapshotFlag");
 }
 
 void C64DebugInterface::GetVICColors(uint8 *cD021, uint8 *cD022, uint8 *cD023, uint8 *cD025, uint8 *cD026, uint8 *cD027, uint8 *cD800)
