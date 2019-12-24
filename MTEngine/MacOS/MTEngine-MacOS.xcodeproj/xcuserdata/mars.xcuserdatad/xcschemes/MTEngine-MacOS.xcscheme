@@ -41,7 +41,7 @@
       </AdditionalOptions>
    </TestAction>
    <LaunchAction
-      buildConfiguration = "Debug"
+      buildConfiguration = "Release"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
@@ -67,6 +67,10 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "/Users/mars/develop/MTEngine/docs/C64Debugger/other/debuginfo-test/sprites-full1.prg"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "/Users/mars/Desktop/furroy/hired2.prg"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
@@ -103,11 +107,15 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-breakpoints"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "/Users/mars/Desktop/breaks.txt"
-            isEnabled = "YES">
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "/Users/mars/Desktop/furroy/breakpoints.txt"
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-vicesymbols"
@@ -115,6 +123,10 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "/Users/mars/develop/MTEngine/tools/_other/c64/KickAss/source.vs"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "/Users/mars/Desktop/hired2.vs"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument

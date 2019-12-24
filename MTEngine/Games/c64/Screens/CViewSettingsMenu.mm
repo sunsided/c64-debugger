@@ -969,6 +969,32 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 																kbsResetCpuCycleAndFrameCounters, tr, tg, tb);
 		menuItemSubMenuEmulation->AddMenuItem(menuItemResetCpuCycleAndFrameCounters);
 		
+		// snapshots manager
+		menuItemC64SnapshotsManagerIsActive = new CViewC64MenuItemOption(fontHeight, new CSlrString("Record snapshots history: "),
+																	 NULL, tr, tg, tb, optionsYesNo, font, fontScale);
+		menuItemC64SnapshotsManagerIsActive->SetSelectedOption(c64SettingsSnapshotsRecordIsActive, false);
+		menuItemSubMenuEmulation->AddMenuItem(menuItemC64SnapshotsManagerIsActive);
+
+		menuItemC64TimelineIsActive = new CViewC64MenuItemOption(fontHeight, new CSlrString("Hover bottom to see timeline: "),
+																 NULL, tr, tg, tb, optionsYesNo, font, fontScale);
+		menuItemC64TimelineIsActive->SetSelectedOption(c64SettingsTimelineIsActive, false);
+		menuItemSubMenuEmulation->AddMenuItem(menuItemC64TimelineIsActive);
+
+		menuItemC64SnapshotsManagerStoreInterval = new CViewC64MenuItemFloat(fontHeight, new CSlrString("Snapshots interval (frames): "),
+																  NULL, tr, tg, tb,
+																  1.0f, 200.0f, 1.00f, font, fontScale);
+		menuItemC64SnapshotsManagerStoreInterval->numDecimalsDigits = 0;
+		menuItemC64SnapshotsManagerStoreInterval->SetValue(c64SettingsSnapshotsIntervalNumFrames, false);
+		menuItemSubMenuEmulation->AddMenuItem(menuItemC64SnapshotsManagerStoreInterval);
+
+		menuItemC64SnapshotsManagerLimit = new CViewC64MenuItemFloat(fontHeight * 2.0f, new CSlrString("Max number of snapshots: "),
+																			 NULL, tr, tg, tb,
+																			 100.0f, 20000.0f, 100.00f, font, fontScale);
+		menuItemC64SnapshotsManagerLimit->numDecimalsDigits = 0;
+		menuItemC64SnapshotsManagerLimit->SetValue(c64SettingsSnapshotsLimit, false);
+		menuItemSubMenuEmulation->AddMenuItem(menuItemC64SnapshotsManagerLimit);
+
+		
 		// champ profiler output
 		isProfilingC64 = false;
 		menuItemC64ProfilerFilePath = new CViewC64MenuItem(fontHeight*2, NULL,
@@ -1290,12 +1316,12 @@ void CViewSettingsMenu::MenuCallbackItemChanged(CGuiViewMenuItem *menuItem)
 	{
 		if (menuItemUseKeyboardAsJoystick->selectedOption == 0)
 		{
-			c64SettingsJoystickIsOn = false;
+			c64SettingsUseKeyboardAsJoystick = false;
 			guiMain->ShowMessage("Joystick is OFF");
 		}
 		else
 		{
-			c64SettingsJoystickIsOn = true;
+			c64SettingsUseKeyboardAsJoystick = true;
 			guiMain->ShowMessage("Joystick is ON");
 		}
 		C64DebuggerStoreSettings();
@@ -1521,6 +1547,27 @@ void CViewSettingsMenu::MenuCallbackItemChanged(CGuiViewMenuItem *menuItem)
 		C64DebuggerSetSetting("UseOnlyFirstCPU", &(v));
 		guiMain->ShowMessage("Please restart C64 Debugger to apply configuration.");
 	}
+	else if (menuItem == menuItemC64SnapshotsManagerIsActive)
+	{
+		bool v = menuItemC64SnapshotsManagerIsActive->selectedOption == 0 ? false : true;
+		C64DebuggerSetSetting("SnapshotsManagerIsActive", &(v));
+	}
+	else if (menuItem == menuItemC64SnapshotsManagerStoreInterval)
+	{
+		i32 v = (i32)menuItemC64SnapshotsManagerStoreInterval->value;
+		C64DebuggerSetSetting("SnapshotsManagerStoreInterval", &v);
+	}
+	else if (menuItem == menuItemC64SnapshotsManagerLimit)
+	{
+		i32 v = (i32)menuItemC64SnapshotsManagerLimit->value;
+		C64DebuggerSetSetting("SnapshotsManagerLimit", &v);
+	}
+	else if (menuItem == menuItemC64TimelineIsActive)
+	{
+		bool v = menuItemC64TimelineIsActive->selectedOption == 0 ? false : true;
+		C64DebuggerSetSetting("TimelineIsActive", &(v));
+	}
+	
 	else if (menuItem == menuItemVicStateRecordingMode)
 	{
 		int sel = menuItemVicStateRecordingMode->selectedOption;

@@ -25,7 +25,6 @@
 #include "CGuiViewResourceManager.h"
 #include "RES_Embedded.h"
 #include "CSlrFileFromOS.h"
-#include <pthread.h>
 #include <algorithm>
 
 #define LOGRD LOGR

@@ -10,7 +10,7 @@
 #ifndef _GUI_STARTUP_
 #define _GUI_STARTUP_
 
-#define GAP_WIDTH 2
+#define GUI_GAP_WIDTH 2
 
 #include "SYS_Defs.h"
 #include "SYS_Main.h"
@@ -130,7 +130,6 @@ public:
 	CSlrImage *imgConsoleFonts;
 	CSlrFontBitmap *fntConsoleInverted;
 	CSlrImage *imgConsoleInvertedFonts;
-	//CSlrImage *imgRabLogo;
 
 	CSlrImage *imgFontDefault;
 	CSlrFont *fntEngineDefault;

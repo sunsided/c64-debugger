@@ -19,8 +19,6 @@
 CGuiViewSelectFile::CGuiViewSelectFile(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, bool cancelButton, CGuiViewSelectFileCallback *callback)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
 {
-	pthread_mutex_init(&renderMutex, NULL);
-
 	this->files = NULL;
 
 	this->callback = callback;
@@ -72,7 +70,6 @@ void CGuiViewSelectFile::SetFont(CSlrFont *font, float fontScale)
 CGuiViewSelectFile::~CGuiViewSelectFile()
 {
 	httpFileUploadedCallbacks.remove(this);
-	pthread_mutex_destroy(&renderMutex);
 }
 
 void CGuiViewSelectFile::Init(std::list<UTFString *> *extensions)
@@ -517,12 +514,12 @@ bool CGuiViewSelectFile::DoScrollWheel(float deltaX, float deltaY)
 
 void CGuiViewSelectFile::LockRenderMutex()
 {
-	pthread_mutex_lock(&this->renderMutex);
+	guiMain->LockMutex();
 }
 
 void CGuiViewSelectFile::UnlockRenderMutex()
 {
-	pthread_mutex_unlock(&this->renderMutex);
+	guiMain->UnlockMutex();
 }
 
 void CGuiViewSelectFileCallback::FileSelected(UTFString *filePath)

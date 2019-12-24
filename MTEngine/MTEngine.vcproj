@@ -11552,6 +11552,14 @@
 							RelativePath=".\Games\c64\Views\CViewSourceCode.mm"
 							>
 						</File>
+						<File
+							RelativePath=".\Games\c64\Views\CViewTimeline.h"
+							>
+						</File>
+						<File
+							RelativePath=".\Games\c64\Views\CViewTimeline.mm"
+							>
+						</File>
 						<Filter
 							Name="VicDisplay"
 							>

@@ -12,7 +12,6 @@
 
 #include "DBG_Log.h"
 #include "SYS_Defs.h"
-#include <pthread.h>
 
 #include <AudioUnit/AudioUnit.h>
 #import <AudioToolbox/AudioToolbox.h>

@@ -17,7 +17,6 @@
 #include "CSlrImageTexture.h"
 #include "DBG_Log.h"
 //#include <math.h>
-#include <pthread.h>
 #include "SYS_Defs.h"
 #include "SYS_Main.h"
 #include "VID_GLViewController.h"
@@ -166,8 +165,6 @@ CGuiListTree::CGuiListTree(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat siz
 	LOGG("CGuiListTree::CGuiListTree");
 	this->name = "CGuiListTree";
 
-	//pthread_mutex_init(&renderMutex, NULL);
-
 	this->callback = callback;
 
 	this->font = font;
@@ -210,8 +207,6 @@ CGuiListTree::CGuiListTree(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat siz
 	LOGG("CGuiListTree::CGuiListTree");
 	this->name = "CGuiListTree";
 
-	//pthread_mutex_init(&renderMutex, NULL);
-
 	this->callback = callback;
 
 	this->font = font;
@@ -249,7 +244,6 @@ CGuiListTree::CGuiListTree(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat siz
 
 CGuiListTree::~CGuiListTree()
 {
-	//pthread_mutex_destroy(&renderMutex);
 }
 
 void CGuiListTree::Init(std::vector<CGuiListTreeElement *> *elements, bool deleteElements)
@@ -827,7 +821,7 @@ void CGuiListTree::Render()
 		 (guiMain->imgBkgMenu, drawX, drawY-1, drawX, drawY-1, VIEW_WIDTH-FONT_WIDTH*2-GAP_WIDTH*3-4, FONT_HEIGHT);
 		 */
 
-		drawX += GAP_WIDTH;
+		drawX += GUI_GAP_WIDTH;
 
 		if (elemNum < numElements)
 		{
@@ -1065,12 +1059,10 @@ void CGuiListTree::ElementSelected()
 void CGuiListTree::LockRenderMutex()
 {
 	guiMain->LockMutex();
-	//pthread_mutex_lock(&this->renderMutex);
 }
 
 void CGuiListTree::UnlockRenderMutex()
 {
 	guiMain->UnlockMutex();
-	//pthread_mutex_unlock(&this->renderMutex);
 }
 

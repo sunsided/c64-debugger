@@ -322,36 +322,12 @@ CViewMainMenu::CViewMainMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 	menuItemAbout = new CViewC64MenuItem(fontHeight, new CSlrString("About..."), NULL, tr, tg, tb);
 	viewMenu->AddMenuItem(menuItemAbout);
 
-	
-	
-	kbsStepOverInstruction = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Step over instruction", MTKEY_F10, false, false, false);
-	viewC64->keyboardShortcuts->AddShortcut(kbsStepOverInstruction);
-	
-	kbsStepOneCycle = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Step one cycle", MTKEY_F10, true, false, false);
-	viewC64->keyboardShortcuts->AddShortcut(kbsStepOneCycle);
-
-	kbsRunContinueEmulation = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Run/Continue code", MTKEY_F11, false, false, false);
-	viewC64->keyboardShortcuts->AddShortcut(kbsRunContinueEmulation);
-
-	kbsIsDataDirectlyFromRam = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Show data from RAM", 'm', false, false, true);
-	viewC64->keyboardShortcuts->AddShortcut(kbsIsDataDirectlyFromRam);
-
-	kbsToggleMulticolorImageDump = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Show multicolor data", 'k', false, false, true);
-	viewC64->keyboardShortcuts->AddShortcut(kbsToggleMulticolorImageDump);
-
-	kbsShowRasterBeam = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Show Raster Beam", 'e', false, false, true);
-	viewC64->keyboardShortcuts->AddShortcut(kbsShowRasterBeam);
-
 	//
 	kbsMoveFocusToNextView = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Move focus to next view", MTKEY_TAB, false, false, false);
 	viewC64->keyboardShortcuts->AddShortcut(kbsMoveFocusToNextView);
 
 	kbsMoveFocusToPreviousView = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Move focus to previous view", MTKEY_TAB, true, false, false);
 	viewC64->keyboardShortcuts->AddShortcut(kbsMoveFocusToPreviousView);
-	
-	//
-	kbsSaveScreenImageAsPNG = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Save screenshot as PNG", 'p', true, false, true);
-	viewC64->keyboardShortcuts->AddShortcut(kbsSaveScreenImageAsPNG);
 	
 	viewMenu->InitSelection();
 	
@@ -926,7 +902,7 @@ bool CViewMainMenu::LoadPRG(CSlrString *path, bool autoStart, bool updatePRGFold
 {
 	path->DebugPrint("CViewMainMenu::LoadPRG: path=");
 	
-	LOGD("   >>> LoadPRG, autostart=%d forceFastReset=%d", autoStart);
+	LOGD("   >>> LoadPRG, autostart=%d forceFastReset=%d", autoStart, forceFastReset);
 	
 	// TODO: p00 http://vice-emu.sourceforge.net/vice_15.html#SEC299
 	

@@ -1460,8 +1460,10 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	LOGD("SetThreadPriority");
 #endif
 
-	HANDLE currentThread = GetCurrentThread();
-	SetThreadPriority(currentThread, THREAD_PRIORITY_LOWEST);
+	// this can stall the UI thread
+	//HANDLE currentThread = GetCurrentThread();
+//	SetThreadPriority(currentThread, THREAD_PRIORITY_LOWEST);
+	//SetThreadPriority(currentThread, THREAD_PRIORITY_ABOVE_NORMAL);
 
 #ifdef LOG_SYSCALLS
 	LOGD("SetVSyncOn");

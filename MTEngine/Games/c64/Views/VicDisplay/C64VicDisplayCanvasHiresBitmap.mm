@@ -7,6 +7,7 @@
 #include "CImageData.h"
 #include "C64Tools.h"
 #include "CViewVicEditor.h"
+#include "CViewC64VicControl.h"
 #include "CViewC64Palette.h"
 
 C64VicDisplayCanvasHiresBitmap::C64VicDisplayCanvasHiresBitmap(CViewC64VicDisplay *vicDisplay)
@@ -32,46 +33,89 @@ void C64VicDisplayCanvasHiresBitmap::RefreshScreen(vicii_cycle_state_t *viciiSta
 	
 	vicDisplay->GetViciiPointers(this->viciiState, &screen_ptr, &color_ram_ptr, &chargen_ptr, &bitmap_low_ptr, &bitmap_high_ptr, colors);
 	
-	u8 bitmap;
-	
-	u8 bgcolor;
-	u8 bgColorR, bgColorG, bgColorB;
-	u8 fgcolor;
-	u8 fgColorR, fgColorG, fgColorB;
-	
-	for (int i = 0; i < 25; i++)
+	if (vicDisplay->viewVicControl && vicDisplay->viewVicControl->forceGrayscaleColors)
 	{
-		for (int j = 0; j < 40; j++)
+		u8 bitmap;
+		
+		u8 bgColorR = 0, bgColorG = 0, bgColorB = 0;
+		u8 fgColorR = 255, fgColorG = 255, fgColorB = 255;
+		
+		for (int i = 0; i < 25; i++)
 		{
-			bgcolor = screen_ptr[(i * 40) + j] & 0x0F;
-			fgcolor = (screen_ptr[(i * 40) + j] & 0xF0) >> 4;
-			
-			debugInterface->GetCBMColor(bgcolor, &bgColorR, &bgColorG, &bgColorB);
-			debugInterface->GetCBMColor(fgcolor, &fgColorR, &fgColorG, &fgColorB);
-			
-			for (int k = 0; k < 8; k++)
+			for (int j = 0; j < 40; j++)
 			{
-				if (((i * 40 * 8) + (j * 8) + k) < 4096)
+				for (int k = 0; k < 8; k++)
 				{
-					
-					bitmap = bitmap_low_ptr[(i * 40 * 8) + (j * 8) + k];
-				}
-				else
-				{
-					bitmap = bitmap_high_ptr[((i * 40 * 8) + (j * 8) + k) - 4096];
-				}
-				for (int l = 0; l < 8; l++)
-				{
-					if (bitmap & (1 << (7 - l)))
+					if (((i * 40 * 8) + (j * 8) + k) < 4096)
 					{
-						//data->colormap[(i * 320 * 8) + (j * 8) + (k * 320) + l] = fgcolor;
-						imageDataScreen->SetPixelResultRGBA(j*8 + l, i*8 + k, fgColorR, fgColorG, fgColorB, foregroundColorAlpha);
 						
+						bitmap = bitmap_low_ptr[(i * 40 * 8) + (j * 8) + k];
 					}
 					else
 					{
-						//data->colormap[(i * 320 * 8) + (j * 8) + (k * 320) + l] = bgcolor;
-						imageDataScreen->SetPixelResultRGBA(j*8 + l, i*8 + k, bgColorR, bgColorG, bgColorB, backgroundColorAlpha);
+						bitmap = bitmap_high_ptr[((i * 40 * 8) + (j * 8) + k) - 4096];
+					}
+					for (int l = 0; l < 8; l++)
+					{
+						if (bitmap & (1 << (7 - l)))
+						{
+							//data->colormap[(i * 320 * 8) + (j * 8) + (k * 320) + l] = fgcolor;
+							imageDataScreen->SetPixelResultRGBA(j*8 + l, i*8 + k, fgColorR, fgColorG, fgColorB, foregroundColorAlpha);
+							
+						}
+						else
+						{
+							//data->colormap[(i * 320 * 8) + (j * 8) + (k * 320) + l] = bgcolor;
+							imageDataScreen->SetPixelResultRGBA(j*8 + l, i*8 + k, bgColorR, bgColorG, bgColorB, backgroundColorAlpha);
+						}
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		u8 bitmap;
+		
+		u8 bgcolor;
+		u8 bgColorR, bgColorG, bgColorB;
+		u8 fgcolor;
+		u8 fgColorR, fgColorG, fgColorB;
+		
+		for (int i = 0; i < 25; i++)
+		{
+			for (int j = 0; j < 40; j++)
+			{
+				bgcolor = screen_ptr[(i * 40) + j] & 0x0F;
+				fgcolor = (screen_ptr[(i * 40) + j] & 0xF0) >> 4;
+				
+				debugInterface->GetCBMColor(bgcolor, &bgColorR, &bgColorG, &bgColorB);
+				debugInterface->GetCBMColor(fgcolor, &fgColorR, &fgColorG, &fgColorB);
+				
+				for (int k = 0; k < 8; k++)
+				{
+					if (((i * 40 * 8) + (j * 8) + k) < 4096)
+					{
+						
+						bitmap = bitmap_low_ptr[(i * 40 * 8) + (j * 8) + k];
+					}
+					else
+					{
+						bitmap = bitmap_high_ptr[((i * 40 * 8) + (j * 8) + k) - 4096];
+					}
+					for (int l = 0; l < 8; l++)
+					{
+						if (bitmap & (1 << (7 - l)))
+						{
+							//data->colormap[(i * 320 * 8) + (j * 8) + (k * 320) + l] = fgcolor;
+							imageDataScreen->SetPixelResultRGBA(j*8 + l, i*8 + k, fgColorR, fgColorG, fgColorB, foregroundColorAlpha);
+							
+						}
+						else
+						{
+							//data->colormap[(i * 320 * 8) + (j * 8) + (k * 320) + l] = bgcolor;
+							imageDataScreen->SetPixelResultRGBA(j*8 + l, i*8 + k, bgColorR, bgColorG, bgColorB, backgroundColorAlpha);
+						}
 					}
 				}
 			}

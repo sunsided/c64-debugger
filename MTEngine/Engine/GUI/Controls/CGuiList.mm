@@ -34,8 +34,6 @@ CGuiList::CGuiList(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 
 	this->listUpGap = 1.0f;
 	this->elementsGap = 2.0f;
-	
-	pthread_mutex_init(&renderMutex, NULL);
 
 	this->callback = callback;
 
@@ -92,7 +90,6 @@ void CGuiList::SetFont(CSlrFont *font, float fontSize)
 
 CGuiList::~CGuiList()
 {
-	pthread_mutex_destroy(&renderMutex);
 }
 
 void CGuiList::Init(char **elements, int numElements, bool deleteElements)
@@ -552,7 +549,7 @@ void CGuiList::Render()
 		 (guiMain->imgBkgMenu, drawX, drawY-1, drawX, drawY-1, VIEW_WIDTH-FONT_WIDTH*2-GAP_WIDTH*3-4, FONT_HEIGHT);
 		 */
 
-		drawX += GAP_WIDTH;
+		drawX += GUI_GAP_WIDTH;
 
 		if (elemNum < numElements)
 		{
@@ -725,11 +722,11 @@ void CGuiList::RestoreListPosition()
 
 void CGuiList::LockRenderMutex()
 {
-	pthread_mutex_lock(&this->renderMutex);
+	guiMain->LockMutex();
 }
 
 void CGuiList::UnlockRenderMutex()
 {
-	pthread_mutex_unlock(&this->renderMutex);
+	guiMain->UnlockMutex();
 }
 

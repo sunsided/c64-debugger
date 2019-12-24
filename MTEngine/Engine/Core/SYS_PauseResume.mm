@@ -1,11 +1,11 @@
 #include "DBG_Log.h"
 #include "SYS_PauseResume.h"
 #include "VID_GLViewController.h"
-#include <pthread.h>
+#include "SYS_Threading.h"
 #include <list>
 
 std::list<CApplicationPauseResumeListener *> pauseResumeListeners;
-pthread_mutex_t pauseResumeListenersMutex;
+CSlrMutex *pauseResumeListenersMutex;
 static volatile bool sysPauseResumeInitDone = false;
 static volatile byte sysApplicationState = APPLICATION_STATE_UNKNOWN;
 
@@ -19,7 +19,8 @@ void SYS_InitApplicationPauseResume()
 
 		LOGM("SYS_InitApplicationPauseResume()");
 		pauseResumeListeners.clear();
-		pthread_mutex_init(&pauseResumeListenersMutex, NULL);
+		
+		pauseResumeListenersMutex = new CSlrMutex("pauseResumeListenersMutex");
 		
 		sysApplicationState = APPLICATION_STATE_INIT;
 	}
@@ -31,7 +32,7 @@ void LockPauseResumeListenersListMutex()
 	LOGD("LockPauseResumeListenersListMutex");
 #endif
 	
-	pthread_mutex_lock(&pauseResumeListenersMutex);
+	pauseResumeListenersMutex->Lock();
 }
 
 void UnlockPauseResumeListenersListMutex()
@@ -40,7 +41,7 @@ void UnlockPauseResumeListenersListMutex()
 	LOGD("UnlockPauseResumeListenersListMutex");
 #endif
 	
-	pthread_mutex_unlock(&pauseResumeListenersMutex);
+	pauseResumeListenersMutex->Unlock();
 }
 
 void SYS_ApplicationAddOpenFileAtStartup(CSlrString *filePath)

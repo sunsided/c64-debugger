@@ -32,6 +32,7 @@
 #include "CViewVicEditorLayers.h"
 #include "CViewVicEditorCreateNewPicture.h"
 #include "CGuiViewToolBox.h"
+#include "CViewTimeline.h"
 
 #include "CGuiMain.h"
 
@@ -495,6 +496,15 @@ void CViewVicEditor::Render()
 	
 	CGuiView::Render();
 	
+	// TODO: timeline for C64 only now
+	if (c64SettingsSnapshotsRecordIsActive && c64SettingsTimelineIsActive)
+	{
+		if (viewC64->viewTimeline->IsInside(guiMain->mousePosX, guiMain->mousePosY))
+		{
+			viewC64->viewTimeline->Render();
+		}
+	}
+
 	guiMain->UnlockMutex();
 
 	/////////////
@@ -821,6 +831,16 @@ bool CViewVicEditor::DoTap(GLfloat x, GLfloat y)
 {
 	LOGG("CViewVicEditor::DoTap:  x=%f y=%f", x, y);
 	
+	// TODO: workaround for quick timeline access (note this will be changed)
+	// timeline for C64 only now
+	if (c64SettingsSnapshotsRecordIsActive && c64SettingsTimelineIsActive)
+	{
+		if (viewC64->viewTimeline->IsInside(x, y))
+		{
+			return viewC64->viewTimeline->DoTap(x, y);
+		}
+	}
+
 	if (CGuiView::DoTap(x, y) == false)
 	{
 		if (viewVicDisplaySmall->visible && viewVicDisplaySmall->IsInsideView(x, y))
@@ -953,6 +973,16 @@ bool CViewVicEditor::GetColorAtRasterPos(int rx, int ry, u8 *color)
 
 bool CViewVicEditor::DoMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat distY, GLfloat diffX, GLfloat diffY)
 {
+	// TODO: workaround for quick timeline access (note this will be changed)
+	// timeline for C64 only now
+	if (c64SettingsSnapshotsRecordIsActive && c64SettingsTimelineIsActive)
+	{
+		if (viewC64->viewTimeline->IsInside(x, y))
+		{
+			return viewC64->viewTimeline->DoMove(x, y, distX, distY, diffX, diffY);
+		}
+	}
+
 	if (CGuiView::DoMove(x, y, distX, distY, diffX, diffY) == false)
 	{
 		if (viewVicDisplaySmall->visible &&
@@ -1269,6 +1299,14 @@ bool CViewVicEditor::FinishMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat dis
 	prevRy = -1000;
 	isMovingPreviewFrame = false;
 	isPaintingOnPreviewFrame = false;
+	
+	// TODO: workaround for quick timeline access (note this will be changed)
+	// timeline for C64 only now
+	if (c64SettingsSnapshotsRecordIsActive && c64SettingsTimelineIsActive)
+	{
+		viewC64->viewTimeline->FinishMove(x, y, distX, distY, accelerationX, accelerationY);
+	}
+
 	return CGuiView::FinishMove(x, y, distX, distY, accelerationX, accelerationY);
 }
 
@@ -1289,6 +1327,14 @@ void CViewVicEditor::FinishTouches()
 	prevRy = -1000;
 	isMovingPreviewFrame = false;
 	isPaintingOnPreviewFrame = false;
+	
+	// TODO: workaround for quick timeline access (note this will be changed)
+	// timeline for C64 only now
+	if (c64SettingsSnapshotsRecordIsActive && c64SettingsTimelineIsActive)
+	{
+		viewC64->viewTimeline->FinishTouches();
+	}
+
 	return CGuiView::FinishTouches();
 }
 
@@ -1518,6 +1564,14 @@ void CViewVicEditor::ZoomDisplay(float newScale)
 bool CViewVicEditor::DoFinishTap(GLfloat x, GLfloat y)
 {
 	LOGG("CViewVicEditor::DoFinishTap: %f %f", x, y);
+
+	// TODO: workaround for quick timeline access (note this will be changed)
+	// timeline for C64 only now
+	if (c64SettingsSnapshotsRecordIsActive && c64SettingsTimelineIsActive)
+	{
+		viewC64->viewTimeline->DoFinishTap(x, y);
+	}
+
 	return CGuiView::DoFinishTap(x, y);
 }
 

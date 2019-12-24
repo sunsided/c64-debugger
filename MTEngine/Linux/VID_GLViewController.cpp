@@ -3808,3 +3808,7 @@ float VID_GetFingerRayLength()
     return 25.0f;
 }
 
+void VID_StoreMainWindowPosition()
+{
+    // TODO
+}

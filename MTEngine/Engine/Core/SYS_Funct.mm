@@ -29,7 +29,6 @@
 #endif
 
 #include <string.h>
-#include <pthread.h>
 
 #if defined(LINUX)
 #include <unistd.h>

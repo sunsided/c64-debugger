@@ -220,9 +220,8 @@ void C64DebugInterfaceVice::RunEmulationThread()
 	// vice blocks d64 for read when mounted and does the flush only on disk unmount or quit. this leads to not saved data immediately.
 	// thus, we do not block d64 for read and avoid that data is not flushed we check periodically if there's a need to flush data
 
-	// TODO: ISILDUR
-//	this->driveFlushThread = new CViceDriveFlushThread(this, 2500); // every 2.5s
-//	SYS_StartThread(this->driveFlushThread);
+	this->driveFlushThread = new CViceDriveFlushThread(this, 2500); // every 2.5s
+	SYS_StartThread(this->driveFlushThread);
 	
 	vice_main_loop_run();
 	
@@ -249,15 +248,16 @@ void CViceDriveFlushThread::ThreadRun(void *data)
 	{
 		SYS_Sleep(this->flushCheckIntervalInMS);
 		
+		this->debugInterface->LockMutex();
 		if (debugInterface->snapshotsManager->snapshotToRestore
 			|| debugInterface->snapshotsManager->pauseNumFrame != -1)
 		{
+			this->debugInterface->UnlockMutex();
 			SYS_Sleep(this->flushCheckIntervalInMS * 4);
 			continue;
 		}
 
 //		LOGD("CViceDriveFlushThread: flushing drive");
-		this->debugInterface->LockMutex();
 		drive_gcr_data_writeback_all();
 		this->debugInterface->UnlockMutex();
 //		LOGD("CViceDriveFlushThread: flushing drive finished");

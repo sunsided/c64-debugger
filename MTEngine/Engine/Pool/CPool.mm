@@ -18,7 +18,7 @@ CPool::CPool(const WORD nPoolSize, const size_t nItemSize, const bool bGrow) :
 	m_pAvailable = m_pPool;
 	m_pLast = m_pPool + m_nItemSize * m_nPoolSize;
 	
-	pthread_mutex_init(&mutex, NULL);
+	mutex = new CSlrMutex("CPool");
 }
 
 // Add a new pool to the end of the linked list, this can only be called from
@@ -37,7 +37,7 @@ CPool::CPool(CPool* const pPrev) :
 	m_pAvailable = m_pPool;
 	m_pLast = m_pPool + m_nItemSize * m_nPoolSize;
 	
-	pthread_mutex_init(&mutex, NULL);
+	mutex = new CSlrMutex("CPool");
 }
 
 CPool::~CPool()
@@ -46,8 +46,8 @@ CPool::~CPool()
 	delete m_pNext;
 	delete m_pPool;
 	delete [] m_pFreeStack;
-	
-	pthread_mutex_destroy(&mutex);
+
+	delete mutex;
 }
 
 void* CPool::New(const size_t size)
@@ -63,7 +63,7 @@ void* CPool::New(const size_t size)
 		return ::operator new(size);
 	}
 
-	pthread_mutex_lock(&mutex);
+	mutex->Lock();
 
 	// If there are any holes in the free stack then fill them up.
 	if (m_nTOS == 0)
@@ -74,7 +74,7 @@ void* CPool::New(const size_t size)
 		{
 			BYTE*	pReturn = m_pAvailable;
 			m_pAvailable += m_nItemSize;
-			pthread_mutex_unlock(&mutex);
+			mutex->Unlock();
 			return reinterpret_cast<void*>(pReturn);
 		}
 		else
@@ -83,7 +83,7 @@ void* CPool::New(const size_t size)
 			// it, otherwise try to create a new pool.
 			if (m_pNext)
 			{
-				pthread_mutex_unlock(&mutex);
+				mutex->Unlock();
 				return m_pNext->New(size);
 			}
 			else
@@ -93,19 +93,19 @@ void* CPool::New(const size_t size)
 					m_pNext = new CPool(this);
 					if (m_pNext)
 					{
-						pthread_mutex_unlock(&mutex);
+						mutex->Unlock();
 						return m_pNext->New(size);
 					}
 				}
 				// If we cannot allocate a new pool then return 0.
-				pthread_mutex_unlock(&mutex);
+				mutex->Unlock();
 				return 0;
 			}
 		}
 	}
 	else
 	{
-		pthread_mutex_unlock(&mutex);
+		mutex->Unlock();
 		return reinterpret_cast<void*>(m_pFreeStack[--m_nTOS]);
 	}
 }
@@ -114,7 +114,7 @@ void CPool::Delete(void* pVoid)
 {
 	//LOGD("CPool::Delete pVoid=%x pool=%x", pVoid, m_pPool);
 	
-	pthread_mutex_lock(&mutex);
+	mutex->Lock();
 	if (pVoid)
 	{
 		BYTE*	pItem = reinterpret_cast<BYTE*>(pVoid);
@@ -145,7 +145,7 @@ void CPool::Delete(void* pVoid)
 		}
 	}
 	
-	pthread_mutex_unlock(&mutex);
+	mutex->Unlock();
 }
 
 // Reset all the pointers and indices, effectively deleting the allocated

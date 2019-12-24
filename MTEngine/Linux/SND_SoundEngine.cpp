@@ -27,7 +27,7 @@ CSoundEngine::CSoundEngine()
 {
 	LOGF(DBGLVL_XMPLAYER, "CSoundEngine init");
 
-	mutex = new CSlrMutex();
+	mutex = new CSlrMutex("CSoundEngine");
 
 	deviceOutIndex = Pa_GetDefaultOutputDevice();
 	if (deviceOutIndex == paNoDevice)

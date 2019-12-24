@@ -2,9 +2,10 @@
 #include "SYS_Main.h"
 #include "CByteBuffer.h"
 #include "SYS_CFileSystem.h"
+#include "SYS_Threading.h"
 
 std::list< std::vector<u16> * > _CSlrString_charVectorsPool;
-pthread_mutex_t _CSlrString_mutex;
+CSlrMutex *_CSlrString_mutex;
 
 bool _sysStringsInit = false;
 
@@ -12,7 +13,7 @@ void SYS_InitStrings()
 {
 	if (_sysStringsInit == false)
 	{
-		pthread_mutex_init(&_CSlrString_mutex, NULL);
+		_CSlrString_mutex = new CSlrMutex("_CSlrString_mutex");
 		_CSlrString_charVectorsPool.clear();
 		
 		_sysStringsInit = true;
@@ -23,7 +24,7 @@ std::vector<u16> *_CSlrString_GetCharsVector()
 {
 	std::vector<u16> *vect;
 
-	pthread_mutex_lock(&_CSlrString_mutex);
+	_CSlrString_mutex->Lock();
 	
 	if (_CSlrString_charVectorsPool.empty())
 	{
@@ -39,7 +40,7 @@ std::vector<u16> *_CSlrString_GetCharsVector()
 	// should be clear already
 	vect->clear();
 	
-	pthread_mutex_unlock(&_CSlrString_mutex);
+	_CSlrString_mutex->Unlock();
 
 	return vect;
 }
@@ -48,11 +49,11 @@ void _CSlrString_ReleaseCharsVector(std::vector<u16> *vect)
 {
 	vect->clear();
 
-	pthread_mutex_lock(&_CSlrString_mutex);
+	_CSlrString_mutex->Lock();
 
 	_CSlrString_charVectorsPool.push_back(vect);
 	
-	pthread_mutex_unlock(&_CSlrString_mutex);
+	_CSlrString_mutex->Unlock();
 }
 
 CSlrString::CSlrString()
@@ -382,8 +383,6 @@ void CSlrString::RemoveEndLineCharacter()
 		return;
 	}
 }
-
-
 
 CSlrString *CSlrString::GetWord(u32 startPos, u32 *retPos, std::list<u16> stopChars)
 {

@@ -16,6 +16,17 @@ public:
 	C64KeyboardShortcuts();
 	
 	// general
+	CSlrKeyboardShortcut *kbsStepOverInstruction;
+	CSlrKeyboardShortcut *kbsStepBackInstruction;
+	CSlrKeyboardShortcut *kbsStepOneCycle;
+	CSlrKeyboardShortcut *kbsRunContinueEmulation;
+	
+	CSlrKeyboardShortcut *kbsIsDataDirectlyFromRam;	
+	CSlrKeyboardShortcut *kbsToggleMulticolorImageDump;
+	CSlrKeyboardShortcut *kbsShowRasterBeam;
+	
+	CSlrKeyboardShortcut *kbsSaveScreenImageAsPNG;
+
 	CSlrKeyboardShortcut *kbsCopyToClipboard;
 	CSlrKeyboardShortcut *kbsCopyAlternativeToClipboard;
 	CSlrKeyboardShortcut *kbsPasteFromClipboard;
@@ -23,6 +34,13 @@ public:
 	
 	CSlrKeyboardShortcut *kbsNextCodeSegmentSymbols;
 	CSlrKeyboardShortcut *kbsPreviousCodeSegmentSymbols;
+	
+	CSlrKeyboardShortcut *kbsScrubEmulationBackOneFrame;
+	CSlrKeyboardShortcut *kbsScrubEmulationForwardOneFrame;
+	CSlrKeyboardShortcut *kbsScrubEmulationBackOneSecond;
+	CSlrKeyboardShortcut *kbsScrubEmulationForwardOneSecond;
+	CSlrKeyboardShortcut *kbsScrubEmulationBackMultipleFrames;
+	CSlrKeyboardShortcut *kbsScrubEmulationForwardMultipleFrames;
 	
 	// joystick
 	CSlrKeyboardShortcut *kbsJoystickUp;

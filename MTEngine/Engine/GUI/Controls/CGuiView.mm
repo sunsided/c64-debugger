@@ -606,6 +606,7 @@ bool CGuiView::DoScrollWheel(float deltaX, float deltaY)
 		 enumGuiElems != guiElementsDownwards.end(); enumGuiElems++)
 	{
 		CGuiElement *guiElement = (*enumGuiElems).second;
+		LOGD("... checking guiElement %s", guiElement->name);
 		if (!guiElement->visible)
 			continue;
 		

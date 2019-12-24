@@ -27,8 +27,6 @@ CGuiViewList::CGuiViewList(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat siz
 {
 	this->name = "CGuiViewList";
 
-	pthread_mutex_init(&renderMutex, NULL);
-
 	this->callback = callback;
 
 	this->startDrawX = 3;
@@ -814,11 +812,9 @@ CGuiElement *CGuiViewList::GetSelectedElement()
 
 void CGuiViewList::LockRenderMutex()
 {
-	pthread_mutex_lock(&this->renderMutex);
 }
 
 void CGuiViewList::UnlockRenderMutex()
 {
-	pthread_mutex_unlock(&this->renderMutex);
 }
 

@@ -128,6 +128,11 @@ public:
 	CViewC64MenuItem *menuItemMapC64MemoryToFile;
 	void UpdateMapC64MemoryToFileLabels();
 
+	CViewC64MenuItemOption *menuItemC64SnapshotsManagerIsActive;
+	CViewC64MenuItemFloat *menuItemC64SnapshotsManagerStoreInterval;
+	CViewC64MenuItemFloat *menuItemC64SnapshotsManagerLimit;
+	CViewC64MenuItemOption *menuItemC64TimelineIsActive;
+	
 	CViewC64MenuItem *menuItemC64ProfilerFilePath;
 	CViewC64MenuItemOption *menuItemC64ProfilerDoVic;
 	void UpdateC64ProfilerFilePath();

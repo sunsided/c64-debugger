@@ -1,8 +1,17 @@
 #ifndef _SYS_THREADING_H_
 #define _SYS_THREADING_H_
 
-#include <pthread.h>
 #include "SYS_Defs.h"
+
+#if defined(WIN32)
+#define USE_WIN32_THREADS
+
+#if defined(USE_WIN32_THREADS)
+#include <windows.h>
+#endif
+#endif
+
+#include <pthread.h>
 
 #define MT_THREAD_PRIORITY_NORMAL	0
 
@@ -13,9 +22,13 @@ public:
 	~CSlrMutex();
 	
 	char name[64];
-	
-	pthread_mutex_t mutex;
 
+#if defined(USE_WIN32_THREADS)
+	HANDLE mutex;
+#else
+	pthread_mutex_t mutex;
+#endif
+	
 	// for debug
 	volatile int lockedLevel;
 	

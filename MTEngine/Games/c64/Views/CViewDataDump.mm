@@ -174,6 +174,11 @@ void CViewDataDump::DoLogic()
 
 bool CViewDataDump::FindDataPosition(float x, float y, int *dataPositionX, int *dataPositionY, int *dataPositionAddr)
 {
+	float fontBytesSize40 = 4*fontBytesSize;
+	float fontBytesSize40_gap = fontBytesSize40 + gapAddress;
+	float fontBytesSize20_gap = 2.0*fontBytesSize + gapHexData;
+	float fontBytesSize05 = gapDataCharacters; //0.5f*fontBytesSize;
+
 	float px = posX;
 	float py = posY;
 	
@@ -185,7 +190,7 @@ bool CViewDataDump::FindDataPosition(float x, float y, int *dataPositionX, int *
 		px = posX;
 		int a = addr;
 		
-		px += 5*fontBytesSize;
+		px += fontBytesSize40_gap;
 		
 		float nextpy = py + fontCharactersWidth;
 		
@@ -205,10 +210,10 @@ bool CViewDataDump::FindDataPosition(float x, float y, int *dataPositionX, int *
 			}
 			
 			a++;
-			px = nextpx + 0.5*fontBytesSize;
+			px += fontBytesSize20_gap; //nextpx + 0.5*fontBytesSize;
 		}
 		
-		px += 0.5f*fontBytesSize;
+		px += fontBytesSize05;
 		
 		addr += numberOfBytesPerLine;
 		
@@ -363,16 +368,19 @@ void CViewDataDump::Render()
 		px += fontBytesSize05;
 		
 		// data characters
-		a = addr;
-		for (int dx = 0; dx < numberOfBytesPerLine; dx++)
+		if (showDataCharacters)
 		{
-			byte value;
-			dataAdapter->AdapterReadByte(a, &value);
-			
-			fontCharacters->BlitChar((u16)value, px, py, posZ, fontCharactersSize);
-			
-			px += fontCharactersWidth;
-			a++;
+			a = addr;
+			for (int dx = 0; dx < numberOfBytesPerLine; dx++)
+			{
+				byte value;
+				dataAdapter->AdapterReadByte(a, &value);
+				
+				fontCharacters->BlitChar((u16)value, px, py, posZ, fontCharactersSize);
+				
+				px += fontCharactersWidth;
+				a++;
+			}			
 		}
 
 		addr += numberOfBytesPerLine;
@@ -651,13 +659,15 @@ bool CViewDataDump::DoTap(GLfloat x, GLfloat y)
 	
 //	isVisibleEditCursor = true;
 
+	guiMain->SetFocus(this);
+	
 	guiMain->UnlockMutex();
 	return true;
 }
 
 bool CViewDataDump::DoScrollWheel(float deltaX, float deltaY)
 {
-//	LOGD("CViewDataDump::DoScrollWheel: %f %f", deltaX, deltaY);
+	LOGD("CViewDataDump::DoScrollWheel: %f %f", deltaX, deltaY);
 	guiMain->LockMutex();
 	
 	int dy = fabs(round(deltaY));

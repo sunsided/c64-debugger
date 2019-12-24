@@ -2132,6 +2132,7 @@
 		41EFD1E923746D550040CD53 /* 64tass-opcodes.c in Sources */ = {isa = PBXBuildFile; fileRef = 41EFD1DB23746D550040CD53 /* 64tass-opcodes.c */; };
 		41EFD1EA23746D550040CD53 /* 64tass-my_getopt.c in Sources */ = {isa = PBXBuildFile; fileRef = 41EFD1DE23746D550040CD53 /* 64tass-my_getopt.c */; };
 		41EFD1EB23746D550040CD53 /* 64tass-avl.c in Sources */ = {isa = PBXBuildFile; fileRef = 41EFD1E023746D550040CD53 /* 64tass-avl.c */; };
+		41EFDF5023B0C46C00C3FB54 /* CViewTimeline.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41EFDF4E23B0C46C00C3FB54 /* CViewTimeline.mm */; };
 		41F2A9D91E9D0E6B00ADE8DF /* actionreplay.c in Sources */ = {isa = PBXBuildFile; fileRef = 41F2A94B1E9D0E6B00ADE8DF /* actionreplay.c */; };
 		41F2A9DA1E9D0E6B00ADE8DF /* actionreplay2.c in Sources */ = {isa = PBXBuildFile; fileRef = 41F2A94D1E9D0E6B00ADE8DF /* actionreplay2.c */; };
 		41F2A9DB1E9D0E6B00ADE8DF /* actionreplay3.c in Sources */ = {isa = PBXBuildFile; fileRef = 41F2A94F1E9D0E6B00ADE8DF /* actionreplay3.c */; };
@@ -4825,6 +4826,8 @@
 		41EFD1DF23746D550040CD53 /* 64tass-my_getopt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "64tass-my_getopt.h"; path = "../Games/c64/Tools/64tass/64tass-my_getopt.h"; sourceTree = "<group>"; };
 		41EFD1E023746D550040CD53 /* 64tass-avl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "64tass-avl.c"; path = "../Games/c64/Tools/64tass/64tass-avl.c"; sourceTree = "<group>"; };
 		41EFD1E123746D550040CD53 /* 64tass-libtree.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "64tass-libtree.h"; path = "../Games/c64/Tools/64tass/64tass-libtree.h"; sourceTree = "<group>"; };
+		41EFDF4E23B0C46C00C3FB54 /* CViewTimeline.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewTimeline.mm; path = ../Games/c64/Views/CViewTimeline.mm; sourceTree = "<group>"; };
+		41EFDF4F23B0C46C00C3FB54 /* CViewTimeline.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewTimeline.h; path = ../Games/c64/Views/CViewTimeline.h; sourceTree = "<group>"; };
 		41F2A94B1E9D0E6B00ADE8DF /* actionreplay.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = actionreplay.c; sourceTree = "<group>"; };
 		41F2A94C1E9D0E6B00ADE8DF /* actionreplay.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = actionreplay.h; sourceTree = "<group>"; };
 		41F2A94D1E9D0E6B00ADE8DF /* actionreplay2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = actionreplay2.c; sourceTree = "<group>"; };
@@ -5792,6 +5795,8 @@
 		4114BB1D1C89CB8A00E5F0A1 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				41EFDF4E23B0C46C00C3FB54 /* CViewTimeline.mm */,
+				41EFDF4F23B0C46C00C3FB54 /* CViewTimeline.h */,
 				41FE272D23575BE900E8F255 /* CViewC64AllGraphics.mm */,
 				41FE272E23575BE900E8F255 /* CViewC64AllGraphics.h */,
 				41D56FA92271A32400F15B8B /* CViewC64EmulationCounters.mm */,
@@ -10425,6 +10430,7 @@
 				41F2AA701E9D0E7900ADE8DF /* c64iec.c in Sources */,
 				414538091CB2D2D100020916 /* iffdrv.c in Sources */,
 				4172F0C921F2B490003F49FB /* NstMachine.cpp in Sources */,
+				41EFDF5023B0C46C00C3FB54 /* CViewTimeline.mm in Sources */,
 				414535B81CB2D1A300020916 /* menu_c64hw.c in Sources */,
 				41925DA81B1DD82F00B33B7F /* jquant2.c in Sources */,
 				41F2AA0F1E9D0E6B00ADE8DF /* superexplode5.c in Sources */,

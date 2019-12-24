@@ -2106,6 +2106,8 @@ void CViewDisassemble::Render()
 //	if (debugInterface->GetSettingIsWarpSpeed() == true)
 //		return;
 	
+	SetClipping(this->posX, this->posY, this->sizeX, this->sizeY);
+	
 	this->renderBreakpointsMutex->Lock();
 	
 	float colorBackgroundR, colorBackgroundG, colorBackgroundB;
@@ -2130,6 +2132,8 @@ void CViewDisassemble::Render()
 	}
 	
 	this->renderBreakpointsMutex->Unlock();
+
+	ResetClipping();
 }
 
 void CViewDisassemble::Render(GLfloat posX, GLfloat posY)

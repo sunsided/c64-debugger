@@ -99,7 +99,7 @@ extern uint16 c64SettingsVicPalette;
 extern bool c64SettingsRenderScreenNearest;
 
 extern uint8 c64SettingsJoystickPort;
-extern bool c64SettingsJoystickIsOn;
+extern bool c64SettingsUseKeyboardAsJoystick;
 
 extern bool c64SettingsRenderDisassembleExecuteAware;
 
@@ -162,11 +162,14 @@ extern CSlrString *c64SettingsC64ProfilerFileOutputPath;
 extern bool c64SettingsC64ProfilerDoVicProfile;
 
 // snapshots recorder
-extern bool c64SettingsRecordSnapshots;
+extern bool c64SettingsSnapshotsRecordIsActive;
+extern bool c64SettingsTimelineIsActive;
+
 // storing interval
 extern int c64SettingsSnapshotsIntervalNumFrames;
 // max number of snapshots
 extern int c64SettingsSnapshotsLimit;
+
 
 // sid import
 extern u8 c64SettingsC64SidImportMode;

@@ -222,12 +222,15 @@ void CDebuggerAPI::SetAssembleTarget(u8 target)
 	this->assembleTarget = target;
 }
 
+#if !defined(WIN32)
 extern "C" {
 	unsigned char *assemble_64tass(void *userData, char *assembleText, int assembleTextSize, int *codeStartAddr, int *codeSize);
 }
+#endif
 
 void CDebuggerAPI::Assemble64Tass(char *assembleText, int *codeStartAddr, int *codeSize)
 {
+#if !defined(WIN32)
 	u8 *buf = assemble_64tass((void*)this, assembleText, strlen(assembleText), codeStartAddr, codeSize);
 	
 	if (buf == NULL)
@@ -245,6 +248,7 @@ void CDebuggerAPI::Assemble64Tass(char *assembleText, int *codeStartAddr, int *c
 		addr++;
 	}
 	free(buf);
+#endif
 }
 
 void CDebuggerAPI::Assemble64TassAddLine(char *assembleText)
@@ -261,6 +265,7 @@ void CDebuggerAPI::Assemble64TassAddLine(char *assembleText)
 #define STORE_ASSEMBLE_TEXT
 void CDebuggerAPI::Assemble64Tass(int *codeStartAddr, int *codeSize)
 {
+#if !defined(WIN32)
 	byteBufferAssembleText->PutU8(0x00);
 	
 	char *assembleText = (char*)byteBufferAssembleText->data;
@@ -296,6 +301,7 @@ void CDebuggerAPI::Assemble64Tass(int *codeStartAddr, int *codeSize)
 	}*/
 	
 	byteBufferAssembleText->Reset();
+#endif
 }
 
 extern "C" {

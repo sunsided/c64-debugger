@@ -31,7 +31,7 @@ void SYS_InitSharedMemory(u32 sharedMemoryKey, u32 sharedMemorySize)
 {
 	LOGD("SYS_InitSharedMemory: key=%d size=%d", sharedMemoryKey, sharedMemorySize);
 	
-	mtSharedMemoryMutex = new CSlrMutex();
+	mtSharedMemoryMutex = new CSlrMutex("mtSharedMemoryMutex");
 	
 	mtSharedMemory = SYS_MapSharedMemory(sharedMemorySize, sharedMemoryKey, &mtSharedMemoryDescriptor);
 	

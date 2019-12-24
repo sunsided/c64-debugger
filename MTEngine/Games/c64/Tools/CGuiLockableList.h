@@ -12,7 +12,6 @@
 #include "CGuiElement.h"
 #include "CGuiView.h"
 #include "CGuiList.h"
-#include <pthread.h>
 
 class CGuiLockableList : public CGuiList
 {

@@ -43,6 +43,8 @@ CViewC64VicControl::CViewC64VicControl(GLfloat posX, GLfloat posY, GLfloat posZ,
 	
 	this->AddGuiButtons();
 	
+	forceGrayscaleColors = false;
+	
 	//
 	txtAutolockRasterPC = new CSlrString("RASTER");
 	txtAutolockBitmapAddress = new CSlrString("BITMAP");
@@ -1058,6 +1060,7 @@ void CViewC64VicControl::Render()
 	// render UI
 	CGuiView::Render();
 }
+
 bool CViewC64VicControl::ListElementPreSelect(CGuiList *listBox, int elementNum)
 {
 	LOGD("CViewC64VicControl::ListElementPreSelect");

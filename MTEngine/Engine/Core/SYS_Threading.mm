@@ -2,8 +2,10 @@
 #include "SYS_Main.h"
 #include "VID_GLViewController.h"
 #include <signal.h>
+#include <errno.h>
 
-#define DEBUG_MUTEX
+//#define DEBUG_MUTEX
+//#define DEBUG_MUTEX_TIMEOUT 5000
 
 void CSlrThread::ThreadRun(void *passData)
 {
@@ -165,7 +167,20 @@ CSlrMutex::CSlrMutex(char *name)
 {
 	strcpy(this->name, name);
 	
-//#if defined(LINUX)
+	LOGD("CSlrMutex::CSlrMutex: %s", this->name);
+	
+#if defined(USE_WIN32_THREADS)
+	mutex = CreateMutex(
+						NULL,              // default security attributes
+						FALSE,             // initially not owned
+						NULL);             // unnamed mutex
+
+	if (mutex == NULL)
+	{
+		SYS_FatalExit("CreateMutex error: %d\n", GetLastError());
+	}
+	
+#else
 
 	pthread_mutexattr_t attr;
 	pthread_mutexattr_init(&attr);
@@ -176,65 +191,71 @@ CSlrMutex::CSlrMutex(char *name)
 
 	lockedLevel = 0;
 	
-//#elif defined(WINDOWS)
-//	mutex = new CRITICAL_SECTION;
-//	InitializeCriticalSection((CRITICAL_SECTION *)mutex);
-//#endif
+#endif
+
 }
 
 CSlrMutex::~CSlrMutex()
 {
-//#if defined(LINUX)
-
+	LOGD("CSlrMutex::~CSlrMutex: %s", this->name);
+#if defined(USE_WIN32_THREADS)
+	CloseHandle(mutex);
+#else
 	pthread_mutex_destroy(&mutex);
 	
-//#elif defined(HAVE_MS_THREAD)
-//	DeleteCriticalSection((CRITICAL_SECTION *)mutex);
-//	delete (CRITICAL_SECTION *)mutex;
-//#endif
+#endif
 }
 	
 void CSlrMutex::Lock()
 {
-//#ifdef HAVE_PTHREAD
-//	pthread_mutex_lock((pthread_mutex_t*)mutex);
-//#elif defined(HAVE_MS_THREAD)
-//	EnterCriticalSection((CRITICAL_SECTION *)mutex);
-//#endif
+#if defined(USE_WIN32_THREADS)
+	DWORD dwWaitResult = WaitForSingleObject(
+			mutex,    // handle to mutex
+            INFINITE);  // no time-out interval
 	
-#if defined(DEBUG_MUTEX)
-	long timeout = SYS_GetCurrentTimeInMillis() + 5000;
-	
-	while (pthread_mutex_trylock(&mutex) == EBUSY)
+	if (dwWaitResult != 0)
 	{
-		long now = SYS_GetCurrentTimeInMillis();
-		if (now >= timeout)
-		{
-			LOGError("Mutex lock timeout, name=%s", this->name);
-			return;
-		}
-		
-		SYS_Sleep(5);
+		SYS_FatalExit("CSlrMutex::Lock: dwWaitResult=%d", dwWaitResult);
 	}
 	
 #else
-	pthread_mutex_lock(&mutex);
-	lockedLevel++;
-#endif
+	#if defined(DEBUG_MUTEX)
+		long timeout = SYS_GetCurrentTimeInMillis() + DEBUG_MUTEX_TIMEOUT;
+		
+		while (pthread_mutex_trylock(&mutex) == EBUSY)
+		{
+			long now = SYS_GetCurrentTimeInMillis();
+			if (now >= timeout)
+			{
+				LOGError("Mutex lock timeout, name=%s", this->name);
+				return;
+			}
+			
+			SYS_Sleep(5);
+		}
 	
+	#else
+		pthread_mutex_lock(&mutex);
+		lockedLevel++;
+	#endif
+#endif
 }
 
 void CSlrMutex::Unlock()
-{
-//#ifdef HAVE_PTHREAD
-//	pthread_mutex_unlock((pthread_mutex_t*)mutex);
-//#elif defined(HAVE_MS_THREAD)
-//	LeaveCriticalSection((CRITICAL_SECTION *)mutex);
-//#endif
-	
+{	
+#if defined(USE_WIN32_THREADS)
+
+	if (!ReleaseMutex(mutex))
+	{
+		LOGError("Release Mutex %s error %d", this->name, GetLastError());
+		SYS_FatalExit("ReleaseMutex %s %d", this->name, GetLastError());
+	}
+#else
 	
 	lockedLevel--;
 	pthread_mutex_unlock(&mutex);
+
+#endif
 }
 
 unsigned long SYS_GetProcessId()

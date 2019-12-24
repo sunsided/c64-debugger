@@ -13,6 +13,7 @@
 #include "CViewC64VicControl.h"
 #include "CViewC64StateSID.h"
 #include "CViewVicEditor.h"
+#include "CSnapshotsManager.h"
 #include "C64Palette.h"
 #include "CViewAtariScreen.h"
 #include "CViewNesScreen.h"
@@ -63,7 +64,7 @@ int c64SettingsScreenSupersampleFactor = 1;
 bool c64SettingsUsePipeIntegration = true;
 
 uint8 c64SettingsJoystickPort = 0;
-bool c64SettingsJoystickIsOn = false;
+bool c64SettingsUseKeyboardAsJoystick = false;
 
 bool c64SettingsWindowAlwaysOnTop = false;
 
@@ -116,11 +117,13 @@ bool c64SettingsC64ProfilerDoVicProfile = false;
 int c64SettingsWaitOnStartup = 0; //500;
 
 // snapshots recorder
-bool c64SettingsRecordSnapshots = true;
+bool c64SettingsTimelineIsActive = true;
+
+bool c64SettingsSnapshotsRecordIsActive = true;
 // snapshots interval
-int c64SettingsSnapshotsIntervalNumFrames = 2;
-// max number of snapshots
-int c64SettingsSnapshotsLimit = 7500;
+int c64SettingsSnapshotsIntervalNumFrames = 10;
+// max number of snapshots. TODO: get fps from debuginterface. 50 frames per second * 60 seconds = 3 mins
+int c64SettingsSnapshotsLimit = (50 * 60 * 3) / 10;
 
 CSlrString *c64SettingsPathToD64 = NULL;
 CSlrString *c64SettingsDefaultD64Folder = NULL;
@@ -390,6 +393,7 @@ void C64DebuggerStoreSettings()
 	
 	storeSettingBlock(byteBuffer, C64DEBUGGER_BLOCK_POSTLAUNCH);
 	storeSettingU8(byteBuffer, "JoystickPort", c64SettingsJoystickPort);
+	storeSettingBool(byteBuffer, "UseKeyboardAsJoystick", c64SettingsUseKeyboardAsJoystick);
 	storeSettingU8(byteBuffer, "MemoryValuesStyle", c64SettingsMemoryValuesStyle);
 	storeSettingU8(byteBuffer, "MemoryMarkersStyle", c64SettingsMemoryMarkersStyle);
 
@@ -483,10 +487,12 @@ void C64DebuggerStoreSettings()
 	
 	storeSettingFloat (byteBuffer, "PaintGridShowZoomLevel", c64SettingsPaintGridShowZoomLevel);
 	
-//	storeSettingBool(byteBuffer, "RecordSnapshots", c64SettingsRecordSnapshots);
-//	storeSettingI32(byteBuffer, "SnapshotsIntervalNumFrames", c64SettingsSnapshotsIntervalNumFrames);
-//	storeSettingI32(byteBuffer, "SnapshotsLimit", c64SettingsSnapshotsLimit);
-	
+	storeSettingBool(byteBuffer, "SnapshotsManagerIsActive", c64SettingsSnapshotsRecordIsActive);
+	storeSettingI32(byteBuffer, "SnapshotsManagerStoreInterval", c64SettingsSnapshotsIntervalNumFrames);
+	storeSettingI32(byteBuffer, "SnapshotsManagerLimit", c64SettingsSnapshotsLimit);
+
+	storeSettingBool(byteBuffer, "TimelineIsActive", c64SettingsTimelineIsActive);
+
 	storeSettingBlock(byteBuffer, C64DEBUGGER_BLOCK_EOF);
 
 	
@@ -651,7 +657,7 @@ void C64DebuggerReadSettingCustom(char *name, CByteBuffer *byteBuffer)
 
 void C64DebuggerSetSetting(char *name, void *value)
 {
-	LOGD("C64DebuggerSetStartupSetting: name='%s'", name);
+	LOGD("C64DebuggerSetSetting: name='%s'", name);
 	
 	if (!strcmp(name, "FolderD64"))
 	{
@@ -1239,7 +1245,39 @@ void C64DebuggerSetSetting(char *name, void *value)
 			c64SettingsC64ProfilerDoVicProfile = v;
 			return;
 		}
+		
+		else if (!strcmp(name, "SnapshotsManagerIsActive"))
+		{
+			bool v = *((bool*)value);
+			viewC64->debugInterfaceC64->snapshotsManager->SetRecordingIsActive(v);
+			viewC64->viewC64SettingsMenu->menuItemC64SnapshotsManagerIsActive->SetSelectedOption(v, false);
+			return;
+		}
+		else if (!strcmp(name, "SnapshotsManagerStoreInterval"))
+		{
+			i32 v = *((i32*)value);
+			viewC64->debugInterfaceC64->snapshotsManager->SetRecordingStoreInterval(v);
+			viewC64->viewC64SettingsMenu->menuItemC64SnapshotsManagerStoreInterval->SetValue(v, false);
+			return;
+		}
+		else if (!strcmp(name, "SnapshotsManagerLimit"))
+		{
+			i32 v = *((i32*)value);
+			viewC64->debugInterfaceC64->snapshotsManager->SetRecordingLimit(v);
+			viewC64->viewC64SettingsMenu->menuItemC64SnapshotsManagerLimit->SetValue(v, false);
+			return;
+		}
+		else if (!strcmp(name, "TimelineIsActive"))
+		{
+			bool v = *((bool*)value);
+			c64SettingsTimelineIsActive = v;
+			viewC64->viewC64SettingsMenu->menuItemC64TimelineIsActive->SetSelectedOption(v, false);
+			return;
+		}
+		
+		
 	}
+
 #endif
 	
 #if defined(RUN_ATARI)
@@ -1476,6 +1514,14 @@ void C64DebuggerSetSetting(char *name, void *value)
 		c64SettingsJoystickPort = v;
 		return;
 	}
+	else if (!strcmp(name, "UseKeyboardAsJoystick"))
+	{
+		bool v = *((bool*)value);
+		c64SettingsUseKeyboardAsJoystick = v;
+		viewC64->viewC64SettingsMenu->menuItemUseKeyboardAsJoystick->SetSelectedOption(v, false);
+		return;
+	}
+	
 	else if (!strcmp(name, "MemoryValuesStyle"))
 	{
 		int v = *((int*)value);
@@ -1815,33 +1861,6 @@ void C64DebuggerSetSetting(char *name, void *value)
 		}
 		return;
 	}
-	/*
-	else if (!strcmp(name, "RecordSnapshots"))
-	{
-		bool v = *((bool*)value);
-		c64SettingsRecordSnapshots = v;
-		
-		LOGD("c64SettingsRecordSnapshots=%s", STRBOOL(c64SettingsRecordSnapshots));
-//		viewC64->viewC64SettingsMenu->menuItemRecordSnapshots->SetSelectedOption(v ? 1:0, false);
-//		
-//		viewC64->debugInterfaceC64->SetRecordSnapshotsParameters(c64SettingsRecordSnapshots, c64SettingsSnapshotsIntervalNumFrames, c64SettingsSnapshotsLimit);
-		return;
-	}
-	else if (!strcmp(name, "SnapshotsIntervalNumFrames"))
-	{
-		i32 v = *((i32*)value);
-		c64SettingsSnapshotsIntervalNumFrames = v;
-			// TODO: set menu
-		return;
-	}
-	else if (!strcmp(name, "SnapshotsLimit"))
-	{
-		i32 v = *((i32*)value);
-		c64SettingsSnapshotsLimit = v;
-		// TODO: set menu
-		return;
-	}
-*/
 	
 	LOGError("C64DebuggerSetSetting: unknown setting '%s'", name);
 }

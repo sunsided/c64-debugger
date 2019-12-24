@@ -14,7 +14,6 @@
 #include "CSlrImage.h"
 #include "CGuiElement.h"
 #include "CGuiView.h"
-#include <pthread.h>
 #include <vector>
 
 #define GUI_LIST_ELEMTYPE_CHARS 1
@@ -142,7 +141,6 @@ public:
 	virtual void ElementSelected();
 	CGuiListTreeCallback *callback;
 
-	//pthread_mutex_t renderMutex;
 	void LockRenderMutex();
 	void UnlockRenderMutex();
 };

@@ -519,7 +519,7 @@ void CViewNesScreen::FinishTouches()
 int CViewNesScreen::GetJoystickAxis(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
 	// because Windows is totally messed up with right-Alt key, let's compare only keyCodes
-//	if (c64SettingsJoystickIsOn)
+//	if (c64SettingsUseKeyboardAsJoystick)
 	{
 		if (viewC64->keyboardShortcuts->kbsJoystickFire->keyCode == keyCode)
 		{

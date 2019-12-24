@@ -75,6 +75,7 @@ public:
 	virtual void SetPosition(GLfloat posX, GLfloat posY);
 	
 	//
+	volatile bool forceGrayscaleColors;
 	CGuiButtonSwitch *btnModeText;
 	CGuiButtonSwitch *btnModeBitmap;
 	CGuiButtonSwitch *btnModeHires;

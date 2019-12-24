@@ -136,19 +136,9 @@ public:
 	CViewC64MenuItem *menuItemSettings;
 
 	CViewC64MenuItem *menuItemAbout;
-
-	CSlrKeyboardShortcut *kbsStepOverInstruction;
-	CSlrKeyboardShortcut *kbsStepOneCycle;
-	CSlrKeyboardShortcut *kbsRunContinueEmulation;
-	CSlrKeyboardShortcut *kbsIsDataDirectlyFromRam;
-
-	CSlrKeyboardShortcut *kbsToggleMulticolorImageDump;
-	CSlrKeyboardShortcut *kbsShowRasterBeam;
 	
 	CSlrKeyboardShortcut *kbsMoveFocusToNextView;
 	CSlrKeyboardShortcut *kbsMoveFocusToPreviousView;
-
-	CSlrKeyboardShortcut *kbsSaveScreenImageAsPNG;
 	
 	std::list<CSlrString *> openFileExtensions;
 	std::list<CSlrString *> diskExtensions;

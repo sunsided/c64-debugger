@@ -199,11 +199,13 @@ static int playCallback( const void *inputBuffer, void *outputBuffer,
 						void *userData )
 
 {   
-	//LOGA("SND_PlaybackCallback");
+//	LOGA("SND_PlaybackCallback");
 	
 	u32 len = framesPerBuffer * 4;
 	int *mixBuffer = (int*)outputBuffer;
 	int numSamples = framesPerBuffer;
+	
+//	LOGD("framesPerBuffer=%d len=%d", framesPerBuffer, len);
 	
 //	u32 j = 0;
 //	for (u32 i = 0; i < framesPerBuffer; i++)
@@ -227,6 +229,7 @@ static int playCallback( const void *inputBuffer, void *outputBuffer,
 		
 	gSoundEngine->LockMutex("playCallback");
 	
+//	LOGD("SND_MainMixer: numSamples=%d", numSamples);
 	SND_MainMixer(outBuffer, numSamples);
 
 	gSoundEngine->UnlockMutex("playCallback");

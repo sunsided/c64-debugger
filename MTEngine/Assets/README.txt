@@ -17,7 +17,9 @@ emulator Team.
 Atari XL/XE debugging interfaces are in alpha stage.
 
 
-See a promo video here: https://youtu.be/_s6s7qnXBx8 
+See promo videos here: 
+https://youtu.be/_s6s7qnXBx8 
+https://youtu.be/Lxd296tDdoo
 
 
 * Installation
@@ -125,15 +127,29 @@ Ctrl+Y
 	Use keyboard arrows as joystick On/Off, Right Alt to fire
 F10
 	Pause code or run to next instruction (step)
+Alt+F10
+	Back-Step one instruction
 Ctrl+F10
 	Step to next line (step over JSR)
 Shift+F10
 	Run one CPU cycle
 F11
 	Run/continue emulation
+Ctrl+Arrow Left
+	Rewind emulation back one frame
+Ctrl+Arrow Right
+	Forward emulation one frame
+Alt+Ctrl+Arrow Left
+	Rewind emulation back one second
+Alt+Ctrl+Arrow Right
+	Forward emulation one second
+Shift+Ctrl+Arrow Left
+	Rewind emulation back 10 seconds
+Shift+Ctrl+Arrow Right
+	Forward emulation 10 seconds
 Ctrl+M
 	Toggle data memory map/dump taken directly from RAM or as-is with
-        I/O and ROMs selected by $0001
+    I/O and ROMs selected by $0001
 Ctrl+E
 	Toggle show current raster beam position
 Ctrl+S
@@ -181,9 +197,8 @@ Enter
 	Scroll code one byte up/down
 Arrow Left/Right
 	If not editing code: follow code jumps and branches using Right-Arrow key, 
-	                     and move back with Left-Arrow key. When argument is 
-                             a memory address then Memory Dump view will be 
-                             scrolled to that address
+	and move back with Left-Arrow key. When argument is a memory address then 
+	Memory Dump view will be scrolled to that address
 	If editing code and hex values visible: change edited hex value	
 CTRL+G <addr>  
         Move cursor to specific address (f.e. CTRL+G EA31)
@@ -191,7 +206,6 @@ CTRL+J
 	JMP to current cursor's address (change CPU PC)
 Mouse wheel
 	Scroll code (faster with Shift pressed)
-
 
 In Data dump view:
 
@@ -272,6 +286,23 @@ F3
 	Select key
 F4
 	Start key
+
+
+* CPU registers
+
+CPU registers are presented as:
+AR XR YR SP 01 NV-BDIZC CC VC RSTY RSTX EG
+
+They show current values of CPU registers and status:
+AR, XR, YR = CPU registers A,X,Y
+SP = stack pointer
+01 = value of memory mapper, i.e. $0001
+NV-BDIZC = processor flags register
+CC = current CPU cycle
+VC = current VIC cycle
+RSTY = current raster Y position
+RSTX = current raster X position
+EG = status of ExRom and Game register (cartridge related)
 	
 
 * VIC state view
@@ -998,6 +1029,20 @@ Shutdown
 	Shutdown the C64 Debugger (Quit program)
 
 
+* Integration via named pipe
+
+You can send and receive messages using a named pipe. The implementation works 
+now only for MacOS and Linux, and is rather an exeprimental feature. If you find
+any problems please contact me as this was not properly tested yet.
+
+The intention of this communication is to allow UI/IDE to interact with the
+debugger by, for example, pausing or stepping code, as well as get some 
+information about the emulation state, such as current CPU registers.
+
+More details here:
+https://docs.google.com/document/d/15ELIVFhyBGIlGyaBOey3R0VU6VLAGHVI49vmgY8jdlY/
+
+
 * Other notes
 
 Step over JSR works in a way that a temporary PC breakpoint is created in
@@ -1072,6 +1117,7 @@ Ruben Aparicio
 64 bites
 Stein Pedersen
 Mads Nielsen (Slammer/Camelot)
+Roy C Riggs (furroy)
 
 
 * Beer Donation
@@ -1262,6 +1308,30 @@ Champ 65c02 Profiler
 *
 * Change log
 *
+
+v0.64.56.8 
+Bug fixed: Changing layout was also changing VIC Display's layout border mode
+Bug fixed: Crash when adding PC breakpoint in Layout #4
+Bug fixed: Passing empty breakpoints.txt file was hanging the debugger 
+           (thanks to Erol Tahirovic)
+Bug fixed: Use of Keyboard as joystick settings are now properly stored and 
+           restored (thanks to Ollie and Roy C Riggs)
+Added: Drag'n'drop of g64 files (requested by Bacchus/Fairlight)
+Added: Show colour hex code in VIC State view (requested by Bacchus/Fairlight)
+Added: Memory hunt (H) command also accepts 16-bit values, so H 1000 2000 D418 
+       is searching now also for existence of 18 D4 pair 
+       (requested by Alex Goldblat)
+Added: Layout that shows all bitmaps in the memory at once (Ctrl+Shift+F7)
+       (requested by Digger/Elysium)
+Added: Snapshots Recorder! Rewind emulation backwards as well forward. 
+       When timeline is active you can access it by hovering mouse near bottom 
+       of the debugger window and scrubbing by clicking and moving a red box.
+Added Linux: Full screen mode on Linux, activate using Alt+Enter. 
+             (thanks to szczm_/Samar code snippets)
+Added MacOS: Window size and position are properly restored after app restart 
+             (thanks to Mojzesh/Arise for reporting)
+Added MacOS and Linux: Integration via standard fifo named pipe, check specs 
+             how to interact remotely with the C64 Debugger (good for UI/IDEs!).
 
 v0.64.56.6 (2019/05/17), released at Moonshine Dragons demo party
 Bug Fixed: Changing SID register was not reflected when CPU emulation 

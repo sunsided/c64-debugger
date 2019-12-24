@@ -45,6 +45,7 @@ extern "C"{
 #include "CViewC64VicDisplay.h"
 #include "CViewC64VicControl.h"
 #include "CViewC64StateCPU.h"
+#include "CViewTimeline.h"
 #include "CViewDriveStateCPU.h"
 
 #include "CViewAtariScreen.h"
@@ -93,8 +94,6 @@ extern "C"{
 #include "C64DebugInterfaceVice.h"
 #include "AtariDebugInterface.h"
 #include "NesDebugInterface.h"
-
-#include "C64DebuggerPluginSpiral.h"
 
 CViewC64 *viewC64 = NULL;
 
@@ -700,9 +699,14 @@ void CViewC64::InitViews()
 	this->AddGuiElement(viewC64EmulationCounters);
 	viewDrive1541StateVIA = new CViewDrive1541StateVIA(0, 0, posZ, SCREEN_WIDTH, SCREEN_HEIGHT, debugInterfaceC64);
 	this->AddGuiElement(viewDrive1541StateVIA);
+
 	viewEmulationState = new CViewEmulationState(0, 0, posZ, SCREEN_WIDTH, SCREEN_HEIGHT, debugInterfaceC64);
 	this->AddGuiElement(viewEmulationState);
 	
+	float timelineHeight = 10;
+	viewTimeline = new CViewTimeline(0, SCREEN_HEIGHT-timelineHeight, posZ, SCREEN_WIDTH, timelineHeight, debugInterfaceC64);
+	this->AddGuiElement(viewEmulationState);
+
 	viewC64VicDisplay = new CViewC64VicDisplay(0, 0, posZ, SCREEN_WIDTH, SCREEN_HEIGHT, debugInterfaceC64);
 	this->AddGuiElement(viewC64VicDisplay);
 
@@ -1223,6 +1227,7 @@ void CViewC64::InitLayouts()
 	screenPositions[m]->c64DataDumpGapHexData = screenPositions[m]->c64DataDumpFontSize*0.5f;
 	screenPositions[m]->c64DataDumpGapDataCharacters = screenPositions[m]->c64DataDumpFontSize*0.5f;
 	screenPositions[m]->c64DataDumpNumberOfBytesPerLine = 16;
+	screenPositions[m]->c64DataDumpShowDataCharacters = true;
 	screenPositions[m]->c64DataDumpShowCharacters = false;
 	screenPositions[m]->c64DataDumpShowSprites = false;
 	screenPositions[m]->c64StateVICVisible = true;
@@ -1339,6 +1344,7 @@ void CViewC64::InitLayouts()
 	screenPositions[m]->c64DataDumpGapHexData = screenPositions[m]->c64DataDumpFontSize*0.28f;
 	screenPositions[m]->c64DataDumpGapDataCharacters = screenPositions[m]->c64DataDumpFontSize*0.5f;
 	screenPositions[m]->c64DataDumpNumberOfBytesPerLine = 16;
+	screenPositions[m]->c64DataDumpShowDataCharacters = true;
 	screenPositions[m]->c64DataDumpShowCharacters = false;
 	screenPositions[m]->c64DataDumpShowSprites = false;
 	
@@ -1448,16 +1454,50 @@ void CViewC64::InitLayouts()
 	screenPositions[m]->c64DisassembleVisible = false;
 	
 	screenPositions[m]->c64CpuStateVisible = true;
-	screenPositions[m]->c64CpuStateX = 220;
+	screenPositions[m]->c64CpuStateX = 350;
 	screenPositions[m]->c64CpuStateY = 2.5f;
 	screenPositions[m]->c64CpuStateFontSize = 5.0f;
 	
-	scale = 0.255f;
+	screenPositions[m]->c64DataDumpVisible = true;
+	screenPositions[m]->c64DataDumpX = 355;
+	screenPositions[m]->c64DataDumpY = 100;
+	screenPositions[m]->c64DataDumpSizeX = 205.0f;
+	screenPositions[m]->c64DataDumpSizeY = 135.0f;
+	screenPositions[m]->c64DataDumpFontSize = 5.0f;
+	screenPositions[m]->c64DataDumpGapAddress = screenPositions[m]->c64DataDumpFontSize*0.75f;
+	screenPositions[m]->c64DataDumpGapHexData = screenPositions[m]->c64DataDumpFontSize*0.28f;
+	screenPositions[m]->c64DataDumpGapDataCharacters = screenPositions[m]->c64DataDumpFontSize*0.5f;
+	screenPositions[m]->c64DataDumpNumberOfBytesPerLine = 16;
+	screenPositions[m]->c64DataDumpShowDataCharacters = false;
+	screenPositions[m]->c64DataDumpShowCharacters = false;
+	screenPositions[m]->c64DataDumpShowSprites = false;
+
+	screenPositions[m]->c64MemoryMapVisible = true;
+	screenPositions[m]->c64MemoryMapSizeX = 140.0f;
+	screenPositions[m]->c64MemoryMapSizeY = 119.0f;
+	screenPositions[m]->c64MemoryMapX = 420; //395; //SCREEN_WIDTH-screenPositions[m]->c64MemoryMapSizeX-2.5f;
+	screenPositions[m]->c64MemoryMapY = 239;
+
+	screenPositions[m]->c64DisassembleVisible = true;
+	screenPositions[m]->c64DisassembleFontSize = 5.0f;
+	screenPositions[m]->c64DisassembleX = 338.0f; //503.0f;
+	screenPositions[m]->c64DisassembleY = 239.0f;
+	screenPositions[m]->c64DisassembleSizeX = screenPositions[m]->c64DisassembleFontSize * 15.8f;
+	screenPositions[m]->c64DisassembleSizeY = 119;
+	screenPositions[m]->c64DisassembleNumberOfLines = 14;
+	screenPositions[m]->c64DisassembleCodeMnemonicsOffset = +0.75f;
+	screenPositions[m]->c64DisassembleShowHexCodes = false;
+	screenPositions[m]->c64DisassembleShowCodeCycles = false;
+	screenPositions[m]->c64DisassembleCodeCyclesOffset = -0.5f;
+	screenPositions[m]->c64DisassembleShowLabels = false;
+	screenPositions[m]->c64DisassembleNumberOfLabelCharacters = 10;
+
+	scale = 0.30f;
 	screenPositions[m]->c64ScreenVisible = true;
 	screenPositions[m]->c64ScreenSizeX = (float)debugInterfaceC64->GetScreenSizeX() * scale;
 	screenPositions[m]->c64ScreenSizeY = (float)debugInterfaceC64->GetScreenSizeY() * scale;
-	screenPositions[m]->c64ScreenX = 478;
-	screenPositions[m]->c64ScreenY = 0.0f;
+	screenPositions[m]->c64ScreenX = 458;
+	screenPositions[m]->c64ScreenY = 15.0f;
 	
 	screenPositions[m]->c64AllGraphicsVisible = true;
 	screenPositions[m]->c64AllGraphicsX = 0.0f;
@@ -2048,6 +2088,7 @@ void CViewC64::SwitchToScreenLayout(int newScreenLayoutId)
 	viewC64MemoryDataDump->gapAddress = screenLayout->c64DataDumpGapAddress;
 	viewC64MemoryDataDump->gapHexData = screenLayout->c64DataDumpGapHexData;
 	viewC64MemoryDataDump->gapDataCharacters = screenLayout->c64DataDumpGapDataCharacters;
+	viewC64MemoryDataDump->showDataCharacters = screenLayout->c64DataDumpShowDataCharacters;
 	viewC64MemoryDataDump->showCharacters = screenLayout->c64DataDumpShowCharacters;
 	viewC64MemoryDataDump->showSprites = screenLayout->c64DataDumpShowSprites;
 
@@ -2498,6 +2539,7 @@ void CViewC64::Render()
 	// render focus border
 	if (focusElement != NULL)
 	{
+//		LOGD("focusElement=%x %s", focusElement, focusElement->name);
 		if (currentScreenLayoutId != SCREEN_LAYOUT_C64_ONLY
 			&& currentScreenLayoutId != SCREEN_LAYOUT_ATARI_ONLY
 			&& currentScreenLayoutId != SCREEN_LAYOUT_NES_ONLY)
@@ -2505,7 +2547,22 @@ void CViewC64::Render()
 			focusElement->RenderFocusBorder();
 		}
 	}
+	
+	// timeline for C64 only now
+	if (c64SettingsSnapshotsRecordIsActive && c64SettingsTimelineIsActive)
+	{
+		float gapY = 5.0f;
 		
+		float x = guiMain->mousePosX;
+		float y = guiMain->mousePosY;
+		
+		if (x >= viewTimeline->posX && x <= viewTimeline->posEndX
+			&& y >= (viewTimeline->posY-gapY) && y <= viewTimeline->posEndY)
+		{
+			viewTimeline->Render();
+		}
+	}
+	
 //	// debug render fps
 //	char buf[128];
 //	sprintf(buf, "%-6.2f %-6.2f", debugInterface->emulationSpeed, debugInterface->emulationFrameRate);
@@ -2641,6 +2698,83 @@ bool CViewC64::ProcessGlobalKeyboardShortcut(u32 keyCode, bool isShift, bool isA
 
 		if (debugInterfaceC64)
 		{
+			// check emulation scrubbing
+			if (shortcut == keyboardShortcuts->kbsScrubEmulationBackOneFrame)
+			{
+				LOGD(">>>>>>>>>................ REWIND -1");
+				guiMain->LockMutex();
+				if (debugInterfaceVice->snapshotsManager->isPerformingSnapshotRestore == false)
+				{
+					debugInterfaceVice->snapshotsManager->RestoreSnapshotByNumFramesOffset(-1);
+				}
+				guiMain->UnlockMutex();
+				return true;
+			}
+			if (shortcut == keyboardShortcuts->kbsScrubEmulationForwardOneFrame)
+			{
+				LOGD(">>>>>>>>>................ FORWARD +1");
+				guiMain->LockMutex();
+				if (debugInterfaceVice->snapshotsManager->isPerformingSnapshotRestore == false)
+				{
+					debugInterfaceVice->snapshotsManager->RestoreSnapshotByNumFramesOffset(+1);
+				}
+				guiMain->UnlockMutex();
+				return true;
+			}
+
+			if (shortcut == keyboardShortcuts->kbsScrubEmulationBackOneSecond)
+			{
+				LOGD(">>>>>>>>>................ REWIND -1s");
+				guiMain->LockMutex();
+				if (debugInterfaceVice->snapshotsManager->isPerformingSnapshotRestore == false)
+				{
+					float emulationFPS = debugInterfaceC64->GetEmulationFPS();
+					debugInterfaceVice->snapshotsManager->RestoreSnapshotByNumFramesOffset(-emulationFPS);
+				}
+				guiMain->UnlockMutex();
+				return true;
+			}
+			if (shortcut == keyboardShortcuts->kbsScrubEmulationForwardOneSecond)
+			{
+				LOGD(">>>>>>>>>................ FORWARD +1s");
+				guiMain->LockMutex();
+				if (debugInterfaceVice->snapshotsManager->isPerformingSnapshotRestore == false)
+				{
+					float emulationFPS = debugInterfaceC64->GetEmulationFPS();
+					debugInterfaceVice->snapshotsManager->RestoreSnapshotByNumFramesOffset(+emulationFPS);
+				}
+				guiMain->UnlockMutex();
+				return true;
+			}
+
+			float scrubMultipleNumSeconds = 10;
+			if (shortcut == keyboardShortcuts->kbsScrubEmulationBackMultipleFrames)
+			{
+				LOGD(">>>>>>>>>................ REWIND -%ds", scrubMultipleNumSeconds);
+				guiMain->LockMutex();
+				if (debugInterfaceVice->snapshotsManager->isPerformingSnapshotRestore == false)
+				{
+					float emulationFPS = debugInterfaceC64->GetEmulationFPS();
+					debugInterfaceVice->snapshotsManager->RestoreSnapshotByNumFramesOffset(-emulationFPS*scrubMultipleNumSeconds);
+				}
+				guiMain->UnlockMutex();
+				return true;
+			}
+			
+			if (shortcut == keyboardShortcuts->kbsScrubEmulationForwardMultipleFrames)
+			{
+				LOGD(">>>>>>>>>................ FORWARD +%ds", scrubMultipleNumSeconds);
+				guiMain->LockMutex();
+				if (debugInterfaceVice->snapshotsManager->isPerformingSnapshotRestore == false)
+				{
+					float emulationFPS = debugInterfaceC64->GetEmulationFPS();
+					debugInterfaceVice->snapshotsManager->RestoreSnapshotByNumFramesOffset(+emulationFPS*scrubMultipleNumSeconds);
+				}
+				guiMain->UnlockMutex();
+				return true;
+			}
+			//
+			
 			if (viewC64Snapshots->ProcessKeyboardShortcut(shortcut))
 			{
 				return true;
@@ -2925,36 +3059,45 @@ bool CViewC64::ProcessGlobalKeyboardShortcut(u32 keyCode, bool isShift, bool isA
 			SwitchUseKeyboardAsJoystick();
 			return true;
 		}
-		else if (shortcut == viewC64MainMenu->kbsStepOverInstruction)
+		else if (shortcut == keyboardShortcuts->kbsStepOverInstruction)
 		{
 			StepOverInstruction();
 			return true;
 		}
-		else if (shortcut == viewC64MainMenu->kbsStepOneCycle)
+		else if (shortcut == keyboardShortcuts->kbsStepBackInstruction)
+		{
+			guiMain->LockMutex();
+			debugInterfaceVice->snapshotsManager->RestoreSnapshotBackstepInstruction();
+			guiMain->UnlockMutex();
+			return true;
+		}
+		
+		else if (shortcut == keyboardShortcuts->kbsStepOneCycle)
 		{
 			StepOneCycle();
 			return true;
 		}
-		else if (shortcut == viewC64MainMenu->kbsRunContinueEmulation)
+		else if (shortcut == keyboardShortcuts->kbsRunContinueEmulation)
 		{
 			RunContinueEmulation();
 			return true;
 		}
-		else if (shortcut == viewC64MainMenu->kbsIsDataDirectlyFromRam)
+		else if (shortcut == keyboardShortcuts->kbsIsDataDirectlyFromRam)
 		{
 			SwitchIsDataDirectlyFromRam();
 			return true;
 		}
-		else if (shortcut == viewC64MainMenu->kbsToggleMulticolorImageDump)
+		else if (shortcut == keyboardShortcuts->kbsToggleMulticolorImageDump)
 		{
 			SwitchIsMulticolorDataDump();
 			return true;
 		}
-		else if (shortcut == viewC64MainMenu->kbsShowRasterBeam)
+		else if (shortcut == keyboardShortcuts->kbsShowRasterBeam)
 		{
 			SwitchIsShowRasterBeam();
 			return true;
 		}
+		
 		else if (shortcut == viewC64MainMenu->kbsMoveFocusToNextView)
 		{
 			MoveFocusToNextView();
@@ -3002,7 +3145,7 @@ bool CViewC64::ProcessGlobalKeyboardShortcut(u32 keyCode, bool isShift, bool isA
 			}
 		}
 		
-		if (shortcut == viewC64MainMenu->kbsSaveScreenImageAsPNG)
+		if (shortcut == keyboardShortcuts->kbsSaveScreenImageAsPNG)
 		{
 			viewVicEditor->SaveScreenshotAsPNG();
 			return true;
@@ -3421,78 +3564,10 @@ bool CViewC64::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 //	{
 //		VID_TestMenu();
 //	}
-	
-	// TODO: CREATE KEY SHORTCUT
-	if (keyCode == MTKEY_F10 && isAlt)
-	{
-		guiMain->LockMutex();
-		debugInterfaceVice->snapshotsManager->RestoreSnapshotBackstepInstruction();
-		guiMain->UnlockMutex();
-		return true;
-	}
-	
-	if (keyCode == MTKEY_ARROW_LEFT && isControl && isShift && isAlt)
-	{
-		guiMain->LockMutex();
-		LOGD(">>>>>>>>>................ REWIND -1");
-		debugInterfaceVice->snapshotsManager->RestoreSnapshotByNumFramesOffset(-1);
-		guiMain->UnlockMutex();
-		return true;
-	}
-	if (keyCode == MTKEY_ARROW_LEFT && isControl && isShift)
-	{
-		guiMain->LockMutex();
-//		guiMain->ShowMessage("REWIND -5s");
-		
-		// TODO: get FPS
-		LOGD(">>>>>>>>>................ REWIND -5s");
-		debugInterfaceVice->snapshotsManager->RestoreSnapshotByNumFramesOffset(-50*5);
-		guiMain->UnlockMutex();
-		return true;
-	}
-	if (keyCode == MTKEY_ARROW_LEFT && isControl)
-	{
-		guiMain->LockMutex();
-//		guiMain->ShowMessage("REWIND -1s");
-		// TODO: get FPS
-		LOGD(">>>>>>>>>................ REWIND -1s");
-		debugInterfaceVice->snapshotsManager->RestoreSnapshotByNumFramesOffset(-10);
-		guiMain->UnlockMutex();
-		return true;
-	}
-
-	if (keyCode == MTKEY_ARROW_RIGHT && isControl && isShift && isAlt)
-	{
-		guiMain->LockMutex();
-		LOGD(">>>>>>>>>................ FORWARD +1");
-		debugInterfaceVice->snapshotsManager->RestoreSnapshotByNumFramesOffset(+1);
-		guiMain->UnlockMutex();
-		return true;
-	}
-	if (keyCode == MTKEY_ARROW_RIGHT && isControl && isShift)
-	{
-		guiMain->LockMutex();
-//		guiMain->ShowMessage("FORWARD +5s");
-		LOGD(">>>>>>>>>................ FORWARD +5s");
-		debugInterfaceVice->snapshotsManager->RestoreSnapshotByNumFramesOffset(50*5);
-		guiMain->UnlockMutex();
-		return true;
-	}
-	if (keyCode == MTKEY_ARROW_RIGHT && isControl)
-	{
-		guiMain->LockMutex();
-//		guiMain->ShowMessage("FORWARD +1s");
-		LOGD(">>>>>>>>>................ FORWARD +1s");
-		debugInterfaceVice->snapshotsManager->RestoreSnapshotByNumFramesOffset(+10);
-		guiMain->UnlockMutex();
-		return true;
-	}
-
-
 //#endif
 	
 #if defined(RUN_ATARI) && defined(RUN_COMMODORE64)
-	// crude hack ctrl+a to switch emus
+	// crude hack ctrl+a to switch emus. TODO: add this to key shortcuts
 	if (keyCode == 'a' && isControl)
 	{
 		if (this->selectedDebugInterface == debugInterfaceC64)
@@ -3779,8 +3854,19 @@ bool CViewC64::DoTap(GLfloat x, GLfloat y)
 {
 	LOGG("CViewC64::DoTap:  x=%f y=%f", x, y);
 
+
 	if (viewC64->debugInterfaceC64)
 	{
+		// TODO: workaround for quick timeline access (note this will be changed)
+		// timeline for C64 only now
+		if (c64SettingsSnapshotsRecordIsActive && c64SettingsTimelineIsActive)
+		{
+			if (viewTimeline->IsInside(x, y))
+			{
+				return viewTimeline->DoTap(x, y);
+			}
+		}
+
 		// TODO: this is a crude workaround to fix problem that c64 zoomed screen is the same instance of the c64 screen (which must be split soon btw)
 		//       do not ever do this at home kids
 		
@@ -3822,7 +3908,6 @@ bool CViewC64::DoTap(GLfloat x, GLfloat y)
 		viewC64->debugInterfaceC64->MouseDown(x, y);
 	}
 
-	
 	for (std::map<float, CGuiElement *, compareZupwards>::iterator enumGuiElems = guiElementsUpwards.begin();
 		 enumGuiElems != guiElementsUpwards.end(); enumGuiElems++)
 	{
@@ -3837,7 +3922,7 @@ bool CViewC64::DoTap(GLfloat x, GLfloat y)
 			// let view decide what to do even if it does not have focus
 			guiElement->DoTap(x, y);
 
-			if (guiElement->hasFocus == false)
+			if (guiElement->IsFocusable() && ((focusElement != guiElement) || (guiElement->hasFocus == false)))
 			{
 				SetFocus((CGuiView *)guiElement);
 			}
@@ -3878,8 +3963,10 @@ bool CViewC64::DoScrollWheel(float deltaX, float deltaY)
 		if (guiElement->IsInside(mouseCursorX, mouseCursorY))
 		{
 			LOGG("  guiElement %s ->DoScrollWheel(%f %f)", guiElement->name, deltaX, deltaY);
-			guiElement->DoScrollWheel(deltaX, deltaY);
-			return true;
+			if (guiElement->DoScrollWheel(deltaX, deltaY))
+			{
+				return true;
+			}
 		}
 	}
 	
@@ -3909,6 +3996,13 @@ bool CViewC64::DoFinishTap(GLfloat x, GLfloat y)
 	if (viewC64->debugInterfaceC64)
 	{
 		viewC64->debugInterfaceC64->MouseUp(x, y);
+		
+		// TODO: workaround for quick timeline access (note this will be changed)
+		// timeline for C64 only now
+		if (c64SettingsSnapshotsRecordIsActive && c64SettingsTimelineIsActive)
+		{
+			viewTimeline->DoFinishTap(x, y);
+		}
 	}
 	
 	return CGuiView::DoFinishTap(x, y);
@@ -3933,6 +4027,19 @@ bool CViewC64::DoMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat distY, GLfloa
 	if (viewC64->debugInterfaceC64)
 	{
 		viewC64->debugInterfaceC64->MouseMove(x, y);
+		
+		if (viewC64->debugInterfaceC64)
+		{
+			// TODO: workaround for quick timeline access (note this will be changed)
+			// timeline for C64 only now
+			if (c64SettingsSnapshotsRecordIsActive && c64SettingsTimelineIsActive)
+			{
+				if (viewTimeline->IsInside(x, y))
+				{
+					return viewTimeline->DoMove(x, y, distX, distY, diffX, diffY);
+				}
+			}
+		}
 	}
 
 	return CGuiView::DoMove(x, y, distX, distY, diffX, diffY);
@@ -3940,6 +4047,16 @@ bool CViewC64::DoMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat distY, GLfloa
 
 bool CViewC64::FinishMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat distY, GLfloat accelerationX, GLfloat accelerationY)
 {
+	if (viewC64->debugInterfaceC64)
+	{
+		// TODO: workaround for quick timeline access (note this will be changed)
+		// timeline for C64 only now
+		if (c64SettingsSnapshotsRecordIsActive && c64SettingsTimelineIsActive)
+		{
+			viewTimeline->FinishMove(x, y, distX, distY, accelerationX, accelerationY);
+		}
+	}
+	
 	return CGuiView::FinishMove(x, y, distX, distY, accelerationX, accelerationY);
 }
 
@@ -3970,6 +4087,15 @@ bool CViewC64::DoMultiFinishTap(COneTouchData *touch, float x, float y)
 
 void CViewC64::FinishTouches()
 {
+	if (viewC64->debugInterfaceC64)
+	{
+		// TODO: workaround for quick timeline access (note this will be changed)
+		// timeline for C64 only now
+		if (c64SettingsSnapshotsRecordIsActive && c64SettingsTimelineIsActive)
+		{
+			viewTimeline->FinishTouches();
+		}
+	}
 	return CGuiView::FinishTouches();
 }
 
@@ -4423,6 +4549,7 @@ CScreenLayout::CScreenLayout()
 	c64DataDumpGapHexData = c64DataDumpFontSize*0.5f;
 	c64DataDumpGapDataCharacters = c64DataDumpFontSize*0.5f;
 	c64DataDumpNumberOfBytesPerLine = 8;
+	c64DataDumpShowDataCharacters = true;
 	c64DataDumpShowCharacters = true;
 	c64DataDumpShowSprites = true;
 

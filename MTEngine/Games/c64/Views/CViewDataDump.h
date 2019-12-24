@@ -114,6 +114,7 @@ public:
 	void CopyHexValuesToClipboard();
 	void CopyHexAddressToClipboard();
 	
+	bool showDataCharacters;
 	bool showCharacters;
 	bool showSprites;
 };

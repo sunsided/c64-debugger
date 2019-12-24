@@ -13,7 +13,6 @@
 #include "SYS_Defs.h"	// definition of EXEC_ON_VALGRIND
 #include "DBG_Log.h"
 //#include "SYS_CFileSystem.h"
-#include <pthread.h>
 
 // set keycode that will quit application
 void SYS_SetQuitKey(int keyCode, bool isShift, bool isAlt, bool isControl);

@@ -136,6 +136,7 @@ do_output(match_ctx ctx,
 	int pos_diff;
 	int max_diff;
 	int diff;
+	int len;
 	static output_ctx out;
 	output_ctxp old;
 	
@@ -194,7 +195,7 @@ do_output(match_ctx ctx,
 	///
 	
 //	output_word(out, (unsigned short int) (load + len));
-	int len = output_get_pos(out);
+	len = output_get_pos(out);
 //	decr->load(out, (unsigned short int) load - max_diff);
 //	output_copy_bytes(out, 0, len);
 //	

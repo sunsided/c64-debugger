@@ -14,7 +14,6 @@
 #include "CSlrImage.h"
 #include "CGuiElement.h"
 #include "CGuiView.h"
-#include <pthread.h>
 
 #define GUI_LIST_ELEMTYPE_CHARS 1
 #define GUI_LIST_ELEMTYPE_NSSTRINGS 2
@@ -110,7 +109,6 @@ public:
 	void BackupListPosition();
 	void RestoreListPosition();
 	
-	pthread_mutex_t renderMutex;
 	void LockRenderMutex();
 	void UnlockRenderMutex();
 	

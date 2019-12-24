@@ -68,6 +68,7 @@ class CViewC64StateREU;
 class CViewC64EmulationCounters;
 class CViewC64AllGraphics;
 class CViewEmulationState;
+class CViewTimeline;
 class CViewMonitorConsole;
 
 class CViewAtariScreen;
@@ -202,6 +203,7 @@ public:
 	float c64DataDumpGapAddress;
 	float c64DataDumpGapHexData;
 	float c64DataDumpGapDataCharacters;
+	bool c64DataDumpShowDataCharacters;
 	bool c64DataDumpShowCharacters;
 	bool c64DataDumpShowSprites;
 	int c64DataDumpNumberOfBytesPerLine;
@@ -490,6 +492,7 @@ public:
 	CViewC64EmulationCounters *viewC64EmulationCounters;
 
 	CViewEmulationState *viewEmulationState;
+	CViewTimeline *viewTimeline;
 	
 	CViewC64VicDisplay *viewC64VicDisplay;
 	CViewC64VicControl *viewC64VicControl;
