@@ -666,15 +666,21 @@ void X11CreateCursor()
 	XFreePixmap(dpy, bitmap);
 }
 
+bool isCursorDefined = false;
+
 void X11HideCursor(bool shouldHide)
 {
 	if (shouldHide)
 	{
+                isCursorDefined = true;
 		XDefineCursor(dpy, win, cur);
 	}
 	else
 	{
-		XUndefineCursor(dpy, win);
+	        if (isCursorDefined)
+	        {
+                   XUndefineCursor(dpy, win);
+                }
 	}
 }
 

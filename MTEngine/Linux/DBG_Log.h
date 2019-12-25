@@ -1,4 +1,3 @@
-
 /*
  *  DBG_Log.h Linux
  *
@@ -60,15 +59,16 @@ void LOG_Shutdown(void);
 
 #if !defined(GLOBAL_DEBUG_OFF)
 
+#define LOGF LOGD
 #define LOGVV LOGD
 #define LOGVD LOGD
 #define LOGVM LOGD
 
 
 
-void LOGF(unsigned int level, std::string *what);
-void LOGF(unsigned int level, char *fmt, ... );
-void LOGF(unsigned int level, const char *fmt, ... );
+void _LOGF(unsigned int level, std::string *what);
+void _LOGF(unsigned int level, char *fmt, ... );
+void _LOGF(unsigned int level, const char *fmt, ... );
 
 // GUI
 void LOGG(std::string *what);
@@ -172,12 +172,10 @@ void LOGWarning(std::string *what);
 void LOGWarning(char *fmt, ... );
 void LOGWarning(const char *fmt, ... );
 
-void LOGT(byte level, char *what);
-void LOGT(byte level, const char *what);
 void SYS_Errorf(char *fmt, ...);
 void SYS_Errorf(const char *fmt, ...);
 
-void Byte2Hex2digits(byte value, char *bufOut);
+void Byte2Hex2digits(unsigned char value, char *bufOut);
 void DBG_PrintBytes(void *data, unsigned int numBytes);
 
 void DBG_LogTime();
@@ -234,6 +232,5 @@ void DBG_LogTime();
 
 #endif
 // GLOBAL_DEBUG_OFF
-
 
 #endif //__DBG_LOGF_H__

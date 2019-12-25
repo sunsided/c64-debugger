@@ -25,7 +25,7 @@
 #include <gtk/gtk.h>
 #include <pwd.h>
 #include <sys/mman.h>
-
+#include "nfd.h"
 
 CFileSystem *gFileSystem;
 UTFString *gPathToDocuments;
@@ -62,7 +62,7 @@ void SYS_InitFileSystem()
 	gCPathToCurrentDirectory = gPathToCurrentDirectory;
 	gUTFPathToCurrentDirectory = new CSlrString(gCPathToCurrentDirectory);
 
-	gPathToResources = new char[256];
+	gPathToResources = new char[PATH_MAX];
 
 //#if !defined(USE_DOCS_INSTEAD_OF_RESOURCES)
 //	sprintf(gPathToResources, "./Resources/");
@@ -70,27 +70,24 @@ void SYS_InitFileSystem()
 	sprintf(gPathToResources, "./Documents/");
 //#endif
 
-	LOGF(DBGLVL_MAIN, "pathToResources=");
-	LOGF(DBGLVL_MAIN, gPathToResources);
+	LOGD("pathToResources=%s", gPathToResources);
 
 
 
-	gPathToDocuments = new char[256];
+	gPathToDocuments = new char[PATH_MAX];
 	sprintf(gPathToDocuments, "./Documents/");
 	gCPathToDocuments = gPathToDocuments;
 	gUTFPathToDocuments = new CSlrString(gCPathToDocuments);
 
 
-	LOGF(DBGLVL_MAIN, "pathToDocuments=");
-	LOGF(DBGLVL_MAIN, gPathToDocuments);
+	LOGD("pathToDocuments=%s", gPathToDocuments);
 
-	gPathToTemp = new char[256];
+	gPathToTemp = new char[PATH_MAX];
 //	sprintf(gPathToTemp, "./Temp/");
 	sprintf(gPathToTemp, "./Documents/");
 	gCPathToTemp = gPathToTemp;
 	gUTFPathToTemp = new CSlrString(gCPathToTemp);
-	LOGF(DBGLVL_MAIN, "gPathToTemp=");
-	LOGF(DBGLVL_MAIN, gPathToTemp);
+	LOGD("gPathToTemp=%s", gPathToTemp);
 
 	const char *homeDir;
 
@@ -99,10 +96,9 @@ void SYS_InitFileSystem()
 	    homeDir = getpwuid(getuid())->pw_dir;
 	}
 
-	gPathToSettings = new char[256];
+	gPathToSettings = new char[PATH_MAX];
 	sprintf(gPathToSettings, "%s/.C64Debugger", homeDir);
-	LOGF(DBGLVL_MAIN, "pathToSettings=");
-	LOGF(DBGLVL_MAIN, gPathToSettings);
+	LOGD("pathToSettings=%s", gPathToSettings);
 	gCPathToSettings = gPathToSettings;
 	gUTFPathToSettings = new CSlrString(gCPathToSettings);
 
@@ -951,74 +947,52 @@ void SYS_DialogOpenFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 	SYS_windowAlwaysOnTopBeforeFileDialog = VID_IsWindowAlwaysOnTop();
 	VID_SetWindowAlwaysOnTopTemporary(false);
 
-	
-	GtkWidget *dialog;
+	char *defaultFolderStr = NULL;
 
-	dialog = gtk_file_chooser_dialog_new("Open file", NULL, GTK_FILE_CHOOSER_ACTION_OPEN,
-									  "Cancel", GTK_RESPONSE_CANCEL,
-									  "Open", GTK_RESPONSE_OK,
-									  NULL);
-
-	// add extensions
-	GtkFileFilter *filterAll = gtk_file_filter_new();
-	gtk_file_filter_set_name(filterAll, "All files");
-	gtk_file_filter_add_pattern(filterAll, "*");
-
-	char *bufName = SYS_GetCharBuf();
-	char *bufPattern = SYS_GetCharBuf();
-	for (std::list<CSlrString *>::iterator it = extensions->begin(); it != extensions->end(); it++)
-	{
-		CSlrString *strExt = *it;
-		char *p = strExt->GetStdASCII();
-		
-		sprintf(bufName, "%s files", p);
-		sprintf(bufPattern, "*.%s", p);
-		
-		
-		GtkFileFilter *filter = gtk_file_filter_new();
-		gtk_file_filter_set_name(filter, bufName);
-		gtk_file_filter_add_pattern(filter, bufPattern);
-
-		gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter);
-
-		delete p;
-	}
-	SYS_ReleaseCharBuf(bufName);
-	SYS_ReleaseCharBuf(bufPattern);
-	
 	if (defaultFolder != NULL)
 	{
-		char *strDefaultFolder = defaultFolder->GetStdASCII();
-		gtk_file_chooser_set_current_folder_uri(GTK_FILE_CHOOSER(dialog), strDefaultFolder);
-		delete [] strDefaultFolder;
+		defaultFolderStr = defaultFolder->GetStdASCII();
 	}
-	
-	if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_OK)
+	else
 	{
-		char *filePath = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
-		
-		gtk_widget_destroy(dialog);
-		
+		defaultFolderStr = new char[32];
+		sprintf(defaultFolderStr, "/");
+	}
+
+	char *filtersStr = SYS_GetCharBuf();
+	for (std::list<CSlrString *>::iterator it = extensions->begin(); it != extensions->end(); it++)
+	{
+		CSlrString *filter = *it;
+		char *filterStr = filter->GetStdASCII();
+		strcat(filtersStr, filterStr);
+		strcat(filtersStr, ",");
+		delete [] filterStr;
+	}
+
+	// remove last ","
+	filtersStr[strlen(filtersStr)-1] = 0x00;
+
+	LOGD("SYS_DialogOpenFile: filtersStr=%s", filtersStr);
+
+	nfdchar_t *outPathStr = NULL;
+	nfdresult_t result = NFD_OpenDialog( filtersStr, defaultFolderStr, &outPathStr );	
+
+	if (result == NFD_OKAY)
+	{
 		VID_SetWindowAlwaysOnTopTemporary(SYS_windowAlwaysOnTopBeforeFileDialog);
 
-		CSlrString *outPath = new CSlrString(filePath);
+		CSlrString *outPath = new CSlrString(outPathStr);
 		callback->SystemDialogFileOpenSelected(outPath);
 	}
 	else
 	{
-		gtk_widget_destroy(dialog);
-
 		VID_SetWindowAlwaysOnTopTemporary(SYS_windowAlwaysOnTopBeforeFileDialog);
 
 		callback->SystemDialogFileOpenCancelled();
 	}
 
-	// ohh that's nasty hack but works for me...
-	for (int i = 0; i < 10; i++)
-	{
-		gtk_main_iteration_do(false);
-		SYS_Sleep(10);
-	}
+	delete [] defaultFolderStr;
+	SYS_ReleaseCharBuf(filtersStr);
 }
 
 void SYS_DialogSaveFile(CSystemFileDialogCallback *callback, std::list<CSlrString *> *extensions, CSlrString *defaultFileName, CSlrString *defaultFolder, CSlrString *windowTitle)
@@ -1027,90 +1001,65 @@ void SYS_DialogSaveFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 	SYS_windowAlwaysOnTopBeforeFileDialog = VID_IsWindowAlwaysOnTop();
 	VID_SetWindowAlwaysOnTopTemporary(false);
 
-	GtkWidget *dialog;
-	
-	dialog = gtk_file_chooser_dialog_new("Save file", NULL, GTK_FILE_CHOOSER_ACTION_SAVE,
-									  "Cancel", GTK_RESPONSE_CANCEL,
-									  "Save", GTK_RESPONSE_OK,
-									  NULL);
-	
-	
-	//
-	// add extensions
-	GtkFileFilter *filterAll = gtk_file_filter_new();
-	gtk_file_filter_set_name(filterAll, "All files");
-	gtk_file_filter_add_pattern(filterAll, "*");
-	
+	char *defaultFolderStr = NULL;
+
+        if (defaultFolder != NULL)
+        {
+                defaultFolderStr = defaultFolder->GetStdASCII();
+        }
+        else
+        {
+                defaultFolderStr = new char[32];
+                sprintf(defaultFolderStr, "/");
+        }
+
 	CSlrString *defaultExtension = NULL;
-
-	char *bufName = SYS_GetCharBuf();
-	char *bufPattern = SYS_GetCharBuf();
-	for (std::list<CSlrString *>::iterator it = extensions->begin(); it != extensions->end(); it++)
-	{
-		CSlrString *strExt = *it;
-
+        char *filtersStr = SYS_GetCharBuf();
+        for (std::list<CSlrString *>::iterator it = extensions->begin(); it != extensions->end(); it++)
+        {
+                CSlrString *filter = *it;
 		if (defaultExtension == NULL)
-			defaultExtension = strExt;
+			defaultExtension = filter;
 
-		char *p = strExt->GetStdASCII();
-		
-		sprintf(bufName, "%s files", p);
-		sprintf(bufPattern, "*.%s", p);
-		
-		
-		GtkFileFilter *filter = gtk_file_filter_new();
-		gtk_file_filter_set_name(filter, bufName);
-		gtk_file_filter_add_pattern(filter, bufPattern);
-		
-		gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter);
-		
-		delete p;
-	}
-	SYS_ReleaseCharBuf(bufName);
-	SYS_ReleaseCharBuf(bufPattern);
-	//
-	
-	if (defaultFolder != NULL)
-	{
-		char *strDefaultFolder = defaultFolder->GetStdASCII();
-		gtk_file_chooser_set_current_folder_uri(GTK_FILE_CHOOSER(dialog), strDefaultFolder);
-		delete [] strDefaultFolder;
-	}
-	
-	if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_OK)
-	{
-		char *filePath = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
-		
-		gtk_widget_destroy(dialog);
-		
-		VID_SetWindowAlwaysOnTopTemporary(SYS_windowAlwaysOnTopBeforeFileDialog);
+                char *filterStr = filter->GetStdASCII();
+                strcat(filtersStr, filterStr);
+                strcat(filtersStr, ",");
+                delete [] filterStr;
+        }
 
-		CSlrString *outPath = new CSlrString(filePath);
+        // remove last ","
+        filtersStr[strlen(filtersStr)-1] = 0x00;
+
+        LOGD("SYS_DialogSaveFile: filtersStr=%s", filtersStr);
+
+        nfdchar_t *outPathStr = NULL;
+        nfdresult_t result = NFD_SaveDialog( filtersStr, defaultFolderStr, &outPathStr );
+
+	if (result == NFD_OKAY)
+        {
+                VID_SetWindowAlwaysOnTopTemporary(SYS_windowAlwaysOnTopBeforeFileDialog);
+		
+		LOGD("outPathStr=%s", outPathStr);
+                CSlrString *outPath = new CSlrString(outPathStr);
 
 		// TODO: workaround gtk_dialog does not add default extension...
-		if (defaultExtension != NULL)
-		{
-			outPath->Concatenate(".");
-			outPath->Concatenate(defaultExtension);
-		}
+                if (defaultExtension != NULL)
+                {
+                        outPath->Concatenate(".");
+                        outPath->Concatenate(defaultExtension);
+                }
 
-		callback->SystemDialogFileSaveSelected(outPath);
-	}
-	else
-	{
-		gtk_widget_destroy(dialog);
-	
-		VID_SetWindowAlwaysOnTopTemporary(SYS_windowAlwaysOnTopBeforeFileDialog);
+                callback->SystemDialogFileSaveSelected(outPath);
+        }   
+        else
+        {
+                VID_SetWindowAlwaysOnTopTemporary(SYS_windowAlwaysOnTopBeforeFileDialog);
 
-		callback->SystemDialogFileSaveCancelled();
-	}
+                callback->SystemDialogFileSaveCancelled();
+        }
 
-	// ohh that's nasty hack but works for me...
-	for (int i = 0; i < 10; i++)
-	{
-		gtk_main_iteration_do(false);
-		SYS_Sleep(10);
-	}
+        delete [] defaultFolderStr;
+        SYS_ReleaseCharBuf(filtersStr);
 }
 
 bool SYS_FileExists(char *path)
