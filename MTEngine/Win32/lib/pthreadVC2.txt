@@ -1,4 +1,0 @@
-This is static version of the pthreadVC2
-
-To use dynamic you need to rename pthreadVC2-dynamic lib to pthreadVC2
-
