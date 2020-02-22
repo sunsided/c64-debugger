@@ -31,6 +31,7 @@
 #include "antic.h"
 #include "cpu.h"
 #include "a-cartridge.h"
+#include "altirra_5200_os.h"
 #include "emuos.h"
 #include "esc.h"
 #include "gtia.h"
@@ -153,6 +154,7 @@ static void alloc_mosaic_memory(void){
 
 static void AllocXEMemory(void)
 {
+	LOGD("AllocXEMemory, MEMORY_ram_size=%d", MEMORY_ram_size);
 	if (MEMORY_ram_size > 64) {
 		/* don't count 64 KB of base memory */
 		/* count number of 16 KB banks, add 1 for saving base memory 0x4000-0x7fff */
@@ -362,7 +364,9 @@ void MEMORY_StateSave(UBYTE SaveVerbose)
 	/* Save amount of base RAM in kilobytes. */
 	temp = MEMORY_ram_size > 64 ? 64 : MEMORY_ram_size;
 	StateSav_SaveINT(&temp, 1);
+	STATESAV_TAG(base_ram);
 	StateSav_SaveUBYTE(&MEMORY_mem[0], 65536);
+	STATESAV_TAG(base_ram_attrib);
 #ifndef PAGED_ATTRIB
 	StateSav_SaveUBYTE(&MEMORY_attrib[0], 65536);
 #else
@@ -1054,14 +1058,28 @@ void MEMORY_CartA0bfEnable(void)
 void MEMORY_GetCharset(UBYTE *cs)
 {
 	/* copy font, but change screencode order to ATASCII order */
-	memcpy(cs, emuos_h + 0x200, 0x100); /* control chars */
-	memcpy(cs + 0x100, emuos_h, 0x200); /* !"#$..., uppercase letters */
-	memcpy(cs + 0x300, emuos_h + 0x300, 0x100); /* lowercase letters */
+	memcpy(cs, ROM_altirra_5200_os + 0x200, 0x100); /* control chars */
+	memcpy(cs + 0x100, ROM_altirra_5200_os, 0x200); /* !"#$..., uppercase letters */
+	memcpy(cs + 0x300, ROM_altirra_5200_os + 0x300, 0x100); /* lowercase letters */
 }
 
 void MEMORY_GetCharsetScreenCodes(UBYTE *cs)
 {
+	UBYTE *orig;
+	UBYTE *inverted;
+	int i;
+
 	memcpy(cs, emuos_h, 0x0800);
+	
+	// Pajero: Atari has 128 characters in the set. Above code 128 you should make it in inverse :)
+	orig = cs;
+	inverted = cs + 128*8;
+	for (i = 0; i < 128*8; i++)
+	{
+		*inverted = *orig ^ 0xFF;
+		orig++;
+		inverted++;
+	}
 }
 
 

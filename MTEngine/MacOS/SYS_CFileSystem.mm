@@ -15,6 +15,8 @@
 #include "CSlrString.h"
 #include "VID_GLViewController.h"
 #include "SYS_Funct.h"
+#include "CViewC64.h"
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/syslimits.h>
@@ -1011,7 +1013,8 @@ void SYS_DialogOpenFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 	// temporary remove always on top window flag
 	SYS_windowAlwaysOnTopBeforeFileDialog = VID_IsWindowAlwaysOnTop();
 	VID_SetWindowAlwaysOnTopTemporary(false);
-	
+
+	viewC64->SetFocus(NULL);
 	
 	if (defaultFolder != NULL)
 	{
@@ -1044,7 +1047,7 @@ void SYS_DialogOpenFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 			[extensionsArray addObject:nsStr];
 		}
 		
-		NSLog(@"%@", extensionsArray);
+//		NSLog(@"%@", extensionsArray);
 	}
 
 	NSString *wtitle = nil;
@@ -1070,7 +1073,7 @@ void SYS_DialogOpenFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 		
 		if (extensionsArray != nil)
 		{
-			NSLog(@"SYS_DialogOpenFile: allowed file types=%@", extensionsArray);
+//			NSLog(@"SYS_DialogOpenFile: allowed file types=%@", extensionsArray);
 			[panel setAllowedFileTypes:extensionsArray];
 		}
 
@@ -1133,6 +1136,8 @@ void SYS_DialogSaveFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 	SYS_windowAlwaysOnTopBeforeFileDialog = VID_IsWindowAlwaysOnTop();
 	VID_SetWindowAlwaysOnTopTemporary(false);
 
+	viewC64->SetFocus(NULL);
+
 	NSMutableArray *extensionsArray = [[NSMutableArray alloc] init];
 	
 	for (std::list<CSlrString *>::iterator it = extensions->begin(); it != extensions->end(); it++)
@@ -1142,7 +1147,7 @@ void SYS_DialogSaveFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 		[extensionsArray addObject:nsStr];
 	}
 	
-	NSLog(@"%@", extensionsArray);
+//	NSLog(@"%@", extensionsArray);
 
 	NSString *fname = nil;
 	NSString *wtitle = nil;

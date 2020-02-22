@@ -1,6 +1,7 @@
 #include "CGuiViewConsole.h"
 #include "SYS_Threading.h"
 #include "SYS_KeyCodes.h"
+#include "CSlrString.h"
 #include "CSlrFont.h"
 
 #define INVERT_CHAR 0x80
@@ -17,9 +18,15 @@ CGuiViewConsole::CGuiViewConsole(float posX, float posY, float posZ, float sizeX
 	this->hasCommandLine = hasCommandLine;
 	
 	promptWidth = 0;
-	
 	maxCharsInLine = 61;
-		
+	
+	numScrollLines = 0;
+	numLinesInBuffer = 0;
+	for (int i = 0; i < MAX_CONSOLE_SCROLL_LINES; i++)
+	{
+		lines[i] = NULL;
+	}
+	
 	mutex = new CSlrMutex("CGuiViewConsole");
 	
 	lineHeight = font->GetLineHeight();
@@ -76,18 +83,39 @@ void CGuiViewConsole::ResetCommandLine()
 void CGuiViewConsole::PrintSingleLine(char *text)
 {
 	mutex->Lock();
-	
-	if (lines.size() == numLines)
+
+	if (lines[0] != NULL)
 	{
-		lines.pop_front();
+		delete [] lines[0];
+	}
+	
+	for (int i = 1; i < MAX_CONSOLE_SCROLL_LINES; i++)
+	{
+		lines[i-1] = lines[i];
 	}
 	
 	int len = strlen(text);
-	char *buf = new char [len+2];
+	char *buf = new char [len+1];
 	strcpy(buf, text);
-	lines.push_back(buf);
+	lines[MAX_CONSOLE_SCROLL_LINES-1] = buf;
+	
+	numLinesInBuffer++;
+	if (numLinesInBuffer == MAX_CONSOLE_SCROLL_LINES+1)
+	{
+		numLinesInBuffer = MAX_CONSOLE_SCROLL_LINES;
+	}
 	
 	mutex->Unlock();
+}
+
+void CGuiViewConsole::PrintLine(CSlrString *str)
+{
+	// TODO: print UTF line
+	char *buf = str->GetStdASCII();
+	
+	this->PrintSingleLine(buf);
+	
+	delete [] buf;
 }
 
 void CGuiViewConsole::PrintLine(const char *format, ...)
@@ -142,6 +170,7 @@ void CGuiViewConsole::PrintString(char *text)
 
 bool CGuiViewConsole::KeyDown(u32 keyCode)
 {
+	LOGD("CGuiViewConsole::KeyDown: %c %x", keyCode, keyCode);
 	if (!hasCommandLine)
 		return false;
 	
@@ -224,6 +253,7 @@ bool CGuiViewConsole::KeyDown(u32 keyCode)
 	}
 	else
 	{
+		LOGD("commandLine=%s", commandLine);
 		if (commandLine[commandLineCursorPos] == 0x00)
 		{
 			commandLine[commandLineCursorPos+1] = 0x00;
@@ -248,18 +278,26 @@ bool CGuiViewConsole::KeyDown(u32 keyCode)
 void CGuiViewConsole::Render()
 {
 	mutex->Lock();
-	int numSkipLines = numLines - lines.size();
 
 	float px = posX + 1.5f;
-	float py = posY + numSkipLines * lineHeight + 3.0f;
+	float py = posY + 3.0f;
 	
-	for (std::list<char *>::iterator it = lines.begin(); it != lines.end(); it++)
+	int lineNum = MAX_CONSOLE_SCROLL_LINES - numLines - numScrollLines;
+	
+	for (int i = 0; i < numLines; i++)
 	{
-		char *lineText = *it;
-		
-		font->BlitTextColor(lineText, px, py, posZ, fontScale, textColorR, textColorG, textColorB, textColorA);
+		if (lineNum >= 0)
+		{
+			char *lineText = lines[lineNum];
+			
+			if (lineText != NULL)
+			{
+				font->BlitTextColor(lineText, px, py, posZ, fontScale, textColorR, textColorG, textColorB, textColorA);
+			}
+		}
 		
 		py += lineHeight;
+		lineNum++;
 	}
 	
 	if (hasCommandLine)
@@ -303,3 +341,26 @@ void CGuiViewConsole::Render()
 	mutex->Unlock();
 }
 
+bool CGuiViewConsole::DoScrollWheel(float deltaX, float deltaY)
+{
+	LOGD("CGuiViewConsole::DoScrollWheel: %f", deltaY);
+	
+	if (numLinesInBuffer < numLines)
+		return false;
+	
+	numScrollLines += (int)deltaY;
+	
+	if (numScrollLines < 0)
+	{
+		numScrollLines = 0;
+	}
+	
+	if (numScrollLines > numLinesInBuffer-numLines)
+	{
+		numScrollLines = numLinesInBuffer-numLines;
+	}
+	
+	LOGD("numLines=%d numScrollLines=%d numLinesInBuffer=%d",
+		 numLines, numScrollLines, numLinesInBuffer);
+	return false;
+}

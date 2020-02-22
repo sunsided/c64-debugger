@@ -18,6 +18,7 @@
 #include "C64KeyboardShortcuts.h"
 #include "C64Opcodes.h"
 #include "CGuiMain.h"
+#include "C64D_Version.h"
 
 #include <math.h>
 
@@ -30,19 +31,26 @@
 
 float speedDivider = 1.0f;
 
-float dataColorSpeed = 0.020 / speedDivider;
-float dataAlphaSpeed = 0.020 / speedDivider;
+float dataColorSpeed; // = 0.020 / speedDivider;
+float dataAlphaSpeed; // = 0.020 / speedDivider;
 
-float codeColorSpeed = 0.07 / speedDivider;
-float codeAlphaSpeed = 0.10 / speedDivider;
+float codeColorSpeed; // = 0.07 / speedDivider;
+float codeAlphaSpeed; // = 0.10 / speedDivider;
 
 const float alphaSplit = 0.55f;
 const float colorSplit = 0.5f;
 
+#if defined(RUN_ATARI)
+float colorExecuteCodeR = 0.8f;
+float colorExecuteCodeG = 1.0f;
+float colorExecuteCodeB = 1.0f;
+float colorExecuteCodeA = 0.9f;
+#else
 float colorExecuteCodeR = 0.0f;
 float colorExecuteCodeG = 1.0f;
 float colorExecuteCodeB = 1.0f;
 float colorExecuteCodeA = 0.7f;
+#endif
 
 float colorExecuteArgumentR = 0.0f;
 float colorExecuteArgumentG = 0.0f;
@@ -63,11 +71,20 @@ void C64DebuggerSetMemoryMapCellsFadeSpeed(float fadeSpeed)
 {
 	speedDivider = 1 / fadeSpeed;
 
+#if defined(RUN_ATARI)
+	dataColorSpeed = 0.020 / speedDivider;
+	dataAlphaSpeed = 0.020 / speedDivider;
+	
+	codeColorSpeed = 0.035 / speedDivider;
+	codeAlphaSpeed = 0.05 / speedDivider;
+#else
 	dataColorSpeed = 0.020 / speedDivider;
 	dataAlphaSpeed = 0.020 / speedDivider;
 	
 	codeColorSpeed = 0.07 / speedDivider;
 	codeAlphaSpeed = 0.10 / speedDivider;
+#endif
+
 }
 
 // rgb color is represented as <0.0, 1.0>
@@ -577,7 +594,18 @@ void CViewMemoryMap::UpdateWholeMap()
 
 void CViewMemoryMap::CellRead(uint16 addr)
 {
-	memoryCells[addr]->MarkCellRead();
+	CViewMemoryMapCell *cell = memoryCells[addr];
+	cell->MarkCellRead();
+}
+
+void CViewMemoryMap::CellRead(uint16 addr, uint16 pc, int readRasterLine, int readRasterCycle)
+{
+	CViewMemoryMapCell *cell = memoryCells[addr];
+	cell->MarkCellRead();
+
+	cell->readPC = pc;
+	cell->readRasterLine = readRasterLine;
+	cell->readRasterCycle = readRasterCycle;
 }
 
 void CViewMemoryMap::CellWrite(uint16 addr, uint8 value)
@@ -587,15 +615,14 @@ void CViewMemoryMap::CellWrite(uint16 addr, uint8 value)
 	cell->MarkCellWrite(value);
 }
 
-void CViewMemoryMap::CellWrite(uint16 addr, uint8 value, uint16 pc, int viciiRasterLine, int viciiRasterCycle)
+void CViewMemoryMap::CellWrite(uint16 addr, uint8 value, uint16 pc, int writeRasterLine, int writeRasterCycle)
 {
 	CViewMemoryMapCell *cell = memoryCells[addr];
-	
 	cell->MarkCellWrite(value);
 	
-	cell->pc = pc;
-	cell->viciiRasterLine = viciiRasterLine;
-	cell->viciiRasterCycle = viciiRasterCycle;
+	cell->writePC = pc;
+	cell->writeRasterLine = writeRasterLine;
+	cell->writeRasterCycle = writeRasterCycle;
 }
 
 void CViewMemoryMap::CellExecute(uint16 addr, uint8 opcode)
@@ -1449,9 +1476,20 @@ bool CViewMemoryMap::DoTap(GLfloat x, GLfloat y)
 				if (guiMain->isControlPressed)
 				{
 					CViewMemoryMapCell *cell = this->memoryCells[addr];
-					if (cell->pc != -1)
+					
+					if (guiMain->isShiftPressed)
 					{
-						viewDataDump->viewDisassemble->ScrollToAddress(cell->pc);
+						if (cell->readPC != -1)
+						{
+							viewDataDump->viewDisassemble->ScrollToAddress(cell->readPC);
+						}
+					}
+					else
+					{
+						if (cell->writePC != -1)
+						{
+							viewDataDump->viewDisassemble->ScrollToAddress(cell->writePC);
+						}
 					}
 				}
 
@@ -1564,7 +1602,8 @@ void CViewMemoryMapCell::ClearReadWriteMarkers()
 	sb = 0.0f; vb = 0.0f; rb = 0.0f;
 	sa = 0.0f; va = 0.0f; ra = 0.0f;
 	
-	pc = viciiRasterCycle = viciiRasterLine = -1;
+	writePC = writeRasterCycle = writeRasterLine = -1;
+	readPC  = readRasterCycle  = readRasterLine = -1;
 }
 
 
@@ -1583,7 +1622,8 @@ CViewMemoryMapCell::CViewMemoryMapCell(int addr)
 	isRead = false;
 	isWrite = false;
 
-	pc = viciiRasterCycle = viciiRasterLine = -1;
+	writePC = writeRasterCycle = writeRasterLine = -1;
+	readPC  = readRasterCycle  = readRasterLine = -1;
 }
 
 CViewMemoryMap::~CViewMemoryMap()

@@ -630,9 +630,21 @@ bool CViewDataDump::DoTap(GLfloat x, GLfloat y)
 	if (guiMain->isControlPressed)
 	{
 		CViewMemoryMapCell *cell = viewMemoryMap->memoryCells[dataPositionAddr];
-		if (cell->pc != -1)
+		
+		if (guiMain->isShiftPressed)
 		{
-			viewDisassemble->ScrollToAddress(cell->pc);
+			if (cell->readPC != -1)
+			{
+				viewDisassemble->ScrollToAddress(cell->readPC);
+			}
+		}
+		else
+		{
+			if (cell->writePC != -1)
+			{
+				viewDisassemble->ScrollToAddress(cell->writePC);
+			}
+			
 		}
 	}
 	else
@@ -667,7 +679,13 @@ bool CViewDataDump::DoTap(GLfloat x, GLfloat y)
 
 bool CViewDataDump::DoScrollWheel(float deltaX, float deltaY)
 {
+	if (this->IsInside(guiMain->mousePosX, guiMain->mousePosY) == false)
+	{
+		return false;
+	}
+	
 	LOGD("CViewDataDump::DoScrollWheel: %f %f", deltaX, deltaY);
+	
 	guiMain->LockMutex();
 	
 	int dy = fabs(round(deltaY));

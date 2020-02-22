@@ -1204,6 +1204,7 @@ void CSlrImage::BindImage()
 	
 	
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, rasterWidth, rasterHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, loadImageData);
+//	TODO: fix me glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, rasterWidth, rasterHeight, GL_RGBA, GL_UNSIGNED_BYTE, loadImageData);
 }
 
 void CSlrImage::FreeLoadImage()

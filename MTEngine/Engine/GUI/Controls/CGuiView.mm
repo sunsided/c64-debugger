@@ -916,7 +916,7 @@ bool CGuiView::SetFocus(CGuiElement *element)
 	this->repeatTime = 0;
 	ClearFocus();
 
-	if (element->SetFocus(true))
+	if (element != NULL && element->SetFocus(true))
 	{
 		focusElement = element;
 	}

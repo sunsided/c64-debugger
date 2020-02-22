@@ -66,14 +66,24 @@ float C64DebugInterface::GetEmulationFPS()
 	return -1;
 }
 
-void C64DebugInterface::ResetMainCpuCycleCounter()
-{
-	CDebugInterface::ResetMainCpuCycleCounter();
-}
-
 unsigned int C64DebugInterface::GetMainCpuCycleCounter()
 {
 	return CDebugInterface::GetMainCpuCycleCounter();
+}
+
+void C64DebugInterface::ResetMainCpuDebugCycleCounter()
+{
+	CDebugInterface::ResetMainCpuDebugCycleCounter();
+}
+
+unsigned int C64DebugInterface::GetMainCpuDebugCycleCounter()
+{
+	return CDebugInterface::GetMainCpuDebugCycleCounter();
+}
+
+unsigned int C64DebugInterface::GetPreviousCpuInstructionCycleCounter()
+{
+	return CDebugInterface::GetPreviousCpuInstructionCycleCounter();
 }
 
 void C64DebugInterface::ResetEmulationFrameCounter()
@@ -84,6 +94,11 @@ void C64DebugInterface::ResetEmulationFrameCounter()
 unsigned int C64DebugInterface::GetEmulationFrameNumber()
 {
 	return CDebugInterface::GetEmulationFrameNumber();
+}
+
+void C64DebugInterface::RefreshScreenNoCallback()
+{
+	SYS_FatalExit("C64DebugInterface::RefreshScreenNoCallback");
 }
 
 void C64DebugInterface::InitKeyMap(C64KeyMap *keyMap)
@@ -614,28 +629,6 @@ void C64DebugInterface::GetFloatCBMColor(uint8 colorNum, float *r, float *g, flo
 
 //
 
-void C64DebugInterface::MarkC64CellRead(uint16 addr)
-{
-	viewC64->viewC64MemoryMap->CellRead(addr);
-}
-
-void C64DebugInterface::MarkC64CellWrite(uint16 addr, uint8 value)
-{
-	viewC64->viewC64MemoryMap->CellWrite(addr, value);
-}
-
-void C64DebugInterface::MarkDrive1541CellRead(uint16 addr)
-{
-	viewC64->viewDrive1541MemoryMap->CellRead(addr);
-}
-
-void C64DebugInterface::MarkDrive1541CellWrite(uint16 addr, uint8 value)
-{
-	viewC64->viewDrive1541MemoryMap->CellWrite(addr, value);
-}
-
-//
-
 //void C64DebugInterface::UiInsertD64(CSlrString *path)
 //{
 //	SYS_FatalExit("C64DebugInterface::UiInsertD64");
@@ -858,3 +851,40 @@ CSlrDataAdapter *C64DebugInterface::GetDataAdapter()
 	return this->dataAdapterC64;
 }
 
+CViewDisassemble *C64DebugInterface::GetViewMainCpuDisassemble()
+{
+	return NULL;
+}
+
+CViewDisassemble *C64DebugInterface::GetViewDriveDisassemble(int driveNo)
+{
+	return NULL;
+}
+
+CViewBreakpoints *C64DebugInterface::GetViewBreakpoints()
+{
+	return NULL;
+}
+
+CViewDataWatch *C64DebugInterface::GetViewMemoryDataWatch()
+{
+	return NULL;
+}
+
+//
+bool C64DebugInterface::IsCodeMonitorSupported()
+{
+	return false;
+}
+
+CSlrString *C64DebugInterface::GetCodeMonitorPrompt()
+{
+	// monitor is not supported
+	return NULL;
+}
+
+bool C64DebugInterface::ExecuteCodeMonitorCommand(CSlrString *commandStr)
+{
+	// monitor is not supported
+	return false;
+}

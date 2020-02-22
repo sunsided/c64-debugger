@@ -65,9 +65,9 @@ class CViewVicEditor;
 class CViewDriveStateCPU;
 class CViewDrive1541StateVIA;
 class CViewC64StateREU;
-class CViewC64EmulationCounters;
 class CViewC64AllGraphics;
 class CViewEmulationState;
+class CViewEmulationCounters;
 class CViewTimeline;
 class CViewMonitorConsole;
 
@@ -120,6 +120,9 @@ enum screenLayouts
 	SCREEN_LAYOUT_ATARI_SHOW_STATES,
 	SCREEN_LAYOUT_ATARI_MEMORY_MAP,
 	SCREEN_LAYOUT_ATARI_MONITOR_CONSOLE,
+	SCREEN_LAYOUT_ATARI_CYCLER,
+	SCREEN_LAYOUT_ATARI_DISPLAY_LITE,
+	SCREEN_LAYOUT_ATARI_SOURCE_CODE,
 
 	// nes
 	SCREEN_LAYOUT_NES_ONLY,
@@ -260,11 +263,11 @@ public:
 	bool c64AllGraphicsVisible;
 	float c64AllGraphicsX, c64AllGraphicsY;
 	
-	bool monitorConsoleVisible;
-	float monitorConsoleX, monitorConsoleY;
-	float monitorConsoleSizeX, monitorConsoleSizeY;
-	float monitorConsoleFontScale;
-	int monitorConsoleNumLines;
+	bool c64MonitorConsoleVisible;
+	float c64MonitorConsoleX, c64MonitorConsoleY;
+	float c64MonitorConsoleSizeX, c64MonitorConsoleSizeY;
+	float c64MonitorConsoleFontScale;
+	int c64MonitorConsoleNumLines;
 	
 	bool emulationStateVisible;
 	float emulationStateX, emulationStateY;
@@ -296,6 +299,11 @@ public:
 	bool atariDisassembleShowLabels;
 	int atariDisassembleNumberOfLabelCharacters;
 
+	bool atariSourceCodeVisible;
+	float atariSourceCodeX, atariSourceCodeY;
+	float atariSourceCodeSizeX, atariSourceCodeSizeY;
+	float atariSourceCodeFontSize;
+
 	bool atariDataDumpVisible;
 	float atariDataDumpX, atariDataDumpY;
 	float atariDataDumpSizeX, atariDataDumpSizeY;
@@ -303,6 +311,7 @@ public:
 	float atariDataDumpGapAddress;
 	float atariDataDumpGapHexData;
 	float atariDataDumpGapDataCharacters;
+	bool atariDataDumpShowDataCharacters;
 	bool atariDataDumpShowCharacters;
 	bool atariDataDumpShowSprites;
 	int atariDataDumpNumberOfBytesPerLine;
@@ -326,6 +335,16 @@ public:
 	bool atariStatePOKEYVisible;
 	float atariStatePOKEYX, atariStatePOKEYY;
 	float atariStatePOKEYFontSize;
+
+	bool atariMonitorConsoleVisible;
+	float atariMonitorConsoleX, atariMonitorConsoleY;
+	float atariMonitorConsoleSizeX, atariMonitorConsoleSizeY;
+	float atariMonitorConsoleFontScale;
+	int atariMonitorConsoleNumLines;
+
+	bool atariEmulationCountersVisible;
+	float atariEmulationCountersX, atariEmulationCountersY;
+	float atariEmulationCountersFontSize;
 
 	///////
 	bool debugOnNes;
@@ -479,27 +498,24 @@ public:
 	
 	CViewSourceCode *viewC64SourceCode;
 	
-	CViewDisassemble *viewAtariDisassemble;
-	CViewDataDump *viewAtariMemoryDataDump;
-	CViewMemoryMap *viewAtariMemoryMap;
-	CViewBreakpoints *viewAtariBreakpoints;
-
 	CViewC64StateCIA *viewC64StateCIA;
 	CViewC64StateSID *viewC64StateSID;
 	CViewC64StateVIC *viewC64StateVIC;
 	CViewDrive1541StateVIA *viewDrive1541StateVIA;
 	CViewC64StateREU *viewC64StateREU;
-	CViewC64EmulationCounters *viewC64EmulationCounters;
+	CViewEmulationCounters *viewC64EmulationCounters;
 
 	CViewEmulationState *viewEmulationState;
-	CViewTimeline *viewTimeline;
+
+	CViewTimeline *viewC64Timeline;
+	CViewTimeline *viewAtariTimeline;
 	
 	CViewC64VicDisplay *viewC64VicDisplay;
 	CViewC64VicControl *viewC64VicControl;
 	
 	CViewC64AllGraphics *viewC64AllGraphics;
 
-	CViewMonitorConsole *viewMonitorConsole;
+	CViewMonitorConsole *viewC64MonitorConsole;
 	
 	CViewC64StateCPU *viewC64StateCPU;
 	CViewDriveStateCPU *viewDriveStateCPU;
@@ -509,17 +525,25 @@ public:
 	
 	// Atari
 	CViewAtariScreen *viewAtariScreen;
+	CViewDisassemble *viewAtariDisassemble;
+	CViewDataDump *viewAtariMemoryDataDump;
+	CViewDataWatch *viewAtariMemoryDataWatch;
+	CViewMemoryMap *viewAtariMemoryMap;
+	CViewBreakpoints *viewAtariBreakpoints;
 	CViewAtariStateCPU *viewAtariStateCPU;
 	CViewAtariStateANTIC *viewAtariStateANTIC;
 	CViewAtariStatePIA *viewAtariStatePIA;
 	CViewAtariStateGTIA *viewAtariStateGTIA;
 	CViewAtariStatePOKEY *viewAtariStatePOKEY;
+	CViewMonitorConsole *viewAtariMonitorConsole;
+	CViewEmulationCounters *viewAtariEmulationCounters;
 	CViewSnapshots *viewAtariSnapshots;
 
 	// NES
 	CViewNesScreen *viewNesScreen;
 	CViewNesStateCPU *viewNesStateCPU;
 	CViewDisassemble *viewNesDisassemble;
+	CViewSourceCode *viewAtariSourceCode;
 	CViewDataDump *viewNesMemoryDataDump;
 	CViewMemoryMap *viewNesMemoryMap;
 	CViewBreakpoints *viewNesBreakpoints;
@@ -573,6 +597,7 @@ public:
 	
 	void SwitchScreenLayout();
 	void SetLayout(int newScreenLayoutId);
+	void RefreshLayout();
 	void SwitchToScreenLayout(int newScreenLayoutId);
 	void SwitchUseKeyboardAsJoystick();
 	void SwitchIsMulticolorDataDump();
@@ -605,10 +630,6 @@ public:
 	void CreateFonts();
 	
 	volatile bool isShowingRasterCross;
-	
-	
-	//
-	C64Symbols *symbols;
 	
 	virtual void ApplicationEnteredBackground();
 	virtual void ApplicationEnteredForeground();

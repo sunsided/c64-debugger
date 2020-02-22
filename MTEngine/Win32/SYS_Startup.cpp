@@ -956,6 +956,7 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 		{
 			LOGM("WM_CLOSE");
 			ShowTaskBar(true);
+			if (isWin32ConsoleAttached) FreeConsole();
 			PostQuitMessage(0);						// Send A Quit Message
 			return 0;								// Jump Back
 		}
@@ -1263,7 +1264,7 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 				int xPos = (int)(((float)GET_X_LPARAM(lParam) - VIEW_START_X) / (float)SCREEN_SCALE);
 				int yPos = (int)(((float)GET_Y_LPARAM(lParam) - VIEW_START_Y) / (float)SCREEN_SCALE);
 
-				LOGI("     > VID_NotTouchedMoved WM_MOUSEMOVE: x=%d y=%d", xPos, yPos);
+				//LOGI("     > VID_NotTouchedMoved WM_MOUSEMOVE: x=%d y=%d", xPos, yPos);
 
 				VID_NotTouchedMoved(xPos, yPos);
 			}
@@ -1394,6 +1395,87 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 }
 */
 
+void SYS_SetMainProcessPriorityBoostDisabled(bool isPriorityBoostDisabled)
+{
+	LOGD("SYS_SetMainProcessPriorityBoostDisabled: isPriorityBoostDisabled=%s", STRBOOL(isPriorityBoostDisabled));
+
+	BOOL bDisablePriorityBoost = isPriorityBoostDisabled ? TRUE:FALSE;
+	
+	if (SetProcessPriorityBoost(GetCurrentProcess(), bDisablePriorityBoost) == 0)
+	{
+		LOGError("SetProcessPriorityBoost failed");
+		//MessageBox(NULL, "SetProcessPriorityBoost failed", "Error", MB_OK);
+	}
+	else
+	{
+		//MessageBox(NULL, "SetProcessPriorityBoost OK", "OK", MB_OK);
+	}
+
+}
+void SYS_SetMainProcessPriority(int priority)
+{
+	LOGD("SYS_SetMainProcessPriority: priority=%d", priority);
+
+	DWORD dwPriorityClass = ABOVE_NORMAL_PRIORITY_CLASS;
+	switch(priority)
+	{
+		case MT_PRIORITY_IDLE:
+			dwPriorityClass = IDLE_PRIORITY_CLASS;
+			break;
+		case MT_PRIORITY_BELOW_NORMAL:
+			dwPriorityClass = BELOW_NORMAL_PRIORITY_CLASS;
+			break;
+		case MT_PRIORITY_NORMAL:
+			dwPriorityClass = NORMAL_PRIORITY_CLASS;
+			break;
+		case MT_PRIORITY_ABOVE_NORMAL:
+			dwPriorityClass = ABOVE_NORMAL_PRIORITY_CLASS;
+			break;
+		case MT_PRIORITY_HIGH_PRIORITY:
+			dwPriorityClass = HIGH_PRIORITY_CLASS;
+			break;
+	}
+
+	if (SetPriorityClass(GetCurrentProcess(), dwPriorityClass) == 0)
+	{
+		LOGError("SetPriorityClass to 0x%x failed", dwPriorityClass);
+		//MessageBox(NULL, "SetPriorityClass failed", "Error", MB_OK);
+	}
+	else
+	{
+		//MessageBox(NULL, "SetPriorityClass OK", "OK", MB_OK);
+	}
+}
+
+bool isWin32ConsoleAttached = false;
+
+void SYS_AttachConsoleToStdOutIfNotRedirected()
+{
+	// check if stdout is already redirected
+	bool isRedirected = false;
+	HANDLE handleStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	DWORD fileTypeStdOut = GetFileType(handleStdOut);
+	if (fileTypeStdOut == FILE_TYPE_DISK || fileTypeStdOut == FILE_TYPE_PIPE)
+	{
+		isRedirected = true;
+	}
+
+	if (isRedirected == FALSE)
+	{
+		if(AttachConsole(ATTACH_PARENT_PROCESS) || AllocConsole())
+		{
+			//printf("isRedirected=%d fileTypeStdOut=%d\n", isRedirected, fileTypeStdOut);
+
+			isWin32ConsoleAttached = true;
+			freopen("CONOUT$", "w", stdout);
+			freopen("CONOUT$", "w", stderr);
+
+			fprintf(stdout, "\n");
+		}	
+	}
+
+}
+
 int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 					HINSTANCE	hPrevInstance,		// Previous Instance
 					LPSTR		lpCmdLine,			// Command Line Parameters
@@ -1404,6 +1486,8 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 
 	pthread_win32_process_attach_np();
 	
+	// moved to settings
+	/*
 	if (SetProcessPriorityBoost(GetCurrentProcess(), true) == 0)
 	{
 		LOGError("SetProcessPriorityBoost failed");
@@ -1422,7 +1506,7 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	else
 	{
 		//MessageBox(NULL, "SetPriorityClass OK", "OK", MB_OK);
-	}
+	}*/
 
 	SYS_InitCharBufPool();
 	SYS_InitStrings();
@@ -1438,6 +1522,21 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 
 	SYS_InitFileSystem();
 
+	/*
+	bool bConsole = AttachConsole(ATTACH_PARENT_PROCESS) != FALSE;
+	
+	if (bConsole)
+	{
+		HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+		int fd = _open_osfhandle((intptr_t)hStdOut, _O_TEXT);
+		if (fd > 0)
+		{
+			*stdout = *_fdopen(fd, "w");
+			setvbuf(stdout, NULL, _IONBF, 0 );
+		}
+	}
+	*/
+	
 	C64DebuggerParseCommandLine0();
 
 	LOGD("init GLView"); 
@@ -1561,6 +1660,8 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 
 	LOG_Shutdown();
 
+	if (isWin32ConsoleAttached) FreeConsole();
+	
 	_exit(0);
 	
 	pthread_win32_process_detach_np();

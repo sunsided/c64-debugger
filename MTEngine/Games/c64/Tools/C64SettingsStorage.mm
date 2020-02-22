@@ -134,7 +134,8 @@ CSlrString *c64SettingsDefaultPRGFolder = NULL;
 CSlrString *c64SettingsPathToCartridge = NULL;
 CSlrString *c64SettingsDefaultCartridgeFolder = NULL;
 
-CSlrString *c64SettingsPathToSnapshot = NULL;
+CSlrString *c64SettingsPathToViceSnapshot = NULL;
+CSlrString *c64SettingsPathToAtariSnapshot = NULL;
 CSlrString *c64SettingsDefaultSnapshotsFolder = NULL;
 
 CSlrString *c64SettingsPathToTAP = NULL;
@@ -144,6 +145,8 @@ CSlrString *c64SettingsPathToReu = NULL;
 CSlrString *c64SettingsDefaultReuFolder = NULL;
 
 CSlrString *c64SettingsDefaultVicEditorFolder = NULL;
+
+bool c64SettingsAtariPokeyStereo = false;
 
 CSlrString *c64SettingsPathToXEX = NULL;
 CSlrString *c64SettingsDefaultXEXFolder = NULL;
@@ -172,7 +175,13 @@ CSlrString *c64SettingsPathToBreakpoints = NULL;
 CSlrString *c64SettingsPathToWatches = NULL;
 CSlrString *c64SettingsPathToDebugInfo = NULL;
 
+bool c64SettingsUseNativeEmulatorMonitor = false;
+
 CSlrString *c64SettingsPathToJukeboxPlaylist = NULL;
+
+// priority
+bool c64SettingsIsProcessPriorityBoostDisabled = true;
+u8 c64SettingsProcessPriority = MT_PRIORITY_ABOVE_NORMAL;
 
 // profiler
 CSlrString *c64SettingsC64ProfilerFileOutputPath = NULL;
@@ -377,6 +386,11 @@ void C64DebuggerStoreSettings()
 
 	storeSettingU16(byteBuffer, "ScreenSupersampleFactor", c64SettingsScreenSupersampleFactor);
 
+	storeSettingBool(byteBuffer, "DisableProcessPriorityBoost", c64SettingsIsProcessPriorityBoostDisabled);
+	storeSettingU8(byteBuffer, "ProcessPriority", c64SettingsProcessPriority);
+
+	storeSettingBool(byteBuffer, "UseNativeEmulatorMonitor", c64SettingsUseNativeEmulatorMonitor);
+	
 #if !defined(WIN32)
 	storeSettingBool(byteBuffer, "UseSystemDialogs", c64SettingsUseSystemFileDialogs);
 #endif
@@ -446,6 +460,7 @@ void C64DebuggerStoreSettings()
 	storeSettingU8(byteBuffer, "AtariVideoSystem", c64SettingsAtariVideoSystem);
 	storeSettingU8(byteBuffer, "AtariMachineType", c64SettingsAtariMachineType);
 	storeSettingU8(byteBuffer, "AtariRamSizeOption", c64SettingsAtariRamSizeOption);
+	storeSettingBool(byteBuffer, "AtariPokeyStereo", c64SettingsAtariPokeyStereo);
 #endif
 
 	storeSettingBool(byteBuffer, "MemMapMultiTouch", c64SettingsUseMultiTouchInMemoryMap);
@@ -578,7 +593,7 @@ void C64DebuggerReadSettingsValues(CByteBuffer *byteBuffer, uint8 settingsBlockT
 		
 		char *name = byteBuffer->GetString();
 		
-		LOGD("readed setting '%s'", name);
+		LOGD("read setting '%s'", name);
 		
 		void *value = NULL;
 		
@@ -806,6 +821,65 @@ void C64DebuggerSetSetting(char *name, void *value)
 		return;
 	}
 	
+	if (!strcmp(name, "SnapshotsManagerStoreInterval"))
+	{
+		i32 v = *((i32*)value);
+		if (viewC64->debugInterfaceC64)
+		{
+			viewC64->debugInterfaceC64->snapshotsManager->SetRecordingStoreInterval(v);
+		}
+		if (viewC64->debugInterfaceAtari)
+		{
+			viewC64->debugInterfaceAtari->snapshotsManager->SetRecordingStoreInterval(v);
+		}
+		viewC64->viewC64SettingsMenu->menuItemC64SnapshotsManagerStoreInterval->SetValue(v, false);
+		return;
+	}
+	else if (!strcmp(name, "SnapshotsManagerLimit"))
+	{
+		i32 v = *((i32*)value);
+		if (viewC64->debugInterfaceC64)
+		{
+			viewC64->debugInterfaceC64->snapshotsManager->SetRecordingLimit(v);
+		}
+		if (viewC64->debugInterfaceAtari)
+		{
+			viewC64->debugInterfaceAtari->snapshotsManager->SetRecordingLimit(v);
+		}
+		viewC64->viewC64SettingsMenu->menuItemC64SnapshotsManagerLimit->SetValue(v, false);
+		return;
+	}
+	else if (!strcmp(name, "TimelineIsActive"))
+	{
+		bool v = *((bool*)value);
+		c64SettingsTimelineIsActive = v;
+		viewC64->viewC64SettingsMenu->menuItemC64TimelineIsActive->SetSelectedOption(v, false);
+		return;
+	}
+	else if (!strcmp(name, "UseNativeEmulatorMonitor"))
+	{
+		bool v = *((bool*)value);
+		c64SettingsUseNativeEmulatorMonitor = v;
+		return;
+	}
+	
+#if defined(WIN32)
+	else if (!strcmp(name, "DisableProcessPriorityBoost"))
+	{
+		bool v = *((bool*)value);
+		c64SettingsIsProcessPriorityBoostDisabled = v;
+		SYS_SetMainProcessPriorityBoostDisabled(c64SettingsIsProcessPriorityBoostDisabled);
+		return;
+	}
+	else if (!strcmp(name, "ProcessPriority"))
+	{
+		u8 v = *((u8*)value);
+		c64SettingsProcessPriority = v;
+		SYS_SetMainProcessPriority(c64SettingsProcessPriority);
+		return;
+	}
+#endif
+	
 //	if (viewC64->debugInterfaceC64)
 #if defined(RUN_COMMODORE64)
 	{
@@ -1009,7 +1083,7 @@ void C64DebuggerSetSetting(char *name, void *value)
 			viewC64->viewC64SettingsMenu->menuItemSIDImportMode->SetSelectedOption(v, false);
 			return;
 		}
-
+		
 		else if (!strcmp(name, "EmulationMaximumSpeed"))
 		{
 			int v = *((int*)value);
@@ -1253,36 +1327,24 @@ void C64DebuggerSetSetting(char *name, void *value)
 			viewC64->viewC64SettingsMenu->menuItemC64SnapshotsManagerIsActive->SetSelectedOption(v, false);
 			return;
 		}
-		else if (!strcmp(name, "SnapshotsManagerStoreInterval"))
-		{
-			i32 v = *((i32*)value);
-			viewC64->debugInterfaceC64->snapshotsManager->SetRecordingStoreInterval(v);
-			viewC64->viewC64SettingsMenu->menuItemC64SnapshotsManagerStoreInterval->SetValue(v, false);
-			return;
-		}
-		else if (!strcmp(name, "SnapshotsManagerLimit"))
-		{
-			i32 v = *((i32*)value);
-			viewC64->debugInterfaceC64->snapshotsManager->SetRecordingLimit(v);
-			viewC64->viewC64SettingsMenu->menuItemC64SnapshotsManagerLimit->SetValue(v, false);
-			return;
-		}
-		else if (!strcmp(name, "TimelineIsActive"))
-		{
-			bool v = *((bool*)value);
-			c64SettingsTimelineIsActive = v;
-			viewC64->viewC64SettingsMenu->menuItemC64TimelineIsActive->SetSelectedOption(v, false);
-			return;
-		}
-		
-		
 	}
-
 #endif
 	
 #if defined(RUN_ATARI)
 	{
-		if (!strcmp(name, "FolderAtariROMs"))
+		/*
+		if (!strcmp(name, "AtariPokeyStereo"))
+		{
+			bool v = *((bool*)value);
+			c64SettingsAtariPokeyStereo = v;
+			debugInterfaceAtari->SetPokeyStereo(v);
+			viewC64->viewC64SettingsMenu->menuItemAtariPokeyStereo->SetSelectedOption(v, false);
+			return;
+		}
+		else
+		 */
+		
+		 if (!strcmp(name, "FolderAtariROMs"))
 		{
 			if (c64SettingsPathToAtariROMs != NULL)
 				delete c64SettingsPathToAtariROMs;

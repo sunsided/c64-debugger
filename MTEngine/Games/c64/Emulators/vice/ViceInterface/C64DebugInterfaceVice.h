@@ -74,10 +74,17 @@ public:
 	virtual void HardReset();
 	virtual void DiskDriveReset();
 
-	virtual void ResetMainCpuCycleCounter();
+	// this is main emulation cpu cycle counter
 	virtual unsigned int GetMainCpuCycleCounter();
+	virtual unsigned int GetPreviousCpuInstructionCycleCounter();
+	
+	// resettable counters for debug purposes
+	virtual void ResetMainCpuDebugCycleCounter();
+	virtual unsigned int GetMainCpuDebugCycleCounter();
 	virtual void ResetEmulationFrameCounter();
 	virtual unsigned int GetEmulationFrameNumber();
+	
+	virtual void RefreshScreenNoCallback();
 	
 	//
 	virtual void KeyboardDown(uint32 mtKeyCode);
@@ -267,8 +274,21 @@ public:
 	virtual void ProfilerActivate(char *fileName, int runForNumCycles, bool pauseCpuWhenFinished);
 	virtual void ProfilerDeactivate();
 
+	// UI
+	virtual CViewDisassemble *GetViewMainCpuDisassemble();
+	virtual CViewDisassemble *GetViewDriveDisassemble(int driveNo);	// TODO: make drive cpu generic (create specific debug interface for drive?)
+	virtual CViewBreakpoints *GetViewBreakpoints();
+	virtual CViewDataWatch *GetViewMemoryDataWatch();
+	
+
 	// drive flush thread
 	CViceDriveFlushThread *driveFlushThread;
+	
+	// interface to vice monitor
+	virtual bool IsCodeMonitorSupported();
+	bool isCodeMonitorOpened;
+	virtual CSlrString *GetCodeMonitorPrompt();
+	virtual bool ExecuteCodeMonitorCommand(CSlrString *commandStr);
 };
 
 extern C64DebugInterfaceVice *debugInterfaceVice;

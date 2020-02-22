@@ -1,7 +1,6 @@
 #include "C64AsmSourceSymbols.h"
 #include "CGuiMain.h"
 #include "CByteBuffer.h"
-#include "C64DebugInterface.h"
 #include "CViewC64.h"
 #include <fstream>
 #include <iostream>
@@ -14,6 +13,8 @@
 #include "CViewDisassemble.h"
 #include "CViewBreakpoints.h"
 #include "CViewDataWatch.h"
+#include "CDebugInterface.h"
+#include "C64DebugInterface.h"
 
 // TODO: the code below is still just a POC written in hurry, meaning this might leak memory a lot and needs proper refactoring
 //       hopefully the labels are not loaded very often... be warned!
@@ -75,7 +76,7 @@ C64AsmSourceSymbols::~C64AsmSourceSymbols()
 
 void C64AsmSourceSymbols::ParseXML(CByteBuffer *byteBuffer, CDebugInterface *debugInterface)
 {
-	LOGD("C64AsmSourceSymbols::ParseXML");
+	LOGD("C64AsmSourceSymbols::ParseXML byteBuffer=%x debugInterface=%x", byteBuffer, debugInterface);
 
 	byteBuffer->removeCRLFinQuotations();
 	
@@ -1212,16 +1213,10 @@ void C64AsmSourceSegment::AddCodeLabel(u16 address, char *text)
 
 	CDisassembleCodeLabel *label;
 	
-	// TODO: make this generic, temporary for now.
-	// TODO: add Drive 1541 labels
-	if (viewC64->selectedDebugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
-	{
-		label = viewC64->viewC64Disassemble->CreateCodeLabel(address, text);
-	}
-	else if (viewC64->selectedDebugInterface->GetEmulatorType() == EMULATOR_TYPE_ATARI800)
-	{
-		label = viewC64->viewAtariDisassemble->CreateCodeLabel(address, text);
-	}
+	// TODO: this is generic but we need to add Drive 1541 labels via specific debug interface
+	
+	CViewDisassemble *viewDisassembleMainCpu = symbols->debugInterface->GetViewMainCpuDisassemble();
+	label = viewDisassembleMainCpu->CreateCodeLabel(address, text);
 	
 	codeLabels[address] = label;
 }
@@ -1256,18 +1251,12 @@ void C64AsmSourceSegment::AddWatch(int address, char *name, uint8 representation
 	
 	CDataWatchDetails *watch;
 	
-	// TODO: make this generic, temporary for now.
-	// TODO: add Drive 1541 watches
-	if (viewC64->selectedDebugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
+	// TODO: make this generic, temporary for now. add Drive 1541 watches
+	
+	CViewDataWatch *viewMemoryDataWatch = symbols->debugInterface->GetViewMemoryDataWatch();
+	if (viewMemoryDataWatch)
 	{
-//		if (watch is C64)
-		{
-			watch = viewC64->viewC64MemoryDataWatch->CreateWatch(address, name, representation, numberOfValues, bits);
-		}
-//		else if (watch is 1541 drive)
-//		{
-//			watch = viewC64->viewDrive1541MemoryDataWatch->CreateWatch(address, name, representation, numberOfValues, bits);
-//		}
+		watch = viewMemoryDataWatch->CreateWatch(address, name, representation, numberOfValues, bits);
 	}
 	
 	watches[address] = watch;
@@ -1430,33 +1419,46 @@ void C64AsmSourceSegment::Activate(CDebugInterface *debugInterface)
 	}
 	debugInterface->breakOnMemory = this->breakOnMemory;
 	
-	// TODO: this is really ugly code, make this generic
+	//
+	// activate labels
+	CViewDisassemble *viewDisassembleMainCpu = debugInterface->GetViewMainCpuDisassemble();
+	
+	if (viewDisassembleMainCpu)
+	{
+		viewDisassembleMainCpu->codeLabels.clear();
+		for(std::map<u16, CDisassembleCodeLabel *> ::iterator it = this->codeLabels.begin(); it != this->codeLabels.end(); it++)
+		{
+			viewDisassembleMainCpu->codeLabels[it->first] = it->second;
+		}
+		
+		viewDisassembleMainCpu->UpdateLabelsPositions();
+	}
+	
+	CViewBreakpoints *viewBreakpoints = debugInterface->GetViewBreakpoints();
+	if (viewBreakpoints)
+	{
+		viewBreakpoints->UpdateRenderBreakpoints();
+	}
+	
+	// TODO: add 1541 drive watches
+	CViewDataWatch *viewMemoryDataWatch = debugInterface->GetViewMemoryDataWatch();
+	if (viewMemoryDataWatch)
+	{
+		// activate watches
+		viewMemoryDataWatch->watches.clear();
+		for(std::map<int, CDataWatchDetails *> ::iterator it = this->watches.begin(); it != this->watches.end(); it++)
+		{
+			viewMemoryDataWatch->watches[it->first] = it->second;
+		}
+	}
+	
+	// TODO: this is really ugly code, make this generic somehow and specific for C64
 	if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
 	{
 		C64DebugInterface *debugInterfaceC64 = (C64DebugInterface*)debugInterface;
 		debugInterfaceC64->breakOnC64IrqVIC = this->breakOnC64IrqVIC;
 		debugInterfaceC64->breakOnC64IrqCIA = this->breakOnC64IrqCIA;
 		debugInterfaceC64->breakOnC64IrqNMI = this->breakOnC64IrqNMI;
-
-		// activate labels
-		// TODO: add 1541 drive labels
-		viewC64->viewC64Disassemble->codeLabels.clear();
-		for(std::map<u16, CDisassembleCodeLabel *> ::iterator it = this->codeLabels.begin(); it != this->codeLabels.end(); it++)
-		{
-			viewC64->viewC64Disassemble->codeLabels[it->first] = it->second;
-		}
-
-		viewC64->viewC64Disassemble->UpdateLabelsPositions();
-		viewC64->viewC64Breakpoints->UpdateRenderBreakpoints();
-		
-		
-		// activate watches
-		// TODO: add 1541 drive watches
-		viewC64->viewC64MemoryDataWatch->watches.clear();
-		for(std::map<int, CDataWatchDetails *> ::iterator it = this->watches.begin(); it != this->watches.end(); it++)
-		{
-			viewC64->viewC64MemoryDataWatch->watches[it->first] = it->second;
-		}
 	}
 	
 	this->symbols->currentSelectedSegment = this;
@@ -1499,11 +1501,15 @@ void C64AsmSourceSegment::CopyBreakpointsAndWatchesFromDebugInterface(CDebugInte
 		this->breakOnC64IrqVIC = debugInterfaceC64->breakOnC64IrqVIC;
 		this->breakOnC64IrqCIA = debugInterfaceC64->breakOnC64IrqCIA;
 		this->breakOnC64IrqNMI = debugInterfaceC64->breakOnC64IrqNMI;
-		
+	}
+	
+	CViewDataWatch *viewMemoryDataWatch = debugInterface->GetViewMemoryDataWatch();
+	if (viewMemoryDataWatch)
+	{
 		// copy watches
 		this->watches.clear();
-		for (std::map<int, CDataWatchDetails *>::iterator it = viewC64->viewC64MemoryDataWatch->watches.begin();
-			 it != viewC64->viewC64MemoryDataWatch->watches.end(); it++)
+		for (std::map<int, CDataWatchDetails *>::iterator it = viewMemoryDataWatch->watches.begin();
+			 it != viewMemoryDataWatch->watches.end(); it++)
 		{
 			this->watches[it->first] = it->second;
 		}
@@ -1530,13 +1536,21 @@ void C64AsmSourceSymbols::DeactivateSegment()
 		debugInterfaceC64->breakOnC64IrqVIC = false;
 		debugInterfaceC64->breakOnC64IrqCIA = false;
 		debugInterfaceC64->breakOnC64IrqNMI = false;
-		
-		// deactivate labels
-		viewC64->viewC64Disassemble->codeLabels.clear();
-		viewC64->viewC64Disassemble->UpdateLabelsPositions();
-		
+	}
+	
+	// deactivate labels
+	CViewDisassemble *viewDisassembleMainCpu = debugInterface->GetViewMainCpuDisassemble();
+	if (viewDisassembleMainCpu)
+	{
+		viewDisassembleMainCpu->codeLabels.clear();
+		viewDisassembleMainCpu->UpdateLabelsPositions();
+	}
+	
+	CViewDataWatch *viewMemoryDataWatch = debugInterface->GetViewMemoryDataWatch();
+	if (viewMemoryDataWatch)
+	{
 		// deactivate watches
-		viewC64->viewC64MemoryDataWatch->watches.clear();
+		viewMemoryDataWatch->watches.clear();
 	}
 	
 	this->currentSelectedSegment = NULL;

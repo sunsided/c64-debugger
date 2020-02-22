@@ -460,6 +460,9 @@ inline static void memmap_mem_update(unsigned int addr, int write)
 void memmap_mem_store(unsigned int addr, unsigned int value)
 {
 	memmap_mem_update(addr, 1);
+	
+	c64d_mark_c64_cell_write(addr, value);
+
 	(*_mem_write_tab_ptr[(addr) >> 8])((WORD)(addr), (BYTE)(value));
 }
 
@@ -467,7 +470,11 @@ void memmap_mem_store(unsigned int addr, unsigned int value)
 BYTE memmap_mem_read(unsigned int addr)
 {
 	check_ba();
+	
 	memmap_mem_update(addr, 0);
+	
+	c64d_mark_c64_cell_read(addr);
+
 	return (*_mem_read_tab_ptr[(addr) >> 8])((WORD)(addr));
 }
 
@@ -2810,9 +2817,6 @@ INC_PC(1);                \
 				viceCurrentC64PC = _c64d_new_pc;
 			}
 			
-			c64d_previous2_instruction_maincpu_clk = c64d_previous_instruction_maincpu_clk;
-			c64d_previous_instruction_maincpu_clk = maincpu_clk;
-			
 #ifdef CHECK_AND_RUN_ALTERNATE_CPU
 			CHECK_AND_RUN_ALTERNATE_CPU
 #endif
@@ -2893,6 +2897,12 @@ INC_PC(1);                \
 			{
 				c64d_profiler_start_handle_cpu_instruction();
 
+				if (maincpu_clk != c64d_previous_instruction_maincpu_clk)
+				{
+					c64d_previous2_instruction_maincpu_clk = c64d_previous_instruction_maincpu_clk;
+					c64d_previous_instruction_maincpu_clk = maincpu_clk;
+				}
+				
 				if (c64d_debug_mode != DEBUGGER_MODE_RUN_ONE_INSTRUCTION
 					&& c64d_debug_mode != DEBUGGER_MODE_RUN_ONE_CYCLE)
 				{
@@ -4242,7 +4252,7 @@ void c64d_check_cpu_snapshot_manager_restore()
 		}
 			 */
 		
-		LOGD("after alarm_context_dispatch: viceCurrentC64PC=%04x reg_pc=%04x cycle=", viceCurrentC64PC, reg_pc, maincpu_clk);
+		LOGD("after alarm_context_dispatch: viceCurrentC64PC=%04x reg_pc=%04x cycle=%d", viceCurrentC64PC, reg_pc, maincpu_clk);
 		
 		return;
 	}

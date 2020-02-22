@@ -75,7 +75,7 @@ public:
 	CStoredChipsSnapshot *GetNewChipSnapshot(u32 frame, u32 cycle, CStoredDiskSnapshot *diskSnapshot);
 	CStoredDiskSnapshot *GetNewDiskSnapshot(u32 frame, u32 cycle);
 	
-	void CheckMainCpuCycle();
+	bool CheckMainCpuCycle();
 	
 	void ClearSnapshotsHistory();
 	
@@ -89,6 +89,7 @@ public:
 	
 	volatile bool isPerformingSnapshotRestore;
 	bool IsPerformingSnapshotRestore();
+	void CancelRestore();
 	
 //	volatile bool skipSavingSnapshots;
 	

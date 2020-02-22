@@ -370,9 +370,26 @@ void CViewFileD64::RefreshInsertedDiskImage()
 	this->RefreshDiskImageMenu();
 }
 
+void CViewFileD64::RefreshInsertedDiskImageAsync()
+{
+	LOGD("CViewFileD64::RefreshInsertedDiskImageAsync");
+	SYS_StartThread(this);
+}
+
+void CViewFileD64::ThreadRun(void *passData)
+{
+	this->RefreshInsertedDiskImage();
+}
+
 void CViewFileD64::RefreshDiskImageMenu()
 {
 	LOGD("CViewFileD64::RefreshDiskImageMenu");
+	
+	if (this->diskImage == NULL)
+	{
+		LOGError("CViewFileD64::RefreshDiskImageMenu: no disk image");
+		return;
+	}
 	
 	guiMain->LockMutex();
 	

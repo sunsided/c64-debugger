@@ -881,7 +881,7 @@ void VID_RightClickEnded(int x, int y, bool alt)
 
 void VID_NotTouchedMoved(int x, int y)
 {
-	LOGG("VID_NotTouchedMoved: %d %d", x, y);
+//	LOGG("VID_NotTouchedMoved: %d %d", x, y);
 	
 	float xPos = (int)(((float)x - VIEW_START_X) / (float)SCREEN_SCALE);
 	float yPos = (int)SCREEN_HEIGHT - (((float)y - VIEW_START_Y) / (float)SCREEN_SCALE);

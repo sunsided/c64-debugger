@@ -40,10 +40,17 @@ public:
 
 	virtual float GetEmulationFPS();
 
-	virtual void ResetMainCpuCycleCounter();
+	// this is main emulation cpu cycle counter
 	virtual unsigned int GetMainCpuCycleCounter();
+	virtual unsigned int GetPreviousCpuInstructionCycleCounter();
+	
+	// resettable counters for debug purposes
+	virtual void ResetMainCpuDebugCycleCounter();
+	virtual unsigned int GetMainCpuDebugCycleCounter();
 	virtual void ResetEmulationFrameCounter();
 	virtual unsigned int GetEmulationFrameNumber();
+
+	virtual void RefreshScreenNoCallback();
 
 	virtual void RunEmulationThread();
 	
@@ -254,12 +261,6 @@ public:
 	virtual bool IsDriveDirtyForSnapshot();
 	virtual void ClearDriveDirtyForSnapshotFlag();
 
-	// from emulator to debugger
-	virtual void MarkC64CellRead(uint16 addr);
-	virtual void MarkC64CellWrite(uint16 addr, uint8 value);
-	virtual void MarkDrive1541CellRead(uint16 addr);
-	virtual void MarkDrive1541CellWrite(uint16 addr, uint8 value);
-	
 //	virtual void UiInsertD64(CSlrString *path);
 	
 	virtual bool IsCpuJam();
@@ -301,6 +302,17 @@ public:
 	
 	//
 	virtual CSlrDataAdapter *GetDataAdapter();
+
+	virtual CViewDisassemble *GetViewMainCpuDisassemble();
+	virtual CViewDisassemble *GetViewDriveDisassemble(int driveNo);	// TODO: make drive cpu generic (create specific debug interface for drive?)
+	virtual CViewBreakpoints *GetViewBreakpoints();
+	virtual CViewDataWatch *GetViewMemoryDataWatch();
+
+	//
+	// @returns NULL when monitor is not supported
+	virtual bool IsCodeMonitorSupported();
+	virtual CSlrString *GetCodeMonitorPrompt();
+	virtual bool ExecuteCodeMonitorCommand(CSlrString *commandStr);
 
 	//
 	virtual void Shutdown();

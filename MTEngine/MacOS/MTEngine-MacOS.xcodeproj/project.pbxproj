@@ -276,7 +276,6 @@
 		4124770221D0F598002534CA /* CViewAtariStatePOKEY.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4142FB8721C4277900EFA4B8 /* CViewAtariStatePOKEY.mm */; };
 		4124770321D0F598002534CA /* jdmainct.c in Sources */ = {isa = PBXBuildFile; fileRef = 41925D4E1B1DD82F00B33B7F /* jdmainct.c */; };
 		4124770421D0F598002534CA /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.mm */; settings = {ATTRIBUTES = (); }; };
-		4124770521D0F598002534CA /* resid-dac.cc in Sources */ = {isa = PBXBuildFile; fileRef = 414534961CB2D1A200020916 /* resid-dac.cc */; };
 		4124770621D0F598002534CA /* GLViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 256AC3D90F4B6AC300CF3369 /* GLViewController.mm */; };
 		4124770721D0F598002534CA /* GLView.mm in Sources */ = {isa = PBXBuildFile; fileRef = AFBD7640113886AE0015E685 /* GLView.mm */; };
 		4124770821D0F598002534CA /* CSlrFileFromDocuments.mm in Sources */ = {isa = PBXBuildFile; fileRef = 412BB98C1614AB6800533AD3 /* CSlrFileFromDocuments.mm */; };
@@ -291,7 +290,6 @@
 		4124771121D0F598002534CA /* machine.c in Sources */ = {isa = PBXBuildFile; fileRef = 414539471CB2E94F00020916 /* machine.c */; };
 		4124771221D0F598002534CA /* ieee-resources.c in Sources */ = {isa = PBXBuildFile; fileRef = 41F2AA9F1E9D0EAC00ADE8DF /* ieee-resources.c */; };
 		4124771321D0F598002534CA /* CGuiTheme.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3904276F186892A700B570B1 /* CGuiTheme.mm */; };
-		4124771421D0F598002534CA /* resid-wave.cc in Sources */ = {isa = PBXBuildFile; fileRef = 414534A71CB2D1A200020916 /* resid-wave.cc */; };
 		4124771521D0F598002534CA /* flash040core.c in Sources */ = {isa = PBXBuildFile; fileRef = 4145383B1CB2DB9C00020916 /* flash040core.c */; };
 		4124771621D0F598002534CA /* clockport.c in Sources */ = {isa = PBXBuildFile; fileRef = 41B5C11D1E9E9E5900E9C644 /* clockport.c */; };
 		4124771721D0F598002534CA /* t64.c in Sources */ = {isa = PBXBuildFile; fileRef = 414535191CB2D1A300020916 /* t64.c */; };
@@ -337,7 +335,6 @@
 		4124774221D0F598002534CA /* MTH_FastMath.mm in Sources */ = {isa = PBXBuildFile; fileRef = 390426D0186892A700B570B1 /* MTH_FastMath.mm */; };
 		4124774321D0F598002534CA /* mon_command.c in Sources */ = {isa = PBXBuildFile; fileRef = 4145341B1CB2D1A200020916 /* mon_command.c */; };
 		4124774421D0F598002534CA /* MenuControllerSettings.mm in Sources */ = {isa = PBXBuildFile; fileRef = 419837CC164CFD7900B8C78D /* MenuControllerSettings.mm */; };
-		4124774521D0F598002534CA /* residfp-extfilt.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4145381C1CB2D91600020916 /* residfp-extfilt.cc */; };
 		4124774621D0F598002534CA /* mon_register65816.c in Sources */ = {isa = PBXBuildFile; fileRef = 41B5C1461E9E9EC200E9C644 /* mon_register65816.c */; };
 		4124774721D0F598002534CA /* drv-mps803.c in Sources */ = {isa = PBXBuildFile; fileRef = 414537D31CB2D27C00020916 /* drv-mps803.c */; };
 		4124774821D0F598002534CA /* reu.c in Sources */ = {isa = PBXBuildFile; fileRef = 41F2A9A51E9D0E6B00ADE8DF /* reu.c */; };
@@ -384,13 +381,11 @@
 		4124777621D0F598002534CA /* sounddump.c in Sources */ = {isa = PBXBuildFile; fileRef = 414538B21CB2DC4400020916 /* sounddump.c */; };
 		4124777721D0F598002534CA /* inflate.c in Sources */ = {isa = PBXBuildFile; fileRef = 3904294F186892A800B570B1 /* inflate.c */; };
 		4124777821D0F598002534CA /* fsimage-probe.c in Sources */ = {isa = PBXBuildFile; fileRef = 414537BE1CB2D21400020916 /* fsimage-probe.c */; };
-		4124777921D0F598002534CA /* resid-version.cc in Sources */ = {isa = PBXBuildFile; fileRef = 414534A41CB2D1A200020916 /* resid-version.cc */; };
 		4124777A21D0F598002534CA /* m93c86.c in Sources */ = {isa = PBXBuildFile; fileRef = 41188FB21E9EAA9F00040048 /* m93c86.c */; };
 		4124777B21D0F598002534CA /* zutil.c in Sources */ = {isa = PBXBuildFile; fileRef = 39042958186892A800B570B1 /* zutil.c */; };
 		4124777C21D0F598002534CA /* pcf8583.c in Sources */ = {isa = PBXBuildFile; fileRef = 41188FE71E9EC33C00040048 /* pcf8583.c */; };
 		4124777D21D0F598002534CA /* render1x1.c in Sources */ = {isa = PBXBuildFile; fileRef = 414535741CB2D1A300020916 /* render1x1.c */; };
 		4124777E21D0F598002534CA /* vdrive-internal.c in Sources */ = {isa = PBXBuildFile; fileRef = 414535441CB2D1A300020916 /* vdrive-internal.c */; };
-		4124777F21D0F598002534CA /* resid-filter.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4145349C1CB2D1A200020916 /* resid-filter.cc */; };
 		4124778021D0F598002534CA /* pa_front.c in Sources */ = {isa = PBXBuildFile; fileRef = 419737DA173B9A37007654BD /* pa_front.c */; };
 		4124778121D0F598002534CA /* CViewJukeboxPlaylist.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41706DB91F9A71EA00B1B2BA /* CViewJukeboxPlaylist.mm */; };
 		4124778221D0F598002534CA /* pngwutil.c in Sources */ = {isa = PBXBuildFile; fileRef = 390427E8186892A700B570B1 /* pngwutil.c */; };
@@ -431,7 +426,6 @@
 		412477A721D0F598002534CA /* pa_mac_core_blocking.c in Sources */ = {isa = PBXBuildFile; fileRef = 41973806173B9A93007654BD /* pa_mac_core_blocking.c */; };
 		412477A821D0F598002534CA /* gmod2.c in Sources */ = {isa = PBXBuildFile; fileRef = 41B5C12B1E9E9E5900E9C644 /* gmod2.c */; };
 		412477A921D0F598002534CA /* CSlrDate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 390426AD186892A700B570B1 /* CSlrDate.mm */; };
-		412477AA21D0F598002534CA /* resid-sid.cc in Sources */ = {isa = PBXBuildFile; fileRef = 414534A01CB2D1A200020916 /* resid-sid.cc */; };
 		412477AB21D0F598002534CA /* vicii-phi1.c in Sources */ = {isa = PBXBuildFile; fileRef = 414535691CB2D1A300020916 /* vicii-phi1.c */; };
 		412477AC21D0F598002534CA /* jmemansi.c in Sources */ = {isa = PBXBuildFile; fileRef = 41925D5E1B1DD82F00B33B7F /* jmemansi.c */; };
 		412477AD21D0F598002534CA /* freezemachine.c in Sources */ = {isa = PBXBuildFile; fileRef = 41F2A97D1E9D0E6B00ADE8DF /* freezemachine.c */; };
@@ -470,7 +464,6 @@
 		412477D121D0F598002534CA /* sid.c in Sources */ = {isa = PBXBuildFile; fileRef = 414538A51CB2DC3300020916 /* sid.c */; };
 		412477D221D0F598002534CA /* gzlib.c in Sources */ = {isa = PBXBuildFile; fileRef = 39042948186892A800B570B1 /* gzlib.c */; };
 		412477D321D0F598002534CA /* riotcore.c in Sources */ = {isa = PBXBuildFile; fileRef = 414538401CB2DB9C00020916 /* riotcore.c */; };
-		412477D421D0F598002534CA /* resid-voice.cc in Sources */ = {isa = PBXBuildFile; fileRef = 414534A51CB2D1A200020916 /* resid-voice.cc */; };
 		412477D521D0F598002534CA /* pa_unix_util.c in Sources */ = {isa = PBXBuildFile; fileRef = 41973815173B9BC8007654BD /* pa_unix_util.c */; };
 		412477D621D0F598002534CA /* bbrtc.c in Sources */ = {isa = PBXBuildFile; fileRef = 41188F661E9EA7FF00040048 /* bbrtc.c */; };
 		412477D721D0F598002534CA /* CSlrMusicFile.mm in Sources */ = {isa = PBXBuildFile; fileRef = 390425D9186892A700B570B1 /* CSlrMusicFile.mm */; };
@@ -509,7 +502,6 @@
 		412477FA21D0F598002534CA /* ds1307.c in Sources */ = {isa = PBXBuildFile; fileRef = 41188FC61E9EBC0C00040048 /* ds1307.c */; };
 		412477FB21D0F598002534CA /* raster-sprite.c in Sources */ = {isa = PBXBuildFile; fileRef = 4145348C1CB2D1A200020916 /* raster-sprite.c */; };
 		412477FC21D0F598002534CA /* jcmainct.c in Sources */ = {isa = PBXBuildFile; fileRef = 41925D3A1B1DD82F00B33B7F /* jcmainct.c */; };
-		412477FD21D0F598002534CA /* resid-envelope.cc in Sources */ = {isa = PBXBuildFile; fileRef = 414534981CB2D1A200020916 /* resid-envelope.cc */; };
 		412477FE21D0F598002534CA /* stb.c in Sources */ = {isa = PBXBuildFile; fileRef = 41F2A9B51E9D0E6B00ADE8DF /* stb.c */; };
 		412477FF21D0F598002534CA /* mon_register.c in Sources */ = {isa = PBXBuildFile; fileRef = 4163BAF51E9F8EDB00E3C077 /* mon_register.c */; };
 		4124780021D0F598002534CA /* platform_beos_runtime_os.c in Sources */ = {isa = PBXBuildFile; fileRef = 4145344E1CB2D1A200020916 /* platform_beos_runtime_os.c */; };
@@ -518,7 +510,6 @@
 		4124780321D0F598002534CA /* riot1d.c in Sources */ = {isa = PBXBuildFile; fileRef = 41F2AAA61E9D0EAC00ADE8DF /* riot1d.c */; };
 		4124780421D0F598002534CA /* mikroass.c in Sources */ = {isa = PBXBuildFile; fileRef = 41F2A9951E9D0E6B00ADE8DF /* mikroass.c */; };
 		4124780521D0F598002534CA /* initcmdline.c in Sources */ = {isa = PBXBuildFile; fileRef = 4145392E1CB2E94F00020916 /* initcmdline.c */; };
-		4124780621D0F598002534CA /* residfp-voice.cc in Sources */ = {isa = PBXBuildFile; fileRef = 414538251CB2D91600020916 /* residfp-voice.cc */; };
 		4124780721D0F598002534CA /* compress.c in Sources */ = {isa = PBXBuildFile; fileRef = 39042941186892A800B570B1 /* compress.c */; };
 		4124780821D0F598002534CA /* cia1571d.c in Sources */ = {isa = PBXBuildFile; fileRef = 41F2AAE11E9D0F2B00ADE8DF /* cia1571d.c */; };
 		4124780A21D0F598002534CA /* userport_joystick.c in Sources */ = {isa = PBXBuildFile; fileRef = 414538C71CB2DC5600020916 /* userport_joystick.c */; };
@@ -573,7 +564,6 @@
 		4124783F21D0F598002534CA /* gfxoutput.c in Sources */ = {isa = PBXBuildFile; fileRef = 414537FB1CB2D2D100020916 /* gfxoutput.c */; };
 		4124784021D0F598002534CA /* JPEGReader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 41925D771B1DD82F00B33B7F /* JPEGReader.cpp */; };
 		4124784121D0F598002534CA /* userport_rtc_58321a.c in Sources */ = {isa = PBXBuildFile; fileRef = 4191A8DB1E9EA1F4004AC6E0 /* userport_rtc_58321a.c */; };
-		4124784221D0F598002534CA /* residfp-wave.cc in Sources */ = {isa = PBXBuildFile; fileRef = 414538271CB2D91600020916 /* residfp-wave.cc */; };
 		4124784321D0F598002534CA /* init.c in Sources */ = {isa = PBXBuildFile; fileRef = 4145392C1CB2E94F00020916 /* init.c */; };
 		4124784421D0F598002534CA /* jcprepct.c in Sources */ = {isa = PBXBuildFile; fileRef = 41925D401B1DD82F00B33B7F /* jcprepct.c */; };
 		4124784521D0F598002534CA /* CSlrFontProportional.mm in Sources */ = {isa = PBXBuildFile; fileRef = 390426B7186892A700B570B1 /* CSlrFontProportional.mm */; };
@@ -601,7 +591,6 @@
 		4124785C21D0F598002534CA /* ui.c in Sources */ = {isa = PBXBuildFile; fileRef = 414531DD1CB2D1A100020916 /* ui.c */; };
 		4124785D21D0F598002534CA /* userport_dac.c in Sources */ = {isa = PBXBuildFile; fileRef = 414538C31CB2DC5600020916 /* userport_dac.c */; };
 		4124785E21D0F598002534CA /* dma.c in Sources */ = {isa = PBXBuildFile; fileRef = 414539051CB2E94F00020916 /* dma.c */; };
-		4124785F21D0F598002534CA /* resid-fp.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4145389B1CB2DC3300020916 /* resid-fp.cc */; };
 		4124786021D0F598002534CA /* CGuiView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 39042771186892A700B570B1 /* CGuiView.mm */; };
 		4124786121D0F598002534CA /* CViewDrive1541StateVIA.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D6FD1C970F3E00EBA9E5 /* CViewDrive1541StateVIA.mm */; };
 		4124786221D0F598002534CA /* event.c in Sources */ = {isa = PBXBuildFile; fileRef = 414539161CB2E94F00020916 /* event.c */; };
@@ -700,7 +689,6 @@
 		412478C621D0F598002534CA /* network.c in Sources */ = {isa = PBXBuildFile; fileRef = 414539551CB2E94F00020916 /* network.c */; };
 		412478C821D0F598002534CA /* color.c in Sources */ = {isa = PBXBuildFile; fileRef = 414538F91CB2E94F00020916 /* color.c */; };
 		412478C921D0F598002534CA /* cbmfile.c in Sources */ = {isa = PBXBuildFile; fileRef = 414538561CB2DBB100020916 /* cbmfile.c */; };
-		412478CA21D0F598002534CA /* residfp-pot.cc in Sources */ = {isa = PBXBuildFile; fileRef = 414538201CB2D91600020916 /* residfp-pot.cc */; };
 		412478CB21D0F598002534CA /* render1x2crt.c in Sources */ = {isa = PBXBuildFile; fileRef = 4145357C1CB2D1A300020916 /* render1x2crt.c */; };
 		412478CC21D0F598002534CA /* drive-overflow.c in Sources */ = {isa = PBXBuildFile; fileRef = 41F2AAB81E9D0EDA00ADE8DF /* drive-overflow.c */; };
 		412478CD21D0F598002534CA /* CAudioChannelBusInt.mm in Sources */ = {isa = PBXBuildFile; fileRef = 390425D5186892A700B570B1 /* CAudioChannelBusInt.mm */; };
@@ -738,7 +726,6 @@
 		412478EF21D0F598002534CA /* kbd.c in Sources */ = {isa = PBXBuildFile; fileRef = 4145318B1CB2D1A100020916 /* kbd.c */; };
 		412478F021D0F598002534CA /* charset.c in Sources */ = {isa = PBXBuildFile; fileRef = 414538F01CB2E94F00020916 /* charset.c */; };
 		412478F121D0F598002534CA /* ser-eeprom.c in Sources */ = {isa = PBXBuildFile; fileRef = 414538411CB2DB9C00020916 /* ser-eeprom.c */; };
-		412478F221D0F598002534CA /* residfp-envelope.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4145381A1CB2D91600020916 /* residfp-envelope.cc */; };
 		412478F321D0F598002534CA /* gs.c in Sources */ = {isa = PBXBuildFile; fileRef = 41F2A9831E9D0E6B00ADE8DF /* gs.c */; };
 		412478F421D0F598002534CA /* freezeframe.c in Sources */ = {isa = PBXBuildFile; fileRef = 41F2A97B1E9D0E6B00ADE8DF /* freezeframe.c */; };
 		412478F521D0F598002534CA /* menu_c64_common_expansions.c in Sources */ = {isa = PBXBuildFile; fileRef = 4145318F1CB2D1A100020916 /* menu_c64_common_expansions.c */; };
@@ -813,7 +800,6 @@
 		4124793F21D0F598002534CA /* jdmarker.c in Sources */ = {isa = PBXBuildFile; fileRef = 41925D4F1B1DD82F00B33B7F /* jdmarker.c */; };
 		4124794021D0F598002534CA /* inffast.c in Sources */ = {isa = PBXBuildFile; fileRef = 3904294C186892A800B570B1 /* inffast.c */; };
 		4124794121D0F598002534CA /* C64CharMulti.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41F8107A1EC1AA7C00E2F9AD /* C64CharMulti.mm */; };
-		4124794221D0F598002534CA /* resid.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4145389D1CB2DC3300020916 /* resid.cc */; };
 		4124794321D0F598002534CA /* c64carthooks.c in Sources */ = {isa = PBXBuildFile; fileRef = 41F2A9C61E9D0E6B00ADE8DF /* c64carthooks.c */; };
 		4124794421D0F598002534CA /* menu_common.c in Sources */ = {isa = PBXBuildFile; fileRef = 414531991CB2D1A100020916 /* menu_common.c */; };
 		4124794521D0F598002534CA /* uncompr.c in Sources */ = {isa = PBXBuildFile; fileRef = 39042955186892A800B570B1 /* uncompr.c */; };
@@ -920,7 +906,6 @@
 		412479B121D0F598002534CA /* raster.c in Sources */ = {isa = PBXBuildFile; fileRef = 4145348E1CB2D1A200020916 /* raster.c */; };
 		412479B221D0F598002534CA /* CSlrFile.mm in Sources */ = {isa = PBXBuildFile; fileRef = 390426AF186892A700B570B1 /* CSlrFile.mm */; };
 		412479B321D0F598002534CA /* CVicEditorLayerUnrestrictedBitmap.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4177D5B41ED710320053D9EE /* CVicEditorLayerUnrestrictedBitmap.mm */; };
-		412479B421D0F598002534CA /* residfp-convolve.cc in Sources */ = {isa = PBXBuildFile; fileRef = 414538191CB2D91600020916 /* residfp-convolve.cc */; };
 		412479B521D0F598002534CA /* pngtrans.c in Sources */ = {isa = PBXBuildFile; fileRef = 390427E4186892A700B570B1 /* pngtrans.c */; };
 		412479B621D0F598002534CA /* c64-snapshot.c in Sources */ = {isa = PBXBuildFile; fileRef = 41F2AA271E9D0E7900ADE8DF /* c64-snapshot.c */; };
 		412479B721D0F598002534CA /* M_CSlrList.mm in Sources */ = {isa = PBXBuildFile; fileRef = 390426CE186892A700B570B1 /* M_CSlrList.mm */; };
@@ -932,7 +917,6 @@
 		412479C021D0F598002534CA /* menu_midi.c in Sources */ = {isa = PBXBuildFile; fileRef = 414531A91CB2D1A100020916 /* menu_midi.c */; };
 		412479C121D0F598002534CA /* C64AsmSourceSymbols.mm in Sources */ = {isa = PBXBuildFile; fileRef = 415838551DC9E89100A56E0E /* C64AsmSourceSymbols.mm */; };
 		412479C221D0F598002534CA /* c64-cmdline-options.c in Sources */ = {isa = PBXBuildFile; fileRef = 41F2AA231E9D0E7900ADE8DF /* c64-cmdline-options.c */; };
-		412479C321D0F598002534CA /* resid-extfilt.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4145349A1CB2D1A200020916 /* resid-extfilt.cc */; };
 		412479C521D0F598002534CA /* mdct.c in Sources */ = {isa = PBXBuildFile; fileRef = 39042927186892A800B570B1 /* mdct.c */; };
 		412479C621D0F598002534CA /* raster-line-changes.c in Sources */ = {isa = PBXBuildFile; fileRef = 414534811CB2D1A200020916 /* raster-line-changes.c */; };
 		412479C721D0F598002534CA /* adler32.c in Sources */ = {isa = PBXBuildFile; fileRef = 39042940186892A800B570B1 /* adler32.c */; };
@@ -1032,7 +1016,6 @@
 		41247A2D21D0F598002534CA /* rawnet.c in Sources */ = {isa = PBXBuildFile; fileRef = 414539641CB2E94F00020916 /* rawnet.c */; };
 		41247A2E21D0F598002534CA /* C64ColodoreScreen.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41579F4E1FD715CF00234FBB /* C64ColodoreScreen.mm */; };
 		41247A2F21D0F598002534CA /* C64KeyMap.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41474DCE1D08607300F1B83F /* C64KeyMap.mm */; };
-		41247A3021D0F598002534CA /* residfp-convolve-sse.cc in Sources */ = {isa = PBXBuildFile; fileRef = 414538321CB2D96600020916 /* residfp-convolve-sse.cc */; };
 		41247A3121D0F598002534CA /* palette.c in Sources */ = {isa = PBXBuildFile; fileRef = 414539591CB2E94F00020916 /* palette.c */; };
 		41247A3221D0F598002534CA /* MTH_MTRand.mm in Sources */ = {isa = PBXBuildFile; fileRef = 390427F5186892A800B570B1 /* MTH_MTRand.mm */; };
 		41247A3321D0F598002534CA /* rushware_keypad.c in Sources */ = {isa = PBXBuildFile; fileRef = 41188F7A1E9EA7FF00040048 /* rushware_keypad.c */; };
@@ -1065,7 +1048,6 @@
 		41247A5321D0F598002534CA /* serial-iec-lib.c in Sources */ = {isa = PBXBuildFile; fileRef = 414537A21CB2D1CE00020916 /* serial-iec-lib.c */; };
 		41247A5421D0F598002534CA /* fullscreen.c in Sources */ = {isa = PBXBuildFile; fileRef = 414531861CB2D1A100020916 /* fullscreen.c */; };
 		41247A5521D0F598002534CA /* coplin_keypad.c in Sources */ = {isa = PBXBuildFile; fileRef = 41188F6A1E9EA7FF00040048 /* coplin_keypad.c */; };
-		41247A5721D0F598002534CA /* residfp-filter.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4145381E1CB2D91600020916 /* residfp-filter.cc */; };
 		41247A5821D0F598002534CA /* render1x1ntsc.c in Sources */ = {isa = PBXBuildFile; fileRef = 414535761CB2D1A300020916 /* render1x1ntsc.c */; };
 		41247A5921D0F598002534CA /* dynlib.c in Sources */ = {isa = PBXBuildFile; fileRef = 414531851CB2D1A100020916 /* dynlib.c */; };
 		41247A5A21D0F598002534CA /* CViewC64StateSID.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D6FB1C970F3E00EBA9E5 /* CViewC64StateSID.mm */; };
@@ -1153,10 +1135,8 @@
 		41247AB521D0F598002534CA /* CSlrString.mm in Sources */ = {isa = PBXBuildFile; fileRef = 390426C5186892A700B570B1 /* CSlrString.mm */; };
 		41247AB621D0F598002534CA /* CGuiViewToolBox.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41430FBA21650EA500D003AA /* CGuiViewToolBox.mm */; };
 		41247AB721D0F598002534CA /* rs232net.c in Sources */ = {isa = PBXBuildFile; fileRef = 414531D71CB2D1A100020916 /* rs232net.c */; };
-		41247AB821D0F598002534CA /* resid-pot.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4145349E1CB2D1A200020916 /* resid-pot.cc */; };
 		41247AB921D0F598002534CA /* simonsbasic.c in Sources */ = {isa = PBXBuildFile; fileRef = 41F2A9AF1E9D0E6B00ADE8DF /* simonsbasic.c */; };
 		41247ABA21D0F598002534CA /* CViewDisassemble.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D7031C970F3E00EBA9E5 /* CViewDisassemble.mm */; };
-		41247ABB21D0F598002534CA /* residfp-sid.cc in Sources */ = {isa = PBXBuildFile; fileRef = 414538221CB2D91600020916 /* residfp-sid.cc */; };
 		41247ABC21D0F598002534CA /* actionreplay.c in Sources */ = {isa = PBXBuildFile; fileRef = 41F2A94B1E9D0E6B00ADE8DF /* actionreplay.c */; };
 		41247ABD21D0F598002534CA /* CGuiViewDataTable.mm in Sources */ = {isa = PBXBuildFile; fileRef = 390426F5186892A700B570B1 /* CGuiViewDataTable.mm */; };
 		41247ABF21D0F598002534CA /* sid-resources.c in Sources */ = {isa = PBXBuildFile; fileRef = 414538A11CB2DC3300020916 /* sid-resources.c */; };
@@ -1215,7 +1195,6 @@
 		412F0EB121F75C7C00652B0B /* SidTuneMod.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 412F0EB021F75C7C00652B0B /* SidTuneMod.cpp */; };
 		412F0EBE21F75CF100652B0B /* libini-ini.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 412F0EB821F75CF100652B0B /* libini-ini.cpp */; };
 		4132CC1119AE145200E7C3B0 /* lodepng.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4132CC0F19AE145200E7C3B0 /* lodepng.cpp */; };
-		4136701722973213006C8AF2 /* C64DebuggerPluginSpiral.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4136701522973213006C8AF2 /* C64DebuggerPluginSpiral.mm */; };
 		4138F97C18BDF69600C6C5A9 /* CGuiViewSelectFolder.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4138F97A18BDF69600C6C5A9 /* CGuiViewSelectFolder.mm */; };
 		413B5F381DC213B300852EA4 /* SYS_SharedMemory.mm in Sources */ = {isa = PBXBuildFile; fileRef = 413B5F371DC213B300852EA4 /* SYS_SharedMemory.mm */; };
 		413D68F71DE06D3E0034BF7E /* C64Palette.mm in Sources */ = {isa = PBXBuildFile; fileRef = 413D68F61DE06D3E0034BF7E /* C64Palette.mm */; };
@@ -1350,15 +1329,6 @@
 		4145371D1CB2D1A300020916 /* raster-sprite-status.c in Sources */ = {isa = PBXBuildFile; fileRef = 4145348A1CB2D1A200020916 /* raster-sprite-status.c */; };
 		4145371E1CB2D1A300020916 /* raster-sprite.c in Sources */ = {isa = PBXBuildFile; fileRef = 4145348C1CB2D1A200020916 /* raster-sprite.c */; };
 		4145371F1CB2D1A300020916 /* raster.c in Sources */ = {isa = PBXBuildFile; fileRef = 4145348E1CB2D1A200020916 /* raster.c */; };
-		414537221CB2D1A300020916 /* resid-dac.cc in Sources */ = {isa = PBXBuildFile; fileRef = 414534961CB2D1A200020916 /* resid-dac.cc */; };
-		414537231CB2D1A300020916 /* resid-envelope.cc in Sources */ = {isa = PBXBuildFile; fileRef = 414534981CB2D1A200020916 /* resid-envelope.cc */; };
-		414537241CB2D1A300020916 /* resid-extfilt.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4145349A1CB2D1A200020916 /* resid-extfilt.cc */; };
-		414537251CB2D1A300020916 /* resid-filter.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4145349C1CB2D1A200020916 /* resid-filter.cc */; };
-		414537261CB2D1A300020916 /* resid-pot.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4145349E1CB2D1A200020916 /* resid-pot.cc */; };
-		414537271CB2D1A300020916 /* resid-sid.cc in Sources */ = {isa = PBXBuildFile; fileRef = 414534A01CB2D1A200020916 /* resid-sid.cc */; };
-		414537281CB2D1A300020916 /* resid-version.cc in Sources */ = {isa = PBXBuildFile; fileRef = 414534A41CB2D1A200020916 /* resid-version.cc */; };
-		414537291CB2D1A300020916 /* resid-voice.cc in Sources */ = {isa = PBXBuildFile; fileRef = 414534A51CB2D1A200020916 /* resid-voice.cc */; };
-		4145372A1CB2D1A300020916 /* resid-wave.cc in Sources */ = {isa = PBXBuildFile; fileRef = 414534A71CB2D1A200020916 /* resid-wave.cc */; };
 		4145375C1CB2D1A300020916 /* t64.c in Sources */ = {isa = PBXBuildFile; fileRef = 414535191CB2D1A300020916 /* t64.c */; };
 		4145375D1CB2D1A300020916 /* tap.c in Sources */ = {isa = PBXBuildFile; fileRef = 4145351B1CB2D1A300020916 /* tap.c */; };
 		4145375E1CB2D1A300020916 /* tape-internal.c in Sources */ = {isa = PBXBuildFile; fileRef = 4145351C1CB2D1A300020916 /* tape-internal.c */; };
@@ -1451,15 +1421,6 @@
 		4145380A1CB2D2D100020916 /* jpegdrv.c in Sources */ = {isa = PBXBuildFile; fileRef = 414537FF1CB2D2D100020916 /* jpegdrv.c */; };
 		4145380B1CB2D2D100020916 /* pcxdrv.c in Sources */ = {isa = PBXBuildFile; fileRef = 414538011CB2D2D100020916 /* pcxdrv.c */; };
 		4145380C1CB2D2D100020916 /* ppmdrv.c in Sources */ = {isa = PBXBuildFile; fileRef = 414538031CB2D2D100020916 /* ppmdrv.c */; };
-		4145382A1CB2D91600020916 /* residfp-convolve.cc in Sources */ = {isa = PBXBuildFile; fileRef = 414538191CB2D91600020916 /* residfp-convolve.cc */; };
-		4145382B1CB2D91600020916 /* residfp-envelope.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4145381A1CB2D91600020916 /* residfp-envelope.cc */; };
-		4145382C1CB2D91600020916 /* residfp-extfilt.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4145381C1CB2D91600020916 /* residfp-extfilt.cc */; };
-		4145382D1CB2D91600020916 /* residfp-filter.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4145381E1CB2D91600020916 /* residfp-filter.cc */; };
-		4145382E1CB2D91600020916 /* residfp-pot.cc in Sources */ = {isa = PBXBuildFile; fileRef = 414538201CB2D91600020916 /* residfp-pot.cc */; };
-		4145382F1CB2D91600020916 /* residfp-sid.cc in Sources */ = {isa = PBXBuildFile; fileRef = 414538221CB2D91600020916 /* residfp-sid.cc */; };
-		414538301CB2D91600020916 /* residfp-voice.cc in Sources */ = {isa = PBXBuildFile; fileRef = 414538251CB2D91600020916 /* residfp-voice.cc */; };
-		414538311CB2D91600020916 /* residfp-wave.cc in Sources */ = {isa = PBXBuildFile; fileRef = 414538271CB2D91600020916 /* residfp-wave.cc */; };
-		414538331CB2D96600020916 /* residfp-convolve-sse.cc in Sources */ = {isa = PBXBuildFile; fileRef = 414538321CB2D96600020916 /* residfp-convolve-sse.cc */; };
 		414538491CB2DB9C00020916 /* ata.c in Sources */ = {isa = PBXBuildFile; fileRef = 414538341CB2DB9C00020916 /* ata.c */; };
 		4145384A1CB2DB9C00020916 /* ciacore.c in Sources */ = {isa = PBXBuildFile; fileRef = 414538361CB2DB9C00020916 /* ciacore.c */; };
 		4145384B1CB2DB9C00020916 /* ciatimer.c in Sources */ = {isa = PBXBuildFile; fileRef = 414538371CB2DB9C00020916 /* ciatimer.c */; };
@@ -1497,8 +1458,6 @@
 		414538971CB2DC2000020916 /* rtc-58321a.c in Sources */ = {isa = PBXBuildFile; fileRef = 4145388F1CB2DC2000020916 /* rtc-58321a.c */; };
 		414538981CB2DC2000020916 /* rtc.c in Sources */ = {isa = PBXBuildFile; fileRef = 414538911CB2DC2000020916 /* rtc.c */; };
 		414538A91CB2DC3300020916 /* fastsid.c in Sources */ = {isa = PBXBuildFile; fileRef = 414538991CB2DC3300020916 /* fastsid.c */; };
-		414538AA1CB2DC3300020916 /* resid-fp.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4145389B1CB2DC3300020916 /* resid-fp.cc */; };
-		414538AB1CB2DC3300020916 /* resid.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4145389D1CB2DC3300020916 /* resid.cc */; };
 		414538AC1CB2DC3300020916 /* sid-cmdline-options.c in Sources */ = {isa = PBXBuildFile; fileRef = 4145389F1CB2DC3300020916 /* sid-cmdline-options.c */; };
 		414538AD1CB2DC3300020916 /* sid-resources.c in Sources */ = {isa = PBXBuildFile; fileRef = 414538A11CB2DC3300020916 /* sid-resources.c */; };
 		414538AE1CB2DC3300020916 /* sid-snapshot.c in Sources */ = {isa = PBXBuildFile; fileRef = 414538A31CB2DC3300020916 /* sid-snapshot.c */; };
@@ -1599,7 +1558,6 @@
 		4152D71C1C970F7900EBA9E5 /* CViewSnapshots.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D7121C970F7900EBA9E5 /* CViewSnapshots.mm */; };
 		4152D71E1C970F7900EBA9E5 /* CViewBreakpoints.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D7141C970F7900EBA9E5 /* CViewBreakpoints.mm */; };
 		4152D7221C970FA900EBA9E5 /* CViewC64.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4152D7201C970FA900EBA9E5 /* CViewC64.mm */; };
-		41563324228DBB4100FC3415 /* C64DebuggerPluginDummy.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41563320228DBB4100FC3415 /* C64DebuggerPluginDummy.mm */; };
 		41563325228DBB4100FC3415 /* C64D_InitPlugins.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41563322228DBB4100FC3415 /* C64D_InitPlugins.mm */; };
 		41579F4C1FD70C4300234FBB /* CViewColodore.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41579F4B1FD70C4300234FBB /* CViewColodore.mm */; };
 		41579F4F1FD715CF00234FBB /* C64ColodoreScreen.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41579F4E1FD715CF00234FBB /* C64ColodoreScreen.mm */; };
@@ -1623,8 +1581,27 @@
 		4163FA991EC1FD23008BBBFD /* C64VicDisplayCanvasHiresBitmap.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4163FA931EC1FD23008BBBFD /* C64VicDisplayCanvasHiresBitmap.mm */; };
 		4163FA9A1EC1FD23008BBBFD /* C64VicDisplayCanvasBlank.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4163FA941EC1FD23008BBBFD /* C64VicDisplayCanvasBlank.mm */; };
 		41646C0E1C8DE93E006BBE25 /* SYS_CommandLine.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41646C0C1C8DE93E006BBE25 /* SYS_CommandLine.mm */; };
+		4165793F23C52DEE0051CEFE /* resid-fp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165793D23C52DEE0051CEFE /* resid-fp.cpp */; };
+		4165794023C52DEE0051CEFE /* resid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165793E23C52DEE0051CEFE /* resid.cpp */; };
+		4165795D23C52E020051CEFE /* resid-dac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165794223C52E020051CEFE /* resid-dac.cpp */; };
+		4165795E23C52E030051CEFE /* resid-envelope.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165794423C52E020051CEFE /* resid-envelope.cpp */; };
+		4165795F23C52E030051CEFE /* resid-extfilt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165794623C52E020051CEFE /* resid-extfilt.cpp */; };
+		4165796023C52E030051CEFE /* resid-filter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165794823C52E020051CEFE /* resid-filter.cpp */; };
+		4165796123C52E030051CEFE /* resid-pot.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165794A23C52E020051CEFE /* resid-pot.cpp */; };
+		4165796223C52E030051CEFE /* resid-sid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165794C23C52E020051CEFE /* resid-sid.cpp */; };
+		4165796323C52E030051CEFE /* resid-version.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165795023C52E020051CEFE /* resid-version.cpp */; };
+		4165796423C52E030051CEFE /* resid-voice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165795123C52E020051CEFE /* resid-voice.cpp */; };
+		4165796523C52E030051CEFE /* resid-wave.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165795323C52E020051CEFE /* resid-wave.cpp */; };
+		4165797823C52E0C0051CEFE /* residfp-convolve-sse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165796723C52E0C0051CEFE /* residfp-convolve-sse.cpp */; };
+		4165797923C52E0C0051CEFE /* residfp-convolve.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165796823C52E0C0051CEFE /* residfp-convolve.cpp */; };
+		4165797A23C52E0C0051CEFE /* residfp-envelope.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165796923C52E0C0051CEFE /* residfp-envelope.cpp */; };
+		4165797B23C52E0C0051CEFE /* residfp-extfilt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165796B23C52E0C0051CEFE /* residfp-extfilt.cpp */; };
+		4165797C23C52E0C0051CEFE /* residfp-filter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165796D23C52E0C0051CEFE /* residfp-filter.cpp */; };
+		4165797D23C52E0C0051CEFE /* residfp-pot.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165796F23C52E0C0051CEFE /* residfp-pot.cpp */; };
+		4165797E23C52E0C0051CEFE /* residfp-sid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165797123C52E0C0051CEFE /* residfp-sid.cpp */; };
+		4165797F23C52E0C0051CEFE /* residfp-voice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165797423C52E0C0051CEFE /* residfp-voice.cpp */; };
+		4165798023C52E0C0051CEFE /* residfp-wave.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165797623C52E0C0051CEFE /* residfp-wave.cpp */; };
 		416AF7801CC8D68700E56DDC /* CSlrTextParser.mm in Sources */ = {isa = PBXBuildFile; fileRef = 416AF77F1CC8D68700E56DDC /* CSlrTextParser.mm */; };
-		416F38512368ADAF00DB2CC0 /* C64DebuggerPluginShowPic.mm in Sources */ = {isa = PBXBuildFile; fileRef = 416F38502368ADAF00DB2CC0 /* C64DebuggerPluginShowPic.mm */; };
 		41706DBA1F9A71EA00B1B2BA /* CViewJukeboxPlaylist.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41706DB91F9A71EA00B1B2BA /* CViewJukeboxPlaylist.mm */; };
 		41706DBD1F9A726F00B1B2BA /* CJukeboxPlaylist.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41706DBB1F9A726F00B1B2BA /* CJukeboxPlaylist.mm */; };
 		4172EFC621F2B48F003F49FB /* nstcli.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4172ED2621F2B48D003F49FB /* nstcli.cpp */; };
@@ -1926,10 +1903,6 @@
 		4172F0F221F2B490003F49FB /* nes_ntsc.inl in Resources */ = {isa = PBXBuildFile; fileRef = 4172EFA621F2B48F003F49FB /* nes_ntsc.inl */; };
 		4172F0F321F2B490003F49FB /* nes_ntsc.txt in Resources */ = {isa = PBXBuildFile; fileRef = 4172EFA721F2B48F003F49FB /* nes_ntsc.txt */; };
 		4172F0F421F2B490003F49FB /* readme.txt in Resources */ = {isa = PBXBuildFile; fileRef = 4172EFAA21F2B48F003F49FB /* readme.txt */; };
-		4172F0F521F2B490003F49FB /* test.bmp in Resources */ = {isa = PBXBuildFile; fileRef = 4172EFAB21F2B48F003F49FB /* test.bmp */; };
-		4172F0F621F2B490003F49FB /* 1.line_phase.nes in Resources */ = {isa = PBXBuildFile; fileRef = 4172EFAD21F2B48F003F49FB /* 1.line_phase.nes */; };
-		4172F0F721F2B490003F49FB /* 2.frame_phase.nes in Resources */ = {isa = PBXBuildFile; fileRef = 4172EFAE21F2B48F003F49FB /* 2.frame_phase.nes */; };
-		4172F0F821F2B490003F49FB /* 3.special_frame_phase.nes in Resources */ = {isa = PBXBuildFile; fileRef = 4172EFAF21F2B48F003F49FB /* 3.special_frame_phase.nes */; };
 		4172F0F921F2B490003F49FB /* CNesAudioChannel.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4172EFB221F2B48F003F49FB /* CNesAudioChannel.mm */; };
 		4172F0FA21F2B490003F49FB /* NesDataAdapters.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4172EFB421F2B48F003F49FB /* NesDataAdapters.mm */; };
 		4172F0FB21F2B490003F49FB /* NesDebugInterface.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4172EFB621F2B48F003F49FB /* NesDebugInterface.mm */; };
@@ -2093,7 +2066,12 @@
 		41CFB03E21F75422002D2702 /* exomizer-match.c in Sources */ = {isa = PBXBuildFile; fileRef = 41CFB03321F75422002D2702 /* exomizer-match.c */; };
 		41CFB03F21F75422002D2702 /* exomizer.c in Sources */ = {isa = PBXBuildFile; fileRef = 41CFB03621F75422002D2702 /* exomizer.c */; };
 		41CFB04021F75422002D2702 /* exomizer-chunkpool.c in Sources */ = {isa = PBXBuildFile; fileRef = 41CFB03821F75422002D2702 /* exomizer-chunkpool.c */; };
-		41D56FAB2271A32400F15B8B /* CViewC64EmulationCounters.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41D56FA92271A32400F15B8B /* CViewC64EmulationCounters.mm */; };
+		41D0683923C0BCD100C0B93E /* altirra_5200_os.c in Sources */ = {isa = PBXBuildFile; fileRef = 41D0683123C0BCD100C0B93E /* altirra_5200_os.c */; };
+		41D0683A23C0BCD100C0B93E /* altirra_basic.c in Sources */ = {isa = PBXBuildFile; fileRef = 41D0683323C0BCD100C0B93E /* altirra_basic.c */; };
+		41D0683B23C0BCD100C0B93E /* altirraos_800.c in Sources */ = {isa = PBXBuildFile; fileRef = 41D0683523C0BCD100C0B93E /* altirraos_800.c */; };
+		41D0683C23C0BCD100C0B93E /* altirraos_xl.c in Sources */ = {isa = PBXBuildFile; fileRef = 41D0683723C0BCD100C0B93E /* altirraos_xl.c */; };
+		41D0683F23C0BE9700C0B93E /* pokeyrec.c in Sources */ = {isa = PBXBuildFile; fileRef = 41D0683E23C0BE9700C0B93E /* pokeyrec.c */; };
+		41D56FAB2271A32400F15B8B /* CViewEmulationCounters.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41D56FA92271A32400F15B8B /* CViewEmulationCounters.mm */; };
 		41DCE4CE2311E24200ADA824 /* SYS_PIPE.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41DCE4CC2311E24200ADA824 /* SYS_PIPE.mm */; };
 		41DDCABF1D0EF01000C03F39 /* C64KeyboardShortcuts.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41DDCABE1D0EF01000C03F39 /* C64KeyboardShortcuts.mm */; };
 		41DDCAC21D0F19C500C03F39 /* CViewKeyboardShortcuts.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41DDCAC01D0F19C500C03F39 /* CViewKeyboardShortcuts.mm */; };
@@ -2921,8 +2899,6 @@
 		412F0EBA21F75CF100652B0B /* libini-headings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "libini-headings.h"; sourceTree = "<group>"; };
 		4132CC0F19AE145200E7C3B0 /* lodepng.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = lodepng.cpp; sourceTree = "<group>"; };
 		4132CC1019AE145200E7C3B0 /* lodepng.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lodepng.h; sourceTree = "<group>"; };
-		4136701522973213006C8AF2 /* C64DebuggerPluginSpiral.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64DebuggerPluginSpiral.mm; path = ../Games/Plugins/C64DebuggerPluginSpiral.mm; sourceTree = "<group>"; };
-		4136701622973213006C8AF2 /* C64DebuggerPluginSpiral.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64DebuggerPluginSpiral.h; path = ../Games/Plugins/C64DebuggerPluginSpiral.h; sourceTree = "<group>"; };
 		4138F97A18BDF69600C6C5A9 /* CGuiViewSelectFolder.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CGuiViewSelectFolder.mm; sourceTree = "<group>"; };
 		4138F97B18BDF69600C6C5A9 /* CGuiViewSelectFolder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CGuiViewSelectFolder.h; sourceTree = "<group>"; };
 		413B5F361DC213B300852EA4 /* SYS_SharedMemory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SYS_SharedMemory.h; sourceTree = "<group>"; };
@@ -3167,34 +3143,6 @@
 		4145348D1CB2D1A200020916 /* raster-sprite.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "raster-sprite.h"; sourceTree = "<group>"; };
 		4145348E1CB2D1A200020916 /* raster.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = raster.c; sourceTree = "<group>"; };
 		4145348F1CB2D1A200020916 /* raster.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = raster.h; sourceTree = "<group>"; };
-		414534951CB2D1A200020916 /* resid-config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "resid-config.h"; sourceTree = "<group>"; };
-		414534961CB2D1A200020916 /* resid-dac.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "resid-dac.cc"; sourceTree = "<group>"; };
-		414534971CB2D1A200020916 /* resid-dac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "resid-dac.h"; sourceTree = "<group>"; };
-		414534981CB2D1A200020916 /* resid-envelope.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "resid-envelope.cc"; sourceTree = "<group>"; };
-		414534991CB2D1A200020916 /* resid-envelope.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "resid-envelope.h"; sourceTree = "<group>"; };
-		4145349A1CB2D1A200020916 /* resid-extfilt.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "resid-extfilt.cc"; sourceTree = "<group>"; };
-		4145349B1CB2D1A200020916 /* resid-extfilt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "resid-extfilt.h"; sourceTree = "<group>"; };
-		4145349C1CB2D1A200020916 /* resid-filter.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "resid-filter.cc"; sourceTree = "<group>"; };
-		4145349D1CB2D1A200020916 /* resid-filter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "resid-filter.h"; sourceTree = "<group>"; };
-		4145349E1CB2D1A200020916 /* resid-pot.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "resid-pot.cc"; sourceTree = "<group>"; };
-		4145349F1CB2D1A200020916 /* resid-pot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "resid-pot.h"; sourceTree = "<group>"; };
-		414534A01CB2D1A200020916 /* resid-sid.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "resid-sid.cc"; sourceTree = "<group>"; };
-		414534A11CB2D1A200020916 /* resid-sid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "resid-sid.h"; sourceTree = "<group>"; };
-		414534A21CB2D1A200020916 /* resid-siddefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "resid-siddefs.h"; sourceTree = "<group>"; };
-		414534A31CB2D1A200020916 /* resid-spline.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "resid-spline.h"; sourceTree = "<group>"; };
-		414534A41CB2D1A200020916 /* resid-version.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "resid-version.cc"; sourceTree = "<group>"; };
-		414534A51CB2D1A200020916 /* resid-voice.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "resid-voice.cc"; sourceTree = "<group>"; };
-		414534A61CB2D1A200020916 /* resid-voice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "resid-voice.h"; sourceTree = "<group>"; };
-		414534A71CB2D1A200020916 /* resid-wave.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "resid-wave.cc"; sourceTree = "<group>"; };
-		414534A81CB2D1A200020916 /* resid-wave.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "resid-wave.h"; sourceTree = "<group>"; };
-		414534A91CB2D1A200020916 /* wave6581__ST.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wave6581__ST.h; sourceTree = "<group>"; };
-		414534AA1CB2D1A200020916 /* wave6581_P_T.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wave6581_P_T.h; sourceTree = "<group>"; };
-		414534AB1CB2D1A300020916 /* wave6581_PS_.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wave6581_PS_.h; sourceTree = "<group>"; };
-		414534AC1CB2D1A300020916 /* wave6581_PST.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wave6581_PST.h; sourceTree = "<group>"; };
-		414534AD1CB2D1A300020916 /* wave8580__ST.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wave8580__ST.h; sourceTree = "<group>"; };
-		414534AE1CB2D1A300020916 /* wave8580_P_T.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wave8580_P_T.h; sourceTree = "<group>"; };
-		414534AF1CB2D1A300020916 /* wave8580_PS_.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wave8580_PS_.h; sourceTree = "<group>"; };
-		414534B01CB2D1A300020916 /* wave8580_PST.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wave8580_PST.h; sourceTree = "<group>"; };
 		414535191CB2D1A300020916 /* t64.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = t64.c; sourceTree = "<group>"; };
 		4145351A1CB2D1A300020916 /* t64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = t64.h; sourceTree = "<group>"; };
 		4145351B1CB2D1A300020916 /* tap.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tap.c; sourceTree = "<group>"; };
@@ -3365,24 +3313,6 @@
 		414538041CB2D2D100020916 /* ppmdrv.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ppmdrv.h; sourceTree = "<group>"; };
 		4145380D1CB2D36C00020916 /* realdevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = realdevice.h; sourceTree = "<group>"; };
 		4145380E1CB2D39100020916 /* realimage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = realimage.h; sourceTree = "<group>"; };
-		414538171CB2D91600020916 /* residfp-config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "residfp-config.h"; sourceTree = "<group>"; };
-		414538191CB2D91600020916 /* residfp-convolve.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "residfp-convolve.cc"; sourceTree = "<group>"; };
-		4145381A1CB2D91600020916 /* residfp-envelope.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "residfp-envelope.cc"; sourceTree = "<group>"; };
-		4145381B1CB2D91600020916 /* residfp-envelope.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "residfp-envelope.h"; sourceTree = "<group>"; };
-		4145381C1CB2D91600020916 /* residfp-extfilt.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "residfp-extfilt.cc"; sourceTree = "<group>"; };
-		4145381D1CB2D91600020916 /* residfp-extfilt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "residfp-extfilt.h"; sourceTree = "<group>"; };
-		4145381E1CB2D91600020916 /* residfp-filter.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "residfp-filter.cc"; sourceTree = "<group>"; };
-		4145381F1CB2D91600020916 /* residfp-filter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "residfp-filter.h"; sourceTree = "<group>"; };
-		414538201CB2D91600020916 /* residfp-pot.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "residfp-pot.cc"; sourceTree = "<group>"; };
-		414538211CB2D91600020916 /* residfp-pot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "residfp-pot.h"; sourceTree = "<group>"; };
-		414538221CB2D91600020916 /* residfp-sid.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "residfp-sid.cc"; sourceTree = "<group>"; };
-		414538231CB2D91600020916 /* residfp-sid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "residfp-sid.h"; sourceTree = "<group>"; };
-		414538241CB2D91600020916 /* residfp-siddefs-fp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "residfp-siddefs-fp.h"; sourceTree = "<group>"; };
-		414538251CB2D91600020916 /* residfp-voice.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "residfp-voice.cc"; sourceTree = "<group>"; };
-		414538261CB2D91600020916 /* residfp-voice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "residfp-voice.h"; sourceTree = "<group>"; };
-		414538271CB2D91600020916 /* residfp-wave.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "residfp-wave.cc"; sourceTree = "<group>"; };
-		414538281CB2D91600020916 /* residfp-wave.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "residfp-wave.h"; sourceTree = "<group>"; };
-		414538321CB2D96600020916 /* residfp-convolve-sse.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "residfp-convolve-sse.cc"; sourceTree = "<group>"; };
 		414538341CB2DB9C00020916 /* ata.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ata.c; sourceTree = "<group>"; };
 		414538351CB2DB9C00020916 /* ata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ata.h; sourceTree = "<group>"; };
 		414538361CB2DB9C00020916 /* ciacore.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ciacore.c; sourceTree = "<group>"; };
@@ -3449,9 +3379,7 @@
 		414538921CB2DC2000020916 /* rtc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rtc.h; sourceTree = "<group>"; };
 		414538991CB2DC3300020916 /* fastsid.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fastsid.c; sourceTree = "<group>"; };
 		4145389A1CB2DC3300020916 /* fastsid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fastsid.h; sourceTree = "<group>"; };
-		4145389B1CB2DC3300020916 /* resid-fp.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "resid-fp.cc"; sourceTree = "<group>"; };
 		4145389C1CB2DC3300020916 /* resid-fp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "resid-fp.h"; sourceTree = "<group>"; };
-		4145389D1CB2DC3300020916 /* resid.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = resid.cc; sourceTree = "<group>"; };
 		4145389E1CB2DC3300020916 /* resid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = resid.h; sourceTree = "<group>"; };
 		4145389F1CB2DC3300020916 /* sid-cmdline-options.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "sid-cmdline-options.c"; sourceTree = "<group>"; };
 		414538A01CB2DC3300020916 /* sid-cmdline-options.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "sid-cmdline-options.h"; sourceTree = "<group>"; };
@@ -3736,8 +3664,6 @@
 		4152D71A1C970F7900EBA9E5 /* CViewSnapshots.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewSnapshots.h; path = ../Games/c64/Screens/CViewSnapshots.h; sourceTree = "<group>"; };
 		4152D7201C970FA900EBA9E5 /* CViewC64.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewC64.mm; path = ../Games/c64/Screens/CViewC64.mm; sourceTree = "<group>"; };
 		4152D7211C970FA900EBA9E5 /* CViewC64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewC64.h; path = ../Games/c64/Screens/CViewC64.h; sourceTree = "<group>"; };
-		41563320228DBB4100FC3415 /* C64DebuggerPluginDummy.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64DebuggerPluginDummy.mm; path = ../Games/Plugins/C64DebuggerPluginDummy.mm; sourceTree = "<group>"; };
-		41563321228DBB4100FC3415 /* C64DebuggerPluginDummy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64DebuggerPluginDummy.h; path = ../Games/Plugins/C64DebuggerPluginDummy.h; sourceTree = "<group>"; };
 		41563322228DBB4100FC3415 /* C64D_InitPlugins.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64D_InitPlugins.mm; path = ../Games/Plugins/C64D_InitPlugins.mm; sourceTree = "<group>"; };
 		41563323228DBB4100FC3415 /* C64D_InitPlugins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64D_InitPlugins.h; path = ../Games/Plugins/C64D_InitPlugins.h; sourceTree = "<group>"; };
 		41579F4A1FD70C4300234FBB /* CViewColodore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewColodore.h; path = ../Games/c64/Screens/CViewColodore.h; sourceTree = "<group>"; };
@@ -3780,12 +3706,58 @@
 		4163FA951EC1FD23008BBBFD /* C64VicDisplayCanvasBlank.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64VicDisplayCanvasBlank.h; path = ../Games/c64/Views/VicDisplay/C64VicDisplayCanvasBlank.h; sourceTree = "<group>"; };
 		41646C0C1C8DE93E006BBE25 /* SYS_CommandLine.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SYS_CommandLine.mm; sourceTree = "<group>"; };
 		41646C0D1C8DE93E006BBE25 /* SYS_CommandLine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SYS_CommandLine.h; sourceTree = "<group>"; };
+		4165793D23C52DEE0051CEFE /* resid-fp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "resid-fp.cpp"; sourceTree = "<group>"; };
+		4165793E23C52DEE0051CEFE /* resid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = resid.cpp; sourceTree = "<group>"; };
+		4165794123C52E020051CEFE /* resid-config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "resid-config.h"; sourceTree = "<group>"; };
+		4165794223C52E020051CEFE /* resid-dac.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "resid-dac.cpp"; sourceTree = "<group>"; };
+		4165794323C52E020051CEFE /* resid-dac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "resid-dac.h"; sourceTree = "<group>"; };
+		4165794423C52E020051CEFE /* resid-envelope.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "resid-envelope.cpp"; sourceTree = "<group>"; };
+		4165794523C52E020051CEFE /* resid-envelope.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "resid-envelope.h"; sourceTree = "<group>"; };
+		4165794623C52E020051CEFE /* resid-extfilt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "resid-extfilt.cpp"; sourceTree = "<group>"; };
+		4165794723C52E020051CEFE /* resid-extfilt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "resid-extfilt.h"; sourceTree = "<group>"; };
+		4165794823C52E020051CEFE /* resid-filter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "resid-filter.cpp"; sourceTree = "<group>"; };
+		4165794923C52E020051CEFE /* resid-filter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "resid-filter.h"; sourceTree = "<group>"; };
+		4165794A23C52E020051CEFE /* resid-pot.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "resid-pot.cpp"; sourceTree = "<group>"; };
+		4165794B23C52E020051CEFE /* resid-pot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "resid-pot.h"; sourceTree = "<group>"; };
+		4165794C23C52E020051CEFE /* resid-sid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "resid-sid.cpp"; sourceTree = "<group>"; };
+		4165794D23C52E020051CEFE /* resid-sid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "resid-sid.h"; sourceTree = "<group>"; };
+		4165794E23C52E020051CEFE /* resid-siddefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "resid-siddefs.h"; sourceTree = "<group>"; };
+		4165794F23C52E020051CEFE /* resid-spline.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "resid-spline.h"; sourceTree = "<group>"; };
+		4165795023C52E020051CEFE /* resid-version.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "resid-version.cpp"; sourceTree = "<group>"; };
+		4165795123C52E020051CEFE /* resid-voice.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "resid-voice.cpp"; sourceTree = "<group>"; };
+		4165795223C52E020051CEFE /* resid-voice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "resid-voice.h"; sourceTree = "<group>"; };
+		4165795323C52E020051CEFE /* resid-wave.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "resid-wave.cpp"; sourceTree = "<group>"; };
+		4165795423C52E020051CEFE /* resid-wave.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "resid-wave.h"; sourceTree = "<group>"; };
+		4165795523C52E020051CEFE /* wave6581__ST.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wave6581__ST.h; sourceTree = "<group>"; };
+		4165795623C52E020051CEFE /* wave6581_P_T.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wave6581_P_T.h; sourceTree = "<group>"; };
+		4165795723C52E020051CEFE /* wave6581_PS_.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wave6581_PS_.h; sourceTree = "<group>"; };
+		4165795823C52E020051CEFE /* wave6581_PST.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wave6581_PST.h; sourceTree = "<group>"; };
+		4165795923C52E020051CEFE /* wave8580__ST.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wave8580__ST.h; sourceTree = "<group>"; };
+		4165795A23C52E020051CEFE /* wave8580_P_T.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wave8580_P_T.h; sourceTree = "<group>"; };
+		4165795B23C52E020051CEFE /* wave8580_PS_.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wave8580_PS_.h; sourceTree = "<group>"; };
+		4165795C23C52E020051CEFE /* wave8580_PST.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wave8580_PST.h; sourceTree = "<group>"; };
+		4165796623C52E0C0051CEFE /* residfp-config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "residfp-config.h"; sourceTree = "<group>"; };
+		4165796723C52E0C0051CEFE /* residfp-convolve-sse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "residfp-convolve-sse.cpp"; sourceTree = "<group>"; };
+		4165796823C52E0C0051CEFE /* residfp-convolve.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "residfp-convolve.cpp"; sourceTree = "<group>"; };
+		4165796923C52E0C0051CEFE /* residfp-envelope.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "residfp-envelope.cpp"; sourceTree = "<group>"; };
+		4165796A23C52E0C0051CEFE /* residfp-envelope.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "residfp-envelope.h"; sourceTree = "<group>"; };
+		4165796B23C52E0C0051CEFE /* residfp-extfilt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "residfp-extfilt.cpp"; sourceTree = "<group>"; };
+		4165796C23C52E0C0051CEFE /* residfp-extfilt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "residfp-extfilt.h"; sourceTree = "<group>"; };
+		4165796D23C52E0C0051CEFE /* residfp-filter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "residfp-filter.cpp"; sourceTree = "<group>"; };
+		4165796E23C52E0C0051CEFE /* residfp-filter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "residfp-filter.h"; sourceTree = "<group>"; };
+		4165796F23C52E0C0051CEFE /* residfp-pot.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "residfp-pot.cpp"; sourceTree = "<group>"; };
+		4165797023C52E0C0051CEFE /* residfp-pot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "residfp-pot.h"; sourceTree = "<group>"; };
+		4165797123C52E0C0051CEFE /* residfp-sid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "residfp-sid.cpp"; sourceTree = "<group>"; };
+		4165797223C52E0C0051CEFE /* residfp-sid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "residfp-sid.h"; sourceTree = "<group>"; };
+		4165797323C52E0C0051CEFE /* residfp-siddefs-fp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "residfp-siddefs-fp.h"; sourceTree = "<group>"; };
+		4165797423C52E0C0051CEFE /* residfp-voice.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "residfp-voice.cpp"; sourceTree = "<group>"; };
+		4165797523C52E0C0051CEFE /* residfp-voice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "residfp-voice.h"; sourceTree = "<group>"; };
+		4165797623C52E0C0051CEFE /* residfp-wave.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "residfp-wave.cpp"; sourceTree = "<group>"; };
+		4165797723C52E0C0051CEFE /* residfp-wave.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "residfp-wave.h"; sourceTree = "<group>"; };
 		41674802210790A1005C8D8A /* icon_new_gfx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = icon_new_gfx.h; path = ../Games/c64/Data/icon_new_gfx.h; sourceTree = "<group>"; };
 		416AF77D1CC7D52100E56DDC /* C64Opcodes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64Opcodes.h; path = ../Games/c64/Tools/C64Opcodes.h; sourceTree = "<group>"; };
 		416AF77E1CC8D68700E56DDC /* CSlrTextParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CSlrTextParser.h; sourceTree = "<group>"; };
 		416AF77F1CC8D68700E56DDC /* CSlrTextParser.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CSlrTextParser.mm; sourceTree = "<group>"; };
-		416F384F2368ADAF00DB2CC0 /* C64DebuggerPluginShowPic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64DebuggerPluginShowPic.h; path = ../Games/Plugins/C64DebuggerPluginShowPic.h; sourceTree = "<group>"; };
-		416F38502368ADAF00DB2CC0 /* C64DebuggerPluginShowPic.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64DebuggerPluginShowPic.mm; path = ../Games/Plugins/C64DebuggerPluginShowPic.mm; sourceTree = "<group>"; };
 		41706DB81F9A71EA00B1B2BA /* CViewJukeboxPlaylist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewJukeboxPlaylist.h; path = ../Games/c64/Views/JukeboxPlaylist/CViewJukeboxPlaylist.h; sourceTree = "<group>"; };
 		41706DB91F9A71EA00B1B2BA /* CViewJukeboxPlaylist.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewJukeboxPlaylist.mm; path = ../Games/c64/Views/JukeboxPlaylist/CViewJukeboxPlaylist.mm; sourceTree = "<group>"; };
 		41706DBB1F9A726F00B1B2BA /* CJukeboxPlaylist.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CJukeboxPlaylist.mm; path = ../Games/c64/Views/JukeboxPlaylist/CJukeboxPlaylist.mm; sourceTree = "<group>"; };
@@ -4422,10 +4394,6 @@
 		4172EFA821F2B48F003F49FB /* nes_ntsc_config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = nes_ntsc_config.h; sourceTree = "<group>"; };
 		4172EFA921F2B48F003F49FB /* nes_ntsc_impl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = nes_ntsc_impl.h; sourceTree = "<group>"; };
 		4172EFAA21F2B48F003F49FB /* readme.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = readme.txt; sourceTree = "<group>"; };
-		4172EFAB21F2B48F003F49FB /* test.bmp */ = {isa = PBXFileReference; lastKnownFileType = image.bmp; path = test.bmp; sourceTree = "<group>"; };
-		4172EFAD21F2B48F003F49FB /* 1.line_phase.nes */ = {isa = PBXFileReference; lastKnownFileType = file; path = 1.line_phase.nes; sourceTree = "<group>"; };
-		4172EFAE21F2B48F003F49FB /* 2.frame_phase.nes */ = {isa = PBXFileReference; lastKnownFileType = file; path = 2.frame_phase.nes; sourceTree = "<group>"; };
-		4172EFAF21F2B48F003F49FB /* 3.special_frame_phase.nes */ = {isa = PBXFileReference; lastKnownFileType = file; path = 3.special_frame_phase.nes; sourceTree = "<group>"; };
 		4172EFB121F2B48F003F49FB /* CNesAudioChannel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CNesAudioChannel.h; sourceTree = "<group>"; };
 		4172EFB221F2B48F003F49FB /* CNesAudioChannel.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CNesAudioChannel.mm; sourceTree = "<group>"; };
 		4172EFB321F2B48F003F49FB /* NesDataAdapters.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NesDataAdapters.h; sourceTree = "<group>"; };
@@ -4734,8 +4702,18 @@
 		41CFB03621F75422002D2702 /* exomizer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = exomizer.c; path = ../Games/c64/Tools/exomizer/exomizer.c; sourceTree = "<group>"; };
 		41CFB03721F75422002D2702 /* exomizer-chunkpool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "exomizer-chunkpool.h"; path = "../Games/c64/Tools/exomizer/exomizer-chunkpool.h"; sourceTree = "<group>"; };
 		41CFB03821F75422002D2702 /* exomizer-chunkpool.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "exomizer-chunkpool.c"; path = "../Games/c64/Tools/exomizer/exomizer-chunkpool.c"; sourceTree = "<group>"; };
-		41D56FA92271A32400F15B8B /* CViewC64EmulationCounters.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewC64EmulationCounters.mm; path = ../Games/c64/Views/CViewC64EmulationCounters.mm; sourceTree = "<group>"; };
-		41D56FAA2271A32400F15B8B /* CViewC64EmulationCounters.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewC64EmulationCounters.h; path = ../Games/c64/Views/CViewC64EmulationCounters.h; sourceTree = "<group>"; };
+		41D0683123C0BCD100C0B93E /* altirra_5200_os.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = altirra_5200_os.c; path = roms/altirra_5200_os.c; sourceTree = "<group>"; };
+		41D0683223C0BCD100C0B93E /* altirra_5200_os.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = altirra_5200_os.h; path = roms/altirra_5200_os.h; sourceTree = "<group>"; };
+		41D0683323C0BCD100C0B93E /* altirra_basic.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = altirra_basic.c; path = roms/altirra_basic.c; sourceTree = "<group>"; };
+		41D0683423C0BCD100C0B93E /* altirra_basic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = altirra_basic.h; path = roms/altirra_basic.h; sourceTree = "<group>"; };
+		41D0683523C0BCD100C0B93E /* altirraos_800.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = altirraos_800.c; path = roms/altirraos_800.c; sourceTree = "<group>"; };
+		41D0683623C0BCD100C0B93E /* altirraos_800.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = altirraos_800.h; path = roms/altirraos_800.h; sourceTree = "<group>"; };
+		41D0683723C0BCD100C0B93E /* altirraos_xl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = altirraos_xl.c; path = roms/altirraos_xl.c; sourceTree = "<group>"; };
+		41D0683823C0BCD100C0B93E /* altirraos_xl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = altirraos_xl.h; path = roms/altirraos_xl.h; sourceTree = "<group>"; };
+		41D0683D23C0BE9700C0B93E /* pokeyrec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pokeyrec.h; sourceTree = "<group>"; };
+		41D0683E23C0BE9700C0B93E /* pokeyrec.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pokeyrec.c; sourceTree = "<group>"; };
+		41D56FA92271A32400F15B8B /* CViewEmulationCounters.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewEmulationCounters.mm; path = ../Games/c64/Views/CViewEmulationCounters.mm; sourceTree = "<group>"; };
+		41D56FAA2271A32400F15B8B /* CViewEmulationCounters.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewEmulationCounters.h; path = ../Games/c64/Views/CViewEmulationCounters.h; sourceTree = "<group>"; };
 		41DCE4CC2311E24200ADA824 /* SYS_PIPE.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SYS_PIPE.mm; sourceTree = "<group>"; };
 		41DCE4CD2311E24200ADA824 /* SYS_PIPE.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SYS_PIPE.h; sourceTree = "<group>"; };
 		41DDCABE1D0EF01000C03F39 /* C64KeyboardShortcuts.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64KeyboardShortcuts.mm; path = ../Games/c64/Tools/C64KeyboardShortcuts.mm; sourceTree = "<group>"; };
@@ -5573,8 +5551,8 @@
 			children = (
 				4160B20A1CEB16AB00EAD217 /* CGuiViewConsole.mm */,
 				4160B20B1CEB16AB00EAD217 /* CGuiViewConsole.h */,
-				4140E6321A9C91F1002FC265 /* CGuiViewDummy.h */,
 				4140E6331A9C91F1002FC265 /* CGuiViewDummy.mm */,
+				4140E6321A9C91F1002FC265 /* CGuiViewDummy.h */,
 				411AE395191BB9000047026E /* GUI_Debug.h */,
 				411AE396191BB9000047026E /* GUI_Debug.mm */,
 				390427BC186892A700B570B1 /* LoadingScreen */,
@@ -5799,8 +5777,8 @@
 				41EFDF4F23B0C46C00C3FB54 /* CViewTimeline.h */,
 				41FE272D23575BE900E8F255 /* CViewC64AllGraphics.mm */,
 				41FE272E23575BE900E8F255 /* CViewC64AllGraphics.h */,
-				41D56FA92271A32400F15B8B /* CViewC64EmulationCounters.mm */,
-				41D56FAA2271A32400F15B8B /* CViewC64EmulationCounters.h */,
+				41D56FA92271A32400F15B8B /* CViewEmulationCounters.mm */,
+				41D56FAA2271A32400F15B8B /* CViewEmulationCounters.h */,
 				41706DB71F9A71BB00B1B2BA /* JukeboxPlaylist */,
 				41F8106E1EC1A97D00E2F9AD /* VicDisplay */,
 				41C2EFE91E7060C200E8779A /* VicEditor */,
@@ -5948,6 +5926,7 @@
 		411C4BC921F2B36F00356433 /* atari800 */ = {
 			isa = PBXGroup;
 			children = (
+				41D0683023C0BCC200C0B93E /* roms */,
 				411C4BEA21F2B36F00356433 /* AtariInterface */,
 				411C4BCA21F2B36F00356433 /* a-cartridge.c */,
 				411C4BCB21F2B36F00356433 /* a-cartridge.h */,
@@ -6039,6 +6018,8 @@
 				411C4C2E21F2B36F00356433 /* pia.h */,
 				411C4C2F21F2B36F00356433 /* pokey.c */,
 				411C4C3021F2B36F00356433 /* pokey.h */,
+				41D0683E23C0BE9700C0B93E /* pokeyrec.c */,
+				41D0683D23C0BE9700C0B93E /* pokeyrec.h */,
 				411C4C3121F2B36F00356433 /* pokeysnd.c */,
 				411C4C3221F2B36F00356433 /* pokeysnd.h */,
 				411C4C3321F2B36F00356433 /* remez.c */,
@@ -6971,34 +6952,34 @@
 		414534941CB2D1A200020916 /* resid */ = {
 			isa = PBXGroup;
 			children = (
-				414534951CB2D1A200020916 /* resid-config.h */,
-				414534961CB2D1A200020916 /* resid-dac.cc */,
-				414534971CB2D1A200020916 /* resid-dac.h */,
-				414534981CB2D1A200020916 /* resid-envelope.cc */,
-				414534991CB2D1A200020916 /* resid-envelope.h */,
-				4145349A1CB2D1A200020916 /* resid-extfilt.cc */,
-				4145349B1CB2D1A200020916 /* resid-extfilt.h */,
-				4145349C1CB2D1A200020916 /* resid-filter.cc */,
-				4145349D1CB2D1A200020916 /* resid-filter.h */,
-				4145349E1CB2D1A200020916 /* resid-pot.cc */,
-				4145349F1CB2D1A200020916 /* resid-pot.h */,
-				414534A01CB2D1A200020916 /* resid-sid.cc */,
-				414534A11CB2D1A200020916 /* resid-sid.h */,
-				414534A21CB2D1A200020916 /* resid-siddefs.h */,
-				414534A31CB2D1A200020916 /* resid-spline.h */,
-				414534A41CB2D1A200020916 /* resid-version.cc */,
-				414534A51CB2D1A200020916 /* resid-voice.cc */,
-				414534A61CB2D1A200020916 /* resid-voice.h */,
-				414534A71CB2D1A200020916 /* resid-wave.cc */,
-				414534A81CB2D1A200020916 /* resid-wave.h */,
-				414534A91CB2D1A200020916 /* wave6581__ST.h */,
-				414534AA1CB2D1A200020916 /* wave6581_P_T.h */,
-				414534AB1CB2D1A300020916 /* wave6581_PS_.h */,
-				414534AC1CB2D1A300020916 /* wave6581_PST.h */,
-				414534AD1CB2D1A300020916 /* wave8580__ST.h */,
-				414534AE1CB2D1A300020916 /* wave8580_P_T.h */,
-				414534AF1CB2D1A300020916 /* wave8580_PS_.h */,
-				414534B01CB2D1A300020916 /* wave8580_PST.h */,
+				4165794123C52E020051CEFE /* resid-config.h */,
+				4165794223C52E020051CEFE /* resid-dac.cpp */,
+				4165794323C52E020051CEFE /* resid-dac.h */,
+				4165794423C52E020051CEFE /* resid-envelope.cpp */,
+				4165794523C52E020051CEFE /* resid-envelope.h */,
+				4165794623C52E020051CEFE /* resid-extfilt.cpp */,
+				4165794723C52E020051CEFE /* resid-extfilt.h */,
+				4165794823C52E020051CEFE /* resid-filter.cpp */,
+				4165794923C52E020051CEFE /* resid-filter.h */,
+				4165794A23C52E020051CEFE /* resid-pot.cpp */,
+				4165794B23C52E020051CEFE /* resid-pot.h */,
+				4165794C23C52E020051CEFE /* resid-sid.cpp */,
+				4165794D23C52E020051CEFE /* resid-sid.h */,
+				4165794E23C52E020051CEFE /* resid-siddefs.h */,
+				4165794F23C52E020051CEFE /* resid-spline.h */,
+				4165795023C52E020051CEFE /* resid-version.cpp */,
+				4165795123C52E020051CEFE /* resid-voice.cpp */,
+				4165795223C52E020051CEFE /* resid-voice.h */,
+				4165795323C52E020051CEFE /* resid-wave.cpp */,
+				4165795423C52E020051CEFE /* resid-wave.h */,
+				4165795523C52E020051CEFE /* wave6581__ST.h */,
+				4165795623C52E020051CEFE /* wave6581_P_T.h */,
+				4165795723C52E020051CEFE /* wave6581_PS_.h */,
+				4165795823C52E020051CEFE /* wave6581_PST.h */,
+				4165795923C52E020051CEFE /* wave8580__ST.h */,
+				4165795A23C52E020051CEFE /* wave8580_P_T.h */,
+				4165795B23C52E020051CEFE /* wave8580_PS_.h */,
+				4165795C23C52E020051CEFE /* wave8580_PST.h */,
 			);
 			path = resid;
 			sourceTree = "<group>";
@@ -7063,11 +7044,11 @@
 		414534F11CB2D1A300020916 /* sid */ = {
 			isa = PBXGroup;
 			children = (
+				4165793D23C52DEE0051CEFE /* resid-fp.cpp */,
+				4165793E23C52DEE0051CEFE /* resid.cpp */,
 				414538991CB2DC3300020916 /* fastsid.c */,
 				4145389A1CB2DC3300020916 /* fastsid.h */,
-				4145389B1CB2DC3300020916 /* resid-fp.cc */,
 				4145389C1CB2DC3300020916 /* resid-fp.h */,
-				4145389D1CB2DC3300020916 /* resid.cc */,
 				4145389E1CB2DC3300020916 /* resid.h */,
 				4145389F1CB2DC3300020916 /* sid-cmdline-options.c */,
 				414538A01CB2DC3300020916 /* sid-cmdline-options.h */,
@@ -7341,24 +7322,24 @@
 		414538161CB2D91600020916 /* resid-fp */ = {
 			isa = PBXGroup;
 			children = (
-				414538321CB2D96600020916 /* residfp-convolve-sse.cc */,
-				414538171CB2D91600020916 /* residfp-config.h */,
-				414538191CB2D91600020916 /* residfp-convolve.cc */,
-				4145381A1CB2D91600020916 /* residfp-envelope.cc */,
-				4145381B1CB2D91600020916 /* residfp-envelope.h */,
-				4145381C1CB2D91600020916 /* residfp-extfilt.cc */,
-				4145381D1CB2D91600020916 /* residfp-extfilt.h */,
-				4145381E1CB2D91600020916 /* residfp-filter.cc */,
-				4145381F1CB2D91600020916 /* residfp-filter.h */,
-				414538201CB2D91600020916 /* residfp-pot.cc */,
-				414538211CB2D91600020916 /* residfp-pot.h */,
-				414538221CB2D91600020916 /* residfp-sid.cc */,
-				414538231CB2D91600020916 /* residfp-sid.h */,
-				414538241CB2D91600020916 /* residfp-siddefs-fp.h */,
-				414538251CB2D91600020916 /* residfp-voice.cc */,
-				414538261CB2D91600020916 /* residfp-voice.h */,
-				414538271CB2D91600020916 /* residfp-wave.cc */,
-				414538281CB2D91600020916 /* residfp-wave.h */,
+				4165796623C52E0C0051CEFE /* residfp-config.h */,
+				4165796723C52E0C0051CEFE /* residfp-convolve-sse.cpp */,
+				4165796823C52E0C0051CEFE /* residfp-convolve.cpp */,
+				4165796923C52E0C0051CEFE /* residfp-envelope.cpp */,
+				4165796A23C52E0C0051CEFE /* residfp-envelope.h */,
+				4165796B23C52E0C0051CEFE /* residfp-extfilt.cpp */,
+				4165796C23C52E0C0051CEFE /* residfp-extfilt.h */,
+				4165796D23C52E0C0051CEFE /* residfp-filter.cpp */,
+				4165796E23C52E0C0051CEFE /* residfp-filter.h */,
+				4165796F23C52E0C0051CEFE /* residfp-pot.cpp */,
+				4165797023C52E0C0051CEFE /* residfp-pot.h */,
+				4165797123C52E0C0051CEFE /* residfp-sid.cpp */,
+				4165797223C52E0C0051CEFE /* residfp-sid.h */,
+				4165797323C52E0C0051CEFE /* residfp-siddefs-fp.h */,
+				4165797423C52E0C0051CEFE /* residfp-voice.cpp */,
+				4165797523C52E0C0051CEFE /* residfp-voice.h */,
+				4165797623C52E0C0051CEFE /* residfp-wave.cpp */,
+				4165797723C52E0C0051CEFE /* residfp-wave.h */,
 			);
 			path = "resid-fp";
 			sourceTree = "<group>";
@@ -8436,7 +8417,6 @@
 				4172EFA821F2B48F003F49FB /* nes_ntsc_config.h */,
 				4172EFA921F2B48F003F49FB /* nes_ntsc_impl.h */,
 				4172EFAA21F2B48F003F49FB /* readme.txt */,
-				4172EFAB21F2B48F003F49FB /* test.bmp */,
 				4172EFAC21F2B48F003F49FB /* tests */,
 			);
 			path = nes_ntsc;
@@ -8445,9 +8425,6 @@
 		4172EFAC21F2B48F003F49FB /* tests */ = {
 			isa = PBXGroup;
 			children = (
-				4172EFAD21F2B48F003F49FB /* 1.line_phase.nes */,
-				4172EFAE21F2B48F003F49FB /* 2.frame_phase.nes */,
-				4172EFAF21F2B48F003F49FB /* 3.special_frame_phase.nes */,
 			);
 			path = tests;
 			sourceTree = "<group>";
@@ -8845,6 +8822,21 @@
 			name = platform;
 			sourceTree = "<group>";
 		};
+		41D0683023C0BCC200C0B93E /* roms */ = {
+			isa = PBXGroup;
+			children = (
+				41D0683123C0BCD100C0B93E /* altirra_5200_os.c */,
+				41D0683223C0BCD100C0B93E /* altirra_5200_os.h */,
+				41D0683323C0BCD100C0B93E /* altirra_basic.c */,
+				41D0683423C0BCD100C0B93E /* altirra_basic.h */,
+				41D0683523C0BCD100C0B93E /* altirraos_800.c */,
+				41D0683623C0BCD100C0B93E /* altirraos_800.h */,
+				41D0683723C0BCD100C0B93E /* altirraos_xl.c */,
+				41D0683823C0BCD100C0B93E /* altirraos_xl.h */,
+			);
+			name = roms;
+			sourceTree = "<group>";
+		};
 		41E0AC1018AC2F740065DCAD /* libjson */ = {
 			isa = PBXGroup;
 			children = (
@@ -9022,12 +9014,6 @@
 		41FA0AAF2215C02B0091F64A /* Plugins */ = {
 			isa = PBXGroup;
 			children = (
-				416F38502368ADAF00DB2CC0 /* C64DebuggerPluginShowPic.mm */,
-				416F384F2368ADAF00DB2CC0 /* C64DebuggerPluginShowPic.h */,
-				4136701522973213006C8AF2 /* C64DebuggerPluginSpiral.mm */,
-				4136701622973213006C8AF2 /* C64DebuggerPluginSpiral.h */,
-				41563320228DBB4100FC3415 /* C64DebuggerPluginDummy.mm */,
-				41563321228DBB4100FC3415 /* C64DebuggerPluginDummy.h */,
 				41563322228DBB4100FC3415 /* C64D_InitPlugins.mm */,
 				41563323228DBB4100FC3415 /* C64D_InitPlugins.h */,
 			);
@@ -9121,15 +9107,11 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4172F0F721F2B490003F49FB /* 2.frame_phase.nes in Resources */,
 				4172F0F021F2B490003F49FB /* changes.txt in Resources */,
-				4172F0F521F2B490003F49FB /* test.bmp in Resources */,
 				4172F0D721F2B490003F49FB /* NstSoundRenderer.inl in Resources */,
-				4172F0F821F2B490003F49FB /* 3.special_frame_phase.nes in Resources */,
 				41A286AC1F08ECC500FE0AF7 /* TODO.txt in Resources */,
 				8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */,
 				4172F0F421F2B490003F49FB /* readme.txt in Resources */,
-				4172F0F621F2B490003F49FB /* 1.line_phase.nes in Resources */,
 				4192C6071B05177400D328EF /* Images.xcassets in Resources */,
 				4172F0DF21F2B490003F49FB /* NstVideoFilterHq2x.inl in Resources */,
 				412F0E8821F7549700652B0B /* sidconfig.h.in in Resources */,
@@ -9163,7 +9145,6 @@
 				4124770221D0F598002534CA /* CViewAtariStatePOKEY.mm in Sources */,
 				4124770321D0F598002534CA /* jdmainct.c in Sources */,
 				4124770421D0F598002534CA /* main.mm in Sources */,
-				4124770521D0F598002534CA /* resid-dac.cc in Sources */,
 				4124770621D0F598002534CA /* GLViewController.mm in Sources */,
 				4124770721D0F598002534CA /* GLView.mm in Sources */,
 				4124770821D0F598002534CA /* CSlrFileFromDocuments.mm in Sources */,
@@ -9178,7 +9159,6 @@
 				4124771121D0F598002534CA /* machine.c in Sources */,
 				4124771221D0F598002534CA /* ieee-resources.c in Sources */,
 				4124771321D0F598002534CA /* CGuiTheme.mm in Sources */,
-				4124771421D0F598002534CA /* resid-wave.cc in Sources */,
 				4124771521D0F598002534CA /* flash040core.c in Sources */,
 				4124771621D0F598002534CA /* clockport.c in Sources */,
 				4124771721D0F598002534CA /* t64.c in Sources */,
@@ -9224,7 +9204,6 @@
 				4124774221D0F598002534CA /* MTH_FastMath.mm in Sources */,
 				4124774321D0F598002534CA /* mon_command.c in Sources */,
 				4124774421D0F598002534CA /* MenuControllerSettings.mm in Sources */,
-				4124774521D0F598002534CA /* residfp-extfilt.cc in Sources */,
 				4124774621D0F598002534CA /* mon_register65816.c in Sources */,
 				4124774721D0F598002534CA /* drv-mps803.c in Sources */,
 				4124774821D0F598002534CA /* reu.c in Sources */,
@@ -9271,13 +9250,11 @@
 				4124777621D0F598002534CA /* sounddump.c in Sources */,
 				4124777721D0F598002534CA /* inflate.c in Sources */,
 				4124777821D0F598002534CA /* fsimage-probe.c in Sources */,
-				4124777921D0F598002534CA /* resid-version.cc in Sources */,
 				4124777A21D0F598002534CA /* m93c86.c in Sources */,
 				4124777B21D0F598002534CA /* zutil.c in Sources */,
 				4124777C21D0F598002534CA /* pcf8583.c in Sources */,
 				4124777D21D0F598002534CA /* render1x1.c in Sources */,
 				4124777E21D0F598002534CA /* vdrive-internal.c in Sources */,
-				4124777F21D0F598002534CA /* resid-filter.cc in Sources */,
 				4124778021D0F598002534CA /* pa_front.c in Sources */,
 				4124778121D0F598002534CA /* CViewJukeboxPlaylist.mm in Sources */,
 				4124778221D0F598002534CA /* pngwutil.c in Sources */,
@@ -9318,7 +9295,6 @@
 				412477A721D0F598002534CA /* pa_mac_core_blocking.c in Sources */,
 				412477A821D0F598002534CA /* gmod2.c in Sources */,
 				412477A921D0F598002534CA /* CSlrDate.mm in Sources */,
-				412477AA21D0F598002534CA /* resid-sid.cc in Sources */,
 				412477AB21D0F598002534CA /* vicii-phi1.c in Sources */,
 				412477AC21D0F598002534CA /* jmemansi.c in Sources */,
 				412477AD21D0F598002534CA /* freezemachine.c in Sources */,
@@ -9357,7 +9333,6 @@
 				412477D121D0F598002534CA /* sid.c in Sources */,
 				412477D221D0F598002534CA /* gzlib.c in Sources */,
 				412477D321D0F598002534CA /* riotcore.c in Sources */,
-				412477D421D0F598002534CA /* resid-voice.cc in Sources */,
 				412477D521D0F598002534CA /* pa_unix_util.c in Sources */,
 				412477D621D0F598002534CA /* bbrtc.c in Sources */,
 				412477D721D0F598002534CA /* CSlrMusicFile.mm in Sources */,
@@ -9396,7 +9371,6 @@
 				412477FA21D0F598002534CA /* ds1307.c in Sources */,
 				412477FB21D0F598002534CA /* raster-sprite.c in Sources */,
 				412477FC21D0F598002534CA /* jcmainct.c in Sources */,
-				412477FD21D0F598002534CA /* resid-envelope.cc in Sources */,
 				412477FE21D0F598002534CA /* stb.c in Sources */,
 				412477FF21D0F598002534CA /* mon_register.c in Sources */,
 				4124780021D0F598002534CA /* platform_beos_runtime_os.c in Sources */,
@@ -9405,7 +9379,6 @@
 				4124780321D0F598002534CA /* riot1d.c in Sources */,
 				4124780421D0F598002534CA /* mikroass.c in Sources */,
 				4124780521D0F598002534CA /* initcmdline.c in Sources */,
-				4124780621D0F598002534CA /* residfp-voice.cc in Sources */,
 				4124780721D0F598002534CA /* compress.c in Sources */,
 				4124780821D0F598002534CA /* cia1571d.c in Sources */,
 				4124780A21D0F598002534CA /* userport_joystick.c in Sources */,
@@ -9460,7 +9433,6 @@
 				4124783F21D0F598002534CA /* gfxoutput.c in Sources */,
 				4124784021D0F598002534CA /* JPEGReader.cpp in Sources */,
 				4124784121D0F598002534CA /* userport_rtc_58321a.c in Sources */,
-				4124784221D0F598002534CA /* residfp-wave.cc in Sources */,
 				4124784321D0F598002534CA /* init.c in Sources */,
 				4124784421D0F598002534CA /* jcprepct.c in Sources */,
 				4124784521D0F598002534CA /* CSlrFontProportional.mm in Sources */,
@@ -9488,7 +9460,6 @@
 				4124785C21D0F598002534CA /* ui.c in Sources */,
 				4124785D21D0F598002534CA /* userport_dac.c in Sources */,
 				4124785E21D0F598002534CA /* dma.c in Sources */,
-				4124785F21D0F598002534CA /* resid-fp.cc in Sources */,
 				4124786021D0F598002534CA /* CGuiView.mm in Sources */,
 				4124786121D0F598002534CA /* CViewDrive1541StateVIA.mm in Sources */,
 				4124786221D0F598002534CA /* event.c in Sources */,
@@ -9587,7 +9558,6 @@
 				412478C621D0F598002534CA /* network.c in Sources */,
 				412478C821D0F598002534CA /* color.c in Sources */,
 				412478C921D0F598002534CA /* cbmfile.c in Sources */,
-				412478CA21D0F598002534CA /* residfp-pot.cc in Sources */,
 				412478CB21D0F598002534CA /* render1x2crt.c in Sources */,
 				412478CC21D0F598002534CA /* drive-overflow.c in Sources */,
 				412478CD21D0F598002534CA /* CAudioChannelBusInt.mm in Sources */,
@@ -9625,7 +9595,6 @@
 				412478EF21D0F598002534CA /* kbd.c in Sources */,
 				412478F021D0F598002534CA /* charset.c in Sources */,
 				412478F121D0F598002534CA /* ser-eeprom.c in Sources */,
-				412478F221D0F598002534CA /* residfp-envelope.cc in Sources */,
 				412478F321D0F598002534CA /* gs.c in Sources */,
 				412478F421D0F598002534CA /* freezeframe.c in Sources */,
 				412478F521D0F598002534CA /* menu_c64_common_expansions.c in Sources */,
@@ -9700,7 +9669,6 @@
 				4124793F21D0F598002534CA /* jdmarker.c in Sources */,
 				4124794021D0F598002534CA /* inffast.c in Sources */,
 				4124794121D0F598002534CA /* C64CharMulti.mm in Sources */,
-				4124794221D0F598002534CA /* resid.cc in Sources */,
 				4124794321D0F598002534CA /* c64carthooks.c in Sources */,
 				4124794421D0F598002534CA /* menu_common.c in Sources */,
 				4124794521D0F598002534CA /* uncompr.c in Sources */,
@@ -9807,7 +9775,6 @@
 				412479B121D0F598002534CA /* raster.c in Sources */,
 				412479B221D0F598002534CA /* CSlrFile.mm in Sources */,
 				412479B321D0F598002534CA /* CVicEditorLayerUnrestrictedBitmap.mm in Sources */,
-				412479B421D0F598002534CA /* residfp-convolve.cc in Sources */,
 				412479B521D0F598002534CA /* pngtrans.c in Sources */,
 				412479B621D0F598002534CA /* c64-snapshot.c in Sources */,
 				412479B721D0F598002534CA /* M_CSlrList.mm in Sources */,
@@ -9819,7 +9786,6 @@
 				412479C021D0F598002534CA /* menu_midi.c in Sources */,
 				412479C121D0F598002534CA /* C64AsmSourceSymbols.mm in Sources */,
 				412479C221D0F598002534CA /* c64-cmdline-options.c in Sources */,
-				412479C321D0F598002534CA /* resid-extfilt.cc in Sources */,
 				412479C521D0F598002534CA /* mdct.c in Sources */,
 				412479C621D0F598002534CA /* raster-line-changes.c in Sources */,
 				412479C721D0F598002534CA /* adler32.c in Sources */,
@@ -9919,7 +9885,6 @@
 				41247A2D21D0F598002534CA /* rawnet.c in Sources */,
 				41247A2E21D0F598002534CA /* C64ColodoreScreen.mm in Sources */,
 				41247A2F21D0F598002534CA /* C64KeyMap.mm in Sources */,
-				41247A3021D0F598002534CA /* residfp-convolve-sse.cc in Sources */,
 				41247A3121D0F598002534CA /* palette.c in Sources */,
 				41247A3221D0F598002534CA /* MTH_MTRand.mm in Sources */,
 				41247A3321D0F598002534CA /* rushware_keypad.c in Sources */,
@@ -9952,7 +9917,6 @@
 				41247A5321D0F598002534CA /* serial-iec-lib.c in Sources */,
 				41247A5421D0F598002534CA /* fullscreen.c in Sources */,
 				41247A5521D0F598002534CA /* coplin_keypad.c in Sources */,
-				41247A5721D0F598002534CA /* residfp-filter.cc in Sources */,
 				41247A5821D0F598002534CA /* render1x1ntsc.c in Sources */,
 				41247A5921D0F598002534CA /* dynlib.c in Sources */,
 				41247A5A21D0F598002534CA /* CViewC64StateSID.mm in Sources */,
@@ -10040,10 +10004,8 @@
 				41247AB521D0F598002534CA /* CSlrString.mm in Sources */,
 				41247AB621D0F598002534CA /* CGuiViewToolBox.mm in Sources */,
 				41247AB721D0F598002534CA /* rs232net.c in Sources */,
-				41247AB821D0F598002534CA /* resid-pot.cc in Sources */,
 				41247AB921D0F598002534CA /* simonsbasic.c in Sources */,
 				41247ABA21D0F598002534CA /* CViewDisassemble.mm in Sources */,
-				41247ABB21D0F598002534CA /* residfp-sid.cc in Sources */,
 				41247ABC21D0F598002534CA /* actionreplay.c in Sources */,
 				41247ABD21D0F598002534CA /* CGuiViewDataTable.mm in Sources */,
 				41247ABF21D0F598002534CA /* sid-resources.c in Sources */,
@@ -10100,7 +10062,6 @@
 				4142FB8D21C4277900EFA4B8 /* CViewAtariStatePOKEY.mm in Sources */,
 				41925D971B1DD82F00B33B7F /* jdmainct.c in Sources */,
 				8D11072D0486CEB800E47090 /* main.mm in Sources */,
-				414537221CB2D1A300020916 /* resid-dac.cc in Sources */,
 				4172F06B21F2B48F003F49FB /* NstBoardSachenSa0037.cpp in Sources */,
 				256AC3DA0F4B6AC300CF3369 /* GLViewController.mm in Sources */,
 				4172F09721F2B48F003F49FB /* NstBoardWaixingPs2.cpp in Sources */,
@@ -10122,7 +10083,6 @@
 				411C4C9C21F2B36F00356433 /* statesav.c in Sources */,
 				39042A2F186892A800B570B1 /* CGuiTheme.mm in Sources */,
 				4172EFFE21F2B48F003F49FB /* NstBoardBmcCtc65.cpp in Sources */,
-				4145372A1CB2D1A300020916 /* resid-wave.cc in Sources */,
 				4145384D1CB2DB9C00020916 /* flash040core.c in Sources */,
 				4172F0BE21F2B48F003F49FB /* NstCheats.cpp in Sources */,
 				4172F0EF21F2B490003F49FB /* NstVsTkoBoxing.cpp in Sources */,
@@ -10135,6 +10095,7 @@
 				414536FF1CB2D1A300020916 /* platform_macosx.c in Sources */,
 				4172F06021F2B48F003F49FB /* NstBoardNitra.cpp in Sources */,
 				414537941CB2D1A300020916 /* video-render.c in Sources */,
+				4165795D23C52E020051CEFE /* resid-dac.cpp in Sources */,
 				41F2AAB21E9D0EAC00ADE8DF /* riot2d.c in Sources */,
 				414536E91CB2D1A300020916 /* mon_memory.c in Sources */,
 				4172F00121F2B48F003F49FB /* NstBoardBmcGamestarA.cpp in Sources */,
@@ -10149,6 +10110,7 @@
 				4145380B1CB2D2D100020916 /* pcxdrv.c in Sources */,
 				39042A62186892A800B570B1 /* pngrio.c in Sources */,
 				412BB9AA1614AB6800533AD3 /* SND_SoundEngine.mm in Sources */,
+				4165796123C52E030051CEFE /* resid-pot.cpp in Sources */,
 				412BB9AB1614AB6800533AD3 /* SYS_Accelerometer.mm in Sources */,
 				4172F05621F2B48F003F49FB /* NstBoardMmc2.cpp in Sources */,
 				41F2AA7A1E9D0E7900ADE8DF /* c64printer.c in Sources */,
@@ -10189,7 +10151,6 @@
 				414536E31CB2D1A300020916 /* mon_command.c in Sources */,
 				419837CD164CFD7900B8C78D /* MenuControllerSettings.mm in Sources */,
 				4172F01721F2B48F003F49FB /* NstBoardBmcY2k64in1.cpp in Sources */,
-				4145382C1CB2D91600020916 /* residfp-extfilt.cc in Sources */,
 				41B5C1471E9E9EC200E9C644 /* mon_register65816.c in Sources */,
 				414537EA1CB2D27C00020916 /* drv-mps803.c in Sources */,
 				41F2AA061E9D0E6B00ADE8DF /* reu.c in Sources */,
@@ -10255,13 +10216,11 @@
 				414538BC1CB2DC4400020916 /* sounddump.c in Sources */,
 				39042B03186892A800B570B1 /* inflate.c in Sources */,
 				414537CB1CB2D21400020916 /* fsimage-probe.c in Sources */,
-				414537281CB2D1A300020916 /* resid-version.cc in Sources */,
 				41188FB41E9EAA9F00040048 /* m93c86.c in Sources */,
 				39042B07186892A800B570B1 /* zutil.c in Sources */,
 				41188FE91E9EC33C00040048 /* pcf8583.c in Sources */,
 				414537801CB2D1A300020916 /* render1x1.c in Sources */,
 				4145376D1CB2D1A300020916 /* vdrive-internal.c in Sources */,
-				414537251CB2D1A300020916 /* resid-filter.cc in Sources */,
 				419737F8173B9A37007654BD /* pa_front.c in Sources */,
 				41563325228DBB4100FC3415 /* C64D_InitPlugins.mm in Sources */,
 				4172F0E221F2B490003F49FB /* NstVideoFilterHqX.cpp in Sources */,
@@ -10284,6 +10243,7 @@
 				4172F08921F2B48F003F49FB /* NstBoardUnlCc21.cpp in Sources */,
 				4172F09A21F2B48F003F49FB /* NstBoardWaixingSgzlz.cpp in Sources */,
 				414536EF1CB2D1A300020916 /* mon_registerz80.c in Sources */,
+				41D0683923C0BCD100C0B93E /* altirra_5200_os.c in Sources */,
 				41F2AA741E9D0E7900ADE8DF /* c64memlimit.c in Sources */,
 				4177D5BC1ED714280053D9EE /* CVicEditorLayerVirtualSprites.mm in Sources */,
 				41188F901E9EA7FF00040048 /* sampler4bit.c in Sources */,
@@ -10331,7 +10291,6 @@
 				4197380D173B9A93007654BD /* pa_mac_core_blocking.c in Sources */,
 				41B5C1401E9E9E5900E9C644 /* gmod2.c in Sources */,
 				390429D9186892A800B570B1 /* CSlrDate.mm in Sources */,
-				414537271CB2D1A300020916 /* resid-sid.cc in Sources */,
 				4145377B1CB2D1A300020916 /* vicii-phi1.c in Sources */,
 				41925DA51B1DD82F00B33B7F /* jmemansi.c in Sources */,
 				41F2A9F21E9D0E6B00ADE8DF /* freezemachine.c in Sources */,
@@ -10390,7 +10349,6 @@
 				4172F08B21F2B48F003F49FB /* NstBoardUnlKingOfFighters96.cpp in Sources */,
 				39042AFE186892A800B570B1 /* gzlib.c in Sources */,
 				414538501CB2DB9C00020916 /* riotcore.c in Sources */,
-				414537291CB2D1A300020916 /* resid-voice.cc in Sources */,
 				41973818173B9BC8007654BD /* pa_unix_util.c in Sources */,
 				4172F09621F2B48F003F49FB /* NstBoardWaixingFfv.cpp in Sources */,
 				41188F841E9EA7FF00040048 /* bbrtc.c in Sources */,
@@ -10444,7 +10402,6 @@
 				41188FC81E9EBC0C00040048 /* ds1307.c in Sources */,
 				4145371E1CB2D1A300020916 /* raster-sprite.c in Sources */,
 				41925D851B1DD82F00B33B7F /* jcmainct.c in Sources */,
-				414537231CB2D1A300020916 /* resid-envelope.cc in Sources */,
 				41F2AA0E1E9D0E6B00ADE8DF /* stb.c in Sources */,
 				4172F08121F2B48F003F49FB /* NstBoardTengen.cpp in Sources */,
 				4163BAF61E9F8EDB00E3C077 /* mon_register.c in Sources */,
@@ -10458,7 +10415,6 @@
 				41F2A9FE1E9D0E6B00ADE8DF /* mikroass.c in Sources */,
 				4172F04F21F2B48F003F49FB /* NstBoardKonamiVrc4.cpp in Sources */,
 				414539B11CB2E94F00020916 /* initcmdline.c in Sources */,
-				414538301CB2D91600020916 /* residfp-voice.cc in Sources */,
 				4172EFE521F2B48F003F49FB /* NstBoardBandaiDatach.cpp in Sources */,
 				39042AFA186892A800B570B1 /* compress.c in Sources */,
 				41F2AAF81E9D0F2C00ADE8DF /* cia1571d.c in Sources */,
@@ -10490,7 +10446,7 @@
 				414537161CB2D1A300020916 /* raster-cmdline-options.c in Sources */,
 				39042A70186892A800B570B1 /* mtrand.mm in Sources */,
 				390429D8186892A800B570B1 /* CSlrAnimationState.mm in Sources */,
-				416F38512368ADAF00DB2CC0 /* C64DebuggerPluginShowPic.mm in Sources */,
+				4165796323C52E030051CEFE /* resid-version.cpp in Sources */,
 				414536FB1CB2D1A300020916 /* platform_amigaos3_runtime_os.c in Sources */,
 				4145399E1CB2E94F00020916 /* cbmdos.c in Sources */,
 				39042B00186892A800B570B1 /* gzwrite.c in Sources */,
@@ -10528,7 +10484,6 @@
 				414538071CB2D2D100020916 /* gfxoutput.c in Sources */,
 				41925DB71B1DD82F00B33B7F /* JPEGReader.cpp in Sources */,
 				4191A8E41E9EA1F4004AC6E0 /* userport_rtc_58321a.c in Sources */,
-				414538311CB2D91600020916 /* residfp-wave.cc in Sources */,
 				414539B01CB2E94F00020916 /* init.c in Sources */,
 				4172F0AF21F2B48F003F49FB /* NstInpPartyTap.cpp in Sources */,
 				41925D8A1B1DD82F00B33B7F /* jcprepct.c in Sources */,
@@ -10565,9 +10520,11 @@
 				414535DF1CB2D1A300020916 /* uicmdline.c in Sources */,
 				414535DE1CB2D1A300020916 /* ui.c in Sources */,
 				414538CB1CB2DC5600020916 /* userport_dac.c in Sources */,
+				4165793F23C52DEE0051CEFE /* resid-fp.cpp in Sources */,
 				414539A81CB2E94F00020916 /* dma.c in Sources */,
 				4172F0BA21F2B48F003F49FB /* NstCartridge.cpp in Sources */,
-				414538AA1CB2DC3300020916 /* resid-fp.cc in Sources */,
+				4165797D23C52E0C0051CEFE /* residfp-pot.cpp in Sources */,
+				41D0683F23C0BE9700C0B93E /* pokeyrec.c in Sources */,
 				39042A30186892A800B570B1 /* CGuiView.mm in Sources */,
 				4152D70D1C970F3E00EBA9E5 /* CViewDrive1541StateVIA.mm in Sources */,
 				414539AA1CB2E94F00020916 /* event.c in Sources */,
@@ -10612,6 +10569,7 @@
 				415B4B2719848A0700B13FFF /* CSlrImageContainer.mm in Sources */,
 				414539AD1CB2E94F00020916 /* fliplist.c in Sources */,
 				390429D5186892A800B570B1 /* CContinuousParamSin.mm in Sources */,
+				4165797823C52E0C0051CEFE /* residfp-convolve-sse.cpp in Sources */,
 				4177D5AB1ED6EB250053D9EE /* CViewVicEditor.mm in Sources */,
 				41925D9E1B1DD82F00B33B7F /* jerror.c in Sources */,
 				41B5C13E1E9E9E5900E9C644 /* easycalc.c in Sources */,
@@ -10664,6 +10622,7 @@
 				4172F04E21F2B48F003F49FB /* NstBoardKonamiVrc3.cpp in Sources */,
 				4172F0D321F2B490003F49FB /* NstSha1.cpp in Sources */,
 				4163BAF41E9F8EAF00E3C077 /* c64export.c in Sources */,
+				4165797F23C52E0C0051CEFE /* residfp-voice.cpp in Sources */,
 				414539AF1CB2E94F00020916 /* info.c in Sources */,
 				412F0EBE21F75CF100652B0B /* libini-ini.cpp in Sources */,
 				4145377C1CB2D1A300020916 /* vicii-resources.c in Sources */,
@@ -10712,7 +10671,6 @@
 				414539A41CB2E94F00020916 /* color.c in Sources */,
 				412F0EA821F75BE500652B0B /* SidTune.cpp in Sources */,
 				4145385B1CB2DBB100020916 /* cbmfile.c in Sources */,
-				4145382E1CB2D91600020916 /* residfp-pot.cc in Sources */,
 				4172EFDB21F2B48F003F49FB /* NstApiVideo.cpp in Sources */,
 				414537841CB2D1A300020916 /* render1x2crt.c in Sources */,
 				41F2AAD41E9D0EDA00ADE8DF /* drive-overflow.c in Sources */,
@@ -10720,6 +10678,7 @@
 				4172F05021F2B48F003F49FB /* NstBoardKonamiVrc6.cpp in Sources */,
 				41F2A9E41E9D0E6B00ADE8DF /* delaep64.c in Sources */,
 				414537691CB2D1A300020916 /* vdrive-bam.c in Sources */,
+				4165796423C52E030051CEFE /* resid-voice.cpp in Sources */,
 				4172F05121F2B48F003F49FB /* NstBoardKonamiVrc7.cpp in Sources */,
 				4163FA971EC1FD23008BBBFD /* C64VicDisplayCanvasMultiText.mm in Sources */,
 				414535D31CB2D1A300020916 /* menu_vic20hw.c in Sources */,
@@ -10771,7 +10730,6 @@
 				414535B31CB2D1A300020916 /* kbd.c in Sources */,
 				414539A01CB2E94F00020916 /* charset.c in Sources */,
 				414538511CB2DB9C00020916 /* ser-eeprom.c in Sources */,
-				4145382B1CB2D91600020916 /* residfp-envelope.cc in Sources */,
 				41F2A9F51E9D0E6B00ADE8DF /* gs.c in Sources */,
 				4172EFE821F2B48F003F49FB /* NstBoardBandaiLz93d50ex.cpp in Sources */,
 				41F2A9F11E9D0E6B00ADE8DF /* freezeframe.c in Sources */,
@@ -10780,6 +10738,7 @@
 				414536F21CB2D1A300020916 /* monitor.c in Sources */,
 				4145386E1CB2DBC200020916 /* fsdevice-close.c in Sources */,
 				414535C71CB2D1A300020916 /* menu_reset.c in Sources */,
+				4165794023C52DEE0051CEFE /* resid.cpp in Sources */,
 				4145378B1CB2D1A300020916 /* renderscale2x.c in Sources */,
 				4191A8E51E9EA1F5004AC6E0 /* userport_rtc_ds1307.c in Sources */,
 				41F2A9E91E9D0E6B00ADE8DF /* easyflash.c in Sources */,
@@ -10795,6 +10754,7 @@
 				4172F05E21F2B48F003F49FB /* NstBoardNanjing.cpp in Sources */,
 				41188F891E9EA7FF00040048 /* joyport.c in Sources */,
 				414538081CB2D2D100020916 /* gifdrv.c in Sources */,
+				4165797E23C52E0C0051CEFE /* residfp-sid.cpp in Sources */,
 				41430FC421650EA600D003AA /* CGuiEditHex.mm in Sources */,
 				39042AF6186892A800B570B1 /* synthesis.c in Sources */,
 				414536FA1CB2D1A300020916 /* platform.c in Sources */,
@@ -10813,6 +10773,7 @@
 				414536E51CB2D1A300020916 /* mon_drive.c in Sources */,
 				4191A8E11E9EA1F4004AC6E0 /* userport_4bit_sampler.c in Sources */,
 				414539D81CB3DC1B00020916 /* C64DataAdaptersVice.mm in Sources */,
+				4165795E23C52E030051CEFE /* resid-envelope.cpp in Sources */,
 				4180558718DC67A200F6EE8F /* CImageKernel.mm in Sources */,
 				41F99C411E641BAE00B46DA7 /* CGuiLockableList.mm in Sources */,
 				4172EFF021F2B48F003F49FB /* NstBoardBmc21in1.cpp in Sources */,
@@ -10821,6 +10782,7 @@
 				414537F21CB2D27C00020916 /* printer-serial.c in Sources */,
 				41F2A9DA1E9D0E6B00ADE8DF /* actionreplay2.c in Sources */,
 				4145399A1CB2E94F00020916 /* alarm.c in Sources */,
+				4165798023C52E0C0051CEFE /* residfp-wave.cpp in Sources */,
 				4172F01421F2B48F003F49FB /* NstBoardBmcT262.cpp in Sources */,
 				39042A3A186892A800B570B1 /* CGuiViewSplit4.mm in Sources */,
 				41F2AA0A1E9D0E6B00ADE8DF /* silverrock128.c in Sources */,
@@ -10864,6 +10826,7 @@
 				390429DC186892A800B570B1 /* CSlrFont.mm in Sources */,
 				4191A8E21E9EA1F4004AC6E0 /* userport_8bss.c in Sources */,
 				4172EFEF21F2B48F003F49FB /* NstBoardBmc20in1.cpp in Sources */,
+				4165797A23C52E0C0051CEFE /* residfp-envelope.cpp in Sources */,
 				41F2AA831E9D0E7900ADE8DF /* plus256k.c in Sources */,
 				41F9775F1CB90DFD00927516 /* CViceAudioChannel.mm in Sources */,
 				414537CD1CB2D21400020916 /* rawimage.c in Sources */,
@@ -10880,7 +10843,6 @@
 				41F8107D1EC1AA7C00E2F9AD /* C64CharMulti.mm in Sources */,
 				411C4C9821F2B36F00356433 /* a-video_gl.c in Sources */,
 				412F0EAF21F75BE500652B0B /* IconInfo.cpp in Sources */,
-				414538AB1CB2DC3300020916 /* resid.cc in Sources */,
 				41F2AA171E9D0E6B00ADE8DF /* c64carthooks.c in Sources */,
 				414535BA1CB2D1A300020916 /* menu_common.c in Sources */,
 				39042B06186892A800B570B1 /* uncompr.c in Sources */,
@@ -10928,7 +10890,6 @@
 				4172F07C21F2B48F003F49FB /* NstBoardSuperGamePocahontas2.cpp in Sources */,
 				4172F06321F2B48F003F49FB /* NstBoardQj.cpp in Sources */,
 				4172F07321F2B48F003F49FB /* NstBoardSunsoft1.cpp in Sources */,
-				4136701722973213006C8AF2 /* C64DebuggerPluginSpiral.mm in Sources */,
 				390429ED186892A800B570B1 /* RES_ResourceManager.mm in Sources */,
 				414539AC1CB2E94F00020916 /* fixpoint.c in Sources */,
 				41B5C1451E9E9E5900E9C644 /* shortbus.c in Sources */,
@@ -10955,6 +10916,7 @@
 				4172F02E21F2B48F003F49FB /* NstBoardCxRom.cpp in Sources */,
 				390429EB186892A800B570B1 /* MTH_Random.mm in Sources */,
 				41EFD1E223746D550040CD53 /* 64tass-eval.c in Sources */,
+				4165797C23C52E0C0051CEFE /* residfp-filter.cpp in Sources */,
 				4172F0EB21F2B490003F49FB /* NstZlib.cpp in Sources */,
 				41B5C14B1E9E9F3900E9C644 /* render1x1crt.c in Sources */,
 				41188FBC1E9EAF3300040048 /* nativedrv.c in Sources */,
@@ -10972,12 +10934,14 @@
 				4172F04621F2B48F003F49FB /* NstBoardJalecoSs88006.cpp in Sources */,
 				41925DA71B1DD82F00B33B7F /* jquant1.c in Sources */,
 				41EC75001CE1E51F00D0E99F /* C64SettingsStorage.mm in Sources */,
+				41D0683C23C0BCD100C0B93E /* altirraos_xl.c in Sources */,
 				41925D961B1DD82F00B33B7F /* jdinput.c in Sources */,
 				414539A21CB2E94F00020916 /* clkguard.c in Sources */,
 				41F2AB031E9D0F2C00ADE8DF /* via4000.c in Sources */,
 				414536E21CB2D1A300020916 /* mon_breakpoint.c in Sources */,
 				4172F07421F2B48F003F49FB /* NstBoardSunsoft2.cpp in Sources */,
 				4172F0AE21F2B48F003F49FB /* NstInpPaddle.cpp in Sources */,
+				4165797B23C52E0C0051CEFE /* residfp-extfilt.cpp in Sources */,
 				414539B31CB2E94F00020916 /* ioutil.c in Sources */,
 				4172F0DC21F2B490003F49FB /* NstTrackerRewinder.cpp in Sources */,
 				4172F03021F2B48F003F49FB /* NstBoardDreamtech.cpp in Sources */,
@@ -11038,7 +11002,6 @@
 				390429DA186892A800B570B1 /* CSlrFile.mm in Sources */,
 				4177D5B81ED710320053D9EE /* CVicEditorLayerUnrestrictedBitmap.mm in Sources */,
 				411C4C6621F2B36F00356433 /* af80.c in Sources */,
-				4145382A1CB2D91600020916 /* residfp-convolve.cc in Sources */,
 				39042A66186892A800B570B1 /* pngtrans.c in Sources */,
 				41F2AA641E9D0E7900ADE8DF /* c64-snapshot.c in Sources */,
 				4172F0C421F2B48F003F49FB /* NstFds.cpp in Sources */,
@@ -11054,7 +11017,6 @@
 				4172EFF321F2B48F003F49FB /* NstBoardBmc35in1.cpp in Sources */,
 				41F2AA621E9D0E7900ADE8DF /* c64-cmdline-options.c in Sources */,
 				4172F09321F2B48F003F49FB /* NstBoardUxRom.cpp in Sources */,
-				414537241CB2D1A300020916 /* resid-extfilt.cc in Sources */,
 				39042AF0186892A800B570B1 /* mdct.c in Sources */,
 				4172F01A21F2B48F003F49FB /* NstBoardBtlAx5705.cpp in Sources */,
 				4172F07621F2B48F003F49FB /* NstBoardSunsoft4.cpp in Sources */,
@@ -11138,6 +11100,7 @@
 				41F2AA6E1E9D0E7900ADE8DF /* c64fastiec.c in Sources */,
 				4172F01C21F2B48F003F49FB /* NstBoardBtlGeniusMerioBros.cpp in Sources */,
 				414537011CB2D1A300020916 /* platform_solaris_runtime_os.c in Sources */,
+				4165796523C52E030051CEFE /* resid-wave.cpp in Sources */,
 				41B5C1431E9E9E5900E9C644 /* shortbus_digimax.c in Sources */,
 				41925D7C1B1DD82F00B33B7F /* jaricom.c in Sources */,
 				41E0AC4818AC2F740065DCAD /* libjson.cpp in Sources */,
@@ -11149,6 +11112,7 @@
 				414536C31CB2D1A300020916 /* diskcontents-block.c in Sources */,
 				41F2AA651E9D0E7900ADE8DF /* c64.c in Sources */,
 				39042A8E186892A800B570B1 /* CPool.mm in Sources */,
+				41D0683B23C0BCD100C0B93E /* altirraos_800.c in Sources */,
 				4172F02921F2B48F003F49FB /* NstBoardCamerica.cpp in Sources */,
 				39042A2B186892A800B570B1 /* CGuiListTree.mm in Sources */,
 				41F2AA761E9D0E7900ADE8DF /* c64memsc.c in Sources */,
@@ -11164,6 +11128,7 @@
 				41F2AAD21E9D0EDA00ADE8DF /* drive-check.c in Sources */,
 				4172F0FC21F2B490003F49FB /* NesWrapper.mm in Sources */,
 				413B5F381DC213B300852EA4 /* SYS_SharedMemory.mm in Sources */,
+				4165795F23C52E030051CEFE /* resid-extfilt.cpp in Sources */,
 				41F2A9E21E9D0E6B00ADE8DF /* comal80.c in Sources */,
 				41EF00B02260DB550031F708 /* CViewC64StateREU.mm in Sources */,
 				41F2AAB31E9D0EAC00ADE8DF /* via1d2031.c in Sources */,
@@ -11197,8 +11162,8 @@
 				414539C51CB2E94F00020916 /* rawnet.c in Sources */,
 				41579F4F1FD715CF00234FBB /* C64ColodoreScreen.mm in Sources */,
 				41474DCF1D08607300F1B83F /* C64KeyMap.mm in Sources */,
+				41D0683A23C0BCD100C0B93E /* altirra_basic.c in Sources */,
 				411C4C8B21F2B36F00356433 /* pbi_xld.c in Sources */,
-				414538331CB2D96600020916 /* residfp-convolve-sse.cc in Sources */,
 				4172EFD621F2B48F003F49FB /* NstApiNsf.cpp in Sources */,
 				4172EFE321F2B48F003F49FB /* NstBoardBandai24c0x.cpp in Sources */,
 				4172F02B21F2B48F003F49FB /* NstBoardCnePsb.cpp in Sources */,
@@ -11245,7 +11210,6 @@
 				414535B01CB2D1A300020916 /* fullscreen.c in Sources */,
 				41188F861E9EA7FF00040048 /* coplin_keypad.c in Sources */,
 				411C4C8F21F2B36F00356433 /* remez.c in Sources */,
-				4145382D1CB2D91600020916 /* residfp-filter.cc in Sources */,
 				411C4C7721F2B36F00356433 /* colours_pal.c in Sources */,
 				414537811CB2D1A300020916 /* render1x1ntsc.c in Sources */,
 				414535AF1CB2D1A300020916 /* dynlib.c in Sources */,
@@ -11258,7 +11222,7 @@
 				411C4C8021F2B36F00356433 /* ide.c in Sources */,
 				41188F881E9EA7FF00040048 /* cx85.c in Sources */,
 				414535C41CB2D1A300020916 /* menu_network.c in Sources */,
-				41D56FAB2271A32400F15B8B /* CViewC64EmulationCounters.mm in Sources */,
+				41D56FAB2271A32400F15B8B /* CViewEmulationCounters.mm in Sources */,
 				411C4C7521F2B36F00356433 /* colours_external.c in Sources */,
 				414537881CB2D1A300020916 /* render2x2pal.c in Sources */,
 				4172F09921F2B48F003F49FB /* NstBoardWaixingSgz.cpp in Sources */,
@@ -11297,7 +11261,6 @@
 				39042A61186892A800B570B1 /* pngread.c in Sources */,
 				41E0AC4418AC2F740065DCAD /* JSONStream.mm in Sources */,
 				41925DAE1B1DD82F00B33B7F /* rdrle.c in Sources */,
-				41563324228DBB4100FC3415 /* C64DebuggerPluginDummy.mm in Sources */,
 				41925DA91B1DD82F00B33B7F /* jutils.c in Sources */,
 				414536DA1CB2D1A300020916 /* asm6502dtv.c in Sources */,
 				4145377E1CB2D1A300020916 /* vicii-timing.c in Sources */,
@@ -11329,6 +11292,7 @@
 				4145377A1CB2D1A300020916 /* vicii-mem.c in Sources */,
 				41CF58FE1920E6EA00F43331 /* GFX_WriteImage.mm in Sources */,
 				4172F07521F2B48F003F49FB /* NstBoardSunsoft3.cpp in Sources */,
+				4165796223C52E030051CEFE /* resid-sid.cpp in Sources */,
 				414539C31CB2E94F00020916 /* ram.c in Sources */,
 				414537C51CB2D21400020916 /* diskimage.c in Sources */,
 				41F2AADB1E9D0EDA00ADE8DF /* drivecpu65c02.c in Sources */,
@@ -11354,6 +11318,7 @@
 				39042AFC186892A800B570B1 /* deflate.c in Sources */,
 				414535E21CB2D1A300020916 /* uimenu.c in Sources */,
 				41DDCABF1D0EF01000C03F39 /* C64KeyboardShortcuts.mm in Sources */,
+				4165797923C52E0C0051CEFE /* residfp-convolve.cpp in Sources */,
 				39042A39186892A800B570B1 /* CGuiViewSelectFile.mm in Sources */,
 				4172F03621F2B48F003F49FB /* NstBoardFutureMedia.cpp in Sources */,
 				412F0EA721F75BE500652B0B /* SidTuneTools.cpp in Sources */,
@@ -11368,11 +11333,9 @@
 				41430FC221650EA500D003AA /* CGuiViewToolBox.mm in Sources */,
 				411C4C7D21F2B36F00356433 /* esc.c in Sources */,
 				414535DB1CB2D1A300020916 /* rs232net.c in Sources */,
-				414537261CB2D1A300020916 /* resid-pot.cc in Sources */,
 				4172F09821F2B48F003F49FB /* NstBoardWaixingSecurity.cpp in Sources */,
 				41F2AA0B1E9D0E6B00ADE8DF /* simonsbasic.c in Sources */,
 				4152D7101C970F3E00EBA9E5 /* CViewDisassemble.mm in Sources */,
-				4145382F1CB2D91600020916 /* residfp-sid.cc in Sources */,
 				41F2A9D91E9D0E6B00ADE8DF /* actionreplay.c in Sources */,
 				4172F0A821F2B48F003F49FB /* NstInpKonamiHyperShot.cpp in Sources */,
 				390429F5186892A800B570B1 /* CGuiViewDataTable.mm in Sources */,
@@ -11400,6 +11363,7 @@
 				4172F0CF21F2B490003F49FB /* NstPins.cpp in Sources */,
 				41E0AC4218AC2F740065DCAD /* JSONNode_Mutex.mm in Sources */,
 				4172EFF921F2B48F003F49FB /* NstBoardBmc8157.cpp in Sources */,
+				4165796023C52E030051CEFE /* resid-filter.cpp in Sources */,
 				41188F8D1E9EA7FF00040048 /* paperclip64.c in Sources */,
 				4172F09221F2B48F003F49FB /* NstBoardUnlXzy.cpp in Sources */,
 				4172F02621F2B48F003F49FB /* NstBoardBtlTobidaseDaisakusen.cpp in Sources */,
@@ -11514,12 +11478,17 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
-				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon C64";
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon 65XE";
 				CLANG_CXX_LIBRARY = "libc++";
 				CODE_SIGN_IDENTITY = "";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "";
 				COPY_PHASE_STRIP = NO;
 				DEVELOPMENT_TEAM = APV7Y7Q9JY;
+				EXCLUDED_SOURCE_FILE_NAMES = (
+					"*.txt",
+					"*.inl",
+					"*.in",
+				);
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_MODEL_TUNING = G5;
@@ -11536,8 +11505,8 @@
 				INSTALL_PATH = "$(HOME)/Applications";
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				OTHER_CFLAGS = "";
-				PRODUCT_BUNDLE_IDENTIFIER = pl.rabidus.C64Debugger;
-				PRODUCT_NAME = C64Debugger;
+				PRODUCT_BUNDLE_IDENTIFIER = pl.rabidus.65XEDebugger;
+				PRODUCT_NAME = 65XEDebugger;
 				PROVISIONING_PROFILE = "";
 				SDKROOT = macosx;
 				VALID_ARCHS = x86_64;
@@ -11550,12 +11519,18 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
-				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon C64";
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon 65XE";
 				CLANG_CXX_LIBRARY = "libc++";
 				CODE_SIGN_IDENTITY = "Developer ID Application: Marcin Skoczylas (APV7Y7Q9JY)";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Developer ID Application: Marcin Skoczylas (APV7Y7Q9JY)";
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = APV7Y7Q9JY;
+				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "*.nib *.lproj *.framework *.gch *.xcode* *.xcassets (*) .DS_Store CVS .svn .git .hg *.pbproj *.pbxproj *.txt *.in *.inl";
+				EXCLUDED_SOURCE_FILE_NAMES = (
+					"*.txt",
+					"*.inl",
+					"*.in",
+				);
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "MTEngine-MacOS_Prefix.pch";
@@ -11569,8 +11544,8 @@
 				INSTALL_PATH = "$(HOME)/Applications";
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				OTHER_CFLAGS = "";
-				PRODUCT_BUNDLE_IDENTIFIER = pl.rabidus.C64Debugger;
-				PRODUCT_NAME = C64Debugger;
+				PRODUCT_BUNDLE_IDENTIFIER = pl.rabidus.65XEDebugger;
+				PRODUCT_NAME = 65XEDebugger;
 				PROVISIONING_PROFILE = "";
 				SDKROOT = macosx;
 				VALID_ARCHS = x86_64;

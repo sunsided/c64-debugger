@@ -7,6 +7,11 @@
 #include "CDebugInterface.h"
 #include "CSlrDataAdapter.h"
 
+extern "C"
+{
+#include "AtariWrapper.h"
+};
+
 #define NUM_ATARI_JOYSTICKS	4
 
 class CAtariAudioChannel;
@@ -21,6 +26,9 @@ public:
 	virtual int GetEmulatorType();
 	virtual CSlrString *GetEmulatorVersionString();
 	virtual CSlrString *GetPlatformNameString();
+
+	virtual float GetEmulationFPS();
+	float numEmulationFPS;
 
 	virtual void RunEmulationThread();
 
@@ -39,7 +47,7 @@ public:
 	virtual void KeyboardDown(uint32 mtKeyCode);
 	virtual void KeyboardUp(uint32 mtKeyCode);
 	
-	int joystickState[NUM_ATARI_JOYSTICKS];
+	volatile uint32 joystickState[NUM_ATARI_JOYSTICKS];
 	virtual void JoystickDown(int port, uint32 axis);
 	virtual void JoystickUp(int port, uint32 axis);
 	
@@ -50,16 +58,37 @@ public:
 	//
 	virtual void Reset();
 	virtual void HardReset();
+	
+	// this is main emulation cpu cycle counter
+	virtual unsigned int GetMainCpuCycleCounter();
+	virtual unsigned int GetPreviousCpuInstructionCycleCounter();
+	
+	// resettable counters for debug purposes
+	virtual void ResetMainCpuDebugCycleCounter();
+	virtual unsigned int GetMainCpuDebugCycleCounter();
+	
+	virtual void RefreshScreenNoCallback();
 
 	virtual bool LoadExecutable(char *fullFilePath);
 	virtual bool MountDisk(char *fullFilePath, int diskNo, bool readOnly);
 	virtual bool InsertCartridge(char *fullFilePath, bool readOnly);
 	virtual bool AttachTape(char *fullFilePath, bool readOnly);
 	
+	virtual void DetachEverything();
+	virtual void DetachDriveDisk();
+	virtual void DetachCartridge();
+
+	//
+	virtual bool GetSettingIsWarpSpeed();
+	virtual void SetSettingIsWarpSpeed(bool isWarpSpeed);
+
+	// TODO: this is not working for mzpokey now
+	virtual void SetPokeyStereo(bool isStereo);
+	
 	//
 	virtual bool LoadFullSnapshot(char *filePath);
 	virtual void SaveFullSnapshot(char *filePath);
-	
+
 	// state
 	virtual int GetCpuPC();
 	
@@ -89,8 +118,34 @@ public:
 	// make jmp and reset CPU
 	virtual void MakeJmpAndReset(uint16 addr);
 
+	virtual CSlrDataAdapter *GetDataAdapter();
+
+	// these calls should be synced with CPU IRQ so snapshot store or restore is allowed
+	// store CHIPS only snapshot, not including DISK DATA
+	virtual bool LoadChipsSnapshotSynced(CByteBuffer *byteBuffer);
+	virtual bool SaveChipsSnapshotSynced(CByteBuffer *byteBuffer);
+	// store DISK DATA only snapshot, without CHIPS
+	virtual bool LoadDiskDataSnapshotSynced(CByteBuffer *byteBuffer);
+	virtual bool SaveDiskDataSnapshotSynced(CByteBuffer *byteBuffer);
 	
-	//	virtual uint8 GetByteFromRamC64(uint16 addr);
+	// controls if we should also store disk drive snapshot when snapshot interval is hit
+	// this is to allow only periodic disk drive snapshot storing, only when disk was changed or new data on disk was saved
+	// when we restore snapshot, we will restore disk contents first
+	virtual bool IsDriveDirtyForSnapshot();
+	virtual void ClearDriveDirtyForSnapshotFlag();
+
+	//
+	void SetPokeyReceiveChannelsData(int pokeyNumber, bool isReceiving);
+
+	// UI
+	virtual CViewDisassemble *GetViewMainCpuDisassemble();
+	virtual CViewDisassemble *GetViewDriveDisassemble(int driveNo);	// TODO: make drive cpu generic (create specific debug interface for drive?)
+	virtual CViewBreakpoints *GetViewBreakpoints();
+	virtual CViewDataWatch *GetViewMemoryDataWatch();
+	
+
+	
+//	virtual uint8 GetByteFromRamC64(uint16 addr);
 //	virtual void MakeJmpC64(uint16 addr);
 //	virtual void MakeJmpNoResetC64(uint16 addr);
 //	virtual void MakeJsrC64(uint16 addr);

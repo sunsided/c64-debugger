@@ -105,9 +105,9 @@ long SYS_RandomSeed()
 	return GetTickCount();
 }
 
-long SYS_GetCurrentTimeInMillis()
+unsigned long SYS_GetCurrentTimeInMillis()
 {
-	return GetTickCount();
+	return (unsigned long)GetTickCount();
 }
 
 static volatile bool resetLogicClock;

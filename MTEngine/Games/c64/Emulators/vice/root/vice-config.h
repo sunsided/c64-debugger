@@ -66,6 +66,8 @@
 
 /* Use the memmap feature. */
 /* #undef FEATURE_CPUMEMHISTORY */
+#define FEATURE_CPUMEMHISTORY
+
 
 /* Enable GP2X compilation */
 /* #undef GP2X */

@@ -64,49 +64,49 @@ void CViewNesStateCPU::RenderRegisters()
 	font->BlitText(buf, px, py, -1, fontSize);
 }
 
-extern "C" {
-	void c64d_atari_set_cpu_pc(u16 addr);
-	void c64d_atari_set_cpu_reg_a(u8 val);
-	void c64d_atari_set_cpu_reg_x(u8 val);
-	void c64d_atari_set_cpu_reg_y(u8 val);
-	void c64d_atari_set_cpu_reg_p(u8 val);
-	void c64d_atari_set_cpu_reg_s(u8 val);
-}
-
+//extern "C" {
+//	void atrd_atari_set_cpu_pc(u16 addr);
+//	void atrd_atari_set_cpu_reg_a(u8 val);
+//	void atrd_atari_set_cpu_reg_x(u8 val);
+//	void atrd_atari_set_cpu_reg_y(u8 val);
+//	void atrd_atari_set_cpu_reg_p(u8 val);
+//	void atrd_atari_set_cpu_reg_s(u8 val);
+//}
+//
 void CViewNesStateCPU::SetRegisterValue(StateCPURegister reg, int value)
 {
 	LOGTODO("CViewNesStateCPU::SetRegisterValue");
 	
 	return;
 	
-	debugInterface->LockMutex();
-	
-	
-	switch (reg)
-	{
-		case STATE_CPU_REGISTER_PC:
-			c64d_atari_set_cpu_pc(value);
-			break;
-		case STATE_CPU_REGISTER_A:
-			c64d_atari_set_cpu_reg_a(value);
-			break;
-		case STATE_CPU_REGISTER_X:
-			c64d_atari_set_cpu_reg_x(value);
-			break;
-		case STATE_CPU_REGISTER_Y:
-			c64d_atari_set_cpu_reg_y(value);
-			break;
-		case STATE_CPU_REGISTER_SP:
-			c64d_atari_set_cpu_reg_s(value);
-			break;
-		case STATE_CPU_REGISTER_FLAGS:
-			c64d_atari_set_cpu_reg_p(value);
-			break;
-		case STATE_CPU_REGISTER_NONE:
-		default:
-			return;
-	}
-	debugInterface->UnlockMutex();
+//	debugInterface->LockMutex();
+//	
+//	
+//	switch (reg)
+//	{
+//		case STATE_CPU_REGISTER_PC:
+//			c64d_atari_set_cpu_pc(value);
+//			break;
+//		case STATE_CPU_REGISTER_A:
+//			c64d_atari_set_cpu_reg_a(value);
+//			break;
+//		case STATE_CPU_REGISTER_X:
+//			c64d_atari_set_cpu_reg_x(value);
+//			break;
+//		case STATE_CPU_REGISTER_Y:
+//			c64d_atari_set_cpu_reg_y(value);
+//			break;
+//		case STATE_CPU_REGISTER_SP:
+//			c64d_atari_set_cpu_reg_s(value);
+//			break;
+//		case STATE_CPU_REGISTER_FLAGS:
+//			c64d_atari_set_cpu_reg_p(value);
+//			break;
+//		case STATE_CPU_REGISTER_NONE:
+//		default:
+//			return;
+//	}
+//	debugInterface->UnlockMutex();
 }
 
 int CViewNesStateCPU::GetRegisterValue(StateCPURegister reg)

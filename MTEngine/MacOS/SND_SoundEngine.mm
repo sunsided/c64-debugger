@@ -271,6 +271,13 @@ std::list<CSlrString *> *CSoundEngine::EnumerateAvailableOutputDevices()
 	LOGD("CSoundEngine::EnumerateAvailableOutputDevices");
 	std::list<CSlrString *> *audioOutDevices = new std::list<CSlrString *>();
 	
+	this->LockMutex("CSoundEngine::EnumerateAvailableOutputDevices");
+
+	bool wasPlayback = isPlaybackOn;
+	bool wasRecording = isRecordingOn;
+
+	this->StopAudioUnit();
+	
 	PaStreamParameters outputParameters;
 	outputParameters.channelCount = 2;                     // stereo output
 	outputParameters.sampleFormat = paInt16;
@@ -296,6 +303,13 @@ std::list<CSlrString *> *CSoundEngine::EnumerateAvailableOutputDevices()
 			audioOutDevices->push_back(new CSlrString(deviceInfo->name));
 		}
 	}
+	
+	if (wasPlayback || wasRecording)
+	{
+		this->StartAudioUnit(wasPlayback, wasRecording, recordingFrequency);
+	}
+	
+	this->UnlockMutex("CSoundEngine::EnumerateAvailableOutputDevices");
 	
 	LOGD("CSoundEngine::EnumerateAvailableOutputDevices finished");
 

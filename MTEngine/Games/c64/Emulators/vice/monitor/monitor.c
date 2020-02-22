@@ -86,6 +86,8 @@
 #include "util.h"
 #include "vsync.h"
 
+#include "DebuggerDefs.h"
+
 #ifndef HAVE_STPCPY
 char *stpcpy(char *dest, const char *src)
 {
@@ -662,11 +664,21 @@ void mon_set_mem_val(MEMSPACE mem, WORD mem_addr, BYTE val)
 }
 
 /* exit monitor  */
+MON_ADDR monitor_command_jump_addr;
+void execute_monitor_command_jump_trap(WORD addr, void *v)
+{
+	mon_evaluate_default_addr(&monitor_command_jump_addr);
+	(monitor_cpu_for_memspace[addr_memspace(monitor_command_jump_addr)]->mon_register_set_val)(addr_memspace(monitor_command_jump_addr), e_PC, (WORD)(addr_location(monitor_command_jump_addr)));
+}
+
 void mon_jump(MON_ADDR addr)
 {
     mon_evaluate_default_addr(&addr);
     (monitor_cpu_for_memspace[addr_memspace(addr)]->mon_register_set_val)(addr_memspace(addr), e_PC, (WORD)(addr_location(addr)));
     exit_mon = 1;
+	
+	monitor_command_jump_addr = addr;
+	interrupt_maincpu_trigger_trap(execute_monitor_command_jump_trap, NULL);
 }
 
 /* exit monitor  */
@@ -1775,6 +1787,8 @@ void mon_instructions_step(int count)
 
     monitor_mask[default_memspace] |= MI_STEP;
     interrupt_monitor_trap_on(mon_interfaces[default_memspace]->int_status);
+	
+	c64d_set_debug_mode(DEBUGGER_MODE_RUNNING);
 }
 
 void mon_instructions_next(int count)
@@ -1796,6 +1810,8 @@ void mon_instructions_next(int count)
 
     monitor_mask[default_memspace] |= MI_STEP;
     interrupt_monitor_trap_on(mon_interfaces[default_memspace]->int_status);
+
+	c64d_set_debug_mode(DEBUGGER_MODE_RUNNING);
 }
 
 void mon_instruction_return(void)
@@ -1810,6 +1826,8 @@ void mon_instruction_return(void)
 
     monitor_mask[default_memspace] |= MI_STEP;
     interrupt_monitor_trap_on(mon_interfaces[default_memspace]->int_status);
+
+	c64d_set_debug_mode(DEBUGGER_MODE_RUNNING);
 }
 
 void mon_stack_up(int count)
@@ -2013,6 +2031,8 @@ int monitor_force_import(MEMSPACE mem)
 /* called by cpu core */
 void monitor_check_icount(WORD pc)
 {
+	LOGD("monitor_check_icount");
+	
     if (!instruction_count) {
         return;
     }
@@ -2056,6 +2076,7 @@ void monitor_check_icount(WORD pc)
         interrupt_monitor_trap_off(mon_interfaces[default_memspace]->int_status);
     }
 
+	LOGD("monitor_check_icount: monitor_startup");
     monitor_startup(e_default_space);
 }
 
@@ -2150,7 +2171,7 @@ void monitor_change_device(MEMSPACE mem)
     default_memspace = mem;
 }
 
-static void make_prompt(char *str)
+void make_prompt(char *str)
 {
     if (asm_mode) {
         sprintf(str, ".%04x  ", addr_location(asm_mode_addr));
@@ -2166,7 +2187,7 @@ void monitor_abort(void)
     mon_stop_output = 1;
 }
 
-static void monitor_open(void)
+void monitor_open(void)
 {
     supported_cpu_type_list_t *slist, *slist_next;
     unsigned int dnr;
@@ -2199,6 +2220,7 @@ static void monitor_open(void)
 #endif
     inside_monitor = TRUE;
     monitor_trap_triggered = FALSE;
+	
     vsync_suspend_speed_eval();
 
     uimon_notify_change();
@@ -2247,8 +2269,9 @@ static void monitor_open(void)
     }
 }
 
-static int monitor_process(char *cmd)
+int monitor_process(char *cmd)
 {
+	LOGD("monitor_process: cmd=%s", cmd);
     mon_stop_output = 0;
 
     if (cmd == NULL) {
@@ -2295,7 +2318,7 @@ static int monitor_process(char *cmd)
     return exit_mon;
 }
 
-static void monitor_close(int check)
+void monitor_close(int check)
 {
 #ifdef FEATURE_CPUHISTORY
     memmap_state &= ~(MEMMAP_STATE_IN_MONITOR);
@@ -2311,6 +2334,8 @@ static void monitor_close(int check)
         if (!monitor_is_remote()) {
             uimon_window_close();
         }
+		
+		LOGTODO("monitor_close: exit(0)");
         exit(0);
     }
 
@@ -2341,9 +2366,11 @@ static void monitor_close(int check)
 }
 
 void monitor_startup(MEMSPACE mem)
-{
+{	
     char prompt[40];
     char *p;
+
+	LOGD("monitor_startup");
 
     if (console_mode) {
         log_message(LOG_DEFAULT, "FIXME: monitor in console mode is not supported right now.");
@@ -2354,6 +2381,9 @@ void monitor_startup(MEMSPACE mem)
         default_memspace = mem;
     }
 
+	c64d_set_debug_mode(DEBUGGER_MODE_PAUSED);
+	
+	/*
     monitor_open();
     while (!exit_mon) {
         make_prompt(prompt);
@@ -2365,11 +2395,12 @@ void monitor_startup(MEMSPACE mem)
         }
 
         if (exit_mon) {
-            /* mon_out("exit\n"); */
+            mon_out("exit\n");
             break;
         }
-    }
-    monitor_close(1);
+    }p
+    monitor_close(1);*/
+
 }
 
 static void monitor_trap(WORD addr, void *unused_data)

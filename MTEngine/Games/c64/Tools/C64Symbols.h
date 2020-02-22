@@ -16,29 +16,30 @@ class C64AsmSourceSymbols;
 class C64Symbols
 {
 public:
-	C64Symbols();
+	C64Symbols(CDebugInterface *debugInterface);
 	~C64Symbols();
 	
+	CDebugInterface *debugInterface;
 	C64AsmSourceSymbols *asmSource;
 	
-	void DeleteAllSymbols(CDebugInterface *debugInterface);
-	void ParseSymbols(CSlrString *fileName, CDebugInterface *debugInterface);
-	void ParseSymbols(CSlrFile *file, CDebugInterface *debugInterface);
-	void ParseSymbols(CByteBuffer *byteBuffer, CDebugInterface *debugInterface);
+	void DeleteAllSymbols();
+	void ParseSymbols(CSlrString *fileName);
+	void ParseSymbols(CSlrFile *file);
+	void ParseSymbols(CByteBuffer *byteBuffer);
 	
-	void DeleteAllBreakpoints(CDebugInterface *debugInterface);
-	void ParseBreakpoints(CSlrString *fileName, CDebugInterface *debugInterface);
-	void ParseBreakpoints(CByteBuffer *byteBuffer, CDebugInterface *debugInterface);
+	void DeleteAllBreakpoints();
+	void ParseBreakpoints(CSlrString *fileName);
+	void ParseBreakpoints(CByteBuffer *byteBuffer);
 	
-	void DeleteAllWatches(CDebugInterface *debugInterface);
-	void ParseWatches(CSlrString *fileName, CDebugInterface *debugInterface);
-	void ParseWatches(CSlrFile *file, CDebugInterface *debugInterface);
-	void ParseWatches(CByteBuffer *byteBuffer, CDebugInterface *debugInterface);
+	void DeleteAllWatches();
+	void ParseWatches(CSlrString *fileName);
+	void ParseWatches(CSlrFile *file);
+	void ParseWatches(CByteBuffer *byteBuffer);
 
-	void DeleteSourceDebugInfo(CDebugInterface *debugInterface);
-	void ParseSourceDebugInfo(CSlrString *fileName, CDebugInterface *debugInterface);
-	void ParseSourceDebugInfo(CSlrFile *file, CDebugInterface *debugInterface);
-	void ParseSourceDebugInfo(CByteBuffer *byteBuffer, CDebugInterface *debugInterface);
+	void DeleteSourceDebugInfo();
+	void ParseSourceDebugInfo(CSlrString *fileName);
+	void ParseSourceDebugInfo(CSlrFile *file);
+	void ParseSourceDebugInfo(CByteBuffer *byteBuffer);
 };
 
 #endif

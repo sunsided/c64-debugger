@@ -44,9 +44,11 @@ extern "C" {
 #include "C64SIDFrequencies.h"
 #include "CViewC64.h"
 #include "CViewC64StateSID.h"
+#include "CViewFileD64.h"
 #include "CViceAudioChannel.h"
 #include "CDebuggerEmulatorPlugin.h"
 #include "CSnapshotsManager.h"
+#include "C64Symbols.h"
 
 extern "C" {
 	void vsync_suspend_speed_eval(void);
@@ -75,6 +77,9 @@ C64DebugInterfaceVice::C64DebugInterfaceVice(CViewC64 *viewC64, uint8 *c64memory
 : C64DebugInterface(viewC64)
 {
 	LOGM("C64DebugInterfaceVice: VICE %s init", VERSION);
+
+	// for loading breakpoints and symbols
+	this->symbols = new C64Symbols(this);
 
 	CreateScreenData();
 
@@ -125,6 +130,8 @@ C64DebugInterfaceVice::C64DebugInterfaceVice(CViewC64 *viewC64, uint8 *c64memory
 	
 	C64KeyMap *keyMap = C64KeyMapGetDefault();
 	InitKeyMap(keyMap);
+	
+	isCodeMonitorOpened = false;
 }
 
 extern "C" {
@@ -379,14 +386,50 @@ void C64DebugInterfaceVice::DiskDriveReset()
 	drivecpu_reset(drive_context[0]);
 }
 
-void C64DebugInterfaceVice::ResetMainCpuCycleCounter()
-{
-	c64d_maincpu_clk = 0;
+extern "C" {
+	unsigned int c64d_get_vice_maincpu_clk();
+	void c64d_refresh_screen_no_callback();
 }
 
 unsigned int C64DebugInterfaceVice::GetMainCpuCycleCounter()
 {
+	return c64d_get_vice_maincpu_clk();
+}
+
+unsigned int C64DebugInterfaceVice::GetPreviousCpuInstructionCycleCounter()
+{
+	unsigned int viceMainCpuClk = c64d_get_vice_maincpu_clk();
+	unsigned int previousInstructionClk = c64d_previous_instruction_maincpu_clk;
+	unsigned int previous2InstructionClk = c64d_previous2_instruction_maincpu_clk;
+	LOGD(">>>>>>>>>................ previous_inst_clk=%d previous2InstructionClk=%d | mainclk=%d", previousInstructionClk, previous2InstructionClk, viceMainCpuClk);
+	
+	if (previousInstructionClk == viceMainCpuClk)
+	{
+		LOGWarning("previousInstructionClk=%d == viceMainCpuClk=%d, previousInstructionClk will be previous2InstructionClk=%d", previousInstructionClk, viceMainCpuClk, previous2InstructionClk);
+		
+		// snapshot was recently restored and debug pause was moved forward or we have no data (i.e. snapshot restored etc)
+		previousInstructionClk = previous2InstructionClk;
+	}
+	
+	return previousInstructionClk;
+}
+
+void C64DebugInterfaceVice::ResetMainCpuDebugCycleCounter()
+{
+	c64d_maincpu_clk = 0;
+}
+
+extern "C" {
+	unsigned int c64d_get_vice_maincpu_clk();
+};
+
+unsigned int C64DebugInterfaceVice::GetMainCpuDebugCycleCounter()
+{
 	return c64d_maincpu_clk;
+}
+
+extern "C" {
+	void c64d_refresh_screen_no_callback();
 }
 
 void C64DebugInterfaceVice::ResetEmulationFrameCounter()
@@ -398,6 +441,11 @@ void C64DebugInterfaceVice::ResetEmulationFrameCounter()
 unsigned int C64DebugInterfaceVice::GetEmulationFrameNumber()
 {
 	return C64DebugInterface::GetEmulationFrameNumber();
+}
+
+void C64DebugInterfaceVice::RefreshScreenNoCallback()
+{
+	c64d_refresh_screen_no_callback();
 }
 
 extern "C" {
@@ -1804,13 +1852,13 @@ bool C64DebugInterfaceVice::LoadChipsSnapshotSynced(CByteBuffer *byteBuffer)
 	{
 		LOGError("C64DebugInterfaceVice::LoadFullSnapshotSynced: failed");
 
-		debugInterfaceVice->UnlockMutex();
 		gSoundEngine->UnlockMutex("LoadChipsSnapshotSynced");
+		debugInterfaceVice->UnlockMutex();
 		return false;
 	}
 	
-	debugInterfaceVice->UnlockMutex();
 	gSoundEngine->UnlockMutex("LoadChipsSnapshotSynced");
+	debugInterfaceVice->UnlockMutex();
 	return true;
 }
 
@@ -1835,13 +1883,15 @@ bool C64DebugInterfaceVice::LoadDiskDataSnapshotSynced(CByteBuffer *byteBuffer)
 	{
 		LOGError("C64DebugInterfaceVice::LoadFullSnapshotSynced: failed");
 		
-		debugInterfaceVice->UnlockMutex();
 		gSoundEngine->UnlockMutex("LoadDiskDataSnapshotSynced");
+		debugInterfaceVice->UnlockMutex();
 		return false;
 	}
 	
-	debugInterfaceVice->UnlockMutex();
 	gSoundEngine->UnlockMutex("LoadDiskDataSnapshotSynced");
+	debugInterfaceVice->UnlockMutex();
+	
+	viewC64->viewFileD64->RefreshInsertedDiskImageAsync();
 	return true;
 }
 
@@ -1916,6 +1966,107 @@ void C64DebugInterfaceVice::ProfilerDeactivate()
 	c64d_profiler_deactivate();
 }
 
+// UI
+CViewDisassemble *C64DebugInterfaceVice::GetViewMainCpuDisassemble()
+{
+	return viewC64->viewC64Disassemble;
+}
+
+CViewDisassemble *C64DebugInterfaceVice::GetViewDriveDisassemble(int driveNo)
+{
+	return viewC64->viewDrive1541Disassemble;
+}
+
+CViewBreakpoints *C64DebugInterfaceVice::GetViewBreakpoints()
+{
+	return viewC64->viewC64Breakpoints;
+}
+
+CViewDataWatch *C64DebugInterfaceVice::GetViewMemoryDataWatch()
+{
+	return viewC64->viewC64MemoryDataWatch;
+}
+
+//
+extern "C" {
+	void monitor_open(void);
+	void make_prompt(char *str);
+	int monitor_process(char *cmd);
+	void monitor_close(int check);
+	int mon_buffer_flush(void);
+}
+
+bool C64DebugInterfaceVice::IsCodeMonitorSupported()
+{
+	return true;
+}
+
+CSlrString *C64DebugInterfaceVice::GetCodeMonitorPrompt()
+{
+	if (!isCodeMonitorOpened)
+	{
+		monitor_open();
+		isCodeMonitorOpened = true;
+	}
+	
+	char *prompt = SYS_GetCharBuf();
+	make_prompt(prompt);
+	
+	CSlrString *str = new CSlrString(prompt);
+	
+	SYS_ReleaseCharBuf(prompt);
+	
+	return str;
+}
+
+extern "C" {
+	char *lib_stralloc(const char *str);
+}
+
+static void execute_monitor_command_trap(WORD addr, void *v)
+{
+	char *monitorCmdStr = (char*)v;
+	int exit_mon = monitor_process(monitorCmdStr);
+	mon_buffer_flush();
+	
+	LOGD("exit_mon=%d", exit_mon);
+}
+
+bool C64DebugInterfaceVice::ExecuteCodeMonitorCommand(CSlrString *commandStr)
+{
+	LOGD("C64DebugInterfaceVice::ExecuteCodeMonitorCommand");
+	//if (!isCodeMonitorOpened)
+	{
+		monitor_open();
+		isCodeMonitorOpened = true;
+	}
+	
+	if (commandStr->IsEmpty())
+	{
+		return true;
+	}
+	
+	commandStr->ConvertToLowerCase();
+
+	char *cmdStr = commandStr->GetStdASCII();
+	char *monitorCmdStr = lib_stralloc(cmdStr);
+	delete [] cmdStr;
+
+//	// we need to move to next instruction on these commands
+//	if (commandStr->CompareWith("step") || commandStr->CompareWith("next") || commandStr->CompareWith("return"))
+//	{
+//		SetDebugMode(DEBUGGER_MODE_RUNNING);
+//		interrupt_maincpu_trigger_trap(execute_monitor_command_trap, monitorCmdStr);
+//	}
+//	else
+	{
+		int exit_mon = monitor_process(monitorCmdStr);
+		mon_buffer_flush();
+		LOGD("exit_mon=%d", exit_mon);
+	}
+
+	return true;
+}
 
 
 /// default keymap

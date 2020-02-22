@@ -296,19 +296,22 @@ void CByteBuffer::ForwardToEnd()
 	index = this->length;
 }
 
+// 32kB memory chunks
+#define MEM_CHUNK	1024*32
+
 void CByteBuffer::putByte(uint8 b)
 {
 #ifdef PRINT_BUFFER_OPS
 	LOGD(">>>>>>>>>>>>>> putByte data[%d]=%2.2x", index, b);
 #endif
 
-	if (this->index == this->wholeDataBufferSize)
+	if (this->index >= this->wholeDataBufferSize)
 	{
-		uint8 *newData = new uint8[this->wholeDataBufferSize * 2];
+		uint8 *newData = new uint8[this->wholeDataBufferSize + MEM_CHUNK];
 		memcpy(newData, this->data, this->wholeDataBufferSize);
 		delete [] this->data;
 		this->data = newData;
-		this->wholeDataBufferSize *= 2;
+		this->wholeDataBufferSize += MEM_CHUNK;
 	}
 	this->data[this->index++] = b;
 	this->length++;
@@ -342,7 +345,7 @@ uint8 CByteBuffer::getByte()
 	return data[index++];
 }
 
-void CByteBuffer::putBytes(uint8 *b, int len)
+void CByteBuffer::putBytes(uint8 *b, unsigned int len)
 {
 #ifdef PRINT_BUFFER_OPS
 	LOGD("putBytes: len=%d", len);
@@ -354,7 +357,7 @@ void CByteBuffer::putBytes(uint8 *b, int len)
 	}
 }
 
-void CByteBuffer::putBytes(uint8 *b, int begin, int len)
+void CByteBuffer::putBytes(uint8 *b, unsigned int begin, unsigned int len)
 {
 #ifdef PRINT_BUFFER_OPS
 	LOGD("putBytes: begin=%d len=%d", begin, len);
@@ -366,7 +369,7 @@ void CByteBuffer::putBytes(uint8 *b, int begin, int len)
 	}
 }
 
-uint8 *CByteBuffer::getBytes(int len)
+uint8 *CByteBuffer::getBytes(unsigned int len)
 {
 #ifdef PRINT_BUFFER_OPS
 	LOGD("getBytes: len=%d", len);
@@ -382,7 +385,7 @@ uint8 *CByteBuffer::getBytes(int len)
 	return b;
 }
 
-void CByteBuffer::getBytes(uint8 *b, int len)
+void CByteBuffer::getBytes(uint8 *b, unsigned int len)
 {
 #ifdef PRINT_BUFFER_OPS
 	LOGD("getBytes: len=%d", len);
@@ -394,7 +397,7 @@ void CByteBuffer::getBytes(uint8 *b, int len)
 	}
 }
 
-void CByteBuffer::GetBytes(uint8 *b, int len)
+void CByteBuffer::GetBytes(uint8 *b, unsigned int len)
 {
 #ifdef PRINT_BUFFER_OPS
 	LOGD("getBytes: len=%d", len);
@@ -1366,12 +1369,12 @@ short unsigned int CByteBuffer::GetU16()
 	return this->getUnsignedShort();
 }
 
-void CByteBuffer::PutBytes(uint8 *b, int len)
+void CByteBuffer::PutBytes(uint8 *b, unsigned int len)
 {
 	this->putBytes(b, len);
 }
 
-uint8 *CByteBuffer::GetBytes(int len)
+uint8 *CByteBuffer::GetBytes(unsigned int len)
 {
 	return this->getBytes(len);
 }

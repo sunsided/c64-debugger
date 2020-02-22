@@ -207,7 +207,7 @@ void CViewC64AllGraphics::SetMode(int newMode)
 			for (int y = 0; y < numDisplaysRows; y++)
 			{
 				LOGD("......px=%f py=%f", px, py);
-				vicDisplays[i]->SetDisplayPosition(px, py, 0.5f, true);
+				vicDisplays[i]->SetDisplayPosition(px, py, 0.45f, true);
 				py += displaySizeY;
 				
 				vicControl[i]->btnModeBitmap->SetOn(true);

@@ -20,8 +20,6 @@ extern "C" {
 #include "VID_ImageBinding.h"
 #include "C64SIDFrequencies.h"
 
-#define SID_WAVEFORM_LENGTH 1024
-
 // waveform views
 CViewC64StateSIDWaveform::CViewC64StateSIDWaveform(float posX, float posY, float posZ, float sizeX, float sizeY)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
@@ -280,6 +278,11 @@ void CViewC64StateSID::Render()
 
 	this->RenderStateSID(selectedSidNumber, posX, posY + buttonSizeY, posZ, fontBytes, fontBytesSize);
 	
+	sidChannelWaveform[selectedSidNumber][0]->CalculateWaveform();
+	sidChannelWaveform[selectedSidNumber][1]->CalculateWaveform();
+	sidChannelWaveform[selectedSidNumber][2]->CalculateWaveform();
+	sidMixWaveform[selectedSidNumber]->CalculateWaveform();
+
 	for (int i = 0; i < 3; i++)
 	{
 		sidChannelWaveform[selectedSidNumber][i]->Render();
@@ -639,12 +642,12 @@ void CViewC64StateSID::AddWaveformData(int sidNumber, int v1, int v2, int v3, sh
 	
 	if (waveformPos == SID_WAVEFORM_LENGTH)
 	{
-		guiMain->LockRenderMutex();
-		sidChannelWaveform[sidNumber][0]->CalculateWaveform();
-		sidChannelWaveform[sidNumber][1]->CalculateWaveform();
-		sidChannelWaveform[sidNumber][2]->CalculateWaveform();
-		sidMixWaveform[sidNumber]->CalculateWaveform();
-		guiMain->UnlockRenderMutex();
+//		guiMain->LockRenderMutex();
+//		sidChannelWaveform[sidNumber][0]->CalculateWaveform();
+//		sidChannelWaveform[sidNumber][1]->CalculateWaveform();
+//		sidChannelWaveform[sidNumber][2]->CalculateWaveform();
+//		sidMixWaveform[sidNumber]->CalculateWaveform();
+//		guiMain->UnlockRenderMutex();
 		
 		waveformPos = 0;
 	}

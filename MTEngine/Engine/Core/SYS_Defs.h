@@ -93,7 +93,12 @@
 #define USE_DEPTH_BUFFER                1
 #define USE_STENCIL_BUFFER				1
 
-
+//
+#define MT_PRIORITY_IDLE			0
+#define MT_PRIORITY_BELOW_NORMAL	1
+#define MT_PRIORITY_NORMAL			2
+#define MT_PRIORITY_ABOVE_NORMAL	3
+#define MT_PRIORITY_HIGH_PRIORITY	4
 
 #if defined(WIN32)
 

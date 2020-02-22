@@ -178,6 +178,7 @@ static int gifdrv_save(screenshot_t *screenshot, const char *filename)
   return 0;
 }
 
+#undef FEATURE_CPUMEMHISTORY
 #ifdef FEATURE_CPUMEMHISTORY
 static GifFileType *gifdrv_memmap_fd;
 static char *gifdrv_memmap_ext_filename;

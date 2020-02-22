@@ -1674,6 +1674,8 @@ void CGuiMain::SetView(CGuiView *element)
 		SYS_FatalExit("CGuiMain::SetView: view not found (%s)", element->name);
 	}
 	
+	SetFocus(element);
+	
 	LOGG("CGuiMain::SetView: UnlockMutex");
 	guiMain->UnlockMutex();
 	
@@ -2077,21 +2079,20 @@ void CGuiMain::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 		return;
 	}
 	
-
-	if (this->focusElement)
-	{
-		// consumed?
-		LOGD("keyDown focusElement=%s", this->focusElement->name);
-		if (this->focusElement->KeyDown(keyCode, isShift, isAlt, isControl))
-		{
-			return;
-		}
-	}
-	
 	if (this->currentView != NULL)
 	{
 		this->currentView->KeyDown(keyCode, isShift, isAlt, isControl);
 	}
+
+//	if (guiMain->focusElement)
+//	{
+//		// consumed?
+//		LOGD("keyDown focusElement=%s", guiMain->focusElement->name);
+//		if (guiMain->focusElement->KeyDown(keyCode, isShift, isAlt, isControl))
+//		{
+//			return;
+//		}
+//	}
 
 	for (std::list<CGlobalKeyboardCallback *>::const_iterator itKeybardCallbacks =
 			this->globalKeyboardCallbacks.begin();
@@ -2122,22 +2123,22 @@ void CGuiMain::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 	this->repeatTime = 0;
 	isKeyDown = false;
 
-	if (this->focusElement)
-	{
-		// consumed?
-		if (this->focusElement->KeyUp(keyCode, isShiftPressed, isAltPressed, isControlPressed))
-		{
-			UpdateControlKeys(keyCode);
-			return;
-		}
-		
-		// consumed?
-		if (this->focusElement->KeyPressed(keyCode, isShiftPressed, isAltPressed, isControlPressed))
-		{
-			UpdateControlKeys(keyCode);
-			return;
-		}
-	}
+//	if (this->focusElement)
+//	{
+//		// consumed?
+//		if (this->focusElement->KeyUp(keyCode, isShiftPressed, isAltPressed, isControlPressed))
+//		{
+//			UpdateControlKeys(keyCode);
+//			return;
+//		}
+//		
+//		// consumed?
+//		if (this->focusElement->KeyPressed(keyCode, isShiftPressed, isAltPressed, isControlPressed))
+//		{
+//			UpdateControlKeys(keyCode);
+//			return;
+//		}
+//	}
 
 	if (this->currentView != NULL)
 	{
@@ -2146,7 +2147,7 @@ void CGuiMain::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 		{
 			this->currentView->KeyPressed(keyCode, isShiftPressed, isAltPressed, isControlPressed);
 			UpdateControlKeys(keyCode);
-			return;
+//			return;
 		}
 	}
 	
@@ -2231,14 +2232,14 @@ void CGuiMain::UpdateControlKeys(u32 keyCode)
 void CGuiMain::KeyPressed(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
 	LOGI("CGuiMain::KeyPressed: %2.2x '%c'", keyCode, keyCode);
-	if (this->focusElement)
-	{
-		// consumed?
-		if (this->focusElement->KeyPressed(keyCode, isShift, isAlt, isControl))
-		{
-			return;
-		}
-	}
+//	if (this->focusElement)
+//	{
+//		// consumed?
+//		if (this->focusElement->KeyPressed(keyCode, isShift, isAlt, isControl))
+//		{
+//			return;
+//		}
+//	}
 	
 	if (this->currentView != NULL)
 	{

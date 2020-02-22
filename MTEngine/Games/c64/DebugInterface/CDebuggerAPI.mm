@@ -12,6 +12,7 @@
 #include "C64Tools.h"
 #include "CViewDisassemble.h"
 #include "C64DebugInterface.h"
+#include "AtariDebugInterface.h"
 #include "CSlrFileFromOS.h"
 #include "CViewMemoryMap.h"
 #include "C64AsmSourceSymbols.h"
@@ -341,9 +342,21 @@ int CDebuggerAPI::Assemble(int addr, char *assembleText)
 
 void CDebuggerAPI::AddWatch(CSlrString *segmentName, int address, CSlrString *watchName, uint8 representation, int numberOfValues, uint8 bits)
 {
-	if (viewC64->symbols->asmSource)
+	// TODO: Generalize me
+	CDebugInterface *debugInterface = NULL;
+	if (viewC64->debugInterfaceC64)
 	{
-		C64AsmSourceSegment *segment = viewC64->symbols->asmSource->FindSegment(segmentName);
+		debugInterface = viewC64->debugInterfaceC64;
+	}
+	else if (viewC64->debugInterfaceAtari)
+	{
+		debugInterface = viewC64->debugInterfaceAtari;
+	}
+	
+	
+	if (debugInterface->symbols->asmSource)
+	{
+		C64AsmSourceSegment *segment = debugInterface->symbols->asmSource->FindSegment(segmentName);
 		if (segment == NULL)
 		{
 			segmentName->DebugPrint("segment=");
@@ -365,9 +378,21 @@ void CDebuggerAPI::AddWatch(CSlrString *segmentName, int address, CSlrString *wa
 
 void CDebuggerAPI::AddWatch(int address, char *watchName, uint8 representation, int numberOfValues, uint8 bits)
 {
-	if (viewC64->symbols->asmSource)
+	// TODO: Generalize me
+	CDebugInterface *debugInterface = NULL;
+	if (viewC64->debugInterfaceC64)
 	{
-		C64AsmSourceSegment *segment = viewC64->symbols->asmSource->segments[0];
+		debugInterface = viewC64->debugInterfaceC64;
+	}
+	else if (viewC64->debugInterfaceAtari)
+	{
+		debugInterface = viewC64->debugInterfaceAtari;
+	}
+	
+	
+	if (debugInterface->symbols->asmSource)
+	{
+		C64AsmSourceSegment *segment = debugInterface->symbols->asmSource->segments[0];
 		if (segment == NULL)
 		{
 			LOGError("CDebuggerAPI::AddWatch: default segment not found");

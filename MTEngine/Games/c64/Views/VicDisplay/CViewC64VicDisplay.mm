@@ -1889,14 +1889,14 @@ bool CViewC64VicDisplay::ScrollMemoryAndDisassembleToRasterPosition(float rx, fl
 		}
 		
 		CViewMemoryMapCell *cell = viewC64->viewC64MemoryMap->memoryCells[addr];
-		if (cell->pc != -1)
+		if (cell->writePC != -1)
 		{
 			//LOGD(".... isForced=%d changed=%d", isForced, viewC64->viewC64Disassemble->changedByUser);
 			//LOGD("viewC64->viewC64Disassemble->changedByUser=%d", viewC64->viewC64Disassemble->changedByUser);
 			if (isForced || viewC64->viewC64Disassemble->changedByUser == false)
 			{
 				//LOGD("      SCROLL TO %04x", cell->pc);
-				viewC64->viewC64Disassemble->ScrollToAddress(cell->pc);
+				viewC64->viewC64Disassemble->ScrollToAddress(cell->writePC);
 				foundMemoryCellPC = true;
 			}
 		}

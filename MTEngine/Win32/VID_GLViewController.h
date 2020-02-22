@@ -32,7 +32,7 @@ GLfloat VID_GetScreenHeight();
 #define SCREEN_EDGE_HEIGHT 2.0
 #define SCREEN_EDGE_WIDTH 2.0
 
-long SYS_GetCurrentTimeInMillis();
+unsigned long SYS_GetCurrentTimeInMillis();
 long SYS_RandomSeed();
 void VID_ResetLogicClock();
 

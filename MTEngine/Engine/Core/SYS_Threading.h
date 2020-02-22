@@ -5,10 +5,10 @@
 
 #if defined(WIN32)
 #define USE_WIN32_THREADS
+#endif
 
 #if defined(USE_WIN32_THREADS)
 #include <windows.h>
-#endif
 #endif
 
 #include <pthread.h>
@@ -59,6 +59,9 @@ void SYS_KillThread(CSlrThread *run);
 
 void SYS_SetThreadPriority(float priority);
 void SYS_SetThreadName(char *name);
+
+void SYS_SetMainProcessPriorityBoostDisabled(bool isPriorityBoostDisabled);
+void SYS_SetMainProcessPriority(int priority);
 
 unsigned long SYS_GetProcessId();
 

@@ -7,6 +7,7 @@
 #include "CViewMemoryMap.h"
 #include "SYS_KeyCodes.h"
 #include "C64DebugInterface.h"
+#include "AtariDebugInterface.h"
 #include "CGuiEditBoxText.h"
 #include "C64Tools.h"
 #include "CSlrString.h"
@@ -161,7 +162,20 @@ void CViewDisassemble::DeleteCodeLabels()
 	//       all access to codeLabels should go through currently selected segment.
 	//       This is left as-is for now due to not having 1541 Drive labels properly
 	//       associated to a segment, and due to no time to fiddle before upcoming release :)
-	if (viewC64->symbols->asmSource)
+	
+	// TODO: Generalize me
+	CDebugInterface *debugInterface = NULL;
+	if (viewC64->debugInterfaceC64)
+	{
+		debugInterface = viewC64->debugInterfaceC64;
+	}
+	else if (viewC64->debugInterfaceAtari)
+	{
+		debugInterface = viewC64->debugInterfaceAtari;
+	}
+	
+	
+	if (debugInterface->symbols->asmSource)
 	{
 		// do not delete code labels, this might leak memory
 		return;
@@ -2759,6 +2773,12 @@ void CViewDisassemble::ScrollUp()
 bool CViewDisassemble::DoScrollWheel(float deltaX, float deltaY)
 {
 	//LOGD("CViewDisassemble::DoScrollWheel: %f %f", deltaX, deltaY);
+	
+	if (this->IsInside(guiMain->mousePosX, guiMain->mousePosY) == false)
+	{
+		return false;
+	}
+	
 	int dy = fabs(round(deltaY));
 	
 	if (guiMain->isShiftPressed)

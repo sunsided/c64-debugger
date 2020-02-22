@@ -108,12 +108,13 @@ void CViewAtariStatePIA::RenderState(float px, float py, float posZ, CSlrFont *f
 //	printf("PACTL= %02X    PBCTL= %02X    PORTA= %02X    "
 //		   "PORTB= %02X\n", PIA_PACTL, PIA_PBCTL, PIA_PORTA, PIA_PORTB);
 
-	sprintf(buf, "PACTL  %02X    PBCTL  %02X",
+	sprintf(buf, "PACTL  %02X     PBCTL  %02X",
 			PIA_PACTL, PIA_PBCTL);
 	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 
-	sprintf(buf, "PORTA  %02X    PORTB  %02X",
-			PIA_PORTA, PIA_PORTB);
+	sprintf(buf, "PORTA  %02X %02X  PORTB  %02X %02X",
+			PIA_PORTA, PIA_GetByte(PIA_OFFSET_PORTA, TRUE),
+			PIA_PORTB, PIA_GetByte(PIA_OFFSET_PORTB, TRUE));
 	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 
 //

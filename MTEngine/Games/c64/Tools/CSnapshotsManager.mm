@@ -7,15 +7,6 @@
 
 /// TODO:
 
-//DONE: zmiana dyskietki  ->  zapisywac zmiany dyskietek / modul osobno i przy przewijaniu wczytac modul dyskietki ostatni dobry (?)
-//TRZYMAC MODUL DYSKIETKI int c64_snapshot_read_from_memory(int event_mode, int read_roms, int read_disks, int read_reu_data, unsigned char *snapshot_data, int snapshot_size)
-//
-//DONE:  GCR_dirty_track_for_snapshot P64_dirty_for_snapshot
-//
-//DONE: c64_snapshot_write_in_memory -> confirm if store disk state is OK, or we should only store *disk contents*... nope we need to store full state
-//
-//TODO BUG: when rewind the F7 disk directory view is not updated
-
 // TODO: rewriting map frame snapshot...  (?)
 // DONE?: attach regular snapshots -> clear rewind data
 // DONE?: store roms on cart change
@@ -23,6 +14,10 @@
 
 //CPU JAM - odwieszanie przy przewijaniu ?
 //DONE?: DUMP all snapshots & history => fix problem with cycle on frame# change
+
+#undef LOGS
+//#define LOGS LOGD
+#define LOGS {}
 
 extern "C" {
 extern volatile unsigned int c64d_previous_instruction_maincpu_clk;
@@ -70,10 +65,10 @@ void CStoredDiskSnapshot::AddReference()
 
 void CStoredDiskSnapshot::RemoveReference()
 {
-	LOGD("CStoredDiskSnapshot::RemoveReference: numLinkedChipsSnapshots=%d", numLinkedChipsSnapshots);
+//	LOGD("CStoredDiskSnapshot::RemoveReference: numLinkedChipsSnapshots=%d", numLinkedChipsSnapshots);
 	this->numLinkedChipsSnapshots--;
 
-	manager->DebugPrintDiskSnapshots();
+//	manager->DebugPrintDiskSnapshots();
 	
 	if (this->numLinkedChipsSnapshots == 0)
 	{
@@ -83,7 +78,7 @@ void CStoredDiskSnapshot::RemoveReference()
 		this->ClearSnapshot();
 	}
 
-	LOGD("CStoredDiskSnapshot::RemoveReference finished: numLinkedChipsSnapshots=%d", numLinkedChipsSnapshots);
+//	LOGD("CStoredDiskSnapshot::RemoveReference finished: numLinkedChipsSnapshots=%d", numLinkedChipsSnapshots);
 }
 
 
@@ -137,29 +132,40 @@ CSnapshotsManager::~CSnapshotsManager()
 {
 }
 
-extern "C" {
-	unsigned int c64d_get_vice_maincpu_clk();
-	void c64d_refresh_screen_no_callback();
+void CSnapshotsManager::CancelRestore()
+{
+	LockMutex();
+	snapshotToRestore = NULL;
+	isPerformingSnapshotRestore = false;
+	pauseNumFrame = -1;
+	pauseNumCycle = -1;
+	skipFrameRender = false;
+	UnlockMutex();
+
+	debugInterface->RefreshScreenNoCallback();
 }
 
 // CheckSnapshotInterval should be run each frame from within code that can store snapshots,
 // check if we are exactly in a new frame cycle should be done by the caller
 bool CSnapshotsManager::CheckSnapshotInterval()
 {
-//	LOGD("CSnapshotsManager::CheckSnapshotInterval");
+	LOGS("CSnapshotsManager::CheckSnapshotInterval: pauseNumCycle=%d currentCycle=%d", pauseNumCycle, debugInterface->GetMainCpuCycleCounter());
 	
 	if (snapshotToRestore || pauseNumCycle != -1) // || skipSavingSnapshots)
+	{
+		LOGS("snapshotToRestore=%x pauseNumCycle=%d", snapshotToRestore, pauseNumCycle);
 		return false;
+	}
 	
 	u32 currentFrame = debugInterface->GetEmulationFrameNumber();
 	
 	if (pauseNumFrame == currentFrame)
 	{
-		LOGD("pauseNumFrame == currentFrame");
+		LOGD("CSnapshotsManager::CheckSnapshotInterval: pauseNumFrame == currentFrame");
 		debugInterface->SetDebugMode(DEBUGGER_MODE_PAUSED);
 		pauseNumFrame = -1;
 		skipFrameRender = false;
-		c64d_refresh_screen_no_callback();
+		debugInterface->RefreshScreenNoCallback();
 		isPerformingSnapshotRestore = false;
 		return false;
 	}
@@ -172,19 +178,19 @@ bool CSnapshotsManager::CheckSnapshotInterval()
 	// check if we should store snapshot (the frame interval is hit)
 	if (lastStoredFrameCounter >= c64SettingsSnapshotsIntervalNumFrames)
 	{
-		LOGD("CSnapshotsManager::CheckSnapshotInterval: LockMutex");
+		LOGS("CSnapshotsManager::CheckSnapshotInterval: LockMutex");
 		this->LockMutex();
 		
 		if (snapshotToRestore == NULL)
 		{
-			LOGD("CSnapshotsManager::CheckSnapshotInterval: snapshotToRestore=NULL");
+			LOGS("CSnapshotsManager::CheckSnapshotInterval: snapshotToRestore=NULL");
 
 			isPerformingSnapshotRestore = false;
 			lastStoredFrameCounter = 0;
 			
-			u32 currentCycle = c64d_get_vice_maincpu_clk();
+			u32 currentCycle = debugInterface->GetMainCpuCycleCounter();
 			
-			LOGD("CSnapshotsManager::CheckSnapshotInterval: store snapshot, currentFrame=%d", currentFrame);
+			LOGS("CSnapshotsManager::CheckSnapshotInterval: store snapshot, currentFrame=%d", currentFrame);
 			lastStoredFrame = currentFrame;
 			
 			long t1 = SYS_GetCurrentTimeInMillis();
@@ -193,7 +199,7 @@ bool CSnapshotsManager::CheckSnapshotInterval()
 			if (currentDiskSnapshot == NULL
 				|| debugInterface->IsDriveDirtyForSnapshot())
 			{
-				LOGD("....... create new disk snapshot");
+//				LOGD("....... create new disk snapshot");
 				CStoredDiskSnapshot *diskSnapshot = GetNewDiskSnapshot(currentFrame, currentCycle);
 				if (diskSnapshot == NULL)
 				{
@@ -213,7 +219,7 @@ bool CSnapshotsManager::CheckSnapshotInterval()
 				currentDiskSnapshot = diskSnapshot;
 				diskSnapshotsByFrame[currentFrame] = diskSnapshot;
 				
-				DebugPrintDiskSnapshots();
+//				DebugPrintDiskSnapshots();
 			}
 			
 			CStoredChipsSnapshot *chipSnapshot = GetNewChipSnapshot(currentFrame, currentCycle, currentDiskSnapshot);
@@ -234,10 +240,10 @@ bool CSnapshotsManager::CheckSnapshotInterval()
 			
 			long t2 = SYS_GetCurrentTimeInMillis();
 			
-			LOGD("CSnapshotsManager stored snapshot t=%d", t2-t1);
+//			LOGD("CSnapshotsManager stored snapshot t=%d", t2-t1);
 		}
 		
-		LOGD("CSnapshotsManager::CheckSnapshotInterval: UnlockMutex");
+		LOGS("CSnapshotsManager::CheckSnapshotInterval: UnlockMutex");
 
 		this->UnlockMutex();
 		
@@ -255,29 +261,29 @@ void CSnapshotsManager::StoreSnapshot()
 
 void CSnapshotsManager::RestoreSnapshot(CStoredChipsSnapshot *snapshot)
 {
-	LOGD("CSnapshotsManager::RestoreSnapshot");
+	LOGS("CSnapshotsManager::RestoreSnapshot (set snapshotToRestore only)");
 	this->LockMutex();
 
 	snapshotToRestore = snapshot;
 	
 	this->UnlockMutex();
 
-	LOGD("CSnapshotsManager::RestoreSnapshot done");
+	LOGS("CSnapshotsManager::RestoreSnapshot done");
 }
 
-void CSnapshotsManager::CheckMainCpuCycle()
+bool CSnapshotsManager::CheckMainCpuCycle()
 {
-//	LOGD("CSnapshotsManager::CheckMainCpuCycle");
+//	LOGD("CSnapshotsManager::CheckMainCpuCycle prev clk=%d now clk=%d", debugInterface->GetPreviousCpuInstructionCycleCounter(), debugInterface->GetMainCpuCycleCounter());
 	
 	if (snapshotToRestore)
-		return;
+		return false;
 	
 	if (pauseNumCycle == -1)
-		return;
+		return false;
 
-	u32 currentCycle = c64d_get_vice_maincpu_clk();
+	u32 currentCycle = debugInterface->GetMainCpuCycleCounter();
 
-	LOGD("previous_instr_maincpu_clk=%d pauseNumCycle=%d maincpu_clk=%d",  c64d_previous_instruction_maincpu_clk, pauseNumCycle, currentCycle);
+//	LOGD("previous_instr_maincpu_clk=%d pauseNumCycle=%d maincpu_clk=%d", debugInterface->GetPreviousCpuInstructionCycleCounter(), pauseNumCycle, currentCycle);
 	
 	if (pauseNumCycle <= currentCycle)
 	{
@@ -286,9 +292,12 @@ void CSnapshotsManager::CheckMainCpuCycle()
 		pauseNumCycle = -1;
 		pauseNumFrame = -1;
 		skipFrameRender = false;
-		c64d_refresh_screen_no_callback();
+		debugInterface->RefreshScreenNoCallback();
 		isPerformingSnapshotRestore = false;
+		return true;
 	}
+	
+	return false;
 }
 
 extern "C" {
@@ -344,31 +353,31 @@ bool CSnapshotsManager::CheckSnapshotRestore()
 // @returns false=snapshot was not found, not possible to restore. cycleNum is optional, if -1 only frame will be searched.
 bool CSnapshotsManager::RestoreSnapshotByFrame(int frame, int cycleNum)
 {
-	LOGD("RestoreSnapshotByFrame: %d %d, LockMutex", frame, cycleNum);
+	LOGS("RestoreSnapshotByFrame: %d %d, LockMutex", frame, cycleNum);
 	this->LockMutex();
 
 	if (snapshotToRestore)
 	{
-		LOGD("RestoreSnapshotByFrame: UnlockMutex (1)");
+		LOGS("RestoreSnapshotByFrame: UnlockMutex (1)");
 		this->UnlockMutex();
 		return false;
 	}
 	
 	if (chipSnapshotsByFrame.empty())
 	{
-		LOGD("RestoreSnapshotByFrame: UnlockMutex (2)");
+		LOGS("RestoreSnapshotByFrame: UnlockMutex (2)");
 		this->UnlockMutex();
 		return false;
 	}
 
-	LOGD("***** CSnapshotsManager::RestoreSnapshotByFrame frame=%d ***", frame);
+	LOGS("***** CSnapshotsManager::RestoreSnapshotByFrame frame=%d ***", frame);
 
 	isPerformingSnapshotRestore = true;
 
 	if (frame < 0)
 		frame = 0;
 	
-	LOGD("frame=%d", frame);
+	LOGS("frame=%d", frame);
 	
 	///////
 	CStoredChipsSnapshot *nearestChipSnapshot = NULL;
@@ -386,7 +395,13 @@ bool CSnapshotsManager::RestoreSnapshotByFrame(int frame, int cycleNum)
 	{
 		CStoredChipsSnapshot *chipSnapshot = it->second;
 		
-		if (chipSnapshot->frame <= frame)
+		// TODO BUG: when scrubbing to exact frame we need to be able to restore snapshot immediately, so we have to restore to previous one
+		// note, this does not affect C64
+//#if defined(RUN_COMMODORE64)
+//		if (chipSnapshot->frame <= frame)
+//#else
+		if (chipSnapshot->frame < frame)
+//#endif
 		{
 			int d2 = frame - chipSnapshot->frame;
 			if (d2 >= 0 && d2 < nearestChipSnapshotDist)
@@ -400,7 +415,7 @@ bool CSnapshotsManager::RestoreSnapshotByFrame(int frame, int cycleNum)
 	
 	if (nearestChipSnapshot != NULL)
 	{
-		LOGD(".... found snapshot frame %d", nearestChipSnapshot->frame);
+		LOGS(".... found snapshot frame %d", nearestChipSnapshot->frame);
 		snapshotToRestore = nearestChipSnapshot;
 	}
 	
@@ -408,10 +423,10 @@ bool CSnapshotsManager::RestoreSnapshotByFrame(int frame, int cycleNum)
 	
 	if (pauseNumFrame != -1 || debugInterface->GetDebugMode() == DEBUGGER_MODE_PAUSED)
 	{
-		LOGD("nearestChipSnapshot->frame=%d frame=%d", nearestChipSnapshot->frame, frame);
+		LOGS("nearestChipSnapshot->frame=%d frame=%d", nearestChipSnapshot->frame, frame);
 		if (nearestChipSnapshot->frame < frame)
 		{
-			LOGD("......... nearestChipSnapshot->frame=%d but we are looking for %d", nearestChipSnapshot->frame, frame);
+			LOGS("......... nearestChipSnapshot->frame=%d but we are looking for %d", nearestChipSnapshot->frame, frame);
 			
 			if (cycleNum == -1)
 			{
@@ -440,13 +455,28 @@ bool CSnapshotsManager::RestoreSnapshotByFrame(int frame, int cycleNum)
 		}
 		else
 		{
-			LOGD("... found frame, going to cycle cycleNum=%d", cycleNum);
+			LOGS("... found frame, going to cycle cycleNum=%d", cycleNum);
 			if (cycleNum == -1)
 			{
-				skipFrameRender = false;
+//#if defined(RUN_COMMODORE64)
+//				// TODO BUG: we can't restore exact frame, the code below restores synchronously, although we are paused we are not sure if we are in a situation that we can restore snapshot synchronously
+//				skipFrameRender = false;
+//				pauseNumCycle = -1;
+//				pauseNumFrame = -1;
+//				// restore snapshot immediately
+//				this->CheckSnapshotRestore();
+//				debugInterface->SetDebugMode(DEBUGGER_MODE_PAUSED);
+//				isPerformingSnapshotRestore = false;
+//#else
+				// TODO BUG: this below does not work now and thus we can't restore to exact frame, TODO: allow restore to exact frame
+				// just run one cycle, we are already where we should be
+				skipFrameRender = true;
 				pauseNumCycle = -1;
-				pauseNumFrame = -1;
-				debugInterface->SetDebugMode(DEBUGGER_MODE_PAUSED);
+				
+				// BUG: note this does not restore correctly and sometimes does not stop at all
+				pauseNumFrame = frame;
+				debugInterface->SetDebugMode(DEBUGGER_MODE_RUNNING);
+//#endif
 			}
 			else
 			{
@@ -458,7 +488,7 @@ bool CSnapshotsManager::RestoreSnapshotByFrame(int frame, int cycleNum)
 		}
 	}
 	
-	LOGD("RestoreSnapshotByFrame: UnlockMutex (3)");
+	LOGS("RestoreSnapshotByFrame: UnlockMutex (3)");
 	this->UnlockMutex();
 
 	return true;
@@ -466,15 +496,31 @@ bool CSnapshotsManager::RestoreSnapshotByFrame(int frame, int cycleNum)
 
 bool CSnapshotsManager::IsPerformingSnapshotRestore()
 {
+	// ??
+	if (this->isPerformingSnapshotRestore && debugInterface->GetDebugMode() != DEBUGGER_MODE_RUNNING)
+	{
+		LOGError("isPerformingSnapshotRestore && debugMode=%d, frame=%d pauseNumFrame=%d pauseNumCycle=%d", debugInterface->GetDebugMode(),
+				 debugInterface->GetEmulationFrameNumber(), pauseNumFrame, pauseNumCycle);
+		
+		if (pauseNumFrame != -1 && pauseNumFrame < debugInterface->GetEmulationFrameNumber())
+		{
+			debugInterface->SetDebugMode(DEBUGGER_MODE_RUNNING);
+		}
+		if (pauseNumCycle != -1 && pauseNumCycle < debugInterface->GetMainCpuCycleCounter())
+		{
+			debugInterface->SetDebugMode(DEBUGGER_MODE_RUNNING);
+		}
+	}
+	
 	return this->isPerformingSnapshotRestore;
 }
 
 CStoredChipsSnapshot *CSnapshotsManager::GetNewChipSnapshot(u32 frame, u32 cycle, CStoredDiskSnapshot *diskSnapshot)
 {
-	LOGD("*************************** CSnapshotsManager::GetNewChipSnapshot: frame=%d        << CHIPS", frame);
+	LOGS("*************************** CSnapshotsManager::GetNewChipSnapshot: frame=%d        << CHIPS", frame);
 
-	LOGD("chipSnapshotsByFrame=%d chipSnapshotsLimit=%d chipsSnapshotsToReuse=%d", chipSnapshotsByFrame.size(), c64SettingsSnapshotsLimit, chipsSnapshotsToReuse.size());
-	LOGD("diskSnapshotsByFrame=%d diskSnapshotsToReuse=%d", diskSnapshotsByFrame.size(), diskSnapshotsToReuse.size());
+//	LOGD("chipSnapshotsByFrame=%d chipSnapshotsLimit=%d chipsSnapshotsToReuse=%d", chipSnapshotsByFrame.size(), c64SettingsSnapshotsLimit, chipsSnapshotsToReuse.size());
+//	LOGD("diskSnapshotsByFrame=%d diskSnapshotsToReuse=%d", diskSnapshotsByFrame.size(), diskSnapshotsToReuse.size());
 	
 	CStoredChipsSnapshot *chipSnapshot = NULL;
 	
@@ -486,7 +532,7 @@ CStoredChipsSnapshot *CSnapshotsManager::GetNewChipSnapshot(u32 frame, u32 cycle
 		
 		if (f < c64SettingsSnapshotsLimit)
 		{
-			LOGD("...create new CStoredChipsSnapshot");
+//			LOGD("...create new CStoredChipsSnapshot");
 			// create new
 			chipSnapshot = new CStoredChipsSnapshot(this, frame, cycle, diskSnapshot);
 			if (chipSnapshot == NULL)
@@ -497,10 +543,10 @@ CStoredChipsSnapshot *CSnapshotsManager::GetNewChipSnapshot(u32 frame, u32 cycle
 		}
 		else
 		{
-			LOGD("...reuse CStoredChipsSnapshot chipsSnapshotsToReuse.size=%d", chipsSnapshotsToReuse.size());
+//			LOGD("...reuse CStoredChipsSnapshot chipsSnapshotsToReuse.size=%d", chipsSnapshotsToReuse.size());
 			int s = chipsSnapshotsToReuse.size();
 
-			LOGD("s=%d", s);
+//			LOGD("s=%d", s);
 			
 			if (s == 0)
 			{
@@ -526,20 +572,20 @@ CStoredChipsSnapshot *CSnapshotsManager::GetNewChipSnapshot(u32 frame, u32 cycle
 		chipSnapshot->Use(frame, cycle, diskSnapshot);
 	}
 
-	LOGD("CSnapshotsManager::GetNewChipSnapshot: done");
+//	LOGD("CSnapshotsManager::GetNewChipSnapshot: done");
 	return chipSnapshot;
 }
 
 CStoredDiskSnapshot *CSnapshotsManager::GetNewDiskSnapshot(u32 frame, u32 cycle)
 {
-	LOGD("*************************** CSnapshotsManager::GetNewDiskSnapshot: frame=%d        << DISK", frame);
-	LOGD("diskSnapshotsToReuse=%d", diskSnapshotsToReuse.size());
+	LOGS("*************************** CSnapshotsManager::GetNewDiskSnapshot: frame=%d        << DISK", frame);
+//	LOGD("diskSnapshotsToReuse=%d", diskSnapshotsToReuse.size());
 	
 	CStoredDiskSnapshot *diskSnapshot = NULL;
 	
 	if (diskSnapshotsToReuse.size() == 0)
 	{
-		LOGD("...create new CStoredDiskSnapshot");
+//		LOGD("...create new CStoredDiskSnapshot");
 		// create new
 		diskSnapshot = new CStoredDiskSnapshot(this, frame, cycle);
 		if (diskSnapshot == NULL)
@@ -550,7 +596,7 @@ CStoredDiskSnapshot *CSnapshotsManager::GetNewDiskSnapshot(u32 frame, u32 cycle)
 	}
 	else
 	{
-		LOGD("...reuse CStoredDiskSnapshot");
+//		LOGD("...reuse CStoredDiskSnapshot");
 		diskSnapshot = diskSnapshotsToReuse.front();
 		
 		diskSnapshotsToReuse.pop_front();
@@ -559,7 +605,7 @@ CStoredDiskSnapshot *CSnapshotsManager::GetNewDiskSnapshot(u32 frame, u32 cycle)
 		diskSnapshot->Use(frame, cycle);
 	}
 	
-	LOGD("CSnapshotsManager::GetNewDiskSnapshot: done");
+//	LOGD("CSnapshotsManager::GetNewDiskSnapshot: done");
 	return diskSnapshot;
 }
 
@@ -621,33 +667,23 @@ void CSnapshotsManager::RestoreSnapshotByNumFramesOffset(int numFramesOffset)
 
 void CSnapshotsManager::RestoreSnapshotBackstepInstruction()
 {
-	LOGD("CSnapshotsManager::RestoreSnapshotBackstepInstruction");
+	LOGS("CSnapshotsManager::RestoreSnapshotBackstepInstruction");
 	this->LockMutex();
-	LOGD("CSnapshotsManager::RestoreSnapshotBackstepInstruction: locked");
+	LOGS("CSnapshotsManager::RestoreSnapshotBackstepInstruction: locked");
 	
 	int currentFrame = debugInterface->GetEmulationFrameNumber();
 	int restoreToFrame = currentFrame-1;
 	
 	if (restoreToFrame < 0)
 		restoreToFrame = 0;
-	
-	unsigned int viceMainCpuClk = c64d_get_vice_maincpu_clk();
-	unsigned int previousInstructionClk = c64d_previous_instruction_maincpu_clk;
-	unsigned int previous2InstructionClk = c64d_previous2_instruction_maincpu_clk;
-	LOGD(">>>>>>>>>................ currentFrame=%d restoreToFrame=%d previous_inst_clk=%d previous2InstructionClk=%d | mainclk=%d", currentFrame, restoreToFrame, previousInstructionClk, previous2InstructionClk, viceMainCpuClk);
-	
-	if (previousInstructionClk == viceMainCpuClk)
-	{
-		LOGWarning("previousInstructionClk=%d == viceMainCpuClk=%d, previousInstructionClk will be previous2InstructionClk=%d", previousInstructionClk, viceMainCpuClk, previous2InstructionClk);
-		
-		// snapshot was recently restored and debug pause was moved forward or we have no data (i.e. snapshot restored etc)
-		previousInstructionClk = previous2InstructionClk;
-	}
-	
+
+	LOGS(">>>>>>>>>................ currentFrame=%d restoreToFrame=%d", currentFrame, restoreToFrame);
+
+	unsigned int previousInstructionClk = debugInterface->GetPreviousCpuInstructionCycleCounter();
 	
 	debugInterface->snapshotsManager->RestoreSnapshotByFrame(restoreToFrame, previousInstructionClk);
 	
-	LOGD("CSnapshotsManager::RestoreSnapshotBackstepInstruction: unlock");
+	LOGS("CSnapshotsManager::RestoreSnapshotBackstepInstruction: unlock");
 	this->UnlockMutex();
 }
 

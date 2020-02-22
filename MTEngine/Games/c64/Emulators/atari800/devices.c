@@ -292,7 +292,10 @@ static int Devices_ReadDir(char *fullpath, char *filename, int *isdir,
 			struct tm *ft;
 			int hour;
 			char ampm = 'a';
-			ft = localtime(&status.st_mtime);
+			{
+				time_t tim = status.st_mtime;
+				ft = localtime(&tim);
+			}
 			hour = ft->tm_hour;
 			if (hour >= 12) {
 				hour -= 12;
@@ -2264,6 +2267,30 @@ static void Devices_GetBasicCommand(void)
 static void Devices_OpenBasicFile(void)
 {
 	if (BINLOAD_bin_file != NULL) {
+		if (BINLOAD_loading_basic == BINLOAD_LOADING_BASIC_LISTED) {
+			/* determine its type now rather than during the loading */
+			unsigned char buf[2];
+			size_t buf_read;
+			
+			fseek(BINLOAD_bin_file, 0, SEEK_END);
+			fseek(BINLOAD_bin_file, -2, SEEK_CUR);
+			
+			buf_read = fread(buf, sizeof(buf[0]), 2, BINLOAD_bin_file);
+			if (buf_read == 2) {
+				/* simple heuristics - look at the last and possibly one before last character */
+				if (buf[1] == 0x9b) {
+					BINLOAD_loading_basic = BINLOAD_LOADING_BASIC_LISTED_ATARI;
+				} else if (buf[1] == 0x0a) {
+					BINLOAD_loading_basic = BINLOAD_LOADING_BASIC_LISTED_LF;
+					if (buf[0] == 0x0d) {
+						BINLOAD_loading_basic = BINLOAD_LOADING_BASIC_LISTED_CRLF;
+					}
+				} else if (buf[1] == 0x0d) {
+					BINLOAD_loading_basic = BINLOAD_LOADING_BASIC_LISTED_CR;
+				}
+			}
+		}
+		
 		fseek(BINLOAD_bin_file, 0, SEEK_SET);
 		ESC_AddEscRts(ehclos_addr, ESC_EHCLOS, Devices_CloseBasicFile);
 		ESC_AddEscRts(ehread_addr, ESC_EHREAD, Devices_ReadBasicFile);
@@ -2286,22 +2313,10 @@ static void Devices_ReadBasicFile(void)
 		}
 		switch (BINLOAD_loading_basic) {
 		case BINLOAD_LOADING_BASIC_LISTED:
-			switch (ch) {
-			case 0x9b:
-				BINLOAD_loading_basic = BINLOAD_LOADING_BASIC_LISTED_ATARI;
-				break;
-			case 0x0a:
-				BINLOAD_loading_basic = BINLOAD_LOADING_BASIC_LISTED_LF;
-				ch = 0x9b;
-				break;
-			case 0x0d:
-				BINLOAD_loading_basic = BINLOAD_LOADING_BASIC_LISTED_CR_OR_CRLF;
-				ch = 0x9b;
-				break;
-			default:
-				break;
-			}
-			break;
+			/* can't be just LISTED at this point */
+			CPU_regY = 136;
+			CPU_SetN;
+			return;
 		case BINLOAD_LOADING_BASIC_LISTED_CR:
 			if (ch == 0x0d)
 				ch = 0x9b;
@@ -2319,21 +2334,6 @@ static void Devices_ReadBasicFile(void)
 					return;
 				}
 			}
-			if (ch == 0x0d)
-				ch = 0x9b;
-			break;
-		case BINLOAD_LOADING_BASIC_LISTED_CR_OR_CRLF:
-			if (ch == 0x0a) {
-				BINLOAD_loading_basic = BINLOAD_LOADING_BASIC_LISTED_CRLF;
-				ch = fgetc(BINLOAD_bin_file);
-				if (ch == EOF) {
-					CPU_regY = 136;
-					CPU_SetN;
-					return;
-				}
-			}
-			else
-				BINLOAD_loading_basic = BINLOAD_LOADING_BASIC_LISTED_CR;
 			if (ch == 0x0d)
 				ch = 0x9b;
 			break;
@@ -2392,106 +2392,116 @@ int Devices_enable_b_patch = FALSE;
 */
 int Devices_PatchOS(void)
 {
+	/* addr points to the ROM table of handler vectors. */
 	UWORD addr;
 	int i;
 	int patched = FALSE;
-
+	
 	switch (Atari800_os_version) {
-	case SYSROM_A_NTSC:
-	case SYSROM_A_PAL:
-	case SYSROM_B_NTSC:
-	case SYSROM_800_CUSTOM:
-		addr = 0xf0e3;
-		break;
-	case SYSROM_AA00R10:
-		addr = 0xc4fa;
-		break;
-	case SYSROM_AA01R11:
-		addr = 0xc479;
-		break;
-	case SYSROM_BB00R1:
-		addr = 0xc43c;
-		break;
-	case SYSROM_BB01R2:
-	case SYSROM_BB01R3:
-	case SYSROM_BB01R4_OS:
-	case SYSROM_BB01R59:
-	case SYSROM_BB01R59A:
-	case SYSROM_XL_CUSTOM:
-		addr = 0xc42e;
-		break;
-	case SYSROM_BB02R3:
-		addr = 0xc42c;
-		break;
-	case SYSROM_BB02R3V4:
-		addr = 0xc43b;
-		break;
-	case SYSROM_CC01R4:
-		addr = 0xc3eb;
-		break;
-	default:
-		return FALSE;
+		case SYSROM_A_NTSC:
+		case SYSROM_A_PAL:
+		case SYSROM_B_NTSC:
+		case SYSROM_800_CUSTOM:
+			addr = 0xf0e3; /* labeled TBLENT in OS sources */
+			break;
+		case SYSROM_AA00R10:
+			addr = 0xc4fa; /* labeled THAV in OS sources */
+			break;
+		case SYSROM_AA01R11:
+			addr = 0xc479; /* labeled THAV in OS sources */
+			break;
+		case SYSROM_BB00R1:
+			addr = 0xc43c; /* labeled THAV in OS sources */
+			break;
+		case SYSROM_BB01R2:
+		case SYSROM_BB01R3:
+		case SYSROM_BB01R4_OS:
+		case SYSROM_BB01R59:
+		case SYSROM_BB01R59A:
+		case SYSROM_XL_CUSTOM:
+			addr = 0xc42e; /* labeled THAV in OS sources */
+			break;
+		case SYSROM_BB02R3:
+			addr = 0xc42c; /* labeled THAV in OS sources */
+			break;
+		case SYSROM_BB02R3V4:
+			addr = 0xc43b; /* labeled THAV in OS sources */
+			break;
+		case SYSROM_CC01R4:
+			addr = 0xc3eb; /* labeled THAV in OS sources */
+			break;
+#if EMUOS_ALTIRRA
+		case SYSROM_ALTIRRA_800:
+			addr = 0xefd4; /* labeled InitHandlerTable in OS sources */
+			break;
+		case SYSROM_ALTIRRA_XL:
+			addr = 0xee90; /* labeled InitHandlerTable in OS sources */
+			break;
+#endif /* EMUOS_ALTIRRA */
+		default:
+			return FALSE;
 	}
-
+	
 	for (i = 0; i < 5; i++) {
 		UWORD devtab = MEMORY_dGetWord(addr + 1);
 		switch (MEMORY_dGetByte(addr)) {
 #ifdef HAVE_SYSTEM
-		case 'P':
-			if (Devices_enable_p_patch) {
-				ESC_AddEscRts((UWORD) (MEMORY_dGetWord(devtab + Devices_TABLE_OPEN) + 1),
-				                   ESC_PHOPEN, Devices_P_Open);
-				ESC_AddEscRts((UWORD) (MEMORY_dGetWord(devtab + Devices_TABLE_CLOS) + 1),
-				                   ESC_PHCLOS, Devices_P_Close);
-				ESC_AddEscRts((UWORD) (MEMORY_dGetWord(devtab + Devices_TABLE_WRIT) + 1),
-				                   ESC_PHWRIT, Devices_P_Write);
-				ESC_AddEscRts((UWORD) (MEMORY_dGetWord(devtab + Devices_TABLE_STAT) + 1),
-				                   ESC_PHSTAT, Devices_P_Status);
-				ESC_AddEscRts2((UWORD) (devtab + Devices_TABLE_INIT), ESC_PHINIT,
-				                    Devices_P_Init);
-				patched = TRUE;
-			}
-			else {
-				ESC_Remove(ESC_PHOPEN);
-				ESC_Remove(ESC_PHCLOS);
-				ESC_Remove(ESC_PHWRIT);
-				ESC_Remove(ESC_PHSTAT);
-				ESC_Remove(ESC_PHINIT);
-			}
-			break;
+			case 'P':
+				if (Devices_enable_p_patch) {
+					ESC_AddEscRts((UWORD) (MEMORY_dGetWord(devtab + Devices_TABLE_OPEN) + 1),
+								  ESC_PHOPEN, Devices_P_Open);
+					ESC_AddEscRts((UWORD) (MEMORY_dGetWord(devtab + Devices_TABLE_CLOS) + 1),
+								  ESC_PHCLOS, Devices_P_Close);
+					ESC_AddEscRts((UWORD) (MEMORY_dGetWord(devtab + Devices_TABLE_WRIT) + 1),
+								  ESC_PHWRIT, Devices_P_Write);
+					ESC_AddEscRts((UWORD) (MEMORY_dGetWord(devtab + Devices_TABLE_STAT) + 1),
+								  ESC_PHSTAT, Devices_P_Status);
+					ESC_AddEscRts2((UWORD) (devtab + Devices_TABLE_INIT), ESC_PHINIT,
+								   Devices_P_Init);
+					patched = TRUE;
+				}
+				else {
+					ESC_Remove(ESC_PHOPEN);
+					ESC_Remove(ESC_PHCLOS);
+					ESC_Remove(ESC_PHWRIT);
+					ESC_Remove(ESC_PHSTAT);
+					ESC_Remove(ESC_PHINIT);
+				}
+				break;
 #endif
-
-		case 'E':
-			if (BINLOAD_loading_basic) {
-				ehopen_addr = MEMORY_dGetWord(devtab + Devices_TABLE_OPEN) + 1;
-				ehclos_addr = MEMORY_dGetWord(devtab + Devices_TABLE_CLOS) + 1;
-				ehread_addr = MEMORY_dGetWord(devtab + Devices_TABLE_READ) + 1;
-				ehwrit_addr = MEMORY_dGetWord(devtab + Devices_TABLE_WRIT) + 1;
-				ready_ptr = ready_prompt;
-				ESC_AddEscRts(ehwrit_addr, ESC_EHWRIT, Devices_IgnoreReady);
-				patched = TRUE;
-			}
+				
+			case 'E':
+				if (BINLOAD_loading_basic) {
+					ehopen_addr = MEMORY_dGetWord(devtab + Devices_TABLE_OPEN) + 1;
+					ehclos_addr = MEMORY_dGetWord(devtab + Devices_TABLE_CLOS) + 1;
+					ehread_addr = MEMORY_dGetWord(devtab + Devices_TABLE_READ) + 1;
+					ehwrit_addr = MEMORY_dGetWord(devtab + Devices_TABLE_WRIT) + 1;
+					ready_ptr = ready_prompt;
+					ESC_AddEscRts(ehwrit_addr, ESC_EHWRIT, Devices_IgnoreReady);
+					patched = TRUE;
+				}
 #ifdef BASIC
-			else
-				ESC_AddEscRts((UWORD) (MEMORY_dGetWord(devtab + Devices_TABLE_WRIT) + 1),
-				                   ESC_EHWRIT, Devices_E_Write);
-			ESC_AddEscRts((UWORD) (MEMORY_dGetWord(devtab + Devices_TABLE_READ) + 1),
-			                   ESC_EHREAD, Devices_E_Read);
-			patched = TRUE;
-			break;
-		case 'K':
-			ESC_AddEscRts((UWORD) (MEMORY_dGetWord(devtab + Devices_TABLE_READ) + 1),
-			                   ESC_KHREAD, Devices_K_Read);
-			patched = TRUE;
-			break;
+				else
+					ESC_AddEscRts((UWORD) (MEMORY_dGetWord(devtab + Devices_TABLE_WRIT) + 1),
+								  ESC_EHWRIT, Devices_E_Write);
+				ESC_AddEscRts((UWORD) (MEMORY_dGetWord(devtab + Devices_TABLE_READ) + 1),
+							  ESC_EHREAD, Devices_E_Read);
+				patched = TRUE;
+				break;
+			case 'K':
+				ESC_AddEscRts((UWORD) (MEMORY_dGetWord(devtab + Devices_TABLE_READ) + 1),
+							  ESC_KHREAD, Devices_K_Read);
+				patched = TRUE;
+				break;
 #endif
-		default:
-			break;
+			default:
+				break;
 		}
 		addr += 3;				/* Next Device in HATABS */
 	}
 	return patched;
 }
+
 
 /* New handling of H: device.
    Previously we simply replaced C: device in OS with our H:.

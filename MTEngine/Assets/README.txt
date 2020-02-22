@@ -1,4 +1,4 @@
-﻿C64 Debugger and 65XE Debugger by SLAJEREK/SAMAR
+C64 Debugger and 65XE Debugger by SLAJEREK/SAMAR
 ------------------------------------------------
 
 C64 Debugger (C) 2016 Marcin Skoczylas
@@ -14,12 +14,11 @@ C64 Debugger embeds VICE v3.1 C64 emulation engine created by
 the VICE Team and the Atari800 emulator created by the Atari800
 emulator Team.
 
-Atari XL/XE debugging interfaces are in alpha stage.
-
 
 See promo videos here: 
-https://youtu.be/_s6s7qnXBx8 
+https://youtu.be/Xu6EknKA7GE
 https://youtu.be/Lxd296tDdoo
+https://youtu.be/_s6s7qnXBx8
 
 
 * Installation
@@ -58,7 +57,7 @@ Ctrl+F2
 	Show C64 disassembler, memory map and data dump
 Ctrl+F3
 	Show C64 disassembler with hex codes, memory map, data dump 
-        and VIC state
+    and VIC state
 Ctrl+F4
 	Show C64 and 1541 disk disassembler and memory maps
 Ctrl+F5
@@ -207,7 +206,7 @@ CTRL+J
 Mouse wheel
 	Scroll code (faster with Shift pressed)
 
-In Data dump view:
+In Memory Dump view:
 
 Mouse Click on hex value
 	Select hex value
@@ -221,6 +220,8 @@ Enter or 0-9 or A-F
 	Start editing value
 Ctrl+Mouse Click
 	Scroll Disassembly to code address that stored that value
+Ctrl+Shift+Mouse Click
+	Scroll Disassembly to code address that last read that value
 Alt+Shift
 	Change CBM charset
 Ctrl+K
@@ -231,7 +232,7 @@ Ctrl+V
 	Paste hex codes from clipboard into memory. Simple separators are
 	parsed, also the text can contain addresses as 4 hex digits
 
-In Memory map view:
+In Memory Map view:
 
 Memory map shows current values of memory cells. Ctrl+M switches bank to
 RAM. Each memory cell value is mapped into RGB or Gray or None. In RGB mode 
@@ -604,6 +605,9 @@ C <from address> <to address> <destination address>
     compare memory with memory
 H <from address> <to address> <value> [<value> ...]
     compare memory with values
+HC <from address> <to address> <value> [<value> ...]
+    continue hunt, compare memory with values that addresses overlap with previous 
+    results of hunt command
 T <from address> <to address> <destination address>
     copy memory
 L [PRG] [from address] [file name]
@@ -676,6 +680,8 @@ section 9.5: Writing to User Defined Files.
      load symbols (code labels)
 -watch <file>
      load watches
+-debuginfo <file>
+     load debug symbols (*.dbg)");
 -wait <ms>
      wait before performing tasks
 -prg <file>
@@ -686,6 +692,10 @@ section 9.5: Writing to User Defined Files.
      attach TAP/T64
 -crt <file>
      attach cartridge
+-xex <file>
+     load XEX file into memory
+-atr <file>
+     insert ATR disk
 -jmp <addr>
      jmp to address, for example jmp x1000, jmp $1000 or jmp 4096
 -autojmp
@@ -702,7 +712,6 @@ section 9.5: Writing to User Defined Files.
      set sound out device by name or number
 -playlist <file>
      load and start jukebox playlist from json file
--
 -clearsettings
      clear all config settings
 -pass
@@ -1062,8 +1071,10 @@ un-select the C64 Screen.
 * Note about Atari XL/XE
 
 Atari XL/XE debugger is using Atari800 emulator. This integration is still 
-in experimental version and a lot of features are not ready yet. There definitely 
+in beta version and many features are not ready yet. There definitely 
 are bugs and other issues, however main features should be working.
+The overall behaviour of the debugger is very similar to C64 Debugger and
+most of keyboard shortcuts and ideas work the same.
 
 
 * Known bugs
@@ -1081,9 +1092,6 @@ dump view.
 
 Command line arguments are passed to VICE. VICE complains that arguments
 that have been parsed by C64 Debugger are not OK.
-
-On some window managers flavours in Linux system open/save file dialogs are
-behaving incorrectly.
 
 When you move a Sprite in VIC Editor and Sprite is on top of other Sprite they will 
 'pile up', also there are no means to select Sprite below a Sprite... this is not
@@ -1218,9 +1226,16 @@ the use of which is hereby acknowledged:
 The ROM files embedded in the source code are Copyright C by Commodore
  Business Machines.
 
-* Atari800 emulator license is GPL, credits below:
+* Atari800 emulator license is GPL, full credits at
+https://github.com/atari800/atari800/blob/master/DOC/CREDITS
 
-Atari800 emulator version 3.1.0
+Credits below:
+
+Atari800 emulator version 4.2.0
+
+Current active members of the Atari800 development team:
+--------------------------------------------------------
+
 Petr Stehlik        (maintainer)
 Perry McFarlane     (core developer)
 Piotr Fusik         (core developer)
@@ -1230,6 +1245,7 @@ Kostas Nakos        (Windows CE, Android)
 James Wilkinson     (DOS, BeOS, Win32)
 Christian Groessler (Sega Dreamcast)
 Andrey Dj           (Raspberry Pi)
+Miro Kropacek       (Atari Falcon)
 
 * NestopiaUE emulator engine license is GPL, credits below:
 
@@ -1304,10 +1320,50 @@ Champ 65c02 Profiler
 	A 6502/65C02 emulator / profiler that enables you to really get to know 
 	your APPLE ][ HiRes Graphics Mode Demo.
 	(C) Micha Specht. https://github.com/specht/champ
+Native File Dialog
+	Copyright © 2014-2019 Frogtoss Games, Inc. File LICENSE covers all files in this repo.
+	Native File Dialog by Michael Labbe mike@frogtoss.com
+	Tomasz Konojacki for microutf8
+	Denis Kolodin for mingw support.
+	Tom Mason for Zenity support.
 
 *
 * Change log
 *
+
+v0.64.58 (2020/2/22), a celebration of my birthday
+Bug fixed: Some edge cases for timeline and code-backstepping fixed
+Bug fixed: Ctrl+G (go to address) was not working in Disassemble view
+Bug fixed: Memory hunt command in monitor was not finding values when 
+           end address was near end of memory (thanks to Shallan)
+Bug fixed Atari: Joystick up was not properly emulated sometimes 
+                 (thanks to Pajero/MadTeam^Samar)
+Bug fixed Atari: Some keyboard shortcuts were crashing 
+                 (thanks to Pajero/MadTeam^Samar)
+Bug fixed Atari: Changing CPU registers was not reflected when code 
+                 was paused (thanks to Pajero/MadTeam^Samar)
+Bug fixed MacOS: Sometimes C64 65XE Debugger window was not visible 
+                 when started for the first time (thanks to Yosi and Stephen)
+Added: Scroll disassemble to address that read memory value 
+              by Ctrl+Shift+Click (written by Ctrl+Click)
+Added: Version can be checked using --version command line option. 
+       Console output works also on Windows (requested by Marco)
+Added: Scroll monitor console content with mouse scroll
+Added: Hunt-continue, a HC command in monitor that searches of addresses which
+       contain values that were also found in previous hunt command
+Added Atari: Atari800 emulator code base upgraded to version 4.2.0
+Added Atari: Timeline and code back-stepping
+Added Atari: Source code debugging symbols and watches
+Added Atari: PIA and GTIA registers related to joystick
+Added Atari: New layouts available
+Added Atari: Passing command line to running instance and options 
+             to load XEX and ATR
+Added C64: Switch to use VICE monitor in Settings 
+           (requested by Bacchus/Fairlight)
+Added Windows: Possibility to set process priority and boosting (Settings/UI)
+
+And a lot other	fixes and tweaks for the Atari XL/XE debugger!
+
 
 v0.64.56.8 
 Bug fixed: Changing layout was also changing VIC Display's layout border mode
@@ -1332,6 +1388,7 @@ Added MacOS: Window size and position are properly restored after app restart
              (thanks to Mojzesh/Arise for reporting)
 Added MacOS and Linux: Integration via standard fifo named pipe, check specs 
              how to interact remotely with the C64 Debugger (good for UI/IDEs!).
+
 
 v0.64.56.6 (2019/05/17), released at Moonshine Dragons demo party
 Bug Fixed: Changing SID register was not reflected when CPU emulation 

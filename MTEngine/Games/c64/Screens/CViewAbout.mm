@@ -261,8 +261,11 @@ void CViewAbout::RenderAtari800License()
 	fontScale = 1.45f;
 	fontHeight = font->GetCharHeight('@', fontScale) + 1;
 
-	font->BlitTextColor("Atari800 emulator version 3.1.0", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
-	font->BlitTextColor("-------------------------------", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+	// TODO: SCROLL ME + ADD ALL CREDITS All contributors
+	
+	font->BlitTextColor("Atari800 emulator version 4.2.0", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+	font->BlitTextColor("Current active members of the Atari800 development team:", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+	font->BlitTextColor("--------------------------------------------------------", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
 	py += fontHeight;
 
 	font->BlitTextColor("Petr Stehlik        (maintainer)", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
@@ -274,8 +277,9 @@ void CViewAbout::RenderAtari800License()
 	font->BlitTextColor("James Wilkinson     (DOS, BeOS, Win32)", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
 	font->BlitTextColor("Christian Groessler (Sega Dreamcast)", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
 	font->BlitTextColor("Andrey Dj           (Raspberry Pi)", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
+	font->BlitTextColor("Miro Kropacek       (Atari Falcon)", px, py, posZ, fontScale, tr, tg, tb, 1); py += fontHeight;
 	
-//	font->BlitTextColor("", px, py, posZ, fontScale, tr, tg, tb, 1);
+	//	font->BlitTextColor("", px, py, posZ, fontScale, tr, tg, tb, 1);
 	py += fontHeight;
 	
 	fontScale = 0.8f;

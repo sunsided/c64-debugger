@@ -10,4 +10,8 @@ extern HWND	hWnd;
 
 #define HWND_CLASS_NAME "MTEngineOpenGL"
 
+extern bool isWin32ConsoleAttached;
+
+void SYS_AttachConsoleToStdOutIfNotRedirected();
+
 #endif

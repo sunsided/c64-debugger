@@ -24,6 +24,9 @@
 
 #include "atari-config.h"
 #include <string.h>
+#if HAVE_STDINT_H
+# include <stdint.h>
+#endif
 
 #include "antic.h"
 #include "atari.h"
@@ -243,7 +246,7 @@ static UBYTE antic_memory[52];
    This allows special optimisations under certain conditions.
    ------------------------------------------------------------------------ */
 
-static UWORD *scrn_ptr;
+UWORD *scrn_ptr;
 #endif /* !defined(BASIC) && !defined(CURSES_BASIC) */
 
 /* Separate access to XE extended memory ----------------------------------- */
@@ -1746,7 +1749,7 @@ static void draw_antic_2_gtia10(int nchars, const UBYTE *antic_memptr, UWORD *pt
 static void draw_antic_2_gtia11(int nchars, const UBYTE *antic_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr)
 {
 	INIT_ANTIC_2
-	if ((unsigned long) ptr & 2) { /* HSCROL & 1 */
+	if ((uintptr_t) ptr & 2) { /* HSCROL & 1 */
 		prepare_an_antic_2(nchars, antic_memptr, t_pm_scanline_ptr);
 		draw_an_gtia11(t_pm_scanline_ptr);
 		return;
@@ -2257,7 +2260,7 @@ static void prepare_an_antic_e(int nchars, const UBYTE *antic_memptr, const ULON
 static void draw_antic_e_gtia9(int nchars, const UBYTE *antic_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr)
 {
 	ULONG lookup[16];
-	if ((unsigned long) ptr & 2) { /* HSCROL & 1 */
+	if ((uintptr_t) ptr & 2) { /* HSCROL & 1 */
 		prepare_an_antic_e(nchars, antic_memptr, t_pm_scanline_ptr);
 		draw_an_gtia9(t_pm_scanline_ptr);
 		return;
@@ -2402,7 +2405,7 @@ static void prepare_an_antic_f(int nchars, const UBYTE *antic_memptr, const ULON
 
 static void draw_antic_f_gtia9(int nchars, const UBYTE *antic_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr)
 {
-	if ((unsigned long) ptr & 2) { /* HSCROL & 1 */
+	if ((uintptr_t) ptr & 2) { /* HSCROL & 1 */
 		prepare_an_antic_f(nchars, antic_memptr, t_pm_scanline_ptr);
 		draw_an_gtia9(t_pm_scanline_ptr);
 		return;
@@ -2447,7 +2450,7 @@ static void draw_antic_f_gtia10(int nchars, const UBYTE *antic_memptr, UWORD *pt
 #else
 	UWORD lookup_gtia10[16];
 #endif
-	if ((unsigned long) ptr & 2) { /* HSCROL & 1 */
+	if ((uintptr_t) ptr & 2) { /* HSCROL & 1 */
 		prepare_an_antic_f(nchars, antic_memptr, t_pm_scanline_ptr);
 		draw_an_gtia10(t_pm_scanline_ptr);
 		return;
@@ -2503,7 +2506,7 @@ static void draw_antic_f_gtia10(int nchars, const UBYTE *antic_memptr, UWORD *pt
 
 static void draw_antic_f_gtia11(int nchars, const UBYTE *antic_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr)
 {
-	if ((unsigned long) ptr & 2) { /* HSCROL & 1 */
+	if ((uintptr_t) ptr & 2) { /* HSCROL & 1 */
 		prepare_an_antic_f(nchars, antic_memptr, t_pm_scanline_ptr);
 		draw_an_gtia11(t_pm_scanline_ptr);
 		return;
@@ -4087,6 +4090,7 @@ case we have ANTIC_cpu2antic_ptr[ANTIC_WSYNC_C+1]-1 = 8 and in the 2nd =12  */
 
 void ANTIC_StateSave(void)
 {
+	STATESAV_TAG(antic);
 	StateSav_SaveUBYTE(&ANTIC_DMACTL, 1);
 	StateSav_SaveUBYTE(&ANTIC_CHACTL, 1);
 	StateSav_SaveUBYTE(&ANTIC_HSCROL, 1);

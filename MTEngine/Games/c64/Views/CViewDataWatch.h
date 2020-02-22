@@ -9,7 +9,7 @@ class C64;
 class CImageData;
 class CSlrImage;
 class CViewDataDump;
-class C64DebugInterface;
+class CDebugInterface;
 class CSlrFont;
 class CViewMemoryMap;
 class CSlrDataAdapter;
@@ -36,7 +36,7 @@ class CViewDataWatch : public CGuiView
 {
 public:
 	CViewDataWatch(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
-				   CSlrDataAdapter *dataAdapter, CViewMemoryMap *viewMemoryMap, C64DebugInterface *c64);
+				   CSlrDataAdapter *dataAdapter, CViewMemoryMap *viewMemoryMap, CDebugInterface *debugInterface);
 	~CViewDataWatch();
 	
 	virtual void SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY);
@@ -63,7 +63,7 @@ public:
 	CSlrFont *font;
 	float fontSize;
 	
-	C64DebugInterface *debugInterface;
+	CDebugInterface *debugInterface;
 	CViewMemoryMap *viewMemoryMap;
 	CSlrDataAdapter *dataAdapter;
 	

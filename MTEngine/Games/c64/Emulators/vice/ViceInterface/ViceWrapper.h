@@ -84,8 +84,8 @@ void c64d_sound_resume();
 extern uint16 viceCurrentC64PC;
 extern uint16 viceCurrentDiskPC[4];
 
-long mt_SYS_GetCurrentTimeInMillis();
-void mt_SYS_Sleep(long milliseconds);
+unsigned long mt_SYS_GetCurrentTimeInMillis();
+void mt_SYS_Sleep(unsigned long milliseconds);
 void mt_SYS_FatalExit(char *text);
 
 void c64d_mark_c64_cell_read(uint16 addr);
@@ -189,6 +189,9 @@ int c64d_check_snapshot_restore();
 
 int c64d_is_drive_dirty_for_snapshot();
 void c64d_clear_drive_dirty_for_snapshot();
+
+void c64d_uimon_print(char *p);
+void c64d_uimon_print_line(char *p);
 
 void c64d_lock_mutex();
 void c64d_unlock_mutex();

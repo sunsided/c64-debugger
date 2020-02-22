@@ -152,7 +152,7 @@ void SYS_RemoveFileNameExtension(char *fileName)
 	}
 }
 
-void SYS_Sleep(long milliseconds)
+void SYS_Sleep(unsigned long milliseconds)
 {
 	//LOGD("SYS_Sleep %d", milliseconds);
 	

@@ -14,7 +14,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "8D1107260486CEB800E47090"
-               BuildableName = "C64Debugger.app"
+               BuildableName = "65XEDebugger.app"
                BlueprintName = "C64Debugger"
                ReferencedContainer = "container:MTEngine-MacOS.xcodeproj">
             </BuildableReference>
@@ -32,7 +32,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8D1107260486CEB800E47090"
-            BuildableName = "C64Debugger.app"
+            BuildableName = "65XEDebugger.app"
             BlueprintName = "C64Debugger"
             ReferencedContainer = "container:MTEngine-MacOS.xcodeproj">
          </BuildableReference>
@@ -48,6 +48,7 @@
       useCustomWorkingDirectory = "NO"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
+      enableAddressSanitizer = "YES"
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
       <BuildableProductRunnable
@@ -55,7 +56,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8D1107260486CEB800E47090"
-            BuildableName = "C64Debugger.app"
+            BuildableName = "65XEDebugger.app"
             BlueprintName = "C64Debugger"
             ReferencedContainer = "container:MTEngine-MacOS.xcodeproj">
          </BuildableReference>
@@ -71,6 +72,22 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "/Users/mars/Desktop/furroy/hired2.prg"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-watch"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "/Users/mars/Desktop/furroy/hired2.watch"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-xex"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "/Users/mars/Downloads/bronchaosu.xex"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
@@ -243,7 +260,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8D1107260486CEB800E47090"
-            BuildableName = "C64Debugger.app"
+            BuildableName = "65XEDebugger.app"
             BlueprintName = "C64Debugger"
             ReferencedContainer = "container:MTEngine-MacOS.xcodeproj">
          </BuildableReference>

@@ -7,11 +7,16 @@
 #include <vector>
 #include <list>
 
+extern "C" {
+#include "AtariWrapper.h"
+}
+
 class CSlrFont;
 class CSlrDataAdapter;
 class CViewMemoryMap;
 class CSlrMutex;
 class AtariDebugInterface;
+class CViewC64StateSIDWaveform;
 
 class CViewAtariStatePOKEY : public CGuiView, CGuiEditHexCallback
 {
@@ -31,12 +36,19 @@ public:
 	float fontSize;	
 	
 	virtual void SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY);
-	
+	virtual void SetVisible(bool isVisible);
 	virtual void Render();
 	virtual void DoLogic();	
 	
 	virtual bool SetFocus(bool focus);
 	
+	// [sid num][channel num]
+	CViewC64StateSIDWaveform *pokeyChannelWaveform[MAX_NUM_POKEYS][4];
+	CViewC64StateSIDWaveform *pokeyMixWaveform[MAX_NUM_POKEYS];
+
+	int waveformPos;
+	void AddWaveformData(int pokeyNumber, int v1, int v2, int v3, int v4, short mix);
+
 	//
 	virtual void RenderState(float px, float py, float posZ, CSlrFont *fontBytes, float fontSize, int ciaId);
 	

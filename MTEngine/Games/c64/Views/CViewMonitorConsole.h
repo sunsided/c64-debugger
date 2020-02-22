@@ -5,24 +5,28 @@
 #include "CGuiViewConsole.h"
 #include "CViewC64.h"
 #include "SYS_CFileSystem.h"
+#include "CDebugInterface.h"
 
 class CSlrDataAdapter;
 
-class CViewMonitorConsole : public CGuiView, CGuiViewConsoleCallback, CSystemFileDialogCallback
+class CViewMonitorConsole : public CGuiView, CGuiViewConsoleCallback, CSystemFileDialogCallback, CDebugInterfaceCodeMonitorCallback
 {
 public:
-	CViewMonitorConsole(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, C64DebugInterface *debugInterface);
+	CViewMonitorConsole(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, CDebugInterface *debugInterface);
 
-	C64DebugInterface *debugInterface;
+	CDebugInterface *debugInterface;
 	
 	CGuiViewConsole *viewConsole;
 	
 	virtual void SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, float fontScale, int numLines);
 	virtual bool KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl);
-	
+	virtual bool DoScrollWheel(float deltaX, float deltaY);
+
 	virtual void Render();
 
 	virtual void GuiViewConsoleExecuteCommand(char *commandText);
+	
+	void PrintInitPrompt();
 	
 	// tokenizer
 	CSlrString *strCommandText;
@@ -40,7 +44,11 @@ public:
 	void CommandFill();
 	void CommandCompare();
 	void CommandTransfer();
+	
+	std::map<int, int> previousHuntAddrs;
 	void CommandHunt();
+	void CommandHuntContinue();
+	
 	void CommandMemorySave();
 	void CommandMemorySavePRG();
 	void CommandMemorySaveDump();
@@ -88,7 +96,10 @@ public:
 	//
 	void StoreMonitorHistory();
 	void RestoreMonitorHistory();
-	
+
+	// callback
+	virtual void CodeMonitorCallbackPrintLine(CSlrString *printLine);
+
 	//
 	virtual void ActivateView();
 

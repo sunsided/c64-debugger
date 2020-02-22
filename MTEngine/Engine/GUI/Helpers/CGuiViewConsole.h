@@ -8,6 +8,8 @@
 #define MAX_CONSOLE_LINE_LENGTH 512
 #define MAX_COMMAND_LINE_HISTORY	64
 
+#define MAX_CONSOLE_SCROLL_LINES	50000
+
 class CSlrFont;
 class CSlrMutex;
 class CSlrString;
@@ -34,15 +36,16 @@ public:
 	bool hasCommandLine;
 	
 	int numLines;
-	
 	int maxCharsInLine;
+	int numScrollLines;
+	int numLinesInBuffer;
 	
 	float lineHeight;
 	
 	char prompt[256];
 	float promptWidth;
 	
-	std::list<char *> lines;
+	char *lines[MAX_CONSOLE_SCROLL_LINES];
 	
 	char commandLine[MAX_CONSOLE_LINE_LENGTH];
 	int commandLineCursorPos;
@@ -61,11 +64,13 @@ public:
 	
 	void PrintSingleLine(char *text);
 	void PrintLine(const char *format, ...);
+	void PrintLine(CSlrString *str);
 	
 	void PrintString(char *text);
 	
 	virtual bool KeyDown(u32 keyCode);
-	
+	virtual bool DoScrollWheel(float deltaX, float deltaY);
+
 	void Render();
 
 	float textColorR, textColorG, textColorB, textColorA;

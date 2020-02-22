@@ -12,6 +12,7 @@
 #ifdef WIN32
 #include <windows.h>
 #include "SYS_MiniDump.h"
+#include "SYS_Startup.h"
 #else
 #include <sys/time.h>
 #endif
@@ -239,6 +240,11 @@ void SYS_FatalExit(char *fmt, ... )
 #ifndef FINAL_RELEASE
 	abort();
 #endif
+
+#if defined(WIN32)
+	if (isWin32ConsoleAttached) FreeConsole();
+#endif
+
 	exit(-1);
 }
 
@@ -294,6 +300,11 @@ void SYS_FatalExit(const char *fmt, ... )
 #ifndef FINAL_RELEASE
 	abort();
 #endif
+
+#if defined(WIN32)
+	if (isWin32ConsoleAttached) FreeConsole();
+#endif
+
 	exit(-1);
 }
 
@@ -336,6 +347,9 @@ void SYS_FatalExit()
 	GtkMessageBox("Fatal error occured and application must close.", "Fatal Error");
 #endif
 
+#if defined(WIN32)
+	if (isWin32ConsoleAttached) FreeConsole();
+#endif
 
 	exit(-1);
 }
@@ -444,6 +458,10 @@ void SYS_CleanExit(char *fmt, ... )
 //#endif
 //#endif
 	
+#if defined(WIN32)
+	if (isWin32ConsoleAttached) FreeConsole();
+#endif
+
 	exit(0);
 }
 
@@ -469,7 +487,11 @@ void SYS_CleanExit(const char *fmt, ... )
 //	MessageBox(NULL, buffer, "Clean Exit", MB_OK);
 //#endif
 //#endif
-	
+
+#if defined(WIN32)
+	if (isWin32ConsoleAttached) FreeConsole();
+#endif
+
 	exit(0);
 }
 
@@ -486,7 +508,11 @@ void SYS_CleanExit()
 #ifdef IOS
 	GUI_ShowCleanExitAlert("Clean Exit");
 #endif
-	
+
+#if defined(WIN32)
+	if (isWin32ConsoleAttached) FreeConsole();
+#endif
+
 	exit(0);
 }
 

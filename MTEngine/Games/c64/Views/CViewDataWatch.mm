@@ -52,14 +52,14 @@ CDataWatchDetails::~CDataWatchDetails()
 }
 
 CViewDataWatch::CViewDataWatch(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
-									 CSlrDataAdapter *dataAdapter, CViewMemoryMap *viewMemoryMap, C64DebugInterface *c64)
+									 CSlrDataAdapter *dataAdapter, CViewMemoryMap *viewMemoryMap, CDebugInterface *debugInterface)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
 {
 	this->name = "CViewDataWatch";
 
 	viewDataDump = NULL;
 	
-	this->debugInterface = c64;
+	this->debugInterface = debugInterface;
 	this->viewMemoryMap = viewMemoryMap;
 	this->dataAdapter = dataAdapter;
 	
@@ -97,7 +97,7 @@ void CViewDataWatch::AddNewWatch(int addr, char *watchName)
 
 void CViewDataWatch::AddNewWatch(int addr, char *watchName, uint8 representation, int numberOfValues, uint8 bits)
 {
-	LOGD("CViewDataWatch::AddNewWatch: %04x=%s rep=%d vals=%d bits=%d", addr, watchName, representation, numberOfValues, bits);
+	LOGD("CViewDataWatch::AddNewWatch: %04x=\"%s\" rep=%d vals=%d bits=%d", addr, watchName, representation, numberOfValues, bits);
 	
 	guiMain->LockMutex();
 	std::map<int, CDataWatchDetails *>::iterator it = watches.find(addr);

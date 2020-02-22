@@ -163,11 +163,25 @@ void SYS_SetThreadName(char *name)
 #endif
 }
 
+#if defined(MACOS) | defined(LINUX)
+void SYS_SetMainProcessPriorityBoostDisabled(bool isPriorityBoostDisabled)
+{
+	LOGTODO("not implemented SYS_SetMainProcessPriorityBoostDisabled: isPriorityBoostDisabled=%s", STRBOOL(isPriorityBoostDisabled));
+}
+
+void SYS_SetMainProcessPriority(int priority)
+{
+	LOGTODO("not implemented SYS_SetMainProcessPriority: priority=%d", priority);
+}
+#else
+// SYS_SetMainProcessPriority and SYS_SetMainProcessPriorityBoost are implemented in SYS_Startup.cpp on Win32
+#endif
+
 CSlrMutex::CSlrMutex(char *name)
 {
 	strcpy(this->name, name);
 	
-	LOGD("CSlrMutex::CSlrMutex: %s", this->name);
+	//LOGD("CSlrMutex::CSlrMutex: %s", this->name);
 	
 #if defined(USE_WIN32_THREADS)
 	mutex = CreateMutex(
@@ -199,7 +213,7 @@ CSlrMutex::~CSlrMutex()
 {
 	LOGD("CSlrMutex::~CSlrMutex: %s", this->name);
 #if defined(USE_WIN32_THREADS)
-	CloseHandle(mutex);
+//	CloseHandle(mutex);
 #else
 	pthread_mutex_destroy(&mutex);
 	
@@ -208,6 +222,11 @@ CSlrMutex::~CSlrMutex()
 	
 void CSlrMutex::Lock()
 {
+//	if (strcmp(this->name, "CSoundEngine"))
+//	{
+//		LOGD("CSlrMutex::Lock: name=%s lockedLevel=%d (after=%d)", this->name, lockedLevel, lockedLevel+1);
+//	}
+	
 #if defined(USE_WIN32_THREADS)
 	DWORD dwWaitResult = WaitForSingleObject(
 			mutex,    // handle to mutex
@@ -215,7 +234,7 @@ void CSlrMutex::Lock()
 	
 	if (dwWaitResult != 0)
 	{
-		SYS_FatalExit("CSlrMutex::Lock: dwWaitResult=%d", dwWaitResult);
+		SYS_FatalExit("CSlrMutex::Lock: dwWaitResult=%d %s", dwWaitResult, this->name);
 	}
 	
 #else
@@ -233,6 +252,7 @@ void CSlrMutex::Lock()
 			
 			SYS_Sleep(5);
 		}
+		lockedLevel++;
 	
 	#else
 		pthread_mutex_lock(&mutex);
@@ -242,9 +262,13 @@ void CSlrMutex::Lock()
 }
 
 void CSlrMutex::Unlock()
-{	
-#if defined(USE_WIN32_THREADS)
+{
+//	if (strcmp(this->name, "CSoundEngine"))
+//	{
+//		LOGD("CSlrMutex::Unlock: name=%s level before=%d (after=%d)", this->name, lockedLevel, lockedLevel-1);
+//	}
 
+#if defined(USE_WIN32_THREADS)
 	if (!ReleaseMutex(mutex))
 	{
 		LOGError("Release Mutex %s error %d", this->name, GetLastError());

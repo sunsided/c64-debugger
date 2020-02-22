@@ -12,6 +12,7 @@
 class CSlrKeyboardShortcut;
 class CViewC64MenuItem;
 class CViewC64MenuItemOption;
+class CDebugInterface;
 
 class CViewMainMenu : public CGuiView, CGuiButtonCallback, CGuiViewMenuCallback, CSystemFileDialogCallback, CSlrThread
 {
@@ -99,6 +100,9 @@ public:
 	CSlrKeyboardShortcut *kbsBrowseD64;
 //	CViewC64MenuItem *menuItemBrowseD64;
 
+	CSlrKeyboardShortcut *kbsInsertATR;
+	CViewC64MenuItem *menuItemInsertATR;
+
 	CSlrKeyboardShortcut *kbsStartFromDisk;
 	//	CViewC64MenuItem *menuStartFromDisk;
 
@@ -132,6 +136,9 @@ public:
 	CSlrKeyboardShortcut *kbsInsertCartridge;
 	CViewC64MenuItem *menuItemInsertCartridge;
 
+	CSlrKeyboardShortcut *kbsInsertAtariCartridge;
+	CViewC64MenuItem *menuItemInsertAtariCartridge;
+
 	CSlrKeyboardShortcut *kbsSettings;
 	CViewC64MenuItem *menuItemSettings;
 
@@ -155,6 +162,7 @@ public:
 	void InsertD64(CSlrString *path, bool updatePathToD64, bool autoRun, int autoRunEntryNum, bool showLoadAddressInfo);
 	void OpenDialogInsertCartridge();
 	void InsertCartridge(CSlrString *path, bool updatePathToCRT);
+	void OpenDialogInsertAtariCartridge();
 	
 	bool LoadPRG(CSlrString *path, bool autoStart, bool updatePRGFolderPath, bool showAddressInfo, bool forceFastReset);
 	bool LoadPRG(CByteBuffer *byteBuffer, bool autoStart, bool showAddressInfo, bool forceFastReset);
@@ -174,12 +182,13 @@ public:
 	bool SaveReu(CSlrString *path, bool updatePathToReu, bool showDetails);
 
 	//
-	CViewC64MenuItem *menuItemSetFolderWithAtariROMs;
 	void OpenDialogSetFolderWithAtariROMs();
 	
 	bool LoadXEX(CSlrString *path, bool autoStart, bool updatePRGFolderPath, bool showAddressInfo);
 	bool LoadCAS(CSlrString *path, bool autoStart, bool updatePRGFolderPath, bool showAddressInfo);
 	bool InsertAtariCartridge(CSlrString *path, bool autoStart, bool updatePRGFolderPath, bool showAddressInfo);
+	
+	void OpenDialogInsertATR();
 	void InsertATR(CSlrString *path, bool updatePathToATR, bool autoRun, int autoRunEntryNum, bool showLoadAddressInfo);
 		
 	//
@@ -189,7 +198,7 @@ public:
 	bool LoadNES(CSlrString *path, bool updateNESFolderPath);
 
 	
-	void LoadLabelsAndWatches(CSlrString *pathToPRG);
+	void LoadLabelsAndWatches(CSlrString *path, CDebugInterface *debugInterface);
 	void SetBasicEndAddr(int endAddr);
 
 	void OpenDialogStartJukeboxPlaylist();

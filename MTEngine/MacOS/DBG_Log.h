@@ -27,7 +27,6 @@
 
 #define GLOBAL_DEBUG_OFF
 
-
 #define DBGLVL_DEBUG		(1 << 0)
 #define DBGLVL_MAIN			(1 << 1)
 #define DBGLVL_RES			(1 << 2)

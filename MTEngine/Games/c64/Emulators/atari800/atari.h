@@ -9,7 +9,7 @@
 
 /* Fundamental declarations ---------------------------------------------- */
 
-#define Atari800_TITLE  "Atari 800 Emulator, Version 3.1.0"
+#define Atari800_TITLE  "Atari 800 Emulator, Version 4.2.0"
 
 #ifndef FALSE
 #define FALSE  0
@@ -117,6 +117,10 @@ extern int Atari800_collisions_in_skipped_frames;
 
 /* Set to TRUE to run emulated Atari as fast as possible */
 extern int Atari800_turbo;
+
+/* Set to TRUE to start in the monitor. It's up to each port's
+	main.c to implement this (initially only SDL supports it). */
+extern int Atari800_start_in_monitor;
 
 /* Initializes Atari800 emulation core. */
 int Atari800_Initialise(int *argc, char *argv[]);

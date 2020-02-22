@@ -14,6 +14,17 @@ class CImageData;
 
 class CDebuggerEmulatorPlugin;
 class CSnapshotsManager;
+class C64Symbols;
+
+class CViewDisassemble;
+class CViewBreakpoints;
+class CViewDataWatch;
+
+class CDebugInterfaceCodeMonitorCallback
+{
+public:
+	virtual void CodeMonitorCallbackPrintLine(CSlrString *printLine);
+};
 
 // abstract class
 class CDebugInterface
@@ -24,7 +35,8 @@ public:
 	CViewC64 *viewC64;
 	
 	CSnapshotsManager *snapshotsManager;
-	
+	C64Symbols *symbols;
+
 	virtual int GetEmulatorType();
 	virtual CSlrString *GetEmulatorVersionString();
 	virtual CSlrString *GetPlatformNameString();
@@ -46,11 +58,18 @@ public:
 	// frame is painted on canvas and ready to be consumed
 	virtual void DoFrame();
 	
-	virtual void ResetMainCpuCycleCounter();
+	// this is main emulation cpu cycle counter
 	virtual unsigned int GetMainCpuCycleCounter();
+	virtual unsigned int GetPreviousCpuInstructionCycleCounter();
+	
+	// resettable counters for debug purposes
+	virtual void ResetMainCpuDebugCycleCounter();
+	virtual unsigned int GetMainCpuDebugCycleCounter();
 	virtual void ResetEmulationFrameCounter();
 	virtual unsigned int GetEmulationFrameNumber();
 	
+	virtual void RefreshScreenNoCallback();
+
 	virtual int GetScreenSizeX();
 	virtual int GetScreenSizeY();
 	
@@ -143,6 +162,22 @@ public:
 
 	virtual CSlrDataAdapter *GetDataAdapter();
 
+	// UI
+	virtual CViewDisassemble *GetViewMainCpuDisassemble();
+	virtual CViewDisassemble *GetViewDriveDisassemble(int driveNo);	// TODO: make drive cpu generic (create specific debug interface for drive?)
+	virtual CViewBreakpoints *GetViewBreakpoints();
+	virtual CViewDataWatch *GetViewMemoryDataWatch();
+	
+	// this is to get prompt and issue commands to native code monitor of the emulator (i.e. Vice's original monitor)
+	virtual bool IsCodeMonitorSupported();
+	
+	CDebugInterfaceCodeMonitorCallback *codeMonitorCallback;
+	virtual void SetCodeMonitorCallback(CDebugInterfaceCodeMonitorCallback *callback);
+	
+	// @returns NULL when monitor is not supported
+	virtual CSlrString *GetCodeMonitorPrompt();
+	virtual bool ExecuteCodeMonitorCommand(CSlrString *commandStr);
+	
 	//
 	
 	virtual void Shutdown();
@@ -165,6 +200,7 @@ public:
 	virtual void LockIoMutex();
 	virtual void UnlockIoMutex();
 	
+	//
 protected:
 	volatile int debugMode;
 

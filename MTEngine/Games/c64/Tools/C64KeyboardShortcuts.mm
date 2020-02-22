@@ -1,4 +1,5 @@
 #include "C64KeyboardShortcuts.h"
+#include "C64D_Version.h"
 #include "SYS_KeyCodes.h"
 
 C64KeyboardShortcuts::C64KeyboardShortcuts()
@@ -33,19 +34,19 @@ C64KeyboardShortcuts::C64KeyboardShortcuts()
 																 MTKEY_ARROW_RIGHT, false, false, true);
 	AddShortcut(kbsScrubEmulationForwardOneFrame);
 	
-	kbsScrubEmulationBackOneSecond  = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Rewind emulation back one second",
+	kbsScrubEmulationBackOneSecond  = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Rewind emulation back 1s",
 															   MTKEY_ARROW_LEFT, false, true, true);
 	AddShortcut(kbsScrubEmulationBackOneSecond);
 	
-	kbsScrubEmulationForwardOneSecond  = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Forward emulation one second",
+	kbsScrubEmulationForwardOneSecond  = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Forward emulation 1s",
 															   MTKEY_ARROW_RIGHT, false, true, true);
 	AddShortcut(kbsScrubEmulationForwardOneSecond);
 	
-	kbsScrubEmulationBackMultipleFrames  = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Rewind emulation back 10 seconds",
+	kbsScrubEmulationBackMultipleFrames  = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Rewind emulation back 10s",
 																	MTKEY_ARROW_LEFT, true, false, true);
 	AddShortcut(kbsScrubEmulationBackMultipleFrames);
 	
-	kbsScrubEmulationForwardMultipleFrames  = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Forward emulation 10 seconds",
+	kbsScrubEmulationForwardMultipleFrames  = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Forward emulation 10s",
 																	   MTKEY_ARROW_RIGHT, true, false, true);
 	AddShortcut(kbsScrubEmulationForwardMultipleFrames);
 
@@ -88,19 +89,6 @@ C64KeyboardShortcuts::C64KeyboardShortcuts()
 	kbsRunContinueEmulation = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Run/Continue code", MTKEY_F11, false, false, false);
 	AddShortcut(kbsRunContinueEmulation);
 	
-	kbsIsDataDirectlyFromRam = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Show data from RAM", 'm', false, false, true);
-	AddShortcut(kbsIsDataDirectlyFromRam);
-	
-	kbsToggleMulticolorImageDump = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Show multicolor data", 'k', false, false, true);
-	AddShortcut(kbsToggleMulticolorImageDump);
-	
-	//
-	kbsShowRasterBeam = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Show Raster Beam", 'e', false, false, true);
-	AddShortcut(kbsShowRasterBeam);
-
-	kbsSaveScreenImageAsPNG = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Save screenshot as PNG", 'p', true, false, true);
-	AddShortcut(kbsSaveScreenImageAsPNG);
-	
 	//
 	
 	kbsMakeJmp = new CSlrKeyboardShortcut(KBZONE_DISASSEMBLE, "Make JMP", 'j', false, false, true);
@@ -112,6 +100,20 @@ C64KeyboardShortcuts::C64KeyboardShortcuts()
 	kbsGoToAddress = new CSlrKeyboardShortcut(KBZONE_MEMORY, "Go to address", 'g', false, false, true);
 	AddShortcut(kbsGoToAddress);
 	
+	//
+#if defined(RUN_COMMODORE64)
+	kbsIsDataDirectlyFromRam = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Show data from RAM", 'm', false, false, true);
+	AddShortcut(kbsIsDataDirectlyFromRam);
+	
+	kbsToggleMulticolorImageDump = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Show multicolor data", 'k', false, false, true);
+	AddShortcut(kbsToggleMulticolorImageDump);
+
+	kbsShowRasterBeam = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Show Raster Beam", 'e', false, false, true);
+	AddShortcut(kbsShowRasterBeam);
+	
+	kbsSaveScreenImageAsPNG = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Save screenshot as PNG", 'p', true, false, true);
+	AddShortcut(kbsSaveScreenImageAsPNG);
+
 	// vic editor
 	kbsVicEditorCreateNewPicture = new CSlrKeyboardShortcut(KBZONE_VIC_EDITOR, "VIC Editor: New Picture", 'n', false, false, true);
 	AddShortcut(kbsVicEditorCreateNewPicture);
@@ -187,6 +189,9 @@ C64KeyboardShortcuts::C64KeyboardShortcuts()
 	kbsVicEditorSelectNextLayer = new CSlrKeyboardShortcut(KBZONE_VIC_EDITOR, "Select next layer", '`', false, false, false);
 	AddShortcut(kbsVicEditorSelectNextLayer);
 	
+#endif
+	
+
 	//
 	kbsShowWatch = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Show watch", 'w', false, false, true);
 	AddShortcut(kbsShowWatch);

@@ -499,9 +499,19 @@ void CViewVicEditor::Render()
 	// TODO: timeline for C64 only now
 	if (c64SettingsSnapshotsRecordIsActive && c64SettingsTimelineIsActive)
 	{
-		if (viewC64->viewTimeline->IsInside(guiMain->mousePosX, guiMain->mousePosY))
+		if (viewC64->debugInterfaceC64)
 		{
-			viewC64->viewTimeline->Render();
+			if (viewC64->viewC64Timeline->IsInside(guiMain->mousePosX, guiMain->mousePosY))
+			{
+				viewC64->viewC64Timeline->Render();
+			}
+		}
+		if (viewC64->debugInterfaceAtari)
+		{
+			if (viewC64->viewAtariTimeline->IsInside(guiMain->mousePosX, guiMain->mousePosY))
+			{
+				viewC64->viewAtariTimeline->Render();
+			}
 		}
 	}
 
@@ -835,9 +845,9 @@ bool CViewVicEditor::DoTap(GLfloat x, GLfloat y)
 	// timeline for C64 only now
 	if (c64SettingsSnapshotsRecordIsActive && c64SettingsTimelineIsActive)
 	{
-		if (viewC64->viewTimeline->IsInside(x, y))
+		if (viewC64->viewC64Timeline->IsInside(x, y))
 		{
-			return viewC64->viewTimeline->DoTap(x, y);
+			return viewC64->viewC64Timeline->DoTap(x, y);
 		}
 	}
 
@@ -977,9 +987,9 @@ bool CViewVicEditor::DoMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat distY, 
 	// timeline for C64 only now
 	if (c64SettingsSnapshotsRecordIsActive && c64SettingsTimelineIsActive)
 	{
-		if (viewC64->viewTimeline->IsInside(x, y))
+		if (viewC64->viewC64Timeline->IsInside(x, y))
 		{
-			return viewC64->viewTimeline->DoMove(x, y, distX, distY, diffX, diffY);
+			return viewC64->viewC64Timeline->DoMove(x, y, distX, distY, diffX, diffY);
 		}
 	}
 
@@ -1304,7 +1314,7 @@ bool CViewVicEditor::FinishMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat dis
 	// timeline for C64 only now
 	if (c64SettingsSnapshotsRecordIsActive && c64SettingsTimelineIsActive)
 	{
-		viewC64->viewTimeline->FinishMove(x, y, distX, distY, accelerationX, accelerationY);
+		viewC64->viewC64Timeline->FinishMove(x, y, distX, distY, accelerationX, accelerationY);
 	}
 
 	return CGuiView::FinishMove(x, y, distX, distY, accelerationX, accelerationY);
@@ -1332,7 +1342,7 @@ void CViewVicEditor::FinishTouches()
 	// timeline for C64 only now
 	if (c64SettingsSnapshotsRecordIsActive && c64SettingsTimelineIsActive)
 	{
-		viewC64->viewTimeline->FinishTouches();
+		viewC64->viewC64Timeline->FinishTouches();
 	}
 
 	return CGuiView::FinishTouches();
@@ -1569,7 +1579,7 @@ bool CViewVicEditor::DoFinishTap(GLfloat x, GLfloat y)
 	// timeline for C64 only now
 	if (c64SettingsSnapshotsRecordIsActive && c64SettingsTimelineIsActive)
 	{
-		viewC64->viewTimeline->DoFinishTap(x, y);
+		viewC64->viewC64Timeline->DoFinishTap(x, y);
 	}
 
 	return CGuiView::DoFinishTap(x, y);

@@ -106,7 +106,7 @@ void LOG_Init(void)
 	LOG_SetLevel(DBGLVL_ANIMATION, true);
 	LOG_SetLevel(DBGLVL_LEVEL, true);
 	LOG_SetLevel(DBGLVL_XMPLAYER, false);
-	LOG_SetLevel(DBGLVL_AUDIO, true);
+	LOG_SetLevel(DBGLVL_AUDIO, false);
 	LOG_SetLevel(DBGLVL_TODO, true);
 
 	LOG_SetLevel(DBGLVL_PAINT, false);

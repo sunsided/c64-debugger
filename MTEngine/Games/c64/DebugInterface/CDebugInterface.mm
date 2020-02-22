@@ -9,6 +9,8 @@ CDebugInterface::CDebugInterface(CViewC64 *viewC64)
 	this->viewC64 = viewC64;
 
 	snapshotsManager = NULL;
+	symbols = NULL;
+	codeMonitorCallback = NULL;
 
 	isRunning = false;
 	isSelected = false;
@@ -26,7 +28,7 @@ CDebugInterface::CDebugInterface(CViewC64 *viewC64)
 	temporaryBreakpointPC = -1;
 	
 	emulationFrameCounter = 0;
-
+	
 	this->debugMode = DEBUGGER_MODE_RUNNING;
 }
 
@@ -93,14 +95,26 @@ void CDebugInterface::DoFrame()
 	}
 }
 
-void CDebugInterface::ResetMainCpuCycleCounter()
-{
-	LOGError("CDebugInterface::ResetMainCpuCycleCounter: not implemented");
-}
-
 unsigned int CDebugInterface::GetMainCpuCycleCounter()
 {
 	LOGError("CDebugInterface::GetMainCpuCycleCounter: not implemented");
+	return 0;
+}
+
+void CDebugInterface::ResetMainCpuDebugCycleCounter()
+{
+	LOGError("CDebugInterface::ResetMainCpuDebugCycleCounter: not implemented");
+}
+
+unsigned int CDebugInterface::GetMainCpuDebugCycleCounter()
+{
+	LOGError("CDebugInterface::GetMainCpuDebugCycleCounter: not implemented");
+	return 0;
+}
+
+unsigned int CDebugInterface::GetPreviousCpuInstructionCycleCounter()
+{
+	LOGError("CDebugInterface::GetPreviousCpuInstructionCycleCounter: not implemented");
 	return 0;
 }
 
@@ -120,6 +134,12 @@ void CDebugInterface::CreateScreenData()
 	screenImage = new CImageData(512 * this->screenSupersampleFactor, 512 * this->screenSupersampleFactor, IMG_TYPE_RGBA);
 	screenImage->AllocImage(false, true);
 }
+
+void CDebugInterface::RefreshScreenNoCallback()
+{
+	SYS_FatalExit("CDebugInterface::RefreshScreenNoCallback");
+}
+
 
 void CDebugInterface::SetSupersampleFactor(int factor)
 {
@@ -383,6 +403,27 @@ int CDebugInterface::GetTemporaryBreakpointPC()
 }
 
 //
+CViewDisassemble *CDebugInterface::GetViewMainCpuDisassemble()
+{
+	return NULL;
+}
+
+CViewDisassemble *CDebugInterface::GetViewDriveDisassemble(int driveNo)
+{
+	return NULL;
+}
+
+CViewBreakpoints *CDebugInterface::GetViewBreakpoints()
+{
+	return NULL;
+}
+
+CViewDataWatch *CDebugInterface::GetViewMemoryDataWatch()
+{
+	return NULL;
+}
+
+//
 void CDebugInterface::RegisterPlugin(CDebuggerEmulatorPlugin *plugin)
 {
 	this->plugins.push_back(plugin);
@@ -394,15 +435,38 @@ void CDebugInterface::RemovePlugin(CDebuggerEmulatorPlugin *plugin)
 }
 
 //
+bool CDebugInterface::IsCodeMonitorSupported()
+{
+	return false;
+}
+
+void CDebugInterface::SetCodeMonitorCallback(CDebugInterfaceCodeMonitorCallback *callback)
+{
+	this->codeMonitorCallback = callback;	
+}
+
+CSlrString *CDebugInterface::GetCodeMonitorPrompt()
+{
+	// monitor is not supported
+	return NULL;
+}
+
+bool CDebugInterface::ExecuteCodeMonitorCommand(CSlrString *commandStr)
+{
+	// monitor is not supported
+	return false;
+}
+
+//
 void CDebugInterface::LockMutex()
 {
-	//	LOGD("CDebugInterface::LockMutex");
+//		LOGD("CDebugInterface::LockMutex");
 	breakpointsMutex->Lock();
 }
 
 void CDebugInterface::UnlockMutex()
 {
-	//	LOGD("CDebugInterface::UnlockMutex");
+//		LOGD("CDebugInterface::UnlockMutex");
 	breakpointsMutex->Unlock();
 }
 
@@ -425,3 +489,9 @@ void CDebugInterface::UnlockIoMutex()
 {
 	ioMutex->Unlock();
 }
+
+void CDebugInterfaceCodeMonitorCallback::CodeMonitorCallbackPrintLine(CSlrString *printLine)
+{
+	LOGError("CDebugInterfaceCodeMonitorCallback::CodeMonitorCallbackPrintLine: not implemented callback");
+}
+

@@ -99,6 +99,9 @@ static ui_menu_retval_t sdl_ui_menu_item_activate(ui_menu_entry_t *item);
 
 static void sdl_ui_putchar(BYTE c, int pos_x, int pos_y)
 {
+	return;
+
+	/*
     int x, y;
     BYTE fontchar;
     BYTE *font_pos;
@@ -117,6 +120,7 @@ static void sdl_ui_putchar(BYTE c, int pos_x, int pos_y)
         ++font_pos;
         draw_pos += menu_draw.pitch;
     }
+	*/
 }
 
 static int sdl_ui_print_wrap(const char *text, int pos_x, int *pos_y_ptr)
@@ -758,13 +762,17 @@ void sdl_ui_activate_pre_action(void)
 
 void sdl_ui_activate_post_action(void)
 {
-    int warp_state;
+	LOGTODO("sdl_ui_activate_post_action");
+	return;
+	
+
+	/*int warp_state;
 
     sdl_menu_state = 0;
     ui_check_mouse_cursor();
     //SDL_EnableKeyRepeat(0, 0);
 
-    /* Do not resume sound if in warp mode */
+    // Do not resume sound if in warp mode
     resources_get_int("WarpMode", &warp_state);
     if (warp_state == 0) {
         sound_resume();
@@ -774,8 +782,9 @@ void sdl_ui_activate_post_action(void)
 //        sdl_vsid_activate();
 //    }
 
-    /* Force a video refresh */
+    // Force a video refresh
     raster_force_repaint(sdl_active_canvas->parent_raster);
+	*/
 }
 
 void sdl_ui_init_draw_params(void)
@@ -929,6 +938,9 @@ void sdl_ui_activate(void)
 
 void sdl_ui_clear(void)
 {
+	return;
+	
+	/*
     int x, y;
     const char c = ' ';
 
@@ -936,7 +948,7 @@ void sdl_ui_clear(void)
         for (x = 0; x < menu_draw.max_text_x; ++x) {
             sdl_ui_putchar(c, x, y);
         }
-    }
+    }*/
 }
 
 int sdl_ui_hotkey(ui_menu_entry_t *item)
@@ -1158,7 +1170,8 @@ ui_menu_entry_t *sdl_ui_get_main_menu(void)
 
 void sdl_ui_refresh(void)
 {
-    video_canvas_refresh_all(sdl_active_canvas);
+	LOGTODO("sdl_ui_refresh");
+//    video_canvas_refresh_all(sdl_active_canvas);
 }
 
 void sdl_ui_scroll_screen_up(void)

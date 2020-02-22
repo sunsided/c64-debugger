@@ -68,6 +68,7 @@ extern uint8 c64SettingsMemoryMarkersStyle;
 extern bool c64SettingsUseMultiTouchInMemoryMap;
 extern bool c64SettingsMemoryMapInvertControl;
 extern uint8 c64SettingsMemoryMapRefreshRate;
+extern int c64SettingsMemoryMapFadeSpeed;
 
 extern uint8 c64SettingsC64Model;
 extern int c64SettingsEmulationMaximumSpeed;
@@ -123,7 +124,8 @@ extern CSlrString *c64SettingsPathToPRG;
 extern CSlrString *c64SettingsDefaultPRGFolder;
 extern CSlrString *c64SettingsPathToCartridge;
 extern CSlrString *c64SettingsDefaultCartridgeFolder;
-extern CSlrString *c64SettingsPathToSnapshot;
+extern CSlrString *c64SettingsPathToViceSnapshot;
+extern CSlrString *c64SettingsPathToAtariSnapshot;
 extern CSlrString *c64SettingsDefaultSnapshotsFolder;
 extern CSlrString *c64SettingsDefaultMemoryDumpFolder;
 extern CSlrString *c64SettingsPathToC64MemoryMapFile;
@@ -138,6 +140,7 @@ extern CSlrString *c64SettingsDefaultVicEditorFolder;
 
 extern CSlrString *c64SettingsPathToAtariROMs;
 
+extern bool c64SettingsAtariPokeyStereo;
 extern CSlrString *c64SettingsPathToATR;
 extern CSlrString *c64SettingsDefaultATRFolder;
 extern CSlrString *c64SettingsPathToXEX;
@@ -155,7 +158,13 @@ extern CSlrString *c64SettingsPathToWatches;
 extern CSlrString *c64SettingsPathToBreakpoints;
 extern CSlrString *c64SettingsPathToDebugInfo;
 
+extern bool c64SettingsUseNativeEmulatorMonitor;
+
 extern CSlrString *c64SettingsPathToJukeboxPlaylist;
+
+// priority
+extern bool c64SettingsIsProcessPriorityBoostDisabled;
+extern u8 c64SettingsProcessPriority;
 
 // profiler
 extern CSlrString *c64SettingsC64ProfilerFileOutputPath;

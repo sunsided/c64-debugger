@@ -73,9 +73,9 @@ int Screen_visible_x2 = 360;			/* 0 .. Screen_WIDTH */
 int Screen_visible_y2 = Screen_HEIGHT;	/* 0 .. Screen_HEIGHT */
 
 int Screen_show_atari_speed = FALSE;
-int Screen_show_disk_led = TRUE;
+int Screen_show_disk_led = FALSE;
 int Screen_show_sector_counter = FALSE;
-int Screen_show_1200_leds = TRUE;
+int Screen_show_1200_leds = FALSE; //TRUE;
 
 #ifdef HAVE_LIBPNG
 #define DEFAULT_SCREENSHOT_FILENAME_FORMAT "atari%03d.png"
@@ -162,11 +162,12 @@ int Screen_Initialise(int *argc, char *argv[])
 	if (help_only)
 		return TRUE;
 
-	if (Screen_atari == NULL) { /* platform-specific code can initialize it in theory */
+	if (Screen_atari == NULL) { /* platform-specific code can initialize it */
 		Screen_atari = (ULONG *) Util_malloc(Screen_HEIGHT * Screen_WIDTH);
 		/* Clear the screen. */
 		memset(Screen_atari, 0, Screen_HEIGHT * Screen_WIDTH);
 #ifdef DIRTYRECT
+		// TODO: workaround fix bug when sometimes snapshot is causing crash in antic_draw4
 		Screen_dirty = (UBYTE *) Util_malloc(Screen_HEIGHT * Screen_WIDTH / 8);
 		Screen_EntireDirty();
 #endif

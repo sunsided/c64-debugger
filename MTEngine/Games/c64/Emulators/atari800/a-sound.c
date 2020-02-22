@@ -148,6 +148,16 @@ int Sound_Initialise(int *argc, char *argv[])
 				a_i = (Sound_desired.freq = Util_sscandec(argv[++i])) == -1;
 			else a_m = TRUE;
 		}
+		else if (strcmp(argv[i], "-volume") == 0) {
+			if (i_a) {
+				int val = Util_sscandec(argv[++i]);
+				if (val == -1)
+					a_i = TRUE;
+				else
+					POKEYSND_SetVolume(val);
+			}
+			else a_m = TRUE;
+		}
 		else if (strcmp(argv[i], "-audio16") == 0)
 			Sound_desired.sample_size = 2;
 		else if (strcmp(argv[i], "-audio8") == 0)
@@ -174,6 +184,7 @@ int Sound_Initialise(int *argc, char *argv[])
 				Log_print("\t-sound               Enable sound");
 				Log_print("\t-nosound             Disable sound");
 				Log_print("\t-dsprate <rate>      Set sound output frequency in Hz");
+				Log_print("\t-volume <0 .. 100>   Set sound output volume");
 				Log_print("\t-audio16             Set sound output format to 16-bit");
 				Log_print("\t-audio8              Set sound output format to 8-bit");
 				Log_print("\t-snd-buflen <ms>     Set length of the hardware sound buffer in milliseconds");
@@ -435,8 +446,13 @@ static void UpdateSyncBuffer(void)
 		   makes place in the buffer. */
 		do {
 			PLATFORM_SoundUnlock();
-			/* Sleep for the duration of one full HW buffer. */
-			Util_sleep((double)Sound_out.buffer_frames / Sound_out.freq);
+			
+//			LOGTODO("check me: sleep");
+//#ifndef __MINT__	/* this does more harm than good on Atari */
+//			/* Sleep for the duration of one full HW buffer. */
+//			Util_sleep((double)Sound_out.buffer_frames / Sound_out.freq);
+//#endif
+			
 			PLATFORM_SoundLock();
 #ifndef SOUND_CALLBACK
 			WriteOut(); /* Write to audio buffer as much as possible. */

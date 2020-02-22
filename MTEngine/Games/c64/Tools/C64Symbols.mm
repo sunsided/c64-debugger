@@ -18,8 +18,9 @@
 #include "utf8.h"
 #include "std_membuf.h"
 
-C64Symbols::C64Symbols()
+C64Symbols::C64Symbols(CDebugInterface *debugInterface)
 {
+	this->debugInterface = debugInterface;
 	this->asmSource = NULL;
 }
 
@@ -27,7 +28,7 @@ C64Symbols::~C64Symbols()
 {
 }
 
-void C64Symbols::ParseSymbols(CSlrString *fileName, CDebugInterface *debugInterface)
+void C64Symbols::ParseSymbols(CSlrString *fileName)
 {
 	char *fname = fileName->GetStdASCII();
 	
@@ -43,31 +44,41 @@ void C64Symbols::ParseSymbols(CSlrString *fileName, CDebugInterface *debugInterf
 	}
 	delete [] fname;
 
-	ParseSymbols(file, debugInterface);
+	ParseSymbols(file);
 
 	delete file;
 }
 
-void C64Symbols::ParseSymbols(CSlrFile *file, CDebugInterface *debugInterface)
+void C64Symbols::ParseSymbols(CSlrFile *file)
 {
 	CByteBuffer *byteBuffer = new CByteBuffer(file, false);
 	
-	ParseSymbols(byteBuffer, debugInterface);
+	ParseSymbols(byteBuffer);
 	
 	delete byteBuffer;
 }
 
-void C64Symbols::DeleteAllSymbols(CDebugInterface *debugInterface)
+void C64Symbols::DeleteAllSymbols()
 {
 	debugInterface->LockMutex();
 
-	viewC64->viewC64Disassemble->DeleteCodeLabels();
-	viewC64->viewDrive1541Disassemble->DeleteCodeLabels();
-	
+	CViewDisassemble *viewDisassembleMainCpu = debugInterface->GetViewMainCpuDisassemble();
+	CViewDisassemble *viewDisassembleDrive = debugInterface->GetViewDriveDisassemble(0);
+
+	if (viewDisassembleMainCpu)
+	{
+		viewDisassembleMainCpu->DeleteCodeLabels();
+	}
+
+	if (viewDisassembleDrive)
+	{
+		viewDisassembleDrive->DeleteCodeLabels();
+	}
+
 	debugInterface->UnlockMutex();
 }
 
-void C64Symbols::ParseSymbols(CByteBuffer *byteBuffer, CDebugInterface *debugInterface)
+void C64Symbols::ParseSymbols(CByteBuffer *byteBuffer)
 {
 	LOGM("C64Symbols::ParseSymbols");
 	
@@ -189,13 +200,22 @@ void C64Symbols::ParseSymbols(CByteBuffer *byteBuffer, CDebugInterface *debugInt
 			
 			LOGD("labelNameStr=%s  addr=%04x", labelNameStr, addr);
 
+			CViewDisassemble *viewDisassembleMainCpu = debugInterface->GetViewMainCpuDisassemble();
+			CViewDisassemble *viewDisassembleDrive = debugInterface->GetViewDriveDisassemble(0);
+
 			if (deviceId == C64_SYMBOL_DEVICE_COMMODORE)
 			{
-				viewC64->viewC64Disassemble->AddNewCodeLabel(addr, labelNameStr);
+				if (viewDisassembleMainCpu)
+				{
+					viewDisassembleMainCpu->AddNewCodeLabel(addr, labelNameStr);
+				}
 			}
 			else if (deviceId == C64_SYMBOL_DEVICE_DRIVE1541)
 			{
-				viewC64->viewDrive1541Disassemble->AddNewCodeLabel(addr, labelNameStr);
+				if (viewDisassembleDrive)
+				{
+					viewDisassembleDrive->AddNewCodeLabel(addr, labelNameStr);
+				}
 			}
 		}
 		else if (words->size() > 3)
@@ -232,7 +252,8 @@ void C64Symbols::ParseSymbols(CByteBuffer *byteBuffer, CDebugInterface *debugInt
 				}
 				
 				LOGD("labelNameStr=%s  addr=%04x", labelNameStr, addr);
-				viewC64->viewC64Disassemble->AddNewCodeLabel(addr, labelNameStr);
+				CViewDisassemble *viewDisassembleMainCpu = debugInterface->GetViewMainCpuDisassemble();
+				viewDisassembleMainCpu->AddNewCodeLabel(addr, labelNameStr);
 				
 				delete []addrStr;
 //				delete []labelNameStr;	TODO: AddCodeLabel does not allocate own string
@@ -260,8 +281,14 @@ void C64Symbols::ParseSymbols(CByteBuffer *byteBuffer, CDebugInterface *debugInt
 	}
 
 	// update positions
-	viewC64->viewC64Disassemble->UpdateLabelsPositions();
-	viewC64->viewDrive1541Disassemble->UpdateLabelsPositions();
+	CViewDisassemble *viewDisassembleMainCpu = debugInterface->GetViewMainCpuDisassemble();
+	CViewDisassemble *viewDisassembleDrive = debugInterface->GetViewDriveDisassemble(0);
+
+	if (viewDisassembleMainCpu)
+		viewDisassembleMainCpu->UpdateLabelsPositions();
+	
+	if (viewDisassembleDrive)
+		viewDisassembleDrive->UpdateLabelsPositions();
 	
 	debugInterface->UnlockMutex();
 	
@@ -269,14 +296,14 @@ void C64Symbols::ParseSymbols(CByteBuffer *byteBuffer, CDebugInterface *debugInt
 }
 
 
-void C64Symbols::DeleteAllBreakpoints(CDebugInterface *debugInterface)
+void C64Symbols::DeleteAllBreakpoints()
 {
 	debugInterface->LockMutex();
 	debugInterface->ClearBreakpoints();
 	debugInterface->UnlockMutex();
 }
 
-void C64Symbols::ParseBreakpoints(CSlrString *fileName, CDebugInterface *debugInterface)
+void C64Symbols::ParseBreakpoints(CSlrString *fileName)
 {
 	char *fname = fileName->GetStdASCII();
 	CSlrFileFromOS *file = new CSlrFileFromOS(fname);
@@ -291,13 +318,13 @@ void C64Symbols::ParseBreakpoints(CSlrString *fileName, CDebugInterface *debugIn
 	
 	CByteBuffer *byteBuffer = new CByteBuffer(file, false);
 	
-	ParseBreakpoints(byteBuffer, debugInterface);
+	ParseBreakpoints(byteBuffer);
 	
 	delete byteBuffer;
 	delete file;
 }
 
-void C64Symbols::ParseBreakpoints(CByteBuffer *byteBuffer, CDebugInterface *debugInterface)
+void C64Symbols::ParseBreakpoints(CByteBuffer *byteBuffer)
 {
 	LOGM("C64Symbols::ParseBreakpoints");
 	
@@ -593,21 +620,39 @@ void C64Symbols::ParseBreakpoints(CByteBuffer *byteBuffer, CDebugInterface *debu
 	
 	debugInterface->UnlockMutex();
 	
-	viewC64->viewC64Breakpoints->UpdateRenderBreakpoints();
+	CViewBreakpoints *viewBreakpoints = debugInterface->GetViewBreakpoints();
+	if (viewBreakpoints)
+	{
+		viewBreakpoints->UpdateRenderBreakpoints();
+	}
 	
 	LOGD("C64Symbols::ParseBreakpoints: done");
 }
 
 ///
-void C64Symbols::DeleteAllWatches(CDebugInterface *debugInterface)
+void C64Symbols::DeleteAllWatches()
 {
-	debugInterface->LockMutex();
-	viewC64->viewC64MemoryDataWatch->DeleteAllWatches();
-	viewC64->viewDrive1541MemoryDataWatch->DeleteAllWatches();
-	debugInterface->UnlockMutex();
+	LOGD("C64Symbols::DeleteAllWatches");
+	
+	// bug: this freezes gui at startup, and is not needed
+//	debugInterface->LockMutex();
+	
+	CViewDataWatch *viewMainCpuDataWatch = debugInterface->GetViewMemoryDataWatch();
+	if (viewMainCpuDataWatch)
+	{
+		viewMainCpuDataWatch->DeleteAllWatches();
+	}
+	
+	// TODO: this below breaks the idea, we *must* have a specific debug interface for the C64 drives
+	if (viewC64->debugInterfaceC64)
+	{
+		viewC64->viewDrive1541MemoryDataWatch->DeleteAllWatches();
+	}
+	
+//	debugInterface->UnlockMutex();
 }
 
-void C64Symbols::ParseWatches(CSlrString *fileName, CDebugInterface *debugInterface)
+void C64Symbols::ParseWatches(CSlrString *fileName)
 {
 	char *fname = fileName->GetStdASCII();
 	
@@ -623,28 +668,29 @@ void C64Symbols::ParseWatches(CSlrString *fileName, CDebugInterface *debugInterf
 	}
 	delete [] fname;
 	
-	ParseWatches(file, debugInterface);
+	ParseWatches(file);
 	
 	delete file;
 }
 
-void C64Symbols::ParseWatches(CSlrFile *file, CDebugInterface *debugInterface)
+void C64Symbols::ParseWatches(CSlrFile *file)
 {
 	CByteBuffer *byteBuffer = new CByteBuffer(file, false);
 	
-	ParseWatches(byteBuffer, debugInterface);
+	ParseWatches(byteBuffer);
 	
 	delete byteBuffer;
 }
 
 
-void C64Symbols::ParseWatches(CByteBuffer *byteBuffer, CDebugInterface *debugInterface)
+void C64Symbols::ParseWatches(CByteBuffer *byteBuffer)
 {
 	LOGM("C64Symbols::ParseWatches");
 	
-	LOGTODO("ParseWatches: viewC64->viewC64MemoryDataWatch->AddWatch: make generic for Atari");
+	LOGTODO("ParseWatches: viewC64->viewC64MemoryDataWatch->AddWatch: make generic for C64 drives (TODO: drive debug interface)");
 
-	debugInterface->LockMutex();
+	// bug: this freezes gui at startup, and is not needed
+//	debugInterface->LockMutex();
 	
 	byteBuffer->removeCRLFinQuotations();
 	
@@ -687,19 +733,20 @@ void C64Symbols::ParseWatches(CByteBuffer *byteBuffer, CDebugInterface *debugInt
 		
 		std::vector<CSlrString *> *words = str->SplitWithChars(splitChars);
 		
-//		for (int i = 0; i < words->size(); i++)
-//		{
-//			LOGD("...words[%d]", i);
-//			(*words)[i]->DebugPrint("...=");
-//		}
+		LOGD("words->size=%d", words->size());
+		for (int i = 0; i < words->size(); i++)
+		{
+			LOGD("...words[%d]", i);
+			(*words)[i]->DebugPrint("...=");
+		}
 		
+		LOGD("------");
+
 		if (words->size() < 3)
 		{
 			lineNum++;
 			continue;
 		}
-		
-		LOGD("words->size=%d", words->size());
 		
 		CSlrString *dataSlrStr = (*words)[0];
 		
@@ -728,13 +775,11 @@ void C64Symbols::ParseWatches(CByteBuffer *byteBuffer, CDebugInterface *debugInt
 //				LOGD("...dataWords[%d]", i);
 //				(*dataWords)[i]->DebugPrint("...=");
 //			}
-
-			CSlrString *addrSlrStr = dataSlrStr; //(*dataWords)[0];
-			char *addrStr = addrSlrStr->GetStdASCII();
-			LOGD("addrStr='%s'", addrStr);
 			
-			int addr;
-			sscanf((addrStr+1), "%x", &addr);
+			CSlrString *addrSlrStr = dataSlrStr; //(*dataWords)[0];
+			int addr = addrSlrStr->ToIntFromHex();
+			
+			LOGD("addr=%x", addr);
 			
 			// Not finished / TODO:
 //			int representation = WATCH_REPRESENTATION_HEX;
@@ -791,10 +836,13 @@ void C64Symbols::ParseWatches(CByteBuffer *byteBuffer, CDebugInterface *debugInt
 //				}
 //			}
 			
-			viewC64->viewC64MemoryDataWatch->AddNewWatch(addr, watchNameStr); //, representation, numberOfValues, bits);
+			CViewDataWatch *viewMemoryDataWatch = debugInterface->GetViewMemoryDataWatch();
+			if (viewMemoryDataWatch)
+			{
+				viewMemoryDataWatch->AddNewWatch(addr, watchNameStr); //, representation, numberOfValues, bits);
+			}
 			
 			delete [] watchNameStr;
-			delete [] addrStr;
 
 		}
 		else if (words->size() > 3)
@@ -832,13 +880,17 @@ void C64Symbols::ParseWatches(CByteBuffer *byteBuffer, CDebugInterface *debugInt
 				
 				LOGD("watchNameStr=%s  addr=%04x", labelNameStr, addr);
 				
-				//				LOGTODO("!!!!!!!!!!!!!!!!!! REMOVE ME!!!!!!!!!!!!");
+				//				LOGTODO("!!!!!!!!!!!!!!!!!! REMOVE ME / TESTING VIEW !!!!!!!!!!!!");
 				//				if (addr >= 0x0900 && addr < 0x0B60)
 				//				{
 				//					viewC64->viewC64MemoryDataWatch->AddWatch(labelNameStr, addr);
 				//				}
 				
-				viewC64->viewC64MemoryDataWatch->AddNewWatch(addr, labelNameStr);
+				CViewDataWatch *viewMemoryDataWatch = debugInterface->GetViewMemoryDataWatch();
+				if (viewMemoryDataWatch)
+				{
+					viewMemoryDataWatch->AddNewWatch(addr, labelNameStr);
+				}
 				
 				delete []addrStr;
 				delete []labelNameStr;
@@ -867,15 +919,18 @@ void C64Symbols::ParseWatches(CByteBuffer *byteBuffer, CDebugInterface *debugInt
 	
 	//LOGTODO("update watches max length for display");
 	
-	debugInterface->UnlockMutex();
+//	debugInterface->UnlockMutex();
 	
 	LOGD("C64Symbols::Watches: done");
 }
 
 ///
 
-void C64Symbols::ParseSourceDebugInfo(CSlrString *fileName, CDebugInterface *debugInterface)
+void C64Symbols::ParseSourceDebugInfo(CSlrString *fileName)
 {
+	LOGM("C64Symbols::ParseSourceDebugInfo");
+	fileName->DebugPrint("C64Symbols::ParseSourceDebugInfo fileName=");
+	
 	char *fname = fileName->GetStdASCII();
 	CSlrFileFromOS *file = new CSlrFileFromOS(fname);
 	
@@ -889,22 +944,22 @@ void C64Symbols::ParseSourceDebugInfo(CSlrString *fileName, CDebugInterface *deb
 	
 	CByteBuffer *byteBuffer = new CByteBuffer(file, false);
 	
-	ParseSourceDebugInfo(byteBuffer, debugInterface);
+	ParseSourceDebugInfo(byteBuffer);
 	
 	delete byteBuffer;
 	delete file;
 }
 
-void C64Symbols::ParseSourceDebugInfo(CSlrFile *file, CDebugInterface *debugInterface)
+void C64Symbols::ParseSourceDebugInfo(CSlrFile *file)
 {
 	CByteBuffer *byteBuffer = new CByteBuffer(file, false);
 	
-	ParseSourceDebugInfo(byteBuffer, debugInterface);
+	ParseSourceDebugInfo(byteBuffer);
 	
 	delete byteBuffer;
 }
 
-void C64Symbols::DeleteSourceDebugInfo(CDebugInterface *debugInterface)
+void C64Symbols::DeleteSourceDebugInfo()
 {
 	debugInterface->LockMutex();
 	
@@ -917,9 +972,9 @@ void C64Symbols::DeleteSourceDebugInfo(CDebugInterface *debugInterface)
 	debugInterface->UnlockMutex();
 }
 
-void C64Symbols::ParseSourceDebugInfo(CByteBuffer *byteBuffer, CDebugInterface *debugInterface)
+void C64Symbols::ParseSourceDebugInfo(CByteBuffer *byteBuffer)
 {
-	LOGM("C64Symbols::ParseSourceDebugInfo");
+	LOGM("C64Symbols::ParseSourceDebugInfo: byteBuffer=%x", byteBuffer);
 	
 	debugInterface->LockMutex();
 	
@@ -930,6 +985,7 @@ void C64Symbols::ParseSourceDebugInfo(CByteBuffer *byteBuffer, CDebugInterface *
 		asmSource = NULL;
 	}
 	
+	LOGD("create asmSource C64AsmSourceSymbols");
 	this->asmSource = new C64AsmSourceSymbols(byteBuffer, debugInterface);
 	
 	debugInterface->UnlockMutex();

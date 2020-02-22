@@ -6,8 +6,17 @@
 #include "CGuiEditHex.h"
 #include "ViceWrapper.h"
 #include "CGuiButtonSwitch.h"
+#include "C64D_Version.h"
 #include <vector>
 #include <list>
+
+// TODO: generalize this
+#if !defined(RUN_ATARI)
+#define SID_WAVEFORM_LENGTH 1024
+#else
+// ATARI
+#define SID_WAVEFORM_LENGTH 128
+#endif
 
 class CSlrFont;
 class CSlrDataAdapter;

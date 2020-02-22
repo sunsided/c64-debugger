@@ -110,8 +110,8 @@ public:
 	//
 	CSlrKeyboardShortcut *kbsResetCpuCycleAndFrameCounters;
 	CViewC64MenuItem *menuItemResetCpuCycleAndFrameCounters;
-	void ResetMainCpuCycleAndFrameCounters();
-	void ResetMainCpuCycleCounter();
+	void ResetMainCpuDebugCycleAndFrameCounters();
+	void ResetMainCpuDebugCycleCounter();
 	void ResetEmulationFrameCounter();
 
 	CSlrKeyboardShortcut *kbsDumpC64Memory;
@@ -143,6 +143,8 @@ public:
 	void C64ProfilerStartStop();
 	bool isProfilingC64;
 
+	CViewC64MenuItemOption *menuItemUseNativeEmulatorMonitor;
+
 	//
 	
 	CViewC64MenuItemOption *menuItemMemoryCellsColorStyle;
@@ -172,6 +174,8 @@ public:
 	std::vector<CSlrString *> *optionsAtariRamSizeXL;
 	std::vector<CSlrString *> *optionsAtariRamSize5200;
 	void UpdateAtariRamSizeOptions();
+
+	CViewC64MenuItemOption *menuItemAtariPokeyStereo;
 
 	void ToggleAutoLoadFromInsertedDisk();
 	void ToggleAutoJmpAlwaysToLoadedPRGAddress();
@@ -303,6 +307,8 @@ public:
 	virtual void SystemDialogFileSaveSelected(CSlrString *path);
 	virtual void SystemDialogFileSaveCancelled();
 
+	CViewC64MenuItem *menuItemSetFolderWithAtariROMs;
+
 	void OpenDialogDumpC64Memory();
 	void OpenDialogDumpC64MemoryMarkers();
 	void OpenDialogDumpDrive1541Memory();
@@ -316,6 +322,10 @@ public:
 	void MapC64MemoryToFile(CSlrString *path);
 	
 	byte openDialogFunction;
+	
+	//
+	CViewC64MenuItemOption *menuItemIsProcessPriorityBoostDisabled;
+	CViewC64MenuItemOption *menuItemProcessPriority;
 	
 	//
 	std::vector<int> *c64ModelTypeIds;

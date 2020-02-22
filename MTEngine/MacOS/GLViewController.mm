@@ -272,12 +272,23 @@
 }
 
 - (void)restoreMainWindowPosition
-{
+{	
 	NSWindow *mainWindow = [openGLView window];
 	
 	NSString *winFrameString = [[NSUserDefaults standardUserDefaults] stringForKey:@"MainWindowFrameKey"];
-	NSRect savedRect = NSRectFromString(winFrameString);
-	[mainWindow setFrame:savedRect display:NO];
+	
+	if (winFrameString != nil)
+	{
+		NSRect savedRect = NSRectFromString(winFrameString);
+		if (CGRectContainsRect([NSScreen mainScreen].visibleFrame, savedRect))
+		{
+			if (savedRect.size.width > 10 && savedRect.size.height > 10)
+			{
+				[mainWindow setFrame:savedRect display:NO];
+			}
+		}
+	}
+	
 }
 
 - (void)windowDidBecomeKey:(NSNotification *)notification

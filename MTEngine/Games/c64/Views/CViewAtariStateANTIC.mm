@@ -72,7 +72,7 @@ void CViewAtariStateANTIC::RenderState(float px, float py, float posZ, CSlrFont 
 
 	sprintf(buf, "ANTIC");
 	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-	py += fontSize;
+	py += fontSize*0.5f;
 	
 	/*
 
@@ -116,32 +116,36 @@ void CViewAtariStateANTIC::RenderState(float px, float py, float posZ, CSlrFont 
 //		   "NMIEN= %02X    ypos=%4d\n",
 //		   ANTIC_PMBASE, ANTIC_CHBASE, ANTIC_GetByte(ANTIC_OFFSET_VCOUNT, TRUE), ANTIC_NMIEN, ANTIC_ypos);
 
-	sprintf(buf, "RASTER: x %4d  y %4d",
-			ANTIC_xpos, ANTIC_ypos);
-	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
+	// TODO:
+	if (viewC64->currentScreenLayoutId != SCREEN_LAYOUT_ATARI_MEMORY_MAP)
+	{
+		sprintf(buf, "RASTER: x %4d  y %4d",
+				ANTIC_xpos, ANTIC_ypos);
+		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
+	}
 	
-	sprintf(buf, "DMACTL %02X    CHACTL %02X",	//    DLIST=%04X",
+	sprintf(buf, "DMACTL %02X  CHACTL %02X",	//    DLIST=%04X",
 			ANTIC_DMACTL, ANTIC_CHACTL);		//, ANTIC_dlist);
 	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 
-	sprintf(buf, "DLISTL %02X    DLISTH %02X", ANTIC_dlist & 0xff, ANTIC_dlist >> 8);
+	sprintf(buf, "DLISTL %02X  DLISTH %02X", ANTIC_dlist & 0xff, ANTIC_dlist >> 8);
 	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 	
-	sprintf(buf, "HSCROL %02X    VSCROL %02X",
+	sprintf(buf, "HSCROL %02X  VSCROL %02X",
 			ANTIC_HSCROL, ANTIC_VSCROL);
 	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 
-	sprintf(buf, "PMBASE %02X    CHBASE %02X",
+	sprintf(buf, "PMBASE %02X  CHBASE %02X",
 			ANTIC_PMBASE, ANTIC_CHBASE);
 	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 
-	sprintf(buf, "VCOUNT %02X    NMIEN  %02X",
+	sprintf(buf, "VCOUNT %02X  NMIEN  %02X",
 			ANTIC_GetByte(ANTIC_OFFSET_VCOUNT, TRUE), ANTIC_NMIEN);
 	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 
 	//
 	py = startY;
-	px += 130;
+	px += 24 * fontSize;
 	
 	// display list
 	/* group identical instructions */

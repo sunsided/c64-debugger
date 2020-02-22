@@ -68,44 +68,53 @@ void CViewAtariStateGTIA::RenderState(float px, float py, float posZ, CSlrFont *
 	
 	sprintf(buf, "GTIA");
 	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-	py += fontSize;
+	py += fontSize*0.5f;
 
-	sprintf(buf, "HPOSP0 %02X    HPOSP1 %02X    HPOSP2 %02X    HPOSP3 %02X",
-			GTIA_HPOSP0, GTIA_HPOSP1, GTIA_HPOSP2, GTIA_HPOSP3);
+//	char *space = "    ";
+	char *space = "  ";
+	
+	sprintf(buf, "HPOSP0 %02X%sHPOSP1 %02X%sHPOSP2 %02X%sHPOSP3 %02X",
+			GTIA_HPOSP0, space, GTIA_HPOSP1, space, GTIA_HPOSP2, space, GTIA_HPOSP3);
 	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 	
-	sprintf(buf, "HPOSM0 %02X    HPOSM1 %02X    HPOSM2 %02X    HPOSM3 %02X",
-			GTIA_HPOSM0, GTIA_HPOSM1, GTIA_HPOSM2, GTIA_HPOSM3);
-	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-	
-
-	sprintf(buf, "SIZEP0 %02X    SIZEP1 %02X    SIZEP2 %02X    SIZEP3 %02X    SIZEM  %02X",
-			GTIA_SIZEP0, GTIA_SIZEP1, GTIA_SIZEP2, GTIA_SIZEP3, GTIA_SIZEM);
-	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-
-	sprintf(buf, "GRAFP0 %02X    GRAFP1 %02X    GRAFP2 %02X    GRAFP3 %02X    GRAFM  %02X",
-			GTIA_GRAFP0, GTIA_GRAFP1, GTIA_GRAFP2, GTIA_GRAFP3, GTIA_GRAFM);
-	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-
-	sprintf(buf, "D010 %02X      D011 %02X      COLMP0 %02X     COLMP1 %02X",
-			0x00, 0x00, GTIA_COLPM0, GTIA_COLPM1, GTIA_COLPM2, GTIA_COLPM3);
+	sprintf(buf, "HPOSM0 %02X%sHPOSM1 %02X%sHPOSM2 %02X%sHPOSM3 %02X",
+			GTIA_HPOSM0, space, GTIA_HPOSM1, space, GTIA_HPOSM2, space, GTIA_HPOSM3);
 	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 	
 
+	sprintf(buf, "SIZEP0 %02X%sSIZEP1 %02X%sSIZEP2 %02X%sSIZEP3 %02X%sSIZEM  %02X",
+			GTIA_SIZEP0, space, GTIA_SIZEP1, space, GTIA_SIZEP2, space, GTIA_SIZEP3, space, GTIA_SIZEM);
+	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
+
+	sprintf(buf, "GRAFP0 %02X%sGRAFP1 %02X%sGRAFP2 %02X%sGRAFP3 %02X%sGRAFM  %02X",
+			GTIA_GRAFP0, space, GTIA_GRAFP1, space, GTIA_GRAFP2, space, GTIA_GRAFP3, space, GTIA_GRAFM);
+	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
+
+//	sprintf(buf, "D010   %02X    D011   %02X    COLMP0 %02X     COLMP1 %02X",
+//			0x00, 0x00, GTIA_COLPM0, GTIA_COLPM1, GTIA_COLPM2, GTIA_COLPM3);
+//	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
+	
+
 	
 	
-	sprintf(buf, "COLPM0 %02X    COLPM1 %02X    COLPM2 %02X    COLPM3 %02X",
-			GTIA_COLPM0, GTIA_COLPM1, GTIA_COLPM2, GTIA_COLPM3);
+	sprintf(buf, "COLPM0 %02X%sCOLPM1 %02X%sCOLPM2 %02X%sCOLPM3 %02X",
+			GTIA_COLPM0, space, GTIA_COLPM1, space, GTIA_COLPM2, space, GTIA_COLPM3);
 	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 
-	sprintf(buf, "COLPF0 %02X    COLPF1 %02X    COLPF2 %02X    COLPF3 %02X    COLBK  %02X",
-			GTIA_COLPF0, GTIA_COLPF1, GTIA_COLPF2, GTIA_COLPF3, GTIA_COLBK);
+	sprintf(buf, "COLPF0 %02X%sCOLPF1 %02X%sCOLPF2 %02X%sCOLPF3 %02X%sCOLBK  %02X",
+			GTIA_COLPF0, space, GTIA_COLPF1, space, GTIA_COLPF2, space, GTIA_COLPF3, space, GTIA_COLBK);
 	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
 
-	sprintf(buf, "PRIOR  %02X    VDELAY %02X    GRACTL %02X",
-			GTIA_PRIOR, GTIA_VDELAY, GTIA_GRACTL);
+	sprintf(buf, "PRIOR  %02X%sVDELAY %02X%sGRACTL %02X%sCONSOL %02X",
+			GTIA_PRIOR, space, GTIA_VDELAY, space, GTIA_GRACTL, space,
+			GTIA_GetByte(GTIA_OFFSET_CONSOL, TRUE));
 	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
-
+	
+	sprintf(buf, "TRIG0  %02X%sTRIG1  %02X%sTRIG2  %02X%sTRIG3  %02X",
+			GTIA_TRIG[0] & GTIA_TRIG_latch[0], space, GTIA_TRIG[1] & GTIA_TRIG_latch[1], space,
+			GTIA_TRIG[2] & GTIA_TRIG_latch[2], space, GTIA_TRIG[3] & GTIA_TRIG_latch[3]);
+	fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
+	
 }
 
 

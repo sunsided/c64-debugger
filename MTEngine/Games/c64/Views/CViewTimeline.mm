@@ -146,7 +146,8 @@ void CViewTimeline::GetFramesLimits(int *minFrame, int *maxFrame)
 void CViewTimeline::ScrubToFrame(int frameNum)
 {
 	guiMain->LockMutex();
-	if (debugInterface->snapshotsManager->isPerformingSnapshotRestore == false)
+	
+	if (debugInterface->snapshotsManager->IsPerformingSnapshotRestore() == false)
 	{
 		debugInterface->snapshotsManager->RestoreSnapshotByFrame(frameNum, -1);
 	}

@@ -957,7 +957,7 @@ static void c64_monitor_init(void)
         drive_interface_init[dnr] = drive_cpu_monitor_interface_get(dnr);
     }
 
-    /* Initialize the monitor.  */
+    /* Initialize the monitor. */
     monitor_init(maincpu_monitor_interface_get(), drive_interface_init, asmarray);
 }
 

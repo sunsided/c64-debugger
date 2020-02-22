@@ -27,6 +27,13 @@ CSoundEngine::CSoundEngine()
 	LOGA("CSoundEngine init");
 
 	mutex = new CSlrMutex("CSoundEngine");
+	
+	int numDevices = Pa_GetDeviceCount();
+	LOGD("CSoundEngine numDevices=%d", numDevices);
+
+//	char *buf = SYS_GetCharBuf();
+//	sprintf(buf, "numDevices=%d", numDevices);
+//	SYS_ShowError(buf);
 
 	deviceOutIndex = Pa_GetDefaultOutputDevice();
 	if (deviceOutIndex == paNoDevice)
@@ -382,14 +389,14 @@ bool CSoundEngine::StartAudioUnit(bool isPlayback, bool isRecording, int recordi
 
 		if( err != paNoError )
 		{
-			SYS_FatalExit("Opening output stream failed");
+			SYS_FatalExit("Opening output stream failed: %s", Pa_GetErrorText( err ));
 		}
 		
 		LOGA("Pa_StartStream");
 		err = Pa_StartStream( streamOutput );
         if( err != paNoError )
 		{
-			SYS_FatalExit("Starting output stream failed");
+			SYS_FatalExit("Starting output stream failed: %s", Pa_GetErrorText( err ));
 		}
 
 		// copy device output name
@@ -427,7 +434,7 @@ bool CSoundEngine::StartAudioUnit(bool isPlayback, bool isRecording, int recordi
 		
 		if( err != paNoError )
 		{
-			SYS_FatalExit("Opening input stream failed");
+			SYS_FatalExit("Opening input stream failed: %s", Pa_GetErrorText( err ));
 		}
 		
 		if (gSoundEngine->recordedData == NULL)

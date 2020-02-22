@@ -88,13 +88,13 @@ void mt_SYS_FatalExit(char *text)
 	SYS_FatalExit(text);
 }
 
-long mt_SYS_GetCurrentTimeInMillis()
+unsigned long mt_SYS_GetCurrentTimeInMillis()
 {
-//	LOGD("mt_SYS_GetCurrentTimeInMillis");
-	return SYS_GetCurrentTimeInMillis();
+	unsigned long t = SYS_GetCurrentTimeInMillis();
+	return t;
 }
 
-void mt_SYS_Sleep(long milliseconds)
+void mt_SYS_Sleep(unsigned long milliseconds)
 {
 	//LOGD("mt_SYS_Sleep: %d", milliseconds);
 	SYS_Sleep(milliseconds);
@@ -103,14 +103,11 @@ void mt_SYS_Sleep(long milliseconds)
 // TODO: memory read breakpoints
 void c64d_mark_c64_cell_read(uint16 addr)
 {
-	//debugInterfaceVice->MarkC64CellRead(addr);
-	viewC64->viewC64MemoryMap->CellRead(addr);
+	viewC64->viewC64MemoryMap->CellRead(addr, viceCurrentC64PC, vicii.raster_line, vicii.raster_cycle);
 }
 
 void c64d_mark_c64_cell_write(uint16 addr, uint8 value)
 {
-//	debugInterfaceVice->MarkC64CellWrite(addr, value);
-	
 	viewC64->viewC64MemoryMap->CellWrite(addr, value, viceCurrentC64PC, vicii.raster_line, vicii.raster_cycle);
 	
 	// skip checking breakpoints when quick fast-forward/restoring snapshot
@@ -183,13 +180,13 @@ void c64d_mark_disk_cell_read(uint16 addr)
 {
 //	LOGD("c64d_mark_disk_cell_read: %04x", addr);
 //	debugInterfaceVice->MarkDrive1541CellRead(addr);
-	viewC64->viewDrive1541MemoryMap->CellRead(addr);
+	viewC64->viewDrive1541MemoryMap->CellRead(addr, viceCurrentDiskPC[0], -1, -1);
 }
 
 void c64d_mark_disk_cell_write(uint16 addr, uint8 value)
 {
 //	debugInterfaceVice->MarkDrive1541CellWrite(addr, value);
-	viewC64->viewDrive1541MemoryMap->CellWrite(addr, value);
+	viewC64->viewDrive1541MemoryMap->CellWrite(addr, value, viceCurrentDiskPC[0], -1, -1);
 	
 	// skip checking breakpoints when quick fast-forward/restoring snapshot
 	if (debugInterfaceVice->snapshotsManager->IsPerformingSnapshotRestore())
@@ -369,9 +366,9 @@ void c64d_refresh_screen_no_callback()
 	if (debugInterfaceVice->snapshotsManager->SkipRefreshOfVideoFrame())
 		return;
 	
-	uint8 *screenBuffer = vicii.raster.canvas->draw_buffer->draw_buffer;
-	
 	debugInterfaceVice->LockRenderScreenMutex();
+
+	uint8 *screenBuffer = vicii.raster.canvas->draw_buffer->draw_buffer;
 	
 	volatile int superSample = debugInterfaceVice->screenSupersampleFactor;
 	
@@ -564,7 +561,7 @@ void c64d_reset_counters()
 {
 	if (c64SettingsResetCountersOnAutoRun)
 	{
-		viewC64->viewC64SettingsMenu->ResetMainCpuCycleCounter();
+		viewC64->viewC64SettingsMenu->ResetMainCpuDebugCycleCounter();
 		viewC64->viewC64SettingsMenu->ResetEmulationFrameCounter();
 	}
 }
@@ -1223,6 +1220,61 @@ void c64d_check_snapshot_interval()
 //		LOGD("c64d_check_snapshot_interval: %d", c64d_start_frame_for_snapshots_manager);
 		c64d_start_frame_for_snapshots_manager = 0;
 		debugInterfaceVice->snapshotsManager->CheckSnapshotInterval();
+	}
+}
+
+char c64d_uimon_buf[1024] = { 0 };
+int c64d_uimon_bufpos = 0;
+
+void c64d_uimon_print(char *p)
+{
+	char *c = (char*)p;
+	for (int i = 0; i < strlen(p); i++)
+	{
+		if (*c == '\n')
+		{
+			c64d_uimon_buf[c64d_uimon_bufpos] = 0;
+			
+			if (debugInterfaceVice->codeMonitorCallback != NULL)
+			{
+				CSlrString *str = new CSlrString(c64d_uimon_buf);
+				debugInterfaceVice->codeMonitorCallback->CodeMonitorCallbackPrintLine(str);
+			}
+			else
+			{
+				LOGError("c64d_uimon_print_line: codeMonitorCallback is NULL, line=%s", p);
+			}
+			
+			c64d_uimon_bufpos = 0;
+			continue;
+		}
+		c64d_uimon_buf[c64d_uimon_bufpos] = *c;
+		c64d_uimon_bufpos++;
+		c++;
+	}
+}
+
+void c64d_uimon_print_line(char *p)
+{
+	LOGD("c64d_uimon_print_line: p=%s", p);
+	
+	c64d_uimon_print(p);
+	
+	if (c64d_uimon_bufpos != 0)
+	{
+		if (debugInterfaceVice->codeMonitorCallback != NULL)
+		{
+			c64d_uimon_buf[c64d_uimon_bufpos] = 0;
+
+			CSlrString *str = new CSlrString(c64d_uimon_buf);
+			debugInterfaceVice->codeMonitorCallback->CodeMonitorCallbackPrintLine(str);
+		}
+		else
+		{
+			LOGError("c64d_uimon_print_line: codeMonitorCallback is NULL, line=%s", p);
+		}
+		
+		c64d_uimon_bufpos = 0;
 	}
 }
 

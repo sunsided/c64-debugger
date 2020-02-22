@@ -500,7 +500,9 @@ std::vector<CSlrString *> *CSlrString::SplitWithChars(std::list<u16> splitChars)
 {
 	std::vector<CSlrString *> *words = new std::vector<CSlrString *>();
 	u32 pos = 0;
-	
+
+	u16 repeatedSplitChar = 0;
+
 	while(pos < GetLength())
 	{
 		u16 chr = this->GetChar(pos);
@@ -510,15 +512,21 @@ std::vector<CSlrString *> *CSlrString::SplitWithChars(std::list<u16> splitChars)
 		for (std::list<u16>::iterator it = splitChars.begin(); it != splitChars.end(); it++)
 		{
 			u16 chrSplit = *it;
+		
+			//LOGD("chrSplit=%d (%c) chr=%d (%c) repeatedSplitChar=%d", chrSplit, chrSplit, chr, chr, repeatedSplitChar);
 			
 			if (chrSplit == chr)
 			{
 				std::vector<u16> chrs;
 				u16 chr = this->GetChar(pos);
 				chrs.push_back(chr);
-				
-				CSlrString *oneSplitChar = new CSlrString(chrs);
-				words->push_back(oneSplitChar);
+
+				if (repeatedSplitChar != chr)
+				{
+					repeatedSplitChar = chr;
+					CSlrString *oneSplitChar = new CSlrString(chrs);
+					words->push_back(oneSplitChar);
+				}
 				
 				found = true;
 				
@@ -529,6 +537,8 @@ std::vector<CSlrString *> *CSlrString::SplitWithChars(std::list<u16> splitChars)
 		
 		if (found)
 			continue;
+		
+		repeatedSplitChar = 0x00;
 		
 		CSlrString *oneWord = this->GetWord(pos, &pos, splitChars);
 		

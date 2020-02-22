@@ -30,6 +30,7 @@
 
 /* Three legitimate entries to UI module. */
 int UI_SelectCartType(int k);
+int UI_Initialise(int *argc, char *argv[]);
 void UI_Run(void);
 
 extern int UI_is_active;
@@ -48,6 +49,8 @@ extern char UI_atari_files_dir[UI_MAX_DIRECTORIES][FILENAME_MAX];
 extern char UI_saved_files_dir[UI_MAX_DIRECTORIES][FILENAME_MAX];
 extern int UI_n_atari_files_dir;
 extern int UI_n_saved_files_dir;
+
+extern int UI_show_hidden_files;
 
 #ifdef GUI_SDL
 void PLATFORM_SetJoystickKey(int joystick, int direction, int value);

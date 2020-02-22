@@ -720,11 +720,11 @@ void CViewAtariScreen::JoystickDown(u32 axis)
 	{
 		if (c64SettingsJoystickPort == 1)
 		{
-			debugInterface->JoystickDown(2, axis);
+			debugInterface->JoystickDown(1, axis);
 		}
 		else if (c64SettingsJoystickPort == 2)
 		{
-			debugInterface->JoystickDown(1, axis);
+			debugInterface->JoystickDown(2, axis);
 		}
 		else
 		{
@@ -749,15 +749,15 @@ void CViewAtariScreen::JoystickUp(u32 axis)
 	{
 		if (c64SettingsJoystickPort == 1)
 		{
-			debugInterface->JoystickDown(2, axis);
+			debugInterface->JoystickUp(1, axis);
 		}
 		else if (c64SettingsJoystickPort == 2)
 		{
-			debugInterface->JoystickDown(1, axis);
+			debugInterface->JoystickUp(2, axis);
 		}
 		else
 		{
-			debugInterface->JoystickDown(c64SettingsJoystickPort, axis);
+			debugInterface->JoystickUp(c64SettingsJoystickPort, axis);
 		}
 	}
 

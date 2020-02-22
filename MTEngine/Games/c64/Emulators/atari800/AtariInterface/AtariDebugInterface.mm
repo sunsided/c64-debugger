@@ -8,10 +8,12 @@ extern "C" {
 #include "videomode.h"
 #include "a-video.h"
 #include "a-palette.h"
+#include "pokeysnd.h"
 #include "akey.h"
 #include "input.h"
 #include "statesav.h"
 #include "AtariWrapper.h"
+#include "sio.h"
 }
 #endif
 
@@ -29,7 +31,9 @@ extern "C" {
 #include "C64SettingsStorage.h"
 #include "CViewC64.h"
 #include "SND_Main.h"
+#include "CSnapshotsManager.h"
 #include "CDebuggerEmulatorPlugin.h"
+#include "C64Symbols.h"
 
 #include "CAtariAudioChannel.h"
 
@@ -42,15 +46,22 @@ AtariDebugInterface::AtariDebugInterface(CViewC64 *viewC64) //, uint8 *memory)
 {
 	LOGM("AtariDebugInterface: %s init", Atari800_TITLE);
 	
+	// for loading breakpoints and symbols
+	this->symbols = new C64Symbols(this);
+	
 	debugInterfaceAtari = this;
 	
 	CreateScreenData();
 	
 	audioChannel = NULL;
-	
+	snapshotsManager = new CSnapshotsManager(this);
+
 	dataAdapter = new AtariDataAdapter(this);
 
 	isDebugOn = true;
+	
+	// PAL by default
+	numEmulationFPS = 50;
 	
 	for (int i = 0; i < NUM_ATARI_JOYSTICKS; i++)
 	{
@@ -127,6 +138,16 @@ CSlrString *AtariDebugInterface::GetPlatformNameString()
 	return new CSlrString("Atari");
 }
 
+float AtariDebugInterface::GetEmulationFPS()
+{
+	return this->numEmulationFPS;
+}
+
+CSlrDataAdapter *AtariDebugInterface::GetDataAdapter()
+{
+	return this->dataAdapter;
+}
+
 void ADI_VIDEO_BlitNormal32(Uint32 *dest, Uint8 *src, int pitch, int width, int height, Uint32 *palette32)
 {
 		register Uint32 quad;
@@ -160,12 +181,16 @@ void AtariDebugInterface::RunEmulationThread()
 	
 	while (true)
 	{
+		atrd_start_frame_for_snapshots_manager = 1;
+		debugInterfaceAtari->DoVSync();
+
 		atrd_async_check();
 
 //		INPUT_key_code = PLATFORM_Keyboard();
 		//SDL_INPUT_Mouse();
+
 		Atari800_Frame();
-		
+
 //		//
 //#ifdef USE_UI_BASIC_ONSCREEN_KEYBOARD
 //		if (INPUT_key_code == AKEY_KEYB) {
@@ -183,86 +208,7 @@ void AtariDebugInterface::RunEmulationThread()
 //		}
 //#endif
 
-		
-		
-		// update screen
-		this->LockRenderScreenMutex();
-		
-		Uint8 *screenBuffer = (Uint8 *)Screen_atari;// + Screen_WIDTH * VIDEOMODE_src_offset_top + VIDEOMODE_src_offset_left;
-		
-		// dest screen width is 512
-		
-		uint8 *srcScreenPtr = screenBuffer;
-		uint8 *destScreenPtr = (uint8 *)this->screenImage->resultData;
-		
-		int screenHeight = this->GetScreenSizeY();
-		
-		int *palette = SDL_PALETTE_tab[VIDEOMODE_MODE_NORMAL].palette;
-
-		int superSample = this->screenSupersampleFactor;
-		
-		if (superSample == 1)
-		{
-			for (int y = 0; y < screenHeight; y++)
-			{
-				for (int x = 0; x < this->GetScreenSizeX(); x++)
-				{
-					byte v = *srcScreenPtr++;
-
-					int i  = v;
-					u8 r, g, b;
-
-					u32 rgb = palette[i];
-					r = (rgb & 0x00ff0000) >> 16;
-					g = (rgb & 0x0000ff00) >> 8;
-					b = (rgb & 0x000000ff) >> 0;
-
-					*destScreenPtr++ = r;
-					*destScreenPtr++ = g;
-					*destScreenPtr++ = b;
-					*destScreenPtr++ = 255;
-				}
-				
-				destScreenPtr += (512-384)*4;
-			}
-		}
-		else
-		{
-			for (int y = 0; y < screenHeight; y++)
-			{
-				for (int j = 0; j < superSample; j++)
-				{
-					uint8 *pScreenPtrSrc = srcScreenPtr;
-					uint8 *pScreenPtrDest = destScreenPtr;
-					
-					for (int x = 0; x < this->GetScreenSizeX(); x++)
-					{
-						byte v = *pScreenPtrSrc++;
-						
-						int i  = v;
-						u8 r, g, b;
-						
-						u32 rgb = palette[i];
-						r = (rgb & 0x00ff0000) >> 16;
-						g = (rgb & 0x0000ff00) >> 8;
-						b = (rgb & 0x000000ff) >> 0;
-						
-						for (int i = 0; i < superSample; i++)
-						{
-							*pScreenPtrDest++ = r;
-							*pScreenPtrDest++ = g;
-							*pScreenPtrDest++ = b;
-							*pScreenPtrDest++ = 255;
-						}
-					}
-					destScreenPtr += (512)*superSample*4;
-				}
-				
-				srcScreenPtr += 384;
-			}
-		}
-		
-		this->UnlockRenderScreenMutex();
+		this->RefreshScreenNoCallback();
 
 		this->DoFrame();
 				
@@ -297,6 +243,117 @@ void AtariDebugInterface::DoFrame()
 {
 	CDebugInterface::DoFrame();
 }
+
+//
+// this is main emulation cpu cycle counter
+unsigned int AtariDebugInterface::GetMainCpuCycleCounter()
+{
+	return atrdMainCpuCycle;
+}
+
+unsigned int AtariDebugInterface::GetPreviousCpuInstructionCycleCounter()
+{
+	LOGD("AtariDebugInterface::GetPreviousCpuInstructionCycleCounter: now=%d previous=%d", atrdMainCpuCycle, atrdMainCpuPreviousInstructionCycle);
+	return atrdMainCpuPreviousInstructionCycle;
+}
+
+// resettable counters for debug purposes
+void AtariDebugInterface::ResetMainCpuDebugCycleCounter()
+{
+	atrdMainCpuDebugCycle = 0;
+}
+
+unsigned int AtariDebugInterface::GetMainCpuDebugCycleCounter()
+{
+	return atrdMainCpuDebugCycle;
+}
+
+void AtariDebugInterface::RefreshScreenNoCallback()
+{
+	// update screen
+	if (this->snapshotsManager->SkipRefreshOfVideoFrame())
+		return;
+
+	this->LockRenderScreenMutex();
+	
+	Uint8 *screenBuffer = (Uint8 *)Screen_atari;// + Screen_WIDTH * VIDEOMODE_src_offset_top + VIDEOMODE_src_offset_left;
+	
+	// dest screen width is 512
+	
+	uint8 *srcScreenPtr = screenBuffer;
+	uint8 *destScreenPtr = (uint8 *)this->screenImage->resultData;
+	
+	int screenHeight = this->GetScreenSizeY();
+	
+	int *palette = SDL_PALETTE_tab[VIDEOMODE_MODE_NORMAL].palette;
+	
+	int superSample = this->screenSupersampleFactor;
+	
+	if (superSample == 1)
+	{
+		for (int y = 0; y < screenHeight; y++)
+		{
+			for (int x = 0; x < this->GetScreenSizeX(); x++)
+			{
+				byte v = *srcScreenPtr++;
+				
+				int i  = v;
+				u8 r, g, b;
+				
+				u32 rgb = palette[i];
+				r = (rgb & 0x00ff0000) >> 16;
+				g = (rgb & 0x0000ff00) >> 8;
+				b = (rgb & 0x000000ff) >> 0;
+				
+				*destScreenPtr++ = r;
+				*destScreenPtr++ = g;
+				*destScreenPtr++ = b;
+				*destScreenPtr++ = 255;
+			}
+			
+			destScreenPtr += (512-384)*4;
+		}
+	}
+	else
+	{
+		for (int y = 0; y < screenHeight; y++)
+		{
+			for (int j = 0; j < superSample; j++)
+			{
+				uint8 *pScreenPtrSrc = srcScreenPtr;
+				uint8 *pScreenPtrDest = destScreenPtr;
+				
+				for (int x = 0; x < this->GetScreenSizeX(); x++)
+				{
+					byte v = *pScreenPtrSrc++;
+					
+					int i  = v;
+					u8 r, g, b;
+					
+					u32 rgb = palette[i];
+					r = (rgb & 0x00ff0000) >> 16;
+					g = (rgb & 0x0000ff00) >> 8;
+					b = (rgb & 0x000000ff) >> 0;
+					
+					for (int i = 0; i < superSample; i++)
+					{
+						*pScreenPtrDest++ = r;
+						*pScreenPtrDest++ = g;
+						*pScreenPtrDest++ = b;
+						*pScreenPtrDest++ = 255;
+					}
+				}
+				destScreenPtr += (512)*superSample*4;
+			}
+			
+			srcScreenPtr += 384;
+		}
+	}
+	
+	this->UnlockRenderScreenMutex();
+}
+
+
 
 //	UBYTE MEMORY_mem[65536 + 2];
 
@@ -398,16 +455,12 @@ uint8 AtariDebugInterface::GetDebugMode()
 	return debugMode;
 }
 
-extern "C" {
-	void c64d_atari_set_cpu_pc(u16 addr);
-}
-
 // make jmp without resetting CPU depending on dataAdapter
 void AtariDebugInterface::MakeJmpNoReset(CSlrDataAdapter *dataAdapter, uint16 addr)
 {
 	this->LockMutex();
 	
-	c64d_atari_set_cpu_pc(addr);
+	atrd_async_set_cpu_pc(addr);
 	
 	this->UnlockMutex();
 }
@@ -639,7 +692,7 @@ int key_control = 0;
 // keyboard & joystick mapper
 void AtariDebugInterface::KeyboardDown(uint32 mtKeyCode)
 {
-	LOGD("AtariDebugInterface::KeyboardDown: mtKeyCode=%04x INPUT_key_consol=%02x", mtKeyCode, INPUT_key_consol);
+	LOGG("AtariDebugInterface::KeyboardDown: mtKeyCode=%04x INPUT_key_consol=%02x", mtKeyCode, INPUT_key_consol);
 
 	for (std::list<CDebuggerEmulatorPlugin *>::iterator it = this->plugins.begin(); it != this->plugins.end(); it++)
 	{
@@ -706,7 +759,7 @@ void AtariDebugInterface::KeyboardDown(uint32 mtKeyCode)
 
 void AtariDebugInterface::KeyboardUp(uint32 mtKeyCode)
 {
-	LOGD("AtariDebugInterface::KeyboardUp: mtKeyCode=%04x INPUT_key_consol=%02x", mtKeyCode, INPUT_key_consol);
+	LOGI("AtariDebugInterface::KeyboardUp: mtKeyCode=%04x INPUT_key_consol=%02x", mtKeyCode, INPUT_key_consol);
 	
 	for (std::list<CDebuggerEmulatorPlugin *>::iterator it = this->plugins.begin(); it != this->plugins.end(); it++)
 	{
@@ -754,22 +807,56 @@ void AtariDebugInterface::KeyboardUp(uint32 mtKeyCode)
 
 void AtariDebugInterface::JoystickDown(int port, uint32 axis)
 {
-	LOGD("AtariDebugInterface::JoystickDown: %d %d", port, axis);
+	LOGD("AtariDebugInterface::JoystickDown: port=%d axis=%d", port, axis);
 
+	if (axis == JOYPAD_N)
+	{
+		if (this->joystickState[port-1] & JOYPAD_S)
+		{
+			this->joystickState[port-1] &= ~JOYPAD_S;
+		}
+	}
+	if (axis == JOYPAD_S)
+	{
+		if (this->joystickState[port-1] & JOYPAD_N)
+		{
+			this->joystickState[port-1] &= ~JOYPAD_N;
+		}
+	}
+	if (axis == JOYPAD_E)
+	{
+		if (this->joystickState[port-1] & JOYPAD_W)
+		{
+			this->joystickState[port-1] &= ~JOYPAD_W;
+		}
+	}
+	if (axis == JOYPAD_W)
+	{
+		if (this->joystickState[port-1] & JOYPAD_E)
+		{
+			this->joystickState[port-1] &= ~JOYPAD_E;
+		}
+	}
+	
 	this->joystickState[port-1] |= axis;
+	
+	LOGD("DOWN joystickState[%d] = %0x", port-1, this->joystickState[port-1]);
 }
 
 void AtariDebugInterface::JoystickUp(int port, uint32 axis)
 {
-	LOGD("AtariDebugInterface::JoystickUp: %d %d", port, axis);
+	LOGD("AtariDebugInterface::JoystickUp: port=%d axis=%d", port, axis);
 	
 	this->joystickState[port-1] &= ~axis;
+
+	LOGD("UP   joystickState[%d] = %0x", port-1, this->joystickState[port-1]);
 }
 
 //
 extern "C" {
 	void CPU_Reset(void);
 	void Colours_SetVideoSystem(int mode);
+	void CARTRIDGE_Remove(void);
 }
 void AtariDebugInterface::Reset()
 {
@@ -781,6 +868,14 @@ void AtariDebugInterface::Reset()
 void AtariDebugInterface::HardReset()
 {
 	LOGM("AtariDebugInterface::HardReset");
+	
+	this->ResetEmulationFrameCounter();
+	this->snapshotsManager->ClearSnapshotsHistory();
+	
+	atrdMainCpuCycle = 0;
+	atrdMainCpuDebugCycle = 0;
+	atrdMainCpuPreviousInstructionCycle = 0;
+
 	Atari800_Coldstart();
 }
 
@@ -804,8 +899,14 @@ bool AtariDebugInterface::LoadExecutable(char *fullFilePath)
 
 bool AtariDebugInterface::MountDisk(char *fullFilePath, int diskNo, bool readOnly)
 {
+	LOGD("SIO drive status=%d", SIO_drive_status[diskNo]);
+//	
+//	if (SIO_drive_status[dsknum] != SIO_OFF && SIO_drive_status[dsknum] != SIO_NO_DISK)
+//		strcpy(disk_filename, SIO_filename[dsknum]);
+
+	
 	int reboot = 0;
-	int retType = AFILE_OpenFile(fullFilePath, reboot, diskNo, readOnly);
+	int retType = AFILE_OpenFile(fullFilePath, reboot, diskNo+1, readOnly);
 
 //	if (retType != ???)
 //		return false;
@@ -841,10 +942,50 @@ bool AtariDebugInterface::AttachTape(char *fullFilePath, bool readOnly)
 	return true;
 }
 
+void AtariDebugInterface::DetachEverything()
+{
+	SIO_DisableDrive(1);
+	CARTRIDGE_Remove();
+	HardReset();
+}
+
+void AtariDebugInterface::DetachDriveDisk()
+{
+	SIO_DisableDrive(1);
+}
+
+void AtariDebugInterface::DetachCartridge()
+{
+	CARTRIDGE_Remove();
+	HardReset();
+}
+
+//
+bool AtariDebugInterface::GetSettingIsWarpSpeed()
+{
+	return Atari800_turbo;
+}
+
+void AtariDebugInterface::SetSettingIsWarpSpeed(bool isWarpSpeed)
+{
+	Atari800_turbo = isWarpSpeed;
+}
+
+// TODO: this is not working for mzpokey now
+void AtariDebugInterface::SetPokeyStereo(bool isStereo)
+{
+	LOGD("AtariDebugInterface::SetPokeyStereo: %s", STRBOOL(isStereo));
+	POKEYSND_stereo_enabled = isStereo;
+}
+
+
 extern "C" {
 	void atrd_async_load_snapshot(char *filePath);
 	void atrd_async_save_snapshot(char *filePath);
 }
+
+bool atrd_store_snapshot_to_bytebuffer_synced(CByteBuffer *byteBuffer);
+bool atrd_restore_snapshot_from_bytebuffer_synced(CByteBuffer *byteBuffer);
 
 bool AtariDebugInterface::LoadFullSnapshot(char *filePath)
 {
@@ -870,17 +1011,106 @@ void AtariDebugInterface::SaveFullSnapshot(char *filePath)
 	guiMain->UnlockMutex();
 }
 
+// these calls should be synced with CPU IRQ so snapshot store or restore is allowed
+bool AtariDebugInterface::LoadChipsSnapshotSynced(CByteBuffer *byteBuffer)
+{
+	LOGD("LoadChipsSnapshotSynced");
+	debugInterfaceAtari->LockMutex();
+	gSoundEngine->LockMutex("LoadChipsSnapshotSynced");
+	
+	bool ret = atrd_restore_snapshot_from_bytebuffer_synced(byteBuffer);
+	if (ret == false)
+	{
+		LOGError("AtariDebugInterface::LoadFullSnapshotSynced: failed");
+		
+		debugInterfaceAtari->UnlockMutex();
+		gSoundEngine->UnlockMutex("LoadChipsSnapshotSynced");
+		return false;
+	}
+	
+	debugInterfaceAtari->UnlockMutex();
+	gSoundEngine->UnlockMutex("LoadChipsSnapshotSynced");
+	return true;
+}
 
+bool AtariDebugInterface::SaveChipsSnapshotSynced(CByteBuffer *byteBuffer)
+{
+	// TODO: check if data changed and store snapshot with data accordingly
+	return atrd_store_snapshot_to_bytebuffer_synced(byteBuffer);
+}
+
+bool AtariDebugInterface::LoadDiskDataSnapshotSynced(CByteBuffer *byteBuffer)
+{
+	return true;
+	
+	/* not implemented
+	//	extern int c64_snapshot_read_from_memory(int event_mode, int read_roms, int read_disks, int read_reu_data,
+	//											 unsigned char *snapshot_data, int snapshot_size);
+	
+	LOGD("LoadDiskDataSnapshotSynced");
+	debugInterfaceAtari->LockMutex();
+	gSoundEngine->LockMutex("LoadDiskDataSnapshotSynced");
+	
+	int ret = 0;
+	//	int ret = c64_snapshot_read_from_memory(0, 0, 1, 0, 0, byteBuffer->data, byteBuffer->length);
+	//int ret = c64_snapshot_read_from_memory(0, 0, 1, 0, 0, 1, byteBuffer->data, byteBuffer->length);
+	if (ret != 0)
+	{
+		LOGError("AtariDebugInterface::LoadFullSnapshotSynced: failed");
+		
+		debugInterfaceAtari->UnlockMutex();
+		gSoundEngine->UnlockMutex("LoadDiskDataSnapshotSynced");
+		return false;
+	}
+	
+	debugInterfaceAtari->UnlockMutex();
+	gSoundEngine->UnlockMutex("LoadDiskDataSnapshotSynced");
+	return true;*/
+}
+
+bool AtariDebugInterface::SaveDiskDataSnapshotSynced(CByteBuffer *byteBuffer)
+{
+	// TODO: check if data changed and store snapshot with data accordingly
+	return true; //this->SaveFullSnapshotSynced(byteBuffer,
+				//						true, false, true, false, false, true, false);
+}
+
+bool AtariDebugInterface::IsDriveDirtyForSnapshot()
+{
+	return false; //c64d_is_drive_dirty_for_snapshot() == 0 ? false : true;
+}
+
+void AtariDebugInterface::ClearDriveDirtyForSnapshotFlag()
+{
+	//c64d_clear_drive_dirty_for_snapshot();
+}
+
+//
+void AtariDebugInterface::SetPokeyReceiveChannelsData(int pokeyNumber, bool isReceiving)
+{
+	if (isReceiving)
+	{
+		atrd_pokey_receive_channels_data(pokeyNumber, 1);
+	}
+	else
+	{
+		atrd_pokey_receive_channels_data(pokeyNumber, 0);
+	}
+}
+
+//
 void AtariDebugInterface::SetVideoSystem(u8 videoSystem)
 {
 	LOGD("AtariDebugInterface::SetVideoSystem: %d", videoSystem);
 	if (videoSystem == ATARI_VIDEO_SYSTEM_PAL)
 	{
 		Atari800_SetTVMode(Atari800_TV_PAL);
+		numEmulationFPS = 50;
 	}
 	else
 	{
 		Atari800_SetTVMode(Atari800_TV_NTSC);
+		numEmulationFPS = 60;
 	}
 	Atari800_InitialiseMachine();
 }
@@ -907,6 +1137,8 @@ static struct {
 
 void AtariDebugInterface::SetMachineType(u8 machineType)
 {
+	snapshotsManager->LockMutex();
+	
 	Atari800_machine_type = atariMachinesDefs[machineType].type;
 	MEMORY_ram_size = atariMachinesDefs[machineType].ram;
 	Atari800_builtin_basic = atariMachinesDefs[machineType].basic;
@@ -918,10 +1150,18 @@ void AtariDebugInterface::SetMachineType(u8 machineType)
 	if (!atariMachinesDefs[machineType].keyboard)
 		Atari800_keyboard_detached = FALSE;
 	Atari800_InitialiseMachine();
+
+	snapshotsManager->ClearSnapshotsHistory();
+	this->ResetEmulationFrameCounter();
+	this->ResetMainCpuDebugCycleCounter();
+	
+	snapshotsManager->UnlockMutex();
 }
 
 void AtariDebugInterface::SetRamSizeOption(u8 ramSizeOption)
 {
+	snapshotsManager->LockMutex();
+	
 	if (Atari800_machine_type == Atari800_MACHINE_800)
 	{
 		switch(ramSizeOption)
@@ -992,6 +1232,34 @@ void AtariDebugInterface::SetRamSizeOption(u8 ramSizeOption)
 		MEMORY_ram_size = 16;
 	}
 
+	Atari800_InitialiseMachine();
+
+	snapshotsManager->ClearSnapshotsHistory();
+	this->ResetEmulationFrameCounter();
+	this->ResetMainCpuDebugCycleCounter();
+	
+	snapshotsManager->UnlockMutex();
+}
+
+// UI
+CViewDisassemble *AtariDebugInterface::GetViewMainCpuDisassemble()
+{
+	return viewC64->viewAtariDisassemble;
+}
+
+CViewDisassemble *AtariDebugInterface::GetViewDriveDisassemble(int driveNo)
+{
+	return NULL;
+}
+
+CViewBreakpoints *AtariDebugInterface::GetViewBreakpoints()
+{
+	return viewC64->viewAtariBreakpoints;
+}
+
+CViewDataWatch *AtariDebugInterface::GetViewMemoryDataWatch()
+{
+	return viewC64->viewAtariMemoryDataWatch;
 }
 
 #else
@@ -1001,6 +1269,7 @@ AtariDebugInterface::AtariDebugInterface(CViewC64 *viewC64) //, uint8 *memory)
 : CDebugInterface(viewC64)
 {
 }
+
 AtariDebugInterface::~AtariDebugInterface() {}
 void AtariDebugInterface::RestartEmulation() {}
 int AtariDebugInterface::GetEmulatorType() { return EMULATOR_TYPE_ATARI800; }
@@ -1037,5 +1306,28 @@ void AtariDebugInterface::SaveFullSnapshot(char *filePath) {}
 void AtariDebugInterface::SetVideoSystem(u8 videoSystem) {}
 void AtariDebugInterface::SetMachineType(u8 machineType) {}
 void AtariDebugInterface::SetRamSizeOption(u8 ramSizeOption) {}
+CViewDisassemble *AtariDebugInterface::GetViewMainCpuDisassemble() { return NULL; }
+CViewDisassemble *AtariDebugInterface::GetViewDriveDisassemble(int driveNo) { return NULL; }
+CViewBreakpoints *AtariDebugInterface::GetViewBreakpoints() { return NULL; }
+CViewDataWatch *AtariDebugInterface::GetViewMemoryDataWatch() { return NULL; }
+CSlrDataAdapter *AtariDebugInterface::GetDataAdapter() { return NULL; }
+float AtariDebugInterface::GetEmulationFPS() { return 0; }
+unsigned int AtariDebugInterface::GetMainCpuCycleCounter() { return 0; }
+unsigned int AtariDebugInterface::GetPreviousCpuInstructionCycleCounter() { return 0; }
+void AtariDebugInterface::ResetMainCpuDebugCycleCounter() {}
+unsigned int AtariDebugInterface::GetMainCpuDebugCycleCounter() { return 0; }
+bool AtariDebugInterface::IsDriveDirtyForSnapshot() { return false; }
+void AtariDebugInterface::ClearDriveDirtyForSnapshotFlag() {}
+bool AtariDebugInterface::LoadChipsSnapshotSynced(CByteBuffer *byteBuffer) { return NULL; }
+bool AtariDebugInterface::SaveChipsSnapshotSynced(CByteBuffer *byteBuffer) { return NULL; }
+bool AtariDebugInterface::LoadDiskDataSnapshotSynced(CByteBuffer *byteBuffer) { return NULL; }
+bool AtariDebugInterface::SaveDiskDataSnapshotSynced(CByteBuffer *byteBuffer) { return NULL; }
+void AtariDebugInterface::RefreshScreenNoCallback() {}
+void AtariDebugInterface::DetachEverything() {}
+void AtariDebugInterface::DetachDriveDisk() {}
+void AtariDebugInterface::DetachCartridge() {}
+void AtariDebugInterface::SetPokeyStereo(bool isStereo) {}
+bool AtariDebugInterface::GetSettingIsWarpSpeed() { return false; }
+void AtariDebugInterface::SetSettingIsWarpSpeed(bool isWarpSpeed) {}
 
 #endif
