@@ -1,0 +1,16 @@
+# <hex address> <watch name>
+0314 irq1
+0315 irq2
+fce2 reset
+# or 64tass style:
+# <watch name> = $<hex address>
+C1NLOW = $097e
+VIBCHECK = $1165
+TRIGGERROWCHAN = $0bcd
+SPEED = $0a2f
+SETCONT = $0d3b
+PTEMP = $0a2e
+MUSIC = $0d83
+OKVIB1 = $120a
+NOBV = $106d
+PAGE = 256

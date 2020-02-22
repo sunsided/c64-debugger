@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>BD4F797F-5E4D-4313-A253-C68E4B9DC7F6</string>
+	<key>IDESourceControlProjectName</key>
+	<string>DeployMaker</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>B00EC9B02C555D990E61356091FE8D56C856D6F1</key>
+		<string>ssh://slaj.rabidus.pl:666/~/git/MTEngine.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>tools/DeployMaker/DeployMaker.xcodeproj</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>B00EC9B02C555D990E61356091FE8D56C856D6F1</key>
+		<string>../../../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>ssh://slaj.rabidus.pl:666/~/git/MTEngine.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>B00EC9B02C555D990E61356091FE8D56C856D6F1</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>B00EC9B02C555D990E61356091FE8D56C856D6F1</string>
+			<key>IDESourceControlWCCName</key>
+			<string>MTEngine</string>
+		</dict>
+	</array>
+</dict>
+</plist>
