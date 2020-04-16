@@ -82,8 +82,13 @@ Should work as-is without troubles. Just put files into
 
 Linux: 
 There's a Makefile in root folder you can use to compile. Just type make.
+You need to install these libs: gcc, g++, libgtk-3-dev, libasound2-dev,
+mesa-common-dev, libglu1-mesa-dev, libglib2.0-dev, libxcb-util
 
-To compile code for development purposes:
+Note this ticket related to libxcb-util library:
+https://sourceforge.net/p/c64-debugger/tickets/34/
+
+To compile code for development purposes in Eclipse IDE:
 I use a tool from hell to compile the project that is called Eclipse CDT.
 It is crap and you can find my stupid posts on Eclipse support forums
 showing why I think so. Devs of Eclipse have never released a stable
@@ -91,8 +96,6 @@ version even though it is more than 10 years old. I selected Eclipse
 because I wasn't able to find any other IDE for Linux that had proper
 wrapper to GDB back in '07. My bad. Should have selected Vi, Emacs or
 something. I was able to compile the project on Ubuntu 12.04 recently.
-You need to install these libs: gcc, g++, libgtk-3-dev, libasound2-dev,
-mesa-common-dev, libglu1-mesa-dev, libglib2.0-dev
 
 Then go to Eclipse settings and make *.mm files compile as C++ source
 code: Window/Properties/File types: *.mm as C++ source 
