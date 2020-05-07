@@ -493,7 +493,7 @@ void CViewMonitorConsole::CommandFill()
 	
 	if (GetTokenValueHex(&addrStart) == false)
 	{
-		this->viewConsole->PrintLine("Usage: F <from addres> <to address> <value>");
+		this->viewConsole->PrintLine("Usage: F <from address> <to address> <value>");
 		return;
 	}
 	
@@ -531,7 +531,7 @@ void CViewMonitorConsole::CommandFill()
 	
 	if (addrEnd < addrStart)
 	{
-		this->viewConsole->PrintLine("Usage: F <from addres> <to address> <value>");
+		this->viewConsole->PrintLine("Usage: F <from address> <to address> <value>");
 		return;
 	}
 
@@ -555,7 +555,7 @@ void CViewMonitorConsole::CommandCompare()
 	
 	if (GetTokenValueHex(&addrStart) == false)
 	{
-		this->viewConsole->PrintLine("Usage: C <from addres> <to address> <destination address>");
+		this->viewConsole->PrintLine("Usage: C <from address> <to address> <destination address>");
 		return;
 	}
 	
@@ -594,7 +594,7 @@ void CViewMonitorConsole::CommandCompare()
 	if (addrEnd <= addrStart)
 	{
 		this->viewConsole->PrintLine("From address must be less than to address.");
-		this->viewConsole->PrintLine("Usage: C <from addres> <to address> <destination address>");
+		this->viewConsole->PrintLine("Usage: C <from address> <to address> <destination address>");
 		return;
 	}
 	
@@ -634,7 +634,7 @@ void CViewMonitorConsole::CommandTransfer()
 	
 	if (GetTokenValueHex(&addrStart) == false)
 	{
-		this->viewConsole->PrintLine("Usage: T <from addres> <to address> <destination address>");
+		this->viewConsole->PrintLine("Usage: T <from address> <to address> <destination address>");
 		return;
 	}
 	
@@ -673,7 +673,7 @@ void CViewMonitorConsole::CommandTransfer()
 	if (addrEnd <= addrStart)
 	{
 		this->viewConsole->PrintLine("From address must be less than to address.");
-		this->viewConsole->PrintLine("Usage: T <from addres> <to address> <destination address>");
+		this->viewConsole->PrintLine("Usage: T <from address> <to address> <destination address>");
 		return;
 	}
 	
@@ -706,7 +706,7 @@ void CViewMonitorConsole::CommandHunt()
 	
 	if (GetTokenValueHex(&addrStart) == false)
 	{
-		this->viewConsole->PrintLine("Usage: H <from addres> <to address> <value> [<value> ...]");
+		this->viewConsole->PrintLine("Usage: H <from address> <to address> <value> [<value> ...]");
 		return;
 	}
 	
@@ -732,7 +732,7 @@ void CViewMonitorConsole::CommandHunt()
 	if (addrEnd <= addrStart)
 	{
 		this->viewConsole->PrintLine("From address must be less than to address.");
-		this->viewConsole->PrintLine("Usage: H <from addres> <to address> <value> [<value> ...]");
+		this->viewConsole->PrintLine("Usage: H <from address> <to address> <value> [<value> ...]");
 		return;
 	}
 
@@ -764,7 +764,7 @@ void CViewMonitorConsole::CommandHunt()
 	if (values.size() == 0)
 	{
 		this->viewConsole->PrintLine("No values entered.");
-		this->viewConsole->PrintLine("Usage: H <from addres> <to address> <value> [<value> ...]");
+		this->viewConsole->PrintLine("Usage: H <from address> <to address> <value> [<value> ...]");
 		return;
 	}
 	
@@ -837,7 +837,7 @@ void CViewMonitorConsole::CommandHuntContinue()
 	
 	if (GetTokenValueHex(&addrStart) == false)
 	{
-		this->viewConsole->PrintLine("Usage: HC <from addres> <to address> <value> [<value> ...]");
+		this->viewConsole->PrintLine("Usage: HC <from address> <to address> <value> [<value> ...]");
 		return;
 	}
 	
@@ -863,7 +863,7 @@ void CViewMonitorConsole::CommandHuntContinue()
 	if (addrEnd <= addrStart)
 	{
 		this->viewConsole->PrintLine("From address must be less than to address.");
-		this->viewConsole->PrintLine("Usage: HC <from addres> <to address> <value> [<value> ...]");
+		this->viewConsole->PrintLine("Usage: HC <from address> <to address> <value> [<value> ...]");
 		return;
 	}
 	
@@ -895,7 +895,7 @@ void CViewMonitorConsole::CommandHuntContinue()
 	if (values.size() == 0)
 	{
 		this->viewConsole->PrintLine("No values entered.");
-		this->viewConsole->PrintLine("Usage: HC <from addres> <to address> <value> [<value> ...]");
+		this->viewConsole->PrintLine("Usage: HC <from address> <to address> <value> [<value> ...]");
 		return;
 	}
 	
@@ -983,7 +983,7 @@ void CViewMonitorConsole::CommandMemorySave()
 	CSlrString *token;
 	if (GetToken(&token) == false)
 	{
-		this->viewConsole->PrintLine("Usage: S [PRG] <from addres> <to address> [file name]");
+		this->viewConsole->PrintLine("Usage: S [PRG] <from address> <to address> [file name]");
 		return;
 	}
 	
@@ -996,7 +996,7 @@ void CViewMonitorConsole::CommandMemorySave()
 	
 	if (GetTokenValueHex(&addrStart) == false)
 	{
-		this->viewConsole->PrintLine("Usage: S [PRG] <from addres> <to address> [file name]");
+		this->viewConsole->PrintLine("Usage: S [PRG] <from address> <to address> [file name]");
 		return;
 	}
 	
@@ -1021,7 +1021,7 @@ void CViewMonitorConsole::CommandMemorySave()
 	
 	if (addrEnd <= addrStart)
 	{
-		this->viewConsole->PrintLine("Usage: S [PRG] <from addres> <to address> [file name]");
+		this->viewConsole->PrintLine("Usage: S [PRG] <from address> <to address> [file name]");
 		return;
 	}
 	
@@ -1033,7 +1033,7 @@ void CViewMonitorConsole::CommandMemorySavePRG()
 {
 	if (GetTokenValueHex(&addrStart) == false)
 	{
-		this->viewConsole->PrintLine("Usage: S [PRG] <from addres> <to address> [file name]");
+		this->viewConsole->PrintLine("Usage: S [PRG] <from address> <to address> [file name]");
 		return;
 	}
 	
@@ -1058,7 +1058,7 @@ void CViewMonitorConsole::CommandMemorySavePRG()
 	
 	if (addrEnd <= addrStart)
 	{
-		this->viewConsole->PrintLine("Usage: S [PRG] <from addres> <to address> [file name]");
+		this->viewConsole->PrintLine("Usage: S [PRG] <from address> <to address> [file name]");
 		return;
 	}
 	
@@ -1452,7 +1452,7 @@ void CViewMonitorConsole::CommandDisassemble()
 	CSlrString *token;
 	if (GetToken(&token) == false)
 	{
-		this->viewConsole->PrintLine("Usage: D [NOHEX] <from addres> <to address> [file name]");
+		this->viewConsole->PrintLine("Usage: D [NOHEX] <from address> <to address> [file name]");
 		return;
 	}
 	
@@ -1465,7 +1465,7 @@ void CViewMonitorConsole::CommandDisassemble()
 	
 	if (GetTokenValueHex(&addrStart) == false)
 	{
-		this->viewConsole->PrintLine("Usage: D [NOHEX] <from addres> <to address> [file name]");
+		this->viewConsole->PrintLine("Usage: D [NOHEX] <from address> <to address> [file name]");
 		return;
 	}
 	
@@ -1490,7 +1490,7 @@ void CViewMonitorConsole::CommandDisassemble()
 	
 	if (addrEnd <= addrStart)
 	{
-		this->viewConsole->PrintLine("Usage: D [NOHEX] <from addres> <to address> [file name]");
+		this->viewConsole->PrintLine("Usage: D [NOHEX] <from address> <to address> [file name]");
 		return;
 	}
 	
