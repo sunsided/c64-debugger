@@ -49,6 +49,7 @@ public:
 	void LoadImage(CSlrFile *imgFile);
 
 	void BindImage();
+	void ReBindImage();
 	void FreeLoadImage();
 
 	// set image data directly, it is a hack, be carefull

@@ -63,6 +63,8 @@ int c64_snapshot_write(const char *name, int save_roms, int save_disks, int even
 {
     snapshot_t *s;
 
+	LOGD("c64_snapshot_write: name=%s save_roms=%d save_disks=%d event_mode=%d save_reu_data=%d save_cart_roms=%d save_screen=%d", name, save_roms, save_disks, event_mode, save_reu_data, save_cart_roms, save_screen);
+
     s = snapshot_create(name, ((BYTE)(SNAP_MAJOR)), ((BYTE)(SNAP_MINOR)), machine_get_name(), 0);
     if (s == NULL) {
         return -1;

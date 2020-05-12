@@ -11,6 +11,8 @@ CGuiViewConsole::CGuiViewConsole(float posX, float posY, float posZ, float sizeX
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
 {
 	this->font = font;
+	this->prompt[0] = 0x00;
+	this->commandLine[0] = 0x00;
 	this->SetFontScale(fontScale);
 	this->SetNumLines(numLines);
 	this->callback = callback;

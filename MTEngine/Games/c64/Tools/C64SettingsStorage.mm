@@ -743,7 +743,7 @@ void C64DebuggerSetSetting(char *name, void *value)
 			delete c64SettingsPathToPRG;
 		
 		c64SettingsPathToPRG = new CSlrString((CSlrString*)value);
-		
+		c64SettingsPathToPRG->DebugPrint("PathPRG=");
 		// the setting will be updated later by c64PerformStartupTasksThreaded
 		if (viewC64->debugInterfaceC64 && viewC64->debugInterfaceC64->isRunning)
 		{

@@ -656,9 +656,6 @@ void CSlrImage::BindImage()
 
 	if (isBound)
 		return;
-
-//  if (!gMainContext || ![EAGLContext setCurrentContext:gMainContext])
-//      SYS_FatalExit("BindImage() self current context failed");
 	
 	if (loadImageData == NULL)
 	{
@@ -666,9 +663,6 @@ void CSlrImage::BindImage()
  	      SYS_FatalExit("BindImage() loadImageData NULL");
 	}
 
-    //  [EAGLContext setCurrentContext:[gMainContext in EAGLView] ];
-
-    glGenTextures(1, &texture[0]);
     glBindTexture(GL_TEXTURE_2D, texture[0]);
 
     isBound = true;
@@ -694,7 +688,7 @@ void CSlrImage::BindImage()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, rasterWidth, rasterHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, loadImageData->getRGBAResultData());
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, rasterWidth, rasterHeight, GL_RGBA, GL_UNSIGNED_BYTE, loadImageData);
 }
 
 void CSlrImage::FreeLoadImage()
@@ -804,9 +798,8 @@ void CSlrImage::SetLoadImageData(CImageData *imageData)
 
 void CSlrImage::ReplaceImageData(CImageData *imageData)
 {
-	this->Deallocate();
 	this->SetLoadImageData(imageData);
-	this->BindImage();
+	this->ReBindImage();
 	this->loadImageData = NULL;
 }
 

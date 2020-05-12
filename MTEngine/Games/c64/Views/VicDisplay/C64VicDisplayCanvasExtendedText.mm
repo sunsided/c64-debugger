@@ -361,7 +361,7 @@ u8 C64VicDisplayCanvasExtendedText::ConvertFrom(CImageData *imageData)
 	
 	C64DebugInterface *debugInterface = vicDisplay->debugInterface;
 	
-	CImageData *image = ReducePalette(imageData);
+	CImageData *image = ReducePalette(imageData, vicDisplay);
 	
 	std::vector<C64ColorsHistogramElement *> *sortedColors = GetSortedColorsHistogram(image);
 

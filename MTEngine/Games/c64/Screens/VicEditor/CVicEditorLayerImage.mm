@@ -43,9 +43,8 @@ CVicEditorLayerImage::~CVicEditorLayerImage()
 
 void CVicEditorLayerImage::RefreshImage()
 {
-	image->Deallocate();
 	image->SetLoadImageData(imageData);
-	image->BindImage();
+	image->ReBindImage();
 	image->loadImageData = NULL;
 }
 

@@ -772,7 +772,7 @@ void CViewMainMenu::InsertD64(CSlrString *path, bool updatePathToD64, bool autoR
 		delete menuItemInsertD64->str2;
 	
 	menuItemInsertD64->str2 = new CSlrString(fname);
-	delete fname;
+	delete [] fname;
 	
 	guiMain->UnlockMutex();
 
@@ -942,7 +942,7 @@ void CViewMainMenu::InsertCartridge(CSlrString *path, bool updatePathToCRT)
 		delete menuItemInsertCartridge->str2;
 	
 	menuItemInsertCartridge->str2 = new CSlrString(fname);
-	delete fname;
+	delete [] fname;
 
 	guiMain->UnlockMutex();
 	
@@ -1000,7 +1000,7 @@ bool CViewMainMenu::LoadPRG(CSlrString *path, bool autoStart, bool updatePRGFold
 		delete menuItemOpenFile->str2;
 	
 	menuItemOpenFile->str2 = new CSlrString(fname);
-	delete fname;
+	delete [] fname;
 	
 	LoadLabelsAndWatches(path, viewC64->debugInterfaceC64);
 	guiMain->UnlockMutex();
@@ -1009,7 +1009,7 @@ bool CViewMainMenu::LoadPRG(CSlrString *path, bool autoStart, bool updatePRGFold
 	CByteBuffer *byteBuffer = new CByteBuffer(file, false);
 	LoadPRG(byteBuffer, autoStart, showAddressInfo, forceFastReset);
 	
-	delete asciiPath;
+	delete [] asciiPath;
 	delete file;
 
 	delete byteBuffer;
@@ -1125,7 +1125,7 @@ bool CViewMainMenu::LoadTape(CSlrString *path, bool autoStart, bool updateTAPFol
 		delete menuItemLoadPRG->str2;
 	 
 	 menuItemLoadPRG->str2 = new CSlrString(fname);
-	 delete fname;
+	 delete [] fname;
 	 
 	 LoadLabelsAndWatches(path);
 	 guiMain->UnlockMutex();
@@ -1201,7 +1201,7 @@ bool CViewMainMenu::LoadXEX(CSlrString *path, bool autoStart, bool updateXEXFold
 		delete menuItemLoadPRG->str2;
 	
 	menuItemLoadPRG->str2 = new CSlrString(fname);
-	delete fname;
+	delete [] fname;
 	 */
 	
 	LoadLabelsAndWatches(path, viewC64->debugInterfaceAtari);
@@ -1278,7 +1278,7 @@ bool CViewMainMenu::LoadCAS(CSlrString *path, bool autoStart, bool updateCASFold
 		delete menuItemLoadPRG->str2;
 	 
 	 menuItemLoadPRG->str2 = new CSlrString(fname);
-	 delete fname;
+	 delete [] fname;
 	 
 	 LoadLabelsAndWatches(path);
 	 guiMain->UnlockMutex();
@@ -1344,7 +1344,7 @@ bool CViewMainMenu::InsertAtariCartridge(CSlrString *path, bool autoStart, bool 
 		delete menuItemInsertAtariCartridge->str2;
 
 	menuItemInsertAtariCartridge->str2 = new CSlrString(fname);
-	delete fname;
+	delete [] fname;
 	
 	LoadLabelsAndWatches(path, viewC64->debugInterfaceAtari);
 	guiMain->UnlockMutex();
@@ -1409,7 +1409,7 @@ void CViewMainMenu::InsertATR(CSlrString *path, bool updatePathToATR, bool autoR
 		delete menuItemInsertATR->str2;
 	
 	menuItemInsertATR->str2 = new CSlrString(fname);
-	delete fname;
+	delete [] fname;
 	
 	guiMain->UnlockMutex();
 	
@@ -1476,7 +1476,7 @@ bool CViewMainMenu::LoadNES(CSlrString *path, bool updateNESFolderPath)
 		delete menuItemLoadPRG->str2;
 	 
 	 menuItemLoadPRG->str2 = new CSlrString(fname);
-	 delete fname;
+	 delete [] fname;
 	 
 	 LoadLabelsAndWatches(path);
 	 guiMain->UnlockMutex();
@@ -1866,7 +1866,7 @@ void CViewMainMenu::LoadPRG(CByteBuffer *byteBuffer, u16 *startAddr, u16 *endAdd
 	LOGD("..loadPoint=%4.4x", loadPoint);
 	
 	u16 addr = loadPoint;
-	while (!byteBuffer->isEof())
+	while (!byteBuffer->IsEof())
 	{
 		u8 b = byteBuffer->GetByte();
 		
@@ -2459,7 +2459,7 @@ CViewC64MenuItemFloat::CViewC64MenuItemFloat(float height, CSlrString *str, CSlr
 	
 	numLeadingDigits = 5;
 	numDecimalsDigits = 2;
-
+	value = 0;
 	
 	// update display string
 	this->SetString(str);

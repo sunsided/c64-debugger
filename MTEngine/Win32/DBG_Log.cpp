@@ -69,7 +69,7 @@ bool logThisLevel(int level)
 //	if (level == DBGLVL_RES) return true;
 //	return false;
 
-		return true;
+		//return true;
 	if (level == DBGLVL_MAIN) return true; 
 	if (level == DBGLVL_DEBUG) return true;
 	if (level == DBGLVL_RES) return false;

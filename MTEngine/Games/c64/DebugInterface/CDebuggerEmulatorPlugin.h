@@ -21,6 +21,7 @@ public:
 	
 	virtual void Init();
 	virtual void DoFrame();
+	virtual void RenderGUI();
 	
 	// returns key
 	virtual u32 KeyDown(u32 keyCode);

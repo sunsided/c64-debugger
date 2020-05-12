@@ -7,7 +7,7 @@ C64CharsetHires::C64CharsetHires()
 	
 void C64CharsetHires::CreateFromCharset(u8 *charsetData)
 {
-	LOGD("C64CharsetHires::CreateFromCharset");
+//	LOGD("C64CharsetHires::CreateFromCharset");
 	for (int charId = 0; charId < 256; charId++)
 	{
 		u8 *chd = charsetData + 8*charId;
@@ -52,8 +52,8 @@ void C64CharsetHires::CreateFromCharset(u8 *charsetData)
 			chd++;
 		}
 
-		LOGD("charId=%d", charId);
-		chr->DebugPrint();
+//		LOGD("charId=%d", charId);
+//		chr->DebugPrint();
 		characters[charId] = chr;
 	}
 }

@@ -520,6 +520,7 @@ void CViewVicEditor::Render()
 	/////////////
 
 	
+	viewC64->RenderPlugins();
 }
 
 void CViewVicEditor::Render(GLfloat posX, GLfloat posY)
@@ -2766,7 +2767,7 @@ bool CViewVicEditor::ImportPNG(CSlrString *path)
 			
 			C64DebugInterface *debugInterface = viewVicDisplayMain->debugInterface;
 			
-			CImageData *image = viewVicDisplayMain->currentCanvas->ReducePalette(imageData);
+			CImageData *image = viewVicDisplayMain->currentCanvas->ReducePalette(imageData, viewVicDisplayMain);
 			
 			for (int ry = 0; ry < 272; ry++)
 			{

@@ -162,9 +162,9 @@ void C64DebuggerComputeMemoryMapColorTables(uint8 memoryValuesStyle)
 }
 
 
-inline void ColorFromValue(byte v, float *r, float *g, float *b, float *a)
+inline void ColorFromValue(u8 v, float *r, float *g, float *b, float *a)
 {
-	*a = alphaSplit;
+	*a = alphaSplit;	
 	*r = colorForValueR[v];
 	*g = colorForValueG[v];
 	*b = colorForValueB[v];
@@ -339,6 +339,8 @@ CViewMemoryMap::CViewMemoryMap(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	this->font = viewC64->fontCBMShifted; //guiMain->fntConsole;
 	this->fontScale = 0.11f;
 	
+	C64DebuggerComputeMemoryMapColorTables(c64SettingsMemoryValuesStyle);
+
 	// alloc with safe margin to avoid comparison in cells marking (quicker)
 	int numCells = ramSize + 0x0200;
 	memoryCells = new CViewMemoryMapCell *[numCells];
@@ -1230,9 +1232,8 @@ void CViewMemoryMap::Render()
 		if (nextScreenUpdateFrame < frameCounter)
 		{
 			UpdateWholeMap();
-			imageMemoryMap->Deallocate();
 			imageMemoryMap->SetLoadImageData(imageDataMemoryMap);
-			imageMemoryMap->BindImage();
+			imageMemoryMap->ReBindImage();
 			imageMemoryMap->loadImageData = NULL;
 			nextScreenUpdateFrame = frameCounter + c64SettingsMemoryMapRefreshRate;
 		}
@@ -1244,9 +1245,8 @@ void CViewMemoryMap::Render()
 		{
 			CellsAnimationLogic();
 			UpdateWholeMap();
-			imageMemoryMap->Deallocate();
 			imageMemoryMap->SetLoadImageData(imageDataMemoryMap);
-			imageMemoryMap->BindImage();
+			imageMemoryMap->ReBindImage();
 			imageMemoryMap->loadImageData = NULL;
 			nextScreenUpdateFrame = frameCounter+35;
 		}

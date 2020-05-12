@@ -30,6 +30,10 @@ void CDebuggerEmulatorPlugin::DoFrame()
 {
 }
 
+void CDebuggerEmulatorPlugin::RenderGUI()
+{
+}
+
 u32 CDebuggerEmulatorPlugin::KeyDown(u32 keyCode)
 {
 	return keyCode;

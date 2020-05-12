@@ -1171,6 +1171,7 @@
 		41247ADE21D0F598002534CA /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		41247ADF21D0F598002534CA /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AFD4D889113C504F00C2DE76 /* OpenGL.framework */; };
 		41247AE021D0F598002534CA /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF9DBBC5113C611C00D05754 /* QuartzCore.framework */; };
+		41269BE8244875C000503464 /* IMG_SimpleSegmentation.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41269BE6244875C000503464 /* IMG_SimpleSegmentation.mm */; };
 		4128D0B11DC0F4D6007A5CFF /* C64SharedMemory.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4128D0AF1DC0F4D6007A5CFF /* C64SharedMemory.mm */; };
 		412BB9A31614AB6800533AD3 /* CSlrFileFromDocuments.mm in Sources */ = {isa = PBXBuildFile; fileRef = 412BB98C1614AB6800533AD3 /* CSlrFileFromDocuments.mm */; };
 		412BB9A41614AB6800533AD3 /* CSlrFileFromResources.mm in Sources */ = {isa = PBXBuildFile; fileRef = 412BB98E1614AB6800533AD3 /* CSlrFileFromResources.mm */; };
@@ -2838,7 +2839,8 @@
 		411C4C5D21F2B36F00356433 /* xep80_fonts.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = xep80_fonts.c; sourceTree = "<group>"; };
 		411C4C5E21F2B36F00356433 /* xep80_fonts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xep80_fonts.h; sourceTree = "<group>"; };
 		41247AE421D0F598002534CA /* 65XEDebugger.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = 65XEDebugger.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		41247AE521D0F599002534CA /* C64Debugger copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "C64Debugger copy-Info.plist"; path = "/Volumes/Macintosh HD/Users/mars/develop/MTEngine/MacOS/C64Debugger copy-Info.plist"; sourceTree = "<absolute>"; };
+		41269BE6244875C000503464 /* IMG_SimpleSegmentation.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = IMG_SimpleSegmentation.mm; sourceTree = "<group>"; };
+		41269BE7244875C000503464 /* IMG_SimpleSegmentation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMG_SimpleSegmentation.h; sourceTree = "<group>"; };
 		4128D0AF1DC0F4D6007A5CFF /* C64SharedMemory.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64SharedMemory.mm; path = ../Games/c64/Tools/C64SharedMemory.mm; sourceTree = "<group>"; };
 		4128D0B01DC0F4D6007A5CFF /* C64SharedMemory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64SharedMemory.h; path = ../Games/c64/Tools/C64SharedMemory.h; sourceTree = "<group>"; };
 		412BB98B1614AB6800533AD3 /* CSlrFileFromDocuments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CSlrFileFromDocuments.h; sourceTree = "<group>"; };
@@ -5203,7 +5205,6 @@
 				29B97317FDCFA39411CA2CEA /* Resources */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
-				41247AE521D0F599002534CA /* C64Debugger copy-Info.plist */,
 			);
 			name = GLFullScreen;
 			sourceTree = "<group>";
@@ -8457,6 +8458,8 @@
 		4180557E18DC676300F6EE8F /* ImageProcessing */ = {
 			isa = PBXGroup;
 			children = (
+				41269BE6244875C000503464 /* IMG_SimpleSegmentation.mm */,
+				41269BE7244875C000503464 /* IMG_SimpleSegmentation.h */,
 				41428A9319F966F300D2F7C9 /* stb_image */,
 				41CF58FF1920E77600F43331 /* IMG_Scale.h */,
 				41CF59001920E77600F43331 /* IMG_Scale.mm */,
@@ -8794,8 +8797,8 @@
 				4195B311173BD3450034680E /* CSlrFileFromTemp.mm */,
 				412BB98F1614AB6800533AD3 /* CSlrFontSystem.h */,
 				412BB9901614AB6800533AD3 /* CSlrFontSystem.mm */,
-				412BB9911614AB6800533AD3 /* CSlrImage.h */,
 				412BB9921614AB6800533AD3 /* CSlrImage.mm */,
+				412BB9911614AB6800533AD3 /* CSlrImage.h */,
 				412BB9951614AB6800533AD3 /* DBG_Log.h */,
 				412BB9961614AB6800533AD3 /* DBG_Log.mm */,
 				412BB9991614AB6800533AD3 /* SND_SoundEngine.h */,
@@ -10412,6 +10415,7 @@
 				41F2AAB11E9D0EAC00ADE8DF /* riot1d.c in Sources */,
 				4172EFE921F2B48F003F49FB /* NstBoardBandaiOekaKids.cpp in Sources */,
 				4172EFFD21F2B48F003F49FB /* NstBoardBmcCh001.cpp in Sources */,
+				41269BE8244875C000503464 /* IMG_SimpleSegmentation.mm in Sources */,
 				41F2A9FE1E9D0E6B00ADE8DF /* mikroass.c in Sources */,
 				4172F04F21F2B48F003F49FB /* NstBoardKonamiVrc4.cpp in Sources */,
 				414539B11CB2E94F00020916 /* initcmdline.c in Sources */,
@@ -11478,7 +11482,8 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
-				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon 65XE";
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon C64";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CODE_SIGN_IDENTITY = "";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "";
@@ -11505,8 +11510,12 @@
 				INSTALL_PATH = "$(HOME)/Applications";
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				OTHER_CFLAGS = "";
-				PRODUCT_BUNDLE_IDENTIFIER = pl.rabidus.65XEDebugger;
-				PRODUCT_NAME = 65XEDebugger;
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-Wno-c++11-narrowing",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = pl.rabidus.C64Debugger;
+				PRODUCT_NAME = C64Debugger;
 				PROVISIONING_PROFILE = "";
 				SDKROOT = macosx;
 				VALID_ARCHS = x86_64;
@@ -11519,7 +11528,8 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
-				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon 65XE";
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon C64";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CODE_SIGN_IDENTITY = "Developer ID Application: Marcin Skoczylas (APV7Y7Q9JY)";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Developer ID Application: Marcin Skoczylas (APV7Y7Q9JY)";
@@ -11544,8 +11554,12 @@
 				INSTALL_PATH = "$(HOME)/Applications";
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				OTHER_CFLAGS = "";
-				PRODUCT_BUNDLE_IDENTIFIER = pl.rabidus.65XEDebugger;
-				PRODUCT_NAME = 65XEDebugger;
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-Wno-c++11-narrowing",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = pl.rabidus.C64Debugger;
+				PRODUCT_NAME = C64Debugger;
 				PROVISIONING_PROFILE = "";
 				SDKROOT = macosx;
 				VALID_ARCHS = x86_64;

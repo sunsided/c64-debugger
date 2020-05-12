@@ -159,9 +159,8 @@ void CViewNesScreen::RefreshScreen()
 	}
 #endif
 	
-	imageScreen->Deallocate();
 	imageScreen->SetLoadImageData(screen);
-	imageScreen->BindImage();
+	imageScreen->ReBindImage();
 	imageScreen->loadImageData = NULL;
 	
 	debugInterface->UnlockRenderScreenMutex();

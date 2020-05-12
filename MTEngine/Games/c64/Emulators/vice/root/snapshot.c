@@ -776,6 +776,8 @@ snapshot_t *snapshot_create(const char *filename, BYTE major_version, BYTE minor
     snapshot_t *sn;
     unsigned char viceversion[4] = { VERSION_RC_NUMBER };
 
+	LOGD("snapshot_create: filename='%s'", filename);
+
     current_filename = (char *)filename;
 
 	sn = lib_malloc(sizeof(snapshot_t));
@@ -1138,6 +1140,7 @@ int snapshot_close(snapshot_t *sn)
 			FILE *fp = fopen(current_filename, "wb");
 			if (fp == NULL)
 			{
+				LOGError("snapshot_close: fp is NULL");
 				snapshot_error = SNAPSHOT_CANNOT_CREATE_SNAPSHOT_ERROR;
 				retval = -1;
 			}
@@ -1149,6 +1152,10 @@ int snapshot_close(snapshot_t *sn)
 			}
 			
 			lib_free(sn->data);
+		}
+		else
+		{
+			LOGD("snapshot_close: current_filename is NULL");
 		}
 	}
 

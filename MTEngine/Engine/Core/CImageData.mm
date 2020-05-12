@@ -12,6 +12,7 @@
 #include "zlib.h"
 #include "JPEGWriter.h"
 #include "CSlrFileZlib.h"
+#include "SYS_CFileSystem.h"
 #include "stb_image.h"
 
 #if defined(ANDROID)
@@ -62,7 +63,7 @@ CImageData::CImageData(char *fileName)
 	this->tempData = NULL;
 	this->resultData = NULL;
 	this->row_pointers = NULL;
-	this->type = IMG_TYPE_GRAYSCALE;
+	this->type = IMG_TYPE_RGBA;
 	this->mask = NULL;
 	this->width = 0;
 	this->height = 0;
@@ -1574,7 +1575,7 @@ void CImageData::GetPixelResultRGBA(int x, int y, u8 *r, u8 *g, u8 *b, u8 *a)
 	*r = imageData[offset++];
 	*g = imageData[offset++];
 	*b = imageData[offset++];
-	*a = imageData[offset];
+	*a = imageData[offset];	
 }
 
 void CImageData::SetPixelResultRGBA(int x, int y, u8 r, u8 g, u8 b, u8 a)
@@ -2564,6 +2565,12 @@ bool CImageData::Load(char *fileName, bool dealloc)
 	if (dealloc)
 		DeallocImage();
 
+	if (SYS_FileExists(fileName) == false)
+	{
+		LOGError("CImageData::Load: file does not exist %s", fileName);
+		return false;
+	}
+	
 	std::vector<unsigned char> image;
 	unsigned imgWidth, imgHeight;
 	unsigned error = lodepng::decode(image, imgWidth, imgHeight, fileName);
@@ -2575,7 +2582,7 @@ bool CImageData::Load(char *fileName, bool dealloc)
 	// If there's an error, display it.
 	if(error != 0)
 	{
-		LOGError("LodePNG error: %s", lodepng_error_text(error));
+		LOGError("LodePNG error: %s fileName=%s", lodepng_error_text(error), fileName);
 		return false;
 	}
 	

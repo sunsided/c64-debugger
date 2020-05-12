@@ -135,6 +135,8 @@ CViewC64::CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 	C64DebuggerInitSharedMemory();
 	SYS_SharedMemoryRegisterCallback(viewC64);
 
+	currentScreenLayoutId = SCREEN_LAYOUT_MAX;
+	
 	C64DebuggerParseCommandLine1();
 
 	// restore pre-launch settings (paths to D64, PRG, CRT)
@@ -2876,13 +2878,49 @@ void CViewC64::Render()
 		}
 	}
 	
+	RenderPlugins();
+
 //	// debug render fps
 //	char buf[128];
 //	sprintf(buf, "%-6.2f %-6.2f", debugInterface->emulationSpeed, debugInterface->emulationFrameRate);
 //	
 //	guiMain->fntConsole->BlitText(buf, 0, 0, -1, 15);
 
-	
+}
+
+void CViewC64::RenderPlugins()
+{
+	// render plugins
+	// TODO: generalize me, iterate over debug interfaces
+	CDebugInterface *debugInterface = this->debugInterfaceC64;
+	if (debugInterface)
+	{
+		for (std::list<CDebuggerEmulatorPlugin *>::iterator it = debugInterface->plugins.begin(); it != debugInterface->plugins.end(); it++)
+		{
+			CDebuggerEmulatorPlugin *plugin = *it;
+			plugin->RenderGUI();
+		}
+	}
+	debugInterface = this->debugInterfaceAtari;
+	if (debugInterface)
+	{
+		for (std::list<CDebuggerEmulatorPlugin *>::iterator it = debugInterface->plugins.begin(); it != debugInterface->plugins.end(); it++)
+		{
+			CDebuggerEmulatorPlugin *plugin = *it;
+			plugin->RenderGUI();
+		}
+	}
+	debugInterface = this->debugInterfaceNes;
+	if (debugInterface)
+	{
+		for (std::list<CDebuggerEmulatorPlugin *>::iterator it = debugInterface->plugins.begin(); it != debugInterface->plugins.end(); it++)
+		{
+			CDebuggerEmulatorPlugin *plugin = *it;
+			plugin->RenderGUI();
+		}
+		
+	}
+	//////// ^^^ TODO
 }
 
 ///////////////

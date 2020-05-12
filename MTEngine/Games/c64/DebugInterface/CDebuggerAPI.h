@@ -19,6 +19,8 @@ class CDebuggerAPI
 public:
 	CDebuggerAPI();
 	
+	void ResetMachine();
+	
 	void SwitchToVicEditor();
 	void CreateNewPicture(u8 mode, u8 backgroundColor);
 	void StartThread(CSlrThread *run);
@@ -63,6 +65,9 @@ public:
 	u8 PaintReferenceImagePixel(int x, int y, u8 r, u8 g, u8 b, u8 a);
 	
 	//
+	void GetCBMColor(u8 colorNum, u8 *r, u8 *g, u8 *b);
+	
+	//
 	void SetByte(int addr, u8 v);	/// NOTE: this needs change
 	void SetByteToRam(int addr, u8 v);
 	void SetByteToRamC64(int addr, u8 v);
@@ -70,6 +75,10 @@ public:
 	void SetWord(int addr, u16 v);
 	void MakeJMP(int addr);
 
+	//
+	void SetCiaRegister(u8 ciaId, u8 registerNum, u8 value);
+	void SetVicRegister(u8 registerNum, u8 value);
+	
 	//
 	void DetachEverything();
 	void ClearRAM(int startAddr, int endAddr, u8 value);
@@ -102,7 +111,13 @@ public:
 	u8 *ExomizerMemoryRaw(u16 fromAddr, u16 toAddr, int *compressedSize);
 	
 	//
+	void SetScreenAndCharsetAddress(u16 screenAddr, u16 charsetAddr);
+	
+	//
+	void ShowMessage(const char *text);
+	void BlitText(const char *text, float posX, float posY, float fontSize);
 	void Sleep(long milliseconds);
+	long GetCurrentTimeInMilliseconds();
 };
 
 #endif

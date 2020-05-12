@@ -54,6 +54,7 @@ public:
 	byte fileLoadError;
 
 	void BindImage();
+	void ReBindImage();
 	void FreeLoadImage();
 
 	char *name;

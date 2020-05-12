@@ -587,17 +587,26 @@ CSlrFile *RES_GetFile(char *fileName, byte fileType)
 	
 	file = RES_GetFile(false, fileName, fileType);
 	if (file->Exists())
+	{
+		LOGD("RES_GetFile: opened '%s'", fileName);
 		return file;
+	}
 	
 	delete file;
 	file = RES_GetFile(true, fileName, fileType);
 	if (file->Exists())
+	{
+		LOGD("RES_GetFile: opened '%s'", fileName);
 		return file;
+	}
 	
 	delete file;
 	file = new CSlrFileFromOS(fileName);
 	if (file->Exists())
+	{
+		LOGD("RES_GetFile: opened '%s'", fileName);
 		return file;
+	}
 	
 	delete file;
 	

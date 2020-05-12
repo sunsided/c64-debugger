@@ -286,7 +286,7 @@ int CViewC64Charset::ImportCharset(CSlrString *path)
 	CByteBuffer *byteBuffer = new CByteBuffer(file, false);
 	for (int i = 0; i < 0x800; i++)
 	{
-		if (byteBuffer->isEof())
+		if (byteBuffer->IsEof())
 		{
 			guiMain->ShowMessage("End of file reached");
 			return -1;

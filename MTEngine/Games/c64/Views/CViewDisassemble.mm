@@ -49,6 +49,7 @@ CViewDisassemble::CViewDisassemble(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 	this->name = "CViewDisassemble";
 	
 	this->addrPositions = NULL;
+	this->numberOfLinesBack = 0;
 	
 	this->viewMemoryMap = memoryMap;
 	this->dataAdapter = dataAdapter;
@@ -59,11 +60,7 @@ CViewDisassemble::CViewDisassemble(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 	
 	this->debugInterface = debugInterface;
 
-	this->fontDisassemble = NULL;
-	
-	
-	this->showHexCodes = false;
-	this->showLabels = false;
+	SetViewParameters(posX, posY, posZ, sizeX, sizeY, NULL, 5.0f, 10, 0.0f, false, false, 0.0f, false, false, 0);
 	
 	this->isTrackingPC = true;
 	this->changedByUser = false;

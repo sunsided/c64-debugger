@@ -18,6 +18,8 @@
 #include "C64AsmSourceSymbols.h"
 #include "C64Symbols.h"
 #include "CViewDataWatch.h"
+#include "CGuiMain.h"
+#include "CSlrFont.h"
 
 CDebuggerAPI::CDebuggerAPI()
 {
@@ -171,6 +173,16 @@ u8 CDebuggerAPI::PaintReferenceImagePixel(int x, int y, u8 r, u8 g, u8 b, u8 a)
 void CDebuggerAPI::Sleep(long milliseconds)
 {
 	SYS_Sleep(milliseconds);
+}
+
+long CDebuggerAPI::GetCurrentTimeInMilliseconds()
+{
+	return SYS_GetCurrentTimeInMillis();
+}
+
+void CDebuggerAPI::ResetMachine()
+{
+	viewC64->debugInterfaceC64->HardReset();
 }
 
 void CDebuggerAPI::MakeJMP(int addr)
@@ -484,3 +496,59 @@ void CDebuggerAPI::BasicUpStart(u16 jmpAddr)
 	}
 	viewC64->debugInterfaceC64->SetByteToRamC64(a++, 0x00);
 }
+
+void CDebuggerAPI::SetCiaRegister(u8 ciaId, u8 registerNum, u8 value)
+{
+	viewC64->debugInterfaceC64->SetCiaRegister(ciaId, registerNum, value);
+}
+
+void CDebuggerAPI::SetVicRegister(u8 registerNum, u8 value)
+{
+	viewC64->debugInterfaceC64->SetVicRegister(registerNum, value);
+}
+
+void CDebuggerAPI::SetScreenAndCharsetAddress(u16 screenAddr, u16 charsetAddr)
+{
+	LOGD("CDebuggerAPI::SetScreenAndCharsetAddress: screenAddr=%04x charsetAddr=%04x", screenAddr, charsetAddr);
+
+	// SET VIC BANK
+	int bankNum = floor((float)charsetAddr / 16384.0f);
+	
+	LOGD("bankNum=%d", bankNum);
+	
+	// (skip) set direction, DD02
+	//SetCiaRegister(0, 2, xxxxxxx);
+
+	// set DD00
+	SetCiaRegister(0, 0, 3-bankNum);
+	
+	u16 bankAddr = bankNum*0x4000;
+	u16 diff = charsetAddr-bankAddr;
+	int characterSetNum = floor((float)diff / 2048.0f);
+
+	diff = screenAddr-bankAddr;
+	int screenNum = floor((float)diff / 1024.0f);
+	
+	u8 d018val = ((u8)screenNum << 4 | (u8)characterSetNum << 1);
+	
+	LOGD("d018val=%02x", d018val);
+	
+	SetVicRegister(0x18, d018val);
+}
+
+void CDebuggerAPI::GetCBMColor(u8 colorNum, u8 *r, u8 *g, u8 *b)
+{
+	return viewC64->debugInterfaceC64->GetCBMColor(colorNum, r, g, b);
+}
+
+void CDebuggerAPI::ShowMessage(const char *text)
+{
+	guiMain->ShowMessage((char*)text);
+}
+
+void CDebuggerAPI::BlitText(const char *text, float posX, float posY, float fontSize)
+{
+	CSlrFont *font = guiMain->fntConsole;
+	font->BlitText((char*)text, posX, posY, -1, fontSize);
+}
+

@@ -204,7 +204,7 @@ CByteBuffer::CByteBuffer(char *fileName)
 	this->wholeDataBufferSize = 0;
 	this->index = 0;
 	this->length = 0;
-	if (this->readFromFile(fileName) == false)
+	if (this->readFromFileNoHeader(fileName) == false)
 	{
 		LOGError("CByteBuffer: file not found '%s'", fileName);
 		this->data = NULL;
@@ -286,9 +286,14 @@ void CByteBuffer::Reset()
 	this->length  = 0;
 }
 
-bool CByteBuffer::isEof()
+bool CByteBuffer::IsEof()
 {
 	return (index == this->length);
+}
+
+bool CByteBuffer::IsEmpty()
+{
+	return (this->length == 0);
 }
 
 void CByteBuffer::ForwardToEnd()
@@ -777,7 +782,7 @@ bool CByteBuffer::storeToFile(CSlrString *filePath)
 	FixFileNameSlashes(f);
 
 	FILE *fp = fopen(f, "wb");
-	free(f);
+	delete [] f;
 #endif
 
 	if (fp == NULL)
@@ -927,7 +932,7 @@ bool CByteBuffer::readFromFile(CSlrString *filePath)
 	FixFileNameSlashes(f);
 	
 	FILE *fp = fopen(f, "rb");
-	free(f);
+	delete [] f;
 #endif
 	
 	if (fp == NULL)

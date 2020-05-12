@@ -157,7 +157,7 @@ void C64VicDisplayCanvas::DeleteColorsHistogram(std::vector<C64ColorsHistogramEl
 }
 
 // reduces color space to C64 colors only (nearest)
-CImageData *C64VicDisplayCanvas::ReducePalette(CImageData *imageData)
+CImageData *C64VicDisplayCanvas::ReducePalette(CImageData *imageData, CViewC64VicDisplay *vicDisplay)
 {
 	CImageData *imageReducedPalette = new CImageData(imageData->width, imageData->height, IMG_TYPE_GRAYSCALE);
 	imageReducedPalette->AllocImage(false, true);

@@ -20,6 +20,9 @@ extern "C" {
 #include "VID_ImageBinding.h"
 #include "C64SIDFrequencies.h"
 
+// TODO: add synchronization like in SidWiz2: https://github.com/Zeinok/SidWiz2F/blob/master/SidWiz/Form1.cs
+
+
 // waveform views
 CViewC64StateSIDWaveform::CViewC64StateSIDWaveform(float posX, float posY, float posZ, float sizeX, float sizeY)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)

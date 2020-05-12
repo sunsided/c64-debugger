@@ -14,7 +14,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "8D1107260486CEB800E47090"
-               BuildableName = "65XEDebugger.app"
+               BuildableName = "C64Debugger.app"
                BlueprintName = "C64Debugger"
                ReferencedContainer = "container:MTEngine-MacOS.xcodeproj">
             </BuildableReference>
@@ -32,7 +32,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8D1107260486CEB800E47090"
-            BuildableName = "65XEDebugger.app"
+            BuildableName = "C64Debugger.app"
             BlueprintName = "C64Debugger"
             ReferencedContainer = "container:MTEngine-MacOS.xcodeproj">
          </BuildableReference>
@@ -48,7 +48,6 @@
       useCustomWorkingDirectory = "NO"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
-      enableAddressSanitizer = "YES"
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
       <BuildableProductRunnable
@@ -56,7 +55,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8D1107260486CEB800E47090"
-            BuildableName = "65XEDebugger.app"
+            BuildableName = "C64Debugger.app"
             BlueprintName = "C64Debugger"
             ReferencedContainer = "container:MTEngine-MacOS.xcodeproj">
          </BuildableReference>
@@ -260,7 +259,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8D1107260486CEB800E47090"
-            BuildableName = "65XEDebugger.app"
+            BuildableName = "C64Debugger.app"
             BlueprintName = "C64Debugger"
             ReferencedContainer = "container:MTEngine-MacOS.xcodeproj">
          </BuildableReference>

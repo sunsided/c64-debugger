@@ -57,7 +57,8 @@ public:
 	void Reset();
 	void SetData(uint8 *s, u32 len);
 	void InsertBytes(CByteBuffer *byteBuffer);
-	bool isEof();
+	bool IsEof();
+	bool IsEmpty();
 	void ForwardToEnd();
 	void putByte(uint8  b);
 	uint8  getByte();

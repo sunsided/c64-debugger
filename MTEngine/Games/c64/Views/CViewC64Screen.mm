@@ -184,9 +184,8 @@ void CViewC64Screen::RefreshScreen()
 	}
 #endif
 	
-	imageScreen->Deallocate();
 	imageScreen->SetLoadImageData(screen);
-	imageScreen->BindImage();
+	imageScreen->ReBindImage();
 	imageScreen->loadImageData = NULL;
 	
 	debugInterface->UnlockRenderScreenMutex();
@@ -202,9 +201,8 @@ void CViewC64Screen::RefreshScreenColodore()
 	CImageData *screen = debugInterface->GetScreenImageData();
 	colodoreScreen->RefreshColodoreScreen(screen);
 	
-	imageScreen->Deallocate();
 	imageScreen->SetLoadImageData(colodoreScreen->imageDataColodoreScreen);
-	imageScreen->BindImage();
+	imageScreen->ReBindImage();
 	imageScreen->loadImageData = NULL;
 	
 	debugInterface->UnlockRenderScreenMutex();

@@ -436,7 +436,7 @@ void RES_GenerateSourceFromData(CByteBuffer *data, char *filePathOut, char *embe
 	fprintf(fp, "uint8 %s[%d] = {\n\t", embedName, data->length);
 	
 	int count = 0;
-	while (!data->isEof())
+	while (!data->IsEof())
 	{
 		if (count != 0)
 		{

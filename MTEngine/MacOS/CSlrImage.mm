@@ -1162,14 +1162,8 @@ void CSlrImage::BindImage()
 {
 	//LOGD("BindImage()");
 
-// TODO:
-//	if (!gMainContext || ![EAGLContext setCurrentContext:gMainContext]) 
-//		SYS_FatalExit("BindImage() self current context failed");
-	
 	if (this->loadImageData == NULL)
 		SYS_FatalExit("BindImage() loadImageData NULL");
-	
-	//	[EAGLContext setCurrentContext:[gMainContext in EAGLView] ];
 	
 	glGenTextures(1, &texture[0]);
 	glBindTexture(GL_TEXTURE_2D, texture[0]);
@@ -1202,10 +1196,47 @@ void CSlrImage::BindImage()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	
-	
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, rasterWidth, rasterHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, loadImageData);
-//	TODO: fix me glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, rasterWidth, rasterHeight, GL_RGBA, GL_UNSIGNED_BYTE, loadImageData);
 }
+
+void CSlrImage::ReBindImage()
+{
+	//LOGD("ReBindImage()");
+	
+	if (this->loadImageData == NULL)
+		SYS_FatalExit("BindImage() loadImageData NULL");
+	
+	glBindTexture(GL_TEXTURE_2D, texture[0]);
+	
+	isBound = true;
+	isActive = true;
+	
+	resourceIsActive = true;
+	resourceState = RESOURCE_STATE_LOADED;
+	
+	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	
+	if (this->linearScaling)
+	{
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+	}
+	else
+	{
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+	}
+	
+	
+	//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	//  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, rasterWidth, rasterHeight, GL_RGBA, GL_UNSIGNED_BYTE, loadImageData);
+}
+
 
 void CSlrImage::FreeLoadImage()
 {
@@ -1261,9 +1292,8 @@ void CSlrImage::SetLoadImageData(CImageData *imageData)
 
 void CSlrImage::ReplaceImageData(CImageData *imageData)
 {
-	this->Deallocate();
 	this->SetLoadImageData(imageData);
-	this->BindImage();
+	this->ReBindImage();
 	this->loadImageData = NULL;
 }
 

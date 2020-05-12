@@ -78,11 +78,11 @@ public:
 	virtual u8 ConvertFrom(CImageData *imageData);
 	
 	// finds background color (the color that has highest number of appearances)
-	virtual std::vector<C64ColorsHistogramElement *> *GetSortedColorsHistogram(CImageData *imageData);
-	virtual void DeleteColorsHistogram(std::vector<C64ColorsHistogramElement *> *colors);
+	static std::vector<C64ColorsHistogramElement *> *GetSortedColorsHistogram(CImageData *imageData);
+	static void DeleteColorsHistogram(std::vector<C64ColorsHistogramElement *> *colors);
 	
 	// reduces color space to C64 colors only (nearest)
-	virtual CImageData *ReducePalette(CImageData *imageData);
+	static CImageData *ReducePalette(CImageData *imageData, CViewC64VicDisplay *vicDisplay);
 };
 
 #endif

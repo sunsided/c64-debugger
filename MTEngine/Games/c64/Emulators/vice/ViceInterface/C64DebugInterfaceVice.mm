@@ -554,7 +554,7 @@ void C64DebugInterfaceVice::InsertD64(CSlrString *path)
 		guiMain->ShowMessage("Inserting disk failed");
 	}
 	
-	delete asciiPath;
+	delete [] asciiPath;
 }
 
 void C64DebugInterfaceVice::DetachDriveDisk()

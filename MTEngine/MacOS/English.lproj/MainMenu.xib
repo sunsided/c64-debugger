@@ -11,8 +11,8 @@
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <menu title="AMainMenu" systemMenu="main" id="29">
             <items>
-                <menuItem title="65XE Debugger" id="56">
-                    <menu key="submenu" title="65XE Debugger" systemMenu="apple" id="57" customClass="MenuControllerSettings">
+                <menuItem title="C64 Debugger" id="56">
+                    <menu key="submenu" title="C64 Debugger" systemMenu="apple" id="57" customClass="MenuControllerSettings">
                         <items>
                             <menuItem title="About C64 65XE Debugger" tag="1" id="586">
                                 <modifierMask key="keyEquivalentModifierMask"/>
@@ -66,7 +66,7 @@
                 </menuItem>
             </items>
         </menu>
-        <window title="65XE Debugger" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" animationBehavior="default" id="371">
+        <window title="C64 Debugger" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" animationBehavior="default" id="371">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowCollectionBehavior key="collectionBehavior" fullScreenPrimary="YES"/>
             <rect key="contentRect" x="335" y="0.0" width="720" height="480"/>

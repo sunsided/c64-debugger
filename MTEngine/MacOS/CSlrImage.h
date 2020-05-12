@@ -58,6 +58,7 @@ public:
 	//void ConvertDataBufferColor();
 	
 	virtual void BindImage();
+	virtual void ReBindImage();
 	virtual void FreeLoadImage();
 	virtual void Deallocate();
 

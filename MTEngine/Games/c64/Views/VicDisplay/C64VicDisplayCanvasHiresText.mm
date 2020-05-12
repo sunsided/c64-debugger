@@ -354,7 +354,7 @@ u8 C64VicDisplayCanvasHiresText::ConvertFrom(CImageData *imageData)
 	
 	C64DebugInterface *debugInterface = vicDisplay->debugInterface;
 	
-	CImageData *image = ReducePalette(imageData);
+	CImageData *image = ReducePalette(imageData, vicDisplay);
 	
 	std::vector<C64ColorsHistogramElement *> *colors = GetSortedColorsHistogram(image);
 
@@ -479,9 +479,7 @@ u8 C64VicDisplayCanvasHiresText::ConvertFrom(CImageData *imageData)
 		}
 	}
 	
-	
-	
-	
+	delete bitmapChr;
 	delete charset;
 	delete image;
 	return PAINT_RESULT_OK;

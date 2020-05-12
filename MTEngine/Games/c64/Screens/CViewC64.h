@@ -699,6 +699,7 @@ public:
 	void CreateEmulatorPlugins();
 	void RegisterEmulatorPlugin(CDebuggerEmulatorPlugin *emuPlugin);
 	
+	void RenderPlugins();
 	//
 	
 	char *ATRD_GetPathForRoms_IMPL();

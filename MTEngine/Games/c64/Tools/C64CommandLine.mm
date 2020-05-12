@@ -1075,7 +1075,7 @@ void c64PerformNewConfigurationTasksThreaded(CByteBuffer *byteBuffer)
 
 	delete currentFolder;
 	
-	while(!byteBuffer->isEof())
+	while(!byteBuffer->IsEof())
 	{
 		uint8 t = byteBuffer->GetU8();
 
