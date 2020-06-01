@@ -165,7 +165,7 @@ static void WaitForCleanup(void)
                                  
 /* public */
 
-nfdresult_t NFD_OpenDialog( const nfdchar_t *filterList,
+nfdresult_t NFD_OpenDialogGTK3( const nfdchar_t *filterList,
                             const nfdchar_t *defaultPath,
                             nfdchar_t **outPath )
 {    
@@ -222,7 +222,7 @@ nfdresult_t NFD_OpenDialog( const nfdchar_t *filterList,
 }
 
 
-nfdresult_t NFD_OpenDialogMultiple( const nfdchar_t *filterList,
+nfdresult_t NFD_OpenDialogMultipleGTK3( const nfdchar_t *filterList,
                                     const nfdchar_t *defaultPath,
                                     nfdpathset_t *outPaths )
 {
@@ -269,7 +269,7 @@ nfdresult_t NFD_OpenDialogMultiple( const nfdchar_t *filterList,
     return result;
 }
 
-nfdresult_t NFD_SaveDialog( const nfdchar_t *filterList,
+nfdresult_t NFD_SaveDialogGTK3( const nfdchar_t *filterList,
                             const nfdchar_t *defaultPath,
                             nfdchar_t **outPath )
 {
@@ -325,7 +325,7 @@ nfdresult_t NFD_SaveDialog( const nfdchar_t *filterList,
     return result;
 }
 
-nfdresult_t NFD_PickFolder(const nfdchar_t *defaultPath,
+nfdresult_t NFD_PickFolderGTK3(const nfdchar_t *defaultPath,
     nfdchar_t **outPath)
 {
     GtkWidget *dialog;

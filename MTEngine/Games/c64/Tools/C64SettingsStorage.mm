@@ -832,7 +832,11 @@ void C64DebuggerSetSetting(char *name, void *value)
 		{
 			viewC64->debugInterfaceAtari->snapshotsManager->SetRecordingStoreInterval(v);
 		}
-		viewC64->viewC64SettingsMenu->menuItemC64SnapshotsManagerStoreInterval->SetValue(v, false);
+		
+		if (viewC64->debugInterfaceC64 || viewC64->debugInterfaceAtari)
+		{
+			viewC64->viewC64SettingsMenu->menuItemC64SnapshotsManagerStoreInterval->SetValue(v, false);
+		}
 		return;
 	}
 	else if (!strcmp(name, "SnapshotsManagerLimit"))
@@ -846,14 +850,21 @@ void C64DebuggerSetSetting(char *name, void *value)
 		{
 			viewC64->debugInterfaceAtari->snapshotsManager->SetRecordingLimit(v);
 		}
-		viewC64->viewC64SettingsMenu->menuItemC64SnapshotsManagerLimit->SetValue(v, false);
+		if (viewC64->debugInterfaceC64 || viewC64->debugInterfaceAtari)
+		{
+			viewC64->viewC64SettingsMenu->menuItemC64SnapshotsManagerLimit->SetValue(v, false);
+		}
 		return;
 	}
 	else if (!strcmp(name, "TimelineIsActive"))
 	{
 		bool v = *((bool*)value);
 		c64SettingsTimelineIsActive = v;
-		viewC64->viewC64SettingsMenu->menuItemC64TimelineIsActive->SetSelectedOption(v, false);
+		
+		if (viewC64->debugInterfaceC64 || viewC64->debugInterfaceAtari)
+		{
+			viewC64->viewC64SettingsMenu->menuItemC64TimelineIsActive->SetSelectedOption(v, false);
+		}
 		return;
 	}
 	else if (!strcmp(name, "UseNativeEmulatorMonitor"))

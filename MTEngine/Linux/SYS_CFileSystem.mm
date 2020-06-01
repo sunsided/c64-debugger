@@ -21,6 +21,7 @@
 #include "CSlrString.h"
 #include "SYS_Funct.h"
 #include "VID_GLViewController.h"
+#include "CGuiMain.h"
 
 #include <gtk/gtk.h>
 #include <pwd.h>
@@ -975,7 +976,8 @@ void SYS_DialogOpenFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 	LOGD("SYS_DialogOpenFile: filtersStr=%s", filtersStr);
 
 	nfdchar_t *outPathStr = NULL;
-	nfdresult_t result = NFD_OpenDialog( filtersStr, defaultFolderStr, &outPathStr );	
+	
+	nfdresult_t result = NFD_OpenDialog( filtersStr, defaultFolderStr, &outPathStr );
 
 	if (result == NFD_OKAY)
 	{
@@ -984,10 +986,25 @@ void SYS_DialogOpenFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 		CSlrString *outPath = new CSlrString(outPathStr);
 		callback->SystemDialogFileOpenSelected(outPath);
 	}
-	else
+	else if (result == NFD_CANCEL)
 	{
 		VID_SetWindowAlwaysOnTopTemporary(SYS_windowAlwaysOnTopBeforeFileDialog);
+		callback->SystemDialogFileOpenCancelled();
+	}
+	else //if (result == NFD_ERROR)
+	{
+		const char *errorStr = NFD_GetError();
 
+		if (errorStr[0] != 0x00)
+		{
+			guiMain->ShowMessage((char*)errorStr);
+		}
+		else
+		{
+			guiMain->ShowMessage("Open dialog failed");
+		}
+		
+		VID_SetWindowAlwaysOnTopTemporary(SYS_windowAlwaysOnTopBeforeFileDialog);
 		callback->SystemDialogFileOpenCancelled();
 	}
 
@@ -1003,63 +1020,77 @@ void SYS_DialogSaveFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 
 	char *defaultFolderStr = NULL;
 
-        if (defaultFolder != NULL)
-        {
-                defaultFolderStr = defaultFolder->GetStdASCII();
-        }
-        else
-        {
-                defaultFolderStr = new char[32];
-                sprintf(defaultFolderStr, "/");
-        }
+	if (defaultFolder != NULL)
+	{
+			defaultFolderStr = defaultFolder->GetStdASCII();
+	}
+	else
+	{
+			defaultFolderStr = new char[32];
+			sprintf(defaultFolderStr, "/");
+	}
 
 	CSlrString *defaultExtension = NULL;
-        char *filtersStr = SYS_GetCharBuf();
-        for (std::list<CSlrString *>::iterator it = extensions->begin(); it != extensions->end(); it++)
-        {
-                CSlrString *filter = *it;
-		if (defaultExtension == NULL)
-			defaultExtension = filter;
+	char *filtersStr = SYS_GetCharBuf();
+	for (std::list<CSlrString *>::iterator it = extensions->begin(); it != extensions->end(); it++)
+	{
+			CSlrString *filter = *it;
+	if (defaultExtension == NULL)
+		defaultExtension = filter;
 
-                char *filterStr = filter->GetStdASCII();
-                strcat(filtersStr, filterStr);
-                strcat(filtersStr, ",");
-                delete [] filterStr;
-        }
+			char *filterStr = filter->GetStdASCII();
+			strcat(filtersStr, filterStr);
+			strcat(filtersStr, ",");
+			delete [] filterStr;
+	}
 
-        // remove last ","
-        filtersStr[strlen(filtersStr)-1] = 0x00;
+	// remove last ","
+	filtersStr[strlen(filtersStr)-1] = 0x00;
 
-        LOGD("SYS_DialogSaveFile: filtersStr=%s", filtersStr);
+	LOGD("SYS_DialogSaveFile: filtersStr=%s", filtersStr);
 
-        nfdchar_t *outPathStr = NULL;
-        nfdresult_t result = NFD_SaveDialog( filtersStr, defaultFolderStr, &outPathStr );
+	nfdchar_t *outPathStr = NULL;
+	nfdresult_t result = NFD_SaveDialog( filtersStr, defaultFolderStr, &outPathStr );
 
 	if (result == NFD_OKAY)
-        {
-                VID_SetWindowAlwaysOnTopTemporary(SYS_windowAlwaysOnTopBeforeFileDialog);
-		
+	{
+		VID_SetWindowAlwaysOnTopTemporary(SYS_windowAlwaysOnTopBeforeFileDialog);
+
 		LOGD("outPathStr=%s", outPathStr);
-                CSlrString *outPath = new CSlrString(outPathStr);
+		CSlrString *outPath = new CSlrString(outPathStr);
 
 		// TODO: workaround gtk_dialog does not add default extension...
-                if (defaultExtension != NULL)
-                {
-                        outPath->Concatenate(".");
-                        outPath->Concatenate(defaultExtension);
-                }
+		if (defaultExtension != NULL)
+		{
+				outPath->Concatenate(".");
+				outPath->Concatenate(defaultExtension);
+		}
 
-                callback->SystemDialogFileSaveSelected(outPath);
-        }   
-        else
-        {
-                VID_SetWindowAlwaysOnTopTemporary(SYS_windowAlwaysOnTopBeforeFileDialog);
+		callback->SystemDialogFileSaveSelected(outPath);
+	}   
+	else if (result == NFD_CANCEL)
+	{
+			VID_SetWindowAlwaysOnTopTemporary(SYS_windowAlwaysOnTopBeforeFileDialog);
+			callback->SystemDialogFileSaveCancelled();
+	}
+	else //if (result == NFD_ERROR)
+	{
+		const char *errorStr = NFD_GetError();
+		if (errorStr[0] != 0x00)
+		{
+			guiMain->ShowMessage((char*)errorStr);
+		}
+		else
+		{
+			guiMain->ShowMessage("Save dialog failed");
+		}
+		
+		VID_SetWindowAlwaysOnTopTemporary(SYS_windowAlwaysOnTopBeforeFileDialog);
+		callback->SystemDialogFileSaveCancelled();
+	}
 
-                callback->SystemDialogFileSaveCancelled();
-        }
-
-        delete [] defaultFolderStr;
-        SYS_ReleaseCharBuf(filtersStr);
+	delete [] defaultFolderStr;
+	SYS_ReleaseCharBuf(filtersStr);
 }
 
 bool SYS_FileExists(char *path)

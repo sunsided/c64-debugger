@@ -12,6 +12,8 @@
 #define C64D_SHARED_MEMORY_KEY		12666
 #elif defined(RUN_ATARI)
 #define C64D_SHARED_MEMORY_KEY		12667
+#elif defined(RUN_NES)
+#define C64D_SHARED_MEMORY_KEY		12668
 #endif
 
 bool c64dSharedMemoryInit = false;

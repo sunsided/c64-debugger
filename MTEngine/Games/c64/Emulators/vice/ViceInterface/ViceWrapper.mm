@@ -837,17 +837,12 @@ void c64d_vicii_copy_state_data(vicii_cycle_state_t *viciiDest, vicii_cycle_stat
 }
 
 
-//uint32 viciiFrameCycleNum = 0;
-
-// TODO: add setting in settings
 uint8 c64d_vicii_record_state_mode = C64D_VICII_RECORD_MODE_EVERY_CYCLE; //C64D_VICII_RECORD_MODE_NONE;
 
 void c64d_c64_set_vicii_record_state_mode(uint8 recordMode)
 {
 	c64d_vicii_record_state_mode = recordMode;
 }
-
-//unsigned int viciiFrameCycleNum = 0;
 
 void c64d_c64_vicii_start_frame()
 {
@@ -874,10 +869,10 @@ void c64d_c64_vicii_cycle()
 
 	if (c64d_vicii_record_state_mode == C64D_VICII_RECORD_MODE_EVERY_CYCLE)
 	{
-		// correct the raster line on start frame
 		unsigned int rasterLine = vicii.raster_line;
 		unsigned int rasterCycle = vicii.raster_cycle;
 		
+		// correct the raster line on start frame
 		if (vicii.start_of_frame == 1)
 		{
 			rasterLine = 0;

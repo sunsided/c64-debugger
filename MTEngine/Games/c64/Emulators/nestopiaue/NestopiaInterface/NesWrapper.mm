@@ -574,7 +574,7 @@ CByteBuffer *nesd_store_state()
 	
 	std::stringstream ss;
 	if (machine->SaveState(ss, Api::Machine::NO_COMPRESSION))
-		return false;
+		return NULL;
 	
 	std::string state = ss.str();
 

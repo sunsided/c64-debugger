@@ -3102,7 +3102,7 @@ bool CViewC64::ProcessGlobalKeyboardShortcut(u32 keyCode, bool isShift, bool isA
 			float scrubMultipleNumSeconds = 10;
 			if (shortcut == keyboardShortcuts->kbsScrubEmulationBackMultipleFrames)
 			{
-				LOGD(">>>>>>>>>................ REWIND -%ds", scrubMultipleNumSeconds);
+				LOGD(">>>>>>>>>................ REWIND -%fs", scrubMultipleNumSeconds);
 				guiMain->LockMutex();
 				if (debugInterfaceVice->snapshotsManager->isPerformingSnapshotRestore == false)
 				{
@@ -3115,7 +3115,7 @@ bool CViewC64::ProcessGlobalKeyboardShortcut(u32 keyCode, bool isShift, bool isA
 			
 			if (shortcut == keyboardShortcuts->kbsScrubEmulationForwardMultipleFrames)
 			{
-				LOGD(">>>>>>>>>................ FORWARD +%ds", scrubMultipleNumSeconds);
+				LOGD(">>>>>>>>>................ FORWARD +%fs", scrubMultipleNumSeconds);
 				guiMain->LockMutex();
 				if (debugInterfaceVice->snapshotsManager->isPerformingSnapshotRestore == false)
 				{

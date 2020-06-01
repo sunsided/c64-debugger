@@ -374,10 +374,11 @@ bool CSnapshotsManager::RestoreSnapshotByFrame(int frame, int cycleNum)
 
 	isPerformingSnapshotRestore = true;
 
-	if (frame < 0)
-		frame = 0;
+	int minFrame, maxFrame;
+	GetFramesLimits(&minFrame, &maxFrame);
 	
-	LOGS("frame=%d", frame);
+	if (frame <= minFrame)
+		frame = minFrame + 1;
 	
 	///////
 	CStoredChipsSnapshot *nearestChipSnapshot = NULL;
@@ -396,7 +397,7 @@ bool CSnapshotsManager::RestoreSnapshotByFrame(int frame, int cycleNum)
 		CStoredChipsSnapshot *chipSnapshot = it->second;
 		
 		// TODO BUG: when scrubbing to exact frame we need to be able to restore snapshot immediately, so we have to restore to previous one
-		// note, this does not affect C64
+		// (note, this does not affect C64). wrong, this may lock the emulation engine due to threads chase. workaround for now.
 //#if defined(RUN_COMMODORE64)
 //		if (chipSnapshot->frame <= frame)
 //#else
@@ -655,8 +656,11 @@ void CSnapshotsManager::RestoreSnapshotByNumFramesOffset(int numFramesOffset)
 	int currentFrame = debugInterface->GetEmulationFrameNumber();
 	int restoreToFrame = currentFrame + numFramesOffset;
 	
-	if (restoreToFrame < 0)
-		restoreToFrame = 0;
+	int minFrame, maxFrame;
+	GetFramesLimits(&minFrame, &maxFrame);
+	
+	if (restoreToFrame <= minFrame)
+		restoreToFrame = minFrame + 1;
 	
 	LOGD(">>>>>>>>>................ currentFrame=%d restoreToFrame=%d", currentFrame, restoreToFrame);
 	debugInterface->snapshotsManager->RestoreSnapshotByFrame(restoreToFrame, -1);
@@ -674,9 +678,16 @@ void CSnapshotsManager::RestoreSnapshotBackstepInstruction()
 	int currentFrame = debugInterface->GetEmulationFrameNumber();
 	int restoreToFrame = currentFrame-1;
 	
-	if (restoreToFrame < 0)
-		restoreToFrame = 0;
-
+	int minFrame, maxFrame;
+	GetFramesLimits(&minFrame, &maxFrame);
+	
+	if (restoreToFrame <= minFrame)
+	{
+		LOGS("CSnapshotsManager::RestoreSnapshotBackstepInstruction: unlock");
+		this->UnlockMutex();
+		return;
+	}
+	
 	LOGS(">>>>>>>>>................ currentFrame=%d restoreToFrame=%d", currentFrame, restoreToFrame);
 
 	unsigned int previousInstructionClk = debugInterface->GetPreviousCpuInstructionCycleCounter();
