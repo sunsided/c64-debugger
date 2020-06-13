@@ -50,7 +50,7 @@ CViewC64StateVIC::CViewC64StateVIC(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 	// init images for sprites
 	for (int i = 0; i < 0x0F; i++)
 	{
-		// alloc image that will store character pixels
+		// alloc image that will store sprite pixels
 		CImageData *imageData = new CImageData(32, 32, IMG_TYPE_RGBA);
 		imageData->AllocImage(false, true);
 		

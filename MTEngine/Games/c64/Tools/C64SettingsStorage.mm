@@ -205,6 +205,8 @@ bool c64SettingsRenderScreenNearest = true;
 int c64SettingsJmpOnStartupAddr = -1;
 
 u8 c64SettingsVicDisplayBorderType = VIC_DISPLAY_SHOW_BORDER_FULL;
+bool c64SettingsVicDisplayShowGridLines = true;
+bool c64SettingsVicDisplayApplyScroll = false;
 
 bool c64SettingsAutoJmp = false;
 bool c64SettingsAutoJmpAlwaysToLoadedPRGAddress = false;	// will jump to loaded address when PRG is loaded from menu
@@ -443,6 +445,8 @@ void C64DebuggerStoreSettings()
 	storeSettingBool(byteBuffer, "EmulateVSPBug", c64SettingsEmulateVSPBug);
 	
 	storeSettingU8(byteBuffer, "VicDisplayBorder", c64SettingsVicDisplayBorderType);
+	storeSettingBool(byteBuffer, "VicDisplayShowGrid", c64SettingsVicDisplayShowGridLines);
+	storeSettingBool(byteBuffer, "VicDisplayApplyScroll", c64SettingsVicDisplayApplyScroll);
 	
 	storeSettingBool (byteBuffer, "VicEditorForceReplaceColor", c64SettingsVicEditorForceReplaceColor);
 	storeSettingU8(byteBuffer, "VicEditorDefaultBackgroundColor", c64SettingsVicEditorDefaultBackgroundColor);
@@ -1153,6 +1157,21 @@ void C64DebuggerSetSetting(char *name, void *value)
 			viewC64->viewC64VicControl->SetBorderType(c64SettingsVicDisplayBorderType);
 			return;
 		}
+		else if (!strcmp(name, "VicDisplayShowGrid"))
+		{
+			u8 v = *((u8*)value);
+			c64SettingsVicDisplayShowGridLines = v;
+			viewC64->viewC64VicControl->SetGridLines(c64SettingsVicDisplayShowGridLines);
+			return;
+		}
+		else if (!strcmp(name, "VicDisplayApplyScroll"))
+		{
+			u8 v = *((u8*)value);
+			c64SettingsVicDisplayApplyScroll = v;
+			viewC64->viewC64VicControl->SetApplyScroll(c64SettingsVicDisplayApplyScroll);
+			return;
+		}
+		
 		else if (!strcmp(name, "VicEditorForceReplaceColor"))
 		{
 			bool v = *((bool*)value);

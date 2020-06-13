@@ -76,6 +76,7 @@ public:
 	
 	//
 	volatile bool forceGrayscaleColors;
+	volatile bool forceDataFromRam;
 	CGuiButtonSwitch *btnModeText;
 	CGuiButtonSwitch *btnModeBitmap;
 	CGuiButtonSwitch *btnModeHires;
@@ -131,6 +132,9 @@ public:
 	
 	void SetBorderType(u8 borderType);
 	void SwitchBorderType();
+
+	void SetGridLines(bool isOn);
+	void SetApplyScroll(bool isOn);
 	
 	//
 	virtual bool ButtonSwitchChanged(CGuiButtonSwitch *button);

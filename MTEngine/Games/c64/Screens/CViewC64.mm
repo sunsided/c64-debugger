@@ -3682,6 +3682,7 @@ bool CViewC64::ProcessGlobalKeyboardShortcut(u32 keyCode, bool isShift, bool isA
 	return false;
 }
 
+// TODO: refactor local viewC64MemoryDataDump->renderDataWithColors to global settings variable
 void CViewC64::SwitchIsMulticolorDataDump()
 {
 	if (viewC64->viewC64VicDisplay->visible
@@ -3693,8 +3694,25 @@ void CViewC64::SwitchIsMulticolorDataDump()
 	{
 		viewC64MemoryDataDump->renderDataWithColors = !viewC64MemoryDataDump->renderDataWithColors;
 		viewC64->viewC64VicDisplay->backupRenderDataWithColors = viewC64MemoryDataDump->renderDataWithColors;
+		viewC64AllGraphics->UpdateRenderDataWithColors();
 	}
 }
+
+void CViewC64::SetIsMulticolorDataDump(bool isMultiColor)
+{
+	if (viewC64->viewC64VicDisplay->visible
+		|| viewC64->viewVicEditor->visible)
+	{
+		viewC64->viewC64VicDisplay->backupRenderDataWithColors = isMultiColor;
+	}
+	else
+	{
+		viewC64MemoryDataDump->renderDataWithColors = isMultiColor;
+		viewC64->viewC64VicDisplay->backupRenderDataWithColors = isMultiColor;
+		viewC64AllGraphics->UpdateRenderDataWithColors();
+	}
+}
+
 
 void CViewC64::SwitchIsShowRasterBeam()
 {

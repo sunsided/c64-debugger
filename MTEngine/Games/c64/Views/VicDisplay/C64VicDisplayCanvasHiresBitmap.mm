@@ -1,6 +1,7 @@
 #include "C64VicDisplayCanvasHiresBitmap.h"
 #include "CViewC64VicDisplay.h"
 #include "C64DebugInterface.h"
+#include "C64DebugInterfaceVice.h"
 #include "CGuiMain.h"
 #include "CViewC64.h"
 #include "C64CharHires.h"
@@ -32,7 +33,7 @@ void C64VicDisplayCanvasHiresBitmap::RefreshScreen(vicii_cycle_state_t *viciiSta
 	u8 colors[0x0F];
 	
 	vicDisplay->GetViciiPointers(this->viciiState, &screen_ptr, &color_ram_ptr, &chargen_ptr, &bitmap_low_ptr, &bitmap_high_ptr, colors);
-	
+		
 	if (vicDisplay->viewVicControl && vicDisplay->viewVicControl->forceGrayscaleColors)
 	{
 		u8 bitmap;

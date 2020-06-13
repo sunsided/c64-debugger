@@ -205,6 +205,8 @@ extern bool c64SettingsResetCountersOnAutoRun;
 extern bool c64SettingsRunSIDWhenInWarp;
 
 extern u8 c64SettingsVicDisplayBorderType;
+extern bool c64SettingsVicDisplayShowGridLines;
+extern bool c64SettingsVicDisplayApplyScroll;
 
 extern float c64SettingsPaintGridCharactersColorR;
 extern float c64SettingsPaintGridCharactersColorG;

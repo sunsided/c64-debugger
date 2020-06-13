@@ -14,6 +14,7 @@ extern "C" {
 #include "CViewC64.h"
 #include "SYS_KeyCodes.h"
 #include "C64DebugInterface.h"
+#include "C64DebugInterfaceVice.h"
 #include "C64SettingsStorage.h"
 #include "CViewC64Screen.h"
 #include "CSlrFont.h"
@@ -213,7 +214,7 @@ void CViewC64VicDisplay::SetAutoScrollMode(int newMode)
 	if (this->autoScrollMode == newMode)
 		return;
 	
-	LOGD("CViewC64VicDisplay::SetAutoScrollMode: %d", newMode);
+//	LOGD("CViewC64VicDisplay::SetAutoScrollMode: %d", newMode);
 	this->autoScrollMode = newMode;
 	
 	if (autoScrollMode == AUTOSCROLL_DISASSEMBLE_RASTER_PC)
@@ -258,7 +259,7 @@ bool CViewC64VicDisplay::IsInside(GLfloat x, GLfloat y)
 
 void CViewC64VicDisplay::SetShowDisplayBorderType(u8 borderType)
 {
-	LOGD("SetShowDisplayBorderType: %d", borderType);
+//	LOGD("SetShowDisplayBorderType: %d", borderType);
 	this->showDisplayBorderType = borderType;
 	
 	// update positions based on visibility of the border
@@ -722,38 +723,70 @@ void CViewC64VicDisplay::GetViciiPointers(vicii_cycle_state_t *viciiState,
 	///
 	//LOGD("screen_addr=%04x charsetAddress=%04x bitmap_bank=%04x", screen_addr, charsetAddress, bitmap_bank);
 	
+	//		raster_screenshot(&vicii.raster, screenshot);
+	//
+	//		screenshot->chipid = "VICII";
+	//		screenshot->video_regs = vicii.regs;
+	//		screenshot->screen_ptr = ;
+	//		screenshot->chargen_ptr = char_base;
+	//		screenshot->bitmap_ptr = NULL;
+	//		screenshot->bitmap_low_ptr = bitmap_low_base;
+	//		screenshot->bitmap_high_ptr = bitmap_high_base;
+	//		screenshot->color_ram_ptr = mem_color_ram_vicii;
+	
+	for (int i = 0; i < 0x0F; i++)
+	{
+		colors[i] = viciiState->regs[0x20 + i] & 0x0F;
+	}
+
 	int tmp = charset_addr;
 	
 	bitmap_low_base = vicii.ram_base_phi1 + bitmap_bank;
 	
-	if (viciiState->export_ultimax_phi2) {
-		if ((screen_addr & 0x3fff) >= 0x3000) {
+	if (viciiState->export_ultimax_phi2)
+	{
+		if ((screen_addr & 0x3fff) >= 0x3000)
+		{
 			screen_base_phi2 = ultimax_romh_phi2_ptr((WORD)(0x1000 + (screen_addr & 0xfff)));
-		} else {
+		}
+		else
+		{
 			screen_base_phi2 = vicii.ram_base_phi2 + screen_addr;
 		}
-	} else {
+	}
+	else
+	{
 		if ((screen_addr & viciiState->vaddr_chargen_mask_phi2)
-			!= viciiState->vaddr_chargen_value_phi2) {
+			!= viciiState->vaddr_chargen_value_phi2)
+		{
 			screen_base_phi2 = vicii.ram_base_phi2 + screen_addr;
-		} else {
+		}
+		else
+		{
 			screen_base_phi2 = mem_chargen_rom_ptr + (screen_addr & 0xc00);
 		}
 	}
 	
-	if (viciiState->export_ultimax_phi1) {
+	if (viciiState->export_ultimax_phi1)
+	{
 		if ((tmp & 0x3fff) >= 0x3000) {
 			char_base = ultimax_romh_phi1_ptr((WORD)(0x1000 + (tmp & 0xfff)));
 		} else {
 			char_base = vicii.ram_base_phi1 + tmp;
 		}
 		
-		if (((bitmap_bank + 0x1000) & 0x3fff) >= 0x3000) {
+		if (((bitmap_bank + 0x1000) & 0x3fff) >= 0x3000)
+		{
+			
 			bitmap_high_base = ultimax_romh_phi1_ptr(0x1000);
-		} else {
+		}
+		else
+		{
 			bitmap_high_base = bitmap_low_base + 0x1000;
 		}
-	} else {
+	}
+	else
+	{
 		if ((tmp & viciiState->vaddr_chargen_mask_phi1)
 			!= viciiState->vaddr_chargen_value_phi1) {
 			char_base = vicii.ram_base_phi1 + tmp;
@@ -768,29 +801,25 @@ void CViewC64VicDisplay::GetViciiPointers(vicii_cycle_state_t *viciiState,
 			bitmap_high_base = mem_chargen_rom_ptr;
 		}
 	}
-	
-	//		raster_screenshot(&vicii.raster, screenshot);
-	//
-	//		screenshot->chipid = "VICII";
-	//		screenshot->video_regs = vicii.regs;
-	//		screenshot->screen_ptr = ;
-	//		screenshot->chargen_ptr = char_base;
-	//		screenshot->bitmap_ptr = NULL;
-	//		screenshot->bitmap_low_ptr = bitmap_low_base;
-	//		screenshot->bitmap_high_ptr = bitmap_high_base;
-	//		screenshot->color_ram_ptr = mem_color_ram_vicii;
-	
-	*screen_ptr = screen_base_phi2;
-	*color_ram_ptr = mem_color_ram_vicii;
-	*chargen_ptr = char_base;
-	*bitmap_low_ptr = bitmap_low_base;
-	*bitmap_high_ptr = bitmap_high_base;
-	
-	for (int i = 0; i < 0x0F; i++)
-	{
-		colors[i] = viciiState->regs[0x20 + i] & 0x0F;
-	}
 
+//	LOGD("screen_addr=%04x charset_addr=%04x", screen_addr, charset_addr);
+	
+	if (viewVicControl->forceDataFromRam)
+	{
+		u8 *c64memory = ((C64DebugInterfaceVice *)debugInterface)->c64memory;
+		*screen_ptr = c64memory + screen_addr;
+		*bitmap_low_ptr = c64memory + bitmap_bank;
+		*bitmap_high_ptr = c64memory + bitmap_bank + 4096;
+	}
+	else
+	{
+		*screen_ptr = screen_base_phi2;
+		*bitmap_low_ptr = bitmap_low_base;
+		*bitmap_high_ptr = bitmap_high_base;
+	}
+	*chargen_ptr = char_base;
+	*color_ram_ptr = mem_color_ram_vicii;
+	
 	//////////////////
 	this->screenAddress = screen_addr;
 	this->bitmapAddress = bitmap_bank;
@@ -940,7 +969,7 @@ void CViewC64VicDisplay::RefreshCurrentCanvas(vicii_cycle_state_t *viciiState)
 
 void CViewC64VicDisplay::SetCurrentCanvas(u8 bm, u8 mc, u8 eb, u8 blank)
 {
-//	LOGD("CViewC64VicDisplay::SetCurrentCanvas: %d %d %d %d", bm, mc, eb, blank);
+	//LOGD("CViewC64VicDisplay::SetCurrentCanvas: %d %d %d %d", bm, mc, eb, blank);
 	
 	if (!blank)
 	{
@@ -953,6 +982,8 @@ void CViewC64VicDisplay::SetCurrentCanvas(u8 bm, u8 mc, u8 eb, u8 blank)
 	}
 
 	currentVicMode = mc << 2 | eb << 1 | bm;
+	
+	//LOGD("currentVicMode=%d", currentVicMode);
 	
 	switch (currentVicMode)
 	{
@@ -2043,6 +2074,12 @@ void CViewC64VicDisplay::UpdateRasterCursorPos()
 		
 		//LOGD("mx=%f x=%f rx=%f  my=%f y=%f ry=%f", mousePosX, px, rasterX, mousePosY, py, rasterY);
 	}
+}
+
+void CViewC64VicDisplay::ClearRasterCursorPos()
+{
+	rasterCursorPosX = -1;
+	rasterCursorPosY = -1;
 }
 
 bool CViewC64VicDisplay::DoFinishTap(GLfloat x, GLfloat y)

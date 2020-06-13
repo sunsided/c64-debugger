@@ -4,7 +4,11 @@
 #include "C64DebugInterface.h"
 #include "CViewC64VicDisplay.h"
 #include "CViewC64VicControl.h"
+#include "CViewDataDump.h"
+#include "CViewMemoryMap.h"
+#include "C64Tools.h"
 #include "CGuiMain.h"
+#include "CViewDataDump.h"
 #include "CGuiLockableList.h"
 #include "CSlrString.h"
 
@@ -18,9 +22,28 @@ CViewC64AllGraphics::CViewC64AllGraphics(GLfloat posX, GLfloat posY, GLfloat pos
 	this->allowFocus = false;
 	
 	forcedRenderScreenMode = VIEW_C64_ALL_GRAPHICS_FORCED_NONE;
+
+	this->isSelectedItemBitmap = false;
+	this->isSelectedItemScreen = false;
+	this->isSelectedItemCharset = false;
+	this->isSelectedItemSprite = false;
+
+	this->charsetScale = 0.3287f;
+	this->charsetSizeX = 256.0f * charsetScale;
+	this->charsetSizeY = 64.0f * charsetScale;
+	this->charsetScaleB = 0.7f;
+	this->charsetSizeXB = 256.0f * charsetScaleB;
+	this->charsetSizeYB = 64.0f * charsetScaleB;
+	this->spriteScale = 0.435f;
+	this->spriteSizeX = 24.0f * spriteScale;
+	this->spriteSizeY = 21.0f * spriteScale;
+	this->spriteScaleB = 2.3f;
+	this->spriteSizeXB = 24.0f * spriteScaleB;
+	this->spriteSizeYB = 21.0f * spriteScaleB;
+
+	this->charsetsOffsetY = 50.0f;
 	
 	numBitmapDisplays = 0x10000/0x2000;	//8
-	
 	numScreenDisplays = 0x10000/0x0400;	// 0x40
 	
 	numVicDisplays = numScreenDisplays;	// 0x40
@@ -36,13 +59,11 @@ CViewC64AllGraphics::CViewC64AllGraphics(GLfloat posX, GLfloat posY, GLfloat pos
 		
 		vicControl[i] = new CViewC64VicControl(0, 0, posZ, 100, 100, vicDisplays[i]);
 		vicControl[i]->visible = false;
-		
+
 		vicDisplays[i]->SetVicControlView(vicControl[i]);
 		
 		vicControl[i]->lstScreenAddresses->SetListLocked(true);
 	}
-
-	this->SetMode(VIEW_C64_ALL_GRAPHICS_MODE_BITMAPS);
 	
 	//
 	font = viewC64->fontCBMShifted;
@@ -51,9 +72,10 @@ CViewC64AllGraphics::CViewC64AllGraphics(GLfloat posX, GLfloat posY, GLfloat pos
 
 	float px = posX + 350;
 	float py = posY + 15;
-	float buttonSizeX = 25.0f;
+	float buttonSizeX = 28.0f;
 	float buttonSizeY = 10.0f;
 	float gap = 5.0f;
+	float mgap = 2.5f;
 
 	btnModeBitmapColorsGrayscale = new CGuiButtonSwitch(NULL, NULL, NULL,
 										   px, py, posZ, buttonSizeX, buttonSizeY,
@@ -99,10 +121,71 @@ CViewC64AllGraphics::CViewC64AllGraphics(GLfloat posX, GLfloat posY, GLfloat pos
 	this->AddGuiElement(btnModeMulti);
 	
 	//
-	// list of screen addresses
 	px = posX + 350;
 	py += buttonSizeY + gap;
+	float by = py;
 	
+	btnShowBitmaps = new CGuiButtonSwitch(NULL, NULL, NULL,
+										px, py, posZ, buttonSizeX, buttonSizeY,
+										new CSlrString("BITMAPS"),
+										FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
+										font, fontScale,
+										1.0, 1.0, 1.0, 1.0,
+										1.0, 1.0, 1.0, 1.0,
+										0.3, 0.3, 0.3, 1.0,
+										this);
+	btnShowBitmaps->SetOn(false);
+	SetLockableButtonDefaultColors(btnShowBitmaps);
+	this->AddGuiElement(btnShowBitmaps);
+
+	py += buttonSizeY + mgap;
+	
+	btnShowScreens = new CGuiButtonSwitch(NULL, NULL, NULL,
+										  px, py, posZ, buttonSizeX, buttonSizeY,
+										  new CSlrString("SCREENS"),
+										  FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
+										  font, fontScale,
+										  1.0, 1.0, 1.0, 1.0,
+										  1.0, 1.0, 1.0, 1.0,
+										  0.3, 0.3, 0.3, 1.0,
+										  this);
+	btnShowScreens->SetOn(true);
+	SetLockableButtonDefaultColors(btnShowScreens);
+	this->AddGuiElement(btnShowScreens);
+
+	py += buttonSizeY + mgap;
+	
+	btnShowCharsets = new CGuiButtonSwitch(NULL, NULL, NULL,
+										  px, py, posZ, buttonSizeX, buttonSizeY,
+										  new CSlrString("CHARSETS"),
+										  FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
+										  font, fontScale,
+										  1.0, 1.0, 1.0, 1.0,
+										  1.0, 1.0, 1.0, 1.0,
+										  0.3, 0.3, 0.3, 1.0,
+										  this);
+	btnShowCharsets->SetOn(false);
+	SetLockableButtonDefaultColors(btnShowCharsets);
+	this->AddGuiElement(btnShowCharsets);
+
+	py += buttonSizeY + mgap;
+	
+	btnShowSprites = new CGuiButtonSwitch(NULL, NULL, NULL,
+										px, py, posZ, buttonSizeX, buttonSizeY,
+										new CSlrString("SPRITES"),
+										FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
+										font, fontScale,
+										1.0, 1.0, 1.0, 1.0,
+										1.0, 1.0, 1.0, 1.0,
+										0.3, 0.3, 0.3, 1.0,
+										this);
+	btnShowSprites->SetOn(false);
+	SetLockableButtonDefaultColors(btnShowSprites);
+	this->AddGuiElement(btnShowSprites);
+
+	// list of screen addresses
+	px = posX + 350 + buttonSizeX + gap;
+	py = by;
 	
 	char **txtScreenAddresses = new char *[0x40];
 	
@@ -123,10 +206,88 @@ CViewC64AllGraphics::CViewC64AllGraphics(GLfloat posX, GLfloat posY, GLfloat pos
 													guiMain->fntConsole,
 													guiMain->theme->imgBackground, 1.0f,
 													this);
+	this->lstScreenAddresses->name = "AllGraphics::lstScreenAddresses";
 	this->lstScreenAddresses->Init(txtScreenAddresses, 0x40, true);
 	this->lstScreenAddresses->SetGaps(0.0f, -0.25f);
 	this->AddGuiElement(this->lstScreenAddresses);
 
+	// list of charset addresses
+	px = posX + 350 + buttonSizeX + gap;
+	py = by;
+	
+	char **txtCharsetAddresses = new char *[0x40];
+	
+	addr = 0x0000;
+	for (int i = 0; i < 0x20; i++)
+	{
+		char *txtCharsetAddr = new char[5];
+		sprintf(txtCharsetAddr, "%04x", addr);
+		addr += 0x0800;
+		
+		txtCharsetAddresses[i] = txtCharsetAddr;
+	}
+
+	this->lstCharsetAddresses = new CGuiLockableList(px, py, posZ+0.01, lstFontSize*6.5f, 65.0f, lstFontSize,
+													NULL, 0, false,
+													guiMain->fntConsole,
+													guiMain->theme->imgBackground, 1.0f,
+													this);
+	this->lstCharsetAddresses->name = "AllGraphics::lstCharsetAddresses";
+	this->lstCharsetAddresses->Init(txtCharsetAddresses, 0x20, true);
+	this->lstCharsetAddresses->SetGaps(0.0f, -0.25f);
+	this->AddGuiElement(this->lstCharsetAddresses);
+
+	// sprites sheet, init images for sprites
+	for (int i = 0; i < (0x10000/0x40); i++)
+	{
+		// alloc image that will store sprite pixels
+		CImageData *imageData = new CImageData(32, 32, IMG_TYPE_RGBA);
+		imageData->AllocImage(false, true);
+		
+		spritesImageData.push_back(imageData);
+		
+		/// init CSlrImage with empty image (will be deleted by loader)
+		// TODO: fixme on GUI branch and use LoadForRebinding...
+		CImageData *emptyImageData = new CImageData(32, 32, IMG_TYPE_RGBA);
+		emptyImageData->AllocImage(false, true);
+		
+		CSlrImage *imageSprite = new CSlrImage(true, false);
+		imageSprite->LoadImage(emptyImageData, RESOURCE_PRIORITY_STATIC, false);
+		imageSprite->resourceType = RESOURCE_TYPE_IMAGE_DYNAMIC;
+		imageSprite->resourcePriority = RESOURCE_PRIORITY_STATIC;
+		VID_PostImageBinding(imageSprite, NULL);
+		
+		spritesImages.push_back(imageSprite);
+		
+		delete emptyImageData;
+	}
+
+	// charsets sheet, init images for charsets
+	for (int i = 0; i < (0x10000/0x800); i++)
+	{
+		// alloc image that will store charset pixels
+		CImageData *imageData = new CImageData(256, 64, IMG_TYPE_RGBA);
+		imageData->AllocImage(false, true);
+		
+		charsetsImageData.push_back(imageData);
+		
+		/// init CSlrImage with empty image (will be deleted by loader)
+		// TODO: fixme on GUI branch and use LoadForRebinding...
+		CImageData *emptyImageData = new CImageData(256, 64, IMG_TYPE_RGBA);
+		emptyImageData->AllocImage(false, true);
+		
+		CSlrImage *imageCharset = new CSlrImage(true, false);
+		imageCharset->LoadImage(emptyImageData, RESOURCE_PRIORITY_STATIC, false);
+		imageCharset->resourceType = RESOURCE_TYPE_IMAGE_DYNAMIC;
+		imageCharset->resourcePriority = RESOURCE_PRIORITY_STATIC;
+		VID_PostImageBinding(imageCharset, NULL);
+		
+		charsetsImages.push_back(imageCharset);
+		
+		delete emptyImageData;
+	}
+
+	this->SetMode(VIEW_C64_ALL_GRAPHICS_MODE_SCREENS);
 }
 
 CViewC64AllGraphics::~CViewC64AllGraphics()
@@ -213,10 +374,98 @@ void CViewC64AllGraphics::SetMode(int newMode)
 				vicControl[i]->btnModeBitmap->SetOn(true);
 				vicControl[i]->lstBitmapAddresses->SetListLocked(true);
 				vicControl[i]->lstBitmapAddresses->SetElement(i, false, false);
-				
+
 				i++;
 			}
 			px += displaySizeX;
+		}
+		
+		btnModeBitmapColorsGrayscale->SetVisible(true);
+		btnModeHires->SetVisible(true);
+		btnModeMulti->SetVisible(true);
+		lstScreenAddresses->SetVisible(true);
+		lstCharsetAddresses->SetVisible(false);
+	}
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SCREENS)
+	{
+		numVisibleDisplays = numScreenDisplays;
+		numDisplaysColumns = 8;
+		
+		numDisplaysRows = (float)numVisibleDisplays / (float)numDisplaysColumns;
+		
+		float px = posX;
+		float py = posY;
+		float displaySizeX = (SCREEN_WIDTH / (float)numDisplaysColumns) * 0.585f;
+		float displaySizeY = SCREEN_HEIGHT / (float)numDisplaysRows * 0.60f;
+		
+		int i = 0;
+		px = 0.0f;
+		for(int x = 0; x < numDisplaysColumns; x++)
+		{
+			
+			py = 0.0f;
+			for (int y = 0; y < numDisplaysRows; y++)
+			{
+				LOGD("......px=%f py=%f", px, py);
+				vicDisplays[i]->SetDisplayPosition(px, py, 0.129f, true);
+				py += displaySizeY;
+				
+				vicControl[i]->btnModeText->SetOn(true);
+				vicControl[i]->lstScreenAddresses->SetListLocked(true);
+				vicControl[i]->lstScreenAddresses->SetElement(i, false, false);
+				vicControl[i]->lstCharsetAddresses->SetListLocked(true);
+
+				i++;
+			}
+			px += displaySizeX;
+		}
+
+		btnModeBitmapColorsGrayscale->SetVisible(true);
+		btnModeHires->SetVisible(true);
+		btnModeMulti->SetVisible(true);
+		lstScreenAddresses->SetVisible(false);
+		lstCharsetAddresses->SetVisible(true);
+	}
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_CHARSETS)
+	{
+		btnModeBitmapColorsGrayscale->SetVisible(false);
+		btnModeHires->SetVisible(true);
+		btnModeMulti->SetVisible(true);
+		lstScreenAddresses->SetVisible(false);
+		lstCharsetAddresses->SetVisible(false);
+		
+		switch(forcedRenderScreenMode)
+		{
+			case VIEW_C64_ALL_GRAPHICS_FORCED_GRAY:
+				forcedRenderScreenMode = VIEW_C64_ALL_GRAPHICS_FORCED_NONE;
+				break;
+			case VIEW_C64_ALL_GRAPHICS_FORCED_HIRES:
+				viewC64->viewC64MemoryDataDump->renderDataWithColors = false;
+				break;
+			case VIEW_C64_ALL_GRAPHICS_FORCED_MULTI:
+				viewC64->viewC64MemoryDataDump->renderDataWithColors = true;
+				break;
+		}
+	}
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SPRITES)
+	{
+		btnModeBitmapColorsGrayscale->SetVisible(false);
+		btnModeHires->SetVisible(true);
+		btnModeMulti->SetVisible(true);
+		lstScreenAddresses->SetVisible(false);
+		lstCharsetAddresses->SetVisible(false);
+		
+		switch(forcedRenderScreenMode)
+		{
+			case VIEW_C64_ALL_GRAPHICS_FORCED_GRAY:
+				forcedRenderScreenMode = VIEW_C64_ALL_GRAPHICS_FORCED_NONE;
+				break;
+			case VIEW_C64_ALL_GRAPHICS_FORCED_HIRES:
+				viewC64->viewC64MemoryDataDump->renderDataWithColors = false;
+				break;
+			case VIEW_C64_ALL_GRAPHICS_FORCED_MULTI:
+				viewC64->viewC64MemoryDataDump->renderDataWithColors = true;
+				break;
 		}
 	}
 	
@@ -230,81 +479,296 @@ void CViewC64AllGraphics::DoLogic()
 
 void CViewC64AllGraphics::Render()
 {
-	u16 screenAddress;
-	vicii_cycle_state_t *viciiState = &viewC64->viciiStateToShow;
-	
-	screenAddress = viciiState->vbank_phi2 + ((viciiState->regs[0x18] & 0xf0) << 6);
-	screenAddress = (screenAddress & viciiState->vaddr_mask_phi2) | viciiState->vaddr_offset_phi2;
-	
-	if (lstScreenAddresses->isLocked)
+	if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_BITMAPS
+		|| displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SCREENS)
 	{
-		screenAddress = lstScreenAddresses->selectedElement * 0x0400;
-	}
-	else
-	{
-		bool updatePosition = true;
+		u16 screenAddress;
+		vicii_cycle_state_t *viciiState = &viewC64->viciiStateToShow;
 		
-		if (lstScreenAddresses->IsInside(guiMain->mousePosX, guiMain->mousePosY))
-			updatePosition = false;
+		screenAddress = viciiState->vbank_phi2 + ((viciiState->regs[0x18] & 0xf0) << 6);
+		screenAddress = (screenAddress & viciiState->vaddr_mask_phi2) | viciiState->vaddr_offset_phi2;
 		
-		// update controls
-		int addrItemNum = screenAddress / 0x0400;
-		lstScreenAddresses->SetElement(addrItemNum, updatePosition, false);
-	}
-
-	//
-	if (forcedRenderScreenMode == VIEW_C64_ALL_GRAPHICS_FORCED_NONE)
-	{
-		u8 mc;
-		
-		mc = (viciiState->regs[0x16] & 0x10) >> 4;
-
-		btnModeBitmapColorsGrayscale->SetOn(false);
-		btnModeHires->SetOn(!mc);
-		btnModeMulti->SetOn(mc);
-	}
-
-	// TODO: move me to button press
-	
-	// vic displays
-	for (int i = 0; i < numVisibleDisplays; i++)
-	{
-//		LOGD("Render VIC Display %d", i);
-		int addrItemNum = screenAddress / 0x0400;
-		vicDisplays[i]->viewVicControl->btnModeText->SetOn(false);
-		vicDisplays[i]->viewVicControl->btnModeBitmap->SetOn(true);
-
-		vicDisplays[i]->viewVicControl->btnModeStandard->SetOn(true);
-		vicDisplays[i]->viewVicControl->btnModeExtended->SetOn(false);
-
-//		LOGD("forcedRenderScreenMode=%d", forcedRenderScreenMode);
-		switch(forcedRenderScreenMode)
+		if (lstScreenAddresses->isLocked)
 		{
-			case VIEW_C64_ALL_GRAPHICS_FORCED_NONE:
-				vicDisplays[i]->viewVicControl->forceGrayscaleColors = false;
-				vicDisplays[i]->viewVicControl->btnModeHires->SetOn(!btnModeMulti->IsOn());
-				vicDisplays[i]->viewVicControl->btnModeMulti->SetOn(btnModeMulti->IsOn());
-				break;
-			case VIEW_C64_ALL_GRAPHICS_FORCED_GRAY:
-				vicDisplays[i]->viewVicControl->forceGrayscaleColors = true;
-				vicDisplays[i]->viewVicControl->btnModeHires->SetOn(true);
-				vicDisplays[i]->viewVicControl->btnModeMulti->SetOn(false);
-				break;
-			case VIEW_C64_ALL_GRAPHICS_FORCED_HIRES:
-				vicDisplays[i]->viewVicControl->forceGrayscaleColors = false;
-				vicDisplays[i]->viewVicControl->btnModeHires->SetOn(true);
-				vicDisplays[i]->viewVicControl->btnModeMulti->SetOn(false);
-				break;
-			case VIEW_C64_ALL_GRAPHICS_FORCED_MULTI:
-				vicDisplays[i]->viewVicControl->forceGrayscaleColors = false;
-				vicDisplays[i]->viewVicControl->btnModeHires->SetOn(false);
-				vicDisplays[i]->viewVicControl->btnModeMulti->SetOn(true);
-				break;
+			screenAddress = lstScreenAddresses->selectedElement * 0x0400;
+		}
+		else
+		{
+			bool updatePosition = true;
+			
+			if (lstScreenAddresses->IsInside(guiMain->mousePosX, guiMain->mousePosY))
+				updatePosition = false;
+			
+			// update controls
+			int addrItemNum = screenAddress / 0x0400;
+			lstScreenAddresses->SetElement(addrItemNum, updatePosition, false);
 		}
 		
-		vicDisplays[i]->viewVicControl->lstScreenAddresses->SetElement(addrItemNum, false, false);
-		vicDisplays[i]->Render();
+		u16 charsetAddress = (viciiState->regs[0x18] & 0xe) << 10;
+		charsetAddress = (charsetAddress + viciiState->vbank_phi1);
+		charsetAddress &= viciiState->vaddr_mask_phi1;
+		charsetAddress |= viciiState->vaddr_offset_phi1;
+		
+		if (lstCharsetAddresses->isLocked)
+		{
+			charsetAddress = lstCharsetAddresses->selectedElement * 0x0800;
+		}
+		else
+		{
+			bool updatePosition = true;
+			
+			if (lstCharsetAddresses->IsInside(guiMain->mousePosX, guiMain->mousePosY))
+				updatePosition = false;
+			
+			// update controls
+			int addrItemNum = charsetAddress / 0x0800;
+			lstCharsetAddresses->SetElement(addrItemNum, updatePosition, false);
+		}
+
+		//
+		if (forcedRenderScreenMode == VIEW_C64_ALL_GRAPHICS_FORCED_NONE)
+		{
+			u8 mc;
+			
+			mc = (viciiState->regs[0x16] & 0x10) >> 4;
+			
+			btnModeBitmapColorsGrayscale->SetOn(false);
+			btnModeHires->SetOn(!mc);
+			btnModeMulti->SetOn(mc);
+		}
+		
+		// TODO: move me to button press
+		
+		// vic displays
+		for (int i = 0; i < numVisibleDisplays; i++)
+		{
+			//		LOGD("Render VIC Display %d", i);
+			vicDisplays[i]->viewVicControl->forceDataFromRam = viewC64->viewC64MemoryMap->isDataDirectlyFromRAM;
+			
+			if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_BITMAPS)
+			{
+				vicDisplays[i]->viewVicControl->btnModeText->SetOn(false);
+				vicDisplays[i]->viewVicControl->btnModeBitmap->SetOn(true);
+				int screenAddrItemNum = screenAddress / 0x0400;
+				vicDisplays[i]->viewVicControl->lstScreenAddresses->SetElement(screenAddrItemNum, false, false);
+				vicDisplays[i]->showGridLines = viewC64->viewC64VicControl->btnShowGrid->IsOn();
+			}
+			else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SCREENS)
+			{
+				vicDisplays[i]->viewVicControl->btnModeBitmap->SetOn(false);
+				vicDisplays[i]->viewVicControl->btnModeText->SetOn(true);
+				int charsetAddrItemNum = charsetAddress / 0x0800;
+				vicDisplays[i]->viewVicControl->lstCharsetAddresses->SetElement(charsetAddrItemNum, false, false);
+				vicDisplays[i]->showGridLines = false;
+			}
+
+			vicDisplays[i]->viewVicControl->btnModeStandard->SetOn(true);
+			vicDisplays[i]->viewVicControl->btnModeExtended->SetOn(false);
+
+//			LOGD("forcedRenderScreenMode=%d", forcedRenderScreenMode);
+			switch(forcedRenderScreenMode)
+			{
+				case VIEW_C64_ALL_GRAPHICS_FORCED_NONE:
+					vicDisplays[i]->viewVicControl->forceGrayscaleColors = false;
+					vicDisplays[i]->viewVicControl->btnModeHires->SetOn(!btnModeMulti->IsOn());
+					vicDisplays[i]->viewVicControl->btnModeMulti->SetOn(btnModeMulti->IsOn());
+					break;
+				case VIEW_C64_ALL_GRAPHICS_FORCED_GRAY:
+					vicDisplays[i]->viewVicControl->forceGrayscaleColors = true;
+					vicDisplays[i]->viewVicControl->btnModeHires->SetOn(true);
+					vicDisplays[i]->viewVicControl->btnModeMulti->SetOn(false);
+					break;
+				case VIEW_C64_ALL_GRAPHICS_FORCED_HIRES:
+					vicDisplays[i]->viewVicControl->forceGrayscaleColors = false;
+					vicDisplays[i]->viewVicControl->btnModeHires->SetOn(true);
+					vicDisplays[i]->viewVicControl->btnModeMulti->SetOn(false);
+					break;
+				case VIEW_C64_ALL_GRAPHICS_FORCED_MULTI:
+					vicDisplays[i]->viewVicControl->forceGrayscaleColors = false;
+					vicDisplays[i]->viewVicControl->btnModeHires->SetOn(false);
+					vicDisplays[i]->viewVicControl->btnModeMulti->SetOn(true);
+					break;
+			}
+			
+			vicDisplays[i]->Render();
+		}
+		
+		if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_BITMAPS)
+		{
+			// render selected bitmap outline only
+			if (selectedBitmapId >=0 && selectedBitmapId < 0x40)
+			{
+				CViewC64VicDisplay *vicDisplay = vicDisplays[selectedBitmapId];
+				BlitRectangle(vicDisplay->posX, vicDisplay->posY, posZ, vicDisplay->sizeX, vicDisplay->sizeY, 1.0, 0.0, 0.0f, 0.7f);
+			}
+		}
+		else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SCREENS)
+		{
+			// render selected outline and screen id
+			if (selectedScreenId >=0 && selectedScreenId < 0x40)
+			{
+				CViewC64VicDisplay *vicDisplay = vicDisplays[selectedScreenId];
+				BlitRectangle(vicDisplay->posX, vicDisplay->posY, posZ, vicDisplay->sizeX, vicDisplay->sizeY, 1.0, 0.0, 0.0f, 0.7f);
+				
+				float px = 62;
+				float py = 220;
+				
+				float ppx = vicDisplay->posX;
+				float ppy = vicDisplay->posY;
+				
+				vicDisplay->showGridLines = viewC64->viewC64VicControl->btnShowGrid->IsOn();
+				vicDisplay->SetDisplayPosition(px, py, 0.650f, true);
+				vicDisplay->Render();
+				vicDisplay->SetDisplayPosition(ppx, ppy, 0.129f, true);
+			}
+		}
+		
 	}
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_CHARSETS)
+	{
+		// get VIC colors
+		u8 cD021, cD022, cD023, cD800;
+		
+		cD021 = viewC64->colorsToShow[1];
+		cD022 = viewC64->colorsToShow[2];
+		cD023 = viewC64->colorsToShow[3];
+		cD800 = viewC64->colorToShowD800;
+		
+		// render charsets
+		UpdateCharsets(viewC64->viewC64MemoryDataDump->renderDataWithColors, cD021, cD022, cD023, cD800);
+		
+		float startX = posX + 0.0f;
+		float startY = posY + charsetsOffsetY;
+		float px = startX;
+		float py = startY;
+
+		int countY = 0;
+		int charsetId = 0;
+		CSlrImage *imageSelectedCharset = NULL;
+		for (std::vector<CSlrImage *>::iterator it = charsetsImages.begin(); it != charsetsImages.end(); it++)
+		{
+			CSlrImage *image = *it;
+			
+			Blit(image, px, py, posZ, charsetSizeX, charsetSizeY);
+			
+			if (charsetId == selectedCharsetId)
+			{
+				BlitRectangle(px, py, posZ, charsetSizeX, charsetSizeY, 1.0, 0.0, 0.0f, 0.7f);
+				imageSelectedCharset = image;
+			}
+			
+			py += charsetSizeY;
+			
+			countY++;
+			
+			if (countY == 8)
+			{
+				countY = 0;
+				py = startY;
+				px += charsetSizeX;
+			}
+			
+			charsetId++;
+		}
+		py = startY + charsetSizeY * 8 + 23.0f;
+		
+		px = (4.0f * charsetSizeX - charsetSizeXB) / 2.0f;
+		if (imageSelectedCharset)
+		{
+//			u16 charsetAddr = selectedCharsetId * 0x0800;
+			Blit(imageSelectedCharset, px, py, posZ, charsetSizeXB, charsetSizeYB);
+			BlitRectangle(px, py, posZ, charsetSizeXB, charsetSizeYB, 1.0, 0.0, 0.0f, 0.7f);
+			
+//			float fontSize = 4.0f;
+//			px = (32.0f * charsetSizeX - charsetSizeXB) / 2.0f;
+		}
+		//
+		if (forcedRenderScreenMode == VIEW_C64_ALL_GRAPHICS_FORCED_NONE)
+		{
+			btnModeBitmapColorsGrayscale->SetOn(false);
+			btnModeHires->SetOn(! (viewC64->viewC64MemoryDataDump->renderDataWithColors) );
+			btnModeMulti->SetOn(  (viewC64->viewC64MemoryDataDump->renderDataWithColors) );
+		}
+	}
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SPRITES)
+	{
+		// get VIC colors
+		u8 cD021, cD022, cD023;
+		u8 cD800;
+		u8 cD025, cD026, cD027;
+		
+		cD021 = viewC64->colorsToShow[1];
+		cD022 = viewC64->colorsToShow[2];
+		cD023 = viewC64->colorsToShow[3];
+		cD800 = viewC64->colorToShowD800;
+		
+		cD025 = viewC64->colorsToShow[5];
+		cD026 = viewC64->colorsToShow[6];
+		cD027 = viewC64->colorsToShow[7];
+		
+		// render sprites
+		UpdateSprites(viewC64->viewC64MemoryDataDump->renderDataWithColors, cD021, cD025, cD026, cD027);
+		
+		float startX = posX + 0.0f;
+		float px = startX;
+		float py = posY;
+		
+		// sprites are rendered upside down
+		const float spriteTexStartX = 4.0/32.0;
+		const float spriteTexStartY = (32.0-4.0)/32.0;
+		const float spriteTexEndX = (4.0+24.0)/32.0;
+		const float spriteTexEndY = (32.0-(4.0+21.0))/32.0;
+		
+		int countX = 0;
+		int spriteId = 0;
+		CSlrImage *imageSelectedSprite = NULL;
+		for (std::vector<CSlrImage *>::iterator it = spritesImages.begin(); it != spritesImages.end(); it++)
+		{
+			CSlrImage *image = *it;
+			
+			Blit(image, px, py, posZ, spriteSizeX, spriteSizeY, spriteTexStartX, spriteTexStartY, spriteTexEndX, spriteTexEndY);
+			
+			if (spriteId == selectedSpriteId)
+			{
+				BlitRectangle(px, py, posZ, spriteSizeX, spriteSizeY, 1.0, 0.0, 0.0f, 0.7f);
+				imageSelectedSprite = image;
+			}
+			
+			px += spriteSizeX;
+			
+			countX++;
+			
+			if (countX == 32)
+			{
+				countX = 0;
+				px = startX;
+				py += spriteSizeY;
+			}
+			
+			spriteId++;
+		}
+		py += spriteSizeY - 3.0f;
+		
+		px = (32.0f * spriteSizeX - spriteSizeXB) / 2.0f;
+		if (imageSelectedSprite)
+		{
+//			u16 spriteAddr = selectedSpriteId * 0x0040;
+			Blit(imageSelectedSprite, px, py, posZ, spriteSizeXB, spriteSizeYB, spriteTexStartX, spriteTexStartY, spriteTexEndX, spriteTexEndY);
+			BlitRectangle(px, py, posZ, spriteSizeXB, spriteSizeYB, 1.0, 0.0, 0.0f, 0.7f);
+			
+			//			float fontSize = 4.0f;
+			//			px = (32.0f * spriteSizeX - fontSize) / 2.0f;
+		}
+		
+		//
+		if (forcedRenderScreenMode == VIEW_C64_ALL_GRAPHICS_FORCED_NONE)
+		{
+			btnModeBitmapColorsGrayscale->SetOn(false);
+			btnModeHires->SetOn(! (viewC64->viewC64MemoryDataDump->renderDataWithColors) );
+			btnModeMulti->SetOn(  (viewC64->viewC64MemoryDataDump->renderDataWithColors) );
+		}
+	}
+	
 
 	CGuiView::Render();	
 }
@@ -312,6 +776,433 @@ void CViewC64AllGraphics::Render()
 void CViewC64AllGraphics::Render(GLfloat posX, GLfloat posY)
 {
 	CGuiView::Render(posX, posY);
+}
+
+void CViewC64AllGraphics::UpdateSprites(bool useColors, u8 colorD021, u8 colorD025, u8 colorD026, u8 colorD027)
+{
+	std::vector<CSlrImage *>::iterator itImage = spritesImages.begin();
+	std::vector<CImageData *>::iterator itImageData = spritesImageData.begin();
+	
+	int addr = 0x0000;
+	CSlrDataAdapter *dataAdapter = viewC64->debugInterfaceC64->dataAdapterC64DirectRam;
+	
+	//	int zi = 0;
+	while(itImage != spritesImages.end())
+	{
+		//		LOGD("sprite#=%d dataAddr=%4.4x", zi++, addr);
+		
+		CSlrImage *image = *itImage;
+		CImageData *imageData = *itImageData;
+		
+		u8 spriteData[63];
+		
+		for (int i = 0; i < 63; i++)
+		{
+			u8 v;
+			dataAdapter->AdapterReadByte(addr, &v);
+			spriteData[i] = v;
+			addr++;
+		}
+		
+		if (useColors == false)
+		{
+			ConvertSpriteDataToImage(spriteData, imageData, 4);
+		}
+		else
+		{
+			ConvertColorSpriteDataToImage(spriteData, imageData, colorD021, colorD025, colorD026, colorD027,
+										  viewC64->debugInterfaceC64, 4);
+		}
+		
+		addr++;
+		
+		// re-bind image
+		image->ReplaceImageData(imageData);
+		
+		itImage++;
+		itImageData++;
+	}
+}
+
+void CViewC64AllGraphics::UpdateCharsets(bool useColors, u8 colorD021, u8 colorD022, u8 colorD023, u8 colorD800)
+{
+	std::vector<CSlrImage *>::iterator itImage = charsetsImages.begin();
+	std::vector<CImageData *>::iterator itImageData = charsetsImageData.begin();
+	
+	int addr = 0x0000;
+	CSlrDataAdapter *dataAdapter = viewC64->debugInterfaceC64->dataAdapterC64DirectRam;
+	
+	//	int zi = 0;
+	while(itImage != charsetsImages.end())
+	{
+		//		LOGD("charsets#=%d dataAddr=%4.4x", zi++, addr);
+		
+		CSlrImage *image = *itImage;
+		CImageData *imageData = *itImageData;
+		
+		u8 charsetData[0x800];
+		
+		for (int i = 0; i < 0x800; i++)
+		{
+			u8 v;
+			dataAdapter->AdapterReadByte(addr, &v);
+			charsetData[i] = v;
+			addr++;
+		}
+		
+		if (useColors == false)
+		{
+			CopyHiresCharsetToImage(charsetData, imageData, 32, 0, 1, viewC64->debugInterfaceC64);
+		}
+		else
+		{
+			CopyMultiCharsetToImage(charsetData, imageData, 32, colorD021, colorD022, colorD023,
+									colorD800, viewC64->debugInterfaceC64);
+		}
+		
+		// re-bind image
+		image->ReplaceImageData(imageData);
+		
+		itImage++;
+		itImageData++;
+	}
+}
+
+bool CViewC64AllGraphics::GetIsSelectedItem()
+{
+	if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_BITMAPS)
+	{
+		return isSelectedItemBitmap;
+	}
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SCREENS)
+	{
+		return isSelectedItemScreen;
+	}
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_CHARSETS)
+	{
+		return isSelectedItemCharset;
+	}
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SPRITES)
+	{
+		return isSelectedItemSprite;
+	}
+	return false;
+}
+
+void CViewC64AllGraphics::SetIsSelectedItem(bool isSelected)
+{
+	if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_BITMAPS)
+	{
+		isSelectedItemBitmap = isSelected;
+	}
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SCREENS)
+	{
+		isSelectedItemScreen = isSelected;
+	}
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_CHARSETS)
+	{
+		isSelectedItemCharset = isSelected;
+	}
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SPRITES)
+	{
+		isSelectedItemSprite = isSelected;
+	}
+}
+
+//@returns is consumed
+bool CViewC64AllGraphics::DoTap(GLfloat x, GLfloat y)
+{
+	LOGG("CViewC64AllGraphics::DoTap:  x=%f y=%f", x, y);
+	
+	if (GetIsSelectedItem() == false)
+	{
+		int itemId = GetItemIdAt(x, y);
+		if (itemId != -1)
+		{
+			SetIsSelectedItem(true);
+			SetSelectedItemId(itemId);
+//			ClearRasterCursorPos();
+			return true;
+		}
+	}
+	else
+	{
+		int itemId = GetItemIdAt(x, y);
+		if (itemId != -1)
+		{
+			int selectedItemId = GetSelectedItemId();
+			if (itemId == selectedItemId)
+			{
+				SetIsSelectedItem(false);
+			}
+			else
+			{
+				SetSelectedItemId(itemId);
+			}
+			
+			// show the cursor again and scroll to address
+			if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_BITMAPS
+				|| displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SCREENS)
+			{
+				vicDisplays[itemId]->DoNotTouchedMove(x, y);
+			}
+		}
+		return true;
+	}
+	
+	return CGuiView::DoTap(x, y);
+}
+
+bool CViewC64AllGraphics::DoNotTouchedMove(GLfloat x, GLfloat y)
+{
+//	LOGD("CViewC64AllGraphics::DoNotTouchedMove: x=%f y=%f", x, y);
+	
+	if (GetIsSelectedItem() == false)
+	{
+		ClearRasterCursorPos();
+
+		int itemId = GetItemIdAt(x, y);
+		SetSelectedItemId(itemId);
+
+		if (itemId != -1)
+		{
+			if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_BITMAPS)
+			{
+				vicDisplays[itemId]->SetAutoScrollMode(AUTOSCROLL_DISASSEMBLE_BITMAP_ADDRESS);
+				vicDisplays[itemId]->DoNotTouchedMove(x, y);
+			}
+			else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SCREENS)
+			{
+				vicDisplays[itemId]->SetAutoScrollMode(AUTOSCROLL_DISASSEMBLE_TEXT_ADDRESS);
+				vicDisplays[itemId]->DoNotTouchedMove(x, y);
+			}
+		}
+	}
+	else
+	{
+		int itemId = GetItemIdAt(x, y);
+		if (itemId != GetSelectedItemId())
+		{
+			ClearRasterCursorPos();
+		}
+	}
+	
+	return false;
+}
+
+int CViewC64AllGraphics::GetSelectedItemId()
+{
+	if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_BITMAPS)
+	{
+		return selectedBitmapId;
+	}
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SCREENS)
+	{
+		return selectedScreenId;
+	}
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_CHARSETS)
+	{
+		return selectedCharsetId;
+	}
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SPRITES)
+	{
+		return selectedSpriteId;
+	}
+	return -1;
+}
+
+void CViewC64AllGraphics::SetSelectedItemId(int itemId)
+{
+	if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_BITMAPS)
+	{
+		selectedBitmapId = itemId;
+		//u16 bitmapAddr = selectedBitmapId * 0x2000;
+		//viewC64->viewC64MemoryDataDump->ScrollToAddress(bitmapAddr);
+	}
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SCREENS)
+	{
+		selectedScreenId = itemId;
+		//u16 screenAddr = selectedScreenId * 0x0400;
+		//viewC64->viewC64MemoryDataDump->ScrollToAddress(screenAddr);
+	}
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_CHARSETS)
+	{
+		selectedCharsetId = itemId;
+		u16 charsetAddr = selectedCharsetId * 0x0800;
+		viewC64->viewC64MemoryDataDump->ScrollToAddress(charsetAddr);
+	}
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SPRITES)
+	{
+		selectedSpriteId = itemId;
+		u16 spriteAddr = selectedSpriteId * 0x0040;
+		viewC64->viewC64MemoryDataDump->ScrollToAddress(spriteAddr);
+	}
+}
+
+
+
+// TODO: refactor me to GetItemAt(x, y), SetSelectedItem(id)
+int CViewC64AllGraphics::GetItemIdAt(float x, float y)
+{
+
+	if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_BITMAPS)
+	{
+		float px = posX;
+		float py = posY;
+		float displaySizeX = (SCREEN_WIDTH / (float)numDisplaysColumns) * 0.6f;
+		float displaySizeY = SCREEN_HEIGHT / (float)numDisplaysRows;
+		
+		int i = 0;
+		px = 0.0f;
+		bool found = false;
+		for(int dx = 0; dx < numDisplaysColumns; dx++)
+		{
+			py = 0.0f;
+			for (int dy = 0; dy < numDisplaysRows; dy++)
+			{
+				if (x >= px && x <= px + displaySizeX
+					&& y >= py && y <= py + displaySizeY)
+				{
+					found = true;
+					break;
+				}
+				py += displaySizeY;
+				i++;
+			}
+			
+			if (found)
+				break;
+			
+			px += displaySizeX;
+		}
+		
+		if (i < 0x08)
+		{
+			return i;
+		}
+		return -1;
+	}
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SCREENS)
+	{
+		float px = posX;
+		float py = posY;
+		float displaySizeX = (SCREEN_WIDTH / (float)numDisplaysColumns) * 0.585f;
+		float displaySizeY = SCREEN_HEIGHT / (float)numDisplaysRows * 0.60f;
+		
+		int i = 0;
+		px = 0.0f;
+		bool found = false;
+		for(int dx = 0; dx < numDisplaysColumns; dx++)
+		{
+			py = 0.0f;
+			for (int dy = 0; dy < numDisplaysRows; dy++)
+			{
+				if (x >= px && x <= px + displaySizeX
+					&& y >= py && y <= py + displaySizeY)
+				{
+					found = true;
+					break;
+				}
+				py += displaySizeY;
+				i++;
+			}
+			
+			if (found)
+				break;
+			
+			px += displaySizeX;
+		}
+		
+		if (i < 0x40)
+		{
+			return i;
+		}
+		return -1;
+	}
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_CHARSETS)
+	{
+		// find charset over cursor
+		int charsetId = 0;
+		
+		float startX = posX + 0.0f;
+		float startY = posY + charsetsOffsetY;
+		float px = startX;
+		float py = startY;
+		
+		int countY = 0;
+		for (std::vector<CSlrImage *>::iterator it = charsetsImages.begin(); it != charsetsImages.end(); it++)
+		{
+			if (x >= px && x <= px + charsetSizeX
+				&& y >= py && y <= py + charsetSizeY)
+			{
+				break;
+			}
+			
+			py += charsetSizeY;
+			
+			countY++;
+			if (countY == 8)
+			{
+				countY = 0;
+				py = startY;
+				px += charsetSizeX;
+			}
+			
+			charsetId++;
+		}
+		
+		if (charsetId < (0x10000/0x800))
+		{
+			return charsetId;
+		}
+		return -1;
+	}
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SPRITES)
+	{
+		// find sprite over cursor
+		int spriteId = 0;
+		
+		float startX = posX + 0.0f;
+		float px = startX;
+		float py = posY;
+		
+		int countX = 0;
+		for (std::vector<CSlrImage *>::iterator it = spritesImages.begin(); it != spritesImages.end(); it++)
+		{
+			if (x >= px && x <= px + spriteSizeX
+				&& y >= py && y <= py + spriteSizeY)
+			{
+				break;
+			}
+			
+			px += spriteSizeX;
+			
+			countX++;
+			if (countX == 32)
+			{
+				countX = 0;
+				px = startX;
+				py += spriteSizeY;
+			}
+			
+			spriteId++;
+		}
+		
+		if (spriteId < (0x10000/0x40))
+		{
+			return spriteId;
+		}
+		return -1;
+	}
+	return -1;
+}
+
+void CViewC64AllGraphics::ClearRasterCursorPos()
+{
+	for (int i = 0; i < numVicDisplays; i++)
+	{
+		vicDisplays[i]->ClearRasterCursorPos();
+	}
 }
 
 bool CViewC64AllGraphics::ButtonClicked(CGuiButton *button)
@@ -335,12 +1226,16 @@ bool CViewC64AllGraphics::ButtonPressed(CGuiButton *button)
 		}
 		else
 		{
-			forcedRenderScreenMode = VIEW_C64_ALL_GRAPHICS_FORCED_NONE;
-			SetSwitchButtonDefaultColors(btnModeBitmapColorsGrayscale);
+			ClearGraphicsForcedMode();
 		}
 	}
 	else if (button == btnModeHires)
 	{
+		if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SPRITES
+			|| displayMode == VIEW_C64_ALL_GRAPHICS_MODE_CHARSETS)
+		{
+			viewC64->viewC64MemoryDataDump->renderDataWithColors = false;
+		}
 		if (forcedRenderScreenMode != VIEW_C64_ALL_GRAPHICS_FORCED_HIRES)
 		{
 			btnModeBitmapColorsGrayscale->SetOn(false);
@@ -351,12 +1246,16 @@ bool CViewC64AllGraphics::ButtonPressed(CGuiButton *button)
 		}
 		else
 		{
-			forcedRenderScreenMode = VIEW_C64_ALL_GRAPHICS_FORCED_NONE;
-			SetSwitchButtonDefaultColors(btnModeHires);
+			ClearGraphicsForcedMode();
 		}
 	}
 	else if (button == btnModeMulti)
 	{
+		if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SPRITES
+			|| displayMode == VIEW_C64_ALL_GRAPHICS_MODE_CHARSETS)
+		{
+			viewC64->viewC64MemoryDataDump->renderDataWithColors = true;
+		}
 		if (forcedRenderScreenMode != VIEW_C64_ALL_GRAPHICS_FORCED_MULTI)
 		{
 			btnModeBitmapColorsGrayscale->SetOn(false);
@@ -367,9 +1266,44 @@ bool CViewC64AllGraphics::ButtonPressed(CGuiButton *button)
 		}
 		else
 		{
-			forcedRenderScreenMode = VIEW_C64_ALL_GRAPHICS_FORCED_NONE;
-			SetSwitchButtonDefaultColors(btnModeMulti);
+			ClearGraphicsForcedMode();
 		}
+	}
+	else if (button == btnShowBitmaps)
+	{
+		btnShowBitmaps->SetOn(true);
+		btnShowScreens->SetOn(false);
+		btnShowCharsets->SetOn(false);
+		btnShowSprites->SetOn(false);
+		SetLockableButtonDefaultColors(btnShowBitmaps);
+		this->SetMode(VIEW_C64_ALL_GRAPHICS_MODE_BITMAPS);
+	}
+	else if (button == btnShowScreens)
+	{
+		btnShowBitmaps->SetOn(false);
+		btnShowScreens->SetOn(true);
+		btnShowCharsets->SetOn(false);
+		btnShowSprites->SetOn(false);
+		SetLockableButtonDefaultColors(btnShowScreens);
+		this->SetMode(VIEW_C64_ALL_GRAPHICS_MODE_SCREENS);
+	}
+	else if (button == btnShowCharsets)
+	{
+		btnShowBitmaps->SetOn(false);
+		btnShowScreens->SetOn(false);
+		btnShowCharsets->SetOn(true);
+		btnShowSprites->SetOn(false);
+		SetLockableButtonDefaultColors(btnShowCharsets);
+		this->SetMode(VIEW_C64_ALL_GRAPHICS_MODE_CHARSETS);
+	}
+	else if (button == btnShowSprites)
+	{
+		btnShowBitmaps->SetOn(false);
+		btnShowScreens->SetOn(false);
+		btnShowCharsets->SetOn(false);
+		btnShowSprites->SetOn(true);
+		SetLockableButtonDefaultColors(btnShowSprites);
+		this->SetMode(VIEW_C64_ALL_GRAPHICS_MODE_SPRITES);
 	}
 
 	return false;
@@ -407,11 +1341,21 @@ bool CViewC64AllGraphics::ListElementPreSelect(CGuiList *listBox, int elementNum
 	return true;
 }
 
-//@returns is consumed
-bool CViewC64AllGraphics::DoTap(GLfloat x, GLfloat y)
+void CViewC64AllGraphics::UpdateRenderDataWithColors()
 {
-	LOGG("CViewC64AllGraphics::DoTap:  x=%f y=%f", x, y);
-	return CGuiView::DoTap(x, y);
+	// ctrl+k shortcut was pressed
+	if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SPRITES)
+	{
+		ClearGraphicsForcedMode();
+	}
+}
+
+void CViewC64AllGraphics::ClearGraphicsForcedMode()
+{
+	this->forcedRenderScreenMode = VIEW_C64_ALL_GRAPHICS_FORCED_NONE;
+	SetSwitchButtonDefaultColors(btnModeBitmapColorsGrayscale);
+	SetSwitchButtonDefaultColors(btnModeHires);
+	SetSwitchButtonDefaultColors(btnModeMulti);
 }
 
 bool CViewC64AllGraphics::DoFinishTap(GLfloat x, GLfloat y)

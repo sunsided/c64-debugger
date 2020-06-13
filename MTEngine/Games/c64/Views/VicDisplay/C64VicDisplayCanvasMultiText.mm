@@ -14,6 +14,7 @@ C64VicDisplayCanvasMultiText::C64VicDisplayCanvasMultiText(CViewC64VicDisplay *v
 void C64VicDisplayCanvasMultiText::RefreshScreen(vicii_cycle_state_t *viciiState, CImageData *imageDataScreen,
 												 u8 backgroundColorAlpha, u8 foregroundColorAlpha)
 {
+//	LOGD("C64VicDisplayCanvasMultiText::RefreshScreen, this=%x", this);
 	this->viciiState = viciiState;
 	
 	// refresh texture of C64's character mode screen
@@ -91,7 +92,6 @@ void C64VicDisplayCanvasMultiText::RefreshScreen(vicii_cycle_state_t *viciiState
 						{
 							//data->colormap[(i * 320 * 8) + (j * 8) + (k * 320) + l] = color0;
 							imageDataScreen->SetPixelResultRGBA(j*8 + l, i*8 + k, color0R, color0G, color0B, 255);
-							
 						}
 					}
 				}

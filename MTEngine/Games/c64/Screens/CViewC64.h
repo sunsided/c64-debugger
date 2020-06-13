@@ -601,6 +601,7 @@ public:
 	void SwitchToScreenLayout(int newScreenLayoutId);
 	void SwitchUseKeyboardAsJoystick();
 	void SwitchIsMulticolorDataDump();
+	void SetIsMulticolorDataDump(bool isMultiColor);
 	void SwitchIsShowRasterBeam();
 	
 	void StepOverInstruction();

@@ -11531,8 +11531,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon C64";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
-				CODE_SIGN_IDENTITY = "Developer ID Application: Marcin Skoczylas (APV7Y7Q9JY)";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Developer ID Application: Marcin Skoczylas (APV7Y7Q9JY)";
+				CODE_SIGN_IDENTITY = "";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "";
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = APV7Y7Q9JY;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "*.nib *.lproj *.framework *.gch *.xcode* *.xcassets (*) .DS_Store CVS .svn .git .hg *.pbproj *.pbxproj *.txt *.in *.inl";
