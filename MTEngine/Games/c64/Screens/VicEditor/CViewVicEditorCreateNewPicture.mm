@@ -28,14 +28,6 @@
 #include <list>
 
 
-typedef enum pictureMode : u8
-{
-	PICTURE_MODE_TEXT_HIRES=1,
-	PICTURE_MODE_TEXT_MULTI,
-	PICTURE_MODE_BITMAP_HIRES,
-	PICTURE_MODE_BITMAP_MULTI
-};
-
 CViewVicEditorCreateNewPicture::CViewVicEditorCreateNewPicture(GLfloat posX, GLfloat posY, GLfloat posZ, CViewVicEditor *vicEditor)
 : CGuiWindow(posX, posY, posZ, 123, 98, new CSlrString("New picture"))
 {
@@ -142,32 +134,36 @@ bool CViewVicEditorCreateNewPicture::ButtonPressed(CGuiButton *button)
 {
 	if (button == btnNewPictureModeTextHires)
 	{
-		CreateNewPicture(PICTURE_MODE_TEXT_HIRES);
+		CreateNewPicture(C64_PICTURE_MODE_TEXT_HIRES, viewPalette->colorLMB, true);
 		return true;
 	}
 	else if (button == btnNewPictureModeTextMulti)
 	{
-		CreateNewPicture(PICTURE_MODE_TEXT_MULTI);
+		CreateNewPicture(C64_PICTURE_MODE_TEXT_MULTI, viewPalette->colorLMB, true);
 		return true;
 	}
 	else if (button == btnNewPictureModeBitmapHires)
 	{
-		CreateNewPicture(PICTURE_MODE_BITMAP_HIRES);
+		CreateNewPicture(C64_PICTURE_MODE_BITMAP_HIRES, viewPalette->colorLMB, true);
 		return true;
 	}
 	else if (button == btnNewPictureModeBitmapMulti)
 	{
-		CreateNewPicture(PICTURE_MODE_BITMAP_MULTI);
+		CreateNewPicture(C64_PICTURE_MODE_BITMAP_MULTI, viewPalette->colorLMB, true);
 		return true;
 	}
 
 	return false;
 }
 
-void CViewVicEditorCreateNewPicture::CreateNewPicture(u8 mode)
+void CViewVicEditorCreateNewPicture::CreateNewPicture(u8 mode, u8 backgroundColor, bool storeUndo)
 {
 	LOGD("CViewVicEditorCreateNewPicture::CreateNewPicture: mode=%d", mode);
-	vicEditor->StoreUndo();
+	
+	if (storeUndo)
+	{
+		vicEditor->StoreUndo();
+	}
 
 	viewC64->debugInterfaceC64->SetDebugMode(DEBUGGER_MODE_RUNNING);
 
@@ -183,28 +179,28 @@ void CViewVicEditorCreateNewPicture::CreateNewPicture(u8 mode)
 	
 	SYS_Sleep(350);
 	
-	if (mode == PICTURE_MODE_TEXT_HIRES)
+	if (mode == C64_PICTURE_MODE_TEXT_HIRES)
 	{
 		vicEditor->SetVicMode(false, false, false);
 		vicEditor->SetVicAddresses(0, 0x0C00, 0x1000, 0x0000);
 		
 		vicEditor->viewCharset->SetVisible(true);
 	}
-	else if (mode == PICTURE_MODE_TEXT_MULTI)
+	else if (mode == C64_PICTURE_MODE_TEXT_MULTI)
 	{
 		vicEditor->SetVicMode(false, true, false);
 		vicEditor->SetVicAddresses(0, 0x0C00, 0x1000, 0x0000);
 
 		vicEditor->viewCharset->SetVisible(true);
 	}
-	else if (mode == PICTURE_MODE_BITMAP_HIRES)
+	else if (mode == C64_PICTURE_MODE_BITMAP_HIRES)
 	{
 		vicEditor->SetVicMode(true, false, false);
 		vicEditor->SetVicAddresses(0, 0x0C00, 0x0000, 0x2000);
 
 		vicEditor->viewCharset->SetVisible(false);
 	}
-	else if (mode == PICTURE_MODE_BITMAP_MULTI)
+	else if (mode == C64_PICTURE_MODE_BITMAP_MULTI)
 	{
 		vicEditor->SetVicMode(true, true, false);
 		vicEditor->SetVicAddresses(0, 0x0C00, 0x0000, 0x2000);
@@ -212,8 +208,8 @@ void CViewVicEditorCreateNewPicture::CreateNewPicture(u8 mode)
 		vicEditor->viewCharset->SetVisible(false);
 	}
 	
-	vicEditor->viewPalette->colorD020 = viewPalette->colorLMB;
-	vicEditor->viewPalette->colorD021 = viewPalette->colorLMB;
+	vicEditor->viewPalette->colorD020 = backgroundColor;
+	vicEditor->viewPalette->colorD021 = backgroundColor;
 	
 	viewC64->debugInterfaceC64->SetVicRegister(0x20, vicEditor->viewPalette->colorD020);
 	viewC64->debugInterfaceC64->SetVicRegister(0x21, vicEditor->viewPalette->colorD021);
@@ -232,7 +228,7 @@ void CViewVicEditorCreateNewPicture::CreateNewPicture(u8 mode)
 	
 	this->SetVisible(false);
 	
-	c64SettingsVicEditorDefaultBackgroundColor = viewPalette->colorLMB;
+	c64SettingsVicEditorDefaultBackgroundColor = backgroundColor;
 
 	C64DebuggerStoreSettings();
 }

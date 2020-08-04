@@ -3,6 +3,8 @@
  *
  */
 
+#include "C64D_Version.h"
+
 //#define DO_NOT_USE_AUDIO_QUEUE
 //#define USE_FAKE_CALLBACK
 
@@ -100,7 +102,7 @@ void CGuiMain::Startup()
 	globalConfig = new CConfigStorage();
 #endif
 
-	renderMutex = new CSlrMutex();
+	renderMutex = new CSlrMutex("CGuiMain::renderMutex");
 
 	LOGM("sound engine init");
 	SYS_InitSoundEngine();
@@ -756,7 +758,7 @@ void CGuiMain::DoRightClickMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat dis
 		return;
 	}
 	
-	//	LOGF("--- DoRightClickMove ---");
+		LOGG("--- DoRightClickMove ---");
 	for (std::map<float, CGuiElement *, compareZdownwards>::iterator enumGuiElems =
 			guiElementsDownwards.begin();
 			enumGuiElems != guiElementsDownwards.end(); enumGuiElems++)
@@ -768,10 +770,10 @@ void CGuiMain::DoRightClickMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat dis
 		if (guiElement == windowOnTop)
 			continue;
 		
-		//		LOGF("DoRightClickMove %f: %s", (*enumGuiElems).first, guiElement->name);
+				LOGG("DoRightClickMove %f: %s", (*enumGuiElems).first, guiElement->name);
 		
 		bool consumed = guiElement->DoRightClickMove(x, y, distX, distY, diffX, diffY);
-		//		LOGF("   consumed=%d", consumed);
+				LOGG("   consumed=%d", consumed);
 		if (consumed)
 			return;
 	}
@@ -1530,8 +1532,13 @@ void CGuiMain::DoLogic()
 		showMessageCurrentScale -= 0.012 * 0.35; //0.025;
 		showMessageAlpha -= 0.02; //0.06;
 #else
+#if defined(RUN_ATARI)
+		showMessageCurrentScale -= 0.006 * 0.45; //0.025;
+		showMessageAlpha -= 0.02; //0.06;
+#else
 		showMessageCurrentScale -= 0.012 * 0.45; //0.025;
 		showMessageAlpha -= 0.03; //0.06;
+#endif
 #endif
 	}
 	else if (this->showMessage != NULL) {
@@ -1635,9 +1642,9 @@ void CGuiMain::SetView(CGuiView *element)
 	}
 #endif
 
-	LOGD("CGuiMain::SetView: view=%s", element->name);
+	LOGG("CGuiMain::SetView: view=%s", element->name);
 	
-	LOGD("CGuiMain::SetView: LockMutex");
+	LOGG("CGuiMain::SetView: LockMutex");
 	guiMain->LockMutex();
 	
 	bool found = false;
@@ -1667,10 +1674,12 @@ void CGuiMain::SetView(CGuiView *element)
 		SYS_FatalExit("CGuiMain::SetView: view not found (%s)", element->name);
 	}
 	
-	LOGD("CGuiMain::SetView: UnlockMutex");
+	SetFocus(element);
+	
+	LOGG("CGuiMain::SetView: UnlockMutex");
 	guiMain->UnlockMutex();
 	
-	LOGD("CGuiMain::SetView: finished");
+	LOGG("CGuiMain::SetView: finished");
 }
 
 void CGuiMain::ShowMessage(CSlrString *showMessage)
@@ -1695,12 +1704,12 @@ void CGuiMain::ShowMessage(char *showMessage, GLfloat showMessageColorR,
 {
 	LOGM("CGuiMain::ShowMessage");
 
-	LOGD("CGuiMain::ShowMessage: LockMutex");
+	LOGG("CGuiMain::ShowMessage: LockMutex");
 	guiMain->LockMutex();
 	this->ShowMessageAsync(showMessage, showMessageColorR, showMessageColorG,
 			showMessageColorB);
 	guiMain->UnlockMutex();
-	LOGD("CGuiMain::ShowMessage: UnlockMutex");
+	LOGG("CGuiMain::ShowMessage: UnlockMutex");
 }
 
 void CGuiMain::ShowMessageAsync(char *showMessage, GLfloat showMessageColorR,
@@ -2019,6 +2028,23 @@ void CGuiMain::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 		isControlPressed = true;
 		isRightControlPressed = true;
 	}
+
+	// sanity check
+	if (isShiftPressed == false)
+	{
+		isLeftShiftPressed = false;
+		isRightShiftPressed = false;
+	}
+	if (isAltPressed == false)
+	{
+		isLeftAltPressed = false;
+		isRightAltPressed = false;
+	}
+	if (isControlPressed == false)
+	{
+		isLeftControlPressed = false;
+		isRightControlPressed = false;
+	}
 	
 	this->repeatTime = 0;
 	isKeyDown = true;
@@ -2053,21 +2079,20 @@ void CGuiMain::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 		return;
 	}
 	
-
-	if (this->focusElement)
-	{
-		// consumed?
-		LOGD("keyDown focusElement=%s", this->focusElement->name);
-		if (this->focusElement->KeyDown(keyCode, isShift, isAlt, isControl))
-		{
-			return;
-		}
-	}
-	
 	if (this->currentView != NULL)
 	{
 		this->currentView->KeyDown(keyCode, isShift, isAlt, isControl);
 	}
+
+//	if (guiMain->focusElement)
+//	{
+//		// consumed?
+//		LOGD("keyDown focusElement=%s", guiMain->focusElement->name);
+//		if (guiMain->focusElement->KeyDown(keyCode, isShift, isAlt, isControl))
+//		{
+//			return;
+//		}
+//	}
 
 	for (std::list<CGlobalKeyboardCallback *>::const_iterator itKeybardCallbacks =
 			this->globalKeyboardCallbacks.begin();
@@ -2093,25 +2118,27 @@ void CGuiMain::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
 	LOGI("CGuiMain::KeyUp: keyCode=%d (0x%2.2x = %c) isShift=%s isAlt=%s isControl=%s", keyCode, keyCode, keyCode, STRBOOL(isShift), STRBOOL(isAlt), STRBOOL(isControl));
 	
+	UpdateControlKeys(keyCode);
+
 	this->repeatTime = 0;
 	isKeyDown = false;
 
-	if (this->focusElement)
-	{
-		// consumed?
-		if (this->focusElement->KeyUp(keyCode, isShiftPressed, isAltPressed, isControlPressed))
-		{
-			UpdateControlKeys(keyCode);
-			return;
-		}
-		
-		// consumed?
-		if (this->focusElement->KeyPressed(keyCode, isShiftPressed, isAltPressed, isControlPressed))
-		{
-			UpdateControlKeys(keyCode);
-			return;
-		}
-	}
+//	if (this->focusElement)
+//	{
+//		// consumed?
+//		if (this->focusElement->KeyUp(keyCode, isShiftPressed, isAltPressed, isControlPressed))
+//		{
+//			UpdateControlKeys(keyCode);
+//			return;
+//		}
+//		
+//		// consumed?
+//		if (this->focusElement->KeyPressed(keyCode, isShiftPressed, isAltPressed, isControlPressed))
+//		{
+//			UpdateControlKeys(keyCode);
+//			return;
+//		}
+//	}
 
 	if (this->currentView != NULL)
 	{
@@ -2120,7 +2147,7 @@ void CGuiMain::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 		{
 			this->currentView->KeyPressed(keyCode, isShiftPressed, isAltPressed, isControlPressed);
 			UpdateControlKeys(keyCode);
-			return;
+//			return;
 		}
 	}
 	
@@ -2139,9 +2166,7 @@ void CGuiMain::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 			break;
 #endif
 
-	}
-	
-	UpdateControlKeys(keyCode);
+	}	
 }
 
 void CGuiMain::UpdateControlKeys(u32 keyCode)
@@ -2207,14 +2232,14 @@ void CGuiMain::UpdateControlKeys(u32 keyCode)
 void CGuiMain::KeyPressed(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
 	LOGI("CGuiMain::KeyPressed: %2.2x '%c'", keyCode, keyCode);
-	if (this->focusElement)
-	{
-		// consumed?
-		if (this->focusElement->KeyPressed(keyCode, isShift, isAlt, isControl))
-		{
-			return;
-		}
-	}
+//	if (this->focusElement)
+//	{
+//		// consumed?
+//		if (this->focusElement->KeyPressed(keyCode, isShift, isAlt, isControl))
+//		{
+//			return;
+//		}
+//	}
 	
 	if (this->currentView != NULL)
 	{

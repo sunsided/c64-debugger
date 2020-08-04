@@ -118,9 +118,17 @@ static ULONG Samp_n_max,		/* Sample max.  For accuracy, it is *256 */
  Samp_n_cnt[2];					/* Sample cnt. */
 
 #ifdef INTERPOLATE_SOUND
-static UWORD last_val = 0;		/* last output value */
+#ifdef CLIP_SOUND
+static SWORD last_val = 0;		/* last output value */
+#else
+static UWORD last_val = 0;
+#endif
 #ifdef STEREO_SOUND
-static UWORD last_val2 = 0;	/* last output value */
+#ifdef CLIP_SOUND
+static SWORD last_val2 = 0;	/* last output value */
+#else
+static UWORD last_val2 = 0;
+#endif
 #endif
 #endif
 
@@ -167,6 +175,8 @@ int POKEYSND_bienias_fix = TRUE;  /* when TRUE, high frequencies get emulated: b
 #ifndef ASAP
 int POKEYSND_stereo_enabled = FALSE;
 #endif
+
+int POKEYSND_volume = 0x100;
 
 /* multiple sound engine interface */
 static void pokeysnd_process_8(void *sndbuffer, int sndn);
@@ -1039,9 +1049,15 @@ static void pokeysnd_process_8(void *sndbuffer, int sndn)
 #ifdef INTERPOLATE_SOUND
 			if (cur_val != last_val) {
 				if (*Samp_n_cnt < Samp_n_max) {		/* need interpolation */
+#ifdef CLIP_SOUND
+					iout = (cur_val * (SLONG)(*Samp_n_cnt) +
+							last_val * (SLONG)(Samp_n_max - *Samp_n_cnt))
+					/ (SLONG)Samp_n_max;
+#else
 					iout = (cur_val * (*Samp_n_cnt) +
 							last_val * (Samp_n_max - *Samp_n_cnt))
-						/ Samp_n_max;
+					/ Samp_n_max;
+#endif
 				}
 				else
 					iout = cur_val;
@@ -1051,20 +1067,26 @@ static void pokeysnd_process_8(void *sndbuffer, int sndn)
 				iout = cur_val;
 #ifdef STEREO_SOUND
 #ifdef __PLUS
-		if (POKEYSND_stereo_enabled)
+			if (POKEYSND_stereo_enabled)
 #endif
-			if (cur_val2 != last_val2) {
-				if (*Samp_n_cnt < Samp_n_max) {		/* need interpolation */
-					iout2 = (cur_val2 * (*Samp_n_cnt) +
-							last_val2 * (Samp_n_max - *Samp_n_cnt))
+				if (cur_val2 != last_val2) {
+					if (*Samp_n_cnt < Samp_n_max) {		/* need interpolation */
+#ifdef CLIP_SOUND
+						iout2 = (cur_val2 * (SLONG)(*Samp_n_cnt) +
+								 last_val2 * (SLONG)(Samp_n_max - *Samp_n_cnt))
+						/ (SLONG)Samp_n_max;
+#else
+						iout2 = (cur_val2 * (*Samp_n_cnt) +
+								 last_val2 * (Samp_n_max - *Samp_n_cnt))
 						/ Samp_n_max;
+#endif
+					}
+					else
+						iout2 = cur_val2;
+					last_val2 = cur_val2;
 				}
 				else
 					iout2 = cur_val2;
-				last_val2 = cur_val2;
-			}
-			else
-				iout2 = cur_val2;
 #endif  /* STEREO_SOUND */
 #else   /* INTERPOLATE_SOUND */
 			iout = cur_val;
@@ -1246,6 +1268,16 @@ static void Update_serio_sound_rf(int out, UBYTE data)
 }
 #endif /* SERIO_SOUND */
 
+void POKEYSND_SetVolume(int vol)
+{
+	if (vol > 100)
+		vol = 100;
+	if (vol < 0)
+		vol = 0;
+	
+	POKEYSND_volume = vol * 0x100 / 100;
+}
+
 static void pokeysnd_process_16(void *sndbuffer, int sndn)
 {
 	UWORD *buffer = (UWORD *) sndbuffer;
@@ -1254,7 +1286,11 @@ static void pokeysnd_process_16(void *sndbuffer, int sndn)
 	pokeysnd_process_8(buffer, sndn);
 
 	for (i = sndn - 1; i >= 0; i--) {
-		int smp = ((int) (((UBYTE *) buffer)[i]) - 0x80) * 0x100;
+#ifndef POKEYSND_SIGNED_SAMPLES
+		int smp = ((int) (((UBYTE *) buffer)[i]) - 0x80) * POKEYSND_volume;
+#else
+		int smp = ((int) ((SBYTE *) buffer)[i]) * POKEYSND_volume;
+#endif
 
 		if (smp > 32767)
 			smp = 32767;

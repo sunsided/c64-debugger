@@ -8,11 +8,17 @@
 
 int MONITOR_Run(void);
 
+#ifdef MONITOR_HINTS
+void MONITOR_PreloadLabelFile(char *filename);
+#endif
+
 #ifdef MONITOR_TRACE
 extern FILE *MONITOR_trace_file;
 #endif
 
 #ifdef MONITOR_BREAK
+void MONITOR_BBRK_on(void);
+void MONITOR_BPC(char *arg);
 extern UWORD MONITOR_break_addr;
 extern UBYTE MONITOR_break_step;
 extern UBYTE MONITOR_break_ret;
@@ -24,7 +30,7 @@ extern const UBYTE MONITOR_optype6502[256];
 
 void MONITOR_Exit(void);
 void MONITOR_ShowState(FILE *fp, UWORD pc, UBYTE a, UBYTE x, UBYTE y, UBYTE s,
-                char n, char v, char z, char c);
+					   char n, char v, char z, char c);
 
 #ifdef MONITOR_BREAKPOINTS
 
@@ -46,12 +52,14 @@ void MONITOR_ShowState(FILE *fp, UWORD pc, UBYTE a, UBYTE x, UBYTE y, UBYTE s,
 #define MONITOR_BREAKPOINT_S           48
 #define MONITOR_BREAKPOINT_READ        64
 #define MONITOR_BREAKPOINT_WRITE       128
+#define MONITOR_BREAKPOINT_MEMORY      256
 #define MONITOR_BREAKPOINT_ACCESS      (MONITOR_BREAKPOINT_READ | MONITOR_BREAKPOINT_WRITE)
 
 typedef struct {
 	UBYTE enabled;
-	UBYTE condition;
+	UWORD condition;
 	UWORD value;
+	UWORD m_addr; /* only for MEM: */
 } MONITOR_breakpoint_cond;
 
 #define MONITOR_BREAKPOINT_TABLE_MAX  20
@@ -61,4 +69,16 @@ extern int MONITOR_breakpoints_enabled;
 
 #endif /* MONITOR_BREAKPOINTS */
 
+#ifdef MONITOR_PROFILE
+typedef struct {
+	unsigned long count; /* number of times executed since last reset */
+	unsigned long cycles; /* number of cycles executed since last reset */
+} MONITOR_coverage_rec;
+extern MONITOR_coverage_rec MONITOR_coverage[0x10000];
+extern unsigned long MONITOR_coverage_insns;
+extern unsigned long MONITOR_coverage_cycles;
+
+#endif /* MONITOR_PROFILE */
+
 #endif /* MONITOR_H_ */
+

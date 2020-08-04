@@ -53,16 +53,20 @@ void uimon_window_close(void)
     sdl_ui_activate_post_action();
 }
 
+console_t c64d_console_log = { 80, 25, 1, 0 };
+
 console_t *uimon_window_open(void)
 {
-    sdl_ui_activate_pre_action();
-    sdl_ui_init_draw_params();
-    sdl_ui_clear();
-    menu_draw = sdl_ui_get_menu_param();
-    mon_console.console_xres = menu_draw->max_text_x;
-    mon_console.console_yres = menu_draw->max_text_y;
-    x_pos = 0;
-    return &mon_console;
+	return &c64d_console_log;
+	
+//    sdl_ui_activate_pre_action();
+//    sdl_ui_init_draw_params();
+//    sdl_ui_clear();
+//    menu_draw = sdl_ui_get_menu_param();
+//    mon_console.console_xres = menu_draw->max_text_x;
+//    mon_console.console_yres = menu_draw->max_text_y;
+//    x_pos = 0;
+//    return &mon_console;
 }
 
 void uimon_window_suspend(void)
@@ -77,17 +81,21 @@ console_t *uimon_window_resume(void)
 
 int uimon_out(const char *buffer)
 {
-    int y = menu_draw->max_text_y - 1;
+//    int y = menu_draw->max_text_y - 1;
     char *p = (char *)buffer;
     int i = 0;
     char c;
 
+	LOGD("uimon_out: %s", buffer);	
+
     while ((c = p[i]) != 0) {
         if (c == '\n') {
             p[i] = 0;
-            sdl_ui_print(p, x_pos, y);
-            sdl_ui_scroll_screen_up();
-            x_pos = 0;
+            //sdl_ui_print(p, x_pos, y);
+            //sdl_ui_scroll_screen_up();
+			c64d_uimon_print_line(p);
+
+            //x_pos = 0;
             p += i + 1;
             i = 0;
         } else {
@@ -96,7 +104,8 @@ int uimon_out(const char *buffer)
     }
 
     if (p[0] != 0) {
-        x_pos += sdl_ui_print(p, x_pos, y);
+        //x_pos += sdl_ui_print(p, x_pos, y);
+		c64d_uimon_print(p);
     }
     return 0;
 }

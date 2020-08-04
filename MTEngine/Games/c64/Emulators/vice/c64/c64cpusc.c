@@ -24,9 +24,13 @@
  *
  */
 
+#define USE_CHAMP_PROFILER
+
 #include "vice.h"
 
 #include <stdio.h>
+#include <string.h>
+#include <stdint.h>
 
 #include "cpmcart.h"
 #include "monitor.h"
@@ -43,6 +47,8 @@
 CLOCK maincpu_clk = 0L;
 /* if != 0, exit when this many cycles have been executed */
 CLOCK maincpu_clk_limit = 0L;
+
+CLOCK c64d_maincpu_clk = 0L;
 
 #define REWIND_FETCH_OPCODE(clock) /*clock-=2*/
 
@@ -61,6 +67,7 @@ int c64d_c64_instruction_cycle = 0;
 #define CLK_INC()                                  \
 	interrupt_delay();                             \
 	maincpu_clk++;                                 \
+	c64d_maincpu_clk++;                            \
 	maincpu_ba_low_flags &= ~MAINCPU_BA_LOW_VICII; \
 	maincpu_ba_low_flags |= c64d_c64_do_cycle()
 
@@ -453,6 +460,9 @@ inline static void memmap_mem_update(unsigned int addr, int write)
 void memmap_mem_store(unsigned int addr, unsigned int value)
 {
 	memmap_mem_update(addr, 1);
+	
+	c64d_mark_c64_cell_write(addr, value);
+
 	(*_mem_write_tab_ptr[(addr) >> 8])((WORD)(addr), (BYTE)(value));
 }
 
@@ -460,7 +470,11 @@ void memmap_mem_store(unsigned int addr, unsigned int value)
 BYTE memmap_mem_read(unsigned int addr)
 {
 	check_ba();
+	
 	memmap_mem_update(addr, 0);
+	
+	c64d_mark_c64_cell_read(addr);
+
 	return (*_mem_read_tab_ptr[(addr) >> 8])((WORD)(addr));
 }
 
@@ -711,6 +725,7 @@ static void cpu_reset(void)
 	}
 	
 	maincpu_clk = 6; /* # of clock cycles needed for RESET.  */
+	c64d_maincpu_clk = 6;
 	
 	/* CPU specific extra reset routine, currently only used
 	 for 8502 fast mode refresh cycle. */
@@ -810,6 +825,198 @@ BYTE *bank_base;
 int bank_start = 0;
 int bank_limit = 0;
 
+//
+// proof of concept of the profiler compatible with Champ, this needs to be moved
+// and generalised to be used also with other platforms not only C64
+//
+#if defined(USE_CHAMP_PROFILER)
+
+void c64d_profiler_init();
+void c64d_set_debug_mode(int newMode);
+
+typedef struct {
+	uint32_t index;
+	uint16_t pc;
+	uint8_t post;
+	enum {
+		dataType_u8, dataType_s8, dataType_u16, dataType_s16
+	} data_type;
+	enum
+	{
+		MEMORY,
+		REGISTER_A,
+		REGISTER_X,
+		REGISTER_Y
+	} type;
+	uint16_t memory_address;
+} r_watch;
+
+r_watch *c64d_profiler_watches = 0;
+uint8_t c64d_profiler_watches_allocated = 0;
+size_t c64d_profiler_watch_count = 0;
+int32_t c64d_profiler_watch_offset_for_pc_and_post[0x20000];
+
+uint16_t c64d_profiler_old_pc = 0x0000;
+uint8_t  c64d_profiler_trace_stack[0x100];
+uint8_t  c64d_profiler_trace_stack_pointer = 0xff;
+uint16_t c64d_profiler_trace_stack_function[0x100];
+uint64_t c64d_profiler_cycles_per_function[0x10000];
+uint64_t c64d_profiler_calls_per_function[0x10000];
+uint64_t c64d_profiler_cpu_total_cycles;
+int c64d_profiler_last_cycles = -1;
+
+int c64d_profiler_is_active = 0;
+FILE *c64d_profiler_file_out = NULL;
+int profiler_run_for_cycles = -1;
+
+int profiler_pause_cpu_when_finished = 1;
+
+// if numCycles == -1 run until stopped
+void c64d_profiler_activate(char *fileName, int runForNumCycles, int pauseCpuWhenFinished)
+{
+	LOGD("c64d_activate_profiler: fileName=%s runForNumCycles=%d", (fileName == NULL ? "NULL" : fileName), runForNumCycles);
+	if (fileName != NULL)
+	{
+		c64d_profiler_file_out = fopen(fileName, "wb");
+	}
+	profiler_run_for_cycles = runForNumCycles;
+	profiler_pause_cpu_when_finished = pauseCpuWhenFinished;
+	
+	c64d_profiler_init();
+}
+
+void c64d_profiler_deactivate()
+{
+	if (c64d_profiler_file_out)
+	{
+		fclose(c64d_profiler_file_out);
+		c64d_profiler_file_out = NULL;
+		profiler_run_for_cycles = -1;
+	}
+	
+	c64d_profiler_is_active = 0;
+	
+	if (profiler_pause_cpu_when_finished)
+	{
+		c64d_set_debug_mode(DEBUGGER_MODE_PAUSED);
+	}
+}
+
+void c64d_profiler_init()
+{
+	LOGD("c64d_profiler_init");
+	c64d_profiler_cpu_total_cycles = 0;
+	c64d_profiler_last_cycles = -1;
+	
+	memset(c64d_profiler_cycles_per_function, 0, sizeof(c64d_profiler_cycles_per_function));
+	memset(c64d_profiler_calls_per_function, 0, sizeof(c64d_profiler_calls_per_function));
+
+	c64d_profiler_is_active = 1;
+}
+
+void c64d_profiler_jsr(uint16_t target_address)
+{
+	//	LOGD("c64d_profiler_jsr: addr pc=%x", reg_pc);
+	if (c64d_profiler_is_active)
+	{
+		// push PC - 1 because target address has already been read
+		c64d_profiler_trace_stack_function[c64d_profiler_trace_stack_pointer] = target_address;
+		c64d_profiler_trace_stack[c64d_profiler_trace_stack_pointer] = reg_sp;
+		c64d_profiler_trace_stack_pointer--;
+		c64d_profiler_calls_per_function[target_address]++;
+		
+		if (c64d_profiler_file_out)
+		{
+			fprintf(c64d_profiler_file_out, "jsr 0x%04x %llu\n", target_address, c64d_profiler_cpu_total_cycles);
+			fflush(c64d_profiler_file_out);
+		}
+	}
+}
+
+void c64d_profiler_rts()
+{
+	//	LOGD("c64d_profiler_rts: addr pc=%x", reg_pc);
+	
+	if (c64d_profiler_is_active)
+	{
+		if (c64d_profiler_trace_stack[c64d_profiler_trace_stack_pointer + 1] == reg_sp + 2)
+		{
+
+			if (c64d_profiler_file_out)
+			{
+				fprintf(c64d_profiler_file_out, "rts %llu\n", c64d_profiler_cpu_total_cycles);
+				fflush(c64d_profiler_file_out);
+			}
+			c64d_profiler_trace_stack_pointer++;
+		}
+	}
+}
+
+void c64d_profiler_start_handle_cpu_instruction()
+{
+	if (c64d_profiler_is_active)
+	{
+		c64d_profiler_old_pc = reg_pc;
+	}
+}
+
+void c64d_profiler_end_cpu_instruction()
+{
+//	LOGD("c64d_c64_instruction_cycle=%d", c64d_c64_instruction_cycle);
+	if (c64d_profiler_is_active)
+	{
+		c64d_profiler_cpu_total_cycles += c64d_c64_instruction_cycle;
+		if (c64d_profiler_trace_stack_pointer < 0xff)
+		{
+			c64d_profiler_cycles_per_function[c64d_profiler_trace_stack_function[c64d_profiler_trace_stack_pointer + 1]] += c64d_c64_instruction_cycle;
+		}
+		
+		if (c64d_profiler_file_out)
+		{
+			int raster_line = vicii.raster_line;
+			int raster_cycle = vicii.raster_cycle;
+			//int raster_irq_line = vicii.raster_irq_line;
+			int bad_line = vicii.bad_line;
+			
+
+			unsigned int frameNum = c64d_get_frame_num();
+			fprintf(c64d_profiler_file_out, "cpu %u %u %04x %02x %02x %02x %04x %02x %02x %llu %d %d %d\n",
+					c64d_maincpu_clk,
+					frameNum,
+				   c64d_profiler_old_pc, reg_a, reg_x, reg_y, reg_pc, reg_sp,
+					reg_p | (flag_n & 0x80) | P_UNUSED | ( (!(flag_z)) ? P_ZERO : 0),
+					c64d_profiler_cpu_total_cycles,
+					raster_line, raster_cycle, bad_line);
+			if (c64d_profiler_cpu_total_cycles / 100000 != c64d_profiler_last_cycles)
+			{
+				c64d_profiler_last_cycles = c64d_profiler_cpu_total_cycles / 100000;
+				fprintf(c64d_profiler_file_out, "cycles %d\n", c64d_profiler_last_cycles * 100000);
+			}
+			fflush(c64d_profiler_file_out);
+		}
+		
+		if (profiler_run_for_cycles != -1)
+		{
+			if (c64d_profiler_cpu_total_cycles > profiler_run_for_cycles)
+			{
+				c64d_profiler_deactivate();
+			}
+		}
+	}
+}
+
+#else
+
+void c64d_profiler_init() {}
+void c64d_profiler_activate(char *fileName, int runForNumCycles, int pauseCpuWhenFinished) {}
+void c64d_profiler_deactivate() {}
+void c64d_profiler_jsr() {}
+void c64d_profiler_rts() {}
+void c64d_profiler_start_handle_cpu_instruction() {}
+void c64d_profiler_end_cpu_instruction() {}
+
+#endif
+
 void c64d_get_maincpu_regs(uint8 *a, uint8 *x, uint8 *y, uint8 *p, uint8 *sp, uint16 *pc,
 						   uint8 *instructionCycle)
 {
@@ -837,6 +1044,10 @@ void c64d_set_maincpu_regs_no_trap(uint8 a, uint8 x, uint8 y, uint8 p, uint8 sp)
 	reg_sp = sp;
 }
 
+unsigned int c64d_get_maincpu_clock()
+{
+	return c64d_maincpu_clk;
+}
 
 void interrupt_maincpu_trigger_trap(void (*trap_func)(WORD, void *data),
 									void *data);
@@ -967,6 +1178,8 @@ void _c64d_maincpu_make_basic_run_trap(WORD addr, void *data)
 	maincpu_regs.sp = 0xFB;
 	maincpu_regs.pc = 0xA659;
 	_c64d_new_pc = -1;
+	
+	c64d_reset_counters();
 
 	LOGD("_c64d_maincpu_make_basic_run_trap done");
 }
@@ -976,6 +1189,9 @@ void c64d_maincpu_make_basic_run(uint8 *a, uint8 *x, uint8 *y, uint8 *p, uint8 *
 	LOGD("c64d_maincpu_make_basic_run");
 	interrupt_maincpu_trigger_trap(_c64d_maincpu_make_basic_run_trap, NULL);
 }
+
+int debug_iterations_after_restore = 0;
+int debug_prev_iteration_pc = 0;
 
 void maincpu_mainloop(void)
 {
@@ -996,7 +1212,7 @@ void maincpu_mainloop(void)
 	//	BYTE *bank_base;
 	//	int bank_start = 0;
 	//	int bank_limit = 0;
-	
+
 	o_bank_base = &bank_base;
 	o_bank_start = &bank_start;
 	o_bank_limit = &bank_limit;
@@ -1027,6 +1243,7 @@ do {                                                              \
 unsigned int tmp;                                             \
 \
 EXPORT_REGISTERS();                                           \
+LOGError("CPU JAM: PC=%04x opcode=%x LAST_OPCODE_ADDR=%04x debug_iterations_after_restore=%d debug_prev_iteration_pc=%04x", reg_pc, opcode, LAST_OPCODE_ADDR, debug_iterations_after_restore, debug_prev_iteration_pc);									\
 tmp = machine_jam("   " CPU_STR ": JAM at $%04X   ", reg_pc); \
 switch (tmp) {                                                \
 case JAM_RESET:                                           \
@@ -1361,107 +1578,107 @@ JUMP(addr);                                                                     
    execute NMI.  */
 		/* FIXME: LOCAL_STATUS() should check byte ready first.  */
 #define DO_INTERRUPT(int_kind)                                                 \
-do {                                                                       \
-BYTE ik = (int_kind);                                                  \
-WORD addr;                                                             \
-\
-if (ik & (IK_IRQ | IK_IRQPEND | IK_NMI)) {                             \
-if ((ik & IK_NMI)                                                  \
-&& interrupt_check_nmi_delay(CPU_INT_STATUS, CLK)) {           \
-TRACE_NMI();                                                   \
-if (monitor_mask[CALLER] & (MI_STEP)) {                        \
-monitor_check_icount_interrupt();                          \
-}                                                              \
-interrupt_ack_nmi(CPU_INT_STATUS);                             \
-if (!SKIP_CYCLE) {                                             \
-LOAD(reg_pc);                                              \
-CLK_INC();                                                 \
-LOAD(reg_pc);                                              \
-CLK_INC();                                                 \
-}                                                              \
-LOCAL_SET_BREAK(0);                                            \
-PUSH(reg_pc >> 8);                                             \
-CLK_INC();                                                     \
-PUSH(reg_pc & 0xff);                                           \
-CLK_INC();                                                     \
-PUSH(LOCAL_STATUS());                                          \
-CLK_INC();                                                     \
-addr = LOAD(0xfffa);                                           \
-CLK_INC();                                                     \
-addr |= (LOAD(0xfffb) << 8);                                   \
-CLK_INC();                                                     \
-LOCAL_SET_INTERRUPT(1);                                        \
-JUMP(addr);                                                    \
-SET_LAST_OPCODE(0);                                            \
-} else if ((ik & (IK_IRQ | IK_IRQPEND))                            \
-&& (!LOCAL_INTERRUPT()                                    \
-|| OPINFO_DISABLES_IRQ(LAST_OPCODE_INFO))             \
-&& interrupt_check_irq_delay(CPU_INT_STATUS, CLK)) {      \
-TRACE_IRQ();                                                   \
-if (monitor_mask[CALLER] & (MI_STEP)) {                        \
-monitor_check_icount_interrupt();                          \
-}                                                              \
-interrupt_ack_irq(CPU_INT_STATUS);                             \
-if (!SKIP_CYCLE) {                                             \
-LOAD(reg_pc);                                              \
-CLK_INC();                                                 \
-LOAD(reg_pc);                                              \
-CLK_INC();                                                 \
-}                                                              \
-LOCAL_SET_BREAK(0);                                            \
-DO_IRQBRK();                                                   \
-SET_LAST_OPCODE(0);                                            \
-}                                                                  \
-}                                                                      \
-if (ik & (IK_TRAP | IK_RESET)) {                                       \
-if (ik & IK_TRAP) {                                                \
-EXPORT_REGISTERS();                                            \
-interrupt_do_trap(CPU_INT_STATUS, (WORD)reg_pc);               \
-IMPORT_REGISTERS();                                            \
-if (CPU_INT_STATUS->global_pending_int & IK_RESET) {           \
-ik |= IK_RESET;                                            \
-}                                                              \
-}                                                                  \
-if (ik & IK_RESET) {                                               \
-interrupt_ack_reset(CPU_INT_STATUS);                           \
-cpu_reset();                                                   \
-addr = LOAD(0xfffc);                                           \
-addr |= (LOAD(0xfffd) << 8);                                   \
-bank_start = bank_limit = 0; /* prevent caching */             \
-JUMP(addr);                                                    \
-DMA_ON_RESET;                                                  \
-}                                                                  \
-}                                                                      \
-if (ik & (IK_MONITOR | IK_DMA)) {                                      \
-if (ik & IK_MONITOR) {                                             \
-if (monitor_force_import(CALLER)) {                            \
-IMPORT_REGISTERS();                                        \
-}                                                              \
-if (monitor_mask[CALLER]) {                                    \
-EXPORT_REGISTERS();                                        \
-}                                                              \
-if (monitor_mask[CALLER] & (MI_STEP)) {                        \
-monitor_check_icount((WORD)reg_pc);                        \
-IMPORT_REGISTERS();                                        \
-}                                                              \
-if (monitor_mask[CALLER] & (MI_BREAK)) {                       \
-if (monitor_check_breakpoints(CALLER, (WORD)reg_pc)) {     \
-monitor_startup(CALLER);                               \
-IMPORT_REGISTERS();                                    \
-}                                                          \
-}                                                              \
-if (monitor_mask[CALLER] & (MI_WATCH)) {                       \
-monitor_check_watchpoints(LAST_OPCODE_ADDR, (WORD)reg_pc); \
-IMPORT_REGISTERS();                                        \
-}                                                              \
-}                                                                  \
-if (ik & IK_DMA) {                                                 \
-EXPORT_REGISTERS();                                            \
-DMA_FUNC;                                                      \
-interrupt_ack_dma(CPU_INT_STATUS);                             \
-IMPORT_REGISTERS();                                            \
-}                                                                  \
-}                                                                      \
+	do {                                                                       \
+		BYTE ik = (int_kind);                                                  \
+		WORD addr;                                                             \
+		\
+		if (ik & (IK_IRQ | IK_IRQPEND | IK_NMI)) {                             \
+			if ((ik & IK_NMI)                                                  \
+				&& interrupt_check_nmi_delay(CPU_INT_STATUS, CLK)) {           \
+				TRACE_NMI();                                                   \
+				if (monitor_mask[CALLER] & (MI_STEP)) {                        \
+					monitor_check_icount_interrupt();                          \
+				}                                                              \
+				interrupt_ack_nmi(CPU_INT_STATUS);                             \
+				if (!SKIP_CYCLE) {                                             \
+					LOAD(reg_pc);                                              \
+					CLK_INC();                                                 \
+					LOAD(reg_pc);                                              \
+					CLK_INC();                                                 \
+				}                                                              \
+				LOCAL_SET_BREAK(0);                                            \
+				PUSH(reg_pc >> 8);                                             \
+				CLK_INC();                                                     \
+				PUSH(reg_pc & 0xff);                                           \
+				CLK_INC();                                                     \
+				PUSH(LOCAL_STATUS());                                          \
+				CLK_INC();                                                     \
+				addr = LOAD(0xfffa);                                           \
+				CLK_INC();                                                     \
+				addr |= (LOAD(0xfffb) << 8);                                   \
+				CLK_INC();                                                     \
+				LOCAL_SET_INTERRUPT(1);                                        \
+				JUMP(addr);                                                    \
+				SET_LAST_OPCODE(0);                                            \
+			} else if ((ik & (IK_IRQ | IK_IRQPEND))                            \
+					&& (!LOCAL_INTERRUPT()                                    \
+						|| OPINFO_DISABLES_IRQ(LAST_OPCODE_INFO))             \
+					&& interrupt_check_irq_delay(CPU_INT_STATUS, CLK)) {      \
+				TRACE_IRQ();                                                   \
+				if (monitor_mask[CALLER] & (MI_STEP)) {                        \
+					monitor_check_icount_interrupt();                          \
+				}                                                              \
+				interrupt_ack_irq(CPU_INT_STATUS);                             \
+				if (!SKIP_CYCLE) {                                             \
+					LOAD(reg_pc);                                              \
+					CLK_INC();                                                 \
+					LOAD(reg_pc);                                              \
+					CLK_INC();                                                 \
+				}                                                              \
+				LOCAL_SET_BREAK(0);                                            \
+				DO_IRQBRK();                                                   \
+				SET_LAST_OPCODE(0);                                            \
+			}                                                                  \
+		}                                                                      \
+		if (ik & (IK_TRAP | IK_RESET)) {                                       \
+			if (ik & IK_TRAP) {                                                \
+				EXPORT_REGISTERS();                                            \
+				interrupt_do_trap(CPU_INT_STATUS, (WORD)reg_pc);               \
+				IMPORT_REGISTERS();                                            \
+				if (CPU_INT_STATUS->global_pending_int & IK_RESET) {           \
+					ik |= IK_RESET;                                            \
+				}                                                              \
+			}                                                                  \
+			if (ik & IK_RESET) {                                               \
+				interrupt_ack_reset(CPU_INT_STATUS);                           \
+				cpu_reset();                                                   \
+				addr = LOAD(0xfffc);                                           \
+				addr |= (LOAD(0xfffd) << 8);                                   \
+				bank_start = bank_limit = 0; /* prevent caching */             \
+				JUMP(addr);                                                    \
+				DMA_ON_RESET;                                                  \
+			}                                                                  \
+		}                                                                      \
+		if (ik & (IK_MONITOR | IK_DMA)) {                                      \
+			if (ik & IK_MONITOR) {                                             \
+				if (monitor_force_import(CALLER)) {                            \
+					IMPORT_REGISTERS();                                        \
+				}                                                              \
+				if (monitor_mask[CALLER]) {                                    \
+					EXPORT_REGISTERS();                                        \
+				}                                                              \
+				if (monitor_mask[CALLER] & (MI_STEP)) {                        \
+					monitor_check_icount((WORD)reg_pc);                        \
+					IMPORT_REGISTERS();                                        \
+				}                                                              \
+				if (monitor_mask[CALLER] & (MI_BREAK)) {                       \
+					if (monitor_check_breakpoints(CALLER, (WORD)reg_pc)) {     \
+						monitor_startup(CALLER);                               \
+						IMPORT_REGISTERS();                                    \
+					}                                                          \
+				}                                                              \
+				if (monitor_mask[CALLER] & (MI_WATCH)) {                       \
+					monitor_check_watchpoints(LAST_OPCODE_ADDR, (WORD)reg_pc); \
+					IMPORT_REGISTERS();                                        \
+				}                                                              \
+			}                                                                  \
+			if (ik & IK_DMA) {                                                 \
+				EXPORT_REGISTERS();                                            \
+				DMA_FUNC;                                                      \
+				interrupt_ack_dma(CPU_INT_STATUS);                             \
+				IMPORT_REGISTERS();                                            \
+			}                                                                  \
+		}                                                                      \
 } while (0)
 		
 		/* ------------------------------------------------------------------------- */
@@ -2161,6 +2378,7 @@ addr_msb = LOAD(reg_pc);                  \
 JSR_FIXUP_MSB(addr_msb);                  \
 dest_addr = (WORD)(p1 | (addr_msb << 8)); \
 CLK_INC();                                \
+c64d_profiler_jsr(dest_addr);								\
 JUMP(dest_addr);                          \
 } while (0)
 		
@@ -2384,6 +2602,7 @@ CLK_INC();            \
 LOAD(tmp);            \
 CLK_INC();            \
 tmp++;                \
+c64d_profiler_rts();			  \
 JUMP(tmp);            \
 } while (0)
 		
@@ -2597,7 +2816,7 @@ INC_PC(1);                \
 			{
 				viceCurrentC64PC = _c64d_new_pc;
 			}
-
+			
 #ifdef CHECK_AND_RUN_ALTERNATE_CPU
 			CHECK_AND_RUN_ALTERNATE_CPU
 #endif
@@ -2615,11 +2834,12 @@ INC_PC(1);                \
 					interrupt_ack_irq(CPU_INT_STATUS);
 				}
 				
+				c64d_check_cpu_snapshot_manager_store();
+				
 				pending_interrupt = CPU_INT_STATUS->global_pending_int;
 				if (pending_interrupt != IK_NONE)
 				{
 					DO_INTERRUPT(pending_interrupt);
-					
 					
 					if ((pending_interrupt & IK_NMI)
 						&& (CLK >= (CPU_INT_STATUS->nmi_clk + INTERRUPT_DELAY)))
@@ -2675,13 +2895,22 @@ INC_PC(1);                \
 			}
 			
 			{
+				c64d_profiler_start_handle_cpu_instruction();
+
+				if (maincpu_clk != c64d_previous_instruction_maincpu_clk)
+				{
+					c64d_previous2_instruction_maincpu_clk = c64d_previous_instruction_maincpu_clk;
+					c64d_previous_instruction_maincpu_clk = maincpu_clk;
+				}
+				
 				if (c64d_debug_mode != DEBUGGER_MODE_RUN_ONE_INSTRUCTION
 					&& c64d_debug_mode != DEBUGGER_MODE_RUN_ONE_CYCLE)
 				{
 					// c64d check PC breakpoint after IRQ or trap
 					c64d_c64_check_pc_breakpoint(reg_pc);
 					viceCurrentC64PC = reg_pc;
-					c64d_debug_pause_check();
+					c64d_debug_pause_check(1);
+					debug_iterations_after_restore = 0;
 				}
 			}
 			
@@ -2695,6 +2924,8 @@ INC_PC(1);                \
 				memmap_state |= (MEMMAP_STATE_INSTR | MEMMAP_STATE_OPCODE);
 #endif
 				
+				debug_iterations_after_restore++;
+				debug_prev_iteration_pc = reg_pc;
 				SET_LAST_ADDR(reg_pc);
 				
 				// c64 debugger fix
@@ -2707,7 +2938,6 @@ INC_PC(1);                \
 					}
 				}
 				///
-
 				FETCH_OPCODE(opcode);
 				
 #ifdef FEATURE_CPUMEMHISTORY
@@ -3696,9 +3926,10 @@ INC_PC(1);                \
 		///
 		/// end of 6510dtvcore.c
 		
-
 		// c64d: mark cell execute
 		c64d_mark_c64_cell_execute(LAST_OPCODE_ADDR & 0xFFFF, LAST_OPCODE_INFO & 0xFF);
+		
+		c64d_profiler_end_cpu_instruction();
 		
 		c64d_c64_instruction_cycle = 0;
 		
@@ -3708,13 +3939,15 @@ INC_PC(1);                \
 			if (c64d_debug_mode == DEBUGGER_MODE_RUN_ONE_INSTRUCTION)
 			{
 				c64d_debug_mode = DEBUGGER_MODE_PAUSED;
+				LOGD("maincpuclk=%d previous=%d previous2=%d",
+					 maincpu_clk, c64d_previous_instruction_maincpu_clk, c64d_previous2_instruction_maincpu_clk);
 			}
 			
 			//c64d_c64_check_pc_breakpoint(reg_pc);
 			
 			viceCurrentC64PC = reg_pc;
 			
-			c64d_debug_pause_check();
+			c64d_debug_pause_check(0);
 		}
 		
 		//		if (c64d_debug_mode == C64_DEBUG_SHUTDOWN)
@@ -3742,6 +3975,7 @@ INC_PC(1);                \
 
 void c64d_set_debug_mode(int newMode)
 {
+	LOGD("c64d_set_debug_mode: %d", newMode);
 	c64d_debug_mode = newMode;
 }
 
@@ -3764,7 +3998,7 @@ int c64d_c64_do_cycle()
 			return vicii_cycle();
 		}
 		
-		c64d_debug_pause_check();
+		c64d_debug_pause_check(0);
 	}
 	
 	return vicii_cycle();
@@ -3928,6 +4162,109 @@ fail:
 	return -1;
 }
 
+void c64d_check_cpu_snapshot_manager_restore()
+{
+	if (c64d_check_snapshot_restore())
+	{
+		enum cpu_int pending_interrupt;
+
+//		EXPORT_REGISTERS();                                            \
+//		interrupt_do_trap(CPU_INT_STATUS, (WORD)reg_pc);               \
+//		IMPORT_REGISTERS();                                            \
+//		if (CPU_INT_STATUS->global_pending_int & IK_RESET) {           \
+//			ik |= IK_RESET;                                            \
+//		}
+		
+		LOGD("GLOBAL_REGS.pc=%04x", GLOBAL_REGS.pc);
+		
+		IMPORT_REGISTERS();
+		viceCurrentC64PC = maincpu_get_pc();
+		
+		LOGD("viceCurrentC64PC=%04x reg_pc=%04x", viceCurrentC64PC, reg_pc);
+		
+		// TODO: this is copy-pasted from CPU emulation, make generic function
+		pending_interrupt = CPU_INT_STATUS->global_pending_int;
+		if (pending_interrupt != IK_NONE)
+		{
+			DO_INTERRUPT(pending_interrupt);
+			
+			if ((pending_interrupt & IK_NMI)
+				&& (CLK >= (CPU_INT_STATUS->nmi_clk + INTERRUPT_DELAY)))
+			{
+				c64d_c64_check_irqnmi_breakpoint();
+				viceCurrentC64PC = reg_pc;
+			}
+			
+			// c64 debugger - check interrupt breakpoints when irq is ack'ed
+			if ((pending_interrupt & IK_IRQ) && ((reg_p & P_INTERRUPT) == P_INTERRUPT))
+			{
+				if (c64d_c64_is_checking_irq_breakpoints_enabled() == 1)
+				{
+					if (vicii.c64d_irq_flag == 1)
+					{
+						c64d_c64_check_irqvic_breakpoint();
+						vicii.c64d_irq_flag = 0;
+						viceCurrentC64PC = reg_pc;
+					}
+					
+					if (machine_context.cia1->irq_enabled)
+					{
+						if (machine_context.cia1->c64d_irq_flag == 1)
+						{
+							c64d_c64_check_irqcia_breakpoint(1);
+							machine_context.cia1->c64d_irq_flag = 0;
+							viceCurrentC64PC = reg_pc;
+						}
+					}
+					
+					if (machine_context.cia2->irq_enabled)
+					{
+						if (machine_context.cia2->c64d_irq_flag == 1)
+						{
+							c64d_c64_check_irqcia_breakpoint(2);
+							machine_context.cia2->c64d_irq_flag = 0;
+							viceCurrentC64PC = reg_pc;
+						}
+					}
+				}
+			}
+			/////
+			
+			if (!(CPU_INT_STATUS->global_pending_int & IK_IRQ)
+				&& CPU_INT_STATUS->global_pending_int & IK_IRQPEND) {
+				CPU_INT_STATUS->global_pending_int &= ~IK_IRQPEND;
+			}
+			while (CLK >= alarm_context_next_pending_clk(ALARM_CONTEXT)) {
+				alarm_context_dispatch(ALARM_CONTEXT, CLK);
+			}
+		}
+
+		
+		
+		
+			/* OLD
+		if (!(CPU_INT_STATUS->global_pending_int & IK_IRQ)
+			&& CPU_INT_STATUS->global_pending_int & IK_IRQPEND) {
+			CPU_INT_STATUS->global_pending_int &= ~IK_IRQPEND;
+		}
+		while (CLK >= alarm_context_next_pending_clk(ALARM_CONTEXT)) {
+			alarm_context_dispatch(ALARM_CONTEXT, CLK);
+		}
+			 */
+		
+		LOGD("after alarm_context_dispatch: viceCurrentC64PC=%04x reg_pc=%04x cycle=%d", viceCurrentC64PC, reg_pc, maincpu_clk);
+		
+		return;
+	}
+}
+
+void c64d_check_cpu_snapshot_manager_store()
+{
+	// check snapshot interval by snapshot manager
+	EXPORT_REGISTERS();
+	c64d_check_snapshot_interval();
+	IMPORT_REGISTERS();
+}
 
 
 /// "../mainc64cpu.c" ends here

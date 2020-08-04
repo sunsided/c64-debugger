@@ -25,9 +25,9 @@ void SYS_InitSoundEngine()
 
 CSoundEngine::CSoundEngine()
 {
-	LOGF(DBGLVL_XMPLAYER, "CSoundEngine init");
+	LOGA("CSoundEngine init");
 
-	mutex = new CSlrMutex();
+	mutex = new CSlrMutex("CSoundEngine");
 
 	deviceOutIndex = Pa_GetDefaultOutputDevice();
 	if (deviceOutIndex == paNoDevice)
@@ -560,7 +560,7 @@ void playbackFakeCallback(int numSamples)
 				//LOGF("xmAudioBufferLen=%d", xmAudioBufferLen);
 				if (xmAudioBufferLen >= SOUND_BUFFER_SIZE)
 				{
-					LOGF(DBGLVL_XMPLAYER, "XMPlayer buffer overflow");
+					LOGA("XMPlayer buffer overflow");
 				}
 				else if (xmAudioBufferLen + samplePos < numSamples)
 				{

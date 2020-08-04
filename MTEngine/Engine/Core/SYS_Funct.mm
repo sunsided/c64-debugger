@@ -10,6 +10,7 @@
 #include "SYS_Funct.h"
 #include "SYS_Main.h"
 #include "SYS_CFileSystem.h"
+#include <string.h>
 
 #if !defined(WIN32) && !defined(ANDROID)
 #include <execinfo.h>
@@ -28,7 +29,6 @@
 #endif
 
 #include <string.h>
-#include <pthread.h>
 
 #if defined(LINUX)
 #include <unistd.h>
@@ -63,22 +63,22 @@ bool compare_str_num(char *str1, char *str2, u16 numChars)
 
 void FixFileNameSlashes(char *buf)
 {
-	u16 len = strlen(buf);
+	int len = strlen(buf);
 
 	// normalize path separators
-	for (u16 i = 0; i < len; i++)
+	for (int i = 0; i < len; i++)
 	{
 		if (buf[i] == '\\' || buf[i] == '/')
 			buf[i] = SYS_FILE_SYSTEM_PATH_SEPARATOR;
 	}
 	
 	// check if double path separators exist (fix for c:\dupa\/file.txt paths)
-	for (u16 i = 0; i < len-1; i++)
+	for (int i = 0; i < len-1; i++)
 	{
 		if (buf[i] == SYS_FILE_SYSTEM_PATH_SEPARATOR
 			&& buf[i+1] == SYS_FILE_SYSTEM_PATH_SEPARATOR)
 		{
-			for (u16 j = i; j < len-1; j++)
+			for (int j = i; j < len-1; j++)
 			{
 				buf[j] = buf[j+1];
 			}
@@ -90,8 +90,8 @@ void FixFileNameSlashes(char *buf)
 
 bool SYS_FileNameHasExtension(char *fileName, char *extension)
 {
-	u16 i = strlen(fileName) - 1;
-	u16 j = strlen(extension) - 1;
+	int i = strlen(fileName) - 1;
+	int j = strlen(extension) - 1;
 
 	// x.ext  - min 2 more
 	if (i < (j+2))
@@ -117,10 +117,10 @@ void SYS_RemoveFileNameExtension(char *fileName)
 	// warning! if the fileName is const it will crash...
 	// don't forget to not use extensions in the const char* filenames
 
-	u16 l = strlen(fileName);
+	int l = strlen(fileName);
 
 	bool isExt = false;
-	for (u16 z = 0; z < l; z++)
+	for (int z = 0; z < l; z++)
 	{
 		if (fileName[z] == '.')
 		{
@@ -131,7 +131,7 @@ void SYS_RemoveFileNameExtension(char *fileName)
 	if (isExt == false)
 		return;
 
-	u16 pos = l;
+	int pos = l;
 
 	int i = l-1;
 
@@ -152,7 +152,7 @@ void SYS_RemoveFileNameExtension(char *fileName)
 	}
 }
 
-void SYS_Sleep(long milliseconds)
+void SYS_Sleep(unsigned long milliseconds)
 {
 	//LOGD("SYS_Sleep %d", milliseconds);
 	
@@ -256,7 +256,7 @@ void SYS_PrintMemoryUsed()
 	PPROCESS_MEMORY_COUNTERS pMemCountr = new PROCESS_MEMORY_COUNTERS;
 	if( GetProcessMemoryInfo(GetCurrentProcess(), pMemCountr, sizeof(PROCESS_MEMORY_COUNTERS)))
 	{
-		LOGF(DBGLVL_MEMORY, "MEMORY=%d", pMemCountr->WorkingSetSize);
+		LOGM("MEMORY=%d", pMemCountr->WorkingSetSize);
 	}
 	delete pMemCountr;
 #elif !defined(ANDROID) && !defined(IPHONE)
@@ -287,7 +287,8 @@ char *SYS_GetFileNameFromFullPath(char *fileNameFull)
 	// path sign is not found, just dup the original path as filename
 	if (foundPathSign == false)
 	{
-		char *ret = strdup(fileNameFull);
+		char *ret = new char[len];
+		strcpy(ret, fileNameFull);
 		return ret;
 	}
 	
@@ -310,8 +311,9 @@ char *SYS_GetFileNameFromFullPath(char *fileNameFull)
 	}
 	fileName[j] = 0x00;
 
-	char *ret = strdup(fileName);
-	
+	char *ret = new char[len];
+	strcpy(ret, fileName);
+
 	SYS_ReleaseCharBuf(fileName);
 	
 	return ret;

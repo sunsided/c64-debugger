@@ -8,6 +8,7 @@
  */
 
 #include "VID_ImageBinding.h"
+#include "SYS_Threading.h"
 #include <time.h>
 #include <list>
 
@@ -38,11 +39,11 @@ public:
 
 std::list<CBindingImageData *> imageBindings;
 
-pthread_mutex_t bindingMutex;
+CSlrMutex *bindingMutex;
 
 void VID_InitImageBindings()
 {
-	pthread_mutex_init(&bindingMutex, NULL);
+	bindingMutex = new CSlrMutex("bindingMutex");
 }
 
 void LockBindingMutex()
@@ -51,7 +52,7 @@ void LockBindingMutex()
 	LOGD("LockBindingMutex");
 #endif
 
-	pthread_mutex_lock(&bindingMutex);
+	bindingMutex->Lock();
 }
 
 void UnlockBindingMutex()
@@ -60,7 +61,7 @@ void UnlockBindingMutex()
 	LOGD("UnlockBindingMutex");
 #endif
 
-	pthread_mutex_unlock(&bindingMutex);
+	bindingMutex->Unlock();
 }
 
 void VID_LoadImage(char *fileName, CSlrImage **destination, bool linearScaling, bool fromResources)

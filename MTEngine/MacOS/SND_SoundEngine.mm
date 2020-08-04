@@ -35,7 +35,7 @@ CSoundEngine::CSoundEngine()
 {
 	LOGA("CSoundEngine init");
 	
-	audioEngineMutex = new CSlrMutex();
+	audioEngineMutex = new CSlrMutex("CSoundEngine");
 	
 #if defined(WRITE_AUDIO_OUT_TO_FILE)
 	char fpath[1024];
@@ -199,11 +199,13 @@ static int playCallback( const void *inputBuffer, void *outputBuffer,
 						void *userData )
 
 {   
-	//LOGA("SND_PlaybackCallback");
+//	LOGA("SND_PlaybackCallback");
 	
 	u32 len = framesPerBuffer * 4;
 	int *mixBuffer = (int*)outputBuffer;
 	int numSamples = framesPerBuffer;
+	
+//	LOGD("framesPerBuffer=%d len=%d", framesPerBuffer, len);
 	
 //	u32 j = 0;
 //	for (u32 i = 0; i < framesPerBuffer; i++)
@@ -227,6 +229,7 @@ static int playCallback( const void *inputBuffer, void *outputBuffer,
 		
 	gSoundEngine->LockMutex("playCallback");
 	
+//	LOGD("SND_MainMixer: numSamples=%d", numSamples);
 	SND_MainMixer(outBuffer, numSamples);
 
 	gSoundEngine->UnlockMutex("playCallback");
@@ -268,6 +271,13 @@ std::list<CSlrString *> *CSoundEngine::EnumerateAvailableOutputDevices()
 	LOGD("CSoundEngine::EnumerateAvailableOutputDevices");
 	std::list<CSlrString *> *audioOutDevices = new std::list<CSlrString *>();
 	
+	this->LockMutex("CSoundEngine::EnumerateAvailableOutputDevices");
+
+	bool wasPlayback = isPlaybackOn;
+	bool wasRecording = isRecordingOn;
+
+	this->StopAudioUnit();
+	
 	PaStreamParameters outputParameters;
 	outputParameters.channelCount = 2;                     // stereo output
 	outputParameters.sampleFormat = paInt16;
@@ -293,6 +303,13 @@ std::list<CSlrString *> *CSoundEngine::EnumerateAvailableOutputDevices()
 			audioOutDevices->push_back(new CSlrString(deviceInfo->name));
 		}
 	}
+	
+	if (wasPlayback || wasRecording)
+	{
+		this->StartAudioUnit(wasPlayback, wasRecording, recordingFrequency);
+	}
+	
+	this->UnlockMutex("CSoundEngine::EnumerateAvailableOutputDevices");
 	
 	LOGD("CSoundEngine::EnumerateAvailableOutputDevices finished");
 

@@ -11,10 +11,14 @@
 #define C64D_SETTINGS_FILE_PATH				"/settings.dat"
 #define C64D_KEYBOARD_SHORTCUTS_FILE_PATH	"/shortcuts.dat"
 #define C64D_KEYMAP_FILE_PATH				"/keymap.dat"
-#else
+#elif defined(RUN_ATARI)
 #define C64D_SETTINGS_FILE_PATH				"/settings-atari.dat"
 #define C64D_KEYBOARD_SHORTCUTS_FILE_PATH	"/shortcuts-atari.dat"
 #define C64D_KEYMAP_FILE_PATH				"/keymap-atari.dat"
+#elif defined(RUN_NES)
+#define C64D_SETTINGS_FILE_PATH				"/settings-nes.dat"
+#define C64D_KEYBOARD_SHORTCUTS_FILE_PATH	"/shortcuts-nes.dat"
+#define C64D_KEYMAP_FILE_PATH				"/keymap-nes.dat"
 #endif
 
 // settings that need to be initialized pre-launch
@@ -36,6 +40,17 @@ enum muteSIDMode : u8
 	MUTE_SID_MODE_SKIP_EMULATION	= 1
 };
 
+enum c64SIDImportMode : u8
+{
+	SID_IMPORT_MODE_DIRECT_COPY		= 0,
+	SID_IMPORT_MODE_PSID64			= 1
+};
+
+enum atariVideoSystem : u8
+{
+	ATARI_VIDEO_SYSTEM_PAL = 0,
+	ATARI_VIDEO_SYSTEM_NTSC = 1
+};
 
 // settings
 extern bool c64SettingsSkipConfig;
@@ -44,15 +59,23 @@ extern bool c64SettingsPassConfigToRunningInstance;
 extern int c64SettingsDefaultScreenLayoutId;
 extern bool c64SettingsIsInVicEditor;
 
+extern int c64SettingsScreenSupersampleFactor;
+
+extern bool c64SettingsUsePipeIntegration;
+
 extern uint8 c64SettingsMemoryValuesStyle;
 extern uint8 c64SettingsMemoryMarkersStyle;
 extern bool c64SettingsUseMultiTouchInMemoryMap;
 extern bool c64SettingsMemoryMapInvertControl;
 extern uint8 c64SettingsMemoryMapRefreshRate;
+extern int c64SettingsMemoryMapFadeSpeed;
 
 extern uint8 c64SettingsC64Model;
 extern int c64SettingsEmulationMaximumSpeed;
 extern bool c64SettingsFastBootKernalPatch;
+
+extern bool c64SettingsReuEnabled;
+extern int c64SettingsReuSize;
 
 extern uint8 c64SettingsSIDEngineModel;
 extern uint8 c64SettingsRESIDSamplingMethod;
@@ -77,13 +100,12 @@ extern uint16 c64SettingsVicPalette;
 extern bool c64SettingsRenderScreenNearest;
 
 extern uint8 c64SettingsJoystickPort;
-extern bool c64SettingsJoystickIsOn;
+extern bool c64SettingsUseKeyboardAsJoystick;
 
 extern bool c64SettingsRenderDisassembleExecuteAware;
 
 extern bool c64SettingsWindowAlwaysOnTop;
 
-//// NEW
 extern float c64SettingsScreenGridLinesAlpha;
 extern uint8 c64SettingsScreenGridLinesColorScheme;
 extern float c64SettingsScreenRasterViewfinderScale;
@@ -102,7 +124,8 @@ extern CSlrString *c64SettingsPathToPRG;
 extern CSlrString *c64SettingsDefaultPRGFolder;
 extern CSlrString *c64SettingsPathToCartridge;
 extern CSlrString *c64SettingsDefaultCartridgeFolder;
-extern CSlrString *c64SettingsPathToSnapshot;
+extern CSlrString *c64SettingsPathToViceSnapshot;
+extern CSlrString *c64SettingsPathToAtariSnapshot;
 extern CSlrString *c64SettingsDefaultSnapshotsFolder;
 extern CSlrString *c64SettingsDefaultMemoryDumpFolder;
 extern CSlrString *c64SettingsPathToC64MemoryMapFile;
@@ -110,19 +133,55 @@ extern CSlrString *c64SettingsPathToC64MemoryMapFile;
 extern CSlrString *c64SettingsPathToTAP;
 extern CSlrString *c64SettingsDefaultTAPFolder;
 
+extern CSlrString *c64SettingsPathToReu;
+extern CSlrString *c64SettingsDefaultReuFolder;
+
+extern CSlrString *c64SettingsDefaultVicEditorFolder;
+
 extern CSlrString *c64SettingsPathToAtariROMs;
 
+extern bool c64SettingsAtariPokeyStereo;
 extern CSlrString *c64SettingsPathToATR;
 extern CSlrString *c64SettingsDefaultATRFolder;
 extern CSlrString *c64SettingsPathToXEX;
 extern CSlrString *c64SettingsDefaultXEXFolder;
+extern CSlrString *c64SettingsPathToCAS;
+extern CSlrString *c64SettingsDefaultCASFolder;
+extern CSlrString *c64SettingsPathToAtariCartridge;
+extern CSlrString *c64SettingsDefaultAtariCartridgeFolder;
+
+extern CSlrString *c64SettingsPathToNES;
+extern CSlrString *c64SettingsDefaultNESFolder;
 
 extern CSlrString *c64SettingsPathToSymbols;
 extern CSlrString *c64SettingsPathToWatches;
 extern CSlrString *c64SettingsPathToBreakpoints;
 extern CSlrString *c64SettingsPathToDebugInfo;
 
+extern bool c64SettingsUseNativeEmulatorMonitor;
+
 extern CSlrString *c64SettingsPathToJukeboxPlaylist;
+
+// priority
+extern bool c64SettingsIsProcessPriorityBoostDisabled;
+extern u8 c64SettingsProcessPriority;
+
+// profiler
+extern CSlrString *c64SettingsC64ProfilerFileOutputPath;
+extern bool c64SettingsC64ProfilerDoVicProfile;
+
+// snapshots recorder
+extern bool c64SettingsSnapshotsRecordIsActive;
+extern bool c64SettingsTimelineIsActive;
+
+// storing interval
+extern int c64SettingsSnapshotsIntervalNumFrames;
+// max number of snapshots
+extern int c64SettingsSnapshotsLimit;
+
+
+// sid import
+extern u8 c64SettingsC64SidImportMode;
 
 extern CSlrString *c64SettingsAudioOutDevice;
 
@@ -141,9 +200,13 @@ extern int c64SettingsDatasetteZeroGapDelay;
 extern int c64SettingsDatasetteTapeWobble;
 extern bool c64SettingsDatasetteResetWithCPU;
 
+extern bool c64SettingsResetCountersOnAutoRun;
+
 extern bool c64SettingsRunSIDWhenInWarp;
 
 extern u8 c64SettingsVicDisplayBorderType;
+extern bool c64SettingsVicDisplayShowGridLines;
+extern bool c64SettingsVicDisplayApplyScroll;
 
 extern float c64SettingsPaintGridCharactersColorR;
 extern float c64SettingsPaintGridCharactersColorG;
@@ -177,6 +240,11 @@ extern int c64SettingsDoubleClickMS;
 extern bool c64SettingsLoadViceLabels;
 extern bool c64SettingsLoadWatches;
 extern bool c64SettingsLoadDebugInfo;
+
+// atari
+extern u8 c64SettingsAtariVideoSystem;
+extern u8 c64SettingsAtariMachineType;
+extern u8 c64SettingsAtariRamSizeOption;
 
 void C64DebuggerSetSettingInt(char *settingName, int param);
 void C64DebuggerSetSettingString(char *settingName, CSlrString *param);

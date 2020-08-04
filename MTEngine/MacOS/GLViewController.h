@@ -43,6 +43,11 @@
 
 - (bool)isWindowFullScreen;
 
+- (void)storeMainWindowPosition;
+- (void)restoreMainWindowPosition;
+
+//- (void)windowWillClose:(NSNotification *)notification;
+
 //// payments
 //- (void) startPayment;
 //- (void) completeTransaction: (SKPaymentTransaction *)transaction;

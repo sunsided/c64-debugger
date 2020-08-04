@@ -32,7 +32,7 @@ GLfloat VID_GetScreenHeight();
 #define SCREEN_EDGE_HEIGHT 2.0
 #define SCREEN_EDGE_WIDTH 2.0
 
-long SYS_GetCurrentTimeInMillis();
+unsigned long SYS_GetCurrentTimeInMillis();
 long SYS_RandomSeed();
 void VID_ResetLogicClock();
 
@@ -174,6 +174,8 @@ void GUI_GetRealScreenPixelSizes(double *pixelSizeX, double *pixelSizeY);
 bool VID_IsWindowFullScreen();
 void VID_ShowMouseCursor();
 void VID_HideMouseCursor();
+
+void VID_StoreMainWindowPosition();
 
 void BlitTexture(GLuint tex, GLfloat destX, GLfloat destY, GLfloat z, GLfloat sizeX, GLfloat sizeY);
 void BlitTexture(GLuint tex, GLfloat destX, GLfloat destY, GLfloat z, GLfloat sizeX, GLfloat sizeY,

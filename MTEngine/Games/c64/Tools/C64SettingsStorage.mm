@@ -13,10 +13,16 @@
 #include "CViewC64VicControl.h"
 #include "CViewC64StateSID.h"
 #include "CViewVicEditor.h"
+#include "CSnapshotsManager.h"
 #include "C64Palette.h"
-#include "DebuggerDefs.h"
+#include "CViewAtariScreen.h"
+#include "CViewNesScreen.h"
+
 #include "C64DebugInterface.h"
 #include "AtariDebugInterface.h"
+#include "NesDebugInterface.h"
+
+#include "DebuggerDefs.h"
 
 // this is used for temporarily allow quick switch for loading settings from other path than default
 //#define DEBUG_SETTINGS_FILE_PATH	"/Users/mars/Downloads/settings.dat.old.bin"
@@ -53,8 +59,12 @@ bool c64SettingsIsInVicEditor = false;
 bool c64SettingsSkipConfig = false;
 bool c64SettingsPassConfigToRunningInstance = false;
 
+int c64SettingsScreenSupersampleFactor = 1;
+
+bool c64SettingsUsePipeIntegration = true;
+
 uint8 c64SettingsJoystickPort = 0;
-bool c64SettingsJoystickIsOn = false;
+bool c64SettingsUseKeyboardAsJoystick = false;
 
 bool c64SettingsWindowAlwaysOnTop = false;
 
@@ -72,6 +82,8 @@ int c64SettingsEmulationMaximumSpeed = 100;		// percentage
 bool c64SettingsFastBootKernalPatch = false;
 bool c64SettingsEmulateVSPBug = false;
 
+// TODO: refactor SID to Sid for better readability
+
 uint8 c64SettingsSIDEngineModel = 0;	// 4=8580 FastSID
 uint8 c64SettingsRESIDSamplingMethod = SID_RESID_SAMPLING_RESAMPLING;
 bool c64SettingsRESIDEmulateFilters = true;
@@ -82,10 +94,16 @@ uint8 c64SettingsSIDStereo = 0;					// "SidStereo" 0=none, 1=stereo, 2=triple
 uint16 c64SettingsSIDStereoAddress = 0xD420;	// "SidStereoAddressStart"
 uint16 c64SettingsSIDTripleAddress = 0xDF00;	// "SidTripleAddressStart"
 
+extern u8 c64SettingsC64SidImportMode = SID_IMPORT_MODE_PSID64;
+
 int c64SettingsDatasetteSpeedTuning = 0;
 int c64SettingsDatasetteZeroGapDelay = 20000;
 int c64SettingsDatasetteTapeWobble = 10;
 bool c64SettingsDatasetteResetWithCPU = false;
+
+//
+bool c64SettingsReuEnabled = false;
+int c64SettingsReuSize = 16384;
 
 bool c64SettingsMuteSIDOnPause = false;
 
@@ -93,10 +111,19 @@ int c64SettingsAudioVolume = 100;				// percentage
 bool c64SettingsRunSIDEmulation = true;
 uint8 c64SettingsMuteSIDMode = MUTE_SID_MODE_ZERO_VOLUME;
 
-
 uint16 c64SettingsVicPalette = 0;
+bool c64SettingsC64ProfilerDoVicProfile = false;
 
 int c64SettingsWaitOnStartup = 0; //500;
+
+// snapshots recorder
+bool c64SettingsTimelineIsActive = true;
+
+bool c64SettingsSnapshotsRecordIsActive = true;
+// snapshots interval
+int c64SettingsSnapshotsIntervalNumFrames = 10;
+// max number of snapshots. TODO: get fps from debuginterface. 50 frames per second * 60 seconds = 3 mins
+int c64SettingsSnapshotsLimit = (50 * 60 * 3) / 10;
 
 CSlrString *c64SettingsPathToD64 = NULL;
 CSlrString *c64SettingsDefaultD64Folder = NULL;
@@ -107,19 +134,36 @@ CSlrString *c64SettingsDefaultPRGFolder = NULL;
 CSlrString *c64SettingsPathToCartridge = NULL;
 CSlrString *c64SettingsDefaultCartridgeFolder = NULL;
 
-CSlrString *c64SettingsPathToSnapshot = NULL;
+CSlrString *c64SettingsPathToViceSnapshot = NULL;
+CSlrString *c64SettingsPathToAtariSnapshot = NULL;
 CSlrString *c64SettingsDefaultSnapshotsFolder = NULL;
 
 CSlrString *c64SettingsPathToTAP = NULL;
 CSlrString *c64SettingsDefaultTAPFolder = NULL;
 
+CSlrString *c64SettingsPathToReu = NULL;
+CSlrString *c64SettingsDefaultReuFolder = NULL;
+
+CSlrString *c64SettingsDefaultVicEditorFolder = NULL;
+
+bool c64SettingsAtariPokeyStereo = false;
+
 CSlrString *c64SettingsPathToXEX = NULL;
 CSlrString *c64SettingsDefaultXEXFolder = NULL;
+
+CSlrString *c64SettingsPathToCAS = NULL;
+CSlrString *c64SettingsDefaultCASFolder = NULL;
+
+CSlrString *c64SettingsPathToAtariCartridge = NULL;
+CSlrString *c64SettingsDefaultAtariCartridgeFolder = NULL;
 
 CSlrString *c64SettingsPathToATR = NULL;
 CSlrString *c64SettingsDefaultATRFolder = NULL;
 
 CSlrString *c64SettingsPathToAtariROMs = NULL;
+
+CSlrString *c64SettingsPathToNES = NULL;
+CSlrString *c64SettingsDefaultNESFolder = NULL;
 
 CSlrString *c64SettingsDefaultMemoryDumpFolder = NULL;
 
@@ -131,7 +175,16 @@ CSlrString *c64SettingsPathToBreakpoints = NULL;
 CSlrString *c64SettingsPathToWatches = NULL;
 CSlrString *c64SettingsPathToDebugInfo = NULL;
 
+bool c64SettingsUseNativeEmulatorMonitor = false;
+
 CSlrString *c64SettingsPathToJukeboxPlaylist = NULL;
+
+// priority
+bool c64SettingsIsProcessPriorityBoostDisabled = true;
+u8 c64SettingsProcessPriority = MT_PRIORITY_ABOVE_NORMAL;
+
+// profiler
+CSlrString *c64SettingsC64ProfilerFileOutputPath = NULL;
 
 CSlrString *c64SettingsAudioOutDevice = NULL;
 
@@ -152,6 +205,8 @@ bool c64SettingsRenderScreenNearest = true;
 int c64SettingsJmpOnStartupAddr = -1;
 
 u8 c64SettingsVicDisplayBorderType = VIC_DISPLAY_SHOW_BORDER_FULL;
+bool c64SettingsVicDisplayShowGridLines = true;
+bool c64SettingsVicDisplayApplyScroll = false;
 
 bool c64SettingsAutoJmp = false;
 bool c64SettingsAutoJmpAlwaysToLoadedPRGAddress = false;	// will jump to loaded address when PRG is loaded from menu
@@ -160,6 +215,8 @@ u8 c64SettingsAutoJmpDoReset = MACHINE_RESET_NONE;
 int c64SettingsAutoJmpWaitAfterReset = 1300;				// this is to let c64 drive finish reset
 
 bool c64SettingsForceUnpause = false;						// unpause debugger on jmp if code is stopped
+
+bool c64SettingsResetCountersOnAutoRun = true;
 
 bool c64SettingsRunSIDWhenInWarp = true;
 
@@ -201,6 +258,10 @@ bool c64SettingsLoadWatches = true;
 // automatically load debug info if filename matched PRG (*.dbg)
 bool c64SettingsLoadDebugInfo = true;
 
+// atari
+u8 c64SettingsAtariVideoSystem = ATARI_VIDEO_SYSTEM_PAL;
+u8 c64SettingsAtariMachineType = 0;
+u8 c64SettingsAtariRamSizeOption = 0;
 
 void storeSettingBlock(CByteBuffer *byteBuffer, u8 value)
 {
@@ -284,23 +345,34 @@ void C64DebuggerStoreSettings()
 	storeSettingString(byteBuffer, "FolderPRG", c64SettingsDefaultPRGFolder);
 	storeSettingString(byteBuffer, "FolderCRT", c64SettingsDefaultCartridgeFolder);
 	storeSettingString(byteBuffer, "FolderTAP", c64SettingsDefaultTAPFolder);
+	storeSettingString(byteBuffer, "FolderREU", c64SettingsDefaultReuFolder);
+	storeSettingString(byteBuffer, "FolderVicEditor", c64SettingsDefaultVicEditorFolder);
 	storeSettingString(byteBuffer, "FolderSnaps", c64SettingsDefaultSnapshotsFolder);
 	storeSettingString(byteBuffer, "FolderMemDumps", c64SettingsDefaultMemoryDumpFolder);
 	storeSettingString(byteBuffer, "PathD64", c64SettingsPathToD64);
 	storeSettingString(byteBuffer, "PathPRG", c64SettingsPathToPRG);
 	storeSettingString(byteBuffer, "PathCRT", c64SettingsPathToCartridge);
 	storeSettingString(byteBuffer, "PathTAP", c64SettingsPathToTAP);
+	storeSettingString(byteBuffer, "PathREU", c64SettingsPathToReu);
 
 	storeSettingString(byteBuffer, "FolderAtariROMs", c64SettingsPathToAtariROMs);
 	storeSettingString(byteBuffer, "FolderATR", c64SettingsDefaultATRFolder);
 	storeSettingString(byteBuffer, "PathATR", c64SettingsPathToATR);
 	storeSettingString(byteBuffer, "FolderXEX", c64SettingsDefaultXEXFolder);
 	storeSettingString(byteBuffer, "PathXEX", c64SettingsPathToXEX);
+	storeSettingString(byteBuffer, "FolderCAS", c64SettingsDefaultCASFolder);
+	storeSettingString(byteBuffer, "PathCAS", c64SettingsPathToCAS);
+	storeSettingString(byteBuffer, "FolderAtariCart", c64SettingsDefaultAtariCartridgeFolder);
+	storeSettingString(byteBuffer, "PathAtariCart", c64SettingsPathToAtariCartridge);
+	storeSettingString(byteBuffer, "FolderNES", c64SettingsDefaultNESFolder);
+	storeSettingString(byteBuffer, "PathNES", c64SettingsPathToNES);
 
+	storeSettingBool(byteBuffer, "UsePipeIntegration", c64SettingsUsePipeIntegration);
+	
 	storeSettingBool(byteBuffer, "AutoJmp", c64SettingsAutoJmp);
 	storeSettingBool(byteBuffer, "AutoJmpAlwaysToLoadedPRGAddress", c64SettingsAutoJmpAlwaysToLoadedPRGAddress);
 	storeSettingBool(byteBuffer, "AutoJmpFromInsertedDiskFirstPrg", c64SettingsAutoJmpFromInsertedDiskFirstPrg);
-	
+
 	storeSettingString(byteBuffer, "PathMemMapFile", c64SettingsPathToC64MemoryMapFile);
 
 	storeSettingString(byteBuffer, "AudioOutDevice", c64SettingsAudioOutDevice);
@@ -313,6 +385,13 @@ void C64DebuggerStoreSettings()
 	storeSettingBool(byteBuffer, "DisassembleExecuteAware", c64SettingsRenderDisassembleExecuteAware);
 	
 	storeSettingBool(byteBuffer, "WindowAlwaysOnTop", c64SettingsWindowAlwaysOnTop);
+
+	storeSettingU16(byteBuffer, "ScreenSupersampleFactor", c64SettingsScreenSupersampleFactor);
+
+	storeSettingBool(byteBuffer, "DisableProcessPriorityBoost", c64SettingsIsProcessPriorityBoostDisabled);
+	storeSettingU8(byteBuffer, "ProcessPriority", c64SettingsProcessPriority);
+
+	storeSettingBool(byteBuffer, "UseNativeEmulatorMonitor", c64SettingsUseNativeEmulatorMonitor);
 	
 #if !defined(WIN32)
 	storeSettingBool(byteBuffer, "UseSystemDialogs", c64SettingsUseSystemFileDialogs);
@@ -321,12 +400,16 @@ void C64DebuggerStoreSettings()
 #if defined(WIN32)
 	storeSettingBool(byteBuffer, "UseOnlyFirstCPU", c64SettingsUseOnlyFirstCPU);
 #endif
-	
-	
+
+#if defined(RUN_COMMODORE64)
 	storeSettingU8(byteBuffer, "C64Model", c64SettingsC64Model);
+	storeSettingString(byteBuffer, "C64ProfilerOutputPath", c64SettingsC64ProfilerFileOutputPath);
+	storeSettingBool(byteBuffer, "C64ProfilerDoVic", c64SettingsC64ProfilerDoVicProfile);
+#endif
 	
 	storeSettingBlock(byteBuffer, C64DEBUGGER_BLOCK_POSTLAUNCH);
 	storeSettingU8(byteBuffer, "JoystickPort", c64SettingsJoystickPort);
+	storeSettingBool(byteBuffer, "UseKeyboardAsJoystick", c64SettingsUseKeyboardAsJoystick);
 	storeSettingU8(byteBuffer, "MemoryValuesStyle", c64SettingsMemoryValuesStyle);
 	storeSettingU8(byteBuffer, "MemoryMarkersStyle", c64SettingsMemoryMarkersStyle);
 
@@ -350,6 +433,9 @@ void C64DebuggerStoreSettings()
 	storeSettingBool(byteBuffer, "RunSIDEmulation", c64SettingsRunSIDEmulation);
 	storeSettingU8(byteBuffer, "MuteSIDMode", c64SettingsMuteSIDMode);
 
+	storeSettingU8(byteBuffer, "SIDImportMode", c64SettingsC64SidImportMode);
+	
+	
 	storeSettingU8(byteBuffer, "VicStateRecording", c64SettingsVicStateRecordingMode);
 	storeSettingU16(byteBuffer, "VicPalette", c64SettingsVicPalette);
 	storeSettingBool(byteBuffer, "RenderScreenNearest", c64SettingsRenderScreenNearest);
@@ -359,6 +445,8 @@ void C64DebuggerStoreSettings()
 	storeSettingBool(byteBuffer, "EmulateVSPBug", c64SettingsEmulateVSPBug);
 	
 	storeSettingU8(byteBuffer, "VicDisplayBorder", c64SettingsVicDisplayBorderType);
+	storeSettingBool(byteBuffer, "VicDisplayShowGrid", c64SettingsVicDisplayShowGridLines);
+	storeSettingBool(byteBuffer, "VicDisplayApplyScroll", c64SettingsVicDisplayApplyScroll);
 	
 	storeSettingBool (byteBuffer, "VicEditorForceReplaceColor", c64SettingsVicEditorForceReplaceColor);
 	storeSettingU8(byteBuffer, "VicEditorDefaultBackgroundColor", c64SettingsVicEditorDefaultBackgroundColor);
@@ -368,6 +456,15 @@ void C64DebuggerStoreSettings()
 	storeSettingI32(byteBuffer, "DatasetteTapeWobble", c64SettingsDatasetteTapeWobble);
 	storeSettingBool(byteBuffer, "DatasetteResetWithCPU", c64SettingsDatasetteResetWithCPU);
 	
+	storeSettingBool(byteBuffer, "ReuEnabled", c64SettingsReuEnabled);
+	storeSettingI32(byteBuffer, "ReuSize", c64SettingsReuSize);
+#endif
+	
+#if defined(RUN_ATARI)
+	storeSettingU8(byteBuffer, "AtariVideoSystem", c64SettingsAtariVideoSystem);
+	storeSettingU8(byteBuffer, "AtariMachineType", c64SettingsAtariMachineType);
+	storeSettingU8(byteBuffer, "AtariRamSizeOption", c64SettingsAtariRamSizeOption);
+	storeSettingBool(byteBuffer, "AtariPokeyStereo", c64SettingsAtariPokeyStereo);
 #endif
 
 	storeSettingBool(byteBuffer, "MemMapMultiTouch", c64SettingsUseMultiTouchInMemoryMap);
@@ -409,6 +506,12 @@ void C64DebuggerStoreSettings()
 	
 	storeSettingFloat (byteBuffer, "PaintGridShowZoomLevel", c64SettingsPaintGridShowZoomLevel);
 	
+	storeSettingBool(byteBuffer, "SnapshotsManagerIsActive", c64SettingsSnapshotsRecordIsActive);
+	storeSettingI32(byteBuffer, "SnapshotsManagerStoreInterval", c64SettingsSnapshotsIntervalNumFrames);
+	storeSettingI32(byteBuffer, "SnapshotsManagerLimit", c64SettingsSnapshotsLimit);
+
+	storeSettingBool(byteBuffer, "TimelineIsActive", c64SettingsTimelineIsActive);
+
 	storeSettingBlock(byteBuffer, C64DEBUGGER_BLOCK_EOF);
 
 	
@@ -494,7 +597,7 @@ void C64DebuggerReadSettingsValues(CByteBuffer *byteBuffer, uint8 settingsBlockT
 		
 		char *name = byteBuffer->GetString();
 		
-		LOGD("readed setting '%s'", name);
+		LOGD("read setting '%s'", name);
 		
 		void *value = NULL;
 		
@@ -573,7 +676,7 @@ void C64DebuggerReadSettingCustom(char *name, CByteBuffer *byteBuffer)
 
 void C64DebuggerSetSetting(char *name, void *value)
 {
-	LOGD("C64DebuggerSetStartupSetting: name='%s'", name);
+	LOGD("C64DebuggerSetSetting: name='%s'", name);
 	
 	if (!strcmp(name, "FolderD64"))
 	{
@@ -644,11 +747,11 @@ void C64DebuggerSetSetting(char *name, void *value)
 			delete c64SettingsPathToPRG;
 		
 		c64SettingsPathToPRG = new CSlrString((CSlrString*)value);
-		
+		c64SettingsPathToPRG->DebugPrint("PathPRG=");
 		// the setting will be updated later by c64PerformStartupTasksThreaded
 		if (viewC64->debugInterfaceC64 && viewC64->debugInterfaceC64->isRunning)
 		{
-			viewC64->viewC64MainMenu->LoadPRG(c64SettingsPathToPRG, false, false, true);
+			viewC64->viewC64MainMenu->LoadPRG(c64SettingsPathToPRG, false, false, true, false);
 		}
 		return;
 	}
@@ -679,16 +782,34 @@ void C64DebuggerSetSetting(char *name, void *value)
 		}
 		return;
 	}
-	else if (!strcmp(name, "FastBootPatch"))
+	else if (!strcmp(name, "ScreenSupersampleFactor"))
 	{
-		bool v = *((bool*)value);
-		c64SettingsFastBootKernalPatch = v;
+		u16 v = *((u16*)value);
+		c64SettingsScreenSupersampleFactor = v;
+		if (viewC64->debugInterfaceC64 && viewC64->debugInterfaceC64->isRunning)
+		{
+			viewC64->viewC64Screen->SetSupersampleFactor(c64SettingsScreenSupersampleFactor);
+		}
+		if (viewC64->debugInterfaceAtari && viewC64->debugInterfaceAtari->isRunning)
+		{
+			viewC64->viewAtariScreen->SetSupersampleFactor(c64SettingsScreenSupersampleFactor);
+		}
+		if (viewC64->debugInterfaceNes && viewC64->debugInterfaceNes->isRunning)
+		{
+			viewC64->viewNesScreen->SetSupersampleFactor(c64SettingsScreenSupersampleFactor);
+		}
 		return;
 	}
-	else if (!strcmp(name, "IsInVicEditor"))
+	else if (!strcmp(name, "UsePipeIntegration"))
 	{
 		bool v = *((bool*)value);
-		c64SettingsIsInVicEditor = v;
+		c64SettingsUsePipeIntegration = v;
+		return;
+	}
+	else if (!strcmp(name, "AutoJmpFromInsertedDiskFirstPrg"))
+	{
+		bool v = *((bool*)value);
+		c64SettingsAutoJmpFromInsertedDiskFirstPrg = v;
 		return;
 	}
 	else if (!strcmp(name, "AutoJmp"))
@@ -703,29 +824,105 @@ void C64DebuggerSetSetting(char *name, void *value)
 		c64SettingsAutoJmpAlwaysToLoadedPRGAddress = v;
 		return;
 	}
-	else if (!strcmp(name, "AutoJmpFromInsertedDiskFirstPrg"))
+	
+	if (!strcmp(name, "SnapshotsManagerStoreInterval"))
 	{
-		bool v = *((bool*)value);
-		c64SettingsAutoJmpFromInsertedDiskFirstPrg = v;
-		return;
-	}
-	else if (!strcmp(name, "C64Model"))
-	{
-		int v = *((int*)value);
-		//viewC64->viewC64SettingsMenu->SetOptionC64ModelType(v);
-		c64SettingsC64Model = v;
-		
-		if (viewC64->debugInterfaceC64 && viewC64->debugInterfaceC64->isRunning)
+		i32 v = *((i32*)value);
+		if (viewC64->debugInterfaceC64)
 		{
-			viewC64->debugInterfaceC64->SetC64ModelType(c64SettingsC64Model);
+			viewC64->debugInterfaceC64->snapshotsManager->SetRecordingStoreInterval(v);
+		}
+		if (viewC64->debugInterfaceAtari)
+		{
+			viewC64->debugInterfaceAtari->snapshotsManager->SetRecordingStoreInterval(v);
+		}
+		
+		if (viewC64->debugInterfaceC64 || viewC64->debugInterfaceAtari)
+		{
+			viewC64->viewC64SettingsMenu->menuItemC64SnapshotsManagerStoreInterval->SetValue(v, false);
 		}
 		return;
 	}
+	else if (!strcmp(name, "SnapshotsManagerLimit"))
+	{
+		i32 v = *((i32*)value);
+		if (viewC64->debugInterfaceC64)
+		{
+			viewC64->debugInterfaceC64->snapshotsManager->SetRecordingLimit(v);
+		}
+		if (viewC64->debugInterfaceAtari)
+		{
+			viewC64->debugInterfaceAtari->snapshotsManager->SetRecordingLimit(v);
+		}
+		if (viewC64->debugInterfaceC64 || viewC64->debugInterfaceAtari)
+		{
+			viewC64->viewC64SettingsMenu->menuItemC64SnapshotsManagerLimit->SetValue(v, false);
+		}
+		return;
+	}
+	else if (!strcmp(name, "TimelineIsActive"))
+	{
+		bool v = *((bool*)value);
+		c64SettingsTimelineIsActive = v;
+		
+		if (viewC64->debugInterfaceC64 || viewC64->debugInterfaceAtari)
+		{
+			viewC64->viewC64SettingsMenu->menuItemC64TimelineIsActive->SetSelectedOption(v, false);
+		}
+		return;
+	}
+	else if (!strcmp(name, "UseNativeEmulatorMonitor"))
+	{
+		bool v = *((bool*)value);
+		c64SettingsUseNativeEmulatorMonitor = v;
+		return;
+	}
+	
+#if defined(WIN32)
+	else if (!strcmp(name, "DisableProcessPriorityBoost"))
+	{
+		bool v = *((bool*)value);
+		c64SettingsIsProcessPriorityBoostDisabled = v;
+		SYS_SetMainProcessPriorityBoostDisabled(c64SettingsIsProcessPriorityBoostDisabled);
+		return;
+	}
+	else if (!strcmp(name, "ProcessPriority"))
+	{
+		u8 v = *((u8*)value);
+		c64SettingsProcessPriority = v;
+		SYS_SetMainProcessPriority(c64SettingsProcessPriority);
+		return;
+	}
+#endif
 	
 //	if (viewC64->debugInterfaceC64)
 #if defined(RUN_COMMODORE64)
 	{
-		if (!strcmp(name, "VicStateRecording"))
+		if (!strcmp(name, "FastBootPatch"))
+		{
+			bool v = *((bool*)value);
+			c64SettingsFastBootKernalPatch = v;
+			return;
+		}
+		else if (!strcmp(name, "IsInVicEditor"))
+		{
+			bool v = *((bool*)value);
+			c64SettingsIsInVicEditor = v;
+			return;
+		}
+		else if (!strcmp(name, "C64Model"))
+		{
+			int v = *((int*)value);
+			//viewC64->viewC64SettingsMenu->SetOptionC64ModelType(v);
+			c64SettingsC64Model = v;
+			
+			if (viewC64->debugInterfaceC64 && viewC64->debugInterfaceC64->isRunning)
+			{
+				viewC64->debugInterfaceC64->SetC64ModelType(c64SettingsC64Model);
+			}
+			return;
+		}
+		else if (!strcmp(name, "VicStateRecording"))
 		{
 			int v = *((int*)value);
 			viewC64->viewC64SettingsMenu->menuItemVicStateRecordingMode->SetSelectedOption(v, false);
@@ -894,7 +1091,14 @@ void C64DebuggerSetSetting(char *name, void *value)
 			viewC64->UpdateSIDMute();
 			return;
 		}
-
+		else if (!strcmp(name, "SIDImportMode"))
+		{
+			u8 v = *((u8*)value);
+			c64SettingsC64SidImportMode = v;
+			viewC64->viewC64SettingsMenu->menuItemSIDImportMode->SetSelectedOption(v, false);
+			return;
+		}
+		
 		else if (!strcmp(name, "EmulationMaximumSpeed"))
 		{
 			int v = *((int*)value);
@@ -953,6 +1157,21 @@ void C64DebuggerSetSetting(char *name, void *value)
 			viewC64->viewC64VicControl->SetBorderType(c64SettingsVicDisplayBorderType);
 			return;
 		}
+		else if (!strcmp(name, "VicDisplayShowGrid"))
+		{
+			u8 v = *((u8*)value);
+			c64SettingsVicDisplayShowGridLines = v;
+			viewC64->viewC64VicControl->SetGridLines(c64SettingsVicDisplayShowGridLines);
+			return;
+		}
+		else if (!strcmp(name, "VicDisplayApplyScroll"))
+		{
+			u8 v = *((u8*)value);
+			c64SettingsVicDisplayApplyScroll = v;
+			viewC64->viewC64VicControl->SetApplyScroll(c64SettingsVicDisplayApplyScroll);
+			return;
+		}
+		
 		else if (!strcmp(name, "VicEditorForceReplaceColor"))
 		{
 			bool v = *((bool*)value);
@@ -1086,12 +1305,76 @@ void C64DebuggerSetSetting(char *name, void *value)
 			viewC64->debugInterfaceC64->DatasetteSetResetWithCPU(v);
 			return;
 		}
+		else if (!strcmp(name, "ReuEnabled"))
+		{
+			bool v = *((bool*)value);
+			c64SettingsReuEnabled = v;
+			
+			LOGD("c64SettingsReuEnabled=%s", STRBOOL(c64SettingsReuEnabled));
+			viewC64->viewC64SettingsMenu->menuItemReuEnabled->SetSelectedOption(v ? 1:0, false);
+			
+			viewC64->debugInterfaceC64->SetReuEnabled(v);
+			return;
+		}
+		else if (!strcmp(name, "ReuSize"))
+		{
+			int v = *((int*)value);
+			c64SettingsReuSize = v;
+
+			for (int i = 0; i < 8; i++)
+			{
+				if (settingsReuSizes[i] == v)
+				{
+					viewC64->viewC64SettingsMenu->menuItemReuSize->SetSelectedOption(i, false);
+					break;
+				}
+			}
+			
+			viewC64->debugInterfaceC64->SetReuSize(v);
+			return;
+		}
+		else if (!strcmp(name, "C64ProfilerOutputPath"))
+		{
+			if (c64SettingsC64ProfilerFileOutputPath != NULL)
+			{
+				delete c64SettingsC64ProfilerFileOutputPath;
+			}
+			
+			c64SettingsC64ProfilerFileOutputPath = new CSlrString((CSlrString*)value);
+			return;
+		}
+		else if (!strcmp(name, "C64ProfilerDoVic"))
+		{
+			bool v = *((bool*)value);
+			c64SettingsC64ProfilerDoVicProfile = v;
+			return;
+		}
+		
+		else if (!strcmp(name, "SnapshotsManagerIsActive"))
+		{
+			bool v = *((bool*)value);
+			viewC64->debugInterfaceC64->snapshotsManager->SetRecordingIsActive(v);
+			viewC64->viewC64SettingsMenu->menuItemC64SnapshotsManagerIsActive->SetSelectedOption(v, false);
+			return;
+		}
 	}
 #endif
 	
 #if defined(RUN_ATARI)
 	{
-		if (!strcmp(name, "FolderAtariROMs"))
+		/*
+		if (!strcmp(name, "AtariPokeyStereo"))
+		{
+			bool v = *((bool*)value);
+			c64SettingsAtariPokeyStereo = v;
+			debugInterfaceAtari->SetPokeyStereo(v);
+			viewC64->viewC64SettingsMenu->menuItemAtariPokeyStereo->SetSelectedOption(v, false);
+			return;
+		}
+		else
+		 */
+		
+		 if (!strcmp(name, "FolderAtariROMs"))
 		{
 			if (c64SettingsPathToAtariROMs != NULL)
 				delete c64SettingsPathToAtariROMs;
@@ -1143,6 +1426,127 @@ void C64DebuggerSetSetting(char *name, void *value)
 			}
 			return;
 		}
+		
+		else if (!strcmp(name, "FolderCAS"))
+		{
+			if (c64SettingsDefaultCASFolder != NULL)
+				delete c64SettingsDefaultCASFolder;
+			
+			c64SettingsDefaultCASFolder = new CSlrString((CSlrString*)value);
+			return;
+		}
+		else if (!strcmp(name, "PathCAS"))
+		{
+			if (c64SettingsPathToCAS != NULL)
+				delete c64SettingsPathToCAS;
+			
+			c64SettingsPathToCAS = new CSlrString((CSlrString*)value);
+			
+			// the setting will be updated later by c64PerformStartupTasksThreaded
+			if (viewC64->debugInterfaceAtari && viewC64->debugInterfaceAtari->isRunning)
+			{
+				viewC64->viewC64MainMenu->LoadCAS(c64SettingsPathToCAS, false, false, true);
+			}
+			return;
+		}
+
+		else if (!strcmp(name, "FolderAtariCart"))
+		{
+			if (c64SettingsDefaultAtariCartridgeFolder != NULL)
+				delete c64SettingsDefaultAtariCartridgeFolder;
+			
+			c64SettingsDefaultAtariCartridgeFolder = new CSlrString((CSlrString*)value);
+			return;
+		}
+		else if (!strcmp(name, "PathAtariCart"))
+		{
+			if (c64SettingsPathToAtariCartridge != NULL)
+				delete c64SettingsPathToAtariCartridge;
+			
+			c64SettingsPathToAtariCartridge = new CSlrString((CSlrString*)value);
+			
+			// the setting will be updated later by c64PerformStartupTasksThreaded
+			if (viewC64->debugInterfaceAtari && viewC64->debugInterfaceAtari->isRunning)
+			{
+				viewC64->viewC64MainMenu->InsertAtariCartridge(c64SettingsPathToAtariCartridge, false, false, true);
+			}
+			return;
+		}
+
+		
+		else if (!strcmp(name, "AtariVideoSystem"))
+		{
+			u8 v = *((u8*)value);
+			viewC64->viewC64SettingsMenu->menuItemAtariVideoSystem->SetSelectedOption(v, false);
+
+			c64SettingsAtariVideoSystem = v;
+			
+			// the setting will be updated later by c64PerformStartupTasksThreaded
+			if (viewC64->debugInterfaceAtari && viewC64->debugInterfaceAtari->isRunning)
+			{
+				viewC64->debugInterfaceAtari->SetVideoSystem(v);
+			}
+			return;
+		}
+		else if (!strcmp(name, "AtariMachineType"))
+		{
+			u8 v = *((u8*)value);
+			viewC64->viewC64SettingsMenu->menuItemAtariMachineType->SetSelectedOption(v, false);
+			viewC64->viewC64SettingsMenu->UpdateAtariRamSizeOptions();
+			
+			c64SettingsAtariMachineType = v;
+			
+			// the setting will be updated later by c64PerformStartupTasksThreaded
+			if (viewC64->debugInterfaceAtari && viewC64->debugInterfaceAtari->isRunning)
+			{
+				viewC64->debugInterfaceAtari->SetMachineType(v);
+			}
+			return;
+		}
+
+		else if (!strcmp(name, "AtariRamSizeOption"))
+		{
+			u8 v = *((u8*)value);
+			viewC64->viewC64SettingsMenu->menuItemAtariRamSize->SetSelectedOption(v, false);
+			
+			c64SettingsAtariRamSizeOption = v;
+			
+			// the setting will be updated later by c64PerformStartupTasksThreaded
+			if (viewC64->debugInterfaceAtari && viewC64->debugInterfaceAtari->isRunning)
+			{
+				viewC64->debugInterfaceAtari->SetRamSizeOption(v);
+			}
+			return;
+		}
+
+	}
+#endif
+	
+#if defined(RUN_NES)
+	{
+		if (!strcmp(name, "FolderNES"))
+		{
+			if (c64SettingsDefaultNESFolder != NULL)
+				delete c64SettingsDefaultNESFolder;
+			
+			c64SettingsDefaultNESFolder = new CSlrString((CSlrString*)value);
+			return;
+		}
+		else if (!strcmp(name, "PathNES"))
+		{
+			if (c64SettingsPathToNES != NULL)
+				delete c64SettingsPathToNES;
+			
+			c64SettingsPathToNES = new CSlrString((CSlrString*)value);
+			
+			// the setting will be updated later by c64PerformStartupTasksThreaded
+			if (viewC64->debugInterfaceNes && viewC64->debugInterfaceNes->isRunning)
+			{
+				viewC64->viewC64MainMenu->LoadNES(c64SettingsPathToNES, false);
+			}
+			return;
+		}
+
 	}
 #endif
 
@@ -1202,6 +1606,14 @@ void C64DebuggerSetSetting(char *name, void *value)
 		c64SettingsJoystickPort = v;
 		return;
 	}
+	else if (!strcmp(name, "UseKeyboardAsJoystick"))
+	{
+		bool v = *((bool*)value);
+		c64SettingsUseKeyboardAsJoystick = v;
+		viewC64->viewC64SettingsMenu->menuItemUseKeyboardAsJoystick->SetSelectedOption(v, false);
+		return;
+	}
+	
 	else if (!strcmp(name, "MemoryValuesStyle"))
 	{
 		int v = *((int*)value);
@@ -1237,12 +1649,12 @@ void C64DebuggerSetSetting(char *name, void *value)
 		
 		if (v)
 		{
-			viewC64->viewC64SettingsMenu->menuItemRenderScreenNearest->SetSelectedOption(1, false);
+			viewC64->viewC64SettingsMenu->menuItemRenderScreenInterpolation->SetSelectedOption(1, false);
 			c64SettingsRenderScreenNearest = true;
 		}
 		else
 		{
-			viewC64->viewC64SettingsMenu->menuItemRenderScreenNearest->SetSelectedOption(0, false);
+			viewC64->viewC64SettingsMenu->menuItemRenderScreenInterpolation->SetSelectedOption(0, false);
 			c64SettingsRenderScreenNearest = false;
 		}
 		return;
@@ -1541,7 +1953,7 @@ void C64DebuggerSetSetting(char *name, void *value)
 		}
 		return;
 	}
-
+	
 	LOGError("C64DebuggerSetSetting: unknown setting '%s'", name);
 }
 

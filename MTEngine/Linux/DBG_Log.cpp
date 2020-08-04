@@ -182,7 +182,7 @@ void LOG_Init(void)
 
 void LOG_Shutdown(void)
 {
-	LOGF(DBGLVL_MAIN, "closing stdlib & logfile\nbye!\n");
+	_LOGF(DBGLVL_MAIN, "closing stdlib & logfile\nbye!\n");
 
 #ifdef LOG_FILE
 	if (fpLog != NULL)
@@ -353,7 +353,7 @@ void LOGT(unsigned int level, char *what)
 {
 	if (!logThisLevel(level))
 		return;
-	LOGF(level, what);
+	_LOGF(level, what);
 }
 
 void LOGT(unsigned int level, const char *what)
@@ -361,10 +361,10 @@ void LOGT(unsigned int level, const char *what)
 	if (!logThisLevel(level))
 		return;
 
-	LOGF(level, what);
+	_LOGF(level, what);
 }
 
-void LOGF(unsigned int level, char *fmt, ... )
+void _LOGF(unsigned int level, char *fmt, ... )
 {
     char buffer[MAX_BUFFER_LENGTH] = {0};
 
@@ -382,14 +382,14 @@ void LOGF(unsigned int level, char *fmt, ... )
 
 }
 
-void LOGF(unsigned int level, std::string what)
+void _LOGF(unsigned int level, std::string what)
 {
 	if (!logThisLevel(level))
 		return;
-	LOGF(level, what.c_str());
+	_LOGF(level, what.c_str());
 }
 
-void LOGF(unsigned int level, const char *fmt, ... )
+void _LOGF(unsigned int level, const char *fmt, ... )
 {
 	if (!logThisLevel(level))
 		return;
@@ -435,7 +435,7 @@ void LOGG(std::string what)
 	if (!logThisLevel(DBGLVL_GUI))
 		return;
 
-	LOGF(DBGLVL_GUI, what.c_str());
+	_LOGF(DBGLVL_GUI, what.c_str());
 }
 
 void LOGG(const char *fmt, ... )
@@ -487,7 +487,7 @@ void LOGD(std::string what)
 	if (!logThisLevel(DBGLVL_DEBUG))
 		return;
 
-	LOGF(DBGLVL_DEBUG, what.c_str());
+	_LOGF(DBGLVL_DEBUG, what.c_str());
 }
 
 void LOGD(const char *fmt, ... )
@@ -539,7 +539,7 @@ void LOGD2(std::string what)
 	if (!logThisLevel(DBGLVL_DEBUG2))
 		return;
 
-	LOGF(DBGLVL_DEBUG2, what.c_str());
+	_LOGF(DBGLVL_DEBUG2, what.c_str());
 }
 
 void LOGD2(const char *fmt, ... )
@@ -591,7 +591,7 @@ void LOGI(std::string what)
 	if (!logThisLevel(DBGLVL_INPUT))
 		return;
 
-	LOGF(DBGLVL_INPUT, what.c_str());
+	_LOGF(DBGLVL_INPUT, what.c_str());
 }
 
 void LOGI(const char *fmt, ... )
@@ -644,7 +644,7 @@ void LOGM(std::string what)
 	if (!logThisLevel(DBGLVL_MAIN))
 		return;
 
-	LOGF(DBGLVL_MAIN, what.c_str());
+	_LOGF(DBGLVL_MAIN, what.c_str());
 }
 
 void LOGM(const char *fmt, ... )
@@ -696,7 +696,7 @@ void LOGL(std::string what)
 	if (!logThisLevel(DBGLVL_LEVEL))
 		return;
 
-	LOGF(DBGLVL_LEVEL, what.c_str());
+	_LOGF(DBGLVL_LEVEL, what.c_str());
 }
 
 void LOGL(const char *fmt, ... )
@@ -748,7 +748,7 @@ void LOGS(std::string what)
 	if (!logThisLevel(DBGLVL_SCRIPT))
 		return;
 
-	LOGF(DBGLVL_SCRIPT, what.c_str());
+	_LOGF(DBGLVL_SCRIPT, what.c_str());
 }
 
 void LOGS(const char *fmt, ... )
@@ -800,7 +800,7 @@ void LOGN(std::string what)
 	if (!logThisLevel(DBGLVL_ANIMATION))
 		return;
 
-	LOGF(DBGLVL_ANIMATION, what.c_str());
+	_LOGF(DBGLVL_ANIMATION, what.c_str());
 }
 
 void LOGN(const char *fmt, ... )
@@ -850,7 +850,7 @@ void LOGA(std::string what)
 	if (!logThisLevel(DBGLVL_AUDIO))
 		return;
 
-	LOGF(DBGLVL_AUDIO, what.c_str());
+	_LOGF(DBGLVL_AUDIO, what.c_str());
 }
 
 void LOGA(const char *fmt, ... )
@@ -901,7 +901,7 @@ void LOGC(std::string what)
 	if (!logThisLevel(DBGLVL_NET))
 		return;
 
-	LOGF(DBGLVL_NET, what.c_str());
+	_LOGF(DBGLVL_NET, what.c_str());
 }
 
 void LOGC(const char *fmt, ... )
@@ -952,7 +952,7 @@ void LOGCC(std::string what)
 	if (!logThisLevel(DBGLVL_NET_CLIENT))
 		return;
 
-	LOGF(DBGLVL_NET_CLIENT, what.c_str());
+	_LOGF(DBGLVL_NET_CLIENT, what.c_str());
 }
 
 void LOGCC(const char *fmt, ... )
@@ -1003,7 +1003,7 @@ void LOGCS(std::string what)
 	if (!logThisLevel(DBGLVL_NET_SERVER))
 		return;
 
-	LOGF(DBGLVL_NET_SERVER, what.c_str());
+	_LOGF(DBGLVL_NET_SERVER, what.c_str());
 }
 
 void LOGCS(const char *fmt, ... )
@@ -1055,7 +1055,7 @@ void LOGX(std::string what)
 	if (!logThisLevel(DBGLVL_XMPLAYER))
 		return;
 
-	LOGF(DBGLVL_XMPLAYER, what.c_str());
+	_LOGF(DBGLVL_XMPLAYER, what.c_str());
 }
 
 void LOGX(const char *fmt, ... )
@@ -1107,7 +1107,7 @@ void LOGR(std::string what)
 	if (!logThisLevel(DBGLVL_RES))
 		return;
 
-	LOGF(DBGLVL_RES, what.c_str());
+	_LOGF(DBGLVL_RES, what.c_str());
 }
 
 void LOGR(const char *fmt, ... )
@@ -1160,7 +1160,7 @@ void LOG_Atari_Main(std::string what)
 	if (!logThisLevel(DBGLVL_ATARI_MAIN))
 		return;
 	
-	LOGF(DBGLVL_ATARI_MAIN, what.c_str());
+	_LOGF(DBGLVL_ATARI_MAIN, what.c_str());
 }
 
 void LOG_Atari_Main(const char *fmt, ... )
@@ -1211,7 +1211,7 @@ void LOG_Atari_Debug(std::string what)
 	if (!logThisLevel(DBGLVL_ATARI_DEBUG))
 		return;
 	
-	LOGF(DBGLVL_ATARI_DEBUG, what.c_str());
+	_LOGF(DBGLVL_ATARI_DEBUG, what.c_str());
 }
 
 void LOG_Atari_Debug(const char *fmt, ... )
@@ -1262,7 +1262,7 @@ void LOGMEM(std::string what)
 	if (!logThisLevel(DBGLVL_MEMORY))
 		return;
 
-	LOGF(DBGLVL_MEMORY, what.c_str());
+	_LOGF(DBGLVL_MEMORY, what.c_str());
 }
 
 void LOGMEM(const char *fmt, ... )
@@ -1312,7 +1312,7 @@ void LOGTODO(std::string what)
 	if (!logThisLevel(DBGLVL_TODO))
 		return;
 
-	LOGF(DBGLVL_TODO, what.c_str());
+	_LOGF(DBGLVL_TODO, what.c_str());
 }
 
 void LOGTODO(const char *fmt, ... )
@@ -1359,7 +1359,7 @@ void LOGError(std::string what)
 	if (!logThisLevel(DBGLVL_ERROR))
 		return;
 
-	LOGF(DBGLVL_ERROR, what.c_str());
+	_LOGF(DBGLVL_ERROR, what.c_str());
 }
 
 void LOGError(const char *fmt, ... )
@@ -1410,7 +1410,7 @@ void LOGWarning(std::string what)
 	if (!logThisLevel(DBGLVL_WARN))
 		return;
 
-	LOGF(DBGLVL_WARN, what.c_str());
+	_LOGF(DBGLVL_WARN, what.c_str());
 }
 
 void LOGWarning(const char *fmt, ... )

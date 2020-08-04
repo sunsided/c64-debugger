@@ -1393,7 +1393,7 @@ void c64d_reset_sound_clk()
 // and do not care about main cpu clock sync
 int c64d_sound_run_sound_when_paused(void)
 {
-	//LOGD("c64d_sound_run_sound_when_paused: run sid");
+//	LOGD("c64d_sound_run_sound_when_paused: run sid");
 	
 	int nr = 0, i;
 	int delta_t = 0;
@@ -1450,12 +1450,16 @@ int c64d_sound_run_sound_when_paused(void)
 		
 		nr = (int)((19656) / snddata.clkstep);
 		
-		if (!nr) {
+		if (!nr)
+		{
 			return 0;
 		}
-		if (snddata.bufptr + nr > SOUND_BUFSIZE) {
+		
+		if (snddata.bufptr + nr > SOUND_BUFSIZE)
+		{
 			return sound_error(translate_text(IDGS_SOUND_BUFFER_OVERFLOW));
 		}
+		
 		bufferptr = snddata.buffer + snddata.bufptr * snddata.sound_output_channels;
 		sound_machine_calculate_samples(snddata.psid,
 										bufferptr,
@@ -1551,10 +1555,13 @@ double sound_flush(int isPaused)
 	}
 	else
 	{
+//		c64d_lock_mutex();
 		if (c64d_sound_run_sound_when_paused())
 		{
+//			c64d_unlock_mutex();
 			return  0;
 		}
+//		c64d_unlock_mutex();
 	}
 	
     if (sid_state_changed) {
@@ -1638,8 +1645,11 @@ double sound_flush(int isPaused)
             /* Fresh start for vsync. */
            //if (drained_warning_count < 25)
 		   {
-                log_warning(sound_log, "Audio Buffer drained: used=%d < fragsize=%d", used, snddata.fragsize);
-                drained_warning_count++;
+			   if (c64d_setting_run_sid_emulation)
+			   {
+				   log_warning(sound_log, "Audio Buffer drained: used=%d < fragsize=%d", used, snddata.fragsize);
+				   drained_warning_count++;
+			   }
 		   }
 //		   else
 //		   {

@@ -84,8 +84,8 @@ void c64d_sound_resume();
 extern uint16 viceCurrentC64PC;
 extern uint16 viceCurrentDiskPC[4];
 
-long mt_SYS_GetCurrentTimeInMillis();
-void mt_SYS_Sleep(long milliseconds);
+unsigned long mt_SYS_GetCurrentTimeInMillis();
+void mt_SYS_Sleep(unsigned long milliseconds);
 void mt_SYS_FatalExit(char *text);
 
 void c64d_mark_c64_cell_read(uint16 addr);
@@ -98,6 +98,7 @@ void c64d_mark_disk_cell_write(uint16 addr, uint8 value);
 void c64d_mark_disk_cell_execute(uint16 addr, uint8 opcode);
 
 void c64d_clear_screen();
+void c64d_refresh_screen_no_callback();
 void c64d_refresh_screen();
 void c64d_refresh_previous_lines();
 void c64d_refresh_dbuf();
@@ -146,7 +147,7 @@ void c64d_drive1541_check_irqvia2_breakpoint();
 void c64d_c64_check_irqvic_breakpoint();
 void c64d_c64_check_irqcia_breakpoint(int ciaNum);
 void c64d_c64_check_irqnmi_breakpoint();
-void c64d_debug_pause_check();
+void c64d_debug_pause_check(int allowRestore);
 
 void c64d_show_message(char *message);
 
@@ -168,8 +169,32 @@ extern int c64d_setting_run_sid_when_in_warp;
 // run SID emulation at all or always skip?
 extern int c64d_setting_run_sid_emulation;
 
+// Main CPU cycle of previous instruction
+extern volatile unsigned int c64d_previous_instruction_maincpu_clk;
+extern volatile unsigned int c64d_previous2_instruction_maincpu_clk;
+
 //// render transparent c64 screen (for Vic Display), transparent color = $d021
 //extern int c64d_setting_render_transparent_screen;
+
+unsigned int c64d_get_frame_num();
+void c64d_reset_counters();
+
+int c64d_is_performing_snapshot_restore();
+void c64d_check_cpu_snapshot_manager_restore();
+void c64d_check_cpu_snapshot_manager_store();
+void c64d_check_snapshot_interval();
+
+// returns 1 if snapshot was restored
+int c64d_check_snapshot_restore();
+
+int c64d_is_drive_dirty_for_snapshot();
+void c64d_clear_drive_dirty_for_snapshot();
+
+void c64d_uimon_print(char *p);
+void c64d_uimon_print_line(char *p);
+
+void c64d_lock_mutex();
+void c64d_unlock_mutex();
 
 
 #endif

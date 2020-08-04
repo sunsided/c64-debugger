@@ -1,5 +1,7 @@
 #import "GLView.h"
 #import "GLViewController.h"
+#import <AppKit/AppKit.h>
+#import <AppKit/NSEvent.h>
 #include "SND_SoundEngine.h"
 #include "SYS_Threading.h"
 #include "CSlrString.h"
@@ -13,6 +15,17 @@ GLView *glView;
 
 #define MACOS_SUPPORT_RETINA
 
+//-(BOOL)wantsLayer
+//{
+//	return YES;
+//}
+//
+//-(id)makeBackingLayer
+//{
+//	[[CALayer layer] setBackgroundColor:(CGColorRef _Nullable)
+//	return [CALayer layer];
+//}
+//
 - (NSOpenGLContext*) openGLContext
 {
 	return openGLContext;
@@ -64,6 +77,8 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 	CGLContextObj cglContext = [[self openGLContext] CGLContextObj];
 	CGLPixelFormatObj cglPixelFormat = [[self pixelFormat] CGLPixelFormatObj];
 	CVDisplayLinkSetCurrentCGDisplayFromOpenGLContext(displayLink, cglContext, cglPixelFormat);
+	
+	
 	
 }
 
@@ -147,6 +162,20 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 	[[controller scene] initGL:backingBounds];
 	
 	[[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
+	
+	//
+	[NSEvent addLocalMonitorForEventsMatchingMask:NSKeyDownMask handler:^(NSEvent *event)
+	{
+		[controller keyDown:event];
+		return event;
+	}];
+
+	[NSEvent addLocalMonitorForEventsMatchingMask:NSKeyUpMask handler:^(NSEvent *event)
+	 {
+		 [controller keyUp:event];
+		 return event;
+	 }];
+
 }
 
 - (void) lockFocus
@@ -173,16 +202,19 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 - (void)updateSize
 {
 	//NSLog(@"updateSize");
-	
-#if defined(MACOS_SUPPORT_RETINA)
-	NSRect backingBounds = [self convertRectToBacking:[self bounds]];
-#else
-	NSRect backingBounds = [self bounds];
-#endif
+	dispatch_async(dispatch_get_main_queue(), ^{
 
-	viewWidth = backingBounds.size.width;
-	viewHeight = backingBounds.size.height;
-	[[controller scene] setViewportRect:backingBounds];
+	#if defined(MACOS_SUPPORT_RETINA)
+		NSRect backingBounds = [self convertRectToBacking:[self bounds]];
+	#else
+		NSRect backingBounds = [self bounds];
+	#endif
+
+		viewWidth = backingBounds.size.width;
+		viewHeight = backingBounds.size.height;
+		[[controller scene] setViewportRect:backingBounds];
+		
+	});
 }
 
 //https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/CocoaPerformance/Articles/CocoaLiveResize.html
@@ -208,19 +240,26 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 	
 	// Make sure we draw to the right context
 	[[self openGLContext] makeCurrentContext];
-	
-#if defined(MACOS_SUPPORT_RETINA)
-	NSRect backingBounds = [self convertRectToBacking:[self bounds]];
-#else
-	NSRect backingBounds = [self bounds];
-#endif
-	
-	if (viewWidth != backingBounds.size.width
-		|| viewHeight != backingBounds.size.height)
+	if ([NSOpenGLContext currentContext] != openGLContext)
 	{
-		[self updateSize];
+		[openGLContext makeCurrentContext];
+		[openGLContext update];
 	}
+	
+	dispatch_async(dispatch_get_main_queue(), ^{
+	#if defined(MACOS_SUPPORT_RETINA)
+		NSRect backingBounds = [self convertRectToBacking:[self bounds]];
+	#else
+		NSRect backingBounds = [self bounds];
+	#endif
 		
+		if (viewWidth != backingBounds.size.width
+			|| viewHeight != backingBounds.size.height)
+		{
+			[self updateSize];
+		}
+	});
+	
 	// Delegate to the scene object for rendering
     [[controller scene] render];
 	
@@ -244,13 +283,11 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 - (void) keyDown:(NSEvent *)theEvent
 {
     // Delegate to the controller object for handling key events
-    [controller keyDown:theEvent];
 }
 
 - (void) keyUp:(NSEvent *)theEvent
 {
     // Delegate to the controller object for handling key events
-    [controller keyUp:theEvent];
 }
 
 - (void)mouseDown:(NSEvent *)theEvent
@@ -340,6 +377,21 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 	}
 }
 
+- (void)storeMainWindowPosition
+{
+	[controller storeMainWindowPosition];
+}
+
+- (void)restoreMainWindowPosition
+{
+	[controller restoreMainWindowPosition];
+}
+
+- (void)testMenu
+{
+	NSLog(@"TEST MENU");
+}
+
 // drag&drop
 - (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender
 {
@@ -369,12 +421,19 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 	
 	NSString *strExt = [[draggedFilenames objectAtIndex:0] pathExtension];
 
-	if ([strExt isEqual:@"prg"] || [strExt isEqual:@"d64"] || [strExt isEqual:@"crt"] || [strExt isEqual:@"tap"] || [strExt isEqual:@"t64"]
+	if ([strExt isEqual:@"prg"] || [strExt isEqual:@"d64"] || [strExt isEqual:@"g64"]
+		|| [strExt isEqual:@"crt"] || [strExt isEqual:@"tap"] || [strExt isEqual:@"t64"]
 		|| [strExt isEqualToString:@"snap"] || [strExt isEqualToString:@"vce"] || [strExt isEqualToString:@"png"]
-		|| [strExt isEqual:@"PRG"] || [strExt isEqual:@"D64"] || [strExt isEqual:@"CRT"] || [strExt isEqual:@"TAP"] || [strExt isEqual:@"T64"]
+		|| [strExt isEqual:@"PRG"] || [strExt isEqual:@"D64"] || [strExt isEqual:@"G64"]
+		|| [strExt isEqual:@"CRT"] || [strExt isEqual:@"TAP"] || [strExt isEqual:@"T64"]
 		|| [strExt isEqualToString:@"SNAP"] || [strExt isEqualToString:@"VCE"] || [strExt isEqualToString:@"PNG"]
+		|| [strExt isEqual:@"sid"] || [strExt isEqual:@"SID"]
 		|| [strExt isEqual:@"xex"] || [strExt isEqual:@"XEX"]
 		|| [strExt isEqual:@"atr"] || [strExt isEqualToString:@"ATR"]
+		|| [strExt isEqual:@"cas"] || [strExt isEqual:@"CAS"]
+		|| [strExt isEqual:@"car"] || [strExt isEqual:@"CAR"]
+		|| [strExt isEqual:@"a8s"] || [strExt isEqual:@"A8S"]
+		|| [strExt isEqual:@"nes"] || [strExt isEqual:@"NES"]
 		|| [strExt isEqual:@"c64jukebox"] || [strExt isEqualToString:@"C64JUKEBOX"] || [strExt isEqual:@"json"] || [strExt isEqualToString:@"JSON"])
 		
 	{
@@ -394,9 +453,14 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
 void C64D_DragDropCallbackPRG(CSlrString *filePath);
 void C64D_DragDropCallbackD64(CSlrString *filePath);
 void C64D_DragDropCallbackCRT(CSlrString *filePath);
+void C64D_DragDropCallbackSID(CSlrString *filePath);
 void C64D_DragDropCallbackSNAP(CSlrString *filePath);
 void C64D_DragDropCallbackXEX(CSlrString *filePath);
 void C64D_DragDropCallbackATR(CSlrString *filePath);
+void C64D_DragDropCallbackCAS(CSlrString *filePath);
+void C64D_DragDropCallbackCAR(CSlrString *filePath);
+void C64D_DragDropCallbackA8S(CSlrString *filePath);
+void C64D_DragDropCallbackNES(CSlrString *filePath);
 void C64D_DragDropCallbackJukeBox(CSlrString *filePath);
 
 - (void)concludeDragOperation:(id <NSDraggingInfo>)sender
@@ -415,11 +479,16 @@ enum
 	MACOS_OPEN_FILE_TYPE_D64,
 	MACOS_OPEN_FILE_TYPE_TAP,
 	MACOS_OPEN_FILE_TYPE_CRT,
+	MACOS_OPEN_FILE_TYPE_SID,
 	MACOS_OPEN_FILE_TYPE_SNAP,
 	MACOS_OPEN_FILE_TYPE_VCE,
 	MACOS_OPEN_FILE_TYPE_PNG,
 	MACOS_OPEN_FILE_TYPE_XEX,
 	MACOS_OPEN_FILE_TYPE_ATR,
+	MACOS_OPEN_FILE_TYPE_CAS,
+	MACOS_OPEN_FILE_TYPE_CAR,
+	MACOS_OPEN_FILE_TYPE_A8S,
+	MACOS_OPEN_FILE_TYPE_NES,
 	MACOS_OPEN_FILE_TYPE_JukeBox
 };
 
@@ -453,7 +522,8 @@ BOOL MACOS_OpenFile(NSString *strPath)
 		
 		return YES;
 	}
-	else if ([strExt isEqual:@"d64"] || [strExt isEqual:@"D64"])
+	else if ([strExt isEqual:@"d64"] || [strExt isEqual:@"D64"]
+			 || [strExt isEqual:@"g64"] || [strExt isEqual:@"G64"])
 	{
 		//NSLog(@"%@", strPath);
 		c64SettingsAutoJmp = false;
@@ -482,6 +552,17 @@ BOOL MACOS_OpenFile(NSString *strPath)
 		c64SettingsAutoJmp = false;
 
 		macOsThreadedOpenFileType = MACOS_OPEN_FILE_TYPE_CRT;
+		macOsThreadedOpenFilePath = FUN_ConvertNSStringToCSlrString(strPath);
+		
+		SYS_StartThread(macOsOpenFileThread);
+		return YES;
+	}
+	else if ([strExt isEqual:@"sid"] || [strExt isEqual:@"SID"])
+	{
+		//NSLog(@"%@", strPath);
+		c64SettingsAutoJmp = false;
+		
+		macOsThreadedOpenFileType = MACOS_OPEN_FILE_TYPE_SID;
 		macOsThreadedOpenFilePath = FUN_ConvertNSStringToCSlrString(strPath);
 		
 		SYS_StartThread(macOsOpenFileThread);
@@ -533,6 +614,42 @@ BOOL MACOS_OpenFile(NSString *strPath)
 		
 		return YES;
 	}
+	else if ([strExt isEqual:@"cas"] || [strExt isEqual:@"CAS"])
+	{
+		macOsThreadedOpenFileType = MACOS_OPEN_FILE_TYPE_CAS;
+		macOsThreadedOpenFilePath = FUN_ConvertNSStringToCSlrString(strPath);
+		
+		SYS_StartThread(macOsOpenFileThread);
+		
+		return YES;
+	}
+	else if ([strExt isEqual:@"car"] || [strExt isEqual:@"CAR"])
+	{
+		macOsThreadedOpenFileType = MACOS_OPEN_FILE_TYPE_CAR;
+		macOsThreadedOpenFilePath = FUN_ConvertNSStringToCSlrString(strPath);
+		
+		SYS_StartThread(macOsOpenFileThread);
+		
+		return YES;
+	}
+	else if ([strExt isEqual:@"a8s"] || [strExt isEqual:@"A8S"])
+	{
+		macOsThreadedOpenFileType = MACOS_OPEN_FILE_TYPE_A8S;
+		macOsThreadedOpenFilePath = FUN_ConvertNSStringToCSlrString(strPath);
+		
+		SYS_StartThread(macOsOpenFileThread);
+		
+		return YES;
+	}
+	else if ([strExt isEqual:@"nes"] || [strExt isEqual:@"NES"])
+	{
+		macOsThreadedOpenFileType = MACOS_OPEN_FILE_TYPE_NES;
+		macOsThreadedOpenFilePath = FUN_ConvertNSStringToCSlrString(strPath);
+		
+		SYS_StartThread(macOsOpenFileThread);
+		
+		return YES;
+	}
 	else if ([strExt isEqual:@"c64jukebox"] || [strExt isEqual:@"C64JUKEBOX"]
 			 || [strExt isEqual:@"json"] || [strExt isEqual:@"JSON"])
 	{
@@ -574,6 +691,10 @@ void CMacOsOpenFileThread::ThreadRun(void *data)
 	{
 		C64D_DragDropCallbackCRT(macOsThreadedOpenFilePath);
 	}
+	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_SID)
+	{
+		C64D_DragDropCallbackSID(macOsThreadedOpenFilePath);
+	}
 	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_SNAP)
 	{
 		C64D_DragDropCallbackSNAP(macOsThreadedOpenFilePath);
@@ -594,6 +715,22 @@ void CMacOsOpenFileThread::ThreadRun(void *data)
 	{
 		C64D_DragDropCallbackATR(macOsThreadedOpenFilePath);
 	}
+	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_CAS)
+	{
+		C64D_DragDropCallbackCAS(macOsThreadedOpenFilePath);
+	}
+	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_CAR)
+	{
+		C64D_DragDropCallbackCAR(macOsThreadedOpenFilePath);
+	}
+	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_A8S)
+	{
+		C64D_DragDropCallbackA8S(macOsThreadedOpenFilePath);
+	}
+	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_NES)
+	{
+		C64D_DragDropCallbackNES(macOsThreadedOpenFilePath);
+	}
 	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_JukeBox)
 	{
 		C64D_DragDropCallbackJukeBox(macOsThreadedOpenFilePath);
@@ -607,11 +744,9 @@ void CMacOsOpenFileThread::ThreadRun(void *data)
 }
 
 
-void SYS_PrepareShutdown();
-
 - (void) dealloc
 {
-	SYS_PrepareShutdown();
+	SYS_ApplicationShutdown();
 	
 	// stop playing audio
 	gSoundEngine->LockMutex("shutdown");

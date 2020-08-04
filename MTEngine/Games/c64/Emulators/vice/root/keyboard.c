@@ -681,6 +681,33 @@ void c64d_keyboard_key_up_latch()
 		}
 }
 
+void c64d_keyboard_force_key_up_latch(signed long key)
+{
+	int i;
+	for (i = 0; i < keyc_num; i++) {
+		if (key == keyconvmap[i].sym) {
+			if ((keyconvmap[i].shift & ALT_MAP) && !key_alternative) {
+				continue;
+			}
+			
+				keyboard_set_latch_keyarr(keyconvmap[i].row,
+										  keyconvmap[i].column, 0);
+				if (!(keyconvmap[i].shift & ALLOW_OTHER)
+					/*|| (right_shift_down + left_shift_down) == 0*/) {
+					break;
+			}
+		}
+	}
+	
+	if (network_connected()) {
+		CLOCK keyboard_delay = KEYBOARD_RAND();
+		network_event_record(EVENT_KEYBOARD_DELAY, (void *)&keyboard_delay, sizeof(keyboard_delay));
+		network_event_record(EVENT_KEYBOARD_MATRIX, (void *)latch_keyarr, sizeof(latch_keyarr));
+	} else {
+		alarm_set(keyboard_alarm, maincpu_clk + KEYBOARD_RAND());
+	}
+}
+
 static void keyboard_key_clear_internal(void)
 {
     keyboard_clear_keymatrix();

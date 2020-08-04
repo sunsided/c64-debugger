@@ -14,7 +14,7 @@ class CMemoryBreakpoint;
 class CViewBreakpoints : public CGuiView, CGuiButtonSwitchCallback, CGuiEditHexCallback
 {
 public:
-	CViewBreakpoints(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY);
+	CViewBreakpoints(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, CDebugInterface *debugInterface);
 	virtual ~CViewBreakpoints();
 
 	virtual void Render();
@@ -70,7 +70,7 @@ public:
 	
 	CSlrString *strHeader;
 
-	CGuiLabel *lblCommodore64;
+	CGuiLabel *lblPlatform;
 	CGuiButtonSwitch *btnBreakpointsPC;
 	CGuiButtonSwitch *btnBreakpointsMemory;
 	CGuiButtonSwitch *btnBreakpointsRaster;

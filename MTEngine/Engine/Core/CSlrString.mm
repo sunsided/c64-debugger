@@ -2,9 +2,10 @@
 #include "SYS_Main.h"
 #include "CByteBuffer.h"
 #include "SYS_CFileSystem.h"
+#include "SYS_Threading.h"
 
 std::list< std::vector<u16> * > _CSlrString_charVectorsPool;
-pthread_mutex_t _CSlrString_mutex;
+CSlrMutex *_CSlrString_mutex;
 
 bool _sysStringsInit = false;
 
@@ -12,7 +13,7 @@ void SYS_InitStrings()
 {
 	if (_sysStringsInit == false)
 	{
-		pthread_mutex_init(&_CSlrString_mutex, NULL);
+		_CSlrString_mutex = new CSlrMutex("_CSlrString_mutex");
 		_CSlrString_charVectorsPool.clear();
 		
 		_sysStringsInit = true;
@@ -23,7 +24,7 @@ std::vector<u16> *_CSlrString_GetCharsVector()
 {
 	std::vector<u16> *vect;
 
-	pthread_mutex_lock(&_CSlrString_mutex);
+	_CSlrString_mutex->Lock();
 	
 	if (_CSlrString_charVectorsPool.empty())
 	{
@@ -39,7 +40,7 @@ std::vector<u16> *_CSlrString_GetCharsVector()
 	// should be clear already
 	vect->clear();
 	
-	pthread_mutex_unlock(&_CSlrString_mutex);
+	_CSlrString_mutex->Unlock();
 
 	return vect;
 }
@@ -48,11 +49,11 @@ void _CSlrString_ReleaseCharsVector(std::vector<u16> *vect)
 {
 	vect->clear();
 
-	pthread_mutex_lock(&_CSlrString_mutex);
+	_CSlrString_mutex->Lock();
 
 	_CSlrString_charVectorsPool.push_back(vect);
 	
-	pthread_mutex_unlock(&_CSlrString_mutex);
+	_CSlrString_mutex->Unlock();
 }
 
 CSlrString::CSlrString()
@@ -288,8 +289,8 @@ bool CSlrString::CompareWith(char *text)
 {
 	u32 len = GetLength();
 
-//	LOGD("CSlrString::CompareWith: text='%s'", text);
-//	this->DebugPrint("CSlrString::CompareWith: this=");
+	LOGD("CSlrString::CompareWith: text='%s'", text);
+	this->DebugPrint("CSlrString::CompareWith: this=");
 	
 	u32 len2 = strlen(text);
 
@@ -298,11 +299,11 @@ bool CSlrString::CompareWith(char *text)
 //		LOGD(" ... i=%d ch=%04x '%c'", i, GetChar(i), GetChar(i));
 //	}
 //	
-//	if (len != len2)
-//	{
-//		LOGD("len=%d len2=%d", len, len2);
-//		return false;
-//	}
+	if (len != len2)
+	{
+		LOGD("len=%d len2=%d", len, len2);
+		return false;
+	}
 
 	for (u32 i = 0; i < len; i++)
 	{
@@ -382,8 +383,6 @@ void CSlrString::RemoveEndLineCharacter()
 		return;
 	}
 }
-
-
 
 CSlrString *CSlrString::GetWord(u32 startPos, u32 *retPos, std::list<u16> stopChars)
 {
@@ -501,7 +500,9 @@ std::vector<CSlrString *> *CSlrString::SplitWithChars(std::list<u16> splitChars)
 {
 	std::vector<CSlrString *> *words = new std::vector<CSlrString *>();
 	u32 pos = 0;
-	
+
+	u16 repeatedSplitChar = 0;
+
 	while(pos < GetLength())
 	{
 		u16 chr = this->GetChar(pos);
@@ -511,15 +512,21 @@ std::vector<CSlrString *> *CSlrString::SplitWithChars(std::list<u16> splitChars)
 		for (std::list<u16>::iterator it = splitChars.begin(); it != splitChars.end(); it++)
 		{
 			u16 chrSplit = *it;
+		
+			//LOGD("chrSplit=%d (%c) chr=%d (%c) repeatedSplitChar=%d", chrSplit, chrSplit, chr, chr, repeatedSplitChar);
 			
 			if (chrSplit == chr)
 			{
 				std::vector<u16> chrs;
 				u16 chr = this->GetChar(pos);
 				chrs.push_back(chr);
-				
-				CSlrString *oneSplitChar = new CSlrString(chrs);
-				words->push_back(oneSplitChar);
+
+				if (repeatedSplitChar != chr)
+				{
+					repeatedSplitChar = chr;
+					CSlrString *oneSplitChar = new CSlrString(chrs);
+					words->push_back(oneSplitChar);
+				}
 				
 				found = true;
 				
@@ -530,6 +537,8 @@ std::vector<CSlrString *> *CSlrString::SplitWithChars(std::list<u16> splitChars)
 		
 		if (found)
 			continue;
+		
+		repeatedSplitChar = 0x00;
 		
 		CSlrString *oneWord = this->GetWord(pos, &pos, splitChars);
 		
@@ -1011,7 +1020,9 @@ CSlrString *CSlrString::GetFilePathWithoutFileNameComponentFromPath()
 	
 	if (!strs->empty())
 	{
+#if !defined(WIN32)
 		fpath->Concatenate(SYS_FILE_SYSTEM_PATH_SEPARATOR);
+#endif
 		
 		for (int i = 0; i < strs->size()-1; i++)
 		{

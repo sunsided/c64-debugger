@@ -29,6 +29,7 @@ public:
 	virtual bool DoMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat distY, GLfloat diffX, GLfloat diffY);
 	virtual bool FinishMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat distY, GLfloat accelerationX, GLfloat accelerationY);
 
+	virtual bool DoScrollWheel(float deltaX, float deltaY);
 	virtual bool InitZoom();
 	virtual bool DoZoomBy(GLfloat x, GLfloat y, GLfloat zoomValue, GLfloat difference);
 	
@@ -50,7 +51,7 @@ public:
 
 	virtual void ActivateView();
 	virtual void DeactivateView();
-
+	
 	CSlrImage *imageScreen;
 
 	CImageData *imageDataScreenDefault;
@@ -157,6 +158,10 @@ public:
 
 	//std::map<u32, bool> pressedKeyCodes;
 	
+	bool shiftDown;
+	
+	//
+	virtual void SetSupersampleFactor(int supersampleFactor);
 };
 
 #endif //_CVIEWC64SCREEN_H_

@@ -106,8 +106,7 @@ u8 C64VicDisplayCanvas::ConvertFrom(CImageData *imageData)
 	return PAINT_RESULT_ERROR;
 }
 
-struct colorPairLess_t {
-	bool operator()(const C64ColorsHistogramElement *a, const C64ColorsHistogramElement *b) const
+struct colorPairLess_t {	bool operator()(const C64ColorsHistogramElement *a, const C64ColorsHistogramElement *b) const
 	{
 		return a->num > b->num;
 	}
@@ -158,7 +157,7 @@ void C64VicDisplayCanvas::DeleteColorsHistogram(std::vector<C64ColorsHistogramEl
 }
 
 // reduces color space to C64 colors only (nearest)
-CImageData *C64VicDisplayCanvas::ReducePalette(CImageData *imageData)
+CImageData *C64VicDisplayCanvas::ReducePalette(CImageData *imageData, CViewC64VicDisplay *vicDisplay)
 {
 	CImageData *imageReducedPalette = new CImageData(imageData->width, imageData->height, IMG_TYPE_GRAYSCALE);
 	imageReducedPalette->AllocImage(false, true);

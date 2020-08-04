@@ -53,8 +53,8 @@ extern void reu_dma(int immed);
 extern void reu_dma_start(void);
 extern void reu_detach(void);
 extern int reu_enable(void);
-extern int reu_read_snapshot_module(struct snapshot_s *s);
-extern int reu_write_snapshot_module(struct snapshot_s *s);
+extern int reu_read_snapshot_module(struct snapshot_s *s, int read_reu_data);
+extern int reu_write_snapshot_module(struct snapshot_s *s, int store_reu_data);
 
 extern int reu_cart_enabled(void);
 extern void reu_config_setup(BYTE *rawcart);

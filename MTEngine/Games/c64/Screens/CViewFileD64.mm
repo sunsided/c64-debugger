@@ -86,7 +86,7 @@ void CViewFileD64::StartFileEntry(DiskImageFileEntry *fileEntry, bool showLoadAd
 		UpdateDriveDiskID();
 		
 		// load the PRG
-		bool ret = viewC64->viewC64MainMenu->LoadPRG(byteBuffer, true, showLoadAddressInfo);
+		bool ret = viewC64->viewC64MainMenu->LoadPRG(byteBuffer, true, showLoadAddressInfo, false);
 		
 		if (ret == false)
 		{
@@ -115,8 +115,8 @@ void CViewFileD64::UpdateDriveDiskID()
 		viewC64->debugInterfaceC64->SetByte1541(0x0012, diskImage->diskId[2]);
 		viewC64->debugInterfaceC64->SetByte1541(0x0013, diskImage->diskId[3]);
 		
-		//		viewC64->debugInterface->SetByte1541(0x0016, diskImage->diskId[2]);
-		//		viewC64->debugInterface->SetByte1541(0x0017, diskImage->diskId[3]);		
+		viewC64->debugInterfaceC64->SetByte1541(0x0016, diskImage->diskId[2]);
+		viewC64->debugInterfaceC64->SetByte1541(0x0017, diskImage->diskId[3]);
 	}
 }
 
@@ -370,9 +370,26 @@ void CViewFileD64::RefreshInsertedDiskImage()
 	this->RefreshDiskImageMenu();
 }
 
+void CViewFileD64::RefreshInsertedDiskImageAsync()
+{
+	LOGD("CViewFileD64::RefreshInsertedDiskImageAsync");
+	SYS_StartThread(this);
+}
+
+void CViewFileD64::ThreadRun(void *passData)
+{
+	this->RefreshInsertedDiskImage();
+}
+
 void CViewFileD64::RefreshDiskImageMenu()
 {
 	LOGD("CViewFileD64::RefreshDiskImageMenu");
+	
+	if (this->diskImage == NULL)
+	{
+		LOGError("CViewFileD64::RefreshDiskImageMenu: no disk image");
+		return;
+	}
 	
 	guiMain->LockMutex();
 	

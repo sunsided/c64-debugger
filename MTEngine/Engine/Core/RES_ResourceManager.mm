@@ -25,7 +25,6 @@
 #include "CGuiViewResourceManager.h"
 #include "RES_Embedded.h"
 #include "CSlrFileFromOS.h"
-#include <pthread.h>
 #include <algorithm>
 
 #define LOGRD LOGR
@@ -92,7 +91,7 @@ void RES_Init(u16 destScreenWidth)
 	gCurrentResourceMemoryTaken = 0;
 	lastResourceId = 0;
 
-	resourceManagerMutex = new CSlrMutex();
+	resourceManagerMutex = new CSlrMutex("resourceManagerMutex");
 	
 	gResourceManagerState = RESOURCE_MANAGER_STATE_IDLE;
 	
@@ -588,12 +587,28 @@ CSlrFile *RES_GetFile(char *fileName, byte fileType)
 	
 	file = RES_GetFile(false, fileName, fileType);
 	if (file->Exists())
+	{
+		LOGD("RES_GetFile: opened '%s'", fileName);
 		return file;
+	}
 	
 	delete file;
 	file = RES_GetFile(true, fileName, fileType);
 	if (file->Exists())
+	{
+		LOGD("RES_GetFile: opened '%s'", fileName);
 		return file;
+	}
+	
+	delete file;
+	file = new CSlrFileFromOS(fileName);
+	if (file->Exists())
+	{
+		LOGD("RES_GetFile: opened '%s'", fileName);
+		return file;
+	}
+	
+	delete file;
 	
 	return NULL;
 }

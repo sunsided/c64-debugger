@@ -119,6 +119,9 @@ public:
 
 	// does not render in view->Render method
 	bool manualRender;
+	
+	// can element gain focus?
+	bool allowFocus;
 
 	byte elementAlignment;
 

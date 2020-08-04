@@ -177,6 +177,7 @@ public:
 	
 	float rasterCursorPosX, rasterCursorPosY;
 	void UpdateRasterCursorPos();
+	void ClearRasterCursorPos();
 	
 	void LockCursor();
 	void UnlockCursor();

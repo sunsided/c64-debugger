@@ -79,32 +79,42 @@
 
 #include "AtariWrapper.h"
 
+volatile unsigned int atrdMainCpuDebugCycle = 0;
+volatile unsigned int atrdMainCpuCycle = 0;
+volatile unsigned int atrdMainCpuPreviousInstructionCycle = 0;
+
 #define NO_GOTO
 
-#ifdef FALCON_CPUASM
-
-extern UBYTE CPU_IRQ;
-
-#ifdef PAGED_MEM
-#error cpu_m68k.asm cannot work with paged memory
+#ifdef LIBATARI800
+#include "libatari800/main.h"
 #endif
 
-void CPU_Initialise(void)
-{
-	CPU_INIT();
-}
+/* For Atari Basic loader */
+void (*CPU_rts_handler)(void) = NULL;
 
-void CPU_GetStatus(void)
-{
-	CPU_GET();
-}
+/* 6502 instruction profiling */
+#ifdef MONITOR_PROFILE
+int CPU_instruction_count[256];
+#endif
 
-void CPU_PutStatus(void)
-{
-	CPU_PUT();
-}
+/* Execution history */
+#ifdef MONITOR_BREAK
+UWORD CPU_remember_PC[CPU_REMEMBER_PC_STEPS];
+UBYTE CPU_remember_op[CPU_REMEMBER_PC_STEPS][3];
+unsigned int CPU_remember_PC_curpos = 0;
+int CPU_remember_xpos[CPU_REMEMBER_PC_STEPS];
+UWORD CPU_remember_JMP[CPU_REMEMBER_JMP_STEPS];
+unsigned int CPU_remember_jmp_curpos = 0;
+#define INC_RET_NESTING MONITOR_ret_nesting++
+#else /* MONITOR_BREAK */
+#define INC_RET_NESTING
+#endif /* MONITOR_BREAK */
 
-#else /* FALCON_CPUASM */
+UBYTE CPU_cim_encountered = FALSE;
+UBYTE CPU_IRQ;
+
+#ifndef FALCON_CPUASM
+
 
 /* Windows headers define it */
 #undef ABSOLUTE
@@ -164,7 +174,7 @@ void CPU_PutStatus(void)
 #define RMW_GetByte(x, addr) \
 	if (MEMORY_attrib[addr] == MEMORY_HARDWARE) { \
 		x = MEMORY_HwGetByte(addr, FALSE); \
-		if ((addr & 0xef00) == 0xc000) { \
+		if ((addr & 0xed00) == 0xc000) { \
 			ANTIC_xpos--; \
 			MEMORY_HwPutByte(addr, x); \
 			ANTIC_xpos++; \
@@ -174,7 +184,7 @@ void CPU_PutStatus(void)
 #else /* PAGED_ATTRIB */
 #define RMW_GetByte(x, addr) \
 	x = MEMORY_GetByte(addr); \
-	if ((addr & 0xef00) == 0xc000) { \
+	if ((addr & 0xed00) == 0xc000) { \
 		ANTIC_xpos--; \
 		MEMORY_PutByte(addr, x); \
 		ANTIC_xpos++; \
@@ -186,7 +196,7 @@ void CPU_PutStatus(void)
 #endif /* NEW_CYCLE_EXACT */
 
 /* 6502 registers. */
-UWORD CPU_regPC;
+volatile UWORD CPU_regPC;
 UBYTE CPU_regA;
 UBYTE CPU_regX;
 UBYTE CPU_regY;
@@ -281,30 +291,6 @@ u8 atrd_RMW_GetByte(u16 addr)
 #define RMW_GetByte(x, addr)		(x) = atrd_RMW_GetByte(addr)
 
 //////
-
-
-/* For Atari Basic loader */
-void (*CPU_rts_handler)(void) = NULL;
-
-/* 6502 instruction profiling */
-#ifdef MONITOR_PROFILE
-int CPU_instruction_count[256];
-#endif
-
-UBYTE CPU_cim_encountered = FALSE;
-
-/* Execution history */
-#ifdef MONITOR_BREAK
-UWORD CPU_remember_PC[CPU_REMEMBER_PC_STEPS];
-UBYTE CPU_remember_op[CPU_REMEMBER_PC_STEPS][3];
-unsigned int CPU_remember_PC_curpos = 0;
-int CPU_remember_xpos[CPU_REMEMBER_PC_STEPS];
-UWORD CPU_remember_JMP[CPU_REMEMBER_JMP_STEPS];
-unsigned int CPU_remember_jmp_curpos = 0;
-#define INC_RET_NESTING MONITOR_ret_nesting++
-#else /* MONITOR_BREAK */
-#define INC_RET_NESTING
-#endif /* MONITOR_BREAK */
 
 /* Addressing modes */
 #ifdef WRAP_ZPAGE
@@ -575,6 +561,54 @@ void CPU_GO(int limit)
 	UBYTE data;
 #define insn data
 
+#else /* FALCON_CPUASM */
+	
+#if defined(PAGED_MEM) || defined(PAGED_ATTRIB)
+#error cpu_m68k.asm cannot work with paged memory/attributes
+#endif
+	
+#if defined(MONITOR_BREAKPOINTS)
+#error cpu_m68k.asm does not support user-defined breakpoints
+#endif
+	
+#if defined(MONITOR_TRACE)
+#error cpu_m68k.asm does not support disassembling the code while it is executed
+#endif
+	
+#if defined(CYCLES_PER_OPCODE)
+#warning per opcode cycles update has no effect in cpu_m68k.asm
+#endif
+	
+#define UPDATE_GLOBAL_REGS
+#define UPDATE_LOCAL_REGS
+	
+#define PH(x)  MEMORY_dPutByte(0x0100 + S--, x)
+#define PHW(x) PH((x) >> 8); PH((x) & 0xff)
+#define INTERRUPT(address)  \
+UBYTE S = CPU_regS;     \
+PHW(CPU_regPC);         \
+PH(CPU_regP & 0xef);	\
+CPU_SetI;               \
+CPU_regPC = MEMORY_dGetWordAligned(address); \
+CPU_regS = S;           \
+ANTIC_xpos += 7;        \
+INC_RET_NESTING;
+	
+	void CPU_NMI(void)
+	{
+		INTERRUPT(0xfffa);
+	}
+	
+#define CPUCHECKIRQ \
+if (CPU_IRQ && !(CPU_regP & CPU_I_FLAG) && ANTIC_xpos < ANTIC_xpos_limit) { \
+INTERRUPT(0xfffe); \
+}
+	
+	void CPU_GO(int limit)
+	{
+#endif /* FALCON_CPUASM */
+		
+
 /*
    This used to be in the main loop but has been removed to improve
    execution speed. It does not seem to have any adverse effect on
@@ -623,8 +657,14 @@ void CPU_GO(int limit)
 
 	CPUCHECKIRQ;
 
-	while (ANTIC_xpos < ANTIC_xpos_limit) {
-
+#ifndef FALCON_CPUASM
+		while (ANTIC_xpos < ANTIC_xpos_limit) {
+			int old_xpos = ANTIC_xpos;
+			
+#ifdef MONITOR_PROFILE
+			UWORD old_PC = GET_PC();
+#endif
+			
 #ifdef MONITOR_BREAKPOINTS
 	breakpoint_return:
 #endif
@@ -686,46 +726,60 @@ void CPU_GO(int limit)
 		//
 		UPDATE_GLOBAL_REGS;
 		
-		//		LOGD("arrd_mark_execute PC=%04x", PC);
+//		LOGD("arrd_mark_execute PC=%04x", PC);
 
 		// atrd: mark cell execute
 		atrd_mark_atari_cell_execute(PC, PEEK_CODE_BYTE());
 		
 		//c64d_c64_instruction_cycle = 0;
-		
-		{
-			if (atrd_debug_mode != DEBUGGER_MODE_RUN_ONE_INSTRUCTION
-				&& atrd_debug_mode != DEBUGGER_MODE_RUN_ONE_CYCLE)
-			{
-				// atrd check PC breakpoint after IRQ or trap
-				atrd_check_pc_breakpoint(PC);
-				atrd_debug_pause_check();
-			}
-		}
 
-		
 		if (atrd_is_debug_on_atari())
 		{
-			// one instruction has been just run, pause
-			if (atrd_debug_mode == DEBUGGER_MODE_RUN_ONE_INSTRUCTION)
+			int shouldSkipOneInstructionStep = FALSE;
+			//int frameNum = atrd_get_emulation_frame_num();
+
 			{
-				atrd_debug_mode = DEBUGGER_MODE_PAUSED;
+				if (atrd_debug_mode != DEBUGGER_MODE_RUN_ONE_INSTRUCTION
+					&& atrd_debug_mode != DEBUGGER_MODE_RUN_ONE_CYCLE)
+				{
+					// atrd check PC breakpoint after IRQ or trap
+					atrd_check_pc_breakpoint(PC);
+					shouldSkipOneInstructionStep = atrd_debug_pause_check(0);
+				}
+			}
+
+			if (shouldSkipOneInstructionStep == FALSE)
+			{
+				// one instruction has been just run, pause
+				if (atrd_debug_mode == DEBUGGER_MODE_RUN_ONE_INSTRUCTION)
+				{
+					//LOGD("DEBUGGER_MODE_RUN_ONE_INSTRUCTION frame=%d atrdMainCpuCycle=%d PC=%x", frameNum, atrdMainCpuCycle, PC);
+					atrd_debug_mode = DEBUGGER_MODE_PAUSED;
+				}
+				
+				//c64d_c64_check_pc_breakpoint(reg_pc);
+				
+				//			viceCurrentC64PC = reg_pc;
+				
+				atrd_debug_pause_check(0);
+			}
+			else
+			{
+				shouldSkipOneInstructionStep = FALSE;
 			}
 			
-			//c64d_c64_check_pc_breakpoint(reg_pc);
-			
-			//			viceCurrentC64PC = reg_pc;
-			
-			atrd_debug_pause_check();
-		}
-		
+//			LOGD("frame=%d atrdMainCpuCycle=%d PC=%x N=%d V=%d Z=%d RegP=%x  A=%02x X=%02x Y=%02x", frameNum, atrdMainCpuCycle, PC, N, V, Z, CPU_regP, A, X, Y);
+			atrdMainCpuPreviousInstructionCycle = atrdMainCpuCycle;
+
 		//		if (c64d_debug_mode == C64_DEBUG_SHUTDOWN)
 		//		{
 		//			//LOGD("c64d_debug_mode=C64_DEBUG_SHUTDOWN!");
 		//			return;
 		//		}
+		}
 		
-		
+		UPDATE_LOCAL_REGS;
+
 		
 		//
 		
@@ -733,7 +787,12 @@ void CPU_GO(int limit)
 		insn = GET_CODE_BYTE();
 
 #ifdef MONITOR_BREAKPOINTS
-		if (MONITOR_breakpoint_table_size > 0 && MONITOR_breakpoints_enabled) {
+#ifdef MONITOR_BREAK
+		if (MONITOR_breakpoint_table_size > 0 && MONITOR_breakpoints_enabled && !MONITOR_break_step)
+#else
+		if (MONITOR_breakpoint_table_size > 0 && MONITOR_breakpoints_enabled)
+#endif
+		{
 			UBYTE optype = MONITOR_optype6502[insn];
 			int i;
 			switch (optype >> 4) {
@@ -770,13 +829,14 @@ void CPU_GO(int limit)
 			}
 			for (i = 0; i < MONITOR_breakpoint_table_size; i++) {
 				int cond;
-				int value;
+				int value, m_addr;;
 				if (!MONITOR_breakpoint_table[i].enabled)
 					continue; /* skip */
 				cond = MONITOR_breakpoint_table[i].condition;
 				if (cond == MONITOR_BREAKPOINT_OR)
 					break; /* fire */
 				value = MONITOR_breakpoint_table[i].value;
+				m_addr = MONITOR_breakpoint_table[i].m_addr;
 				if (cond == MONITOR_BREAKPOINT_FLAG_CLEAR) {
 					switch (value) {
 					case CPU_N_FLAG:
@@ -862,6 +922,9 @@ void CPU_GO(int limit)
 							goto cond_failed;
 						val = addr;
 						break;
+					case MONITOR_BREAKPOINT_MEMORY >> 3:
+						val = MEMORY_SafeGetByte(m_addr);
+						break;
 					default:
 						/* shouldn't happen */
 						continue;
@@ -897,6 +960,8 @@ void CPU_GO(int limit)
 
 #ifdef MONITOR_PROFILE
 		CPU_instruction_count[insn]++;
+		MONITOR_coverage[old_PC = PC - 1].count++;
+		MONITOR_coverage_insns++;
 #endif
 
 #ifdef PREFETCH_CODE
@@ -915,12 +980,18 @@ void CPU_GO(int limit)
 #endif
 
 	OPCODE(00)				/* BRK */
+#ifdef LIBATARI800
+#ifdef HAVE_SETJMP
+		longjmp(libatari800_cpu_crash, LIBATARI800_BRK_INSTRUCTION);
+#endif /* HAVE_SETJMP */
+#else /* LIBATARI800 */
 #ifdef MONITOR_BREAK
 		if (MONITOR_break_brk) {
 			DO_BREAK;
 		}
 		else
-#endif
+#endif /* MONITOR_BREAK */
+#endif /* LIBATARI800 */
 		{
 			PC++;
 			PHPC;
@@ -1708,7 +1779,7 @@ void CPU_GO(int limit)
 
 	OPCODE(8b)				/* ANE #ab [unofficial - A AND X AND (Mem OR $EF) to Acc] (Fox) */
 		data = IMMEDIATE;
-		N = Z = A & X & data;
+		Z = N = A & X & data;
 		A &= X & (data | 0xef);
 		DONE
 
@@ -2110,8 +2181,6 @@ void CPU_GO(int limit)
 	OPCODE(d5)				/* CMP ab,x */
 		ZPAGE_X;
 		CMP(MEMORY_dGetByte(addr));
-		Z = N = A - data;
-		C = (A >= data);
 		DONE
 
 	OPCODE(d6)				/* DEC ab,x */
@@ -2360,7 +2429,13 @@ void CPU_GO(int limit)
 		UI_Run();
 #else
 		CPU_cim_encountered = TRUE;
-		ENTER_MONITOR;
+#ifdef LIBATARI800
+#ifdef HAVE_SETJMP
+				longjmp(libatari800_cpu_crash, LIBATARI800_CPU_CRASH);
+#endif /* HAVE_SETJMP */
+#else
+				ENTER_MONITOR;
+#endif /* LIBATARI800 */
 #endif /* CRASH_MENU */
 
 		CPU_PutStatus();
@@ -2392,8 +2467,8 @@ void CPU_GO(int limit)
 			/* Decimal mode */
 			unsigned int tmp;
 			tmp = (A & 0x0f) + (data & 0x0f) + C;
-			if (tmp >= 10)
-				tmp = (tmp - 10) | 0x10;
+			if (tmp >= 0x0a)
+				tmp = ((tmp + 0x06) & 0x0f) + 0x10;
 			tmp += (A & 0xf0) + (data & 0xf0);
 
 			Z = A + data + C;
@@ -2406,7 +2481,7 @@ void CPU_GO(int limit)
 				CPU_SetV;
 #endif
 
-			if (tmp > 0x9f)
+			if (tmp >= 0xa0)
 				tmp += 0x60;
 			C = tmp > 0xff;
 			A = (UBYTE) tmp;
@@ -2421,53 +2496,55 @@ void CPU_GO(int limit)
 			tmp = A - data - 1 + C;
 			C = tmp < 0x100;
 #ifndef NO_V_FLAG_VARIABLE
-			V = ((A ^ tmp) & 0x80) && ((A ^ data) & 0x80);
+			V = ((A ^ data) & 0x80) && ((A ^ tmp) & 0x80);
 #else
 			CPU_ClrV;
-			if (((A ^ tmp) & 0x80) && ((A ^ data) & 0x80))
+			if (((A ^ data) & 0x80) && ((A ^ tmp) & 0x80))
 				CPU_SetV;
 #endif
 			Z = N = A = (UBYTE) tmp;
 		}
 		else {
 			/* Decimal mode */
-			unsigned int al, ah, tmp;
-			/* tmp = A - data - !C; */
-			tmp = A - data - 1 + C;
-			/* al = (A & 0x0f) - (data & 0x0f) - !C; */
-			al = (A & 0x0f) - (data & 0x0f) - 1 + C;	/* Calculate lower nybble */
-			ah = (A >> 4) - (data >> 4);		/* Calculate upper nybble */
-			if (al & 0x10) {
-				al -= 6;	/* BCD fixup for lower nybble */
-				ah--;
-			}
-			if (ah & 0x10)
-				ah -= 6;	/* BCD fixup for upper nybble */
-
-			C = tmp < 0x100;			/* Set flags */
+			unsigned int tmp;
+			tmp = (A & 0x0f) - (data & 0x0f) - 1 + C;
+			if (tmp & 0x10)
+				tmp = ((tmp - 0x06) & 0x0f) - 0x10;
+			tmp += (A & 0xf0) - (data & 0xf0);
+			if (tmp & 0x100)
+				tmp -= 0x60;
+			
+			Z = N = A - data - 1 + C;
 #ifndef NO_V_FLAG_VARIABLE
-			V = ((A ^ tmp) & 0x80) && ((A ^ data) & 0x80);
+			V = ((A ^ data) & 0x80) && ((A ^ Z) & 0x80);
 #else
 			CPU_ClrV;
-			if (((A ^ tmp) & 0x80) && ((A ^ data) & 0x80))
+			if (((A ^ data) & 0x80) && ((A ^ Z) & 0x80))
 				CPU_SetV;
 #endif
-			Z = N = (UBYTE) tmp;
-
-			A = (ah << 4) + (al & 0x0f);	/* Compose result */
+			C = ((unsigned int) (A - data - 1 + C)) <= 0xff;
+			
+			A = tmp;
 		}
 		DONE
-
+				
 #ifdef NO_GOTO
 	}
 #else
 	next:
 #endif
-
-		//
 		
-		
-		//
+		{
+			int cyc = ANTIC_xpos - old_xpos;
+			
+			atrdMainCpuCycle += cyc;
+			atrdMainCpuDebugCycle += cyc;
+			
+#ifdef MONITOR_PROFILE
+			MONITOR_coverage[old_PC].cycles += cyc;
+			MONITOR_coverage_cycles += cyc;
+#endif
+		}
 		
 #ifdef MONITOR_BREAK
 		if (MONITOR_break_step) {
@@ -2475,41 +2552,43 @@ void CPU_GO(int limit)
 		}
 #endif
 		/* This "continue" does nothing here.
-		   But it is necessary because, if we're not using NO_GOTO nor MONITOR_BREAK,
-		   gcc can complain: "error: label at end of compound statement". */
+		 But it is necessary because, if we're not using NO_GOTO nor MONITOR_BREAK,
+		 gcc can complain: "error: label at end of compound statement". */
 		continue;
 	}
-
+	
+#else /* FALCON_CPUASM */
+	
+	extern void CPU_GO_m68k(void);
+	CPU_GO_m68k();
+	
+#endif /* FALCON_CPUASM */
 	UPDATE_GLOBAL_REGS;
 }
 
-///
-
-
-void CPU_Initialise(void)
-{
-}
-
-#endif /* FALCON_CPUASM */
 
 void CPU_Reset(void)
 {
 #ifdef MONITOR_PROFILE
 	memset(CPU_instruction_count, 0, sizeof(CPU_instruction_count));
 #endif
-
+	
 	CPU_IRQ = 0;
 
 	CPU_regP = 0x34;				/* The unused bit is always 1, I flag set! */
 	CPU_PutStatus();	/* Make sure flags are all updated */
 	CPU_regS = 0xff;
 	CPU_regPC = MEMORY_dGetWordAligned(0xfffc);
+	
+	atrdMainCpuCycle = 0;
+	atrdMainCpuPreviousInstructionCycle = 0;
 }
 
 #if !defined(BASIC) && !defined(ASAP)
 
 void CPU_StateSave(UBYTE SaveVerbose)
 {
+	STATESAV_TAG(cpu);
 	StateSav_SaveUBYTE(&CPU_regA, 1);
 
 	CPU_GetStatus();	/* Make sure flags are all updated */
@@ -2522,7 +2601,10 @@ void CPU_StateSave(UBYTE SaveVerbose)
 
 	MEMORY_StateSave(SaveVerbose);
 
+	STATESAV_TAG(pc);
 	StateSav_SaveUWORD(&CPU_regPC, 1);
+	
+//	LOGD("CPU_StateSave: CPU_regP=%x N=%d V=%d Z=%d", CPU_regP, N, V, Z);
 }
 
 void CPU_StateRead(UBYTE SaveVerbose, UBYTE StateVersion)
@@ -2540,6 +2622,8 @@ void CPU_StateRead(UBYTE SaveVerbose, UBYTE StateVersion)
 	MEMORY_StateRead(SaveVerbose, StateVersion);
 
 	StateSav_ReadUWORD(&CPU_regPC, 1);
+
+//	LOGD("CPU_StateRead: CPU_regP=%x N=%d V=%d Z=%d", CPU_regP, N, V, Z);
 }
 
 
@@ -2560,10 +2644,63 @@ void Atari800_GetCpuRegs(UWORD *ret_CPU_regPC,
 	*ret_CPU_regA = CPU_regA;
 	*ret_CPU_regX = CPU_regX;
 	*ret_CPU_regY = CPU_regY;
-	*ret_CPU_regP = CPU_regP;
+#ifndef NO_V_FLAG_VARIABLE
+	*ret_CPU_regP = (N & 0x80) + (V ? 0x40 : 0) + (CPU_regP & 0x3c) + ((Z == 0) ? 0x02 : 0) + C;
+#else
+	*ret_CPU_regP = (N & 0x80) + (CPU_regP & 0x7c) + ((Z == 0) ? 0x02 : 0) + C;
+#endif
 	*ret_CPU_regS = CPU_regS;
 	*ret_CPU_IRQ = CPU_IRQ;
 	
+}
+
+void atrd_atari_set_cpu_pc(u16 addr)
+{
+	CPU_regPC = addr;
+}
+
+void atrd_atari_set_cpu_reg_a(u8 val)
+{
+	CPU_regA = val;
+}
+
+void atrd_atari_set_cpu_reg_x(u8 val)
+{
+	CPU_regX = val;
+}
+
+void atrd_atari_set_cpu_reg_y(u8 val)
+{
+	CPU_regY = val;
+}
+
+void atrd_atari_set_cpu_reg_p(u8 val)
+{
+	CPU_regP = val;
+	CPU_PutStatus();
+}
+
+void atrd_atari_set_cpu_reg_s(u8 val)
+{
+	CPU_regS = val;
+}
+
+//
+	
+void atrd_check_cpu_snapshot_manager_restore()
+{
+	if (atrd_check_snapshot_restore())
+	{
+//		LOGD("after atrd_check_cpu_snapshot_manager_restore: CPU_regPC=%04x reg_pc=%04x cycle=", CPU_regPC, reg_pc, maincpu_clk);
+				
+		return;
+	}
+}
+
+void atrd_check_cpu_snapshot_manager_store()
+{
+	// check snapshot interval by snapshot manager
+	atrd_check_snapshot_interval();
 }
 
 

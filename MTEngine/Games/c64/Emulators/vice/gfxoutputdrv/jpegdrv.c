@@ -40,7 +40,7 @@
 #include "types.h"
 #include "util.h"
 
-//#include <jpeglib.h>
+#include "jpeglib.h"
 
 typedef struct gfxoutputdrv_data_s
 {
@@ -56,82 +56,82 @@ extern gfxoutputdrv_t jpeg_drv;
 static gfxoutputdrv_t jpeg_drv;
 #endif
 
-//struct jpeg_compress_struct cinfo;
-//struct jpeg_error_mgr jerr;
+struct jpeg_compress_struct cinfo;
+struct jpeg_error_mgr jerr;
 
 static int jpegdrv_open(screenshot_t *screenshot, const char *filename)
 {
-//  gfxoutputdrv_data_t *sdata;
-//
-//  cinfo.err = jpeg_std_error(&jerr);
-//  jpeg_create_compress(&cinfo);
-//  sdata = lib_malloc(sizeof(gfxoutputdrv_data_t));
-//  screenshot->gfxoutputdrv_data = sdata;
-//  sdata->line = 0;
-//  sdata->ext_filename=util_add_extension_const(filename, jpeg_drv.default_extension);
-//  sdata->fd = fopen(sdata->ext_filename, "wb");
-//  if (sdata->fd==NULL)
-//  {
-//    jpeg_destroy_compress(&cinfo);
-//    lib_free(sdata->ext_filename);
-//    lib_free(sdata);
-//    return -1;
-//  }
-//  jpeg_stdio_dest(&cinfo, sdata->fd);
-//  sdata->data = lib_malloc(screenshot->width*3);
-//  cinfo.image_width = screenshot->width;
-//  cinfo.image_height = screenshot->height;
-//  cinfo.input_components = 3;
-//  cinfo.in_color_space = JCS_RGB;
-//  jpeg_set_defaults(&cinfo);
-//  jpeg_start_compress(&cinfo, TRUE);
-//
+  gfxoutputdrv_data_t *sdata;
+
+  cinfo.err = jpeg_std_error(&jerr);
+  jpeg_create_compress(&cinfo);
+  sdata = lib_malloc(sizeof(gfxoutputdrv_data_t));
+  screenshot->gfxoutputdrv_data = sdata;
+  sdata->line = 0;
+  sdata->ext_filename=util_add_extension_const(filename, jpeg_drv.default_extension);
+  sdata->fd = fopen(sdata->ext_filename, "wb");
+  if (sdata->fd==NULL)
+  {
+    jpeg_destroy_compress(&cinfo);
+    lib_free(sdata->ext_filename);
+    lib_free(sdata);
+    return -1;
+  }
+  jpeg_stdio_dest(&cinfo, sdata->fd);
+  sdata->data = lib_malloc(screenshot->width*3);
+  cinfo.image_width = screenshot->width;
+  cinfo.image_height = screenshot->height;
+  cinfo.input_components = 3;
+  cinfo.in_color_space = JCS_RGB;
+  jpeg_set_defaults(&cinfo);
+  jpeg_start_compress(&cinfo, TRUE);
+
   return 0;
 }
 
 static int jpegdrv_write(screenshot_t *screenshot)
 {
-//  JSAMPROW rowpointer[1];
-//  gfxoutputdrv_data_t *sdata;
-//
-//  sdata = screenshot->gfxoutputdrv_data;
-//  (screenshot->convert_line)(screenshot, sdata->data, sdata->line, SCREENSHOT_MODE_RGB24);
-//  rowpointer[0]=sdata->data;
-//  jpeg_write_scanlines(&cinfo, rowpointer, 1);
+  JSAMPROW rowpointer[1];
+  gfxoutputdrv_data_t *sdata;
+
+  sdata = screenshot->gfxoutputdrv_data;
+  (screenshot->convert_line)(screenshot, sdata->data, sdata->line, SCREENSHOT_MODE_RGB24);
+  rowpointer[0]=sdata->data;
+  jpeg_write_scanlines(&cinfo, rowpointer, 1);
 
   return 0;
 }
 
 static int jpegdrv_close(screenshot_t *screenshot)
 {
-//  gfxoutputdrv_data_t *sdata;
-//
-//  sdata = screenshot->gfxoutputdrv_data;
-//  jpeg_finish_compress(&cinfo);
-//  fclose(sdata->fd);
-//  jpeg_destroy_compress(&cinfo);
-//  lib_free(sdata->data);
-//  lib_free(sdata->ext_filename);
-//  lib_free(sdata);
+  gfxoutputdrv_data_t *sdata;
+
+  sdata = screenshot->gfxoutputdrv_data;
+  jpeg_finish_compress(&cinfo);
+  fclose(sdata->fd);
+  jpeg_destroy_compress(&cinfo);
+  lib_free(sdata->data);
+  lib_free(sdata->ext_filename);
+  lib_free(sdata);
 
   return 0;
 }
 
 static int jpegdrv_save(screenshot_t *screenshot, const char *filename)
 {
-//  if (jpegdrv_open(screenshot, filename) < 0)
-//    return -1;
-//
-//  for (screenshot->gfxoutputdrv_data->line = 0; 
-//       screenshot->gfxoutputdrv_data->line < screenshot->height;
-//       (screenshot->gfxoutputdrv_data->line)++)
-//  {
-//    jpegdrv_write(screenshot);
-//  }
-//
-//  if (jpegdrv_close(screenshot) < 0)
-//    return -1;
-//
+  if (jpegdrv_open(screenshot, filename) < 0)
+    return -1;
+
+  for (screenshot->gfxoutputdrv_data->line = 0; 
+       screenshot->gfxoutputdrv_data->line < screenshot->height;
+       (screenshot->gfxoutputdrv_data->line)++)
+  {
+    jpegdrv_write(screenshot);
+  }
+
+  if (jpegdrv_close(screenshot) < 0)
+    return -1;
+
   return 0;
 }
 

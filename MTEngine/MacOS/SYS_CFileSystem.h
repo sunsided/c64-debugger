@@ -180,6 +180,7 @@ void SYS_DialogSaveFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 bool SYS_FileExists(char *path);
 bool SYS_FileExists(CSlrString *path);
 bool SYS_FileDirExists(CSlrString *path);
+bool SYS_FileDirExists(char *cPath);
 
 uint8 *SYS_MapMemoryToFile(int memorySize, char *filePath, void **fileDescriptor);
 void SYS_UnMapMemoryFromFile(uint8 *memoryMap, int memorySize, void **fileDescriptor);

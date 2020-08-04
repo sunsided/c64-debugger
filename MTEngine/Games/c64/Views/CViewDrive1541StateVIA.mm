@@ -443,7 +443,7 @@ void CViewDrive1541StateVIA::GuiEditHexEnteredValue(CGuiEditHex *editHex, u32 la
 		byte v = editHex->value;
 		debugInterface->SetViaRegister(driveId, editingVIAIndex, editingRegisterValueIndex, v);
 		
-		editingRegisterValueIndex = -1;
+		editHex->SetCursorPos(0);
 	}
 	
 

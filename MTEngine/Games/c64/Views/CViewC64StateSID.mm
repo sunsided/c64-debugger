@@ -20,7 +20,8 @@ extern "C" {
 #include "VID_ImageBinding.h"
 #include "C64SIDFrequencies.h"
 
-#define SID_WAVEFORM_LENGTH 1024
+// TODO: add synchronization like in SidWiz2: https://github.com/Zeinok/SidWiz2F/blob/master/SidWiz/Form1.cs
+
 
 // waveform views
 CViewC64StateSIDWaveform::CViewC64StateSIDWaveform(float posX, float posY, float posZ, float sizeX, float sizeY)
@@ -280,6 +281,11 @@ void CViewC64StateSID::Render()
 
 	this->RenderStateSID(selectedSidNumber, posX, posY + buttonSizeY, posZ, fontBytes, fontBytesSize);
 	
+	sidChannelWaveform[selectedSidNumber][0]->CalculateWaveform();
+	sidChannelWaveform[selectedSidNumber][1]->CalculateWaveform();
+	sidChannelWaveform[selectedSidNumber][2]->CalculateWaveform();
+	sidMixWaveform[selectedSidNumber]->CalculateWaveform();
+
 	for (int i = 0; i < 3; i++)
 	{
 		sidChannelWaveform[selectedSidNumber][i]->Render();
@@ -356,8 +362,6 @@ void CViewC64StateSID::RenderStateSID(int sidNum, float posX, float posY, float 
 		reg_sr = sid_peek(voiceBase + 0x06);
 		
 		uint16 freq = (reg_freq_hi << 8) | reg_freq_lo;
-		
-		
 		
 		sprintf(buf, "Voice #%d", (voice+1));
 		fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
@@ -565,7 +569,7 @@ void CViewC64StateSID::GuiEditHexEnteredValue(CGuiEditHex *editHex, u32 lastKeyC
 		byte v = editHex->value;
 		debugInterface->SetSidRegister(editingSIDIndex, editingRegisterValueIndex, v);
 		
-		editingRegisterValueIndex = -1;
+		editHex->SetCursorPos(0);
 	}
 	
 }
@@ -641,12 +645,12 @@ void CViewC64StateSID::AddWaveformData(int sidNumber, int v1, int v2, int v3, sh
 	
 	if (waveformPos == SID_WAVEFORM_LENGTH)
 	{
-		guiMain->LockRenderMutex();
-		sidChannelWaveform[sidNumber][0]->CalculateWaveform();
-		sidChannelWaveform[sidNumber][1]->CalculateWaveform();
-		sidChannelWaveform[sidNumber][2]->CalculateWaveform();
-		sidMixWaveform[sidNumber]->CalculateWaveform();
-		guiMain->UnlockRenderMutex();
+//		guiMain->LockRenderMutex();
+//		sidChannelWaveform[sidNumber][0]->CalculateWaveform();
+//		sidChannelWaveform[sidNumber][1]->CalculateWaveform();
+//		sidChannelWaveform[sidNumber][2]->CalculateWaveform();
+//		sidMixWaveform[sidNumber]->CalculateWaveform();
+//		guiMain->UnlockRenderMutex();
 		
 		waveformPos = 0;
 	}

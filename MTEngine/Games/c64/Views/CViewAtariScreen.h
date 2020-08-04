@@ -149,6 +149,7 @@ public:
 	float zoomedScreenRasterOffsetY;
 
 	//std::map<u32, bool> pressedKeyCodes;
+	virtual void SetSupersampleFactor(int supersampleFactor);
 
 };
 

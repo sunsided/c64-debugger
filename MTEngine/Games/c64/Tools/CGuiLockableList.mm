@@ -33,7 +33,6 @@ CGuiLockableList::CGuiLockableList(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 
 CGuiLockableList::~CGuiLockableList()
 {
-	pthread_mutex_destroy(&renderMutex);
 }
 
 bool CGuiLockableList::DoScrollWheel(float deltaX, float deltaY)
@@ -97,7 +96,7 @@ void CGuiLockableList::Render()
 		//LOGD("	elemNum=%d", elemNum);
 		drawX = startDrawX;
 		
-		drawX += GAP_WIDTH;
+		drawX += GUI_GAP_WIDTH;
 		
 		if (elemNum < numElements)
 		{

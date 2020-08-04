@@ -13,7 +13,6 @@
 #include "CSlrImage.h"
 #include "CGuiElement.h"
 #include "CGuiView.h"
-#include <pthread.h>
 
 class CGuiViewHorizontalScrollCallback;
 

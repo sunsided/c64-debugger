@@ -12,6 +12,7 @@
 class CSlrKeyboardShortcut;
 class CViewC64MenuItem;
 class CViewC64MenuItemOption;
+class CDebugInterface;
 
 class CViewMainMenu : public CGuiView, CGuiButtonCallback, CGuiViewMenuCallback, CSystemFileDialogCallback, CSlrThread
 {
@@ -92,11 +93,15 @@ public:
 	CSlrKeyboardShortcut *kbsScreenLayout11;
 	CSlrKeyboardShortcut *kbsScreenLayout12;
 	CSlrKeyboardShortcut *kbsScreenLayout13;
+	CSlrKeyboardShortcut *kbsScreenLayout14;
 
 	CSlrKeyboardShortcut *kbsInsertD64;
 	CViewC64MenuItem *menuItemInsertD64;
 	CSlrKeyboardShortcut *kbsBrowseD64;
 //	CViewC64MenuItem *menuItemBrowseD64;
+
+	CSlrKeyboardShortcut *kbsInsertATR;
+	CViewC64MenuItem *menuItemInsertATR;
 
 	CSlrKeyboardShortcut *kbsStartFromDisk;
 	//	CViewC64MenuItem *menuStartFromDisk;
@@ -104,8 +109,8 @@ public:
 	CSlrKeyboardShortcut *kbsRestartPRG;
 	//CViewC64MenuItem *menuItemRestartPRG;
 	
-	CSlrKeyboardShortcut *kbsLoadPRG;
-	CViewC64MenuItem *menuItemLoadPRG;
+	CSlrKeyboardShortcut *kbsOpenFile;
+	CViewC64MenuItem *menuItemOpenFile;
 	CSlrKeyboardShortcut *kbsReloadAndRestart;
 	CViewC64MenuItem *menuItemReloadAndRestart;
 	CSlrKeyboardShortcut *kbsSoftReset;
@@ -114,64 +119,86 @@ public:
 	CViewC64MenuItem *menuItemHardReset;
 	CSlrKeyboardShortcut *kbsDiskDriveReset;
 
-	CSlrKeyboardShortcut *kbsSnapshots;
-	CViewC64MenuItem *menuItemSnapshots;
+	CSlrKeyboardShortcut *kbsSnapshotsC64;
+	CViewC64MenuItem *menuItemSnapshotsC64;
 
-	CSlrKeyboardShortcut *kbsBreakpoints;
-	CViewC64MenuItem *menuItemBreakpoints;
+	CSlrKeyboardShortcut *kbsSnapshotsAtari;
+	CViewC64MenuItem *menuItemSnapshotsAtari;
+
+	CSlrKeyboardShortcut *kbsSnapshotsNes;
+	CViewC64MenuItem *menuItemSnapshotsNes;
+
+	CSlrKeyboardShortcut *kbsBreakpointsC64;
+	CViewC64MenuItem *menuItemBreakpointsC64;
+	CSlrKeyboardShortcut *kbsBreakpointsAtari;
+	CViewC64MenuItem *menuItemBreakpointsAtari;
 
 	CSlrKeyboardShortcut *kbsInsertCartridge;
 	CViewC64MenuItem *menuItemInsertCartridge;
+
+	CSlrKeyboardShortcut *kbsInsertAtariCartridge;
+	CViewC64MenuItem *menuItemInsertAtariCartridge;
 
 	CSlrKeyboardShortcut *kbsSettings;
 	CViewC64MenuItem *menuItemSettings;
 
 	CViewC64MenuItem *menuItemAbout;
-
-	CSlrKeyboardShortcut *kbsStepOverInstruction;
-	CSlrKeyboardShortcut *kbsStepOneCycle;
-	CSlrKeyboardShortcut *kbsRunContinueEmulation;
-	CSlrKeyboardShortcut *kbsIsDataDirectlyFromRam;
-
-	CSlrKeyboardShortcut *kbsToggleMulticolorImageDump;
-	CSlrKeyboardShortcut *kbsShowRasterBeam;
 	
 	CSlrKeyboardShortcut *kbsMoveFocusToNextView;
 	CSlrKeyboardShortcut *kbsMoveFocusToPreviousView;
-
-	CSlrKeyboardShortcut *kbsSaveScreenImageAsPNG;
 	
 	std::list<CSlrString *> openFileExtensions;
 	std::list<CSlrString *> diskExtensions;
 	std::list<CSlrString *> tapeExtensions;
 	std::list<CSlrString *> crtExtensions;
+	std::list<CSlrString *> reuExtensions;
 	std::list<CSlrString *> jukeboxExtensions;
 	std::list<CSlrString *> romsFileExtensions;
-	
+
+	void OpenDialogOpenFile();
+
 	void LoadFile(CSlrString *path);
 	void OpenDialogInsertD64();
 	void InsertD64(CSlrString *path, bool updatePathToD64, bool autoRun, int autoRunEntryNum, bool showLoadAddressInfo);
 	void OpenDialogInsertCartridge();
 	void InsertCartridge(CSlrString *path, bool updatePathToCRT);
+	void OpenDialogInsertAtariCartridge();
 	
-	void OpenDialogLoadPRG();
-	bool LoadPRG(CSlrString *path, bool autoStart, bool updatePRGFolderPath, bool showAddressInfo);
-	bool LoadPRG(CByteBuffer *byteBuffer, bool autoStart, bool showAddressInfo);
+	bool LoadPRG(CSlrString *path, bool autoStart, bool updatePRGFolderPath, bool showAddressInfo, bool forceFastReset);
+	bool LoadPRG(CByteBuffer *byteBuffer, bool autoStart, bool showAddressInfo, bool forceFastReset);
 	void LoadPRG(CByteBuffer *byteBuffer, u16 *startAddr, u16 *endAddr);
 	bool LoadPRGNotThreaded(CByteBuffer *byteBuffer, bool autoStart, bool showAddressInfo);
 
+	bool LoadSID(CSlrString *filePath);
+	
 	void OpenDialogInsertTape();
 	bool LoadTape(CSlrString *path, bool autoStart, bool updateTAPFolderPath, bool showAddressInfo);
 	void DetachTape();
 
 	//
-	CViewC64MenuItem *menuItemSetFolderWithAtariROMs;
+	void OpenDialogAttachReu();
+	void OpenDialogSaveReu();
+	bool AttachReu(CSlrString *path, bool updatePathToReu, bool showDetails);
+	bool SaveReu(CSlrString *path, bool updatePathToReu, bool showDetails);
+
+	//
 	void OpenDialogSetFolderWithAtariROMs();
 	
 	bool LoadXEX(CSlrString *path, bool autoStart, bool updatePRGFolderPath, bool showAddressInfo);
+	bool LoadCAS(CSlrString *path, bool autoStart, bool updatePRGFolderPath, bool showAddressInfo);
+	bool InsertAtariCartridge(CSlrString *path, bool autoStart, bool updatePRGFolderPath, bool showAddressInfo);
+	
+	void OpenDialogInsertATR();
 	void InsertATR(CSlrString *path, bool updatePathToATR, bool autoRun, int autoRunEntryNum, bool showLoadAddressInfo);
+		
+	//
+	CViewC64MenuItem *menuItemSetFolderWithNesROMs;
+	void OpenDialogSetFolderWithNesROMs();
 
-	void LoadLabelsAndWatches(CSlrString *pathToPRG);
+	bool LoadNES(CSlrString *path, bool updateNESFolderPath);
+
+	
+	void LoadLabelsAndWatches(CSlrString *path, CDebugInterface *debugInterface);
 	void SetBasicEndAddr(int endAddr);
 
 	void OpenDialogStartJukeboxPlaylist();
@@ -180,6 +207,7 @@ public:
 	CByteBuffer *loadPrgByteBuffer;
 	bool loadPrgAutoStart;
 	bool loadPrgShowAddressInfo;
+	bool loadPrgForceFastReset;
 	virtual void ThreadRun(void *data);
 	
 	void ReloadAndRestartPRG();
@@ -189,8 +217,8 @@ public:
 	
 	virtual void SystemDialogFileOpenSelected(CSlrString *path);
 	virtual void SystemDialogFileOpenCancelled();
-//	virtual void SystemDialogFileSaveSelected(CSlrString *path);
-//	virtual void SystemDialogFileSaveCancelled();
+	virtual void SystemDialogFileSaveSelected(CSlrString *path);
+	virtual void SystemDialogFileSaveCancelled();
 	
 	void SwitchMainMenuScreen();
 	
@@ -229,6 +257,7 @@ public:
 						   std::vector<CSlrString *> *options, CSlrFont *font, float fontScale);
 	
 	void SetOptions(std::vector<CSlrString *> *options);
+	void SetOptionsWithoutDelete(std::vector<CSlrString *> *options);
 	
 	std::vector<CSlrString *> *options;
 	

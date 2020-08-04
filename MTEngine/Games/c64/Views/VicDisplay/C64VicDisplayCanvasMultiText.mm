@@ -14,6 +14,7 @@ C64VicDisplayCanvasMultiText::C64VicDisplayCanvasMultiText(CViewC64VicDisplay *v
 void C64VicDisplayCanvasMultiText::RefreshScreen(vicii_cycle_state_t *viciiState, CImageData *imageDataScreen,
 												 u8 backgroundColorAlpha, u8 foregroundColorAlpha)
 {
+//	LOGD("C64VicDisplayCanvasMultiText::RefreshScreen, this=%x", this);
 	this->viciiState = viciiState;
 	
 	// refresh texture of C64's character mode screen
@@ -91,7 +92,6 @@ void C64VicDisplayCanvasMultiText::RefreshScreen(vicii_cycle_state_t *viciiState
 						{
 							//data->colormap[(i * 320 * 8) + (j * 8) + (k * 320) + l] = color0;
 							imageDataScreen->SetPixelResultRGBA(j*8 + l, i*8 + k, color0R, color0G, color0B, 255);
-							
 						}
 					}
 				}
@@ -103,7 +103,7 @@ void C64VicDisplayCanvasMultiText::RefreshScreen(vicii_cycle_state_t *viciiState
 //
 void C64VicDisplayCanvasMultiText::ClearScreen()
 {
-	LOGD("C64VicDisplayCanvasMultiText::ClearScreen");
+	LOGF("C64VicDisplayCanvasMultiText::ClearScreen");
 	ClearScreen(0x20, 0x00);
 }
 
@@ -139,10 +139,10 @@ u8 C64VicDisplayCanvasMultiText::PutCharacterAtRaster(int x, int y, u8 color, in
 	
 	int offset = charColumn + charRow * 40;
 	
-	LOGD("1     poke %04x %02x", screenBase + offset, charValue);
+	LOGF("1     poke %04x %02x", screenBase + offset, charValue);
 	debugInterface->SetByteC64(screenBase + offset, charValue);
 	
-	LOGD("2     poke %04x %02x", 0xD800 + offset, color);
+	LOGF("2     poke %04x %02x", 0xD800 + offset, color);
 	debugInterface->SetByteC64(0xD800 + offset, color);
 	
 	return PAINT_RESULT_OK;
@@ -211,12 +211,12 @@ void C64VicDisplayCanvasMultiText::RenderCanvasSpecificGridLines()
 			u8 color3 = color_ram_ptr[(y * 40) + x] & 0x0F;
 			if (!(color3 & 8))
 			{
-				//LOGD("RenderCanvasSpecificGridLines: hires x=%d y=%d", x, y);
+				//LOGF("RenderCanvasSpecificGridLines: hires x=%d y=%d", x, y);
 
 				float rasterX = (float)x * 8.0f;
 				float rasterY = (float)y * 8.0f;
 
-				//LOGD("   rx=%f ry=%f", rasterX, rasterY);
+				//LOGF("   rx=%f ry=%f", rasterX, rasterY);
 				
 				float cx = vicDisplay->displayPosWithScrollX + (float)rasterX * vicDisplay->rasterScaleFactorX  + vicDisplay->rasterCrossOffsetX;
 				float cy = vicDisplay->displayPosWithScrollY + (float)rasterY * vicDisplay->rasterScaleFactorY  + vicDisplay->rasterCrossOffsetY;
@@ -332,7 +332,7 @@ void C64VicDisplayCanvasMultiText::RenderCanvasSpecificGridValues()
 					
 					//
 					
-					//LOGD("rasterX=%d rasterY=%d", rasterX, rasterY);
+					//LOGF("rasterX=%d rasterY=%d", rasterX, rasterY);
 					
 					sprintfHexCode16WithoutZeroEnding(buf1, vicDisplay->screenAddress + offset);
 					sprintfHexCode8(buf1 + 5, charValue);
@@ -385,11 +385,11 @@ u8 C64VicDisplayCanvasMultiText::PaintDither(bool forceColorReplace, int x, int 
 	
 	// check if starting dither
 	{
-		LOGD("													---- isAltPressed: dither -----");
+		LOGF("													---- isAltPressed: dither -----");
 		{
 			if (ditherMaskPosX == -1 || ditherMaskPosY == -1)
 			{
-				LOGD("******** START DITHER ********");
+				LOGF("******** START DITHER ********");
 				// start dither painting
 				if (colorSource == VICEDITOR_COLOR_SOURCE_LMB)
 				{
@@ -408,7 +408,7 @@ u8 C64VicDisplayCanvasMultiText::PaintDither(bool forceColorReplace, int x, int 
 			
 			int d = (dX + dY) % 2;
 			
-			LOGD("==================== dX=%d dY=%d d=%d", dX, dY, d);
+			LOGF("==================== dX=%d dY=%d d=%d", dX, dY, d);
 			
 			if (d != 0)
 			{

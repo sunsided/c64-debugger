@@ -1,18 +1,24 @@
-﻿C64 Debugger by SLAJEREK/SAMAR
-------------------------------
+C64 Debugger and 65XE Debugger by SLAJEREK/SAMAR
+------------------------------------------------
 
-C64 Debugger (C) 2016-2017 Marcin Skoczylas
-Vice (C) 1993-2017 The VICE Team
+C64 Debugger (C) 2016 Marcin Skoczylas
+Vice (C) 1993 The VICE Team
+65XE Debugger (C) 2018 Marcin Skoczylas
+Atari800 emulator (C) The Atari800 emulator Team
+
+This is Commodore 64 and Atari XL/XE code and memory debugger 
+that works in real time. It is quick prototyping tool where you 
+can play with 8-bit machine and its internals.
+
+C64 Debugger embeds VICE v3.1 C64 emulation engine created by 
+the VICE Team and the Atari800 emulator created by the Atari800
+emulator Team.
 
 
-This is Commodore 64 code and memory debugger that works in real time.
-It is quick prototyping tool where you can play with Commodore 64 machine
-and its internals.
-
-C64 Debugger embeds VICE v3.1 C64 emulation engine created by The VICE Team.
-
-
-See a promo video here: https://youtu.be/_s6s7qnXBx8
+See promo videos here: 
+https://youtu.be/Xu6EknKA7GE
+https://youtu.be/Lxd296tDdoo
+https://youtu.be/_s6s7qnXBx8
 
 
 * Installation
@@ -51,7 +57,7 @@ Ctrl+F2
 	Show C64 disassembler, memory map and data dump
 Ctrl+F3
 	Show C64 disassembler with hex codes, memory map, data dump 
-        and VIC state
+    and VIC state
 Ctrl+F4
 	Show C64 and 1541 disk disassembler and memory maps
 Ctrl+F5
@@ -120,15 +126,29 @@ Ctrl+Y
 	Use keyboard arrows as joystick On/Off, Right Alt to fire
 F10
 	Pause code or run to next instruction (step)
+Alt+F10
+	Back-Step one instruction
 Ctrl+F10
 	Step to next line (step over JSR)
 Shift+F10
 	Run one CPU cycle
 F11
 	Run/continue emulation
+Ctrl+Arrow Left
+	Rewind emulation back one frame
+Ctrl+Arrow Right
+	Forward emulation one frame
+Alt+Ctrl+Arrow Left
+	Rewind emulation back one second
+Alt+Ctrl+Arrow Right
+	Forward emulation one second
+Shift+Ctrl+Arrow Left
+	Rewind emulation back 10 seconds
+Shift+Ctrl+Arrow Right
+	Forward emulation 10 seconds
 Ctrl+M
 	Toggle data memory map/dump taken directly from RAM or as-is with
-        I/O and ROMs selected by $0001
+    I/O and ROMs selected by $0001
 Ctrl+E
 	Toggle show current raster beam position
 Ctrl+S
@@ -176,9 +196,8 @@ Enter
 	Scroll code one byte up/down
 Arrow Left/Right
 	If not editing code: follow code jumps and branches using Right-Arrow key, 
-	                     and move back with Left-Arrow key. When argument is 
-                             a memory address then Memory Dump view will be 
-                             scrolled to that address
+	and move back with Left-Arrow key. When argument is a memory address then 
+	Memory Dump view will be scrolled to that address
 	If editing code and hex values visible: change edited hex value	
 CTRL+G <addr>  
         Move cursor to specific address (f.e. CTRL+G EA31)
@@ -187,8 +206,7 @@ CTRL+J
 Mouse wheel
 	Scroll code (faster with Shift pressed)
 
-
-In Data dump view:
+In Memory Dump view:
 
 Mouse Click on hex value
 	Select hex value
@@ -202,6 +220,8 @@ Enter or 0-9 or A-F
 	Start editing value
 Ctrl+Mouse Click
 	Scroll Disassembly to code address that stored that value
+Ctrl+Shift+Mouse Click
+	Scroll Disassembly to code address that last read that value
 Alt+Shift
 	Change CBM charset
 Ctrl+K
@@ -212,7 +232,7 @@ Ctrl+V
 	Paste hex codes from clipboard into memory. Simple separators are
 	parsed, also the text can contain addresses as 4 hex digits
 
-In Memory map view:
+In Memory Map view:
 
 Memory map shows current values of memory cells. Ctrl+M switches bank to
 RAM. Each memory cell value is mapped into RGB or Gray or None. In RGB mode 
@@ -257,11 +277,41 @@ When joystick is turned on then you can control selected ports using arrow keys,
 and right-alt as fire.
 
 
+* Atari XL/XE screen
+
+Additional keys in Atari:
+
+F2
+	Option key
+F3
+	Select key
+F4
+	Start key
+
+
+* CPU registers
+
+CPU registers are presented as:
+AR XR YR SP 01 NV-BDIZC CC VC RSTY RSTX EG
+
+They show current values of CPU registers and status:
+AR, XR, YR = CPU registers A,X,Y
+SP = stack pointer
+01 = value of memory mapper, i.e. $0001
+NV-BDIZC = processor flags register
+CC = current CPU cycle
+VC = current VIC cycle
+RSTY = current raster Y position
+RSTX = current raster X position
+EG = status of ExRom and Game register (cartridge related)
+	
+
 * VIC state view
 
 This view shows state of VIC registers. You can lock colors using Mouse Left Click,
 or change them using Mouse Right Click, these will be reflected in previews like
 Memory Dump or VIC Display view.
+
 
 * SID state view
 
@@ -555,6 +605,9 @@ C <from address> <to address> <destination address>
     compare memory with memory
 H <from address> <to address> <value> [<value> ...]
     compare memory with values
+HC <from address> <to address> <value> [<value> ...]
+    continue hunt, compare memory with values that addresses overlap with previous 
+    results of hunt command
 T <from address> <to address> <destination address>
     copy memory
 L [PRG] [from address] [file name]
@@ -627,6 +680,8 @@ section 9.5: Writing to User Defined Files.
      load symbols (code labels)
 -watch <file>
      load watches
+-debuginfo <file>
+     load debug symbols (*.dbg)");
 -wait <ms>
      wait before performing tasks
 -prg <file>
@@ -637,6 +692,10 @@ section 9.5: Writing to User Defined Files.
      attach TAP/T64
 -crt <file>
      attach cartridge
+-xex <file>
+     load XEX file into memory
+-atr <file>
+     insert ATR disk
 -jmp <addr>
      jmp to address, for example jmp x1000, jmp $1000 or jmp 4096
 -autojmp
@@ -653,7 +712,6 @@ section 9.5: Writing to User Defined Files.
      set sound out device by name or number
 -playlist <file>
      load and start jukebox playlist from json file
--
 -clearsettings
      clear all config settings
 -pass
@@ -749,11 +807,11 @@ Here are the basic format. To make it easier to read I have given a param named 
       Default,$d011,vic2_screen_control_register1
    </Labels>
 
-   <Watches values="SEGMENT,ADDRESS,ARGUMENT">
+   <Watchpoints values="SEGMENT,ADDRESS,ARGUMENT">
     	Default,$3000
     	Default,$2001,2,hex8
     	BANK2,$3000,,text
-   </Watches>
+   </Watchpoints>
 
    <Breakpoints values="SEGMENT,ADDRESS,ARGUMENT">
       BANK1,$1000,nmi
@@ -766,19 +824,71 @@ So everything is inside a <C64debugger> tag with a version number. Inside are di
 
 There will always be one <Sources> tag with all the source files and their indexs.
 
-There will be one or more <Segment> tags - one for each segment. Segments contains zero or more <Block> tags and inside these are the usual debug data. 
+There will be one or more <Segment> tags - one for each segment. Segments contains zero 
+or more <Block> tags and inside these are the usual debug data. 
 
-There will always be one <Breakpoints> tag. It contains one line for each breakpoint. First arg is the segment it is defined in (so if you turn on and off segments you can switch breakpoints on an off too). Second argument is the address it is defined at (You will not need it in eg. .break "nmi", but it is always there). Third argument is whatever the user writes in the .break argument and might be empty. So .break "nmi" and .break "cia" will give nmi and cia. 
+There will always be one <Breakpoints> tag. It contains one line for each 
+breakpoint. First arg is the segment it is defined in (so if you turn on and off segments 
+you can switch breakpoints on an off too). Second argument is the address it is defined at 
+(You will not need it in eg. .break "nmi", but it is always there). 
 
-<Labels> tag adds a label at address. First argument is the segment name, second argument is the address and last argument is label text.
+Third argument is whatever the user writes in the .break argument and might be empty. 
+So .break "nmi" and .break "cia" will give nmi and cia. 
 
-<Watches> is similar to labels but it will appear in watches view. First argument is the segment name, second argument is the address, then third argument is number of values to display, and fourth argument declares a representation which can be:
+<Labels> tag adds a label at address. First argument is the segment name, second argument is 
+the address and last argument is label text.
+
+<Watchpoints> is similar to labels but it will appear in watches view. First argument is 
+the segment name, second argument is the address, then third argument is number of values 
+to display, and fourth argument declares a representation which can be:
 hex8, hex16, hex32, or simply h, h8, h16, h32 is hex representation of value interpreted as 8, 16 or 32 bits.
 signed8, signed16, signed32, or simply s8, s16, s32 is a signed decimal representation of value interpreted as 8, 16 or 32 bits.
 unsigned8, unsigned16, unsigned32 or simply u8, u16, u32 is an unsigned decimal representation of value interpreted as 8, 16 or 32 bits.
 text signifies text representation.
 
-Please note that representation and number of values are not yet displayed in Watches view, this will be updated in upcoming version. Now, the Watches view displays only one hex 8-bit value.
+Please note that representation and number of values are not yet displayed in Watches view, 
+this will be updated in upcoming version. Now, the Watches view displays only one hex 8-bit value.
+
+View to see disassembled code with the source code is available via the
+Ctrl+Shift+F3 key. It will display the disassembled code on the left, and
+source code on the right. On top near the disassemble you will see a segment
+name and a block name below. To switch segments you can click on the segment
+name or use keyboard shortcuts Ctrl+; or Ctrl+'
+
+
+* Champ-6502 profiler
+
+C64 Debugger allows to create a profile file that can be then used to create
+profile reports in HTML format. This feature is still in development,
+however it is usable. Note that profile labels, watches and screen dump are not
+completed yet. Champ uses Ruby and GraphViz thus you need to install these
+packages first. You have to run the C64-debugger compatible version
+of Champ ruby source which is available to download from SourceForge C64 Debugger
+project.
+
+To start generating profile file go to Settings/Emulation and select file
+path. The debugger will dump all profile data needed for the Champ in this
+file, default file extension for profile data is *.pd 
+
+When you finished running code that you want to profile next step is to
+create profile report using command line:
+
+$ c64d-champ.rb <file.pd>
+
+Champ will create a report.html with report-files folder that you can view
+using standard web browser.
+
+The report log file consists of these types of events:
+cpu <emulation cycle> <frame number> <previous PC> <register A> <register X> <register Y> <PC> <SP> <processor flags> <profile cpu cycles> <raster line> <raster cycle> <is bad line>
+
+vic <emulation cycle> <frame number> <raster line> <raster cycle> <is bad line> <is sprite dma> <raster irq line>
+
+jsr 0x<hex addr> <cycles>
+
+rts <cycles>
+
+cycles <cycles>
+
 
 * JukeBox playlist and automated tests
 
@@ -928,6 +1038,20 @@ Shutdown
 	Shutdown the C64 Debugger (Quit program)
 
 
+* Integration via named pipe
+
+You can send and receive messages using a named pipe. The implementation works 
+now only for MacOS and Linux, and is rather an exeprimental feature. If you find
+any problems please contact me as this was not properly tested yet.
+
+The intention of this communication is to allow UI/IDE to interact with the
+debugger by, for example, pausing or stepping code, as well as get some 
+information about the emulation state, such as current CPU registers.
+
+More details here:
+https://docs.google.com/document/d/15ELIVFhyBGIlGyaBOey3R0VU6VLAGHVI49vmgY8jdlY/
+
+
 * Other notes
 
 Step over JSR works in a way that a temporary PC breakpoint is created in
@@ -942,6 +1066,15 @@ You can browse the contents of attached disk image by pressing F7 key, and
 run the first PRG by F3 key. Note that if C64 Screen is selected then these keys are 
 normally sent to the C64. Thus to let these key shortcuts work you need to first 
 un-select the C64 Screen.
+
+
+* Note about Atari XL/XE
+
+Atari XL/XE debugger is using Atari800 emulator. This integration is still 
+in beta version and many features are not ready yet. There definitely 
+are bugs and other issues, however main features should be working.
+The overall behaviour of the debugger is very similar to C64 Debugger and
+most of keyboard shortcuts and ideas work the same.
 
 
 * Known bugs
@@ -960,12 +1093,14 @@ dump view.
 Command line arguments are passed to VICE. VICE complains that arguments
 that have been parsed by C64 Debugger are not OK.
 
-On some window managers flavours in Linux system open/save file dialogs are
-behaving incorrectly.
-
 When you move a Sprite in VIC Editor and Sprite is on top of other Sprite they will 
 'pile up', also there are no means to select Sprite below a Sprite... this is not
 ready yet and is planned for next release.
+
+Atari800 has troubles with saving and loading states when machine has more than 64kB
+of RAM memory selected. This seems to be a bug in Atari800 3.1.0, still under 
+investigation.
+
 
 * To do
 
@@ -990,6 +1125,7 @@ Ruben Aparicio
 64 bites
 Stein Pedersen
 Mads Nielsen (Slammer/Camelot)
+Roy C Riggs (furroy)
 
 
 * Beer Donation
@@ -1090,6 +1226,44 @@ the use of which is hereby acknowledged:
 The ROM files embedded in the source code are Copyright C by Commodore
  Business Machines.
 
+* Atari800 emulator license is GPL, full credits at
+https://github.com/atari800/atari800/blob/master/DOC/CREDITS
+
+Credits below:
+
+Atari800 emulator version 4.2.0
+
+Current active members of the Atari800 development team:
+--------------------------------------------------------
+
+Petr Stehlik        (maintainer)
+Perry McFarlane     (core developer)
+Piotr Fusik         (core developer)
+Tomasz Krasuski     (core developer)
+Mark Grebe          (Mac OSX)
+Kostas Nakos        (Windows CE, Android)
+James Wilkinson     (DOS, BeOS, Win32)
+Christian Groessler (Sega Dreamcast)
+Andrey Dj           (Raspberry Pi)
+Miro Kropacek       (Atari Falcon)
+
+* NestopiaUE emulator engine license is GPL, credits below:
+
+Nestopia is Copyright © 2003-2008 by Martin Freij.
+NES is either a trademark or registered trademark of Nintendo of America Inc.
+Famicom is either a trademark or registered trademark of Nintendo Co., LTD.
+All other trademarks are property of their respective owners.
+Nestopia is not affiliated with or endorsed by any of the companies mentioned.
+
+Authors: [yang], Alexander Roshal, Andrea Mazzoleni, Bootgod, Brad Taylor, 
+CaH4e3, Chris Covell, Christophe Thibault, Derek Liauw Kie Fa, Enri, FireBug, 
+Gilles Vollant, Goroh, hap, Hellsbane, Igor Pavlov, Jean-loup Gailly, 
+Jeremy Chadwick, John West, Kevin Horton, Ki, Loopy, MAME dev. team, 
+Marat Fayzullin, Mark Adler, Mark Knibbs, Marko Mäkelä, Matthew Conte, 
+Maxim Stepin, NewRisingSun, Norix, Pongbashi, Quietust, Richard Hoelscher, 
+Shay Green (aka blargg), The Mad Dumper, Xodnizel
+
+
 * Libraries
 
 libjpeg 
@@ -1125,17 +1299,156 @@ mman-32
 libclipboard
 	Copyright (c) 2016 Jeremy Tan
 	https://github.com/jtanx/libclipboard
-	
+md5
+	Copyright (C) 1999 Aladdin Enterprises.  All rights reserved.
+	This code has been derived by Michael Schwendt <mschwendt@yahoo.com>
+	from original work by L. Peter Deutsch <ghost@aladdin.com>
 pugixml
 	Light-weight, simple and fast XML parser for C++ with XPath support
 	https://pugixml.org
-	
+psid64
+	Create a C64 executable from a PSID file
+    Copyright (C) 2001-2003  Roland Hermans <rolandh@users.sourceforge.net>
+	PSID64 contains the following contributed or derived work. In the order they
+	first supplied contributions or code was derived from their work:
+    Dag Lem           - PSID driver reference implementation
+    Simon White       - SidUtils library
+    Michael Schwendt  - SidTune library
+    LaLa              - STILView library
+    Magnus Lind       - Exomizer compressor
+Champ 65c02 Profiler
+	A 6502/65C02 emulator / profiler that enables you to really get to know 
+	your APPLE ][ HiRes Graphics Mode Demo.
+	(C) Micha Specht. https://github.com/specht/champ
+Native File Dialog
+	Copyright © 2014-2019 Frogtoss Games, Inc. File LICENSE covers all files in this repo.
+	Native File Dialog by Michael Labbe mike@frogtoss.com
+	Tomasz Konojacki for microutf8
+	Denis Kolodin for mingw support.
+	Tom Mason for Zenity support.
 
 *
 * Change log
 *
 
-v0.64.56
+v0.64.58 (2020/2/22), a celebration of my birthday
+Bug fixed: Some edge cases for timeline and code-backstepping fixed
+Bug fixed: Ctrl+G (go to address) was not working in Disassemble view
+Bug fixed: Memory hunt command in monitor was not finding values when 
+           end address was near end of memory (thanks to Shallan)
+Bug fixed Atari: Joystick up was not properly emulated sometimes 
+                 (thanks to Pajero/MadTeam^Samar)
+Bug fixed Atari: Some keyboard shortcuts were crashing 
+                 (thanks to Pajero/MadTeam^Samar)
+Bug fixed Atari: Changing CPU registers was not reflected when code 
+                 was paused (thanks to Pajero/MadTeam^Samar)
+Bug fixed MacOS: Sometimes C64 65XE Debugger window was not visible 
+                 when started for the first time (thanks to Yosi and Stephen)
+Added: Scroll disassemble to address that read memory value 
+              by Ctrl+Shift+Click (written by Ctrl+Click)
+Added: Version can be checked using --version command line option. 
+       Console output works also on Windows (requested by Marco)
+Added: Scroll monitor console content with mouse scroll
+Added: Hunt-continue, a HC command in monitor that searches of addresses which
+       contain values that were also found in previous hunt command
+Added Atari: Atari800 emulator code base upgraded to version 4.2.0
+Added Atari: Timeline and code back-stepping
+Added Atari: Source code debugging symbols and watches
+Added Atari: PIA and GTIA registers related to joystick
+Added Atari: New layouts available
+Added Atari: Passing command line to running instance and options 
+             to load XEX and ATR
+Added C64: Switch to use VICE monitor in Settings 
+           (requested by Bacchus/Fairlight)
+Added Windows: Possibility to set process priority and boosting (Settings/UI)
+
+And a lot other	fixes and tweaks for the Atari XL/XE debugger!
+
+
+v0.64.56.8 
+Bug fixed: Changing layout was also changing VIC Display's layout border mode
+Bug fixed: Crash when adding PC breakpoint in Layout #4
+Bug fixed: Passing empty breakpoints.txt file was hanging the debugger 
+           (thanks to Erol Tahirovic)
+Bug fixed: Use of Keyboard as joystick settings are now properly stored and 
+           restored (thanks to Ollie and Roy C Riggs)
+Added: Drag'n'drop of g64 files (requested by Bacchus/Fairlight)
+Added: Show colour hex code in VIC State view (requested by Bacchus/Fairlight)
+Added: Memory hunt (H) command also accepts 16-bit values, so H 1000 2000 D418 
+       is searching now also for existence of 18 D4 pair 
+       (requested by Alex Goldblat)
+Added: Layout that shows all bitmaps in the memory at once (Ctrl+Shift+F7)
+       (requested by Digger/Elysium)
+Added: Snapshots Recorder! Rewind emulation backwards as well forward. 
+       When timeline is active you can access it by hovering mouse near bottom 
+       of the debugger window and scrubbing by clicking and moving a red box.
+Added Linux: Full screen mode on Linux, activate using Alt+Enter. 
+             (thanks to szczm_/Samar code snippets)
+Added MacOS: Window size and position are properly restored after app restart 
+             (thanks to Mojzesh/Arise for reporting)
+Added MacOS and Linux: Integration via standard fifo named pipe, check specs 
+             how to interact remotely with the C64 Debugger (good for UI/IDEs!).
+
+
+v0.64.56.6 (2019/05/17), released at Moonshine Dragons demo party
+Bug Fixed: Changing SID register was not reflected when CPU emulation 
+           was paused in some SID emulation engines
+Bug Fixed: Detach everything was not detaching cartridge
+Bug Fixed: 1541 Drive memory map was showing pixels based on C64 memory map
+Bug Fixed: Disassemble command in monitor console was sometimes not adding
+           a new line character (thanks to Alex Goldblat)
+Added: REU settings menu and REU registers view in Ctrl+F5
+Added: Timestamp, frame number and cycle number counters shown in in Ctrl+F5 
+       (zero by Shift+Backspace)
+Added: Frame number, cycle number, raster line, raster cycle and a fetch line
+       ("bad line") state added to profiler log. Note, the event name has 
+       been changed from 'log' to 'cpu'
+Added: Settings switch to also do VIC profiling (event 'vic')
+Added: Keyboard shortcut to switch auto load reset and jump modes
+Added: Some more Debugger API functionalities and a dummy plugin example
+
+
+v0.64.56.4 (2019/02/22), a celebration of my 40th birthday 
+                         and 3 years duration of the project! Cheers!
+Added: Sprite view in VIC Editor also shows sprite pointer value (requested by Dr.J)
+Added: You can zoom in and out using mouse wheel within zoomed screen view
+Added: You can set C64 screen texture supersampling factor in Settings
+Added: Opening SID tunes: conversion is done using psid64 by Roland Hermans! 
+       You can now drag & drop SID tune onto debugger's window and it will be played. 
+       You can also just load the SID into RAM. Select preferred behavior in Settings.
+Added: Simple debugger emulation API to create own plugins for code proof of concepts 
+       (early draft)
+Added: Champ 6502 profiler integration (early draft, , thanks to Brush/Elysium for the idea)
+Added: NestopiaUE emulator engine aka NES Debugger (early draft)
+Bug Fixed: Comparing commands in monitor was not properly matching command names 
+           that overlap
+Bug Fixed: Memory dump to file was not properly reading values of address $00 and $01 
+           (thanks to Bacchus/Fairlight)
+Bug Fixed: Detach tape was not saving settings and tape was always reattached again 
+           after restart (thanks to Bacchus/Fairlight)
+Bug Fixed: Saving on d64 disk was not flushing data on quit, now a periodic check is 
+           performed that flushes data (thanks to Isildur/Samar)
+Bug Fixed Linux: When system open/file dialogs were not used and folder was not 
+                 existing a fatal error was thrown (thanks to Tetsuo/Samar)
+Bug Fixed MacOS: Sometimes a mixture of CMD key and other key does not send KeyUp 
+                 event to the application in MacOS, workaround applied
+
+
+v0.64.56.2 (2018/12/24), X-Mas maintenance release
+Added: You can right-click on a C64 Screen in any layout to change display mode: screen, zoomed raster, VIC Display
+Added Atari: ANTIC/GTIA/PIA/POKEY states view, loading and saving snapshots (a8s), breakpoints screen and a proper binary release
+Changed: Emulation is paused while saving snapshot (Ctrl+S)
+Bug Fixed: Tabs in source files were displayed as "A" (thanks to Scan/House)
+Bug Fixed: Breakpoint red markers in disassembly are now properly displayed when loaded from dbg symbols file (thanks to Scan/House)
+Bug Fixed: Breakpoints in some Segments from dbg symbols file were set on by default (thanks to Scan/House)
+Bug Fixed: NMI breakpoint is fixed (thanks to Scan/House)
+Bug Fixed: Crash when editing $d418 register with selected ReSID-fp emulation engine
+Bug Fixed: Adding a breakpoint on Breakpoints view did not set breakpoint switch
+Bug Fixed: Empty breakpoints.txt file could cause crash (thanks to Yugorin/Samar)
+Bug Fixed Windows: On some keyboards with AltGr (Polish, German, ...) the Right-Alt sends also Left-Ctrl keypress events. A workaround to skip bogus Left-Ctrl when Right-Alt is pressed was applied
+
+
+v0.64.56 (the X Party 2018 release)
 Added: PALette palette.
 Added: CHARSET mode in VIC Display
 Added: Joystick keys can be defined as regular keyboard shortcut keys
@@ -1159,7 +1472,6 @@ Bug Fixed: Markers are cleared automatically after PRG load (thanks to Alex Gold
 Bug Fixed: Zooming in memory map was sometimes blocked
 Bug Fixed: Command line -help option now properly displays message box on Windows (thanks to Timsa Uotila for bug report)
 Bug fixed: Painting on vertically-stretched multicolor sprite caused crash (thanks to Isildur/Samar for bug report)
-
 
 
 v0.64.2

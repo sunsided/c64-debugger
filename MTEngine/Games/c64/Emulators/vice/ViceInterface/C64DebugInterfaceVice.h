@@ -3,6 +3,7 @@
 
 #include "C64DebugInterface.h"
 #include "ViceWrapper.h"
+#include "SYS_Threading.h"
 
 //HAVE_NETWORK  ?
 
@@ -24,6 +25,16 @@ enum shift_type {
 
 
 class CViceAudioChannel;
+class C64DebugInterfaceVice;
+
+class CViceDriveFlushThread : public CSlrThread
+{
+public:
+	CViceDriveFlushThread(C64DebugInterfaceVice *debugInterface, int flushCheckIntervalInMS);
+	int flushCheckIntervalInMS;
+	C64DebugInterfaceVice *debugInterface;
+	virtual void ThreadRun(void *data);
+};
 
 class C64DebugInterfaceVice : public C64DebugInterface
 {
@@ -33,8 +44,6 @@ public:
 	
 	virtual void InitKeyMap(C64KeyMap *keyMap);
 
-	CImageData *screen;
-	
 	CViceAudioChannel *audioChannel;
 	
 	int screenHeight;
@@ -45,7 +54,13 @@ public:
 	virtual int GetEmulatorType();
 	virtual CSlrString *GetEmulatorVersionString();
 	
+	virtual float GetEmulationFPS();
+	float numEmulationFPS;
+
 	virtual void RunEmulationThread();
+	virtual void DoFrame();
+
+	virtual void Shutdown();
 	
 	virtual uint8 *GetCharRom();
 
@@ -55,12 +70,22 @@ public:
 	virtual int GetScreenSizeX();
 	virtual int GetScreenSizeY();
 	
-	virtual CImageData *GetScreenImageData();
-
 	virtual void Reset();
 	virtual void HardReset();
 	virtual void DiskDriveReset();
 
+	// this is main emulation cpu cycle counter
+	virtual unsigned int GetMainCpuCycleCounter();
+	virtual unsigned int GetPreviousCpuInstructionCycleCounter();
+	
+	// resettable counters for debug purposes
+	virtual void ResetMainCpuDebugCycleCounter();
+	virtual unsigned int GetMainCpuDebugCycleCounter();
+	virtual void ResetEmulationFrameCounter();
+	virtual unsigned int GetEmulationFrameNumber();
+	
+	virtual void RefreshScreenNoCallback();
+	
 	//
 	virtual void KeyboardDown(uint32 mtKeyCode);
 	virtual void KeyboardUp(uint32 mtKeyCode);
@@ -145,6 +170,7 @@ public:
 	virtual void GetWholeMemoryMapFromRam1541(uint8 *buffer);
 
 	virtual void GetMemoryC64(uint8 *buffer, int addrStart, int addrEnd);
+	virtual void GetMemoryFromRam(uint8 *buffer, int addrStart, int addrEnd);
 	virtual void GetMemoryFromRamC64(uint8 *buffer, int addrStart, int addrEnd);
 	virtual void GetMemoryDrive1541(uint8 *buffer, int addrStart, int addrEnd);
 	virtual void GetMemoryFromRamDrive1541(uint8 *buffer, int addrStart, int addrEnd);
@@ -158,10 +184,24 @@ public:
 
 	virtual bool LoadFullSnapshot(CByteBuffer *snapshotBuffer);
 	virtual void SaveFullSnapshot(CByteBuffer *snapshotBuffer);
-	
 	virtual bool LoadFullSnapshot(char *filePath);
 	virtual void SaveFullSnapshot(char *filePath);
+	
+	// these calls should be synced with CPU IRQ so snapshot store or restore is allowed
+	// these calls should be synced with CPU IRQ so snapshot store or restore is allowed
+	// store CHIPS only snapshot, not including DISK DATA
+	virtual bool SaveFullSnapshotSynced(CByteBuffer *byteBuffer,
+										bool saveChips, bool saveRoms, bool saveDisks, bool eventMode,
+										bool saveReuData, bool saveCartRoms, bool saveScreen);
+	virtual bool LoadChipsSnapshotSynced(CByteBuffer *byteBuffer);
+	virtual bool SaveChipsSnapshotSynced(CByteBuffer *byteBuffer);
+	// store DISK DATA only snapshot, without CHIPS
+	virtual bool LoadDiskDataSnapshotSynced(CByteBuffer *byteBuffer);
+	virtual bool SaveDiskDataSnapshotSynced(CByteBuffer *byteBuffer);
 
+	virtual bool IsDriveDirtyForSnapshot();
+	virtual void ClearDriveDirtyForSnapshotFlag();
+	
 	virtual void SetDebugMode(uint8 debugMode);
 	virtual uint8 GetDebugMode();
 	
@@ -186,6 +226,14 @@ public:
 	virtual void DetachCartridge();
 	virtual void CartridgeFreezeButtonPressed();
 	virtual void GetC64CartridgeState(C64StateCartridge *cartridgeState);
+
+	virtual void DetachEverything();
+	
+	// reu
+	virtual void SetReuEnabled(bool isEnabled);
+	virtual void SetReuSize(int reuSize);
+	virtual bool LoadReu(char *filePath);
+	virtual bool SaveReu(char *filePath);
 
 	//
 	virtual void SetVicRegister(uint8 registerNum, uint8 value);
@@ -220,8 +268,27 @@ public:
 	//
 	virtual void SetRunSIDEmulation(bool isSIDEmulationOn);
 	virtual void SetAudioVolume(float volume);
+		
+	// profiler
+	// if fileName is NULL no file will be created, if runForNumCycles is -1 it will run till ProfilerDeactivate
+	virtual void ProfilerActivate(char *fileName, int runForNumCycles, bool pauseCpuWhenFinished);
+	virtual void ProfilerDeactivate();
+
+	// UI
+	virtual CViewDisassemble *GetViewMainCpuDisassemble();
+	virtual CViewDisassemble *GetViewDriveDisassemble(int driveNo);	// TODO: make drive cpu generic (create specific debug interface for drive?)
+	virtual CViewBreakpoints *GetViewBreakpoints();
+	virtual CViewDataWatch *GetViewMemoryDataWatch();
 	
 
+	// drive flush thread
+	CViceDriveFlushThread *driveFlushThread;
+	
+	// interface to vice monitor
+	virtual bool IsCodeMonitorSupported();
+	bool isCodeMonitorOpened;
+	virtual CSlrString *GetCodeMonitorPrompt();
+	virtual bool ExecuteCodeMonitorCommand(CSlrString *commandStr);
 };
 
 extern C64DebugInterfaceVice *debugInterfaceVice;

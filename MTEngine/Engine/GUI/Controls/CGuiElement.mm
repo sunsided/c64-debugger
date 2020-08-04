@@ -16,6 +16,7 @@ CGuiElement::CGuiElement(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX
 	this->parent = NULL;
 	
 	this->visible = true;
+	this->allowFocus = true;
 	
 	SetPositionOffset(posX, posY, posZ);
 	SetPosition(posX, posY, posZ, sizeX, sizeY);
@@ -146,7 +147,7 @@ void CGuiElement::RenderFocusBorder()
 
 bool CGuiElement::IsFocusable()
 {
-	return false;
+	return allowFocus;
 }
 
 bool CGuiElement::DoTap(GLfloat x, GLfloat y)

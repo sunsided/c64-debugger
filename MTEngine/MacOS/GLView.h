@@ -40,6 +40,11 @@
 
 - (bool)isWindowFullScreen;
 
+- (void)storeMainWindowPosition;
+- (void)restoreMainWindowPosition;
+
+- (void)testMenu;
+
 @end
 
 extern GLView *glView;

@@ -204,12 +204,40 @@ CByteBuffer::CByteBuffer(char *fileName)
 	this->wholeDataBufferSize = 0;
 	this->index = 0;
 	this->length = 0;
-	if (this->readFromFile(fileName) == false)
+	if (this->readFromFileNoHeader(fileName) == false)
 	{
 		LOGError("CByteBuffer: file not found '%s'", fileName);
 		this->data = NULL;
 	}
 }
+
+CByteBuffer::CByteBuffer(char *fileName, bool hasHeader)
+{
+	error = false;
+	
+	this->data = NULL;
+	this->wholeDataBufferSize = 0;
+	this->index = 0;
+	this->length = 0;
+	
+	if (hasHeader)
+	{
+		if (this->readFromFile(fileName) == false)
+		{
+			LOGError("CByteBuffer: file not found '%s'", fileName);
+			this->data = NULL;
+		}
+	}
+	else
+	{
+		if (this->readFromFileNoHeader(fileName) == false)
+		{
+			LOGError("CByteBuffer: file not found '%s'", fileName);
+			this->data = NULL;
+		}
+	}
+}
+
 
 CByteBuffer::~CByteBuffer()
 {
@@ -258,9 +286,14 @@ void CByteBuffer::Reset()
 	this->length  = 0;
 }
 
-bool CByteBuffer::isEof()
+bool CByteBuffer::IsEof()
 {
 	return (index == this->length);
+}
+
+bool CByteBuffer::IsEmpty()
+{
+	return (this->length == 0);
 }
 
 void CByteBuffer::ForwardToEnd()
@@ -268,19 +301,22 @@ void CByteBuffer::ForwardToEnd()
 	index = this->length;
 }
 
+// 32kB memory chunks
+#define MEM_CHUNK	1024*32
+
 void CByteBuffer::putByte(uint8 b)
 {
 #ifdef PRINT_BUFFER_OPS
 	LOGD(">>>>>>>>>>>>>> putByte data[%d]=%2.2x", index, b);
 #endif
 
-	if (this->index == this->wholeDataBufferSize)
+	if (this->index >= this->wholeDataBufferSize)
 	{
-		uint8 *newData = new uint8[this->wholeDataBufferSize * 2];
+		uint8 *newData = new uint8[this->wholeDataBufferSize + MEM_CHUNK];
 		memcpy(newData, this->data, this->wholeDataBufferSize);
 		delete [] this->data;
 		this->data = newData;
-		this->wholeDataBufferSize *= 2;
+		this->wholeDataBufferSize += MEM_CHUNK;
 	}
 	this->data[this->index++] = b;
 	this->length++;
@@ -314,7 +350,7 @@ uint8 CByteBuffer::getByte()
 	return data[index++];
 }
 
-void CByteBuffer::putBytes(uint8 *b, int len)
+void CByteBuffer::putBytes(uint8 *b, unsigned int len)
 {
 #ifdef PRINT_BUFFER_OPS
 	LOGD("putBytes: len=%d", len);
@@ -326,7 +362,7 @@ void CByteBuffer::putBytes(uint8 *b, int len)
 	}
 }
 
-void CByteBuffer::putBytes(uint8 *b, int begin, int len)
+void CByteBuffer::putBytes(uint8 *b, unsigned int begin, unsigned int len)
 {
 #ifdef PRINT_BUFFER_OPS
 	LOGD("putBytes: begin=%d len=%d", begin, len);
@@ -338,7 +374,7 @@ void CByteBuffer::putBytes(uint8 *b, int begin, int len)
 	}
 }
 
-uint8 *CByteBuffer::getBytes(int len)
+uint8 *CByteBuffer::getBytes(unsigned int len)
 {
 #ifdef PRINT_BUFFER_OPS
 	LOGD("getBytes: len=%d", len);
@@ -354,7 +390,7 @@ uint8 *CByteBuffer::getBytes(int len)
 	return b;
 }
 
-void CByteBuffer::getBytes(uint8 *b, int len)
+void CByteBuffer::getBytes(uint8 *b, unsigned int len)
 {
 #ifdef PRINT_BUFFER_OPS
 	LOGD("getBytes: len=%d", len);
@@ -366,7 +402,7 @@ void CByteBuffer::getBytes(uint8 *b, int len)
 	}
 }
 
-void CByteBuffer::GetBytes(uint8 *b, int len)
+void CByteBuffer::GetBytes(uint8 *b, unsigned int len)
 {
 #ifdef PRINT_BUFFER_OPS
 	LOGD("getBytes: len=%d", len);
@@ -746,7 +782,7 @@ bool CByteBuffer::storeToFile(CSlrString *filePath)
 	FixFileNameSlashes(f);
 
 	FILE *fp = fopen(f, "wb");
-	free(f);
+	delete [] f;
 #endif
 
 	if (fp == NULL)
@@ -896,7 +932,7 @@ bool CByteBuffer::readFromFile(CSlrString *filePath)
 	FixFileNameSlashes(f);
 	
 	FILE *fp = fopen(f, "rb");
-	free(f);
+	delete [] f;
 #endif
 	
 	if (fp == NULL)
@@ -1000,9 +1036,14 @@ bool CByteBuffer::readFromFile(CSlrFile *file, bool readHeader)
 
 bool CByteBuffer::readFromFileNoHeader(char *fileName)
 {
-	FixFileNameSlashes(fileName);
+	char *buf = SYS_GetCharBuf();
+	strcpy(buf, fileName);
+	
+	FixFileNameSlashes(buf);
 
-	CSlrFile *file = RES_GetFile(fileName, DEPLOY_FILE_TYPE_DATA);
+	CSlrFile *file = RES_GetFile(buf, DEPLOY_FILE_TYPE_DATA);
+	SYS_ReleaseCharBuf(buf);
+
 	if (!file)
 		return false;
 	if (!file->Exists())
@@ -1023,8 +1064,13 @@ bool CByteBuffer::storeToFileNoHeader(char *fileName)
 {
 	LOGD("CByteBuffer::storeToFileNoHeader: '%s'", fileName);
 	
-	FixFileNameSlashes(fileName);
-	FILE *fp = fopen(fileName, "wb");
+	char *buf = SYS_GetCharBuf();
+	strcpy(buf, fileName);
+	
+	FixFileNameSlashes(buf);
+	FILE *fp = fopen(buf, "wb");
+	SYS_ReleaseCharBuf(buf);
+
 	if (fp == NULL)
 	{
 		LOGError("fp NULL");
@@ -1033,7 +1079,7 @@ bool CByteBuffer::storeToFileNoHeader(char *fileName)
 	
 	fwrite(this->data, 1, this->length, fp);
 	fclose(fp);
-	
+
 	return true;
 }
 
@@ -1328,12 +1374,12 @@ short unsigned int CByteBuffer::GetU16()
 	return this->getUnsignedShort();
 }
 
-void CByteBuffer::PutBytes(uint8 *b, int len)
+void CByteBuffer::PutBytes(uint8 *b, unsigned int len)
 {
 	this->putBytes(b, len);
 }
 
-uint8 *CByteBuffer::GetBytes(int len)
+uint8 *CByteBuffer::GetBytes(unsigned int len)
 {
 	return this->getBytes(len);
 }

@@ -176,7 +176,7 @@ static const char snap_mem_module_name[] = "C64MEM";
 #define SNAP_MAJOR 0
 #define SNAP_MINOR 1
 
-int c64_snapshot_write_module(snapshot_t *s, int save_roms)
+int c64_snapshot_write_module(snapshot_t *s, int save_roms, int save_reu_data, int save_cart_roms)
 {
     snapshot_module_t *m;
 
@@ -215,10 +215,10 @@ int c64_snapshot_write_module(snapshot_t *s, int save_roms)
         return -1;
     }
 
-    return cartridge_snapshot_write_modules(s);
+    return cartridge_snapshot_write_modules(s, save_reu_data, save_cart_roms);
 }
 
-int c64_snapshot_read_module(snapshot_t *s)
+int c64_snapshot_read_module(snapshot_t *s, int read_reu_data, int read_cart_roms)
 {
     BYTE major_version, minor_version;
     snapshot_module_t *m;
@@ -282,7 +282,7 @@ int c64_snapshot_read_module(snapshot_t *s)
         return -1;
     }
 
-    if (cartridge_snapshot_read_modules(s) < 0) {
+    if (cartridge_snapshot_read_modules(s, read_reu_data, read_cart_roms) < 0) {
         return -1;
     }
 

@@ -50,7 +50,7 @@ CViewC64StateVIC::CViewC64StateVIC(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 	// init images for sprites
 	for (int i = 0; i < 0x0F; i++)
 	{
-		// alloc image that will store character pixels
+		// alloc image that will store sprite pixels
 		CImageData *imageData = new CImageData(32, 32, IMG_TYPE_RGBA);
 		imageData->AllocImage(false, true);
 		
@@ -128,6 +128,11 @@ void CViewC64StateVIC::RenderColorRectangle(float px, float py, float ledSizeX, 
 	BlitRectangle(px, py - gap, posZ, ledSizeX, ledSizeY,
 				  colorR, colorG, colorB, 1.0f, gap);
 	
+	// blit hex color code
+	char buf[2];
+	Byte2Hex1digitR(color, buf);
+	buf[1] = 0x00;
+	guiMain->fntConsole->BlitText(buf, px + ledSizeX/2.0f - fontSize/2.0f, py+0.5f, posZ, fontSize);
 }
 
 void CViewC64StateVIC::Render()
@@ -1068,8 +1073,8 @@ void CViewC64StateVIC::GuiEditHexEnteredValue(CGuiEditHex *editHex, u32 lastKeyC
 		byte v = editHex->value;
 		debugInterface->SetVicRegister(editingRegisterValueIndex, v);
 		
-		editingRegisterValueIndex = -1;
-	}	
+		editHex->SetCursorPos(0);
+	}
 }
 
 

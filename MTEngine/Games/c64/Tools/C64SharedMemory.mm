@@ -3,10 +3,18 @@
 #include "SYS_SharedMemory.h"
 #include "CViewC64.h"
 #include "C64CommandLine.h"
+#include "C64D_Version.h"
 
 // 16kB should be enough for everybody
 #define C64D_SHARED_MEMORY_SIZE		1024*16
+
+#if defined(RUN_COMMODORE64)
 #define C64D_SHARED_MEMORY_KEY		12666
+#elif defined(RUN_ATARI)
+#define C64D_SHARED_MEMORY_KEY		12667
+#elif defined(RUN_NES)
+#define C64D_SHARED_MEMORY_KEY		12668
+#endif
 
 bool c64dSharedMemoryInit = false;
 

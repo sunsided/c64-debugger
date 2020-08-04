@@ -44,10 +44,12 @@ public:
 	void LoadImage(UTFString *fileName, UTFString *fileExt);
 	void LoadImage(CImageData *imageData);
 	void LoadImage(CImageData *imageData, byte resourcePriority, bool flipImageVertically);
+	void RefreshImageParameters(CImageData *imageData, byte resourcePriority, bool flipImageVertically);
 	void PreloadImage(CSlrFile *imgFile);
 	void LoadImage(CSlrFile *imgFile);
 
 	void BindImage();
+	void ReBindImage();
 	void FreeLoadImage();
 
 	// set image data directly, it is a hack, be carefull

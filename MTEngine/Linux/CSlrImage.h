@@ -44,6 +44,7 @@ public:
 	void LoadImage(CImageData *imageData);
 	void LoadImage(CImageData *imageData, byte resourcePriority);
 	void LoadImage(CImageData *imageData, byte resourcePriority, bool flipImageVertically);
+	void RefreshImageParameters(CImageData *imageData, byte resourcePriority, bool flipImageVertically);
 	void PreloadImage(CSlrFile *imgFile);
 	void LoadImage(CSlrFile *imgFile);
 
@@ -53,6 +54,7 @@ public:
 	byte fileLoadError;
 
 	void BindImage();
+	void ReBindImage();
 	void FreeLoadImage();
 
 	char *name;

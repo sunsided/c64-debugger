@@ -9,27 +9,10 @@ class C64;
 class CImageData;
 class CSlrImage;
 class CViewDataDump;
-class C64DebugInterface;
+class CDebugInterface;
 class CSlrFont;
 class CViewMemoryMap;
 class CSlrDataAdapter;
-
-enum watchRepresentation : uint8
-{
-	WATCH_REPRESENTATION_HEX = 0,
-	WATCH_REPRESENTATION_BIN,
-	WATCH_REPRESENTATION_UNSIGNED_DEC,
-	WATCH_REPRESENTATION_SIGNED_DEC,
-	WATCH_REPRESENTATION_TEXT
-//	WATCH_REPRESENTATION_OCT,		// not used
-};
-
-enum watchNumberOfBits : uint8
-{
-	WATCH_BITS_8,
-	WATCH_BITS_16,
-	WATCH_BITS_32	// not used
-};
 
 class CDataWatchDetails
 {
@@ -53,7 +36,7 @@ class CViewDataWatch : public CGuiView
 {
 public:
 	CViewDataWatch(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
-				   CSlrDataAdapter *dataAdapter, CViewMemoryMap *viewMemoryMap, C64DebugInterface *c64);
+				   CSlrDataAdapter *dataAdapter, CViewMemoryMap *viewMemoryMap, CDebugInterface *debugInterface);
 	~CViewDataWatch();
 	
 	virtual void SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY);
@@ -80,7 +63,7 @@ public:
 	CSlrFont *font;
 	float fontSize;
 	
-	C64DebugInterface *debugInterface;
+	CDebugInterface *debugInterface;
 	CViewMemoryMap *viewMemoryMap;
 	CSlrDataAdapter *dataAdapter;
 	

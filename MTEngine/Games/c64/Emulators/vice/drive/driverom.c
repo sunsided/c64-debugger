@@ -74,6 +74,8 @@ int driverom_load(const char *resource_name, BYTE *drive_rom, unsigned
     unsigned int dnr;
     drive_t *drive;
 
+	LOGD("driverom_load: '%s'", resource_name);
+
     if (!drive_rom_load_ok) {
         return 0;
     }

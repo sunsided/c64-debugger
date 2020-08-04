@@ -1,9 +1,13 @@
 #include "SYS_Threading.h"
 #include "SYS_Main.h"
-
+#include "VID_GLViewController.h"
 #include <signal.h>
+#include <errno.h>
 
-void CSlrThread::ThreadRun(void *data)
+//#define DEBUG_MUTEX
+//#define DEBUG_MUTEX_TIMEOUT 5000
+
+void CSlrThread::ThreadRun(void *passData)
 {
 }
 
@@ -16,9 +20,9 @@ public:
 };
 
 
-void *ThreadStarterFuncRun(void *data)
+void *ThreadStarterFuncRun(void *dataToPassWithArg)
 {
-	CThreadPassData *passArg = (CThreadPassData *)data;
+	CThreadPassData *passArg = (CThreadPassData *)dataToPassWithArg;
 
 #if defined(IPHONE) || defined(MACOS)
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
@@ -159,9 +163,38 @@ void SYS_SetThreadName(char *name)
 #endif
 }
 
-CSlrMutex::CSlrMutex()
+#if defined(MACOS) | defined(LINUX)
+void SYS_SetMainProcessPriorityBoostDisabled(bool isPriorityBoostDisabled)
 {
-//#if defined(LINUX)
+	LOGTODO("not implemented SYS_SetMainProcessPriorityBoostDisabled: isPriorityBoostDisabled=%s", STRBOOL(isPriorityBoostDisabled));
+}
+
+void SYS_SetMainProcessPriority(int priority)
+{
+	LOGTODO("not implemented SYS_SetMainProcessPriority: priority=%d", priority);
+}
+#else
+// SYS_SetMainProcessPriority and SYS_SetMainProcessPriorityBoost are implemented in SYS_Startup.cpp on Win32
+#endif
+
+CSlrMutex::CSlrMutex(char *name)
+{
+	strcpy(this->name, name);
+	
+	//LOGD("CSlrMutex::CSlrMutex: %s", this->name);
+	
+#if defined(USE_WIN32_THREADS)
+	mutex = CreateMutex(
+						NULL,              // default security attributes
+						FALSE,             // initially not owned
+						NULL);             // unnamed mutex
+
+	if (mutex == NULL)
+	{
+		SYS_FatalExit("CreateMutex error: %d\n", GetLastError());
+	}
+	
+#else
 
 	pthread_mutexattr_t attr;
 	pthread_mutexattr_init(&attr);
@@ -172,46 +205,89 @@ CSlrMutex::CSlrMutex()
 
 	lockedLevel = 0;
 	
-//#elif defined(WINDOWS)
-//	mutex = new CRITICAL_SECTION;
-//	InitializeCriticalSection((CRITICAL_SECTION *)mutex);
-//#endif
+#endif
+
 }
 
 CSlrMutex::~CSlrMutex()
 {
-//#if defined(LINUX)
-
+	LOGD("CSlrMutex::~CSlrMutex: %s", this->name);
+#if defined(USE_WIN32_THREADS)
+//	CloseHandle(mutex);
+#else
 	pthread_mutex_destroy(&mutex);
 	
-//#elif defined(HAVE_MS_THREAD)
-//	DeleteCriticalSection((CRITICAL_SECTION *)mutex);
-//	delete (CRITICAL_SECTION *)mutex;
-//#endif
+#endif
 }
 	
 void CSlrMutex::Lock()
 {
-//#ifdef HAVE_PTHREAD
-//	pthread_mutex_lock((pthread_mutex_t*)mutex);
-//#elif defined(HAVE_MS_THREAD)
-//	EnterCriticalSection((CRITICAL_SECTION *)mutex);
-//#endif
+//	if (strcmp(this->name, "CSoundEngine"))
+//	{
+//		LOGD("CSlrMutex::Lock: name=%s lockedLevel=%d (after=%d)", this->name, lockedLevel, lockedLevel+1);
+//	}
 	
-	pthread_mutex_lock(&mutex);
-	lockedLevel++;
+#if defined(USE_WIN32_THREADS)
+	DWORD dwWaitResult = WaitForSingleObject(
+			mutex,    // handle to mutex
+            INFINITE);  // no time-out interval
+	
+	if (dwWaitResult != 0)
+	{
+		SYS_FatalExit("CSlrMutex::Lock: dwWaitResult=%d %s", dwWaitResult, this->name);
+	}
+	
+#else
+	#if defined(DEBUG_MUTEX)
+		long timeout = SYS_GetCurrentTimeInMillis() + DEBUG_MUTEX_TIMEOUT;
+		
+		while (pthread_mutex_trylock(&mutex) == EBUSY)
+		{
+			long now = SYS_GetCurrentTimeInMillis();
+			if (now >= timeout)
+			{
+				LOGError("Mutex lock timeout, name=%s", this->name);
+				return;
+			}
+			
+			SYS_Sleep(5);
+		}
+		lockedLevel++;
+	
+	#else
+		pthread_mutex_lock(&mutex);
+		lockedLevel++;
+	#endif
+#endif
 }
 
 void CSlrMutex::Unlock()
 {
-//#ifdef HAVE_PTHREAD
-//	pthread_mutex_unlock((pthread_mutex_t*)mutex);
-//#elif defined(HAVE_MS_THREAD)
-//	LeaveCriticalSection((CRITICAL_SECTION *)mutex);
-//#endif
-	
+//	if (strcmp(this->name, "CSoundEngine"))
+//	{
+//		LOGD("CSlrMutex::Unlock: name=%s level before=%d (after=%d)", this->name, lockedLevel, lockedLevel-1);
+//	}
+
+#if defined(USE_WIN32_THREADS)
+	if (!ReleaseMutex(mutex))
+	{
+		LOGError("Release Mutex %s error %d", this->name, GetLastError());
+		SYS_FatalExit("ReleaseMutex %s %d", this->name, GetLastError());
+	}
+#else
 	
 	lockedLevel--;
 	pthread_mutex_unlock(&mutex);
+
+#endif
+}
+
+unsigned long SYS_GetProcessId()
+{
+#if defined(WIN32)
+	return GetCurrentProcessId();
+#else
+	return getpid();
+#endif
 }
 

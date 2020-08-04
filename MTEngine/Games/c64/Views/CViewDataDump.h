@@ -82,10 +82,12 @@ public:
 	std::list<CSlrImage *> spritesImages;
 
 	
+	CSlrFont *fontAtari;
 	CSlrFont *fontCBM1;
 	CSlrFont *fontCBM2;
 	
-	CSlrMutex *mutex;
+	CSlrFont *fonts[3];
+
 	
 	bool isEditingValue;
 	CGuiEditHex *editHex;
@@ -112,6 +114,7 @@ public:
 	void CopyHexValuesToClipboard();
 	void CopyHexAddressToClipboard();
 	
+	bool showDataCharacters;
 	bool showCharacters;
 	bool showSprites;
 };

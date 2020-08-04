@@ -211,7 +211,7 @@ bool CViewC64Charset::DoRightClick(GLfloat x, GLfloat y)
 
 bool CViewC64Charset::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
-	LOGD("CViewC64Charset::KeyDown: %d", keyCode);
+	LOGI("CViewC64Charset::KeyDown: %d", keyCode);
 	
 	return false;
 }
@@ -286,7 +286,7 @@ int CViewC64Charset::ImportCharset(CSlrString *path)
 	CByteBuffer *byteBuffer = new CByteBuffer(file, false);
 	for (int i = 0; i < 0x800; i++)
 	{
-		if (byteBuffer->isEof())
+		if (byteBuffer->IsEof())
 		{
 			guiMain->ShowMessage("End of file reached");
 			return -1;

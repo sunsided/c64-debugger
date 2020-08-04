@@ -6,13 +6,14 @@
 #include "CGuiViewMenu.h"
 #include "SYS_CFileSystem.h"
 #include "CDiskImageD64.h"
+#include "SYS_Threading.h"
 #include <list>
 
 class CSlrKeyboardShortcut;
 class CViewC64MenuItem;
 class CViewC64MenuItemOption;
 
-class CViewFileD64 : public CGuiView, CGuiButtonCallback, CGuiViewMenuCallback, CSystemFileDialogCallback
+class CViewFileD64 : public CGuiView, CGuiButtonCallback, CGuiViewMenuCallback, CSystemFileDialogCallback, CSlrThread
 {
 public:
 	CViewFileD64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY);
@@ -85,6 +86,9 @@ public:
 	
 	void RefreshDiskImageMenu();
 	void RefreshInsertedDiskImage();
+	
+	void RefreshInsertedDiskImageAsync();
+	virtual void ThreadRun(void *passData);
 
 	void SetDiskImage(char *fileName);
 	void SetDiskImage(int deviceId);

@@ -100,7 +100,7 @@ static void mon_buffer_alloc(void)
     }
 }
 
-static int mon_buffer_flush(void)
+int mon_buffer_flush(void)
 {
     int rv = 0;
 

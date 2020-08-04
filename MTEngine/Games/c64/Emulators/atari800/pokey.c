@@ -50,6 +50,10 @@
 #include "input.h"
 #include "pbi.h"
 
+#ifdef POKEYREC
+#include "pokeyrec.h"
+#endif
+
 #ifdef VOICEBOX
 #include "voicebox.h"
 #include "votraxsnd.h"
@@ -447,6 +451,10 @@ void POKEY_Frame(void)
 
 void POKEY_Scanline(void)
 {
+#ifdef POKEYREC
+	POKEYREC_Recorder();
+#endif
+	
 #ifdef POKEY_UPDATE
 	pokey_update();
 #endif
@@ -639,6 +647,7 @@ void POKEY_StateSave(void)
 	int shift_key = 0;
 	int keypressed = 0;
 
+	STATESAV_TAG(pokey);
 	StateSav_SaveUBYTE(&POKEY_KBCODE, 1);
 	StateSav_SaveUBYTE(&POKEY_IRQST, 1);
 	StateSav_SaveUBYTE(&POKEY_IRQEN, 1);
@@ -657,9 +666,11 @@ void POKEY_StateSave(void)
 	StateSav_SaveINT(&POKEY_DivNIRQ[0], 4);
 	StateSav_SaveINT(&POKEY_DivNMax[0], 4);
 	StateSav_SaveINT(&POKEY_Base_mult[0], 1);
+	
+	StateSav_SaveULONG(&random_scanline_counter, 1);
 }
 
-void POKEY_StateRead(void)
+void POKEY_StateRead(UBYTE version)
 {
 	int i;
 	int shift_key;
@@ -688,6 +699,12 @@ void POKEY_StateRead(void)
 	StateSav_ReadINT(&POKEY_DivNIRQ[0], 4);
 	StateSav_ReadINT(&POKEY_DivNMax[0], 4);
 	StateSav_ReadINT(&POKEY_Base_mult[0], 1);
+	
+	// added by Slajerek 2019/01/25
+	if (version > 8)
+	{
+		StateSav_ReadULONG(&random_scanline_counter, 1);
+	}
 }
 
 #endif

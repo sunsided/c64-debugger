@@ -55,9 +55,13 @@ public:
 	void ClearExecuteMarkers();
 	void ClearReadWriteMarkers();
 	
-	// write PC & raster (where was PC & raster when cell was written)
-	int pc;
-	int viciiRasterLine, viciiRasterCycle;
+	// last write PC & raster (where was PC & raster when cell was written)
+	int writePC;
+	int writeRasterLine, writeRasterCycle;
+	
+	// last read PC & raster (where was PC & raster when cell was read)
+	int readPC;
+	int readRasterLine, readRasterCycle;
 };
 
 void C64DebuggerSetMemoryMapCellsFadeSpeed(float fadeSpeed);
@@ -115,6 +119,7 @@ public:
 	void UpdateWholeMap();
 	
 	void CellRead(uint16 addr);
+	void CellRead(uint16 addr, uint16 pc, int rasterX, int rasterY);
 	void CellWrite(uint16 addr, uint8 value);
 	void CellWrite(uint16 addr, uint8 value, uint16 pc, int rasterX, int rasterY);
 	void CellExecute(uint16 addr, uint8 opcode);
@@ -178,6 +183,7 @@ public:
 	float textCodeWidth9h;
 	float textCodeWidth10h;
 	
+	bool isBeingMoved;
 	void UpdateMapPosition();
 	
 	// for double click

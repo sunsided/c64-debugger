@@ -16,7 +16,6 @@
 #define CPU_Z_FLAG 0x02
 #define CPU_C_FLAG 0x01
 
-void CPU_Initialise(void);		/* used in the assembler version of cpu.c only */
 void CPU_GetStatus(void);
 void CPU_PutStatus(void);
 void CPU_Reset(void);
@@ -26,13 +25,7 @@ void CPU_NMI(void);
 void CPU_GO(int limit);
 #define CPU_GenerateIRQ() (CPU_IRQ = 1)
 
-#ifdef FALCON_CPUASM
-extern void CPU_INIT(void);
-extern void CPU_GET(void);		/* put from CCR, N & Z FLAG into regP */
-extern void CPU_PUT(void);		/* put from regP into CCR, N & Z FLAG */
-#endif
-
-extern UWORD CPU_regPC;
+extern volatile UWORD CPU_regPC;
 extern UBYTE CPU_regA;
 extern UBYTE CPU_regP;
 extern UBYTE CPU_regS;
@@ -73,5 +66,9 @@ extern unsigned int CPU_remember_jmp_curpos;
 #ifdef MONITOR_PROFILE
 extern int CPU_instruction_count[256];
 #endif
+
+extern volatile unsigned int atrdMainCpuDebugCycle;
+extern volatile unsigned int atrdMainCpuCycle;
+extern volatile unsigned int atrdMainCpuPreviousInstructionCycle;
 
 #endif /* CPU_H_ */

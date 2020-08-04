@@ -25,15 +25,13 @@
 #ifndef __DBG_LOGF_H__
 #define __DBG_LOGF_H__
 
-
 #define GLOBAL_DEBUG_OFF
-
 
 #define DBGLVL_DEBUG		(1 << 0)
 #define DBGLVL_MAIN			(1 << 1)
 #define DBGLVL_RES			(1 << 2)
 #define DBGLVL_GUI			(1 << 3)
-#define DBGLVL_FACEBOOK		(1 << 4)
+#define DBGLVL_PAINT		(1 << 4)
 #define DBGLVL_FLURRY		(1 << 5)
 #define DBGLVL_WEBSERVICE	(1 << 6)
 #define DBGLVL_XML			(1 << 7)
@@ -83,7 +81,7 @@ void LOG_Shutdown(void);
 #define LOGP(...) _LOGGER(DBGLVL_DATAPROVIDER, __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
 #define LOGR(...) _LOGGER(DBGLVL_RES, __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
 #define LOGG(...) _LOGGER(DBGLVL_GUI, __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
-#define LOGF(...) _LOGGER(DBGLVL_FACEBOOK, __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
+#define LOGF(...) _LOGGER(DBGLVL_PAINT, __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
 #define LOGH(...) _LOGGER(DBGLVL_HTTP, __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
 #define LOGA(...) _LOGGER(DBGLVL_AUDIO, __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
 #define LOGAD(...) _LOGGER(DBGLVL_ADS, __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
@@ -111,7 +109,7 @@ void LOG_Shutdown(void);
 #define LOGNP(...) _LOGGER(DBGLVL_DATAPROVIDER, __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
 #define LOGNR(...) _LOGGER(DBGLVL_RES, __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
 #define LOGNG(...) _LOGGER(DBGLVL_GUI, __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
-#define LOGNF(...) _LOGGER(DBGLVL_FACEBOOK, __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
+#define LOGNF(...) _LOGGER(DBGLVL_PAINT, __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
 #define LOGNN(...) _LOGGER(DBGLVL_ANIMATION, __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
 #define LOGNH(...) _LOGGER(DBGLVL_HTTP, __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
 #define LOGNA(...) _LOGGER(DBGLVL_AUDIO, __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
@@ -128,7 +126,10 @@ void LOG_Shutdown(void);
 #define LOGNError(...) _LOGGER(DBGLVL_ERROR, __FILE__, __LINE__, __PRETTY_FUNCTION__, __VA_ARGS__)
 
 int _LOGGER(unsigned int level, const char *fileName, unsigned int lineNum, const char *functionName, const char *format, ...);
+
+#ifndef MT_DBGLOG_SKIP_NSSTRING
 int _LOGGER(unsigned int level, const char *fileName, unsigned int lineNum, const char *functionName, const NSString *format, ...);
+#endif
 
 #else
 

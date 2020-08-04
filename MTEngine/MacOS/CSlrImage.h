@@ -51,12 +51,14 @@ public:
 	void LoadImage(CImageData *origImageData);
 	void LoadImage(CImageData *origImageData, byte resourcePriority);
 	void LoadImage(CImageData *origImageData, byte resourcePriority, bool flipImageVertically);
+	void RefreshImageParameters(CImageData *origImageData, byte resourcePriority, bool flipImageVertically);
 	void PreloadImage(CSlrFile *imgFile);
 	void LoadImage(CSlrFile *imgFile);
 	
 	//void ConvertDataBufferColor();
 	
 	virtual void BindImage();
+	virtual void ReBindImage();
 	virtual void FreeLoadImage();
 	virtual void Deallocate();
 

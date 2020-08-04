@@ -1,3 +1,4 @@
+#include "psid64.h"
 #include "SYS_Main.h"
 #include "RES_ResourceManager.h"
 #include "CSlrFontProportional.h"
@@ -8,6 +9,9 @@
 #include "C64SIDFrequencies.h"
 #include "C64SettingsStorage.h"
 #include "CColorsTheme.h"
+#include "CViewC64.h"
+#include "exomizer.h"
+#include "SidTuneMod.h"
 #include <float.h>
 
 u8 ConvertPetsciiToSreenCode(u8 chr)
@@ -394,9 +398,7 @@ void ConvertColorSpriteDataToImage(u8 *spriteData, CImageData *imageData, u8 col
 	}
 }
 
-
-
-CSlrFontProportional *ProcessCBMFonts(u8 *charsetData, bool useScreenCodes)
+CSlrFontProportional *ProcessFonts(u8 *charsetData, bool useScreenCodes)
 {
 	LOGD("--- process fonts ---");
 	
@@ -1055,3 +1057,175 @@ uint16 GetSidAddressByChipNum(int chipNum)
 	return 0xD400;
 }
 
+CByteBuffer *ConvertSIDtoPRG(CByteBuffer *sidFileData)
+{
+	Psid64 psid64;
+	
+	psid64.load(sidFileData->data, sidFileData->length);
+	if (!psid64.convert())
+	{
+		return NULL;
+	}
+	
+	psid64.setCompress(false);
+	
+	unsigned int length;
+	u8 *data = psid64.getProgramDataBuffer(&length);
+	
+	CByteBuffer *byteBuffer = new CByteBuffer(length);
+	byteBuffer->putBytes(data, length);
+	byteBuffer->Rewind();
+	
+	return byteBuffer;
+}
+
+bool C64LoadSIDToRam(char *filePath, u16 *fromAddr, u16 *toAddr, u16 *initAddr, u16 *playAddr)
+{
+	SidTuneMod sidTune(0);
+	if (!sidTune.load(filePath))
+	{
+		LOGError("C64LoadSIDToRam: load failed %s", sidTune.getInfo().statusString);
+		return false;
+	}
+	
+	u8 *sidBuf = new u8[0x10000];
+	sidTune.placeSidTuneInC64mem(sidBuf);
+	
+	*fromAddr = sidTune.getInfo().loadAddr;
+	*toAddr = sidTune.getInfo().loadAddr + sidTune.getInfo().c64dataLen;
+	
+	for (int i = *fromAddr; i < *toAddr; i++)
+	{
+		viewC64->debugInterfaceC64->SetByteToRamC64(i, sidBuf[i]);
+	}
+	
+	*initAddr = sidTune.getInfo().initAddr;
+	*playAddr = sidTune.getInfo().playAddr;
+	
+	delete [] sidBuf;
+	
+	return true;
+}
+
+bool C64SaveMemoryExomizerPRG(int fromAddr, int toAddr, int jmpAddr, char *filePath)
+{
+	FILE *fp = fopen(filePath, "wb");
+	if (!fp)
+	{
+		return false;
+	}
+
+	int dataSize = toAddr - fromAddr;
+	u8 *data = new u8[dataSize];
+	int i = 0;
+	for (int d = fromAddr; d < toAddr; d++)
+	{
+		data[i++] = viewC64->debugInterfaceC64->GetByteFromRamC64(d);
+	}
+	
+	u8 *compressedData = new u8[0x10000];
+	int prgSize = exomizer(data, dataSize,
+						   fromAddr, jmpAddr, compressedData);
+	
+	int lineNumber = 666;
+	// set BASIC line number
+	compressedData[4] = (u8) (lineNumber & 0xff);
+	compressedData[5] = (u8) (lineNumber >> 8);
+	
+	fwrite(compressedData, prgSize, 1, fp);
+	fclose(fp);
+	
+	delete [] compressedData;
+	delete [] data;
+	
+	LOGD("C64SaveMemoryExomizerPRG: stored to %s", filePath);
+	
+	return true;
+}
+
+u8 *C64ExomizeMemoryRaw(int fromAddr, int toAddr, int *compressedSize)
+{
+	int dataSize = toAddr - fromAddr;
+	u8 *data = new u8[dataSize];
+	int i = 0;
+	for (int d = fromAddr; d < toAddr; d++)
+	{
+		data[i++] = viewC64->debugInterfaceC64->GetByteFromRamC64(d);
+	}
+	
+	u8 *compressedData = new u8[0x10000];
+	*compressedSize = exomizer_raw_backwards(data, dataSize, compressedData);
+	
+	delete [] data;
+	
+	LOGD("C64ExomizeMemoryRaw: dataSize=%d compressedSize=%d", dataSize, compressedSize);
+	
+	return compressedData;
+}
+
+
+bool C64SaveMemory(int fromAddr, int toAddr, bool isPRG, CSlrDataAdapter *dataAdapter, char *filePath)
+{
+	FILE *fp;
+	fp = fopen(filePath, "wb");
+	
+	if (!fp)
+	{
+		return false;
+	}
+
+	int len = toAddr - fromAddr;
+	uint8 *memoryBuffer = new uint8[0x10000];
+	dataAdapter->AdapterReadBlockDirect(memoryBuffer, fromAddr, toAddr);
+	
+	uint8 *writeBuffer = new uint8[len];
+	memcpy(writeBuffer, memoryBuffer + fromAddr, len);
+	
+	if (isPRG)
+	{
+		// write header
+		uint8 buf[2];
+		buf[0] = fromAddr & 0x00FF;
+		buf[1] = (fromAddr >> 8) & 0x00FF;
+		
+		fwrite(buf, 1, 2, fp);
+	}
+	
+	
+	int lenWritten = fwrite(writeBuffer, 1, len, fp);
+	fclose(fp);
+	
+	delete [] writeBuffer;
+	delete [] memoryBuffer;
+	
+	if (lenWritten != len)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+int C64LoadMemory(int fromAddr, CSlrDataAdapter *dataAdapter, char *filePath)
+{
+	FILE *fp;
+	fp = fopen(filePath, "rb");
+	
+	if (!fp)
+	{
+		return -1;
+	}
+	
+	u16 addr = fromAddr;
+	int len = 0;
+	while(!feof(fp))
+	{
+		u8 c = getc(fp);
+		dataAdapter->AdapterWriteByte(addr, c);
+		addr++;
+		len++;
+	}
+
+	fclose(fp);
+	return len;
+}

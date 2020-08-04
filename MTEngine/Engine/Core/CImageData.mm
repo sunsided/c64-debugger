@@ -8,6 +8,12 @@
 #include "RES_ResourceManager.h"
 #include "CByteBuffer.h"
 #include "IMG_Scale.h"
+#include "GFX_Types.h"
+#include "zlib.h"
+#include "JPEGWriter.h"
+#include "CSlrFileZlib.h"
+#include "SYS_CFileSystem.h"
+#include "stb_image.h"
 
 #if defined(ANDROID)
 #include "SYS_ApkManager.h"
@@ -17,6 +23,39 @@
 
 //#define FLIP_VERTICAL
 
+struct CImageDataRowIter
+{
+	CImageDataRowIter(CImageData *imageData): buffer(imageData->width * 3)
+	{
+		this->imageData = imageData;
+		y = 0;
+	}
+	
+	unsigned char* operator*()
+	{
+		return &buffer[0];
+	}
+	
+	void operator++()
+	{
+		unsigned i = 0;
+		for (unsigned x = 0; x < imageData->width; ++x)
+		{
+			u8 r,g,b,a;
+			imageData->GetPixelResultRGBA(x, y, &r, &g, &b, &a);
+			buffer[i++] = r;
+			buffer[i++] = g;
+			buffer[i++] = b;
+		}
+		
+		y++;
+	}
+	
+	int y;
+	CImageData *imageData;
+	std::vector<unsigned char> buffer;
+};
+
 CImageData::CImageData(char *fileName)
 {
 	LOGR("CImageData::CImageData: '%s'", fileName);
@@ -24,7 +63,7 @@ CImageData::CImageData(char *fileName)
 	this->tempData = NULL;
 	this->resultData = NULL;
 	this->row_pointers = NULL;
-	this->type = IMG_TYPE_GRAYSCALE;
+	this->type = IMG_TYPE_RGBA;
 	this->mask = NULL;
 	this->width = 0;
 	this->height = 0;
@@ -63,8 +102,30 @@ CImageData::CImageData(CByteBuffer *byteBuffer)
 	//LOGD("pool test CImageData: %d", ++poolTestCImageData);
 }
 
+// assuming type RGBA
+CImageData::CImageData(int width, int height)
+{
+	this->width = width;
+	this->height = height;
+	//this->originalHeight = height;
+	//this->originalWidth = width;
+	//this->origData = NULL;
+	this->tempData = NULL;
+	this->resultData = NULL;
+	this->row_pointers = NULL;
+	this->type = IMG_TYPE_RGBA;
+	this->mask = NULL;
+	
+#ifdef USE_BUFFER_OFFSETS
+	this->bufferOffsets = IMG_GetBufferOffsets(this->type, this->height, this->width);
+#endif
+	
+	this->AllocImage(false, true);
+	
+	//LOGD("pool test CImageData: %d", ++poolTestCImageData);
+}
 
-CImageData::CImageData(int width, int height, byte type)
+CImageData::CImageData(int width, int height, u8 type)
 {
 	this->width = width;
 	this->height = height;
@@ -84,7 +145,7 @@ CImageData::CImageData(int width, int height, byte type)
 	//LOGD("pool test CImageData: %d", ++poolTestCImageData);
 }
 
-CImageData::CImageData(int width, int height, byte type, bool allocTemp, bool allocResult)
+CImageData::CImageData(int width, int height, u8 type, bool allocTemp, bool allocResult)
 {
 	this->width = width;
 	this->height = height;
@@ -107,7 +168,7 @@ CImageData::CImageData(int width, int height, byte type, bool allocTemp, bool al
 }
 
 
-CImageData::CImageData(int width, int height, byte type, void *data)
+CImageData::CImageData(int width, int height, u8 type, void *data)
 {
 	this->width = width;
 	this->height = height;
@@ -301,17 +362,17 @@ void CImageData::copyResultToTemporary()
 }
 
 
-byte CImageData::getImageType()
+u8 CImageData::getImageType()
 {
 	return this->type;
 }
 
-void CImageData::setImageType(byte type)
+void CImageData::setImageType(u8 type)
 {
 	this->type = type;
 }
 
-void CImageData::setResultImage(void *data, byte type)
+void CImageData::setResultImage(void *data, u8 type)
 {
 	this->type = type;
 	this->resultData = data;
@@ -331,7 +392,7 @@ void CImageData::DeallocTemp()
 			case IMG_TYPE_RGB:
 			case IMG_TYPE_RGBA:
 				//LOGD("delete data");
-				delete [] (byte *)tempData;
+				delete [] (u8 *)tempData;
 				break;
 			case IMG_TYPE_SHORT_INT:
 				delete [] (unsigned short int*)tempData;
@@ -361,7 +422,7 @@ void CImageData::DeallocResult()
 			case IMG_TYPE_RGB:
 			case IMG_TYPE_RGBA:
 				//LOGD("delete data");
-				delete [] (byte *)resultData;
+				delete [] (u8 *)resultData;
 				break;
 			case IMG_TYPE_SHORT_INT:
 				delete [] (unsigned short int*)resultData;
@@ -390,7 +451,7 @@ void CImageData::DeallocImage()
 			case IMG_TYPE_GRAYSCALE:
 			case IMG_TYPE_RGB:
 				//LOGD("delete data");
-				delete (byte *)origData;
+				delete (u8 *)origData;
 				break;
 			case IMG_TYPE_SHORT_INT:
 				delete (unsigned short int*)origData;
@@ -688,7 +749,7 @@ void CImageData::AllocResultImage()
 // for sure this should significally speed up non-streamed algorithms such as the watershed.
 
 // grayscale
-byte CImageData::GetPixelResultByte(int x, int y)
+u8 CImageData::GetPixelResultByte(int x, int y)
 {
 #ifdef PEDANTIC
 	if (x < 0 || y < 0 || x >= width || y >= height)
@@ -712,7 +773,7 @@ byte CImageData::GetPixelResultByte(int x, int y)
 		return 0x00;
 	}
 #endif
-	byte *imageData = (byte *)this->resultData;
+	u8 *imageData = (u8 *)this->resultData;
 
 #ifdef USE_BUFFER_OFFSETS
 	unsigned int offset = this->bufferOffsets->offsets[x][y];
@@ -723,7 +784,7 @@ byte CImageData::GetPixelResultByte(int x, int y)
 
 }
 
-void CImageData::SetPixelResultByte(int x, int y, byte val)
+void CImageData::SetPixelResultByte(int x, int y, u8 val)
 {
 #ifdef PEDANTIC
 	if (x < 0 || y < 0 || x >= width || y >= height)
@@ -747,7 +808,7 @@ void CImageData::SetPixelResultByte(int x, int y, byte val)
 		return;
 	}
 #endif
-	byte *imageData = (byte *)this->resultData;
+	u8 *imageData = (u8 *)this->resultData;
 
 #ifdef USE_BUFFER_OFFSETS
 	unsigned int offset = this->bufferOffsets->offsets[x][y];
@@ -758,7 +819,7 @@ void CImageData::SetPixelResultByte(int x, int y, byte val)
 
 }
 
-byte CImageData::GetPixelResultByteSafe(int x, int y)
+u8 CImageData::GetPixelResultByteSafe(int x, int y)
 {
 	if (x < 0 || y < 0 || x >= width || y >= height)
 	{
@@ -778,7 +839,7 @@ byte CImageData::GetPixelResultByteSafe(int x, int y)
 		return 0x00;
 	}
 #endif
-	byte *imageData = (byte *)this->resultData;
+	u8 *imageData = (u8 *)this->resultData;
 
 #ifdef USE_BUFFER_OFFSETS
 	unsigned int offset = this->bufferOffsets->offsets[x][y];
@@ -789,7 +850,7 @@ byte CImageData::GetPixelResultByteSafe(int x, int y)
 
 }
 
-void CImageData::SetPixelResultByteSafe(int x, int y, byte val)
+void CImageData::SetPixelResultByteSafe(int x, int y, u8 val)
 {
 	if (x < 0 || y < 0 || x >= width || y >= height)
 	{
@@ -809,7 +870,7 @@ void CImageData::SetPixelResultByteSafe(int x, int y, byte val)
 		return;
 	}
 #endif
-	byte *imageData = (byte *)this->resultData;
+	u8 *imageData = (u8 *)this->resultData;
 
 #ifdef USE_BUFFER_OFFSETS
 	unsigned int offset = this->bufferOffsets->offsets[x][y];
@@ -820,7 +881,7 @@ void CImageData::SetPixelResultByteSafe(int x, int y, byte val)
 
 }
 
-byte CImageData::GetPixelResultByteBorder(int x, int y)
+u8 CImageData::GetPixelResultByteBorder(int x, int y)
 {
 	if (x < 0)
 		x = 0;
@@ -845,7 +906,7 @@ byte CImageData::GetPixelResultByteBorder(int x, int y)
 		return 0x00;
 	}
 #endif
-	byte *imageData = (byte *)this->resultData;
+	u8 *imageData = (u8 *)this->resultData;
 
 #ifdef USE_BUFFER_OFFSETS
 	unsigned int offset = this->bufferOffsets->offsets[x][y];
@@ -856,7 +917,7 @@ byte CImageData::GetPixelResultByteBorder(int x, int y)
 
 }
 
-byte CImageData::GetPixelTemporaryByte(int x, int y)
+u8 CImageData::GetPixelTemporaryByte(int x, int y)
 {
 #ifdef PEDANTIC
 	if (x < 0 || y < 0 || x >= width || y >= height)
@@ -880,7 +941,7 @@ byte CImageData::GetPixelTemporaryByte(int x, int y)
 		return 0x00;
 	}
 #endif
-	byte *imageData = (byte *)this->tempData;
+	u8 *imageData = (u8 *)this->tempData;
 
 #ifdef USE_BUFFER_OFFSETS
 	unsigned int offset = this->bufferOffsets->offsets[x][y];
@@ -891,7 +952,7 @@ byte CImageData::GetPixelTemporaryByte(int x, int y)
 
 }
 
-void CImageData::SetPixelTemporaryByte(int x, int y, byte val)
+void CImageData::SetPixelTemporaryByte(int x, int y, u8 val)
 {
 #ifdef PEDANTIC
 	if (x < 0 || y < 0 || x >= width || y >= height)
@@ -915,7 +976,7 @@ void CImageData::SetPixelTemporaryByte(int x, int y, byte val)
 		return;
 	}
 #endif
-	byte *imageData = (byte *)this->tempData;
+	u8 *imageData = (u8 *)this->tempData;
 
 #ifdef USE_BUFFER_OFFSETS
 	unsigned int offset = this->bufferOffsets->offsets[x][y];
@@ -926,7 +987,7 @@ void CImageData::SetPixelTemporaryByte(int x, int y, byte val)
 
 }
 
-byte *CImageData::getGrayscaleResultData()
+u8 *CImageData::getGrayscaleResultData()
 {
 #ifdef MORE_PEDANTIC
 	if (this->type != IMG_TYPE_GRAYSCALE)
@@ -936,10 +997,10 @@ byte *CImageData::getGrayscaleResultData()
 		SYS_FatalExit();
 	}
 #endif
-	return (byte *)this->resultData;
+	return (u8 *)this->resultData;
 }
 
-void CImageData::setGrayscaleResultData(byte *data)
+void CImageData::setGrayscaleResultData(u8 *data)
 {
 #ifdef MORE_PEDANTIC
 	if (this->type != IMG_TYPE_GRAYSCALE)
@@ -952,7 +1013,7 @@ void CImageData::setGrayscaleResultData(byte *data)
 	this->resultData = data;
 }
 
-byte *CImageData::getGrayscaleTemporaryData()
+u8 *CImageData::getGrayscaleTemporaryData()
 {
 #ifdef MORE_PEDANTIC
 	if (this->type != IMG_TYPE_GRAYSCALE)
@@ -962,7 +1023,7 @@ byte *CImageData::getGrayscaleTemporaryData()
 		SYS_FatalExit();
 	}
 #endif
-	return (byte *)this->tempData;
+	return (u8 *)this->tempData;
 }
 
 unsigned short CImageData::GetPixelResultShort(int x, int y)
@@ -1291,7 +1352,14 @@ void CImageData::setLongIntResultData(long unsigned int *data)
 }
 
 // rgb
-void CImageData::GetPixelResultRGB(int x, int y, byte *r, byte *g, byte *b)
+
+// this might be confusing with rgba
+//void CImageData::GetPixel(int x, int y, u8 *r, u8 *g, u8 *b)
+//{
+//	GetPixelResultRGB(x, y, r, g, b);
+//}
+
+void CImageData::GetPixelResultRGB(int x, int y, u8 *r, u8 *g, u8 *b)
 {
 #ifdef PEDANTIC
 	if (x < 0 || y < 0 || x >= width || y >= height)
@@ -1315,7 +1383,7 @@ void CImageData::GetPixelResultRGB(int x, int y, byte *r, byte *g, byte *b)
 		return;
 	}
 #endif
-	byte *imageData = (byte *)this->resultData;
+	u8 *imageData = (u8 *)this->resultData;
 
 #ifdef USE_BUFFER_OFFSETS
 	unsigned int offset = this->bufferOffsets->offsets[x][y];
@@ -1327,7 +1395,12 @@ void CImageData::GetPixelResultRGB(int x, int y, byte *r, byte *g, byte *b)
 	*b = imageData[offset];
 }
 
-void CImageData::SetPixelResultRGB(int x, int y, byte r, byte g, byte b)
+void CImageData::SetPixel(int x, int y, u8 r, u8 g, u8 b, u8 a)
+{
+	SetPixelResultRGBA(x, y, r, g, b, a);
+}
+
+void CImageData::SetPixelResultRGB(int x, int y, u8 r, u8 g, u8 b)
 {
 #ifdef PEDANTIC
 	if (x < 0 || y < 0 || x >= width || y >= height)
@@ -1351,7 +1424,7 @@ void CImageData::SetPixelResultRGB(int x, int y, byte r, byte g, byte b)
 		return;
 	}
 #endif
-	byte *imageData = (byte *)this->resultData;
+	u8 *imageData = (u8 *)this->resultData;
 
 #ifdef USE_BUFFER_OFFSETS
 	unsigned int offset = this->bufferOffsets->offsets[x][y];
@@ -1364,7 +1437,7 @@ void CImageData::SetPixelResultRGB(int x, int y, byte r, byte g, byte b)
 	imageData[offset] = b;
 }
 
-void CImageData::GetPixelTemporaryRGB(int x, int y, byte *r, byte *g, byte *b)
+void CImageData::GetPixelTemporaryRGB(int x, int y, u8 *r, u8 *g, u8 *b)
 {
 #ifdef PEDANTIC
 	if (x < 0 || y < 0 || x >= width || y >= height)
@@ -1388,7 +1461,7 @@ void CImageData::GetPixelTemporaryRGB(int x, int y, byte *r, byte *g, byte *b)
 		return;
 	}
 #endif
-	byte *imageData = (byte *)this->tempData;
+	u8 *imageData = (u8 *)this->tempData;
 
 #ifdef USE_BUFFER_OFFSETS
 	unsigned int offset = this->bufferOffsets->offsets[x][y];
@@ -1402,7 +1475,7 @@ void CImageData::GetPixelTemporaryRGB(int x, int y, byte *r, byte *g, byte *b)
 
 }
 
-void CImageData::SetPixelTemporaryRGB(int x, int y, byte r, byte g, byte b)
+void CImageData::SetPixelTemporaryRGB(int x, int y, u8 r, u8 g, u8 b)
 {
 #ifdef PEDANTIC
 	if (x < 0 || y < 0 || x >= width || y >= height)
@@ -1426,7 +1499,7 @@ void CImageData::SetPixelTemporaryRGB(int x, int y, byte r, byte g, byte b)
 		return;
 	}
 #endif
-	byte *imageData = (byte *)this->tempData;
+	u8 *imageData = (u8 *)this->tempData;
 
 #ifdef USE_BUFFER_OFFSETS
 	unsigned int offset = this->bufferOffsets->offsets[x][y];
@@ -1439,7 +1512,7 @@ void CImageData::SetPixelTemporaryRGB(int x, int y, byte r, byte g, byte b)
 	imageData[offset] = b;
 }
 
-byte *CImageData::getRGBResultData()
+u8 *CImageData::getRGBResultData()
 {
 	if (this->type != IMG_TYPE_RGB)
 	{
@@ -1447,10 +1520,10 @@ byte *CImageData::getRGBResultData()
 		//log_backtrace();
 		SYS_FatalExit();
 	}
-	return (byte *)this->resultData;
+	return (u8 *)this->resultData;
 }
 
-void CImageData::setRGBResultData(byte *data)
+void CImageData::setRGBResultData(u8 *data)
 {
 	if (this->type != IMG_TYPE_RGB)
 	{
@@ -1463,7 +1536,12 @@ void CImageData::setRGBResultData(byte *data)
 
 /////////////////RGBA
 // rgb
-void CImageData::GetPixelResultRGBA(int x, int y, byte *r, byte *g, byte *b, byte *a)
+void CImageData::GetPixel(int x, int y, u8 *r, u8 *g, u8 *b, u8 *a)
+{
+	GetPixelResultRGBA(x, y, r, g, b, a);
+}
+
+void CImageData::GetPixelResultRGBA(int x, int y, u8 *r, u8 *g, u8 *b, u8 *a)
 {
 #ifdef PEDANTIC
 	if (x < 0 || y < 0 || x >= width || y >= height)
@@ -1487,7 +1565,7 @@ void CImageData::GetPixelResultRGBA(int x, int y, byte *r, byte *g, byte *b, byt
 		return;
 	}
 #endif
-	byte *imageData = (byte *)this->resultData;
+	u8 *imageData = (u8 *)this->resultData;
 
 #ifdef USE_BUFFER_OFFSETS
 	//unsigned int offset = this->bufferOffsets->offsets[x][y];
@@ -1497,10 +1575,10 @@ void CImageData::GetPixelResultRGBA(int x, int y, byte *r, byte *g, byte *b, byt
 	*r = imageData[offset++];
 	*g = imageData[offset++];
 	*b = imageData[offset++];
-	*a = imageData[offset];
+	*a = imageData[offset];	
 }
 
-void CImageData::SetPixelResultRGBA(int x, int y, byte r, byte g, byte b, byte a)
+void CImageData::SetPixelResultRGBA(int x, int y, u8 r, u8 g, u8 b, u8 a)
 {
 #ifdef PEDANTIC
 	if (x < 0 || y < 0 || x >= width || y >= height)
@@ -1524,7 +1602,7 @@ void CImageData::SetPixelResultRGBA(int x, int y, byte r, byte g, byte b, byte a
 		return;
 	}
 #endif
-	byte *imageData = (byte *)this->resultData;
+	u8 *imageData = (u8 *)this->resultData;
 
 #ifdef USE_BUFFER_OFFSETS
 	unsigned int offset = this->bufferOffsets->offsets[x][y];
@@ -1545,7 +1623,7 @@ void CImageData::SetPixelResultRGBA(int x, int y, byte r, byte g, byte b, byte a
 	imageData[offset] = a;
 }
 
-void CImageData::GetPixelTemporaryRGBA(int x, int y, byte *r, byte *g, byte *b, byte *a)
+void CImageData::GetPixelTemporaryRGBA(int x, int y, u8 *r, u8 *g, u8 *b, u8 *a)
 {
 #ifdef PEDANTIC
 	if (x < 0 || y < 0 || x >= width || y >= height)
@@ -1569,7 +1647,7 @@ void CImageData::GetPixelTemporaryRGBA(int x, int y, byte *r, byte *g, byte *b, 
 		return;
 	}
 #endif
-	byte *imageData = (byte *)this->tempData;
+	u8 *imageData = (u8 *)this->tempData;
 
 #ifdef USE_BUFFER_OFFSETS
 	unsigned int offset = this->bufferOffsets->offsets[x][y];
@@ -1584,7 +1662,7 @@ void CImageData::GetPixelTemporaryRGBA(int x, int y, byte *r, byte *g, byte *b, 
 
 }
 
-void CImageData::SetPixelTemporaryRGBA(int x, int y, byte r, byte g, byte b, byte a)
+void CImageData::SetPixelTemporaryRGBA(int x, int y, u8 r, u8 g, u8 b, u8 a)
 {
 #ifdef PEDANTIC
 	if (x < 0 || y < 0 || x >= width || y >= height)
@@ -1608,7 +1686,7 @@ void CImageData::SetPixelTemporaryRGBA(int x, int y, byte r, byte g, byte b, byt
 		return;
 	}
 #endif
-	byte *imageData = (byte *)this->tempData;
+	u8 *imageData = (u8 *)this->tempData;
 
 #ifdef USE_BUFFER_OFFSETS
 	unsigned int offset = this->bufferOffsets->offsets[x][y];
@@ -1622,7 +1700,7 @@ void CImageData::SetPixelTemporaryRGBA(int x, int y, byte r, byte g, byte b, byt
 	imageData[offset] = a;
 }
 
-void CImageData::EraseContent(byte r, byte g, byte b, byte a)
+void CImageData::EraseContent(u8 r, u8 g, u8 b, u8 a)
 {
 	for (int x = 0; x < width; x++)
 	{
@@ -1634,7 +1712,7 @@ void CImageData::EraseContent(byte r, byte g, byte b, byte a)
 }
 
 
-byte *CImageData::getRGBAResultData()
+u8 *CImageData::getRGBAResultData()
 {
 	if (this->type != IMG_TYPE_RGBA)
 	{
@@ -1642,10 +1720,10 @@ byte *CImageData::getRGBAResultData()
 		//log_backtrace();
 		SYS_FatalExit();
 	}
-	return (byte *)this->resultData;
+	return (u8 *)this->resultData;
 }
 
-void CImageData::setRGBAResultData(byte *data)
+void CImageData::setRGBAResultData(u8 *data)
 {
 	if (this->type != IMG_TYPE_RGBA)
 	{
@@ -1832,7 +1910,7 @@ void CImageData::ConvertToGrayscale()
 	this->ConvertToByte();
 }
 
-void CImageData::ConvertToGrayscale(byte componentNum)
+void CImageData::ConvertToGrayscale(u8 componentNum)
 {
 	this->ConvertToByte(componentNum);
 }
@@ -1842,7 +1920,7 @@ void CImageData::ConvertToByte()
 	//LOGD("ConvertToByte()");
 	if (this->type == IMG_TYPE_SHORT_INT)
 	{
-		byte *newData = new byte[this->width * this->height];
+		u8 *newData = new byte[this->width * this->height];
 		unsigned short int *imageData = (unsigned short int *)this->resultData;
 		unsigned int size = this->width * this->height;
 		unsigned short int val;
@@ -1861,12 +1939,12 @@ void CImageData::ConvertToByte()
 	}
 	else if (this->type == IMG_TYPE_RGBA)
 	{
-		byte *newData = new byte[this->width * this->height];
+		u8 *newData = new byte[this->width * this->height];
 		for (unsigned int x = 0; x < this->width; x++)
 		{
 			for (unsigned int y = 0; y < this->height; y++)
 			{
-				byte r,g,b,a;
+				u8 r,g,b,a;
 				this->GetPixelResultRGBA(x, y, &r, &g, &b, &a);
 				
 				int v = (r+g+b)/3;
@@ -1887,17 +1965,17 @@ void CImageData::ConvertToByte()
 	//LOGD("ConvertToByte() done");
 }
 
-void CImageData::ConvertToByte(byte componentNum)
+void CImageData::ConvertToByte(u8 componentNum)
 {
 	//LOGD("ConvertToByte()");
 	if (this->type == IMG_TYPE_RGBA)
 	{
-		byte *newData = new byte[this->width * this->height];
+		u8 *newData = new byte[this->width * this->height];
 		for (unsigned int x = 0; x < this->width; x++)
 		{
 			for (unsigned int y = 0; y < this->height; y++)
 			{
-				byte r,g,b,a;
+				u8 r,g,b,a;
 				this->GetPixelResultRGBA(x, y, &r, &g, &b, &a);
 				
 				int v = 0;
@@ -1930,12 +2008,12 @@ void CImageData::ConvertToRGBA()
 	//LOGD("CImageData::ConvertToRGBA");
 	if (this->type == IMG_TYPE_GRAYSCALE)
 	{
-		byte *newData = new byte[this->width * this->height * 4];
+		u8 *newData = new byte[this->width * this->height * 4];
 		for (unsigned int x = 0; x < this->width; x++)
 		{
 			for (unsigned int y = 0; y < this->height; y++)
 			{
-				byte v = this->GetPixelResultByte(x, y);
+				u8 v = this->GetPixelResultByte(x, y);
 				unsigned int offset = y * width * 4 + x * 4;
 				newData[offset++] = v;
 				newData[offset++] = v;
@@ -1952,7 +2030,60 @@ void CImageData::ConvertToRGBA()
 	}
 	else
 	{
-		SYS_FatalExit("CImageData::ConvertToByte: image type %2.2x not implemented", this->type);
+		SYS_FatalExit("CImageData::ConvertToRGBA: image type %2.2x not implemented", this->type);
+	}
+	//LOGD("CImageData::ConvertToRGBA: done");
+}
+
+void CImageData::ConvertToRGB()
+{
+	//LOGD("CImageData::ConvertToRGB");
+	if (this->type == IMG_TYPE_GRAYSCALE)
+	{
+		u8 *newData = new byte[this->width * this->height * 3];
+		for (unsigned int x = 0; x < this->width; x++)
+		{
+			for (unsigned int y = 0; y < this->height; y++)
+			{
+				u8 v = this->GetPixelResultByte(x, y);
+				unsigned int offset = y * width * 3 + x * 3;
+				newData[offset++] = v;
+				newData[offset++] = v;
+				newData[offset++] = v;
+			}
+		}
+		//LOGD("dealloc");
+		DeallocImage();
+		//LOGD("dealloc ok");
+		this->type = IMG_TYPE_RGB;
+		this->resultData = newData;
+		
+	}
+	else if (this->type == IMG_TYPE_RGBA)
+	{
+		u8 *newData = new byte[this->width * this->height * 3];
+		for (unsigned int x = 0; x < this->width; x++)
+		{
+			for (unsigned int y = 0; y < this->height; y++)
+			{
+				u8 r,g,b,a;
+				this->GetPixelResultRGBA(x, y, &r, &g, &b, &a);
+				unsigned int offset = y * width * 3 + x * 3;
+				newData[offset++] = r;
+				newData[offset++] = g;
+				newData[offset++] = b;
+			}
+		}
+		//LOGD("dealloc");
+		DeallocImage();
+		//LOGD("dealloc ok");
+		this->type = IMG_TYPE_RGB;
+		this->resultData = newData;
+		
+	}
+	else
+	{
+		SYS_FatalExit("CImageData::ConvertToRGB: image type %2.2x not implemented", this->type);
 	}
 	//LOGD("CImageData::ConvertToRGBA: done");
 }
@@ -1995,7 +2126,7 @@ void CImageData::ConvertToShortCount()
 	}
 
 	short unsigned int *newData = new short unsigned int [this->width * this->height];
-	byte *imageData = (byte *)this->resultData;
+	u8 *imageData = (u8 *)this->resultData;
 	short unsigned int classNum = 0;
 	map<int, short unsigned int> colors;
 
@@ -2003,9 +2134,9 @@ void CImageData::ConvertToShortCount()
 	{
 		for (int y = 0; y < height; y++)
 		{
-			byte r = imageData[y * width * 3 + x * 3    ];
-			byte g = imageData[y * width * 3 + x * 3 + 1];
-			byte b = imageData[y * width * 3 + x * 3 + 2];
+			u8 r = imageData[y * width * 3 + x * 3    ];
+			u8 g = imageData[y * width * 3 + x * 3 + 1];
+			u8 b = imageData[y * width * 3 + x * 3 + 2];
 
 			int colorVal = 0x00 | (r << 16) | (g << 8) | b;
 			map<int, short unsigned int>::iterator val = colors.find(colorVal);
@@ -2084,7 +2215,7 @@ void CImageData::Save(char *fileName)
 
 	if (this->type == IMG_TYPE_GRAYSCALE)
 	{
-		byte *byteData = (byte *)this->resultData;
+		u8 *byteData = (u8 *)this->resultData;
 
 		for (y = 0; y < height; y++)
 		{
@@ -2097,9 +2228,9 @@ void CImageData::Save(char *fileName)
 	}
 	else if (this->type == IMG_TYPE_RGB)
 	{
-		byte *byteData = (byte *)this->resultData;
+		u8 *byteData = (u8 *)this->resultData;
 		// scale first
-		byte min, max, val;
+		u8 min, max, val;
 
 		max = 0x00;
 		min = 0xFF;
@@ -2127,10 +2258,10 @@ void CImageData::Save(char *fileName)
 				png_byte* row = row_pointers[y];
 				for (int x = 0; x < this->width; x++)
 				{
-					byte val = (byteData[y * (this->width * 3)+ (x * 3)]
+					u8 val = (byteData[y * (this->width * 3)+ (x * 3)]
 							+ byteData[y * (this->width * 3)+ (x * 3) + 1]
 							+ byteData[y * (this->width * 3)+ (x * 3) + 2]) / 3;
-					byte valCalc = ((val - min) * 255) / (max - min);
+					u8 valCalc = ((val - min) * 255) / (max - min);
 					//LOGD("x=%d y=%d val=%d valCalc=%d", x, y, val, valCalc);
 					row[x] = valCalc;
 				}
@@ -2140,16 +2271,16 @@ void CImageData::Save(char *fileName)
 	}
 	else if (this->type == IMG_TYPE_RGBA)
 	{
-		byte *byteData = (byte *)this->resultData;
+		u8 *byteData = (u8 *)this->resultData;
 		for (int y = 0; y < this->height; y++)
 		{
 			png_byte* row = row_pointers[y];
 			for (int x = 0; x < this->width; x++)
 			{
-				byte r = (byteData[y * (this->width * 4)+ (x * 4)]);
-				byte g = (byteData[y * (this->width * 4)+ (x * 4) + 1]);
-				byte b = (byteData[y * (this->width * 4)+ (x * 4) + 2]);
-				byte a = (byteData[y * (this->width * 4)+ (x * 4) + 3]);
+				u8 r = (byteData[y * (this->width * 4)+ (x * 4)]);
+				u8 g = (byteData[y * (this->width * 4)+ (x * 4) + 1]);
+				u8 b = (byteData[y * (this->width * 4)+ (x * 4) + 2]);
+				u8 a = (byteData[y * (this->width * 4)+ (x * 4) + 3]);
 				row[(x*4)] = r;
 				row[(x*4) + 1] = g;
 				row[(x*4) + 2] = b;
@@ -2189,7 +2320,7 @@ void CImageData::Save(char *fileName)
 				for (int x = 0; x < this->width; x++)
 				{
 					unsigned short int val = shortData[y * this->width + x];
-					byte valCalc = ((val - min) * 255) / (max - min);
+					u8 valCalc = ((val - min) * 255) / (max - min);
 					//LOGD("x=%d y=%d val=%d valCalc=%d", x, y, val, valCalc);
 					row[x] = valCalc;
 				}
@@ -2297,15 +2428,15 @@ void CImageData::SaveScaled(char *fileName, short int min, short int max)
 
 	if (this->type == IMG_TYPE_GRAYSCALE)
 	{
-		byte *byteData = (byte *)this->resultData;
+		u8 *byteData = (u8 *)this->resultData;
 
 		for (y = 0; y < height; y++)
 		{
 			png_byte* row = row_pointers[y];
 			for (x = 0; x < width; x++)
 			{
-				byte val = byteData[y * this->width + x];
-				byte valCalc = ((val - min) * 255) / (max - min);
+				u8 val = byteData[y * this->width + x];
+				u8 valCalc = ((val - min) * 255) / (max - min);
 				//LOGD("x=%d y=%d val=%d valCalc=%d", x, y, val, valCalc);
 				row[x] = valCalc;
 			}
@@ -2313,7 +2444,7 @@ void CImageData::SaveScaled(char *fileName, short int min, short int max)
 	}
 	else if (this->type == IMG_TYPE_RGB)
 	{
-		byte *byteData = (byte *)this->resultData;
+		u8 *byteData = (u8 *)this->resultData;
 		//LOGD("SaveScaled: max=%d min=%d", max, min);
 		if (max != min)
 		{
@@ -2322,10 +2453,10 @@ void CImageData::SaveScaled(char *fileName, short int min, short int max)
 				png_byte* row = row_pointers[y];
 				for (int x = 0; x < this->width; x++)
 				{
-					byte val = (byteData[y * (this->width * 3)+ (x * 3)]
+					u8 val = (byteData[y * (this->width * 3)+ (x * 3)]
 							+ byteData[y * (this->width * 3)+ (x * 3) + 1]
 							+ byteData[y * (this->width * 3)+ (x * 3) + 2]) / 3;
-					byte valCalc = ((val - min) * 255) / (max - min);
+					u8 valCalc = ((val - min) * 255) / (max - min);
 					//LOGD("x=%d y=%d val=%d valCalc=%d", x, y, val, valCalc);
 					row[x] = valCalc;
 				}
@@ -2346,7 +2477,7 @@ void CImageData::SaveScaled(char *fileName, short int min, short int max)
 				for (int x = 0; x < this->width; x++)
 				{
 					unsigned short int val = shortData[y * this->width + x];
-					byte valCalc = ((val - min) * 255) / (max - min);
+					u8 valCalc = ((val - min) * 255) / (max - min);
 					//LOGD("x=%d y=%d val=%d valCalc=%d", x, y, val, valCalc);
 					row[x] = valCalc;
 				}
@@ -2434,6 +2565,12 @@ bool CImageData::Load(char *fileName, bool dealloc)
 	if (dealloc)
 		DeallocImage();
 
+	if (SYS_FileExists(fileName) == false)
+	{
+		LOGError("CImageData::Load: file does not exist %s", fileName);
+		return false;
+	}
+	
 	std::vector<unsigned char> image;
 	unsigned imgWidth, imgHeight;
 	unsigned error = lodepng::decode(image, imgWidth, imgHeight, fileName);
@@ -2445,7 +2582,7 @@ bool CImageData::Load(char *fileName, bool dealloc)
 	// If there's an error, display it.
 	if(error != 0)
 	{
-		LOGError("LodePNG error: %s", lodepng_error_text(error));
+		LOGError("LodePNG error: %s fileName=%s", lodepng_error_text(error), fileName);
 		return false;
 	}
 	
@@ -2455,7 +2592,7 @@ bool CImageData::Load(char *fileName, bool dealloc)
 	if (dealloc)
 		this->resultData = new byte[this->width * this->height * 4];
 	
-	byte *byteData = (byte *)this->resultData;
+	u8 *byteData = (u8 *)this->resultData;
 	
 	u32 imageSize = width * height * 4;
 	
@@ -2471,15 +2608,15 @@ bool CImageData::Load(char *fileName, bool dealloc)
 	if (dealloc)
 		DeallocImage();
 
-	png_byte color_type;
-	png_byte bit_depth;
+	png_u8 color_type;
+	png_u8 bit_depth;
 
 	png_structp png_ptr;
 	png_infop info_ptr;
 	int number_of_passes;
 	//png_bytep *row_pointers;
 
-	png_byte header[8];	// 8 is the maximum size that can be checked
+	png_u8 header[8];	// 8 is the maximum size that can be checked
 
 #if defined(ANDROID)
 	// synchronous
@@ -2582,7 +2719,7 @@ bool CImageData::Load(char *fileName, bool dealloc)
 		if (dealloc)
 			this->resultData = new byte[this->width * this->height];
 
-		byte *byteData = (byte *)this->resultData;
+		u8 *byteData = (u8 *)this->resultData;
 
 		for (y = 0; y < height; y++)
 		{
@@ -2634,7 +2771,7 @@ bool CImageData::Load(char *fileName, bool dealloc)
 //		if (dealloc)
 //			this->resultData = new byte[this->width * this->height];
 //
-//		byte *byteData = (byte *)this->resultData;
+//		u8 *byteData = (u8 *)this->resultData;
 //
 //		for (y = 0; y < height; y++)
 //		{
@@ -2642,7 +2779,7 @@ bool CImageData::Load(char *fileName, bool dealloc)
 //			for (x = 0; x < width; x++)
 //			{
 //				float val = (row[x*3] + row[x*3 + 1] + row[x*3 + 2]);
-//				byte val2 = (byte)(val / 3.0f);
+//				u8 val2 = (byte)(val / 3.0f);
 //				byteData[y * this->width + x] = val2;
 //			}
 //		}
@@ -2655,7 +2792,7 @@ bool CImageData::Load(char *fileName, bool dealloc)
 		if (dealloc)
 			this->resultData = new byte[this->width * this->height * 4];
 
-		byte *byteData = (byte *)this->resultData;
+		u8 *byteData = (u8 *)this->resultData;
 
 		for (y = 0; y < height; y++)
 		{
@@ -2668,9 +2805,9 @@ bool CImageData::Load(char *fileName, bool dealloc)
 			for (x = 0; x < width; x++)
 			{
 				//LOGD("x=%d", x);
-				byte r = row[x*3];
-				byte g = row[x*3 + 1];
-				byte b = row[x*3 + 2];
+				u8 r = row[x*3];
+				u8 g = row[x*3 + 1];
+				u8 b = row[x*3 + 2];
 				//LOGD("%4d %4d %2.2x %2.2x %2.2x %2.2x", y, x, r, g, b, a);
 				byteData[y * this->width*4 + (x*4)] = r;
 				byteData[y * this->width*4 + (x*4) + 1] = g;
@@ -2728,7 +2865,7 @@ bool CImageData::Load(char *fileName, bool dealloc)
 		if (dealloc)
 			this->resultData = new byte[this->width * this->height * 4];
 
-		byte *byteData = (byte *)this->resultData;
+		u8 *byteData = (u8 *)this->resultData;
 
 		for (y = 0; y < height; y++)
 		{
@@ -2741,10 +2878,10 @@ bool CImageData::Load(char *fileName, bool dealloc)
 			for (x = 0; x < width; x++)
 			{
 				//LOGD("x=%d", x);
-				byte r = row[x*4];
-				byte g = row[x*4 + 1];
-				byte b = row[x*4 + 2];
-				byte a = row[x*4 + 3];
+				u8 r = row[x*4];
+				u8 g = row[x*4 + 1];
+				u8 b = row[x*4 + 2];
+				u8 a = row[x*4 + 3];
 				//LOGD("%4d %4d %2.2x %2.2x %2.2x %2.2x", y, x, r, g, b, a);
 				byteData[y * this->width*4 + (x*4)] = r;
 				byteData[y * this->width*4 + (x*4) + 1] = g;
@@ -2794,7 +2931,7 @@ bool CImageData::Load(char *fileName, bool dealloc)
 		if (dealloc)
 			this->resultData = new byte[this->width * this->height * 4];
 
-		byte *byteData = (byte *)this->resultData;
+		u8 *byteData = (u8 *)this->resultData;
 
 		for (y = 0; y < height; y++)
 		{
@@ -2807,9 +2944,9 @@ bool CImageData::Load(char *fileName, bool dealloc)
 			for (x = 0; x < width; x++)
 			{
 				//LOGD("x=%d", x);
-				byte r = row[x*6];
-				byte g = row[x*6 + 2];
-				byte b = row[x*6 + 4];
+				u8 r = row[x*6];
+				u8 g = row[x*6 + 2];
+				u8 b = row[x*6 + 4];
 				//LOGD("%4d %4d %2.2x %2.2x %2.2x %2.2x", y, x, r, g, b, a);
 				byteData[y * this->width*4 + (x*4)] = r;
 				byteData[y * this->width*4 + (x*4) + 1] = g;
@@ -2859,7 +2996,7 @@ bool CImageData::Load(char *fileName, bool dealloc)
 		if (dealloc)
 			this->resultData = new byte[this->width * this->height * 4];
 
-		byte *byteData = (byte *)this->resultData;
+		u8 *byteData = (u8 *)this->resultData;
 
 		for (y = 0; y < height; y++)
 		{
@@ -2872,10 +3009,10 @@ bool CImageData::Load(char *fileName, bool dealloc)
 			for (x = 0; x < width; x++)
 			{
 				//LOGD("x=%d", x);
-				byte r = row[x*8];
-				byte g = row[x*8 + 2];
-				byte b = row[x*8 + 4];
-				byte a = row[x*8 + 6];
+				u8 r = row[x*8];
+				u8 g = row[x*8 + 2];
+				u8 b = row[x*8 + 4];
+				u8 a = row[x*8 + 6];
 				//LOGD("%4d %4d %2.2x %2.2x %2.2x %2.2x", y, x, r, g, b, a);
 				byteData[y * this->width*4 + (x*4)] = r;
 				byteData[y * this->width*4 + (x*4) + 1] = g;
@@ -2954,13 +3091,13 @@ void CImageData::RawLoad(char *fileName)
 void CImageData::LoadFromByteBuffer(CByteBuffer *byteBuffer)
 {
 	DeallocImage();
-	byte m = byteBuffer->GetByte();
+	u8 m = byteBuffer->GetByte();
 	if (m != 'G')
 	{
 		LOGError("CImageData::LoadFromByteBuffer: magic not found");
 		return;
 	}
-	byte v = byteBuffer->GetByte();
+	u8 v = byteBuffer->GetByte();
 	if (v != 0x01)
 	{
 		LOGError("CImageData::LoadFromByteBuffer: version unknown (%2.2x)", v);
@@ -3009,7 +3146,7 @@ int CImageData::GetDataLength()
 
 void CImageData::FlipVertically()
 {
-	byte *imageData = (byte*)resultData;
+	u8 *imageData = (byte*)resultData;
 	
 //	unsigned int offset = y * width * 4 + x * 4;
 
@@ -3020,10 +3157,10 @@ void CImageData::FlipVertically()
 	{
 		for (int x = 0; x < this->width; x++)
 		{
-			byte r = imageData[y*w + (x*4) + 0];
-			byte g = imageData[y*w + (x*4) + 1];
-			byte b = imageData[y*w + (x*4) + 2];
-			byte a = imageData[y*w + (x*4) + 3];
+			u8 r = imageData[y*w + (x*4) + 0];
+			u8 g = imageData[y*w + (x*4) + 1];
+			u8 b = imageData[y*w + (x*4) + 2];
+			u8 a = imageData[y*w + (x*4) + 3];
 			
 			imageData[y*w + (x*4) + 0] = imageData[(h-1-y)*w + (x*4) + 0];
 			imageData[y*w + (x*4) + 1] = imageData[(h-1-y)*w + (x*4) + 1];
@@ -3064,7 +3201,7 @@ void CImageData::Scale(float scaleX, float scaleY)
 		SYS_FatalExit();
 	}
 
-	byte *data = (byte *)this->resultData;
+	u8 *data = (u8 *)this->resultData;
 
 	this->resultData = NULL;
 	this->AllocResultImage();
@@ -3073,7 +3210,7 @@ void CImageData::Scale(float scaleX, float scaleY)
 	this->bufferOffsets = IMG_GetBufferOffsets(this->type, this->height, this->width);
 #endif
 
-	byte *newData = (byte *)this->resultData;
+	u8 *newData = (u8 *)this->resultData;
 
 	float origPosX = 0;
 	float origPosY = 0;
@@ -3082,7 +3219,7 @@ void CImageData::Scale(float scaleX, float scaleY)
 		origPosY = 0;
 		for (int y = 0; y < newHeight; y++)
 		{
-			byte val = data[(int)origPosY * oldWidth + (int)origPosX];
+			u8 val = data[(int)origPosY * oldWidth + (int)origPosX];
 			newData[y * newWidth +x] = val;
 			origPosY += scaleStepY;
 		}
@@ -3094,7 +3231,7 @@ void CImageData::Scale(float scaleX, float scaleY)
 	LOGD("CImageData::Scale finished");
 }
 
-void CImageData::DrawLine(int startX, int startY, int endX, int endY, byte r, byte g, byte b)
+void CImageData::DrawLine(int startX, int startY, int endX, int endY, u8 r, u8 g, u8 b)
 {
 	int x0 = startX;
 	int y0 = startY;
@@ -3157,7 +3294,7 @@ void CImageData::DrawLine(int startX, int startY, int endX, int endY, byte r, by
 	}
 }
 
-void CImageData::DrawLine(int startX, int startY, int endX, int endY, byte r, byte g, byte b, byte a)
+void CImageData::DrawLine(int startX, int startY, int endX, int endY, u8 r, u8 g, u8 b, u8 a)
 {
 	int x0 = startX;
 	int y0 = startY;
@@ -3350,6 +3487,290 @@ void CImageData::DrawImage(CImageData *drawImage, int x, int y, int width, int h
 	
 	if (image != drawImage)
 		delete image;
+}
+
+namespace
+{
+	// stb_image callbacks that operate on a CSlrFile
+	int jpegRead(void* user, char* data, int size)
+	{
+		CSlrFile* stream = static_cast<CSlrFile*>(user);
+		return static_cast<int>(stream->Read((byte*)data, size));
+	}
+	void jpegSkip(void* user, int size)
+	{
+		LOGError("CSlrImage: jpegSkip=%d not implemented", size);
+		CSlrFile* stream = static_cast<CSlrFile*>(user);
+		stream->Seek(stream->Tell() + size);
+	}
+	int jpegEof(void* user)
+	{
+		CSlrFile* stream = static_cast<CSlrFile*>(user);
+		return stream->Eof();
+	}
+}
+
+
+void CImageData::StoreToByteBuffer(CByteBuffer *byteBuffer, int compressionType)
+{
+	u8 *imageBuffer = NULL;
+	u32 numBytes;
+	
+	if (this->type == IMG_TYPE_RGB)
+	{
+		numBytes = width*height*3;
+		imageBuffer = this->getRGBResultData();
+	}
+	else if (this->type == IMG_TYPE_RGBA)
+	{
+		numBytes = width*height*4;
+		imageBuffer = this->getRGBAResultData();
+	}
+	else
+	{
+		SYS_FatalExit("CImageData::StoreToByteBuffer: image type %d not supported", this->type);
+	}
+
+	byteBuffer->PutByte('G');
+	byteBuffer->PutByte(0x02);
+	byteBuffer->PutI32(this->width);
+	byteBuffer->PutI32(this->height);
+	byteBuffer->PutU8(this->type);
+	byteBuffer->PutU8(compressionType);
+	
+	if (compressionType == GFX_COMPRESSION_TYPE_UNCOMPRESSED)
+	{
+		byteBuffer->putByte(GFX_COMPRESSION_TYPE_UNCOMPRESSED);		// compression algo 0x00 = no compression
+		byteBuffer->putBytes(imageBuffer, numBytes);
+	}
+	else if (compressionType == GFX_COMPRESSION_TYPE_ZLIB)
+	{
+		uLong outBufferSize = compressBound(numBytes);
+		u8 *outBuffer = new byte[outBufferSize];
+		
+		int result = compress2(outBuffer, &outBufferSize, imageBuffer, numBytes, 9);
+		
+		if (result != Z_OK)
+		{
+			SYS_FatalExit("zlib error: %d", result);
+		}
+		
+		u32 outSize = (u32)outBufferSize;
+		
+		LOGD("..original size=%d compressed=%d", numBytes, outSize);
+		
+		byteBuffer->PutU32(outSize);
+		byteBuffer->PutBytes(outBuffer, outSize);
+	}
+	else if (compressionType == GFX_COMPRESSION_TYPE_JPEG)
+	{
+		CImageData *imageToStore = NULL;
+		if (this->type == IMG_TYPE_RGBA)
+		{
+			imageToStore = new CImageData(this);
+			imageToStore->ConvertToRGB();
+		}
+		else if (this->type == IMG_TYPE_RGB)
+		{
+			imageToStore = this;
+		}
+		else
+		{
+			SYS_FatalExit("CImageData::StoreToByteBuffer: image type %d not supported for compression %d", this->type, compressionType);
+		}
+		
+		numBytes = width*height*3;
+		
+		CImageDataRowIter rowIter(imageToStore);
+		
+		unsigned char *jpegBuf = NULL;
+		unsigned long outSize = 0;
+		
+		JPEGWriter writer;
+		writer.header(this->width, this->height, 3, JPEG::COLOR_RGB);
+		writer.setQuality(85);
+		writer.write(&jpegBuf, &outSize, rowIter);
+		
+		byteBuffer->PutU32((unsigned int)outSize);
+		byteBuffer->PutBytes(jpegBuf, (unsigned int)outSize);
+		
+		LOGD("..original size RGB=%d compressed=%d", numBytes, outSize);
+		
+		free(jpegBuf);
+
+		if (imageToStore != this)
+		{
+			delete imageToStore;
+		}
+	}
+	else if (compressionType == GFX_COMPRESSION_TYPE_JPEG_ZLIB)
+	{
+		CImageData *imageToStore = NULL;
+		if (this->type == IMG_TYPE_RGBA)
+		{
+			imageToStore = new CImageData(this);
+			imageToStore->ConvertToRGB();
+		}
+		else if (this->type == IMG_TYPE_RGB)
+		{
+			imageToStore = this;
+		}
+		else
+		{
+			SYS_FatalExit("CImageData::StoreToByteBuffer: image type %d not supported for compression %d", this->type, compressionType);
+		}
+
+		numBytes = width*height*3;
+
+		CImageDataRowIter rowIter(imageToStore);
+		
+		unsigned char *jpegBuf = NULL;
+		unsigned long outJpegSize = 0;
+		
+		// jcmarker.c
+		//  M_SOI   = 0xd8		// StartOfImage marker
+		//	4 bytes - ASCII "JFIF": emit_jfif_app0 (j_compress_ptr cinfo)
+		
+		JPEGWriter writer;
+		writer.header(this->width, this->height, 3, JPEG::COLOR_RGB);
+		writer.setQuality(85);
+		writer.write(&jpegBuf, &outJpegSize, rowIter);
+		
+		
+		uLong outBufferSize = compressBound(outJpegSize);
+		u8 *outBuffer = new byte[outBufferSize];
+		
+		int result = compress2(outBuffer, &outBufferSize, jpegBuf, outJpegSize, 9);
+		
+		if (result != Z_OK)
+		{
+			SYS_FatalExit("zlib error: %d", result);
+		}
+		
+		u32 outSize = (u32)outBufferSize;
+		
+		byteBuffer->putUnsignedInt((unsigned int)outSize);
+		byteBuffer->putBytes(outBuffer, (unsigned int)outSize);
+		
+		LOGD("..original size RGB=%d compressed=%d", numBytes, outSize);
+		
+		free(jpegBuf);
+		delete [] outBuffer;
+	}
+}
+
+CImageData *CImageData::GetFromByteBuffer(CByteBuffer *byteBuffer)
+{
+	if (byteBuffer->GetU8() != 'G')
+	{
+		LOGError("CImageData::GetFromByteBuffer: magic not found");
+		return NULL;
+	}
+	
+	if (byteBuffer->GetU8() != 0x02)
+	{
+		LOGError("CImageData::GetFromByteBuffer: version not correct");
+		return NULL;
+	}
+	
+	int width = byteBuffer->GetI32();
+	int height = byteBuffer->GetI32();
+	u8 type = byteBuffer->GetU8();
+	u8 compressionType = byteBuffer->GetU8();
+	
+	u8 *imageBuffer = NULL;
+	
+	int numBytes;
+	if (type == IMG_TYPE_RGB)
+	{
+		numBytes = width*height*3;
+	}
+	else if (type == IMG_TYPE_RGBA)
+	{
+		numBytes = width*height*4;
+	}
+	else
+	{
+		SYS_FatalExit("CImageData::StoreToByteBuffer: image type %d not supported", type);
+	}
+
+	if (compressionType == GFX_COMPRESSION_TYPE_UNCOMPRESSED)
+	{
+		imageBuffer = (u8*)malloc( numBytes );
+		byteBuffer->GetBytes(imageBuffer, numBytes);
+	}
+	else if (compressionType == GFX_COMPRESSION_TYPE_ZLIB)
+	{
+		imageBuffer = (u8*)malloc( numBytes );
+
+		u32 compressedSize = byteBuffer->GetU32();
+		u8 *compressedData = (u8*)malloc( compressedSize );
+		byteBuffer->GetBytes(compressedData, compressedSize);
+		CSlrFileMemory *memFile = new CSlrFileMemory(compressedData, compressedSize);
+		
+		CSlrFileZlib *fileZlib = new CSlrFileZlib(memFile);
+		fileZlib->Read(imageBuffer, numBytes);
+		
+		delete fileZlib;
+		free(compressedData);
+		
+		delete memFile;
+	}
+	else if (compressionType == GFX_COMPRESSION_TYPE_JPEG)
+	{
+		u32 compressedSize = byteBuffer->GetU32();
+		u8 *compressedData = (u8*)malloc( compressedSize );
+		byteBuffer->GetBytes(compressedData, compressedSize);
+		CSlrFileMemory *memFile = new CSlrFileMemory(compressedData, compressedSize);
+
+		stbi_io_callbacks callbacks;
+		callbacks.read = &jpegRead;
+		callbacks.skip = &jpegSkip;
+		callbacks.eof  = &jpegEof;
+		
+		int jpegWidth, jpegHeight, jpegChannels;
+		imageBuffer = stbi_load_from_callbacks(&callbacks, memFile, &jpegWidth, &jpegHeight, &jpegChannels, STBI_rgb_alpha);
+		
+		//LOGD("failure=%s", stbi_failure_reason());
+		
+		LOGD("jpeg loaded: width=%d height=%d channels=%d", jpegWidth, jpegHeight, jpegChannels);
+		
+		free(compressedData);
+		delete memFile;
+	}
+	else if (compressionType == GFX_COMPRESSION_TYPE_JPEG_ZLIB)
+	{
+		u32 compressedSize = byteBuffer->GetU32();
+		u8 *compressedData = (u8*)malloc( compressedSize );
+		byteBuffer->GetBytes(compressedData, compressedSize);
+		CSlrFileMemory *memFile = new CSlrFileMemory(compressedData, compressedSize);
+		
+		
+		CSlrFileZlib *fileZlib = new CSlrFileZlib(memFile);
+		fileZlib->fileSize = compressedSize;
+		
+		
+		stbi_io_callbacks callbacks;
+		callbacks.read = &jpegRead;
+		callbacks.skip = &jpegSkip;
+		callbacks.eof  = &jpegEof;
+		
+		int jpegWidth, jpegHeight, jpegChannels;
+		imageBuffer = stbi_load_from_callbacks(&callbacks, fileZlib, &jpegWidth, &jpegHeight, &jpegChannels, STBI_rgb_alpha);
+		
+		//LOGD("failure=%s", stbi_failure_reason());
+		
+		LOGD("jpeg-zlib loaded: width=%d height=%d channels=%d", jpegWidth, jpegHeight, jpegChannels);
+		
+		delete fileZlib;
+		
+		free(compressedData);
+		delete memFile;
+	}
+	else SYS_FatalExit("CImageData::GetFromByteBuffer: unknown compression type %2.2x", compressionType);
+	
+	CImageData *imageData = new CImageData(width, height, type, imageBuffer);
+	return imageData;
 }
 
 

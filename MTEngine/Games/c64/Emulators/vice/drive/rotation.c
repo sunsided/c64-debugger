@@ -238,6 +238,7 @@ inline static void write_next_bit(drive_t *dptr, int value)
         return;
     }
     dptr->GCR_dirty_track = 1;
+	dptr->GCR_dirty_track_for_snapshot = 1;
     if (value) {
         dptr->GCR_track_start_ptr[byte_offset] |= 1 << bit;
     } else {
@@ -872,6 +873,7 @@ static void rotation_1541_p64(drive_t *dptr, int ref_cycles)
                     /* Remove pulse */
                     P64PulseStreamFreePulse(P64PulseStream, P64PulseStream->CurrentIndex);
                     dptr->P64_dirty = 1;
+					dptr->P64_dirty_for_snapshot = 1;
                 } else if (head_write) {
                     /* Add a strong flux pulse */
                     if ((P64PulseStream->CurrentIndex >= 0) &&
@@ -879,10 +881,12 @@ static void rotation_1541_p64(drive_t *dptr, int ref_cycles)
                         if (P64PulseStream->Pulses[P64PulseStream->CurrentIndex].Strength != 0xffffffffUL) {
                             P64PulseStream->Pulses[P64PulseStream->CurrentIndex].Strength = 0xffffffffUL;
                             dptr->P64_dirty = 1;
+							dptr->P64_dirty_for_snapshot = 1;
                         }
                     } else {
                         P64PulseStreamAddPulse(P64PulseStream, rptr->PulseHeadPosition, 0xffffffffUL);
                         dptr->P64_dirty = 1;
+						dptr->P64_dirty_for_snapshot = 1;
                     }
                     P64PulseStream->CurrentIndex = P64PulseStream->Pulses[P64PulseStream->CurrentIndex].Next;
                     head_write = 0;

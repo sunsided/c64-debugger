@@ -138,6 +138,7 @@ int fsimage_dxx_write_half_track(disk_image_t *image, unsigned int half_track,
     }
 
     /* Make sure the stream is visible to other readers.  */
+	LOGD("fflush(fsimage->fd)");
     fflush(fsimage->fd);
     return 0;
 }

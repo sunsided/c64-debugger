@@ -42,6 +42,7 @@ public:
 	CByteBuffer(uint8  *buffer, int size);
 	CByteBuffer(int size);
 	CByteBuffer(char *fileName);
+	CByteBuffer(char *fileName, bool hasHeader);
 	CByteBuffer(CSlrFile *file);
 	CByteBuffer(CSlrFile *file, bool readHeader);
 	CByteBuffer(char *filePath, uint8 fileType);
@@ -56,7 +57,8 @@ public:
 	void Reset();
 	void SetData(uint8 *s, u32 len);
 	void InsertBytes(CByteBuffer *byteBuffer);
-	bool isEof();
+	bool IsEof();
+	bool IsEmpty();
 	void ForwardToEnd();
 	void putByte(uint8  b);
 	uint8  getByte();
@@ -64,13 +66,13 @@ public:
 	uint8  GetU8();
 	void PutByte(uint8  b);
 	uint8  GetByte();
-	void putBytes(uint8  *b, int len);
-	void PutBytes(uint8  *b, int len);
-	void putBytes(uint8  *b, int begin, int len);
-	uint8  *getBytes(int len);
-	uint8  *GetBytes(int len);
-	void getBytes(uint8  *b, int len);
-	void GetBytes(uint8  *b, int len);
+	void putBytes(uint8  *b, unsigned int len);
+	void PutBytes(uint8  *b, unsigned int len);
+	void putBytes(uint8  *b, unsigned int begin, unsigned int len);
+	uint8  *getBytes(unsigned int len);
+	uint8  *GetBytes(unsigned int len);
+	void getBytes(uint8  *b, unsigned int len);
+	void GetBytes(uint8  *b, unsigned int len);
 	void putByteBuffer(CByteBuffer *byteBuffer);
 	CByteBuffer *getByteBuffer();
 	void putString(char *str);

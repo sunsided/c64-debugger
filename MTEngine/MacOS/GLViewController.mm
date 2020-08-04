@@ -220,9 +220,22 @@
 	[scene setViewportRect:[openGLView bounds]];
 }
 
+- (void) windowDidLoad
+{
+	// NOTE this is not called as we do not have window that is loaded
+	LOGD("windowDidLoad");
+}
+
 - (void) awakeFromNib
 {
 	[NSApp setDelegate: self];
+
+	// TODO: auto
+	//guard let data = UserDefaults.standard.data(forKey: key),
+	//let frame = NSKeyedUnarchiver.unarchiveObject(with: data) as? NSRect else {
+	//	return
+	// }
+//	window?.setFrame(frame, display: true)
 	
 	isAltKeyDown = false;
 	isShiftKeyDown = false;
@@ -243,10 +256,39 @@
 	NSWindow *mainWindow = [openGLView window];
 	
 	[mainWindow setAcceptsMouseMovedEvents:YES];
-	
 	[mainWindow setDelegate:self];
+	
+	[self restoreMainWindowPosition];
 
 	SYS_UpdateMenuItems();
+}
+
+- (void)storeMainWindowPosition
+{
+	NSWindow *mainWindow = [openGLView window];
+	NSRect frame = mainWindow.frame;
+	
+	[[NSUserDefaults standardUserDefaults] setObject:NSStringFromRect(frame) forKey:@"MainWindowFrameKey"];
+}
+
+- (void)restoreMainWindowPosition
+{	
+	NSWindow *mainWindow = [openGLView window];
+	
+	NSString *winFrameString = [[NSUserDefaults standardUserDefaults] stringForKey:@"MainWindowFrameKey"];
+	
+	if (winFrameString != nil)
+	{
+		NSRect savedRect = NSRectFromString(winFrameString);
+		if (CGRectContainsRect([NSScreen mainScreen].visibleFrame, savedRect))
+		{
+			if (savedRect.size.width > 10 && savedRect.size.height > 10)
+			{
+				[mainWindow setFrame:savedRect display:NO];
+			}
+		}
+	}
+	
 }
 
 - (void)windowDidBecomeKey:(NSNotification *)notification
@@ -271,6 +313,21 @@
 	
 	SYS_ApplicationEnteredBackground();
 
+}
+
+- (void)windowWillClose:(NSNotification *)notification
+{
+	LOGM("windowWillClose");
+	
+	// TODO: auto
+//	guard let frame = window?.frame else {
+//		return
+//	}
+//	
+//	let data = NSKeyedArchiver.archivedData(withRootObject: frame)
+//	UserDefaults.standard.set(data, forKey: key)
+	
+	SYS_ApplicationShutdown();
 }
 
 - (bool)isWindowFullScreen
@@ -571,6 +628,7 @@ bool wasKeyDownControl = false;
 		if (key == quitKeyCode && isShift == quitIsShift && isAlt == quitIsAlt && isControl == quitIsControl)
 		{
 			LOGM("QUIT.");
+			SYS_ApplicationShutdown();
 			gSoundEngine->StopAudioUnit();
 			[self stopAnimation];
 			//exit(0);
@@ -589,6 +647,7 @@ bool wasKeyDownControl = false;
 		if (keyCode == quitKeyCode && isShift == quitIsShift && isAlt == quitIsAlt && isControl == quitIsControl)
 		{
 			LOGM("QUIT.");
+			SYS_ApplicationShutdown();
 			gSoundEngine->StopAudioUnit();
 			[self stopAnimation];
 			//exit(0);
@@ -1013,6 +1072,11 @@ bool wasKeyDownControl = false;
 {
 	return YES;
 }
+
+//- (void)windowWillClose:(NSNotification *)notification
+//{
+//	
+//}
 
 - (BOOL)application:(NSApplication *)sender openFile:(NSString *)filename
 {

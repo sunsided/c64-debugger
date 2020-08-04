@@ -23,7 +23,7 @@ extern "C" {
 #include "CViewDataDump.h"
 #include "CViewDisassemble.h"
 #include "CViewC64VicDisplay.h"
-
+#include "C64SettingsStorage.h"
 
 CViewC64VicControl::CViewC64VicControl(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
 									   CViewC64VicDisplay *vicDisplay)
@@ -42,6 +42,9 @@ CViewC64VicControl::CViewC64VicControl(GLfloat posX, GLfloat posY, GLfloat posZ,
 	
 	
 	this->AddGuiButtons();
+	
+	forceGrayscaleColors = false;
+	forceDataFromRam = false;
 	
 	//
 	txtAutolockRasterPC = new CSlrString("RASTER");
@@ -410,7 +413,7 @@ void CViewC64VicControl::HideGuiButtons()
 
 void CViewC64VicControl::SetAutoScrollModeUI(int newMode)
 {
-	LOGD("CViewC64VicControl::SetAutoScrollModeUI: %d", newMode);
+//	LOGD("CViewC64VicControl::SetAutoScrollModeUI: %d", newMode);
 	
 	if (newMode == AUTOSCROLL_DISASSEMBLE_RASTER_PC)
 	{
@@ -1058,6 +1061,7 @@ void CViewC64VicControl::Render()
 	// render UI
 	CGuiView::Render();
 }
+
 bool CViewC64VicControl::ListElementPreSelect(CGuiList *listBox, int elementNum)
 {
 	LOGD("CViewC64VicControl::ListElementPreSelect");
@@ -1088,17 +1092,33 @@ void CViewC64VicControl::UpdateApplyScrollRegister()
 	this->vicDisplay->applyScrollRegister = btnApplyScrollRegister->IsOn();
 }
 
+void CViewC64VicControl::SetGridLines(bool isOn)
+{
+	this->vicDisplay->showGridLines = isOn;
+	c64SettingsVicDisplayShowGridLines = isOn;
+	btnShowGrid->SetOn(isOn);
+}
+
+void CViewC64VicControl::SetApplyScroll(bool isOn)
+{
+	c64SettingsVicDisplayApplyScroll = isOn;
+	btnApplyScrollRegister->SetOn(isOn);
+	UpdateApplyScrollRegister();
+}
+
 bool CViewC64VicControl::ButtonSwitchChanged(CGuiButtonSwitch *button)
 {
 	if (button == btnShowGrid)
 	{
-		this->vicDisplay->showGridLines = btnShowGrid->IsOn();
+		SetGridLines(btnShowGrid->IsOn());
+		C64DebuggerStoreSettings();
 		return true;
 	}
 	
 	if (button == btnApplyScrollRegister)
 	{
-		UpdateApplyScrollRegister();
+		SetApplyScroll(btnApplyScrollRegister->IsOn());
+		C64DebuggerStoreSettings();
 		return true;
 	}
 	
@@ -1179,6 +1199,7 @@ void CViewC64VicControl::SwitchBorderType()
 	
 	this->vicDisplay->SetShowDisplayBorderType(borderType);
 	
+	c64SettingsVicDisplayBorderType = borderType;
 	C64DebuggerStoreSettings();
 
 }

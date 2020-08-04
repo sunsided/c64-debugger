@@ -3,6 +3,7 @@
 #include "C64DebugInterface.h"
 #include "CGuiMain.h"
 #include "CViewC64.h"
+#include "CViewC64VicControl.h"
 #include "C64CharsetHires.h"
 #include "C64CharHires.h"
 #include "CImageData.h"
@@ -16,6 +17,8 @@ C64VicDisplayCanvasHiresText::C64VicDisplayCanvasHiresText(CViewC64VicDisplay *v
 void C64VicDisplayCanvasHiresText::RefreshScreen(vicii_cycle_state_t *viciiState, CImageData *imageDataScreen,
 												 u8 backgroundColorAlpha, u8 foregroundColorAlpha)
 {
+	//LOGD("C64VicDisplayCanvasHiresText::RefreshScreen, this=%x", this);
+	
 	this->viciiState = viciiState;
 	
 	// refresh texture of C64's character mode screen
@@ -30,43 +33,79 @@ void C64VicDisplayCanvasHiresText::RefreshScreen(vicii_cycle_state_t *viciiState
 	
 	vicDisplay->GetViciiPointers(viciiState, &screen_ptr, &color_ram_ptr, &chargen_ptr, &bitmap_low_ptr, &bitmap_high_ptr, colors);
 	
-	u8 bitmap;
-	
-	u8 bgcolor;
-	u8 bgColorR, bgColorG, bgColorB;
-	u8 fgcolor;
-	u8 fgColorR, fgColorG, fgColorB;
-	
-	bgcolor = colors[1]; //vicii.regs[0x21] & 0xf;
-	
-	debugInterface->GetCBMColor(bgcolor, &bgColorR, &bgColorG, &bgColorB);
-	
-	for (int i = 0; i < 25; i++)
+	if (vicDisplay->viewVicControl && vicDisplay->viewVicControl->forceGrayscaleColors)
 	{
-		for (int j = 0; j < 40; j++)
+		u8 bitmap;
+		
+		u8 bgColorR = 0, bgColorG = 0, bgColorB = 0;
+		u8 fgColorR = 255, fgColorG = 255, fgColorB = 255;
+		
+		for (int i = 0; i < 25; i++)
 		{
-			fgcolor = color_ram_ptr[(i * 40) + j] & 0xf;
-			debugInterface->GetCBMColor(fgcolor, &fgColorR, &fgColorG, &fgColorB);
-			
-			for (int k = 0; k < 8; k++)
+			for (int j = 0; j < 40; j++)
 			{
-				bitmap = chargen_ptr[(screen_ptr[(i * 40) + j] * 8) + k];
-				for (int l = 0; l < 8; l++)
+				for (int k = 0; k < 8; k++)
 				{
-					if (bitmap & (1 << (7 - l)))
+					bitmap = chargen_ptr[(screen_ptr[(i * 40) + j] * 8) + k];
+					for (int l = 0; l < 8; l++)
 					{
-						//data->colormap[(i * 320 * 8) + (j * 8) + (k * 320) + l] = fgcolor;
-						imageDataScreen->SetPixelResultRGBA(j*8 + l, i*8 + k, fgColorR, fgColorG, fgColorB, foregroundColorAlpha);
-					}
-					else
-					{
-						//data->colormap[(i * 320 * 8) + (j * 8) + (k * 320) + l] = bgcolor;
-						imageDataScreen->SetPixelResultRGBA(j*8 + l, i*8 + k, bgColorR, bgColorG, bgColorB, backgroundColorAlpha);
+						if (bitmap & (1 << (7 - l)))
+						{
+							//data->colormap[(i * 320 * 8) + (j * 8) + (k * 320) + l] = fgcolor;
+							imageDataScreen->SetPixelResultRGBA(j*8 + l, i*8 + k, fgColorR, fgColorG, fgColorB, foregroundColorAlpha);
+						}
+						else
+						{
+							//data->colormap[(i * 320 * 8) + (j * 8) + (k * 320) + l] = bgcolor;
+							imageDataScreen->SetPixelResultRGBA(j*8 + l, i*8 + k, bgColorR, bgColorG, bgColorB, backgroundColorAlpha);
+						}
 					}
 				}
 			}
 		}
 	}
+	else
+	{
+		u8 bitmap;
+		
+		u8 bgcolor;
+		u8 bgColorR, bgColorG, bgColorB;
+		u8 fgcolor;
+		u8 fgColorR, fgColorG, fgColorB;
+		
+		bgcolor = colors[1]; //vicii.regs[0x21] & 0xf;
+		
+		debugInterface->GetCBMColor(bgcolor, &bgColorR, &bgColorG, &bgColorB);
+		
+		for (int i = 0; i < 25; i++)
+		{
+			for (int j = 0; j < 40; j++)
+			{
+				fgcolor = color_ram_ptr[(i * 40) + j] & 0xf;
+				debugInterface->GetCBMColor(fgcolor, &fgColorR, &fgColorG, &fgColorB);
+				
+				for (int k = 0; k < 8; k++)
+				{
+					bitmap = chargen_ptr[(screen_ptr[(i * 40) + j] * 8) + k];
+					for (int l = 0; l < 8; l++)
+					{
+						if (bitmap & (1 << (7 - l)))
+						{
+							//data->colormap[(i * 320 * 8) + (j * 8) + (k * 320) + l] = fgcolor;
+							imageDataScreen->SetPixelResultRGBA(j*8 + l, i*8 + k, fgColorR, fgColorG, fgColorB, foregroundColorAlpha);
+						}
+						else
+						{
+							//data->colormap[(i * 320 * 8) + (j * 8) + (k * 320) + l] = bgcolor;
+							imageDataScreen->SetPixelResultRGBA(j*8 + l, i*8 + k, bgColorR, bgColorG, bgColorB, backgroundColorAlpha);
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	
 }
 
 u8 C64VicDisplayCanvasHiresText::PutCharacterAtRaster(int x, int y, u8 color, int charValue)
@@ -88,10 +127,10 @@ u8 C64VicDisplayCanvasHiresText::PutCharacterAt(int charColumn, int charRow, u8 
 
 	int offset = charColumn + charRow * 40;
 	
-	LOGD("1     poke %04x %02x", screenBase + offset, charValue);
+	LOGF("1     poke %04x %02x", screenBase + offset, charValue);
 	debugInterface->SetByteC64(screenBase + offset, charValue);
 	
-	LOGD("2     poke %04x %02x", 0xD800 + offset, color);
+	LOGF("2     poke %04x %02x", 0xD800 + offset, color);
 	debugInterface->SetByteC64(0xD800 + offset, color);
 	
 	return PAINT_RESULT_OK;
@@ -99,7 +138,7 @@ u8 C64VicDisplayCanvasHiresText::PutCharacterAt(int charColumn, int charRow, u8 
 
 void C64VicDisplayCanvasHiresText::ClearScreen()
 {
-	LOGD("C64VicDisplayCanvasHiresText::ClearScreen");
+	LOGF("C64VicDisplayCanvasHiresText::ClearScreen");
 	ClearScreen(0x20, 0x00);
 }
 
@@ -257,7 +296,7 @@ void C64VicDisplayCanvasHiresText::RenderCanvasSpecificGridValues()
 					
 					//
 					
-					//LOGD("rasterX=%d rasterY=%d", rasterX, rasterY);
+					//LOGF("rasterX=%d rasterY=%d", rasterX, rasterY);
 					
 					sprintfHexCode16WithoutZeroEnding(buf1, vicDisplay->screenAddress + offset);
 					sprintfHexCode8(buf1 + 5, charValue);
@@ -310,11 +349,11 @@ u8 C64VicDisplayCanvasHiresText::PaintDither(bool forceColorReplace, int x, int 
 	
 	// check if starting dither
 	{
-		LOGD("													---- isAltPressed: dither -----");
+		LOGF("													---- isAltPressed: dither -----");
 		{
 			if (ditherMaskPosX == -1 || ditherMaskPosY == -1)
 			{
-				LOGD("******** START DITHER ********");
+				LOGF("******** START DITHER ********");
 				// start dither painting
 				if (colorSource == VICEDITOR_COLOR_SOURCE_LMB)
 				{
@@ -333,7 +372,7 @@ u8 C64VicDisplayCanvasHiresText::PaintDither(bool forceColorReplace, int x, int 
 			
 			int d = (dX + dY) % 2;
 			
-			LOGD("==================== dX=%d dY=%d d=%d", dX, dY, d);
+			LOGF("==================== dX=%d dY=%d d=%d", dX, dY, d);
 			
 			if (d != 0)
 			{
@@ -350,17 +389,17 @@ u8 C64VicDisplayCanvasHiresText::PaintDither(bool forceColorReplace, int x, int 
 ///
 u8 C64VicDisplayCanvasHiresText::ConvertFrom(CImageData *imageData)
 {
-	LOGD("C64VicDisplayCanvasHiresText::ConvertFrom");
+	LOGF("C64VicDisplayCanvasHiresText::ConvertFrom");
 	
 	C64DebugInterface *debugInterface = vicDisplay->debugInterface;
 	
-	CImageData *image = ReducePalette(imageData);
+	CImageData *image = ReducePalette(imageData, vicDisplay);
 	
 	std::vector<C64ColorsHistogramElement *> *colors = GetSortedColorsHistogram(image);
 
 	u8 backgroundColor = (*colors)[0]->color;
 	
-	LOGD("backgroundColor = %d", backgroundColor);
+	LOGF("backgroundColor = %d", backgroundColor);
 	
 	DeleteColorsHistogram(colors);
 	
@@ -380,7 +419,7 @@ u8 C64VicDisplayCanvasHiresText::ConvertFrom(CImageData *imageData)
 	C64CharsetHires *charset = new C64CharsetHires();
 	charset->CreateFromCharset(chargen_ptr);
 	
-	LOGD("...matching chars...");
+	LOGF("...matching chars...");
 	
 	C64CharHires *bitmapChr = new C64CharHires();
 	
@@ -390,7 +429,7 @@ u8 C64VicDisplayCanvasHiresText::ConvertFrom(CImageData *imageData)
 	{
 		for (int xc = 0; xc < 40; xc++)
 		{
-			LOGD(" xc=%d yc=%d", xc, yc);
+			LOGF(" xc=%d yc=%d", xc, yc);
 			int x = xc * 8;
 			int y = yc * 8;
 			
@@ -422,7 +461,7 @@ u8 C64VicDisplayCanvasHiresText::ConvertFrom(CImageData *imageData)
 			
 			for (int i = 0; i < 16; i++)
 			{
-				LOGD(" histogram[%d] = %d", i, histogram[i]);
+				LOGF(" histogram[%d] = %d", i, histogram[i]);
 				
 				if (i == backgroundColor)
 					continue;
@@ -448,7 +487,7 @@ u8 C64VicDisplayCanvasHiresText::ConvertFrom(CImageData *imageData)
 						int p1 = chr->GetPixel(x, y);
 						int p2 = bitmapChr->GetPixel(x, y);
 						
-						//LOGD("  p1=%d p2=%d", p1, p2);
+						//LOGF("  p1=%d p2=%d", p1, p2);
 						if (p1 == p2)
 						{
 							fit++;
@@ -456,7 +495,7 @@ u8 C64VicDisplayCanvasHiresText::ConvertFrom(CImageData *imageData)
 					}
 				}
 				
-				//LOGD("  --> i=%02x fit=%d", i, fit);
+				//LOGF("  --> i=%02x fit=%d", i, fit);
 				fitCharacters[i] = fit;
 			}
 			
@@ -472,16 +511,14 @@ u8 C64VicDisplayCanvasHiresText::ConvertFrom(CImageData *imageData)
 				}
 			}
 			
-			LOGD("  xc=%2d yc=%2d .. c=%02x (fit=%d) '%c'", xc, yc, c, max, c);
+			LOGF("  xc=%2d yc=%2d .. c=%02x (fit=%d) '%c'", xc, yc, c, max, c);
 			
 			//
 			PutCharacterAt(xc, yc, color, c);
 		}
 	}
 	
-	
-	
-	
+	delete bitmapChr;
 	delete charset;
 	delete image;
 	return PAINT_RESULT_OK;

@@ -19,6 +19,7 @@ struct ITNode
 };
 
 ITNode *FUN_ITInsert(ITNode *root, ITInterval i);
+void FUN_ITPrintInOrder(ITNode *root);
 ITInterval *FUN_ITOverlapSearch(ITNode *root, ITInterval i);
 
 

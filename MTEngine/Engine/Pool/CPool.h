@@ -4,7 +4,7 @@
 #include "SYS_Defs.h"
 #include "PoolDefs.h"
 
-#include <pthread.h>
+#include "SYS_Threading.h"
 
 #define WORD u16
 #define BYTE u8
@@ -63,7 +63,7 @@ private:
 	BYTE*			m_pPool;		// The allocation pool of items.
 	BYTE**			m_pFreeStack;	// The stack of deleted items.
 	
-	pthread_mutex_t mutex;
+	CSlrMutex *mutex;
 };
 
 #endif

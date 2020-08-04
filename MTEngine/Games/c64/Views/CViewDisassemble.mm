@@ -6,8 +6,8 @@
 #include "CViewC64.h"
 #include "CViewMemoryMap.h"
 #include "SYS_KeyCodes.h"
-#include "CViewC64Screen.h"
 #include "C64DebugInterface.h"
+#include "AtariDebugInterface.h"
 #include "CGuiEditBoxText.h"
 #include "C64Tools.h"
 #include "CSlrString.h"
@@ -19,6 +19,10 @@
 #include "CViewDisassemble.h"
 #include "C64Symbols.h"
 #include "C64AsmSourceSymbols.h"
+
+#include "CViewC64Screen.h"
+#include "CViewAtariScreen.h"
+#include "CViewNesScreen.h"
 
 #define byte unsigned char
 
@@ -45,6 +49,7 @@ CViewDisassemble::CViewDisassemble(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 	this->name = "CViewDisassemble";
 	
 	this->addrPositions = NULL;
+	this->numberOfLinesBack = 0;
 	
 	this->viewMemoryMap = memoryMap;
 	this->dataAdapter = dataAdapter;
@@ -55,11 +60,7 @@ CViewDisassemble::CViewDisassemble(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 	
 	this->debugInterface = debugInterface;
 
-	this->fontDisassemble = NULL;
-	
-	
-	this->showHexCodes = false;
-	this->showLabels = false;
+	SetViewParameters(posX, posY, posZ, sizeX, sizeY, NULL, 5.0f, 10, 0.0f, false, false, 0.0f, false, false, 0);
 	
 	this->isTrackingPC = true;
 	this->changedByUser = false;
@@ -70,7 +71,7 @@ CViewDisassemble::CViewDisassemble(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 	
 	this->CreateAddrPositions();
 	
-	renderBreakpointsMutex = new CSlrMutex();
+	renderBreakpointsMutex = new CSlrMutex("CViewDisassemble::renderBreakpointsMutex");
 	
 	this->editCursorPos = EDIT_CURSOR_POS_NONE;
 	
@@ -158,7 +159,20 @@ void CViewDisassemble::DeleteCodeLabels()
 	//       all access to codeLabels should go through currently selected segment.
 	//       This is left as-is for now due to not having 1541 Drive labels properly
 	//       associated to a segment, and due to no time to fiddle before upcoming release :)
-	if (viewC64->symbols->asmSource)
+	
+	// TODO: Generalize me
+	CDebugInterface *debugInterface = NULL;
+	if (viewC64->debugInterfaceC64)
+	{
+		debugInterface = viewC64->debugInterfaceC64;
+	}
+	else if (viewC64->debugInterfaceAtari)
+	{
+		debugInterface = viewC64->debugInterfaceAtari;
+	}
+	
+	
+	if (debugInterface->symbols->asmSource)
 	{
 		// do not delete code labels, this might leak memory
 		return;
@@ -1597,6 +1611,8 @@ int CViewDisassemble::UpdateDisassembleOpcodeLine(float py, int addr, uint8 op, 
 	addrPositions[addrPositionCounter].y = py;
 	addrPositionCounter++;
 	
+//	LOGD("addrPositionCounter=%d", addrPositionCounter);
+	
 	int numBytesPerOp = opcodes[op].addressingLength;
 	
 	int newAddress = addr + numBytesPerOp;
@@ -1695,7 +1711,7 @@ void CViewDisassemble::UpdateDisassemble(int startAddress, int endAddress)
 	
 	do
 	{
-		//LOGD("renderAddress=%4.4x l=%4.4x", renderAddress, memoryLength);
+//		LOGD("renderAddress=%4.4x l=%4.4x addrPositionCounter=%d py=%f posEndY=%f", renderAddress, memoryLength, addrPositionCounter, py, posEndY);
 		if (renderAddress >= memoryLength)
 			break;
 		
@@ -2068,10 +2084,11 @@ void CViewDisassemble::StartEditingAtCursorPosition(int newCursorPos, bool goLef
 			}
 		}
 		
-		int cp = newCursorPos-EDIT_CURSOR_POS_HEX1;
-		
-		editHex->SetValue(op[cp], 2);
-
+		if (newCursorPos != EDIT_CURSOR_POS_MNEMONIC)
+		{
+			int cp = newCursorPos-EDIT_CURSOR_POS_HEX1;
+			editHex->SetValue(op[cp], 2);
+		}
 	}
 	
 	if (newCursorPos == EDIT_CURSOR_POS_MNEMONIC)
@@ -2100,6 +2117,8 @@ void CViewDisassemble::Render()
 //	if (debugInterface->GetSettingIsWarpSpeed() == true)
 //		return;
 	
+	SetClipping(this->posX, this->posY, this->sizeX, this->sizeY);
+	
 	this->renderBreakpointsMutex->Lock();
 	
 	float colorBackgroundR, colorBackgroundG, colorBackgroundB;
@@ -2124,6 +2143,8 @@ void CViewDisassemble::Render()
 	}
 	
 	this->renderBreakpointsMutex->Unlock();
+
+	ResetClipping();
 }
 
 void CViewDisassemble::Render(GLfloat posX, GLfloat posY)
@@ -2340,11 +2361,21 @@ bool CViewDisassemble::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 	
 	if (keyboardShortcut == viewC64->keyboardShortcuts->kbsMakeJmp)
 	{
-		LOGTODO("MAKEJMP: kbsMakeJmp should be in disassemble");
+		MakeJMPToCursor();
 		
-		viewC64->debugInterfaceC64->MakeJmpNoReset(this->dataAdapter, this->cursorAddress);
-		
-		viewC64->viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		// TODO: make generic and iterate over interfaces
+		if (viewC64->debugInterfaceC64)
+		{
+			viewC64->viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		}
+		if (viewC64->debugInterfaceAtari)
+		{
+			viewC64->viewAtariScreen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		}
+		if (viewC64->debugInterfaceNes)
+		{
+			viewC64->viewNesScreen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		}
 		return true;
 	}
 
@@ -2473,15 +2504,6 @@ bool CViewDisassemble::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 		StartEditingAtCursorPosition(EDIT_CURSOR_POS_MNEMONIC, false);
 		return true;
 	}
-	
-	// TODO: fix me, this is workaround
-	if (viewC64->currentScreenLayoutId == SCREEN_LAYOUT_C64_VIC_DISPLAY)
-	{
-		if (viewC64->viewC64VicDisplay->KeyDown(keyCode, isShift, isAlt, isControl))
-			return true;
-	}
-
-	
 	
 	return CGuiView::KeyDown(keyCode, isShift, isAlt, isControl);
 }
@@ -2748,6 +2770,12 @@ void CViewDisassemble::ScrollUp()
 bool CViewDisassemble::DoScrollWheel(float deltaX, float deltaY)
 {
 	//LOGD("CViewDisassemble::DoScrollWheel: %f %f", deltaX, deltaY);
+	
+	if (this->IsInside(guiMain->mousePosX, guiMain->mousePosY) == false)
+	{
+		return false;
+	}
+	
 	int dy = fabs(round(deltaY));
 	
 	if (guiMain->isShiftPressed)
@@ -2773,6 +2801,64 @@ bool CViewDisassemble::DoScrollWheel(float deltaX, float deltaY)
 	return false;
 }
 
+void CViewDisassemble::MakeJMPToCursor()
+{
+	this->debugInterface->MakeJmpNoReset(this->dataAdapter, this->cursorAddress);
+}
+
+void CViewDisassemble::MakeJMPToAddress(u16 address)
+{
+	this->debugInterface->MakeJmpNoReset(this->dataAdapter, address);
+}
+
+void CViewDisassemble::SetBreakpointPC(u16 address, bool setOn)
+{
+	debugInterface->LockMutex();
+	
+	bool found = false;
+	
+	// keep local copy to not lock mutex during rendering
+	std::map<uint16, uint16>::iterator it2 = renderBreakpoints.find(address);
+	if (it2 != renderBreakpoints.end())
+	{
+		if (setOn)
+		{
+			// breakpoint is already there, do not create new
+			LOGError("CViewDisassemble::SetBreakpointPC: breakpoint already existing addr=%04x", address);
+		}
+		else
+		{
+			// remove breakpoint
+			LOGD("CViewDisassemble::SetBreakpointPC: remove breakpoint addr=%04x", address);
+			
+			renderBreakpoints.erase(it2);
+			debugInterface->RemoveAddrBreakpoint(breakpointsMap, address);
+		}
+		
+		found = true;
+	}
+	
+	if (found == false)
+	{
+		if (setOn)
+		{
+			// add breakpoint
+			LOGD("CViewDisassemble::SetBreakpointPC: add breakpoint addr=%04x", address);
+			renderBreakpoints[address] = address;
+			
+			CAddrBreakpoint *breakpoint = new CAddrBreakpoint(address);
+			breakpoint->actions = ADDR_BREAKPOINT_ACTION_STOP;
+			
+			debugInterface->AddAddrBreakpoint(breakpointsMap, breakpoint);
+		}
+		else
+		{
+			LOGError("CViewDisassemble::SetBreakpointPC: breakpoint not found addr=%04x", address);
+		}
+	}
+	
+	debugInterface->UnlockMutex();
+}
 
 void CViewDisassemble::Assemble(int assembleAddress)
 {
@@ -2864,7 +2950,7 @@ int CViewDisassemble::Assemble(int assembleAddress, char *lineBuffer, bool showM
 
 #define FAIL(ErrorMessage)  		delete textParser; \
 									strcpy(errorMessageBuf, (ErrorMessage)); \
-									LOGError("CViewDisassemble::error: %s", (ErrorMessage)); \
+									LOGError("CViewDisassemble::error: %s lineBuffer=%s", (ErrorMessage), lineBuffer); \
 									isErrorCode = true; \
 									return -1;
 
@@ -3101,6 +3187,11 @@ int CViewDisassemble::Assemble(int assembleAddress, char *lineBuffer, int *instr
 	if (*instructionOpCode == -1)
 	{
 		*instructionOpCode = AssembleFindOp(mnemonic, addressingMode);
+		
+		if (*instructionOpCode == -1)
+		{
+			*instructionOpCode = AssembleFindOp(mnemonic, ADDR_ABS);
+		}
 	}
 
 	// found opcode?
@@ -3195,7 +3286,17 @@ void CViewDisassemble::CreateAddrPositions()
 	if (addrPositions != NULL)
 		delete [] addrPositions;
 	
-	addrPositions = new addrPosition_t[(numberOfLinesBack*5)+1];
+	int numVisibleLines = (sizeY / fontSize);
+	int numLines = numVisibleLines*2 + numberOfLinesBack + 1;	// additional for scrolling
+	if (numLines >= 0)
+	{
+//		addrPositions = new addrPosition_t[(numberOfLinesBack*5)+3];
+		addrPositions = new addrPosition_t[numLines];
+	}
+	else
+	{
+		addrPositions = NULL;
+	}
 }
 
 

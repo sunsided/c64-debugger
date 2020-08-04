@@ -26,7 +26,14 @@ CSoundEngine::CSoundEngine()
 {
 	LOGA("CSoundEngine init");
 
-	mutex = new CSlrMutex();
+	mutex = new CSlrMutex("CSoundEngine");
+	
+	int numDevices = Pa_GetDeviceCount();
+	LOGD("CSoundEngine numDevices=%d", numDevices);
+
+//	char *buf = SYS_GetCharBuf();
+//	sprintf(buf, "numDevices=%d", numDevices);
+//	SYS_ShowError(buf);
 
 	deviceOutIndex = Pa_GetDefaultOutputDevice();
 	if (deviceOutIndex == paNoDevice)
@@ -382,14 +389,14 @@ bool CSoundEngine::StartAudioUnit(bool isPlayback, bool isRecording, int recordi
 
 		if( err != paNoError )
 		{
-			SYS_FatalExit("Opening output stream failed");
+			SYS_FatalExit("Opening output stream failed: %s", Pa_GetErrorText( err ));
 		}
 		
 		LOGA("Pa_StartStream");
 		err = Pa_StartStream( streamOutput );
         if( err != paNoError )
 		{
-			SYS_FatalExit("Starting output stream failed");
+			SYS_FatalExit("Starting output stream failed: %s", Pa_GetErrorText( err ));
 		}
 
 		// copy device output name
@@ -427,7 +434,7 @@ bool CSoundEngine::StartAudioUnit(bool isPlayback, bool isRecording, int recordi
 		
 		if( err != paNoError )
 		{
-			SYS_FatalExit("Opening input stream failed");
+			SYS_FatalExit("Opening input stream failed: %s", Pa_GetErrorText( err ));
 		}
 		
 		if (gSoundEngine->recordedData == NULL)
@@ -525,8 +532,6 @@ void CSoundEngine::LockMutex(char *_whoLocked)
 
 	mutex->Lock();
 
-//	pthread_mutex_lock(&xmPlayerMutex);
-	
 	//LOGD("CSoundEngine::LockMutex: %s success", _whoLocked);
 }
 
@@ -541,8 +546,6 @@ void CSoundEngine::UnlockMutex(char *_whoLocked)
 	
 	mutex->Unlock();
 
-	//pthread_mutex_unlock(&xmPlayerMutex);
-	
 	//this->whoLocked = NULL;
 	//LOGD("CSoundEngine::UnlockMutex: %s success", _whoLocked);
 }
@@ -597,10 +600,10 @@ void playbackFakeCallback(int numSamples)
 			if (xmAudioBufferPos >= xmAudioBufferLen)
 			{
 				// render one buffer
-				pthread_mutex_lock(&gSoundEngine->xmPlayerMutex);	
+				gSoundEngine->mutex->LockMutex();
 				//LOGF("render");
 				xmAudioBufferLen = gSoundEngine->xmPlayer->Render(xmAudioBuffer, SOUND_BUFFER_SIZE);
-				pthread_mutex_unlock(&gSoundEngine->xmPlayerMutex);					
+				gSoundEngine->mutex->UnlockMutex();
 				
 				//LOGF("xmAudioBufferLen=%d", xmAudioBufferLen);
 				if (xmAudioBufferLen >= SOUND_BUFFER_SIZE)

@@ -5,7 +5,8 @@
 #include "CSlrFile.h"
 #include "ivorbiscodec.h"
 #include "ivorbisfile.h"
-#include <pthread.h>
+
+class CSlrMutex;
 
 class CSlrMusicFileOgg : public CSlrMusicFile
 {
@@ -66,8 +67,7 @@ private:
 	int oggAudioBufferPos;// = 0;
 	int oggAudioBufferLen;// = 0;
 
-	pthread_mutex_t oggFileMutex;
-
+	CSlrMutex *oggFileMutex;
 };
 
 #endif

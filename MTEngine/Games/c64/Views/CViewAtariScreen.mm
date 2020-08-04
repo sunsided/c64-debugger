@@ -16,8 +16,8 @@ CViewAtariScreen::CViewAtariScreen(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 	
 	this->debugInterface = debugInterface;
 	
-	int w = 512;
-	int h = 512;
+	int w = 512 * debugInterface->screenSupersampleFactor;
+	int h = 512 * debugInterface->screenSupersampleFactor;
 	imageDataScreenDefault = new CImageData(w, h, IMG_TYPE_RGBA);
 	imageDataScreenDefault->AllocImage(false, true);
 	
@@ -59,6 +59,21 @@ CViewAtariScreen::CViewAtariScreen(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 
 	InitRasterColorsFromScheme();
 }
+
+void CViewAtariScreen::SetSupersampleFactor(int supersampleFactor)
+{
+	guiMain->LockMutex();
+	debugInterface->LockRenderScreenMutex();
+	
+	debugInterface->SetSupersampleFactor(supersampleFactor);
+	
+	CImageData *screenData = debugInterface->GetScreenImageData();
+	this->imageScreen->RefreshImageParameters(screenData,  RESOURCE_PRIORITY_STATIC, false);
+	VID_PostImageBinding(imageScreenDefault, NULL);
+	debugInterface->UnlockRenderScreenMutex();
+	guiMain->UnlockMutex();
+}
+
 
 CViewAtariScreen::~CViewAtariScreen()
 {
@@ -144,9 +159,8 @@ void CViewAtariScreen::RefreshScreen()
 	}
 #endif
 	
-	imageScreen->Deallocate();
 	imageScreen->SetLoadImageData(screen);
-	imageScreen->BindImage();
+	imageScreen->ReBindImage();
 	imageScreen->loadImageData = NULL;
 	
 	debugInterface->UnlockRenderScreenMutex();
@@ -188,7 +202,7 @@ void CViewAtariScreen::Render()
 		 sizeY,
 		 0.0f, 1.0f, screenTexEndX, screenTexEndY);
 	
-	if (true) //showGridLines)
+	if (showGridLines)
 	{
 		// raster screen in hex:
 		// startx = 68 (88) endx = 1e8 (1c8)
@@ -503,10 +517,43 @@ void CViewAtariScreen::FinishTouches()
 
 int CViewAtariScreen::GetJoystickAxis(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
-	if (c64SettingsJoystickIsOn)
+	// because Windows is totally messed up with right-Alt key, let's compare only keyCodes
+	if (c64SettingsUseKeyboardAsJoystick)
+	{
+		if (viewC64->keyboardShortcuts->kbsJoystickFire->keyCode == keyCode)
+		{
+			return JOYPAD_FIRE;
+		}
+		if (viewC64->keyboardShortcuts->kbsJoystickUp->keyCode == keyCode)
+		{
+			return JOYPAD_N;
+		}
+		if (viewC64->keyboardShortcuts->kbsJoystickDown->keyCode == keyCode)
+		{
+			return JOYPAD_S;
+		}
+		if (viewC64->keyboardShortcuts->kbsJoystickLeft->keyCode == keyCode)
+		{
+			return JOYPAD_E;	// TODO: fix me?
+		}
+		if (viewC64->keyboardShortcuts->kbsJoystickRight->keyCode == keyCode)
+		{
+			return JOYPAD_W;	// TODO: fix me?
+		}
+	}
+	return JOYPAD_IDLE;
+
+	/*
+	if (c64SettingsUseKeyboardAsJoystick)
 	{
 		// workaround for fire (eg. fire+up = ALT+UP)
 		CSlrKeyboardShortcut *shortcut = NULL;
+		
+		LOGD("CViewAtariScreen::GetJoystickAxis: (shortcut=pressed) keyCode: %08x=%08x isShift: %d=%d isAlt: %d=%d isControl: %d=%d",
+			 viewC64->keyboardShortcuts->kbsJoystickFire->keyCode, keyCode,
+			 viewC64->keyboardShortcuts->kbsJoystickFire->isShift, isShift,
+			 viewC64->keyboardShortcuts->kbsJoystickFire->isAlt, isAlt,
+			 viewC64->keyboardShortcuts->kbsJoystickFire->isControl, isControl);
 		
 		if (viewC64->keyboardShortcuts->kbsJoystickFire->keyCode == keyCode
 			&& viewC64->keyboardShortcuts->kbsJoystickFire->isShift == isShift
@@ -562,6 +609,7 @@ int CViewAtariScreen::GetJoystickAxis(u32 keyCode, bool isShift, bool isAlt, boo
 	}
 	
 	return JOYPAD_IDLE;
+	 */
 }
 
 bool CViewAtariScreen::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
@@ -671,11 +719,11 @@ void CViewAtariScreen::JoystickDown(u32 axis)
 	{
 		if (c64SettingsJoystickPort == 1)
 		{
-			debugInterface->JoystickDown(2, axis);
+			debugInterface->JoystickDown(1, axis);
 		}
 		else if (c64SettingsJoystickPort == 2)
 		{
-			debugInterface->JoystickDown(1, axis);
+			debugInterface->JoystickDown(2, axis);
 		}
 		else
 		{
@@ -700,15 +748,15 @@ void CViewAtariScreen::JoystickUp(u32 axis)
 	{
 		if (c64SettingsJoystickPort == 1)
 		{
-			debugInterface->JoystickDown(2, axis);
+			debugInterface->JoystickUp(1, axis);
 		}
 		else if (c64SettingsJoystickPort == 2)
 		{
-			debugInterface->JoystickDown(1, axis);
+			debugInterface->JoystickUp(2, axis);
 		}
 		else
 		{
-			debugInterface->JoystickDown(c64SettingsJoystickPort, axis);
+			debugInterface->JoystickUp(c64SettingsJoystickPort, axis);
 		}
 	}
 

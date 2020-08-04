@@ -881,7 +881,7 @@ void VID_RightClickEnded(int x, int y, bool alt)
 
 void VID_NotTouchedMoved(int x, int y)
 {
-	LOGG("VID_NotTouchedMoved: %d %d", x, y);
+//	LOGG("VID_NotTouchedMoved: %d %d", x, y);
 	
 	float xPos = (int)(((float)x - VIEW_START_X) / (float)SCREEN_SCALE);
 	float yPos = (int)SCREEN_HEIGHT - (((float)y - VIEW_START_Y) / (float)SCREEN_SCALE);
@@ -1215,13 +1215,31 @@ bool VID_IsWindowFullScreen()
 void VID_ShowMouseCursor()
 {
 	LOGM("VID_ShowMouseCursor");
-	[NSCursor unhide];
+	dispatch_async(dispatch_get_main_queue(), ^{
+		[NSCursor unhide];
+	});
 }
 
 void VID_HideMouseCursor()
 {
 	LOGM("VID_HideMouseCursor");
-	[NSCursor hide];
+	dispatch_async(dispatch_get_main_queue(), ^{
+		[NSCursor hide];
+	});
 }
 
+void VID_StoreMainWindowPosition()
+{
+	[glView storeMainWindowPosition];
+}
+
+void VID_RestoreMainWindowPosition()
+{
+	[glView restoreMainWindowPosition];
+}
+
+void VID_TestMenu()
+{
+	[glView testMenu];
+}
 

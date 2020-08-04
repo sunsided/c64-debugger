@@ -218,7 +218,7 @@ void CViewC64Sprite::Render()
 			if (sprx < 0)
 				sprx += 504;
 			
-			sprintf(buf, "%3d %3d", sprx, spry);
+			sprintf(buf, "%02x    %3d %3d", viciiState->sprite[sprite->spriteId].pointer, sprx, spry);
 			guiMain->fntConsole->BlitText(buf, px, py2, -1, 5);
 			
 			int addr = addr2;
@@ -584,7 +584,7 @@ bool CViewC64Sprite::DoRightClick(GLfloat x, GLfloat y)
 
 bool CViewC64Sprite::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
-	LOGD("CViewC64Sprite::KeyDown: %d", keyCode);
+	LOGI("CViewC64Sprite::KeyDown: %d", keyCode);
 	
 	if ((keyCode == '1' && isShift && !isAlt && !isControl)
 		|| keyCode == '!')
@@ -835,7 +835,7 @@ int CViewC64Sprite::ImportSprite(CSlrString *path)
 		
 		for (int i = 0; i < 64; i++)
 		{
-			if (byteBuffer->isEof())
+			if (byteBuffer->IsEof())
 			{
 				guiMain->ShowMessage("Sprite file corrupted");
 				delete byteBuffer;
@@ -849,34 +849,34 @@ int CViewC64Sprite::ImportSprite(CSlrString *path)
 		
 		int paintResult;
 		
-		if (byteBuffer->isEof()) { delete byteBuffer; delete file; return sprite->pointerAddr; }
+		if (byteBuffer->IsEof()) { delete byteBuffer; delete file; return sprite->pointerAddr; }
 		u8 colorD021 = byteBuffer->GetU8();
 		// skip D021
 		
-		if (byteBuffer->isEof()) { delete byteBuffer; delete file; return sprite->pointerAddr; }
+		if (byteBuffer->IsEof()) { delete byteBuffer; delete file; return sprite->pointerAddr; }
 		u8 colorD025 = byteBuffer->GetU8();
 		
 		paintResult = vicEditor->layerVirtualSprites->ReplaceColor(spriteRasterX, spriteRasterY, sprite->spriteId, 1, colorD025);
 
-		if (byteBuffer->isEof()) { delete byteBuffer; delete file; return sprite->pointerAddr; }
+		if (byteBuffer->IsEof()) { delete byteBuffer; delete file; return sprite->pointerAddr; }
 		u8 colorD026 = byteBuffer->GetU8();
 
 		paintResult = vicEditor->layerVirtualSprites->ReplaceColor(spriteRasterX, spriteRasterY, sprite->spriteId, 3, colorD026);
 
-		if (byteBuffer->isEof()) { delete byteBuffer; delete file; return sprite->pointerAddr; }
+		if (byteBuffer->IsEof()) { delete byteBuffer; delete file; return sprite->pointerAddr; }
 		u8 colorSprite = byteBuffer->GetU8();
 
 		paintResult = vicEditor->layerVirtualSprites->ReplaceColor(spriteRasterX, spriteRasterY, sprite->spriteId, 2, colorSprite);
 
-		if (byteBuffer->isEof()) { delete byteBuffer; delete file; return sprite->pointerAddr; }
+		if (byteBuffer->IsEof()) { delete byteBuffer; delete file; return sprite->pointerAddr; }
 		bool isMultiColor = byteBuffer->GetBool();
 		vicEditor->layerVirtualSprites->ReplaceMultiColor(spriteRasterX, spriteRasterY, sprite->spriteId, isMultiColor);
 
-		if (byteBuffer->isEof()) { delete byteBuffer; delete file; return sprite->pointerAddr; }
+		if (byteBuffer->IsEof()) { delete byteBuffer; delete file; return sprite->pointerAddr; }
 		bool isStretchX = byteBuffer->GetBool();
 		vicEditor->layerVirtualSprites->ReplaceStretchX(spriteRasterX, spriteRasterY, sprite->spriteId, isStretchX);
 
-		if (byteBuffer->isEof()) { delete byteBuffer; delete file; return sprite->pointerAddr; }
+		if (byteBuffer->IsEof()) { delete byteBuffer; delete file; return sprite->pointerAddr; }
 		bool isStretchY = byteBuffer->GetBool();
 		vicEditor->layerVirtualSprites->ReplaceStretchY(spriteRasterX, spriteRasterY, sprite->spriteId, isStretchY);
 		

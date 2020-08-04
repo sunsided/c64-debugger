@@ -10,6 +10,7 @@
 #include "CGuiMain.h"
 #include "CGuiViewEditWithTitle.h"
 
+
 CGuiViewEditWithTitle::CGuiViewEditWithTitle(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, u32 numChars, CGuiViewEditWithTitleCallback *callback)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
 {

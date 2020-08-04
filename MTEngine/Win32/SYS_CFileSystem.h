@@ -175,6 +175,7 @@ char *SYS_DialogSaveElemFile();
 
 bool SYS_FileExists(char *path);
 bool SYS_FileExists(CSlrString *path);
+bool SYS_FileDirExists(char *path);
 bool SYS_FileDirExists(CSlrString *path);
 
 uint8 *SYS_MapMemoryToFile(int memorySize, char *filePath, void **fileDescriptor);

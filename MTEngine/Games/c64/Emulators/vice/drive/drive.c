@@ -208,6 +208,7 @@ int drive_init(void)
         drive->byte_ready_level = 1;
         drive->byte_ready_edge = 1;
         drive->GCR_dirty_track = 0;
+		drive->GCR_dirty_track_for_snapshot = 0;
         drive->GCR_write_value = 0x55;
         drive->GCR_track_start_ptr = NULL;
         drive->GCR_current_track_size = 0;
@@ -220,6 +221,7 @@ int drive_init(void)
         drive->GCR_image_loaded = 0;
         drive->P64_image_loaded = 0;
         drive->P64_dirty = 0;
+		drive->P64_dirty_for_snapshot = 0;
         drive->read_only = 0;
         drive->clock_frequency = 1;
         drive->led_last_change_clk = *(drive->clk);
@@ -602,6 +604,8 @@ void drive_move_head(int step, drive_t *drive)
 
 void drive_gcr_data_writeback(drive_t *drive)
 {
+//	LOGD("drive_gcr_data_writeback");
+	
     int extend;
     unsigned int half_track, track;
     int tmp;
@@ -622,6 +626,8 @@ void drive_gcr_data_writeback(drive_t *drive)
     if (!(drive->GCR_dirty_track)) {
         return;
     }
+	
+//	LOGD("drive_gcr_data_writeback: DIRTY TRACK");
 
     if ((drive->image->type == DISK_IMAGE_TYPE_G64)
         || (drive->image->type == DISK_IMAGE_TYPE_G71)) {
@@ -669,11 +675,17 @@ void drive_gcr_data_writeback(drive_t *drive)
 
 void drive_gcr_data_writeback_all(void)
 {
+//	LOGD("drive_gcr_data_writeback_all");
+	
     drive_t *drive;
     unsigned int i;
 
     for (i = 0; i < DRIVE_NUM; i++) {
+		if (drive_context[i] == NULL)
+			continue;
         drive = drive_context[i]->drive;
+		if (drive == NULL)
+			continue;
         drive_gcr_data_writeback(drive);
         if (drive->P64_image_loaded && drive->image && drive->image->p64) {
             if (drive->image->type == DISK_IMAGE_TYPE_P64) {

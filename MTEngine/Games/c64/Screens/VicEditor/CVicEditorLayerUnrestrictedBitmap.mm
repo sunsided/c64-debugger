@@ -44,9 +44,8 @@ CVicEditorLayerUnrestrictedBitmap::~CVicEditorLayerUnrestrictedBitmap()
 
 void CVicEditorLayerUnrestrictedBitmap::RefreshImage()
 {
-	imageUnrestricted->Deallocate();
 	imageUnrestricted->SetLoadImageData(imageDataUnrestricted);
-	imageUnrestricted->BindImage();
+	imageUnrestricted->ReBindImage();
 	imageUnrestricted->loadImageData = NULL;
 }
 

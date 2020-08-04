@@ -15,6 +15,8 @@
 #include "CSlrString.h"
 #include "VID_GLViewController.h"
 #include "SYS_Funct.h"
+#include "CViewC64.h"
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/syslimits.h>
@@ -1011,7 +1013,8 @@ void SYS_DialogOpenFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 	// temporary remove always on top window flag
 	SYS_windowAlwaysOnTopBeforeFileDialog = VID_IsWindowAlwaysOnTop();
 	VID_SetWindowAlwaysOnTopTemporary(false);
-	
+
+	viewC64->SetFocus(NULL);
 	
 	if (defaultFolder != NULL)
 	{
@@ -1044,7 +1047,7 @@ void SYS_DialogOpenFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 			[extensionsArray addObject:nsStr];
 		}
 		
-		NSLog(@"%@", extensionsArray);
+//		NSLog(@"%@", extensionsArray);
 	}
 
 	NSString *wtitle = nil;
@@ -1069,7 +1072,10 @@ void SYS_DialogOpenFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 		[panel setAllowsMultipleSelection:NO];
 		
 		if (extensionsArray != nil)
+		{
+//			NSLog(@"SYS_DialogOpenFile: allowed file types=%@", extensionsArray);
 			[panel setAllowedFileTypes:extensionsArray];
+		}
 
 		// title was removed after OS X 10.11
 //		if (wtitle != nil)
@@ -1130,6 +1136,8 @@ void SYS_DialogSaveFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 	SYS_windowAlwaysOnTopBeforeFileDialog = VID_IsWindowAlwaysOnTop();
 	VID_SetWindowAlwaysOnTopTemporary(false);
 
+	viewC64->SetFocus(NULL);
+
 	NSMutableArray *extensionsArray = [[NSMutableArray alloc] init];
 	
 	for (std::list<CSlrString *>::iterator it = extensions->begin(); it != extensions->end(); it++)
@@ -1139,7 +1147,7 @@ void SYS_DialogSaveFile(CSystemFileDialogCallback *callback, std::list<CSlrStrin
 		[extensionsArray addObject:nsStr];
 	}
 	
-	NSLog(@"%@", extensionsArray);
+//	NSLog(@"%@", extensionsArray);
 
 	NSString *fname = nil;
 	NSString *wtitle = nil;
@@ -1277,6 +1285,27 @@ bool SYS_FileDirExists(CSlrString *path)
 {
 	char *cPath = path->GetStdASCII();
 	
+	struct stat info;
+	
+	if(stat( cPath, &info ) != 0)
+	{
+		delete [] cPath;
+		return false;
+	}
+	else if(info.st_mode & S_IFDIR)
+	{
+		delete [] cPath;
+		return true;
+	}
+	else
+	{
+		delete [] cPath;
+		return false;
+	}
+}
+
+bool SYS_FileDirExists(char *cPath)
+{
 	struct stat info;
 	
 	if(stat( cPath, &info ) != 0)

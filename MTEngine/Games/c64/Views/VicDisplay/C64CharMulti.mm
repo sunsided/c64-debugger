@@ -83,7 +83,7 @@ C64CharMulti::C64CharMulti(CViewC64VicDisplay *vicDisplay, int x, int y)
 	}
 	
 	
-	this->DebugPrint();
+//	this->DebugPrint();
 	
 }
 

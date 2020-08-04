@@ -59,6 +59,7 @@
 #include "translate.h"
 #include "types.h"
 #include "util.h"
+#include "ViceWrapper.h"
 
 #define CARTRIDGE_INCLUDE_PRIVATE_API
 #include "reu.h"
@@ -285,7 +286,7 @@ static const export_resource_t export_res_reu = {
 /* ------------------------------------------------------------------------- */
 
 /*! \brief Flag: Is the external REU enabled?  */
-static int reu_enabled = 0;
+volatile int reu_enabled = 0;
 
 /*! \brief Size of the REU.  */
 static unsigned int reu_size = 0;
@@ -312,9 +313,10 @@ int reu_cart_enabled(void)
  \return
    0 on success. else -1.
 */
-static int set_reu_enabled(int value, void *param)
+int set_reu_enabled(int value, void *param)
 {
     int val = value ? 1 : 0;
+	LOGD("set_reu_enabled: %d", value);
 
     if ((!val) && (reu_enabled)) {
         if (reu_deactivate() < 0) {
@@ -351,7 +353,7 @@ static int set_reu_enabled(int value, void *param)
  \remark
    val must be one of 128, 256, 512, 1024, 2048, 4096, 8192, or 16384.
 */
-static int set_reu_size(int val, void *param)
+int set_reu_size(int val, void *param)
 {
     if (val == reu_size_kb) {
         return 0;
@@ -445,7 +447,7 @@ static int set_reu_size(int val, void *param)
    The file name of the REU data is the name of the file which is
    used to store the REU data onto disk.
 */
-static int set_reu_filename(const char *name, void *param)
+int set_reu_filename(const char *name, void *param)
 {
     if (reu_filename != NULL && name != NULL && strcmp(name, reu_filename) == 0) {
         return 0;
@@ -750,6 +752,7 @@ inline static void reu_clk_inc_pre(void)
 {
     if (!reu_ba.enabled) {
         maincpu_clk++;
+		c64d_maincpu_clk++;
     }
 }
 
@@ -758,6 +761,7 @@ inline static void reu_clk_inc_post(void)
 {
     if (reu_ba.enabled) {
         maincpu_clk++;
+		c64d_maincpu_clk++;
         if (reu_ba.check()) reu_ba.delay++; else reu_ba.delay = 0;
         reu_ba.last_cycle = (reu_ba.delay > 1);
         if (reu_ba.last_cycle) {
@@ -772,6 +776,7 @@ inline static void reu_clk_inc_post2(void)
 {
     if (reu_ba.enabled) {
         maincpu_clk++;
+		c64d_maincpu_clk++;
         if (reu_ba.check()) {
             reu_ba.steal();
         }
@@ -792,7 +797,7 @@ inline static void reu_clk_inc_post2(void)
   \remark
     address must be in the valid range 0..0x1f
 */
-static BYTE reu_read_without_sideeffects(WORD addr)
+BYTE reu_read_without_sideeffects(WORD addr)
 {
     BYTE retval = 0xff;
 
@@ -958,7 +963,7 @@ static BYTE reu_io2_peek(WORD addr)
   \param byte
     The value to set the register to
 */
-static void reu_io2_store(WORD addr, BYTE byte)
+void reu_io2_store(WORD addr, BYTE byte)
 {
     if (!reu_dma_active && (addr < REU_REG_FIRST_UNUSED)) {
         reu_store_without_sideeffects(addr, byte);
@@ -991,6 +996,11 @@ static void reu_io2_store(WORD addr, BYTE byte)
                 break;
         }
     }
+}
+
+void c64d_reu_io2_store(WORD addr, BYTE value)
+{
+	reu_io2_store(addr, value);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -1170,7 +1180,12 @@ static void reu_dma_update_regs(WORD host_addr, unsigned int reu_addr, int len, 
 static void reu_dma_host_to_reu(WORD host_addr, unsigned int reu_addr, int host_step, int reu_step, int len)
 {
     BYTE value;
-    DEBUG_LOG(DEBUG_LEVEL_TRANSFER_HIGH_LEVEL, (reu_log, "copy ext $%05X %s<= main $%04X%s, $%04X (%d) bytes.",
+
+	//LOGD("reu_dma_host_to_reu: >>>>> host_addr=%04x reu_addr=%06x host_step=%d reu_step=%d len=%d (%x)",
+	//	 host_addr, reu_addr, host_step, reu_step, len, len);
+	
+
+	DEBUG_LOG(DEBUG_LEVEL_TRANSFER_HIGH_LEVEL, (reu_log, "copy ext $%05X %s<= main $%04X%s, $%04X (%d) bytes.",
                                                 reu_addr, reu_step ? "" : "(fixed) ", host_addr, host_step ? "" : " (fixed)", len, len));
 
     assert(((host_step == 0) || (host_step == 1)));
@@ -1213,6 +1228,8 @@ static void reu_dma_host_to_reu(WORD host_addr, unsigned int reu_addr, int host_
 static void reu_dma_reu_to_host(WORD host_addr, unsigned int reu_addr, int host_step, int reu_step, int len)
 {
     BYTE value;
+//	LOGD("reu_dma_reu_to_host  <<<<<  host_addr=%04x reu_addr=%06x host_step=%d reu_step=%d len=%d ($%x)",
+//		 host_addr, reu_addr, host_step, reu_step, len, len);
     DEBUG_LOG(DEBUG_LEVEL_TRANSFER_HIGH_LEVEL, (reu_log, "copy ext $%05X %s=> main $%04X%s, $%04X (%d) bytes.",
                                                 reu_addr, reu_step ? "" : "(fixed) ", host_addr, host_step ? "" : " (fixed)", len, len));
 
@@ -1257,9 +1274,11 @@ static void reu_dma_reu_to_host(WORD host_addr, unsigned int reu_addr, int host_
     The transfer length of the operation
 */
 static void reu_dma_swap(WORD host_addr, unsigned int reu_addr, int host_step, int reu_step, int len)
-{
+{	
     BYTE value_from_reu;
     BYTE value_from_c64;
+//	LOGD("reu_dma_swap  <<< >>> host_addr=%04x  reu_addr=%06x  host_step=%d reu_step=%d len=%d (%x)",
+//		 host_addr, reu_addr, host_step, reu_step, len, len);
     DEBUG_LOG(DEBUG_LEVEL_TRANSFER_HIGH_LEVEL, (reu_log, "swap ext $%05X %s<=> main $%04X%s, $%04X (%d) bytes.",
                                                 reu_addr, reu_step ? "" : "(fixed) ", host_addr, host_step ? "" : " (fixed)", len, len));
 
@@ -1411,6 +1430,8 @@ void reu_dma(int immediate)
 {
     static int delay = 0;
 
+	LOGD("reu_dma immediate=%d", immediate);
+	
     if (!reu_enabled) {
         return;
     }
@@ -1442,6 +1463,8 @@ void reu_dma_start(void)
     WORD host_addr;
     unsigned int reu_addr;
 
+//	LOGD("reu_dma_start");
+	
     /* wrong address of bank register & calculations corrected  - RH */
     host_addr = rec.base_computer;
     reu_addr = rec.base_reu | (rec.bank_reu << 16);
@@ -1502,7 +1525,7 @@ typedef BYTE reu_as_stored_in_snapshot_t[16];
  \return
     0 on success, else -1.
 */
-int reu_write_snapshot_module(snapshot_t *s)
+int reu_write_snapshot_module(snapshot_t *s, int store_reu_data)
 {
     snapshot_module_t *m;
 
@@ -1520,14 +1543,35 @@ int reu_write_snapshot_module(snapshot_t *s)
     if (m == NULL) {
         return -1;
     }
+	
+	// check if reu_ram is allocated
+	if (reu_ram == NULL)
+	{
+		LOGError("reu_write_snapshot_module: reu_ram is NULL");
+		reu_ram = lib_malloc(reu_size);
+	}
 
-    if (0
-        || SMW_DW(m, (reu_size >> 10)) < 0
-        || SMW_BA(m, reu, sizeof(reu)) < 0
-        || SMW_BA(m, reu_ram, reu_size) < 0) {
-        snapshot_module_close(m);
-        return -1;
-    }
+	if (store_reu_data)
+	{
+		if (0
+			|| SMW_DW(m, (reu_size >> 10)) < 0
+			|| SMW_BA(m, reu, sizeof(reu)) < 0
+			|| SMW_BA(m, reu_ram, reu_size) < 0) {
+			snapshot_module_close(m);
+			return -1;
+		}
+	}
+	else
+	{
+		if (0
+			|| SMW_DW(m, (reu_size >> 10)) < 0
+			|| SMW_BA(m, reu, sizeof(reu)) < 0)
+		{
+			snapshot_module_close(m);
+			return -1;
+		}
+	}
+	
 
     return snapshot_module_close(m);
 }
@@ -1539,7 +1583,7 @@ int reu_write_snapshot_module(snapshot_t *s)
  \return
     0 on success, else -1.
  */
-int reu_read_snapshot_module(snapshot_t *s)
+int reu_read_snapshot_module(snapshot_t *s, int read_reu_data)
 {
     BYTE major_version, minor_version;
     snapshot_module_t *m;
@@ -1577,10 +1621,19 @@ int reu_read_snapshot_module(snapshot_t *s)
         set_reu_enabled(1, NULL);
     }
 
-    if (SMR_BA(m, reu, sizeof(reu)) < 0 || SMR_BA(m, reu_ram, reu_size) < 0) {
-        goto fail;
-    }
-
+	if (read_reu_data)
+	{
+		if (SMR_BA(m, reu, sizeof(reu)) < 0 || SMR_BA(m, reu_ram, reu_size) < 0) {
+			goto fail;
+		}
+	}
+	else
+	{
+		if (SMR_BA(m, reu, sizeof(reu)) < 0) {
+			goto fail;
+		}
+	}
+	
     if (reu[REU_REG_R_STATUS] & 0x80) {
         interrupt_restore_irq(maincpu_int_status, reu_int_num, 1);
     } else {

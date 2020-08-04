@@ -32,7 +32,6 @@ public:
 	void Render();
 	void Render(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY);
 
-	pthread_mutex_t renderMutex;
 	void LockRenderMutex();
 	void UnlockRenderMutex();
 

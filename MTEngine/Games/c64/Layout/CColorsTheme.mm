@@ -1010,6 +1010,18 @@ void GetColorsFromScheme(int schemeNum, float splitAmount, float *r, float *g, f
 			*g = 0.0f;
 			*b = 1.0f;
 			break;
+		case C64D_COLOR_ORANGE:
+			// orange
+			*r = 1.0f;
+			*g = 0.492f;
+			*b = 0.0f;
+			break;
+		case C64D_COLOR_MID_GRAY:
+			*r = 0.625f;
+			*g = 0.625f;
+			*b = 0.625f;
+			break;
+
 	}
 }
 

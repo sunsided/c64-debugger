@@ -12,6 +12,7 @@
 #ifdef WIN32
 #include <windows.h>
 #include "SYS_MiniDump.h"
+#include "SYS_Startup.h"
 #else
 #include <sys/time.h>
 #endif
@@ -21,8 +22,8 @@
 #endif
 
 #include <stdlib.h>
-#include <pthread.h>
 #include "DBG_Log.h"
+#include "SYS_Threading.h"
 #include <list>
 
 
@@ -239,6 +240,11 @@ void SYS_FatalExit(char *fmt, ... )
 #ifndef FINAL_RELEASE
 	abort();
 #endif
+
+#if defined(WIN32)
+	if (isWin32ConsoleAttached) FreeConsole();
+#endif
+
 	exit(-1);
 }
 
@@ -294,6 +300,11 @@ void SYS_FatalExit(const char *fmt, ... )
 #ifndef FINAL_RELEASE
 	abort();
 #endif
+
+#if defined(WIN32)
+	if (isWin32ConsoleAttached) FreeConsole();
+#endif
+
 	exit(-1);
 }
 
@@ -336,6 +347,9 @@ void SYS_FatalExit()
 	GtkMessageBox("Fatal error occured and application must close.", "Fatal Error");
 #endif
 
+#if defined(WIN32)
+	if (isWin32ConsoleAttached) FreeConsole();
+#endif
 
 	exit(-1);
 }
@@ -444,6 +458,10 @@ void SYS_CleanExit(char *fmt, ... )
 //#endif
 //#endif
 	
+#if defined(WIN32)
+	if (isWin32ConsoleAttached) FreeConsole();
+#endif
+
 	exit(0);
 }
 
@@ -469,7 +487,11 @@ void SYS_CleanExit(const char *fmt, ... )
 //	MessageBox(NULL, buffer, "Clean Exit", MB_OK);
 //#endif
 //#endif
-	
+
+#if defined(WIN32)
+	if (isWin32ConsoleAttached) FreeConsole();
+#endif
+
 	exit(0);
 }
 
@@ -486,7 +508,11 @@ void SYS_CleanExit()
 #ifdef IOS
 	GUI_ShowCleanExitAlert("Clean Exit");
 #endif
-	
+
+#if defined(WIN32)
+	if (isWin32ConsoleAttached) FreeConsole();
+#endif
+
 	exit(0);
 }
 
@@ -658,47 +684,10 @@ void SYS_Free(void **ptr)
 
 }
 
-// get bare key code (e.g. not shifted)
-u32 SYS_GetBareKey(u32 keyCode, bool isShift, bool isAlt, bool isControl)
-{
-	//LOGD("SYS_GetBareKey: key=%d", keyCode);
-
-	if (keyCode >= 'A' && keyCode <= 'Z')
-	{
-		return keyCode + 0x20;
-	}
-
-	{
-		// de-translate shifted keys
-		switch(keyCode)
-		{
-			case 33: keyCode = '1'; break;
-			case 64: keyCode = '2'; break;
-			case 35: keyCode = '3'; break;
-			case 36: keyCode = '4'; break;
-			case 37: keyCode = '5'; break;
-			case 94: keyCode = '6'; break;
-			case 38: keyCode = '7'; break;
-			case 42: keyCode = '8'; break;
-			case 40: keyCode = '9'; break;
-			case 41: keyCode = '0'; break;
-			case 95: keyCode = '-'; break;
-			case 43: keyCode = '='; break;
-			case 58: keyCode = ';'; break;
-			case 34: keyCode = '\''; break;
-			case 60: keyCode = ','; break;
-			case 62: keyCode = '.'; break;
-			case 63: keyCode = '/'; break;
-		}
-	}
-	
-	return keyCode;
-}
-
 
 std::list<char *> charBufsPool;
 
-pthread_mutex_t charBufsMutex;
+CSlrMutex *charBufsMutex;
 
 bool _sysCharBufsInit = false;
 
@@ -706,7 +695,7 @@ void SYS_InitCharBufPool()
 {
 	if (_sysCharBufsInit == false)
 	{
-		pthread_mutex_init(&charBufsMutex, NULL);
+		charBufsMutex = new CSlrMutex("charBufsMutex");
 		_sysCharBufsInit = true;
 	}
 }
@@ -715,7 +704,7 @@ char *SYS_GetCharBuf()
 {
 	char *buf = NULL;
 
-	pthread_mutex_lock(&charBufsMutex);
+	charBufsMutex->Lock();
 	if (charBufsPool.empty())
 	{
 		buf = new char[MAX_STRING_LENGTH];
@@ -725,7 +714,7 @@ char *SYS_GetCharBuf()
 		buf = charBufsPool.front();
 		charBufsPool.pop_front();
 	}
-	pthread_mutex_unlock(&charBufsMutex);
+	charBufsMutex->Unlock();
 
 	buf[0] = 0x00;
 	return buf;
@@ -733,9 +722,9 @@ char *SYS_GetCharBuf()
 
 void SYS_ReleaseCharBuf(char *buf)
 {
-	pthread_mutex_lock(&charBufsMutex);
+	charBufsMutex->Lock();
 	charBufsPool.push_back(buf);
-	pthread_mutex_unlock(&charBufsMutex);
+	charBufsMutex->Unlock();
 }
 
 char *SYS_GetCurrentDateTimeString()
@@ -766,4 +755,39 @@ char *SYS_GetCurrentDateTimeString()
 #endif
 
 	return buf;
+}
+
+// get bare key code (e.g. not shifted)
+u32 SYS_GetBareKey(u32 keyCode, bool isShift, bool isAlt, bool isControl)
+{
+	//LOGD("SYS_GetBareKey: key=%d", keyCode);
+	
+	if (keyCode >= 'A' && keyCode <= 'Z')
+	{
+		return keyCode + 0x20;
+	}
+	
+	// de-translate shifted keys
+	switch(keyCode)
+	{
+		case 33: keyCode = '1'; break;
+		case 64: keyCode = '2'; break;
+		case 35: keyCode = '3'; break;
+		case 36: keyCode = '4'; break;
+		case 37: keyCode = '5'; break;
+		case 94: keyCode = '6'; break;
+		case 38: keyCode = '7'; break;
+		case 42: keyCode = '8'; break;
+		case 40: keyCode = '9'; break;
+		case 41: keyCode = '0'; break;
+		case 95: keyCode = '-'; break;
+		case 43: keyCode = '='; break;
+		case 58: keyCode = ';'; break;
+		case 34: keyCode = '\''; break;
+		case 60: keyCode = ','; break;
+		case 62: keyCode = '.'; break;
+		case 63: keyCode = '/'; break;
+	}
+	
+	return keyCode;
 }

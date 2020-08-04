@@ -32,6 +32,7 @@
 #include "CViewVicEditorLayers.h"
 #include "CViewVicEditorCreateNewPicture.h"
 #include "CGuiViewToolBox.h"
+#include "CViewTimeline.h"
 
 #include "CGuiMain.h"
 
@@ -96,9 +97,12 @@ CViewVicEditor::CViewVicEditor(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	importFileExtensions.push_back(new CSlrString("ddl"));
 	importFileExtensions.push_back(new CSlrString("kla"));
 	importFileExtensions.push_back(new CSlrString("d64"));
+	importFileExtensions.push_back(new CSlrString("g64"));
 	importFileExtensions.push_back(new CSlrString("prg"));
 	importFileExtensions.push_back(new CSlrString("crt"));
-
+	importFileExtensions.push_back(new CSlrString("snap"));
+	importFileExtensions.push_back(new CSlrString("vsf"));
+	importFileExtensions.push_back(new CSlrString("sid"));
 	
 	exportVCEFileExtensions.push_back(new CSlrString("vce"));
 	exportHyperBitmapFileExtensions.push_back(new CSlrString("bin"));
@@ -492,11 +496,31 @@ void CViewVicEditor::Render()
 	
 	CGuiView::Render();
 	
+	// TODO: timeline for C64 only now
+	if (c64SettingsSnapshotsRecordIsActive && c64SettingsTimelineIsActive)
+	{
+		if (viewC64->debugInterfaceC64)
+		{
+			if (viewC64->viewC64Timeline->IsInside(guiMain->mousePosX, guiMain->mousePosY))
+			{
+				viewC64->viewC64Timeline->Render();
+			}
+		}
+		if (viewC64->debugInterfaceAtari)
+		{
+			if (viewC64->viewAtariTimeline->IsInside(guiMain->mousePosX, guiMain->mousePosY))
+			{
+				viewC64->viewAtariTimeline->Render();
+			}
+		}
+	}
+
 	guiMain->UnlockMutex();
 
 	/////////////
 
 	
+	viewC64->RenderPlugins();
 }
 
 void CViewVicEditor::Render(GLfloat posX, GLfloat posY)
@@ -778,11 +802,56 @@ u8 CViewVicEditor::PaintPixel(int rx, int ry, u8 colorSource)
 	return result;
 }
 
+// pure pixel paiting (for external API)
+u8 CViewVicEditor::PaintPixelColor(bool forceColorReplace, int rx, int ry, u8 color, int selectedChar)
+{
+	guiMain->LockMutex();
+	
+	int result;
+	
+	result = viewVicDisplayMain->currentCanvas->Paint(forceColorReplace, false,
+													  rx, ry,
+													  color, color, VICEDITOR_COLOR_SOURCE_LMB,
+													  selectedChar);
+	
+	guiMain->UnlockMutex();
+	
+	return result;
+}
+
+// pure pixel paiting (for external API)
+u8 CViewVicEditor::PaintPixelColor(int rx, int ry, u8 color)
+{
+	guiMain->LockMutex();
+	
+	int result;
+	
+	result = viewVicDisplayMain->currentCanvas->Paint(true, false,
+													  rx, ry,
+													  color, color, VICEDITOR_COLOR_SOURCE_LMB,
+													  0x00);
+	
+	guiMain->UnlockMutex();
+	
+	return result;
+}
+
+
 //@returns is consumed
 bool CViewVicEditor::DoTap(GLfloat x, GLfloat y)
 {
 	LOGG("CViewVicEditor::DoTap:  x=%f y=%f", x, y);
 	
+	// TODO: workaround for quick timeline access (note this will be changed)
+	// timeline for C64 only now
+	if (c64SettingsSnapshotsRecordIsActive && c64SettingsTimelineIsActive)
+	{
+		if (viewC64->viewC64Timeline->IsInside(x, y))
+		{
+			return viewC64->viewC64Timeline->DoTap(x, y);
+		}
+	}
+
 	if (CGuiView::DoTap(x, y) == false)
 	{
 		if (viewVicDisplaySmall->visible && viewVicDisplaySmall->IsInsideView(x, y))
@@ -915,6 +984,16 @@ bool CViewVicEditor::GetColorAtRasterPos(int rx, int ry, u8 *color)
 
 bool CViewVicEditor::DoMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat distY, GLfloat diffX, GLfloat diffY)
 {
+	// TODO: workaround for quick timeline access (note this will be changed)
+	// timeline for C64 only now
+	if (c64SettingsSnapshotsRecordIsActive && c64SettingsTimelineIsActive)
+	{
+		if (viewC64->viewC64Timeline->IsInside(x, y))
+		{
+			return viewC64->viewC64Timeline->DoMove(x, y, distX, distY, diffX, diffY);
+		}
+	}
+
 	if (CGuiView::DoMove(x, y, distX, distY, diffX, diffY) == false)
 	{
 		if (viewVicDisplaySmall->visible &&
@@ -1231,6 +1310,14 @@ bool CViewVicEditor::FinishMove(GLfloat x, GLfloat y, GLfloat distX, GLfloat dis
 	prevRy = -1000;
 	isMovingPreviewFrame = false;
 	isPaintingOnPreviewFrame = false;
+	
+	// TODO: workaround for quick timeline access (note this will be changed)
+	// timeline for C64 only now
+	if (c64SettingsSnapshotsRecordIsActive && c64SettingsTimelineIsActive)
+	{
+		viewC64->viewC64Timeline->FinishMove(x, y, distX, distY, accelerationX, accelerationY);
+	}
+
 	return CGuiView::FinishMove(x, y, distX, distY, accelerationX, accelerationY);
 }
 
@@ -1251,6 +1338,14 @@ void CViewVicEditor::FinishTouches()
 	prevRy = -1000;
 	isMovingPreviewFrame = false;
 	isPaintingOnPreviewFrame = false;
+	
+	// TODO: workaround for quick timeline access (note this will be changed)
+	// timeline for C64 only now
+	if (c64SettingsSnapshotsRecordIsActive && c64SettingsTimelineIsActive)
+	{
+		viewC64->viewC64Timeline->FinishTouches();
+	}
+
 	return CGuiView::FinishTouches();
 }
 
@@ -1370,7 +1465,7 @@ bool CViewVicEditor::DoNotTouchedMove(GLfloat x, GLfloat y)
 
 void CViewVicEditor::MoveDisplayDiff(float diffX, float diffY)
 {
-	LOGD("CViewVicEditor::MoveDisplayDiff: diffX=%f diffY=%f posX=%f posY=%f posOffsetX=%f posOffsetY=%f", diffX, diffY, viewVicDisplayMain->posX, viewVicDisplayMain->posY, viewVicDisplayMain->posOffsetX, viewVicDisplayMain->posOffsetY);
+	LOGG("CViewVicEditor::MoveDisplayDiff: diffX=%f diffY=%f posX=%f posY=%f posOffsetX=%f posOffsetY=%f", diffX, diffY, viewVicDisplayMain->posX, viewVicDisplayMain->posY, viewVicDisplayMain->posOffsetX, viewVicDisplayMain->posOffsetY);
 	float px = viewVicDisplayMain->posX - mainDisplayPosX - viewVicDisplayMain->posOffsetX;
 	float py = viewVicDisplayMain->posY - mainDisplayPosY - viewVicDisplayMain->posOffsetY;
 	
@@ -1382,7 +1477,7 @@ void CViewVicEditor::MoveDisplayDiff(float diffX, float diffY)
 
 void CViewVicEditor::MoveDisplayToScreenPos(float px, float py)
 {
-	LOGD("CViewVicEditor::MoveDisplayToScreenPos: %f %f", px, py);
+	LOGG("CViewVicEditor::MoveDisplayToScreenPos: %f %f", px, py);
 
 	guiMain->LockMutex();
 	
@@ -1423,7 +1518,7 @@ void CViewVicEditor::MoveDisplayToScreenPos(float px, float py)
 		py = mainDisplaySizeY - (mainDisplayPosY + viewVicDisplayMain->visibleScreenSizeY);
 	}
 	
-	LOGD("------> SetPosition: px=%f py=%f", px, py);
+	LOGG("------> SetPosition: px=%f py=%f", px, py);
 	viewVicDisplayMain->SetPosition(px, py);
 	UpdateDisplayFrame();
 	
@@ -1480,6 +1575,14 @@ void CViewVicEditor::ZoomDisplay(float newScale)
 bool CViewVicEditor::DoFinishTap(GLfloat x, GLfloat y)
 {
 	LOGG("CViewVicEditor::DoFinishTap: %f %f", x, y);
+
+	// TODO: workaround for quick timeline access (note this will be changed)
+	// timeline for C64 only now
+	if (c64SettingsSnapshotsRecordIsActive && c64SettingsTimelineIsActive)
+	{
+		viewC64->viewC64Timeline->DoFinishTap(x, y);
+	}
+
 	return CGuiView::DoFinishTap(x, y);
 }
 
@@ -1539,6 +1642,13 @@ void CViewVicEditor::SaveScreenshotAsPNG()
 {
 	exportMode = VICEDITOR_EXPORT_PNG;
 	this->OpenDialogExportFile();
+}
+
+void CViewVicEditor::SetSpritesFramesVisible(bool showSpriteFrames)
+{
+	viewVicDisplayMain->showSpritesFrames = showSpriteFrames;
+	viewVicDisplaySmall->showSpritesFrames = showSpriteFrames;
+	layerVirtualSprites->showSpriteFrames = showSpriteFrames;
 }
 
 void CViewVicEditor::SetTopBarVisible(bool isTopBarVisible)
@@ -1823,9 +1933,7 @@ bool CViewVicEditor::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContr
 	else if (shortcut == viewC64->keyboardShortcuts->kbsVicEditorToggleSpriteFrames)
 	{
 		bool show = !viewVicDisplayMain->showSpritesFrames;
-		viewVicDisplayMain->showSpritesFrames = show;
-		viewVicDisplaySmall->showSpritesFrames = show;
-		layerVirtualSprites->showSpriteFrames = show;
+		SetSpritesFramesVisible(show);		
 		return true;
 	}
 	else if (shortcut == viewC64->keyboardShortcuts->kbsVicEditorSelectNextLayer)
@@ -2202,7 +2310,7 @@ void CViewVicEditor::OpenDialogImportFile()
 	LOGM("OpenDialogImportFile");
 	CSlrString *windowTitle = new CSlrString("Open image file to import");
 	windowTitle->DebugPrint("windowTitle=");
-	viewC64->ShowDialogOpenFile(this, &importFileExtensions, NULL, windowTitle);
+	viewC64->ShowDialogOpenFile(this, &importFileExtensions, c64SettingsDefaultVicEditorFolder, windowTitle);
 	delete windowTitle;
 }
 
@@ -2211,6 +2319,12 @@ void CViewVicEditor::SystemDialogFileOpenSelected(CSlrString *path)
 	LOGM("CViewVicEditor::SystemDialogFileOpenSelected, path=%x", path);
 	path->DebugPrint("path=");
 	
+	if (c64SettingsDefaultVicEditorFolder != NULL)
+		delete c64SettingsDefaultVicEditorFolder;
+	c64SettingsDefaultVicEditorFolder = path->GetFilePathWithoutFileNameComponentFromPath();
+	c64SettingsDefaultVicEditorFolder->DebugPrint("c64SettingsDefaultVicEditorFolder=");
+	C64DebuggerStoreSettings();
+
 	CSlrString *ext = path->GetFileExtensionComponentFromPath();
 	
 	if (ext->CompareWith("png") || ext->CompareWith("PNG"))
@@ -2353,7 +2467,7 @@ void CViewVicEditor::OpenDialogExportFile()
 		exportFileDialogMode = VICEDITOR_EXPORT_HYPER;
 
 		CSlrString *windowTitle = new CSlrString("Export HyperScreen Picture");
-		viewC64->ShowDialogSaveFile(this, &exportHyperBitmapFileExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
+		viewC64->ShowDialogSaveFile(this, &exportHyperBitmapFileExtensions, defaultFileName, c64SettingsDefaultVicEditorFolder, windowTitle);
 		delete windowTitle;
 		delete defaultFileName;
 		return;
@@ -2367,7 +2481,7 @@ void CViewVicEditor::OpenDialogExportFile()
 		exportFileDialogMode = VICEDITOR_EXPORT_PNG;
 		
 		CSlrString *windowTitle = new CSlrString("Export screen to PNG");
-		viewC64->ShowDialogSaveFile(this, &exportPNGFileExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
+		viewC64->ShowDialogSaveFile(this, &exportPNGFileExtensions, defaultFileName, c64SettingsDefaultVicEditorFolder, windowTitle);
 		delete windowTitle;
 		delete defaultFileName;
 		return;
@@ -2385,7 +2499,7 @@ void CViewVicEditor::OpenDialogExportFile()
 		exportFileDialogMode = VICEDITOR_EXPORT_KOALA;
 
 		CSlrString *windowTitle = new CSlrString("Export Multi-Color KOALA Picture");
-		viewC64->ShowDialogSaveFile(this, &exportMultiBitmapFileExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
+		viewC64->ShowDialogSaveFile(this, &exportMultiBitmapFileExtensions, defaultFileName, c64SettingsDefaultVicEditorFolder, windowTitle);
 		delete windowTitle;
 		delete defaultFileName;
 		return;
@@ -2399,7 +2513,7 @@ void CViewVicEditor::OpenDialogExportFile()
 		exportFileDialogMode = VICEDITOR_EXPORT_ART_STUDIO;
 
 		CSlrString *windowTitle = new CSlrString("Export Hires ART STUDIO Picture");
-		viewC64->ShowDialogSaveFile(this, &exportHiresBitmapFileExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
+		viewC64->ShowDialogSaveFile(this, &exportHiresBitmapFileExtensions, defaultFileName, c64SettingsDefaultVicEditorFolder, windowTitle);
 		delete windowTitle;
 		delete defaultFileName;
 		return;
@@ -2413,7 +2527,7 @@ void CViewVicEditor::OpenDialogExportFile()
 		exportFileDialogMode = VICEDITOR_EXPORT_RAW_TEXT;
 
 		CSlrString *windowTitle = new CSlrString("Export RAW TEXT Picture");
-		viewC64->ShowDialogSaveFile(this, &exportHiresTextFileExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
+		viewC64->ShowDialogSaveFile(this, &exportHiresTextFileExtensions, defaultFileName, c64SettingsDefaultVicEditorFolder, windowTitle);
 		delete windowTitle;
 		delete defaultFileName;
 		return;
@@ -2431,7 +2545,7 @@ void CViewVicEditor::OpenDialogSaveVCE()
 	exportFileDialogMode = VICEDITOR_EXPORT_VCE;
 		
 	CSlrString *windowTitle = new CSlrString("Export VicEditor Picture");
-	viewC64->ShowDialogSaveFile(this, &exportVCEFileExtensions, defaultFileName, c64SettingsDefaultSnapshotsFolder, windowTitle);
+	viewC64->ShowDialogSaveFile(this, &exportVCEFileExtensions, defaultFileName, c64SettingsDefaultVicEditorFolder, windowTitle);
 	delete windowTitle;
 	delete defaultFileName;
 }
@@ -2441,6 +2555,12 @@ void CViewVicEditor::SystemDialogFileSaveSelected(CSlrString *path)
 	LOGD("CViewVicEditor::SystemDialogFileSaveSelected");
 	path->DebugPrint("path=");
 	
+	if (c64SettingsDefaultVicEditorFolder != NULL)
+		delete c64SettingsDefaultVicEditorFolder;
+	c64SettingsDefaultVicEditorFolder = path->GetFilePathWithoutFileNameComponentFromPath();
+	c64SettingsDefaultVicEditorFolder->DebugPrint("c64SettingsDefaultVicEditorFolder=");
+	C64DebuggerStoreSettings();
+
 	if (exportFileDialogMode == VICEDITOR_EXPORT_VCE)
 	{
 		ExportVCE(path);
@@ -2647,7 +2767,7 @@ bool CViewVicEditor::ImportPNG(CSlrString *path)
 			
 			C64DebugInterface *debugInterface = viewVicDisplayMain->debugInterface;
 			
-			CImageData *image = viewVicDisplayMain->currentCanvas->ReducePalette(imageData);
+			CImageData *image = viewVicDisplayMain->currentCanvas->ReducePalette(imageData, viewVicDisplayMain);
 			
 			for (int ry = 0; ry < 272; ry++)
 			{
@@ -3148,6 +3268,7 @@ bool CViewVicEditor::ExportRawText(CSlrString *path)
 	file->Write(color_ram_ptr, 0x03E8);
 
 	file->WriteByte(d020colors[1]);
+	file->WriteByte(d020colors[0]);
 	
 	file->Close();
 	
@@ -3284,7 +3405,9 @@ bool CViewVicEditor::ExportPNG(CSlrString *path)
 	
 	// refresh texture of C64's screen
 	CImageData *c64Screen = viewC64->debugInterfaceC64->GetScreenImageData();
-	CImageData *imageCrop = IMG_CropImageRGBA(c64Screen, 0, 0, 384, 272);
+	CImageData *imageCrop = IMG_CropSupersampleImageRGBA(c64Screen,
+														 viewC64->debugInterfaceC64->screenSupersampleFactor,
+														 0, 0, 384, 272);
 
 	viewVicDisplayMain->RefreshScreenImageData(&(viewC64->viciiStateToShow), 255, 255);
 	layerVirtualSprites->SimpleScanSpritesInThisFrame();

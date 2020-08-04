@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12121" systemVersion="16G1510" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12121" systemVersion="16G2136" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12121"/>
@@ -14,14 +14,14 @@
                 <menuItem title="C64 Debugger" id="56">
                     <menu key="submenu" title="C64 Debugger" systemMenu="apple" id="57" customClass="MenuControllerSettings">
                         <items>
-                            <menuItem title="About C64 Debugger" tag="1" id="586">
+                            <menuItem title="About C64 65XE Debugger" tag="1" id="586">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="aboutKCT:" target="57" id="587"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="585"/>
-                            <menuItem title="Hide C64 Debugger" id="134">
+                            <menuItem title="Hide Debugger" id="134">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="hide:" target="-1" id="367"/>
@@ -36,7 +36,7 @@
                             <menuItem isSeparatorItem="YES" id="149">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
-                            <menuItem title="Quit C64 Debugger" id="136">
+                            <menuItem title="Quit Debugger" id="136">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="terminate:" target="-3" id="449"/>
@@ -66,7 +66,7 @@
                 </menuItem>
             </items>
         </menu>
-        <window title="C64 Debugger" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" animationBehavior="default" id="371">
+        <window title="C64 Debugger" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" animationBehavior="default" id="371" userLabel="I">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowCollectionBehavior key="collectionBehavior" fullScreenPrimary="YES"/>
             <rect key="contentRect" x="335" y="0.0" width="720" height="480"/>

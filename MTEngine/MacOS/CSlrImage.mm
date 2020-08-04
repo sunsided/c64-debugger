@@ -741,6 +741,51 @@ void CSlrImage::LoadImage(CImageData *origImageData, byte resourcePriority, bool
 	//LOGR("image loaded ok");
 }
 
+void CSlrImage::RefreshImageParameters(CImageData *origImageData, byte resourcePriority, bool flipImageVertically)
+{
+	// only refresh parameters, do not load
+	LOGR("CSlrImage::RefreshImageParameters from CImageData");
+	
+	gfxScale = 2.0f;
+	
+	//if (gScaleDownImages == false)
+	{
+		this->loadImgWidth = origImageData->width;
+		this->loadImgHeight = origImageData->height;
+		this->rasterWidth = NextPow2(loadImgWidth);
+		this->rasterHeight = NextPow2(loadImgHeight);
+		this->origRasterWidth = rasterWidth;
+		this->origRasterHeight = rasterHeight;
+		this->loadImage = NULL;
+		this->loadTexData = NULL;
+		this->loadContext = NULL;
+		this->loadColorSpace = NULL;
+		this->width = loadImgWidth/2.0;
+		this->height = loadImgHeight/2.0;
+		
+		this->defaultTexStartX = 0.0f;
+		this->defaultTexEndX = ((GLfloat)loadImgWidth / (GLfloat)rasterWidth);
+		this->defaultTexStartY = 0.0f;
+		this->defaultTexEndY = ((GLfloat)loadImgHeight / (GLfloat)rasterHeight);
+		
+		this->loadImageData = malloc( rasterHeight * rasterWidth * 4 );
+		memset(this->loadImageData, 0x00, rasterHeight * rasterWidth * 4);
+	}
+	
+	this->widthD2 = this->width/2.0;
+	this->heightD2 = this->height/2.0;
+	this->widthM2 = this->width*2.0;
+	this->heightM2 = this->height*2.0;
+	
+	this->resourcePriority = resourcePriority;
+	this->resourceLoadingSize = rasterWidth * rasterHeight * 4 * 2;
+	this->resourceIdleSize = rasterWidth * rasterHeight * 4;
+	
+	this->resourceIsActive = true;
+	this->resourceState = RESOURCE_STATE_LOADED;
+	
+	//LOGR("image loaded ok");
+}
 
 void CSlrImage::PreloadImage(CSlrFile *imgFile)
 {
@@ -1117,14 +1162,8 @@ void CSlrImage::BindImage()
 {
 	//LOGD("BindImage()");
 
-// TODO:
-//	if (!gMainContext || ![EAGLContext setCurrentContext:gMainContext]) 
-//		SYS_FatalExit("BindImage() self current context failed");
-	
 	if (this->loadImageData == NULL)
 		SYS_FatalExit("BindImage() loadImageData NULL");
-	
-	//	[EAGLContext setCurrentContext:[gMainContext in EAGLView] ];
 	
 	glGenTextures(1, &texture[0]);
 	glBindTexture(GL_TEXTURE_2D, texture[0]);
@@ -1157,9 +1196,47 @@ void CSlrImage::BindImage()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	
-	
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, rasterWidth, rasterHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, loadImageData);
 }
+
+void CSlrImage::ReBindImage()
+{
+	//LOGD("ReBindImage()");
+	
+	if (this->loadImageData == NULL)
+		SYS_FatalExit("BindImage() loadImageData NULL");
+	
+	glBindTexture(GL_TEXTURE_2D, texture[0]);
+	
+	isBound = true;
+	isActive = true;
+	
+	resourceIsActive = true;
+	resourceState = RESOURCE_STATE_LOADED;
+	
+	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	
+	if (this->linearScaling)
+	{
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+	}
+	else
+	{
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+	}
+	
+	
+	//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	//  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, rasterWidth, rasterHeight, GL_RGBA, GL_UNSIGNED_BYTE, loadImageData);
+}
+
 
 void CSlrImage::FreeLoadImage()
 {
@@ -1215,9 +1292,8 @@ void CSlrImage::SetLoadImageData(CImageData *imageData)
 
 void CSlrImage::ReplaceImageData(CImageData *imageData)
 {
-	this->Deallocate();
 	this->SetLoadImageData(imageData);
-	this->BindImage();
+	this->ReBindImage();
 	this->loadImageData = NULL;
 }
 

@@ -7,6 +7,10 @@
 #include "CByteBuffer.h"
 #include "DebuggerDefs.h"
 
+
+
+
+
 extern "C"
 {
 #include "ViceWrapper.h"
@@ -32,7 +36,22 @@ public:
 	
 	virtual int GetEmulatorType();
 	virtual CSlrString *GetEmulatorVersionString();
+	virtual CSlrString *GetPlatformNameString();
+
+	virtual float GetEmulationFPS();
+
+	// this is main emulation cpu cycle counter
+	virtual unsigned int GetMainCpuCycleCounter();
+	virtual unsigned int GetPreviousCpuInstructionCycleCounter();
 	
+	// resettable counters for debug purposes
+	virtual void ResetMainCpuDebugCycleCounter();
+	virtual unsigned int GetMainCpuDebugCycleCounter();
+	virtual void ResetEmulationFrameCounter();
+	virtual unsigned int GetEmulationFrameNumber();
+
+	virtual void RefreshScreenNoCallback();
+
 	virtual void RunEmulationThread();
 	
 	virtual void InitKeyMap(C64KeyMap *keyMap);
@@ -72,8 +91,6 @@ public:
 	
 	virtual int GetScreenSizeX();
 	virtual int GetScreenSizeY();
-	
-	virtual CImageData *GetScreenImageData();
 	
 	virtual void Reset();
 	virtual void HardReset();
@@ -143,6 +160,7 @@ public:
 	virtual void MakeJmpNoReset(CSlrDataAdapter *dataAdapter, uint16 addr);
 
 	// make jmp and reset CPU
+	virtual void MakeJmpAndReset(uint16 addr);
 	virtual void MakeJmpC64(uint16 addr);
 	
 	// make jmp without resetting CPU
@@ -217,18 +235,32 @@ public:
 	virtual void DatasetteSetResetWithCPU(bool resetWithCPU);
 	virtual void DatasetteSetTapeWobble(int tapeWobble);
 
+	// reu
+	virtual void SetReuEnabled(bool isEnabled);
+	virtual void SetReuSize(int reuSize);
+	virtual bool LoadReu(char *filePath);
+	virtual bool SaveReu(char *filePath);
+
+	//
+	virtual void DetachEverything();
+
 	// snapshots
 	virtual bool LoadFullSnapshot(CByteBuffer *snapshotBuffer);
 	virtual void SaveFullSnapshot(CByteBuffer *snapshotBuffer);
 	virtual bool LoadFullSnapshot(char *filePath);
 	virtual void SaveFullSnapshot(char *filePath);
 
-	// from emulator to debugger
-	virtual void MarkC64CellRead(uint16 addr);
-	virtual void MarkC64CellWrite(uint16 addr, uint8 value);
-	virtual void MarkDrive1541CellRead(uint16 addr);
-	virtual void MarkDrive1541CellWrite(uint16 addr, uint8 value);
-	
+	// these calls should be synced with CPU IRQ so snapshot store or restore is allowed
+	// store CHIPS only snapshot, not including DISK DATA
+	virtual bool LoadChipsSnapshotSynced(CByteBuffer *byteBuffer);
+	virtual bool SaveChipsSnapshotSynced(CByteBuffer *byteBuffer);
+	// store DISK DATA only snapshot, without CHIPS
+	virtual bool LoadDiskDataSnapshotSynced(CByteBuffer *byteBuffer);
+	virtual bool SaveDiskDataSnapshotSynced(CByteBuffer *byteBuffer);
+
+	virtual bool IsDriveDirtyForSnapshot();
+	virtual void ClearDriveDirtyForSnapshotFlag();
+
 //	virtual void UiInsertD64(CSlrString *path);
 	
 	virtual bool IsCpuJam();
@@ -270,6 +302,25 @@ public:
 	
 	//
 	virtual CSlrDataAdapter *GetDataAdapter();
+
+	virtual CViewDisassemble *GetViewMainCpuDisassemble();
+	virtual CViewDisassemble *GetViewDriveDisassemble(int driveNo);	// TODO: make drive cpu generic (create specific debug interface for drive?)
+	virtual CViewBreakpoints *GetViewBreakpoints();
+	virtual CViewDataWatch *GetViewMemoryDataWatch();
+
+	//
+	// @returns NULL when monitor is not supported
+	virtual bool IsCodeMonitorSupported();
+	virtual CSlrString *GetCodeMonitorPrompt();
+	virtual bool ExecuteCodeMonitorCommand(CSlrString *commandStr);
+
+	//
+	virtual void Shutdown();
+	
+	// profiler
+	// if fileName is NULL no file will be created, if runForNumCycles is -1 it will run till ProfilerDeactivate
+	virtual void ProfilerActivate(char *fileName, int runForNumCycles, bool pauseCpuWhenFinished);
+	virtual void ProfilerDeactivate();
 
 };
 

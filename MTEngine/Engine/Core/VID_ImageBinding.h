@@ -11,7 +11,6 @@
 #define _VID_IMAGE_BINDING_
 
 #include "SYS_Defs.h"
-#include <pthread.h>
 #include "SYS_Main.h"
 #include "CSlrImage.h"
 

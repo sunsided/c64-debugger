@@ -9,26 +9,10 @@ class CViewC64VicDisplay;
 class C64DebugInterface;
 class CImageData;
 
-enum c64CanvasType : u8
-{
-	C64_CANVAS_TYPE_BLANK	= 0,
-	C64_CANVAS_TYPE_BITMAP	= 1,
-	C64_CANVAS_TYPE_TEXT	= 2,
-};
-
 enum
 {
 	VICEDITOR_COLOR_SOURCE_LMB = 1,
 	VICEDITOR_COLOR_SOURCE_RMB = 2
-};
-
-enum
-{
-	PAINT_RESULT_ERROR			= 0,
-	PAINT_RESULT_OUTSIDE		= 1,
-	PAINT_RESULT_BLOCKED		= 2,
-	PAINT_RESULT_OK				= 10,
-	PAINT_RESULT_REPLACED_COLOR	= 11,
 };
 
 class C64ColorsHistogramElement
@@ -94,11 +78,11 @@ public:
 	virtual u8 ConvertFrom(CImageData *imageData);
 	
 	// finds background color (the color that has highest number of appearances)
-	virtual std::vector<C64ColorsHistogramElement *> *GetSortedColorsHistogram(CImageData *imageData);
-	virtual void DeleteColorsHistogram(std::vector<C64ColorsHistogramElement *> *colors);
+	static std::vector<C64ColorsHistogramElement *> *GetSortedColorsHistogram(CImageData *imageData);
+	static void DeleteColorsHistogram(std::vector<C64ColorsHistogramElement *> *colors);
 	
 	// reduces color space to C64 colors only (nearest)
-	virtual CImageData *ReducePalette(CImageData *imageData);
+	static CImageData *ReducePalette(CImageData *imageData, CViewC64VicDisplay *vicDisplay);
 };
 
 #endif

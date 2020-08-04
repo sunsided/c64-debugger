@@ -11,7 +11,8 @@ void vice_wrapper_log_message(char *message)
 
 void vice_wrapper_log_warning(char *message)
 {
-	LOGWarning("%s", message);
+//	LOGWarning("%s", message);
+	LOGA("%s", message);
 }
 
 void vice_wrapper_log_error(char *message)

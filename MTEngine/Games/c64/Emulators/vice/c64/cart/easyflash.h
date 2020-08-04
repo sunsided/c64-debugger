@@ -51,7 +51,7 @@ extern int easyflash_flush_image(void);
 
 struct snapshot_s;
 
-extern int easyflash_snapshot_write_module(struct snapshot_s *s);
-extern int easyflash_snapshot_read_module(struct snapshot_s *s);
+extern int easyflash_snapshot_write_module(struct snapshot_s *s, int save_cart_roms);
+extern int easyflash_snapshot_read_module(struct snapshot_s *s, int read_cart_roms);
 
 #endif

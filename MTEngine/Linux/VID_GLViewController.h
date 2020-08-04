@@ -304,5 +304,7 @@ void GUI_SetPressConsumed(bool consumed);
 float VID_GetFingerRayLength();
 
 void VID_SetFPS(float fps);
+void VID_StoreMainWindowPosition();
+
 
 #endif

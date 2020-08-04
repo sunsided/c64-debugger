@@ -2572,7 +2572,7 @@ opcode.op.op8[0] = ((o) >> 16) & 0xff; \
 					// c64d check PC breakpoint after IRQ or trap
 					c64d_drive1541_check_pc_breakpoint(reg_pc);
 					viceCurrentDiskPC[0] = reg_pc;
-					c64d_debug_pause_check();
+					c64d_debug_pause_check(0);
 				}
 			}
 			
@@ -3682,7 +3682,7 @@ opcode.op.op8[0] = ((o) >> 16) & 0xff; \
 			
 			viceCurrentDiskPC[0] = reg_pc;
 			
-			c64d_debug_pause_check();
+			c64d_debug_pause_check(0);
 		}
 		
 		//		if (c64d_debug_mode == C64_DEBUG_SHUTDOWN)

@@ -11,6 +11,7 @@
 #include "CViewMemoryMap.h"
 #include "CViewC64StateCPU.h"
 #include "CViewDriveStateCPU.h"
+#include "C64Tools.h"
 #include "C64D_Version.h"
 
 #define C64DEBUGGER_MONITOR_HISTORY_FILE_VERSION	1
@@ -24,7 +25,7 @@ enum monitorSaveFileType
 	MONITOR_SAVE_FILE_DISASSEMBLE
 };
 
-CViewMonitorConsole::CViewMonitorConsole(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, C64DebugInterface *debugInterface)
+CViewMonitorConsole::CViewMonitorConsole(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, CDebugInterface *debugInterface)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
 {
 	this->debugInterface = debugInterface;
@@ -40,15 +41,15 @@ CViewMonitorConsole::CViewMonitorConsole(GLfloat posX, GLfloat posY, GLfloat pos
 
 	
 	this->device = C64MONITOR_DEVICE_C64;
-	this->dataAdapter = viewC64->viewC64MemoryDataDump->dataAdapter;
+	this->dataAdapter = debugInterface->GetDataAdapter();
 	
 	memoryExtensions.push_back(new CSlrString("bin"));
 	prgExtensions.push_back(new CSlrString("prg"));
 	disassembleExtensions.push_back(new CSlrString("asm"));
 	
-	char *buf = SYS_GetCharBuf();
-	sprintf(buf, "C64 Debugger v%s monitor", C64DEBUGGER_VERSION_STRING);
-	this->viewConsole->PrintLine(buf);
+	debugInterface->SetCodeMonitorCallback(this);
+	
+	PrintInitPrompt();
 	
 	RestoreMonitorHistory();
 }
@@ -75,47 +76,54 @@ bool CViewMonitorConsole::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool is
  
 	//LOGD("commandLineCursorPos=%d", viewConsole->commandLineCursorPos);
 
-	// hack for case-sensitive file names ;)
-	if (viewConsole->commandLine[0] == 'S')
+	if (c64SettingsUseNativeEmulatorMonitor && debugInterface->IsCodeMonitorSupported())
 	{
-		// 0123456789012345678
-		// S XXXX YYYY filename
-		// S PRG XXXX YYYY filename
-
-		if (viewConsole->commandLine[2] != 'P' && viewConsole->commandLineCursorPos >= 11)
-		{
-			upKey = keyCode;
-		}
-		else if (viewConsole->commandLine[2] == 'P' && viewConsole->commandLineCursorPos >= 15)
-		{
-			upKey = keyCode;
-		}
-		else
-		{
-			upKey = toupper(keyCode);
-		}
-	}
-	else if (viewConsole->commandLine[0] == 'L')
-	{
-		// 0123456789012345678
-		// L XXXX filename
-		// L PRG filename
-		if (viewConsole->commandLine[2] != 'P' && viewConsole->commandLineCursorPos >= 6)
-		{
-			upKey = keyCode;
-		}
-		else if (viewConsole->commandLine[2] == 'P' && viewConsole->commandLineCursorPos >= 5)
-		{
-			upKey = keyCode;
-		}
-		else
-		{
-			upKey = toupper(keyCode);
-		}
+		upKey = keyCode;
 	}
 	else
 	{
-		upKey = toupper(keyCode);
+		// hack for case-sensitive file names ;)
+		if (viewConsole->commandLine[0] == 'S')
+		{
+			// 0123456789012345678
+			// S XXXX YYYY filename
+			// S PRG XXXX YYYY filename
+			
+			if (viewConsole->commandLine[2] != 'P' && viewConsole->commandLineCursorPos >= 11)
+			{
+				upKey = keyCode;
+			}
+			else if (viewConsole->commandLine[2] == 'P' && viewConsole->commandLineCursorPos >= 15)
+			{
+				upKey = keyCode;
+			}
+			else
+			{
+				upKey = toupper(keyCode);
+			}
+		}
+		else if (viewConsole->commandLine[0] == 'L')
+		{
+			// 0123456789012345678
+			// L XXXX filename
+			// L PRG filename
+			if (viewConsole->commandLine[2] != 'P' && viewConsole->commandLineCursorPos >= 6)
+			{
+				upKey = keyCode;
+			}
+			else if (viewConsole->commandLine[2] == 'P' && viewConsole->commandLineCursorPos >= 5)
+			{
+				upKey = keyCode;
+			}
+			else
+			{
+				upKey = toupper(keyCode);
+			}
+		}
+		else
+		{
+			upKey = toupper(keyCode);
+		}
 	}
 
 	return this->viewConsole->KeyDown(upKey);
@@ -125,6 +133,42 @@ void CViewMonitorConsole::Render()
 {
 	BlitFilledRectangle(posX, posY, posZ, sizeX, sizeY, 0.15f, 0.15f, 0.15f, 1.0f);
 	this->viewConsole->Render();
+}
+
+bool CViewMonitorConsole::DoScrollWheel(float deltaX, float deltaY)
+{
+	return this->viewConsole->DoScrollWheel(deltaX, deltaY);
+}
+
+void CViewMonitorConsole::PrintInitPrompt()
+{
+	if (c64SettingsUseNativeEmulatorMonitor && debugInterface->IsCodeMonitorSupported())
+	{
+		CSlrString *str = debugInterface->GetEmulatorVersionString();
+		str->Concatenate(" monitor");
+		this->viewConsole->PrintLine(str);
+		
+//		CSlrString *promptStr = debugInterface->GetCodeMonitorPrompt();
+//		this->viewConsole->PrintLine(promptStr);
+//		delete promptStr;
+	}
+	else
+	{
+		char *buf = SYS_GetCharBuf();
+#if defined(RUN_COMMODORE64)
+		sprintf(buf, "C64 Debugger v%s monitor", C64DEBUGGER_VERSION_STRING);
+#elif defined(RUN_ATARI)
+		sprintf(buf, "65XE Debugger v%s monitor", C64DEBUGGER_VERSION_STRING);
+#else
+		sprintf(buf, "C64 65XE Debugger v%s monitor", C64DEBUGGER_VERSION_STRING);
+#endif
+		this->viewConsole->PrintLine(buf);
+	}
+}
+
+void CViewMonitorConsole::CodeMonitorCallbackPrintLine(CSlrString *printLine)
+{
+	this->viewConsole->PrintLine(printLine);
 }
 
 void CViewMonitorConsole::GuiViewConsoleExecuteCommand(char *commandText)
@@ -139,6 +183,33 @@ void CViewMonitorConsole::GuiViewConsoleExecuteCommand(char *commandText)
 	this->viewConsole->PrintLine(buf);
 	
 	SYS_ReleaseCharBuf(buf);
+	
+	if (c64SettingsUseNativeEmulatorMonitor && debugInterface->IsCodeMonitorSupported())
+	{
+		this->viewConsole->mutex->Unlock();
+
+		if (!strcmp(commandText, "C64D") || !strcmp(commandText, "c64d"))
+		{
+			c64SettingsUseNativeEmulatorMonitor = false;
+			this->viewConsole->ResetCommandLine();
+			this->PrintInitPrompt();
+			C64DebuggerStoreSettings();
+			return;
+		}
+		
+		CSlrString *commandStr = new CSlrString(commandText);
+		debugInterface->ExecuteCodeMonitorCommand(commandStr);
+		delete commandStr;
+		
+		CSlrString *promptStr = debugInterface->GetCodeMonitorPrompt();
+		this->viewConsole->PrintLine(promptStr);
+		delete promptStr;
+
+		this->viewConsole->ResetCommandLine();
+		StoreMonitorHistory();
+		
+		return;
+	}
 	
 	// tokenize command
 	tokenIndex = 0;
@@ -156,7 +227,8 @@ void CViewMonitorConsole::GuiViewConsoleExecuteCommand(char *commandText)
 		{
 			CommandHelp();
 		}
-		else if (token->CompareWith("DEVICE") || token->CompareWith("device"))
+		else if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE
+				 && (token->CompareWith("DEVICE") || token->CompareWith("device")))
 		{
 			CommandDevice();
 		}
@@ -175,6 +247,10 @@ void CViewMonitorConsole::GuiViewConsoleExecuteCommand(char *commandText)
 		else if (token->CompareWith("H") || token->CompareWith("h"))
 		{
 			CommandHunt();
+		}
+		else if (token->CompareWith("HC") || token->CompareWith("hc"))
+		{
+			CommandHuntContinue();
 		}
 		else if (token->CompareWith("S") || token->CompareWith("s"))
 		{
@@ -195,6 +271,12 @@ void CViewMonitorConsole::GuiViewConsoleExecuteCommand(char *commandText)
 		else if (token->CompareWith("D") || token->CompareWith("d"))
 		{
 			CommandDisassemble();
+		}
+		else if (token->CompareWith("VICE") || token->CompareWith("vice"))
+		{
+			c64SettingsUseNativeEmulatorMonitor = true;
+			this->PrintInitPrompt();
+			C64DebuggerStoreSettings();
 		}
 		else
 		{
@@ -266,14 +348,19 @@ bool CViewMonitorConsole::GetTokenValueHex(int *value)
 
 void CViewMonitorConsole::CommandHelp()
 {
-	this->viewConsole->PrintLine("DEVICE C / D / 8");
-	this->viewConsole->PrintLine("    set current device (C64/Disk/Disk)");
+	if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
+	{
+		this->viewConsole->PrintLine("DEVICE C / D / 8");
+		this->viewConsole->PrintLine("    set current device (C64/Disk/Disk)");
+	}
 	this->viewConsole->PrintLine("F <from address> <to address> <value>");
 	this->viewConsole->PrintLine("    fill memory with value");
 	this->viewConsole->PrintLine("C <from address> <to address> <destination address>");
 	this->viewConsole->PrintLine("    compare memory with memory");
 	this->viewConsole->PrintLine("H <from address> <to address> <value> [<value> ...]");
 	this->viewConsole->PrintLine("    compare memory with values");
+	this->viewConsole->PrintLine("HC <from address> <to address> <value> [<value> ...]");
+	this->viewConsole->PrintLine("    find values that addresses are in previous hunt");
 	this->viewConsole->PrintLine("T <from address> <to address> <destination address>");
 	this->viewConsole->PrintLine("    copy memory");
 	this->viewConsole->PrintLine("L [PRG] [from address] [file name]");
@@ -306,13 +393,21 @@ void CViewMonitorConsole::CommandGoJMP()
 		return;
 	}
 	
-	if (this->device == C64MONITOR_DEVICE_C64)
+	// TODO: generalize me (add drive debug interface)
+	if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
 	{
-		viewC64->debugInterfaceC64->MakeJmpNoResetC64(addrStart);
+		if (this->device == C64MONITOR_DEVICE_C64)
+		{
+			viewC64->debugInterfaceC64->MakeJmpNoResetC64(addrStart);
+		}
+		else
+		{
+			viewC64->debugInterfaceC64->MakeJmpNoReset1541(addrStart);
+		}
 	}
 	else
 	{
-		viewC64->debugInterfaceC64->MakeJmpNoReset1541(addrStart);
+		debugInterface->MakeJmpNoReset(debugInterface->GetDataAdapter(), addrStart);
 	}
 }
 
@@ -353,37 +448,43 @@ void CViewMonitorConsole::CommandDevice()
 
 void CViewMonitorConsole::UpdateDataAdapters()
 {
-	bool v1, v2;
-	if (device == C64MONITOR_DEVICE_C64)
+	// TODO: generalize me, add drive data adapters
+	if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
 	{
-		this->dataAdapter = viewC64->viewC64MemoryDataDump->dataAdapter;
+		bool v1, v2;
+		if (device == C64MONITOR_DEVICE_C64)
+		{
+			this->dataAdapter = viewC64->viewC64MemoryDataDump->dataAdapter;
+			
+			v1 = true;
+			v2 = false;
+		}
+		else if (device == C64MONITOR_DEVICE_DISK1541_8)
+		{
+			this->dataAdapter = viewC64->viewDrive1541MemoryDataDump->dataAdapter;
+			
+			v1 = false;
+			v2 = true;
+		}
 		
-		v1 = true;
-		v2 = false;
+		bool v;
+		v = v1;
+		viewC64->viewC64StateCPU->SetVisible(v);
+		viewC64->viewC64Disassemble->SetVisible(v);
+		viewC64->viewC64MemoryDataDump->SetVisible(v);
+		viewC64->viewC64MemoryMap->SetVisible(v);
+		viewC64->debugInterfaceC64->isDebugOn = v;
+		v = v2;
+		viewC64->viewDriveStateCPU->SetVisible(v);
+		viewC64->viewDrive1541Disassemble->SetVisible(v);
+		viewC64->viewDrive1541MemoryDataDump->SetVisible(v);
+		viewC64->viewDrive1541MemoryMap->SetVisible(v);
+		viewC64->debugInterfaceC64->debugOnDrive1541 = v;
 	}
-	else if (device == C64MONITOR_DEVICE_DISK1541_8)
+	else
 	{
-		this->dataAdapter = viewC64->viewDrive1541MemoryDataDump->dataAdapter;
-
-		v1 = false;
-		v2 = true;
+		this->dataAdapter = debugInterface->GetDataAdapter();
 	}
-	
-	bool v;
-	v = v1;
-	viewC64->viewC64StateCPU->SetVisible(v);
-	viewC64->viewC64Disassemble->SetVisible(v);
-	viewC64->viewC64MemoryDataDump->SetVisible(v);
-	viewC64->viewC64MemoryMap->SetVisible(v);
-	viewC64->debugInterfaceC64->isDebugOn = v;
-	v = v2;
-	viewC64->viewDriveStateCPU->SetVisible(v);
-	viewC64->viewDrive1541Disassemble->SetVisible(v);
-	viewC64->viewDrive1541MemoryDataDump->SetVisible(v);
-	viewC64->viewDrive1541MemoryMap->SetVisible(v);
-	viewC64->debugInterfaceC64->debugOnDrive1541 = v;
-	
-
 }
 
 void CViewMonitorConsole::CommandFill()
@@ -392,7 +493,7 @@ void CViewMonitorConsole::CommandFill()
 	
 	if (GetTokenValueHex(&addrStart) == false)
 	{
-		this->viewConsole->PrintLine("Usage: F <from addres> <to address> <value>");
+		this->viewConsole->PrintLine("Usage: F <from address> <to address> <value>");
 		return;
 	}
 	
@@ -430,7 +531,7 @@ void CViewMonitorConsole::CommandFill()
 	
 	if (addrEnd < addrStart)
 	{
-		this->viewConsole->PrintLine("Usage: F <from addres> <to address> <value>");
+		this->viewConsole->PrintLine("Usage: F <from address> <to address> <value>");
 		return;
 	}
 
@@ -454,7 +555,7 @@ void CViewMonitorConsole::CommandCompare()
 	
 	if (GetTokenValueHex(&addrStart) == false)
 	{
-		this->viewConsole->PrintLine("Usage: C <from addres> <to address> <destination address>");
+		this->viewConsole->PrintLine("Usage: C <from address> <to address> <destination address>");
 		return;
 	}
 	
@@ -493,7 +594,7 @@ void CViewMonitorConsole::CommandCompare()
 	if (addrEnd <= addrStart)
 	{
 		this->viewConsole->PrintLine("From address must be less than to address.");
-		this->viewConsole->PrintLine("Usage: C <from addres> <to address> <destination address>");
+		this->viewConsole->PrintLine("Usage: C <from address> <to address> <destination address>");
 		return;
 	}
 	
@@ -533,7 +634,7 @@ void CViewMonitorConsole::CommandTransfer()
 	
 	if (GetTokenValueHex(&addrStart) == false)
 	{
-		this->viewConsole->PrintLine("Usage: T <from addres> <to address> <destination address>");
+		this->viewConsole->PrintLine("Usage: T <from address> <to address> <destination address>");
 		return;
 	}
 	
@@ -572,7 +673,7 @@ void CViewMonitorConsole::CommandTransfer()
 	if (addrEnd <= addrStart)
 	{
 		this->viewConsole->PrintLine("From address must be less than to address.");
-		this->viewConsole->PrintLine("Usage: T <from addres> <to address> <destination address>");
+		this->viewConsole->PrintLine("Usage: T <from address> <to address> <destination address>");
 		return;
 	}
 	
@@ -605,7 +706,7 @@ void CViewMonitorConsole::CommandHunt()
 	
 	if (GetTokenValueHex(&addrStart) == false)
 	{
-		this->viewConsole->PrintLine("Usage: H <from addres> <to address> <value> [<value> ...]");
+		this->viewConsole->PrintLine("Usage: H <from address> <to address> <value> [<value> ...]");
 		return;
 	}
 	
@@ -631,28 +732,39 @@ void CViewMonitorConsole::CommandHunt()
 	if (addrEnd <= addrStart)
 	{
 		this->viewConsole->PrintLine("From address must be less than to address.");
-		this->viewConsole->PrintLine("Usage: H <from addres> <to address> <value> [<value> ...]");
+		this->viewConsole->PrintLine("Usage: H <from address> <to address> <value> [<value> ...]");
 		return;
 	}
 
-	std::list<uint8> values;
+	std::list<int> values;
 
 	int val;
 	
 	while (GetTokenValueHex(&val))
 	{
-		if (val < 0x00 || val > 0xFF)
+		if (val >= 0x00 && val <= 0xFF)
+		{
+			values.push_back(val);
+		}
+		else if (val >= 0x0100 && val <= 0xFFFF)
+		{
+			u8 val1 = val & 0x00FF;
+			u8 val2 = (val & 0xFF00) >> 8;
+			
+			values.push_back(val1);
+			values.push_back(val2);
+		}
+		else
 		{
 			this->viewConsole->PrintLine("Bad hunt value.");
 			return;
 		}
-		values.push_back(val);
 	}
 	
 	if (values.size() == 0)
 	{
 		this->viewConsole->PrintLine("No values entered.");
-		this->viewConsole->PrintLine("Usage: H <from addres> <to address> <value> [<value> ...]");
+		this->viewConsole->PrintLine("Usage: H <from address> <to address> <value> [<value> ...]");
 		return;
 	}
 	
@@ -662,17 +774,18 @@ void CViewMonitorConsole::CommandHunt()
 	char *buf2 = SYS_GetCharBuf();
 	
 	int numAddresses = 0;
+	previousHuntAddrs.clear();
 	
 	for (int i = addrStart; i < addrEnd; i++)
 	{
-		if (addrEnd + values.size() > 0xFFFF)
+		if (i + values.size() > 0xFFFF)
 			break;
 		
 		bool found = true;
 
 		int addr = i;
 		
-		for (std::list<uint8>::iterator it = values.begin(); it != values.end(); it++)
+		for (std::list<int>::iterator it = values.begin(); it != values.end(); it++)
 		{
 			uint8 v;
 			dataAdapter->AdapterReadByte(addr, &v, &a);
@@ -694,6 +807,8 @@ void CViewMonitorConsole::CommandHunt()
 		
 		if (found)
 		{
+			previousHuntAddrs[i] = i;
+			
 			sprintf(buf2, " %04X", i);
 			strcat(buf, buf2);
 			numAddresses++;
@@ -716,12 +831,159 @@ void CViewMonitorConsole::CommandHunt()
 	SYS_ReleaseCharBuf(buf2);
 }
 
+void CViewMonitorConsole::CommandHuntContinue()
+{
+	int addrStart, addrEnd;
+	
+	if (GetTokenValueHex(&addrStart) == false)
+	{
+		this->viewConsole->PrintLine("Usage: HC <from address> <to address> <value> [<value> ...]");
+		return;
+	}
+	
+	if (addrStart < 0x0000 || addrStart > 0xFFFF)
+	{
+		this->viewConsole->PrintLine("Bad 'from' address value.");
+		return;
+	}
+	
+	//
+	if (GetTokenValueHex(&addrEnd) == false)
+	{
+		this->viewConsole->PrintLine("Missing 'to' address value.");
+		return;
+	}
+	
+	if (addrEnd < 0x0000 || addrEnd > 0xFFFF)
+	{
+		this->viewConsole->PrintLine("Bad 'to' address value.");
+		return;
+	}
+	
+	if (addrEnd <= addrStart)
+	{
+		this->viewConsole->PrintLine("From address must be less than to address.");
+		this->viewConsole->PrintLine("Usage: HC <from address> <to address> <value> [<value> ...]");
+		return;
+	}
+	
+	std::list<int> values;
+	
+	int val;
+	
+	while (GetTokenValueHex(&val))
+	{
+		if (val >= 0x00 && val <= 0xFF)
+		{
+			values.push_back(val);
+		}
+		else if (val >= 0x0100 && val <= 0xFFFF)
+		{
+			u8 val1 = val & 0x00FF;
+			u8 val2 = (val & 0xFF00) >> 8;
+			
+			values.push_back(val1);
+			values.push_back(val2);
+		}
+		else
+		{
+			this->viewConsole->PrintLine("Bad hunt value.");
+			return;
+		}
+	}
+	
+	if (values.size() == 0)
+	{
+		this->viewConsole->PrintLine("No values entered.");
+		this->viewConsole->PrintLine("Usage: HC <from address> <to address> <value> [<value> ...]");
+		return;
+	}
+	
+	bool a;
+	
+	char *buf = SYS_GetCharBuf();
+	char *buf2 = SYS_GetCharBuf();
+	
+	int numAddresses = 0;
+	
+	std::list<int> foundAddresses;
+	
+	for (int i = addrStart; i < addrEnd; i++)
+	{
+		if (i + values.size() > 0xFFFF)
+			break;
+		
+		bool found = true;
+		
+		int addr = i;
+		
+		for (std::list<int>::iterator it = values.begin(); it != values.end(); it++)
+		{
+			uint8 v;
+			dataAdapter->AdapterReadByte(addr, &v, &a);
+			
+			if (a == false)
+			{
+				found = false;
+				break;
+			}
+			
+			if (v != *it)
+			{
+				found = false;
+				break;
+			}
+			
+			addr++;
+		}
+		
+		if (found)
+		{
+			// check if found addr is already in previous hunt results
+			std::map<int, int>::iterator it = previousHuntAddrs.find(i);
+			if (it != previousHuntAddrs.end())
+			{
+				// value found in previous hunt
+				foundAddresses.push_back(i);
+				
+				sprintf(buf2, " %04X", i);
+				strcat(buf, buf2);
+				numAddresses++;
+			
+				if (numAddresses == 8)
+				{
+					viewConsole->PrintLine(buf);
+					buf[0] = 0x00;
+					numAddresses = 0;
+				}
+			}
+		}
+	}
+	
+	if (numAddresses != 0)
+	{
+		viewConsole->PrintLine(buf);
+		
+		// copy over previous hunt
+		previousHuntAddrs.clear();
+		
+		for (std::list<int>::iterator it = foundAddresses.begin(); it != foundAddresses.end(); it++)
+		{
+			int addr = *it;
+			previousHuntAddrs[addr] = addr;
+		}
+	}
+	
+	SYS_ReleaseCharBuf(buf);
+	SYS_ReleaseCharBuf(buf2);
+}
+
 void CViewMonitorConsole::CommandMemorySave()
 {
 	CSlrString *token;
 	if (GetToken(&token) == false)
 	{
-		this->viewConsole->PrintLine("Usage: S [PRG] <from addres> <to address> [file name]");
+		this->viewConsole->PrintLine("Usage: S [PRG] <from address> <to address> [file name]");
 		return;
 	}
 	
@@ -734,7 +996,7 @@ void CViewMonitorConsole::CommandMemorySave()
 	
 	if (GetTokenValueHex(&addrStart) == false)
 	{
-		this->viewConsole->PrintLine("Usage: S [PRG] <from addres> <to address> [file name]");
+		this->viewConsole->PrintLine("Usage: S [PRG] <from address> <to address> [file name]");
 		return;
 	}
 	
@@ -759,7 +1021,7 @@ void CViewMonitorConsole::CommandMemorySave()
 	
 	if (addrEnd <= addrStart)
 	{
-		this->viewConsole->PrintLine("Usage: S [PRG] <from addres> <to address> [file name]");
+		this->viewConsole->PrintLine("Usage: S [PRG] <from address> <to address> [file name]");
 		return;
 	}
 	
@@ -771,7 +1033,7 @@ void CViewMonitorConsole::CommandMemorySavePRG()
 {
 	if (GetTokenValueHex(&addrStart) == false)
 	{
-		this->viewConsole->PrintLine("Usage: S [PRG] <from addres> <to address> [file name]");
+		this->viewConsole->PrintLine("Usage: S [PRG] <from address> <to address> [file name]");
 		return;
 	}
 	
@@ -796,7 +1058,7 @@ void CViewMonitorConsole::CommandMemorySavePRG()
 	
 	if (addrEnd <= addrStart)
 	{
-		this->viewConsole->PrintLine("Usage: S [PRG] <from addres> <to address> [file name]");
+		this->viewConsole->PrintLine("Usage: S [PRG] <from address> <to address> [file name]");
 		return;
 	}
 	
@@ -891,6 +1153,8 @@ bool CViewMonitorConsole::DoMemoryDumpToFile(int addrStart, int addrEnd, bool is
 	// get file path
 	char *cFilePath = filePath->GetStdASCII();
 	
+	C64SaveMemory(addrStart, addrEnd, isPRG, dataAdapter, cFilePath);
+	
 	FILE *fp;
 	fp = fopen(cFilePath, "wb");
 
@@ -953,7 +1217,7 @@ void CViewMonitorConsole::CommandMemoryLoad()
 	{
 		//this->viewConsole->PrintLine("Usage: L [PRG] [from addres] [file name]");
 		// no tokens - just open LOAD PRG dialog
-		viewC64->viewC64MainMenu->OpenDialogLoadPRG();
+		viewC64->viewC64MainMenu->OpenDialogOpenFile();
 		return;
 	}
 
@@ -1129,9 +1393,9 @@ void CViewMonitorConsole::StoreMonitorHistory()
 	CByteBuffer *byteBuffer = new CByteBuffer();
 	byteBuffer->PutU16(C64DEBUGGER_MONITOR_HISTORY_FILE_VERSION);
 	
-	byteBuffer->PutByte(viewC64->viewMonitorConsole->viewConsole->commandLineHistory.size());
-	for (std::list<char *>::iterator it = viewC64->viewMonitorConsole->viewConsole->commandLineHistory.begin();
-		 it != viewC64->viewMonitorConsole->viewConsole->commandLineHistory.end(); it++)
+	byteBuffer->PutByte(this->viewConsole->commandLineHistory.size());
+	for (std::list<char *>::iterator it = this->viewConsole->commandLineHistory.begin();
+		 it != this->viewConsole->commandLineHistory.end(); it++)
 	{
 		byteBuffer->PutString(*it);
 	}
@@ -1188,7 +1452,7 @@ void CViewMonitorConsole::CommandDisassemble()
 	CSlrString *token;
 	if (GetToken(&token) == false)
 	{
-		this->viewConsole->PrintLine("Usage: D [NOHEX] <from addres> <to address> [file name]");
+		this->viewConsole->PrintLine("Usage: D [NOHEX] <from address> <to address> [file name]");
 		return;
 	}
 	
@@ -1201,7 +1465,7 @@ void CViewMonitorConsole::CommandDisassemble()
 	
 	if (GetTokenValueHex(&addrStart) == false)
 	{
-		this->viewConsole->PrintLine("Usage: D [NOHEX] <from addres> <to address> [file name]");
+		this->viewConsole->PrintLine("Usage: D [NOHEX] <from address> <to address> [file name]");
 		return;
 	}
 	
@@ -1226,7 +1490,7 @@ void CViewMonitorConsole::CommandDisassemble()
 	
 	if (addrEnd <= addrStart)
 	{
-		this->viewConsole->PrintLine("Usage: D [NOHEX] <from addres> <to address> [file name]");
+		this->viewConsole->PrintLine("Usage: D [NOHEX] <from address> <to address> [file name]");
 		return;
 	}
 	
@@ -1357,6 +1621,7 @@ bool CViewMonitorConsole::DoDisassembleMemory(int startAddress, int endAddress, 
 			{
 				opcode = memory[addr ];	//% memoryLength
 				renderAddress += DisassembleLine(renderAddress, op[0], op[1], op[2], byteBuffer);
+				byteBuffer->PutByte('\n');
 			}
 			else
 			{
@@ -1369,10 +1634,12 @@ bool CViewMonitorConsole::DoDisassembleMemory(int startAddress, int endAddress, 
 					if (opcodes[opcode].addressingLength == 1)
 					{
 						DisassembleLine(renderAddress, op[0], op[1], op[2], byteBuffer);
+						byteBuffer->PutByte('\n');
 					}
 					else
 					{
 						DisassembleHexLine(renderAddress, byteBuffer);
+						byteBuffer->PutByte('\n');
 					}
 					
 					renderAddress += 1;
@@ -1390,6 +1657,7 @@ bool CViewMonitorConsole::DoDisassembleMemory(int startAddress, int endAddress, 
 					
 					opcode = memory[ (renderAddress) ];	//% memoryLength
 					renderAddress += DisassembleLine(renderAddress, op[0], op[1], op[2], byteBuffer);
+					byteBuffer->PutByte('\n');
 				}
 				else
 				{
@@ -1402,13 +1670,16 @@ bool CViewMonitorConsole::DoDisassembleMemory(int startAddress, int endAddress, 
 						if (opcodes[opcode].addressingLength == 2)
 						{
 							renderAddress += DisassembleLine(renderAddress, op[0], op[1], op[2], byteBuffer);
+							byteBuffer->PutByte('\n');
 						}
 						else
 						{
 							DisassembleHexLine(renderAddress, byteBuffer);
+							byteBuffer->PutByte('\n');
 							renderAddress += 1;
 							
 							DisassembleHexLine(renderAddress, byteBuffer);
+							byteBuffer->PutByte('\n');
 							renderAddress += 1;
 						}
 						
@@ -1425,6 +1696,7 @@ bool CViewMonitorConsole::DoDisassembleMemory(int startAddress, int endAddress, 
 						
 						opcode = memory[ (renderAddress) ];	//% memoryLength
 						renderAddress += DisassembleLine(renderAddress, op[0], op[1], op[2], byteBuffer);
+						byteBuffer->PutByte('\n');
 					}
 					else
 					{
@@ -1432,19 +1704,19 @@ bool CViewMonitorConsole::DoDisassembleMemory(int startAddress, int endAddress, 
 						{
 							// execute not found, just render line
 							renderAddress += DisassembleLine(renderAddress, op[0], op[1], op[2], byteBuffer);
+							byteBuffer->PutByte('\n');
 						}
 						else
 						{
 							// it is argument
 							DisassembleHexLine(renderAddress, byteBuffer);
+							byteBuffer->PutByte('\n');
 							renderAddress++;
 						}
 					}
 				}
 			}
 		}
-		
-		byteBuffer->PutByte('\n');
 		
 		if (renderAddress >= endAddress)
 			break;

@@ -1,19 +1,19 @@
 #include "DBG_Log.h"
 #include "SYS_Accelerometer.h"
-#include <pthread.h>
+#include "SYS_Threading.h"
 #include <list>
 
 //#define ACCELEROMETER_TWEAK_VALUES 0.083
 
 std::list<CAccelerometerListener *> accelerometerListeners;
-pthread_mutex_t accelerometerListenersMutex;
+CSlrMutex *accelerometerListenersMutex;
 volatile bool accelerometerInit = false;
 
 void SYS_InitAccelerometer()
 {
 	LOGD("SYS_InitAccelerometer()");
 	accelerometerListeners.clear();
-	pthread_mutex_init(&accelerometerListenersMutex, NULL);
+	accelerometerListenersMutex = new CSlrMutex("accelerometerListenersMutex");
 
 	//[gAppDelegate initAccelerometer];
 	accelerometerInit = true;
@@ -40,7 +40,7 @@ void LockAccelerometerListenersListMutex()
 	LOGD("LockAccelerometerListenersListMutex");
 #endif
 
-	pthread_mutex_lock(&accelerometerListenersMutex);
+	accelerometerListenersMutex->Lock();
 }
 
 void UnlockAccelerometerListenersListMutex()
@@ -49,7 +49,7 @@ void UnlockAccelerometerListenersListMutex()
 	LOGD("UnlockAccelerometerListenersListMutex");
 #endif
 
-	pthread_mutex_unlock(&accelerometerListenersMutex);
+	accelerometerListenersMutex->Unlock();
 }
 
 void SYS_AddAccelerometerListener(CAccelerometerListener *callback)

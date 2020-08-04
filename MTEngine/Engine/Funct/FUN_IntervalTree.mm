@@ -80,15 +80,15 @@ ITInterval *FUN_ITOverlapSearch(ITNode *root, ITInterval i)
 }
 
 
-void inorder(ITNode *root)
+void FUN_ITPrintInOrder(ITNode *root)
 {
 	if (root == NULL) return;
  
-	inorder(root->left);
+	FUN_ITPrintInOrder(root->left);
  
 	LOGD("[%d, %d] max=%d", root->i->low, root->i->high, root->max);
  
-	inorder(root->right);
+	FUN_ITPrintInOrder(root->right);
 }
 
 

@@ -50,7 +50,7 @@ void SDL_INIT_Exit(void)
 
 double PLATFORM_Time(void)
 {
-	return mt_SYS_GetCurrentTimeInMillis() * 1e-3;
+	return (double)(mt_SYS_GetCurrentTimeInMillis()) * 1e-3;
 	//	return SDL_GetTicks() * 1e-3;
 }
 

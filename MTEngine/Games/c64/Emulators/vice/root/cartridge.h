@@ -85,8 +85,8 @@ extern int cartridge_flush_image(int type);
 
 /* load/write snapshot modules for attached cartridges */
 struct snapshot_s;
-extern int cartridge_snapshot_read_modules(struct snapshot_s *s);
-extern int cartridge_snapshot_write_modules(struct snapshot_s *s);
+extern int cartridge_snapshot_read_modules(struct snapshot_s *s, int store_reu_data, int read_cart_roms);
+extern int cartridge_snapshot_write_modules(struct snapshot_s *s, int store_reu_data, int save_cart_roms);
 
 /* setup context */
 struct machine_context_s;

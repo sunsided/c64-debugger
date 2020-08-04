@@ -110,11 +110,11 @@ void CGuiViewFrame::UpdateSize()
 
 void CGuiViewFrame::SetSize(GLfloat sizeX, GLfloat sizeY)
 {
-	LOGD("CGuiViewFrame::SetSize: '%s'", this->view->name);
+	LOGG("CGuiViewFrame::SetSize: '%s'", this->view->name);
 	CGuiView::SetSize(sizeX, sizeY);
 	if (btnCloseWindow != NULL)
 	{
-		LOGD("CGuiViewFrame::SetSize: '%s' update close button, this->sizeX=%f", this->view->name, this->sizeX);
+		LOGG("CGuiViewFrame::SetSize: '%s' update close button, this->sizeX=%f", this->view->name, this->sizeX);
 		btnCloseWindow->SetPositionOffset(this->sizeX - 7, (-barHeight+2), 0);
 	}
 }

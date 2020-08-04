@@ -39,6 +39,11 @@ C64DebugInterface::~C64DebugInterface()
 {
 }
 
+void C64DebugInterface::Shutdown()
+{
+	CDebugInterface::Shutdown();
+}
+
 int C64DebugInterface::GetEmulatorType()
 {
 	SYS_FatalExit("C64DebugInterface::GetEmulatorType");
@@ -49,6 +54,51 @@ CSlrString *C64DebugInterface::GetEmulatorVersionString()
 {
 	SYS_FatalExit("C64DebugInterface::GetEmulatorVersionString");
 	return NULL;
+}
+
+CSlrString *C64DebugInterface::GetPlatformNameString()
+{
+	return new CSlrString("Commodore 64");
+}
+
+float C64DebugInterface::GetEmulationFPS()
+{
+	return -1;
+}
+
+unsigned int C64DebugInterface::GetMainCpuCycleCounter()
+{
+	return CDebugInterface::GetMainCpuCycleCounter();
+}
+
+void C64DebugInterface::ResetMainCpuDebugCycleCounter()
+{
+	CDebugInterface::ResetMainCpuDebugCycleCounter();
+}
+
+unsigned int C64DebugInterface::GetMainCpuDebugCycleCounter()
+{
+	return CDebugInterface::GetMainCpuDebugCycleCounter();
+}
+
+unsigned int C64DebugInterface::GetPreviousCpuInstructionCycleCounter()
+{
+	return CDebugInterface::GetPreviousCpuInstructionCycleCounter();
+}
+
+void C64DebugInterface::ResetEmulationFrameCounter()
+{
+	CDebugInterface::ResetEmulationFrameCounter();
+}
+
+unsigned int C64DebugInterface::GetEmulationFrameNumber()
+{
+	return CDebugInterface::GetEmulationFrameNumber();
+}
+
+void C64DebugInterface::RefreshScreenNoCallback()
+{
+	SYS_FatalExit("C64DebugInterface::RefreshScreenNoCallback");
 }
 
 void C64DebugInterface::InitKeyMap(C64KeyMap *keyMap)
@@ -65,6 +115,7 @@ uint8 *C64DebugInterface::GetCharRom()
 
 void C64DebugInterface::RunEmulationThread()
 {
+	CDebugInterface::RunEmulationThread();
 	SYS_FatalExit("C64DebugInterface::RunEmulationThread");
 }
 
@@ -142,12 +193,6 @@ void C64DebugInterface::SetTemporaryDrive1541BreakpointPC(int address)
 int C64DebugInterface::GetTemporaryDrive1541BreakpointPC()
 {
 	return this->temporaryDrive1541BreakpointPC;
-}
-
-CImageData *C64DebugInterface::GetScreenImageData()
-{
-	SYS_FatalExit("C64DebugInterface::GetScreenImageData");
-	return NULL;
 }
 
 void C64DebugInterface::Reset()
@@ -407,6 +452,11 @@ void C64DebugInterface::MakeJmpNoReset(CSlrDataAdapter *dataAdapter, uint16 addr
 	}
 }
 
+void C64DebugInterface::MakeJmpAndReset(uint16 addr)
+{
+	this->MakeJmpC64(addr);
+}
+
 void C64DebugInterface::MakeJmpC64(uint16 addr)
 {
 	SYS_FatalExit("C64DebugInterface::MakeJmpC64");
@@ -521,6 +571,42 @@ void C64DebugInterface::SaveFullSnapshot(char *filePath)
 	SYS_FatalExit("C64DebugInterface::SaveFullSnapshot");	
 }
 
+// this call should be synced with CPU IRQ so snapshot store or restore is allowed
+bool C64DebugInterface::LoadChipsSnapshotSynced(CByteBuffer *byteBuffer)
+{
+	SYS_FatalExit("C64DebugInterface::LoadChipsSnapshotSynced");
+	return false;
+}
+
+bool C64DebugInterface::SaveChipsSnapshotSynced(CByteBuffer *byteBuffer)
+{
+	SYS_FatalExit("C64DebugInterface::SaveChipsSnapshotSynced");
+	return false;
+}
+
+bool C64DebugInterface::LoadDiskDataSnapshotSynced(CByteBuffer *byteBuffer)
+{
+	SYS_FatalExit("C64DebugInterface::LoadDiskDataSnapshotSynced");
+	return false;
+}
+
+bool C64DebugInterface::SaveDiskDataSnapshotSynced(CByteBuffer *byteBuffer)
+{
+	SYS_FatalExit("C64DebugInterface::SaveDiskDataSnapshotSynced");
+	return false;
+}
+
+bool C64DebugInterface::IsDriveDirtyForSnapshot()
+{
+	SYS_FatalExit("C64DebugInterface::IsDriveDirtyForSnapshot");
+	return false;
+}
+
+void C64DebugInterface::ClearDriveDirtyForSnapshotFlag()
+{
+	SYS_FatalExit("C64DebugInterface::ClearDriveDirtyForSnapshotFlag");
+}
+
 void C64DebugInterface::GetVICColors(uint8 *cD021, uint8 *cD022, uint8 *cD023, uint8 *cD025, uint8 *cD026, uint8 *cD027, uint8 *cD800)
 {
 	SYS_FatalExit("C64DebugInterface::GetVICColors");
@@ -539,28 +625,6 @@ void C64DebugInterface::GetCBMColor(uint8 colorNum, uint8 *r, uint8 *g, uint8 *b
 void C64DebugInterface::GetFloatCBMColor(uint8 colorNum, float *r, float *g, float *b)
 {
 	SYS_FatalExit("C64DebugInterface::GetFloatCBMColor");
-}
-
-//
-
-void C64DebugInterface::MarkC64CellRead(uint16 addr)
-{
-	viewC64->viewC64MemoryMap->CellRead(addr);
-}
-
-void C64DebugInterface::MarkC64CellWrite(uint16 addr, uint8 value)
-{
-	viewC64->viewC64MemoryMap->CellWrite(addr, value);
-}
-
-void C64DebugInterface::MarkDrive1541CellRead(uint16 addr)
-{
-	viewC64->viewDrive1541MemoryMap->CellRead(addr);
-}
-
-void C64DebugInterface::MarkDrive1541CellWrite(uint16 addr, uint8 value)
-{
-	viewC64->viewDrive1541MemoryMap->CellWrite(addr, value);
 }
 
 //
@@ -728,6 +792,35 @@ void C64DebugInterface::GetC64CartridgeState(C64StateCartridge *cartridgeState)
 	SYS_FatalExit("C64DebugInterface::GetC64CartridgeState");
 }
 
+// REU
+void C64DebugInterface::SetReuEnabled(bool isEnabled)
+{
+	SYS_FatalExit("C64DebugInterface::SetReuEnabled");
+}
+
+void C64DebugInterface::SetReuSize(int reuSize)
+{
+	SYS_FatalExit("C64DebugInterface::SetReuSize");
+}
+
+bool C64DebugInterface::LoadReu(char *filePath)
+{
+	SYS_FatalExit("C64DebugInterface::LoadReu");
+	return false;
+}
+
+bool C64DebugInterface::SaveReu(char *filePath)
+{
+	SYS_FatalExit("C64DebugInterface::SaveReu");
+	return false;
+}
+
+//
+void C64DebugInterface::DetachEverything()
+{
+	SYS_FatalExit("C64DebugInterface::DetachEverything");
+}
+
 void C64DebugInterface::SetPalette(uint8 *palette)
 {
 	SYS_FatalExit("C64DebugInterface::SetPalette");
@@ -743,8 +836,55 @@ void C64DebugInterface::SetAudioVolume(float volume)
 	SYS_FatalExit("C64DebugInterface::SetAudioVolume");
 }
 
+void C64DebugInterface::ProfilerActivate(char *fileName, int runForNumCycles, bool pauseCpuWhenFinished)
+{
+	SYS_FatalExit("C64DebugInterface::ProfilerActivate");
+}
+
+void C64DebugInterface::ProfilerDeactivate()
+{
+	SYS_FatalExit("C64DebugInterface::ProfilerDeactivate");
+}
+
 CSlrDataAdapter *C64DebugInterface::GetDataAdapter()
 {
 	return this->dataAdapterC64;
 }
 
+CViewDisassemble *C64DebugInterface::GetViewMainCpuDisassemble()
+{
+	return NULL;
+}
+
+CViewDisassemble *C64DebugInterface::GetViewDriveDisassemble(int driveNo)
+{
+	return NULL;
+}
+
+CViewBreakpoints *C64DebugInterface::GetViewBreakpoints()
+{
+	return NULL;
+}
+
+CViewDataWatch *C64DebugInterface::GetViewMemoryDataWatch()
+{
+	return NULL;
+}
+
+//
+bool C64DebugInterface::IsCodeMonitorSupported()
+{
+	return false;
+}
+
+CSlrString *C64DebugInterface::GetCodeMonitorPrompt()
+{
+	// monitor is not supported
+	return NULL;
+}
+
+bool C64DebugInterface::ExecuteCodeMonitorCommand(CSlrString *commandStr)
+{
+	// monitor is not supported
+	return false;
+}

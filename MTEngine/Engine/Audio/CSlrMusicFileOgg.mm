@@ -63,7 +63,7 @@ CSlrMusicFileOgg::CSlrMusicFileOgg()
 : CSlrMusicFile()
 {
 	this->type = MUSIC_TYPE_OGG;
-	pthread_mutex_init(&oggFileMutex, NULL);
+	oggFileMutex = new CSlrMutex("CSlrMusicFileOgg");
 
 	oggMixBuffer = new int[SOUND_BUFFER_SIZE];
 	oggAudioBuffer = new int[SOUND_BUFFER_SIZE];
@@ -79,7 +79,7 @@ CSlrMusicFileOgg::CSlrMusicFileOgg(char *fileName, bool seekable, bool fromResou
 : CSlrMusicFile()
 {
 	this->type = MUSIC_TYPE_OGG;
-	pthread_mutex_init(&oggFileMutex, NULL);
+	oggFileMutex = new CSlrMutex("CSlrMusicFileOgg");
 
 	oggMixBuffer = new int[SOUND_BUFFER_SIZE];
 	oggAudioBuffer = new int[SOUND_BUFFER_SIZE];
@@ -96,7 +96,7 @@ CSlrMusicFileOgg::CSlrMusicFileOgg(CSlrFile *file, bool seekable)
 : CSlrMusicFile()
 {
 	this->type = MUSIC_TYPE_OGG;
-	pthread_mutex_init(&oggFileMutex, NULL);
+	oggFileMutex = new CSlrMutex("CSlrMusicFileOgg");
 	
 	oggMixBuffer = new int[SOUND_BUFFER_SIZE];
 	oggAudioBuffer = new int[SOUND_BUFFER_SIZE];
@@ -430,14 +430,12 @@ void CSlrMusicFileOgg::OggMix(u32 numSamples)
 		if (oggAudioBufferPos >= oggAudioBufferLen)
 		{
 			// render one buffer
-			//pthread_mutex_lock(&gSoundEngine->oggPlayerMutex);
 			//LOGD("ogg render");
 
 			if (oggVorbisData == NULL || !this->isPlaying)
 			{
 				memset((byte *) oggMixBuffer, 0x00, len);
 				oggAudioBufferPos = SOUND_BUFFER_SIZE;
-				//pthread_mutex_unlock(&gSoundEngine->oggPlayerMutex);
 
 				if (shouldBeDestroyedByEngine)
 					this->destroyMe = true;
@@ -739,11 +737,11 @@ u32 CSlrMusicFileOgg::ResourceGetSize()
 
 void CSlrMusicFileOgg::LockMutex()
 {
-	pthread_mutex_lock(&oggFileMutex);
+	oggFileMutex->Lock();
 }
 
 void CSlrMusicFileOgg::UnlockMutex()
 {
-	pthread_mutex_unlock(&oggFileMutex);
+	oggFileMutex->Unlock();
 }
 

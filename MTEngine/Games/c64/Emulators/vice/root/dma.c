@@ -97,6 +97,7 @@ void dma_maincpu_steal_cycles(CLOCK start_clk, int num, CLOCK sub)
     }
 
     maincpu_clk += num;
+	c64d_maincpu_clk += num;
 
     cs->last_stolen_cycles_clk = dma_start + num;
 #ifdef DEBUGIRQDMA

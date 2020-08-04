@@ -8,7 +8,6 @@
 #include "CViewC64.h"
 #include "CViewMemoryMap.h"
 #include "C64Tools.h"
-#include "CViewC64Screen.h"
 #include "SYS_Threading.h"
 #include "CGuiEditHex.h"
 #include "VID_ImageBinding.h"
@@ -18,8 +17,12 @@
 #include "C64KeyboardShortcuts.h"
 #include "SYS_SharedMemory.h"
 #include "CViewC64VicDisplay.h"
-#include "CViewAtariScreen.h"
 #include <math.h>
+
+
+#include "CViewC64Screen.h"
+#include "CViewAtariScreen.h"
+#include "CViewNesScreen.h"
 
 CViewDataDump::CViewDataDump(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
 							 CSlrDataAdapter *dataAdapter, CViewMemoryMap *viewMemoryMap, CViewDisassemble *viewDisassemble,
@@ -35,15 +38,32 @@ CViewDataDump::CViewDataDump(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 	
 	this->viewMemoryMap->SetViewC64DataDump(this);
 
-	fontCBM1 = viewC64->fontCBM1;
-	fontCBM2 = viewC64->fontCBM2;
+	if (this->debugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
+	{
+		fontAtari = NULL;
+		fontCBM1 = viewC64->fontCBM1;
+		fontCBM2 = viewC64->fontCBM2;
+		fontCharacters = fontCBM1;
+	}
+	else if (this->debugInterface->GetEmulatorType() == EMULATOR_TYPE_ATARI800)
+	{
+		fontAtari = viewC64->fontAtari;
+		fontCBM1 = viewC64->fontCBM1;
+		fontCBM2 = viewC64->fontCBM2;
+		fontCharacters = fontAtari;
+	}
+	else if (this->debugInterface->GetEmulatorType() == EMULATOR_TYPE_NESTOPIA)
+	{
+		fontAtari = viewC64->fontAtari;
+		fontCBM1 = viewC64->fontCBM1;
+		fontCBM2 = viewC64->fontCBM2;
+		fontCharacters = fontCBM1;
+	}
 	
 	fontSize = 5.0f;
 	
 	fontBytes = guiMain->fntConsole;
 	
-	fontCharacters = fontCBM1;
-
 	dataShowStart = 0;
 	dataShowEnd = 0;
 	dataShowSize = 0;
@@ -68,8 +88,6 @@ CViewDataDump::CViewDataDump(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 	isEditingValueAddr = false;
 	
 	strTemp = new CSlrString();
-
-	mutex = new CSlrMutex();
 
 	renderDataWithColors = false;
 	
@@ -98,7 +116,7 @@ CViewDataDump::CViewDataDump(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 	// init images for sprites
 	for (int i = 0; i < numberOfSpritesToShow; i++)
 	{
-		// alloc image that will store character pixels
+		// alloc image that will store sprite pixels
 		CImageData *imageData = new CImageData(32, 32, IMG_TYPE_RGBA);
 		imageData->AllocImage(false, true);
 		
@@ -156,6 +174,11 @@ void CViewDataDump::DoLogic()
 
 bool CViewDataDump::FindDataPosition(float x, float y, int *dataPositionX, int *dataPositionY, int *dataPositionAddr)
 {
+	float fontBytesSize40 = 4*fontBytesSize;
+	float fontBytesSize40_gap = fontBytesSize40 + gapAddress;
+	float fontBytesSize20_gap = 2.0*fontBytesSize + gapHexData;
+	float fontBytesSize05 = gapDataCharacters; //0.5f*fontBytesSize;
+
 	float px = posX;
 	float py = posY;
 	
@@ -167,7 +190,7 @@ bool CViewDataDump::FindDataPosition(float x, float y, int *dataPositionX, int *
 		px = posX;
 		int a = addr;
 		
-		px += 5*fontBytesSize;
+		px += fontBytesSize40_gap;
 		
 		float nextpy = py + fontCharactersWidth;
 		
@@ -187,10 +210,10 @@ bool CViewDataDump::FindDataPosition(float x, float y, int *dataPositionX, int *
 			}
 			
 			a++;
-			px = nextpx + 0.5*fontBytesSize;
+			px += fontBytesSize20_gap; //nextpx + 0.5*fontBytesSize;
 		}
 		
-		px += 0.5f*fontBytesSize;
+		px += fontBytesSize05;
 		
 		addr += numberOfBytesPerLine;
 		
@@ -345,16 +368,19 @@ void CViewDataDump::Render()
 		px += fontBytesSize05;
 		
 		// data characters
-		a = addr;
-		for (int dx = 0; dx < numberOfBytesPerLine; dx++)
+		if (showDataCharacters)
 		{
-			byte value;
-			dataAdapter->AdapterReadByte(a, &value);
-			
-			fontCharacters->BlitChar((u16)value, px, py, posZ, fontCharactersSize);
-			
-			px += fontCharactersWidth;
-			a++;
+			a = addr;
+			for (int dx = 0; dx < numberOfBytesPerLine; dx++)
+			{
+				byte value;
+				dataAdapter->AdapterReadByte(a, &value);
+				
+				fontCharacters->BlitChar((u16)value, px, py, posZ, fontCharactersSize);
+				
+				px += fontCharactersWidth;
+				a++;
+			}			
 		}
 
 		addr += numberOfBytesPerLine;
@@ -604,9 +630,21 @@ bool CViewDataDump::DoTap(GLfloat x, GLfloat y)
 	if (guiMain->isControlPressed)
 	{
 		CViewMemoryMapCell *cell = viewMemoryMap->memoryCells[dataPositionAddr];
-		if (cell->pc != -1)
+		
+		if (guiMain->isShiftPressed)
 		{
-			viewDisassemble->ScrollToAddress(cell->pc);
+			if (cell->readPC != -1)
+			{
+				viewDisassemble->ScrollToAddress(cell->readPC);
+			}
+		}
+		else
+		{
+			if (cell->writePC != -1)
+			{
+				viewDisassemble->ScrollToAddress(cell->writePC);
+			}
+			
 		}
 	}
 	else
@@ -633,13 +671,21 @@ bool CViewDataDump::DoTap(GLfloat x, GLfloat y)
 	
 //	isVisibleEditCursor = true;
 
+	guiMain->SetFocus(this);
+	
 	guiMain->UnlockMutex();
 	return true;
 }
 
 bool CViewDataDump::DoScrollWheel(float deltaX, float deltaY)
 {
-//	LOGD("CViewDataDump::DoScrollWheel: %f %f", deltaX, deltaY);
+	if (this->IsInside(guiMain->mousePosX, guiMain->mousePosY) == false)
+	{
+		return false;
+	}
+	
+	LOGD("CViewDataDump::DoScrollWheel: %f %f", deltaX, deltaY);
+	
 	guiMain->LockMutex();
 	
 	int dy = fabs(round(deltaY));
@@ -756,7 +802,7 @@ void CViewDataDump::ScrollToAddress(int address)
 
 bool CViewDataDump::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
-	LOGD("CViewDataDump::keyDown=%4.4x", keyCode);
+//	LOGD("CViewDataDump::keyDown=%4.4x", keyCode);
 	
 	u32 bareKey = SYS_GetBareKey(keyCode, isShift, isAlt, isControl);
 	
@@ -767,7 +813,18 @@ bool CViewDataDump::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContro
 		{
 			fontCharacters = fontCBM2;
 		}
-		else
+		else if (fontCharacters == fontCBM2)
+		{
+			if (fontAtari != NULL)
+			{
+				fontCharacters = fontAtari;
+			}
+			else
+			{
+				fontCharacters = fontCBM1;
+			}
+		}
+		else if (fontCharacters == fontAtari)
 		{
 			fontCharacters = fontCBM1;
 		}
@@ -803,10 +860,14 @@ bool CViewDataDump::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContro
 		{
 			viewC64->viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
 		}
-		
 		if (viewC64->debugInterfaceAtari)
 		{
 			viewC64->viewAtariScreen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		}
+
+		if (viewC64->debugInterfaceNes)
+		{
+			viewC64->viewNesScreen->KeyUpModifierKeys(isShift, isAlt, isControl);
 		}
 		return true;
 	}

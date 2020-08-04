@@ -8,6 +8,7 @@
 #include "SYS_KeyCodes.h"
 #include "CViewC64Screen.h"
 #include "C64DebugInterface.h"
+#include "AtariDebugInterface.h"
 #include "CGuiEditBoxText.h"
 #include "C64Tools.h"
 #include "CSlrString.h"
@@ -147,12 +148,24 @@ void CViewSourceCode::Render()
 		
 	}
 
-	C64AsmSourceSymbols *asmSource = viewC64->symbols->asmSource;
+	// TODO: Generalize me
+	CDebugInterface *debugInterface = NULL;
+	if (viewC64->debugInterfaceC64)
+	{
+		debugInterface = viewC64->debugInterfaceC64;
+	}
+	else if (viewC64->debugInterfaceAtari)
+	{
+		debugInterface = viewC64->debugInterfaceAtari;
+	}
+	
+	
+	C64AsmSourceSymbols *asmSource = debugInterface->symbols->asmSource;
 	
 	if (asmSource == NULL)
 		return;
 	
-	if (viewC64->symbols->asmSource->segments.empty())
+	if (debugInterface->symbols->asmSource->segments.empty())
 		return;
 
 //	fontSize = 5.0f;
@@ -173,7 +186,7 @@ void CViewSourceCode::Render()
 	
 	C64AsmSourceLine *sourceLine = NULL;
 	
-	C64AsmSourceSegment *sourceSegment = viewC64->symbols->asmSource->currentSelectedSegment;
+	C64AsmSourceSegment *sourceSegment = debugInterface->symbols->asmSource->currentSelectedSegment;
 	
 	// blit segment name
 	// TODO: make this in-line with UI, this is UI workaround
@@ -318,14 +331,28 @@ bool CViewSourceCode::DoTap(GLfloat x, GLfloat y)
 {
 	LOGG("CViewSourceCode::DoTap:  x=%f y=%f", x, y);
 	
+	if (this->visible == false)
+		return false;
+	
+	// TODO: Generalize me
+	CDebugInterface *debugInterface = NULL;
+	if (viewC64->debugInterfaceC64)
+	{
+		debugInterface = viewC64->debugInterfaceC64;
+	}
+	else if (viewC64->debugInterfaceAtari)
+	{
+		debugInterface = viewC64->debugInterfaceAtari;
+	}
+	
 	const float segmentFontSize = 6.0f;
 	if (x > posX && x < posX + (segmentFontSize*18)
 		&& y > 0 && y < (segmentFontSize * 3.0f))
 	{
 		// tapped on Segment, switch Segment to next
-		if (viewC64->symbols && viewC64->symbols->asmSource)
+		if (debugInterface->symbols && debugInterface->symbols->asmSource)
 		{
-			viewC64->symbols->asmSource->SelectNextSegment();
+			debugInterface->symbols->asmSource->SelectNextSegment();
 		}
 		return true;
 	}
@@ -406,4 +433,9 @@ bool CViewSourceCode::DoScrollWheel(float deltaX, float deltaY)
 	return true;
 }
 
+void CViewSourceCode::RenderFocusBorder()
+{
+	// do not render border
+	
+}
 

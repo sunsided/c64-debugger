@@ -61,7 +61,7 @@ int POKEY_Initialise(int *argc, char *argv[]);
 void POKEY_Frame(void);
 void POKEY_Scanline(void);
 void POKEY_StateSave(void);
-void POKEY_StateRead(void);
+void POKEY_StateRead(UBYTE version);
 
 #endif
 

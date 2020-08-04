@@ -10,6 +10,8 @@
 class CSlrKeyboardShortcut;
 class CViewC64MenuItem;
 
+extern int settingsReuSizes[8];
+
 class CViewSettingsMenu : public CGuiView, CGuiButtonCallback, CGuiViewMenuCallback, CSystemFileDialogCallback
 {
 public:
@@ -72,13 +74,15 @@ public:
 	CViewC64MenuItem *menuItemSubMenuAudio;
 	CViewC64MenuItem *menuItemSubMenuMemory;
 	CViewC64MenuItem *menuItemSubMenuTape;
+	CViewC64MenuItem *menuItemSubMenuReu;
 	CViewC64MenuItem *menuItemSubMenuUI;
 
 	CSlrKeyboardShortcut *kbsDetachEverything;
 	CViewC64MenuItem *menuItemDetachEverything;
-	void DetachEverything();
+	void DetachEverything(bool showMessage, bool storeSettings);
 	void DetachCartridge(bool showMessage);
 	void DetachDiskImage();
+	void DetachTape(bool showMessage);
 
 	CSlrKeyboardShortcut *kbsDetachDiskImage;
 	CViewC64MenuItem *menuItemDetachDiskImage;
@@ -103,6 +107,13 @@ public:
 	CSlrKeyboardShortcut *kbsCartridgeFreezeButton;
 	CViewC64MenuItem *menuItemCartridgeFreeze;
 
+	//
+	CSlrKeyboardShortcut *kbsResetCpuCycleAndFrameCounters;
+	CViewC64MenuItem *menuItemResetCpuCycleAndFrameCounters;
+	void ResetMainCpuDebugCycleAndFrameCounters();
+	void ResetMainCpuDebugCycleCounter();
+	void ResetEmulationFrameCounter();
+
 	CSlrKeyboardShortcut *kbsDumpC64Memory;
 	CViewC64MenuItem *menuItemDumpC64Memory;
 	CSlrKeyboardShortcut *kbsDumpDrive1541Memory;
@@ -117,6 +128,25 @@ public:
 	CViewC64MenuItem *menuItemMapC64MemoryToFile;
 	void UpdateMapC64MemoryToFileLabels();
 
+	CViewC64MenuItemOption *menuItemC64SnapshotsManagerIsActive;
+	CViewC64MenuItemFloat *menuItemC64SnapshotsManagerStoreInterval;
+	CViewC64MenuItemFloat *menuItemC64SnapshotsManagerLimit;
+	CViewC64MenuItemOption *menuItemC64TimelineIsActive;
+	
+	CViewC64MenuItem *menuItemC64ProfilerFilePath;
+	CViewC64MenuItemOption *menuItemC64ProfilerDoVic;
+	void UpdateC64ProfilerFilePath();
+	CSlrKeyboardShortcut *kbsC64ProfilerStartStop;
+	CViewC64MenuItem *menuItemC64ProfilerStartStop;
+	void OpenDialogSetC64ProfilerFileOutputPath();
+	void SetC64ProfilerOutputFile(CSlrString *path);
+	void C64ProfilerStartStop();
+	bool isProfilingC64;
+
+	CViewC64MenuItemOption *menuItemUseNativeEmulatorMonitor;
+
+	//
+	
 	CViewC64MenuItemOption *menuItemMemoryCellsColorStyle;
 	CViewC64MenuItemOption *menuItemMemoryMarkersColorStyle;
 	CViewC64MenuItemOption *menuItemMultiTouchMemoryMap;
@@ -127,13 +157,29 @@ public:
 	
 	//
 	CViewC64MenuItemOption *menuItemAutoJmp;
+	CSlrKeyboardShortcut *kbsAutoJmpAlwaysToLoadedPRGAddress;
 	CViewC64MenuItemOption *menuItemAutoJmpAlwaysToLoadedPRGAddress;
 	CSlrKeyboardShortcut *kbsAutoJmpFromInsertedDiskFirstPrg;
 	CViewC64MenuItemOption *menuItemAutoJmpFromInsertedDiskFirstPrg;
+	CSlrKeyboardShortcut *kbsAutoJmpDoReset;
 	CViewC64MenuItemOption *menuItemAutoJmpDoReset;
 	CViewC64MenuItemFloat  *menuItemAutoJmpWaitAfterReset;
 
+	// atari
+	CViewC64MenuItemOption *menuItemAtariVideoSystem;
+	CViewC64MenuItemOption *menuItemAtariMachineType;
+	std::vector<CSlrString *> *optionsAtariMachineTypes;
+	CViewC64MenuItemOption *menuItemAtariRamSize;
+	std::vector<CSlrString *> *optionsAtariRamSize800;
+	std::vector<CSlrString *> *optionsAtariRamSizeXL;
+	std::vector<CSlrString *> *optionsAtariRamSize5200;
+	void UpdateAtariRamSizeOptions();
+
+	CViewC64MenuItemOption *menuItemAtariPokeyStereo;
+
 	void ToggleAutoLoadFromInsertedDisk();
+	void ToggleAutoJmpAlwaysToLoadedPRGAddress();
+	void ToggleAutoJmpDoReset();
 	
 	// tape
 	CSlrKeyboardShortcut *kbsTapeAttach;
@@ -159,6 +205,13 @@ public:
 	CViewC64MenuItemFloat *menuItemDatasetteTapeWobble;
 	CViewC64MenuItemOption *menuItemDatasetteResetWithCPU;
 	
+	// REU
+	CViewC64MenuItemOption *menuItemReuEnabled;
+	CSlrKeyboardShortcut *kbsReuAttach;
+	CViewC64MenuItem *menuItemReuAttach;
+	CViewC64MenuItem *menuItemReuSave;
+	CViewC64MenuItemOption *menuItemReuSize;
+
 	
 	//
 	CViewC64MenuItemFloat *menuItemScreenGridLinesAlpha;
@@ -205,6 +258,7 @@ public:
 	CViewC64MenuItemOption *menuItemRunSIDEmulation;
 	CViewC64MenuItemFloat *menuItemAudioVolume;
 	CViewC64MenuItemOption *menuItemMuteSIDMode;
+	CViewC64MenuItemOption *menuItemSIDImportMode;
 	
 	CSlrKeyboardShortcut *kbsSwitchSoundOnOff;  // mojzesh
 	
@@ -222,7 +276,9 @@ public:
 	CViewC64MenuItemOption *menuItemDisassemblyNonExecuteColor;
 
 	CViewC64MenuItemOption *menuItemVicPalette;
-	CViewC64MenuItemOption *menuItemRenderScreenNearest;
+	CViewC64MenuItemOption *menuItemRenderScreenInterpolation;
+	CViewC64MenuItemOption *menuItemRenderScreenSupersample;
+
 	
 	CViewC64MenuItemOption *menuItemMaximumSpeed;
 	CSlrKeyboardShortcut *kbsSwitchNextMaximumSpeed;
@@ -246,9 +302,12 @@ public:
 	
 	std::list<CSlrString *> memoryExtensions;
 	std::list<CSlrString *> csvExtensions;
+	std::list<CSlrString *> profilerExtensions;
 	
 	virtual void SystemDialogFileSaveSelected(CSlrString *path);
 	virtual void SystemDialogFileSaveCancelled();
+
+	CViewC64MenuItem *menuItemSetFolderWithAtariROMs;
 
 	void OpenDialogDumpC64Memory();
 	void OpenDialogDumpC64MemoryMarkers();
@@ -263,6 +322,10 @@ public:
 	void MapC64MemoryToFile(CSlrString *path);
 	
 	byte openDialogFunction;
+	
+	//
+	CViewC64MenuItemOption *menuItemIsProcessPriorityBoostDisabled;
+	CViewC64MenuItemOption *menuItemProcessPriority;
 	
 	//
 	std::vector<int> *c64ModelTypeIds;

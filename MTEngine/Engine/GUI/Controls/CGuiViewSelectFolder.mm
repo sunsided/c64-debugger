@@ -19,8 +19,6 @@
 CGuiViewSelectFolder::CGuiViewSelectFolder(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, bool cancelButton, CGuiViewSelectFolderCallback *callback)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
 {
-	pthread_mutex_init(&renderMutex, NULL);
-
 	this->files = NULL;
 
 	this->callback = callback;
@@ -62,7 +60,6 @@ CGuiViewSelectFolder::CGuiViewSelectFolder(GLfloat posX, GLfloat posY, GLfloat p
 CGuiViewSelectFolder::~CGuiViewSelectFolder()
 {
 	httpFileUploadedCallbacks.remove(this);
-	pthread_mutex_destroy(&renderMutex);
 }
 
 void CGuiViewSelectFolder::SetFont(CSlrFont *font, float fontScale)
@@ -542,12 +539,12 @@ void CGuiViewSelectFolder::Render(GLfloat posX, GLfloat posY, GLfloat posZ, GLfl
 
 void CGuiViewSelectFolder::LockRenderMutex()
 {
-	pthread_mutex_lock(&this->renderMutex);
+	guiMain->LockMutex();
 }
 
 void CGuiViewSelectFolder::UnlockRenderMutex()
 {
-	pthread_mutex_unlock(&this->renderMutex);
+	guiMain->UnlockMutex();
 }
 
 void CGuiViewSelectFolderCallback::FolderSelected(UTFString *fullFolderPath, UTFString *folderPath)

@@ -575,7 +575,7 @@ static char flash_snap_module_name[] = "FLASH040EF";
 #define SNAP_MAJOR   0
 #define SNAP_MINOR   0
 
-int easyflash_snapshot_write_module(snapshot_t *s)
+int easyflash_snapshot_write_module(snapshot_t *s, int save_cart_roms)
 {
     snapshot_module_t *m;
 
@@ -590,8 +590,8 @@ int easyflash_snapshot_write_module(snapshot_t *s)
         || (SMW_B(m, easyflash_register_00) < 0)
         || (SMW_B(m, easyflash_register_02) < 0)
         || (SMW_BA(m, easyflash_ram, 256) < 0)
-        || (SMW_BA(m, roml_banks, 0x80000) < 0)
-        || (SMW_BA(m, romh_banks, 0x80000) < 0)) {
+		|| (save_cart_roms ? SMW_BA(m, roml_banks, 0x80000) : 1 < 0)
+		|| (save_cart_roms ? SMW_BA(m, romh_banks, 0x80000) : 1 < 0)) {
         snapshot_module_close(m);
         return -1;
     }
@@ -607,7 +607,7 @@ int easyflash_snapshot_write_module(snapshot_t *s)
     return 0;
 }
 
-int easyflash_snapshot_read_module(snapshot_t *s)
+int easyflash_snapshot_read_module(snapshot_t *s, int read_cart_roms)
 {
     BYTE vmajor, vminor;
     snapshot_module_t *m;
@@ -628,8 +628,8 @@ int easyflash_snapshot_read_module(snapshot_t *s)
         || (SMR_B(m, &easyflash_register_00) < 0)
         || (SMR_B(m, &easyflash_register_02) < 0)
         || (SMR_BA(m, easyflash_ram, 256) < 0)
-        || (SMR_BA(m, roml_banks, 0x80000) < 0)
-        || (SMR_BA(m, romh_banks, 0x80000) < 0)) {
+		|| (read_cart_roms ? SMR_BA(m, roml_banks, 0x80000) : 1 < 0)
+		|| (read_cart_roms ? SMR_BA(m, romh_banks, 0x80000) : 1 < 0)) {
         goto fail;
     }
 

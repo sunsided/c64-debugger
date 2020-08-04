@@ -223,3 +223,54 @@ void C64DiskDirectRamDataAdapterVice::AdapterReadBlockDirect(uint8 *buffer, int 
 {
 	this->debugInterface->GetMemoryFromRamDrive1541(buffer, pointerStart, pointerEnd);
 }
+
+// REU
+
+C64ReuDataAdapterVice::C64ReuDataAdapterVice(C64DebugInterfaceVice *debugInterface)
+{
+	this->debugInterface = debugInterface;
+}
+
+int C64ReuDataAdapterVice::AdapterGetDataLength()
+{
+	return 16*1024*1024; //16MB;
+}
+
+
+void C64ReuDataAdapterVice::AdapterReadByte(int pointer, uint8 *value)
+{
+//	*value = this->debugInterface->GetByteFromReu(pointer);
+}
+
+void C64ReuDataAdapterVice::AdapterWriteByte(int pointer, uint8 value)
+{
+//	this->debugInterface->SetByteToReu(pointer, value);
+}
+
+void C64ReuDataAdapterVice::AdapterReadByte(int pointer, uint8 *value, bool *isAvailable)
+{
+//	if (pointer < 16MB)
+//	{
+//		*isAvailable = true;
+//		*value = this->debugInterface->GetByteReu(pointer);
+//		return;
+//	}
+//	*isAvailable = false;
+}
+
+void C64ReuDataAdapterVice::AdapterWriteByte(int pointer, uint8 value, bool *isAvailable)
+{
+//	if (pointer < 16MB)
+//	{
+//		*isAvailable = true;
+//		this->debugInterface->SetByteToReu(pointer, value);
+//		return;
+//	}
+//	*isAvailable = false;
+}
+
+void C64ReuDataAdapterVice::AdapterReadBlockDirect(uint8 *buffer, int pointerStart, int pointerEnd)
+{
+//	this->debugInterface->GetMemoryFromReu(buffer, pointerStart, pointerEnd);
+}
+

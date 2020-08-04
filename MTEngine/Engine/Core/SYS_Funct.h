@@ -21,7 +21,7 @@ unsigned NextPow2( unsigned x );
 
 #include <math.h>
 
-void SYS_Sleep(long milliseconds);
+void SYS_Sleep(unsigned long milliseconds);
 
 static inline double radians (double degrees) {return degrees * M_PI/180;}
 

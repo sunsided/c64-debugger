@@ -48,16 +48,17 @@ public:
 	//void *origData;
 	void *tempData;
 	void *resultData;
-	byte type;
+	u8 type;
 
-	byte *mask;
+	u8 *mask;
 
 public:
 	CImageData(char *fileName);
 	CImageData(CByteBuffer *byteBuffer);
-	CImageData(int width, int height, byte type);
-	CImageData(int width, int height, byte type, bool allocTemp, bool allocResult);
-	CImageData(int width, int height, byte type, void *data);
+	CImageData(int width, int height);
+	CImageData(int width, int height, u8 type);
+	CImageData(int width, int height, u8 type, bool allocTemp, bool allocResult);
+	CImageData(int width, int height, u8 type, void *data);
 	CImageData(CImageData *src);
 	~CImageData();
 
@@ -74,35 +75,38 @@ public:
 	void DeallocResult();
 	void DeallocImage();
 
-	byte getImageType();
-	void setImageType(byte type);
-	void setResultImage(void *data, byte type);
+	u8 getImageType();
+	void setImageType(u8 type);
+	void setResultImage(void *data, u8 type);
 
 	// grayscale
-	byte GetPixelResultByte(int x, int y);
-	void SetPixelResultByte(int x, int y, byte val);
-	byte GetPixelResultByteSafe(int x, int y);
-	void SetPixelResultByteSafe(int x, int y, byte val);
-	byte GetPixelResultByteBorder(int x, int y);
-	byte GetPixelTemporaryByte(int x, int y);
-	void SetPixelTemporaryByte(int x, int y, byte val);
-	byte *getGrayscaleResultData();
-	byte *getGrayscaleTemporaryData();
-	void setGrayscaleResultData(byte *data);
+	u8 GetPixelResultByte(int x, int y);
+	void SetPixelResultByte(int x, int y, u8 val);
+	u8 GetPixelResultByteSafe(int x, int y);
+	void SetPixelResultByteSafe(int x, int y, u8 val);
+	u8 GetPixelResultByteBorder(int x, int y);
+	u8 GetPixelTemporaryByte(int x, int y);
+	void SetPixelTemporaryByte(int x, int y, u8 val);
+	u8 *getGrayscaleResultData();
+	u8 *getGrayscaleTemporaryData();
+	void setGrayscaleResultData(u8 *data);
 	// rgb
-	void GetPixelResultRGB(int x, int y, byte *r, byte *g, byte *b);
-	void SetPixelResultRGB(int x, int y, byte r, byte g, byte b);
-	void GetPixelTemporaryRGB(int x, int y, byte *r, byte *g, byte *b);
-	void SetPixelTemporaryRGB(int x, int y, byte r, byte g, byte b);
-	byte *getRGBResultData();
-	void setRGBResultData(byte *data);
+//	void GetPixel(int x, int y, u8 *r, u8 *g, u8 *b);
+	void GetPixelResultRGB(int x, int y, u8 *r, u8 *g, u8 *b);
+	void SetPixelResultRGB(int x, int y, u8 r, u8 g, u8 b);
+	void GetPixelTemporaryRGB(int x, int y, u8 *r, u8 *g, u8 *b);
+	void SetPixelTemporaryRGB(int x, int y, u8 r, u8 g, u8 b);
+	u8 *getRGBResultData();
+	void setRGBResultData(u8 *data);
 	// rgba
-	void GetPixelResultRGBA(int x, int y, byte *r, byte *g, byte *b, byte *a);
-	void SetPixelResultRGBA(int x, int y, byte r, byte g, byte b, byte a);
-	void GetPixelTemporaryRGBA(int x, int y, byte *r, byte *g, byte *b, byte *a);
-	void SetPixelTemporaryRGBA(int x, int y, byte r, byte g, byte b, byte a);
-	byte *getRGBAResultData();
-	void setRGBAResultData(byte *data);
+	void GetPixel(int x, int y, u8 *r, u8 *g, u8 *b, u8 *a);
+	void GetPixelResultRGBA(int x, int y, u8 *r, u8 *g, u8 *b, u8 *a);
+	void SetPixel(int x, int y, u8 r, u8 g, u8 b, u8 a);
+	void SetPixelResultRGBA(int x, int y, u8 r, u8 g, u8 b, u8 a);
+	void GetPixelTemporaryRGBA(int x, int y, u8 *r, u8 *g, u8 *b, u8 *a);
+	void SetPixelTemporaryRGBA(int x, int y, u8 r, u8 g, u8 b, u8 a);
+	u8 *getRGBAResultData();
+	void setRGBAResultData(u8 *data);
 	// cielab
 	void GetPixelResultCIELAB(int x, int y, int *l, int *a, int *b);
 	void SetPixelResultCIELAB(int x, int y, int l, int a, int b);
@@ -129,12 +133,13 @@ public:
 	void copyResultToTemporary()	;
 
 	void ConvertToByte();
-	void ConvertToByte(byte componentNum);
+	void ConvertToByte(u8 componentNum);
 	void ConvertToGrayscale();
-	void ConvertToGrayscale(byte componentNum);
+	void ConvertToGrayscale(u8 componentNum);
 	void ConvertToShortCount();
 	void ConvertToShort();
 	void ConvertToRGBA();
+	void ConvertToRGB();
 
 	uint8 *GetResultDataAsRGBA();
 	
@@ -150,12 +155,15 @@ public:
 	void LoadFromByteBuffer(CByteBuffer *byteBuffer);
 	void StoreToByteBuffer(CByteBuffer *byteBuffer);
 
+	void StoreToByteBuffer(CByteBuffer *byteBuffer, int compressionType);
+	static CImageData *GetFromByteBuffer(CByteBuffer *byteBuffer);
+
 	// temporary here -> move to image filters
-	void EraseContent(byte r, byte g, byte b, byte a);
+	void EraseContent(u8 r, u8 g, u8 b, u8 a);
 	void FlipVertically();
 	void Scale(float scaleX, float scaleY);
-	void DrawLine(int startX, int startY, int endX, int endY, byte r, byte g, byte b);
-	void DrawLine(int startX, int startY, int endX, int endY, byte r, byte g, byte b, byte a);
+	void DrawLine(int startX, int startY, int endX, int endY, u8 r, u8 g, u8 b);
+	void DrawLine(int startX, int startY, int endX, int endY, u8 r, u8 g, u8 b, u8 a);
 
 	bool isInsideCircularMask(int x, int y);
 

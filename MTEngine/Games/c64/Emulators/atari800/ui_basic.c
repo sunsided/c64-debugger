@@ -739,13 +739,14 @@ static int BasicUIOpenDir(const char *dirname)
 	return TRUE;
 }
 
-static int BasicUIReadDir(char *filename, int *isdir)
+static int BasicUIReadDir(char *filename, int *isdir, int *ishidden)
 {
 	if (dh == INVALID_HANDLE_VALUE) {
 #ifdef _WIN32_WCE
 		if (parentdir[0] != '\0' && Util_direxists(parentdir)) {
 			strcpy(filename, "..");
 			*isdir = TRUE;
+			*ishidden = FALSE;
 			parentdir[0] = '\0';
 			return TRUE;
 		}
@@ -764,6 +765,7 @@ static int BasicUIReadDir(char *filename, int *isdir)
 		parentdir[0] = '\0';
 #endif
 	*isdir = (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? TRUE : FALSE;
+	*ishidden = (wfd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) ? TRUE : FALSE;
 	if (!FindNextFile(dh, &wfd)) {
 		FindClose(dh);
 		dh = INVALID_HANDLE_VALUE;
@@ -785,7 +787,7 @@ static int BasicUIOpenDir(const char *dirname)
 	return dp != NULL;
 }
 
-static int BasicUIReadDir(char *filename, int *isdir)
+static int BasicUIReadDir(char *filename, int *isdir, int *ishidden)
 {
 	struct dirent *entry;
 	char fullfilename[FILENAME_MAX];
@@ -800,6 +802,7 @@ static int BasicUIReadDir(char *filename, int *isdir)
 	Util_catpath(fullfilename, dir_path, entry->d_name);
 	stat(fullfilename, &st);
 	*isdir = S_ISDIR(st.st_mode);
+	*ishidden = strlen(entry->d_name) > 1 && entry->d_name[0] == '.' && entry->d_name[1] != '.';
 	return TRUE;
 }
 
@@ -816,10 +819,10 @@ static int BasicUIOpenDir(const char *dirname)
 	return Atari_OpenDir(filename);
 }
 
-int Atari_ReadDir(char *fullpath, char *filename, int *isdir,
-                  int *readonly, int *size, char *timetext);
+int Atari_ReadDir(char *fullpath, char *filename, int *isdir, int *ishidden,
+				  int *readonly, int *size, char *timetext);
 
-#define BasicUIReadDir(filename, isdir)  Atari_ReadDir(NULL, filename, isdir, NULL, NULL, NULL)
+#define BasicUIReadDir(filename, isdir, ishidden)  Atari_ReadDir(NULL, filename, isdir, ishidden, NULL, NULL, NULL)
 
 #define DO_DIR
 
@@ -900,24 +903,25 @@ static void GetDirectory(const char *directory)
 #ifdef __DJGPP__
 	unsigned short s_backup = _djstat_flags;
 	_djstat_flags = _STAT_INODE | _STAT_EXEC_EXT | _STAT_EXEC_MAGIC | _STAT_DIRSIZE |
-		_STAT_ROOT_TIME | _STAT_WRITEBIT;
+	_STAT_ROOT_TIME | _STAT_WRITEBIT;
 	/* we do not need any of those 'hard-to-get' informations */
 #endif	/* DJGPP */
-
+	
 	filenames = (const char **) Util_malloc(FILENAMES_INITIAL_SIZE * sizeof(const char *));
 	n_filenames = 0;
-
+	
 	if (BasicUIOpenDir(directory)) {
 		char filename[FILENAME_MAX];
-		int isdir;
-
-		while (BasicUIReadDir(filename, &isdir)) {
+		int isdir, ishidden;
+		
+		while (BasicUIReadDir(filename, &isdir, &ishidden)) {
 			char *filename2;
-
+			
 			if (filename[0] == '\0' ||
-				(filename[0] == '.' && filename[1] == '\0'))
+				(filename[0] == '.' && filename[1] == '\0') ||
+				(ishidden && !UI_show_hidden_files))
 				continue;
-
+			
 			if (isdir) {
 				/* add directories as [dir] */
 				size_t len = strlen(filename);
@@ -929,10 +933,10 @@ static void GetDirectory(const char *directory)
 			}
 			else
 				filename2 = Util_strdup(filename);
-
+			
 			FilenamesAdd(filename2);
 		}
-
+		
 		FilenamesSort(filenames, filenames + n_filenames);
 	}
 	else {

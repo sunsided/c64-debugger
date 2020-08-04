@@ -1509,41 +1509,47 @@ static void get_platform_TRIG(Uint8 *t0, Uint8 *t1, Uint8 *t2, Uint8 *t3)
 int getAtariJoystickPORT(int joystickState)
 {
 	int j = INPUT_STICK_CENTRE;
-	
+
+	//	LOGD("getAtariJoystickPORT state=%d", joystickState);
+
 	if (joystickState & JOYPAD_N)
 	{
+//		LOGD("+ JOYPAD_N");
 		j &= INPUT_STICK_FORWARD;
 	}
-
-	if (joystickState & JOYPAD_S)
+	else if (joystickState & JOYPAD_S)
 	{
+//		LOGD("+ JOYPAD_S");
 		j &= INPUT_STICK_BACK;
 	}
-
+	
 	if (joystickState & JOYPAD_E)
 	{
+//		LOGD("+ JOYPAD_E");
 		j &= INPUT_STICK_LEFT;
 	}
-
-	if (joystickState & JOYPAD_W)
+	else if (joystickState & JOYPAD_W)
 	{
+//		LOGD("+ JOYPAD_W");
 		j &= INPUT_STICK_RIGHT;
 	}
 	
+//	LOGD("= j=%x", j);
 	return j;
 }
 
 int PLATFORM_PORT(int num)
 {
 //	LOGD("PLATFORM_PORT: num=%d", num);
-//	LOGD("joystickState[0]=%02x", joystickState);
+//	LOGD("joystickState[0]=%02x", atrd_get_joystick_state(0));
+//	LOGD("joystickState[1]=%02x", atrd_get_joystick_state(1));
 
 	if (num == 0)
 	{
 		u8 p0;
 		u8 p1;
 
-		int joystickState = atrd_get_joystick_state(0);
+		unsigned int joystickState = atrd_get_joystick_state(0);
 		p0 = getAtariJoystickPORT(joystickState);
 		
 		joystickState = atrd_get_joystick_state(1);
@@ -1556,7 +1562,7 @@ int PLATFORM_PORT(int num)
 		u8 p2;
 		u8 p3;
 
-		int joystickState = atrd_get_joystick_state(2);
+		unsigned int joystickState = atrd_get_joystick_state(2);
 		p2 = getAtariJoystickPORT(joystickState);
 		
 		joystickState = atrd_get_joystick_state(3);
@@ -1584,7 +1590,7 @@ int PLATFORM_TRIG(int num)
 {
 //	LOGD("PLATFORM_TRIG: num=%d", num);
 	
-	int joystickState = atrd_get_joystick_state(num);
+	unsigned int joystickState = atrd_get_joystick_state(num);
 	if (joystickState & JOYPAD_FIRE)
 	{
 		return 0;

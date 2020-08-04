@@ -75,7 +75,7 @@ int vicii_snapshot_write_module(snapshot_t *s)
         return -1;
     }
 	
-	LOGD("... vicii_resources.model=%d", (BYTE)vicii_resources.model);
+//	LOGD("... vicii_resources.model=%d", (BYTE)vicii_resources.model);
 
     mem_color_ram_to_snapshot(color_ram);
 

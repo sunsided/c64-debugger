@@ -37,6 +37,16 @@
 #endif
 #ifdef HAVE_LIBZ
 #include <zlib.h>
+#else
+
+#if !defined(ATRD_STATE_BUFFER)
+#define gzFile char *
+#define Z_OK 0
+#endif
+
+#endif
+#ifdef LIBATARI800
+#include "libatari800/init.h"
 #endif
 #ifdef DREAMCAST
 #include <bzlib/bzlib.h>
@@ -71,24 +81,39 @@
 #include "xep80.h"
 #endif
 
-#define SAVE_VERSION_NUMBER 8 /* Last changed after Atari800 3.1.0 */
+#define SAVE_VERSION_NUMBER 9 /* version 8 is Atar800 4.2.0, version 9 has fix for storing POKEY random number generator state added by Slajerek */
 
-#if defined(MEMCOMPR)
-static gzFile *mem_open(const char *name, const char *mode);
-static int mem_close(gzFile *stream);
-static size_t mem_read(void *buf, size_t len, gzFile *stream);
-static size_t mem_write(const void *buf, size_t len, gzFile *stream);
+#if defined(ATRD_STATE_BUFFER)
+void *atrd_state_buffer_open(const char *name, const char *mode);
+int atrd_state_buffer_close(void *stream);
+size_t atrd_state_buffer_read(void *buf, size_t len, void *stream);
+size_t atrd_state_buffer_write(const void *buf, size_t len, void *stream);
+#define gzFile void *
+#define Z_OK 0
+#define GZOPEN(X, Y)     atrd_state_buffer_open(X, Y)
+#define GZCLOSE(X)       atrd_state_buffer_close(X)
+#define GZREAD(X, Y, Z)  atrd_state_buffer_read(Y, Z, X)
+#define GZWRITE(X, Y, Z) atrd_state_buffer_write(Y, Z, X)
+#undef GZERROR
+
+#elif defined(MEMCOMPR) || defined(LIBATARI800)
+static gzFile mem_open(const char *name, const char *mode);
+static int mem_close(gzFile stream);
+static size_t mem_read(void *buf, size_t len, gzFile stream);
+static size_t mem_write(const void *buf, size_t len, gzFile stream);
 #define GZOPEN(X, Y)     mem_open(X, Y)
 #define GZCLOSE(X)       mem_close(X)
 #define GZREAD(X, Y, Z)  mem_read(Y, Z, X)
 #define GZWRITE(X, Y, Z) mem_write(Y, Z, X)
 #undef GZERROR
+
 #elif defined(HAVE_LIBZ) /* above MEMCOMPR, below HAVE_LIBZ */
 #define GZOPEN(X, Y)     gzopen(X, Y)
 #define GZCLOSE(X)       gzclose(X)
 #define GZREAD(X, Y, Z)  gzread(X, Y, Z)
 #define GZWRITE(X, Y, Z) gzwrite(X, (const voidp) Y, Z)
 #define GZERROR(X, Y)    gzerror(X, Y)
+
 #else
 #define GZOPEN(X, Y)     fopen(X, Y)
 #define GZCLOSE(X)       fclose(X)
@@ -97,6 +122,7 @@ static size_t mem_write(const void *buf, size_t len, gzFile *stream);
 #undef GZERROR
 #define gzFile  FILE *
 #define Z_OK    0
+
 #endif
 
 static gzFile StateFile = NULL;
@@ -294,6 +320,86 @@ void StateSav_ReadINT(int *data, int num)
 	}
 }
 
+/* Value is memory location of data, num is number of type to save */
+void StateSav_SaveULONG(const ULONG *data, int num)
+{
+	if (!StateFile || nFileError != Z_OK)
+		return;
+	
+	/* ULONGS are saved as 32bits, regardless of the size on this particular
+	 platform. Each byte of the ULONG will be pushed out individually in
+	 LSB order. The shifts here and in the read routines will work for both
+	 LSB and MSB architectures. */
+	while (num > 0) {
+		ULONG temp;
+		UBYTE byte;
+		
+		temp = *data++;
+		byte = temp & 0xff;
+		if (GZWRITE(StateFile, &byte, 1) == 0) {
+			GetGZErrorText();
+			break;
+		}
+		
+		temp >>= 8;
+		byte = temp & 0xff;
+		if (GZWRITE(StateFile, &byte, 1) == 0) {
+			GetGZErrorText();
+			break;
+		}
+		
+		temp >>= 16;
+		byte = temp & 0xff;
+		if (GZWRITE(StateFile, &byte, 1) == 0) {
+			GetGZErrorText();
+			break;
+		}
+		
+		temp >>= 24;
+		byte = temp & 0xff;
+		if (GZWRITE(StateFile, &byte, 1) == 0) {
+			GetGZErrorText();
+			break;
+		}
+		
+		num--;
+	}
+}
+
+/* Value is memory location of data, num is number of type to save */
+void StateSav_ReadULONG(ULONG *data, int num)
+{
+	if (!StateFile || nFileError != Z_OK)
+		return;
+	
+	while (num > 0) {
+		UBYTE byte1, byte2, byte3, byte4;
+		
+		if (GZREAD(StateFile, &byte1, 1) == 0) {
+			GetGZErrorText();
+			break;
+		}
+		
+		if (GZREAD(StateFile, &byte2, 1) == 0) {
+			GetGZErrorText();
+			break;
+		}
+		
+		if (GZREAD(StateFile, &byte3, 1) == 0) {
+			GetGZErrorText();
+			break;
+		}
+		
+		if (GZREAD(StateFile, &byte4, 1) == 0) {
+			GetGZErrorText();
+			break;
+		}
+		
+		*data++ = (byte4 << 24) | (byte3 << 16) | (byte2 << 8) | byte1;
+		num--;
+	}
+}
+
 void StateSav_SaveFNAME(const char *filename)
 {
 	UWORD namelen;
@@ -330,8 +436,6 @@ void StateSav_ReadFNAME(char *filename)
 
 int StateSav_SaveAtariState(const char *filename, const char *mode, UBYTE SaveVerbose)
 {
-	UBYTE StateVersion = SAVE_VERSION_NUMBER;
-
 	if (StateFile != NULL) {
 		GZCLOSE(StateFile);
 		StateFile = NULL;
@@ -344,6 +448,27 @@ int StateSav_SaveAtariState(const char *filename, const char *mode, UBYTE SaveVe
 		GetGZErrorText();
 		return FALSE;
 	}
+	
+	return StateSav_SaveAtariStateToStateFile(SaveVerbose);
+}
+
+int StateSav_SaveAtariStateToByteBuffer(void *ByteBufferHook, UBYTE SaveVerbose)
+{
+	if (StateFile != NULL) {
+		GZCLOSE(StateFile);
+		StateFile = NULL;
+	}
+	nFileError = Z_OK;
+
+	StateFile = ByteBufferHook;
+	
+	return StateSav_SaveAtariStateToStateFile(SaveVerbose);
+}
+
+int StateSav_SaveAtariStateToStateFile(UBYTE SaveVerbose)
+{
+	UBYTE StateVersion = SAVE_VERSION_NUMBER;
+
 	if (GZWRITE(StateFile, "ATARI800", 8) == 0) {
 		GetGZErrorText();
 		GZCLOSE(StateFile);
@@ -351,6 +476,7 @@ int StateSav_SaveAtariState(const char *filename, const char *mode, UBYTE SaveVe
 		return FALSE;
 	}
 
+	STATESAV_TAG(size);  /* initialize to 0, set to actual size if successful */
 	StateSav_SaveUBYTE(&StateVersion, 1);
 	StateSav_SaveUBYTE(&SaveVerbose, 1);
 	/* The order here is important. Atari800_StateSave must be first because it saves the machine type, and
@@ -400,6 +526,7 @@ int StateSav_SaveAtariState(const char *filename, const char *mode, UBYTE SaveVe
 	DCStateSave();
 #endif
 
+	STATESAV_TAG(size);
 	if (GZCLOSE(StateFile) != 0) {
 		StateFile = NULL;
 		return FALSE;
@@ -414,10 +541,6 @@ int StateSav_SaveAtariState(const char *filename, const char *mode, UBYTE SaveVe
 
 int StateSav_ReadAtariState(const char *filename, const char *mode)
 {
-	char header_string[8];
-	UBYTE StateVersion = 0;  /* The version of the save file */
-	UBYTE SaveVerbose = 0;   /* Verbose mode means save basic, OS if patched */
-
 	if (StateFile != NULL) {
 		GZCLOSE(StateFile);
 		StateFile = NULL;
@@ -430,7 +553,28 @@ int StateSav_ReadAtariState(const char *filename, const char *mode)
 		GetGZErrorText();
 		return FALSE;
 	}
+	return StateSav_ReadAtariStateFromStateFile();
+}
 
+int StateSav_ReadAtariStateFromByteBuffer(void *ByteBufferHook)
+{
+	if (StateFile != NULL) {
+		GZCLOSE(StateFile);
+		StateFile = NULL;
+	}
+	nFileError = Z_OK;
+
+	StateFile = ByteBufferHook;
+
+	return StateSav_ReadAtariStateFromStateFile();
+}
+
+int StateSav_ReadAtariStateFromStateFile()
+{
+	char header_string[8];
+	UBYTE StateVersion = 0;  /* The version of the save file */
+	UBYTE SaveVerbose = 0;   /* Verbose mode means save basic, OS if patched */
+	
 	if (GZREAD(StateFile, header_string, 8) == 0) {
 		GetGZErrorText();
 		GZCLOSE(StateFile);
@@ -469,12 +613,12 @@ int StateSav_ReadAtariState(const char *filename, const char *mode)
 	CPU_StateRead(SaveVerbose, StateVersion);
 	GTIA_StateRead(StateVersion);
 	PIA_StateRead(StateVersion);
-	POKEY_StateRead();
+	POKEY_StateRead(StateVersion);
 	if (StateVersion >= 6) {
 #ifdef XEP80_EMULATION
 		XEP80_StateRead();
 #else
-		int local_xep80_enabled;
+		int local_xep80_enabled = FALSE;
 		StateSav_ReadINT(&local_xep80_enabled,1);
 		if (local_xep80_enabled) {
 			Log_print("Cannot read this state file because this version does not support XEP80.");
@@ -540,6 +684,11 @@ int StateSav_ReadAtariState(const char *filename, const char *mode)
 	return TRUE;
 }
 
+/* Common definitions for in-memory state save used for DREAMCAST and libatari800 */
+#if defined(MEMCOMPR) || defined(LIBATARI800)
+static char * plainmembuf;
+static unsigned int plainmemoff;
+static unsigned int unclen;
 
 /* hack to compress in memory before writing
  * - for DREAMCAST only
@@ -548,27 +697,21 @@ int StateSav_ReadAtariState(const char *filename, const char *mode)
  * - write in DC specific file format to provide icon and description
  */
 #ifdef MEMCOMPR
-
-static char * plainmembuf;
-static unsigned int plainmemoff;
 static char * comprmembuf;
 #define OM_READ  1
 #define OM_WRITE 2
 static int openmode;
-static unsigned int unclen;
 static char savename[FILENAME_MAX];
 #define HDR_LEN 640
 
-#define ALLOC_LEN 210000
-
 /* replacement for GZOPEN */
-static gzFile *mem_open(const char *name, const char *mode)
+static gzFile mem_open(const char *name, const char *mode)
 {
 	if (*mode == 'w') {
 		/* open for write (save) */
 		openmode = OM_WRITE;
 		strcpy(savename, name); /* remember name */
-		plainmembuf = Util_malloc(ALLOC_LEN);
+		plainmembuf = Util_malloc(STATESAV_MAX_SIZE);
 		plainmemoff = 0; /*HDR_LEN;*/
 		return (gzFile *) plainmembuf;
 	}
@@ -577,13 +720,13 @@ static gzFile *mem_open(const char *name, const char *mode)
 		FILE *f;
 		size_t len;
 		openmode = OM_READ;
-		unclen = ALLOC_LEN;
+		unclen = STATESAV_MAX_SIZE;
 		f = fopen(name, mode);
 		if (f == NULL)
 			return NULL;
-		plainmembuf = Util_malloc(ALLOC_LEN);
-		comprmembuf = Util_malloc(ALLOC_LEN);
-		len = fread(comprmembuf, 1, ALLOC_LEN, f);
+		plainmembuf = Util_malloc(STATESAV_MAX_SIZE);
+		comprmembuf = Util_malloc(STATESAV_MAX_SIZE);
+		len = fread(comprmembuf, 1, STATESAV_MAX_SIZE, f);
 		fclose(f);
 		/* XXX: does DREAMCAST's fread return ((size_t) -1) ? */
 		if (len != 0
@@ -594,7 +737,7 @@ static gzFile *mem_open(const char *name, const char *mode)
 #endif
 			free(comprmembuf);
 			plainmemoff = 0;
-			return (gzFile *) plainmembuf;
+			return (gzFile) plainmembuf;
 		}
 		free(comprmembuf);
 		free(plainmembuf);
@@ -603,16 +746,16 @@ static gzFile *mem_open(const char *name, const char *mode)
 }
 
 /* replacement for GZCLOSE */
-static int mem_close(gzFile *stream)
+static int mem_close(gzFile stream)
 {
 	int status = -1;
-	unsigned int comprlen = ALLOC_LEN - HDR_LEN;
+	unsigned int comprlen = STATESAV_MAX_SIZE - HDR_LEN;
 	if (openmode != OM_WRITE) {
 		/* was opened for read */
 		free(plainmembuf);
 		return 0;
 	}
-	comprmembuf = Util_malloc(ALLOC_LEN);
+	comprmembuf = Util_malloc(STATESAV_MAX_SIZE);
 	if (BZ2_bzBuffToBuffCompress(comprmembuf + HDR_LEN, &comprlen, plainmembuf, plainmemoff, 9, 0, 0) == BZ_OK) {
 		FILE *f;
 		f = fopen(savename, "wb");
@@ -620,13 +763,13 @@ static int mem_close(gzFile *stream)
 			char icon[32 + 512];
 #ifdef DEBUG
 			printf("mem_close: plain len %lu, compr len %lu\n",
-			       (unsigned long) plainmemoff, (unsigned long) comprlen);
+				   (unsigned long) plainmemoff, (unsigned long) comprlen);
 #endif
 			memcpy(icon, palette, 32);
 			memcpy(icon + 32, bitmap, 512);
 			ndc_vmu_create_vmu_header(comprmembuf, "Atari800DC",
-						  "Atari800DC " A800DCVERASC " saved state",
-						  comprlen, icon);
+									  "Atari800DC " A800DCVERASC " saved state",
+									  comprlen, icon);
 			comprlen = (comprlen + HDR_LEN + 511) & ~511;
 			ndc_vmu_do_crc(comprmembuf, comprlen);
 			status = (fwrite(comprmembuf, 1, comprlen, f) == comprlen) ? 0 : -1;
@@ -641,9 +784,34 @@ static int mem_close(gzFile *stream)
 	free(plainmembuf);
 	return status;
 }
+#endif /* #ifdef MEMCOMPR */
+
+
+#ifdef LIBATARI800
+/* replacement for GZOPEN */
+static gzFile mem_open(const char *name, const char *mode)
+{
+	plainmembuf = (char *)LIBATARI800_StateSav_buffer;
+	plainmemoff = 0; /*HDR_LEN;*/
+	unclen = STATESAV_MAX_SIZE;
+	return (gzFile) plainmembuf;
+}
+
+/* replacement for GZCLOSE */
+static int mem_close(gzFile stream)
+{
+	return 0;
+}
+
+ULONG StateSav_Tell()
+{
+	return (ULONG)plainmemoff;
+}
+#endif /* #ifdef LIBATARI800 */
+
 
 /* replacement for GZREAD */
-static size_t mem_read(void *buf, size_t len, gzFile *stream)
+static size_t mem_read(void *buf, size_t len, gzFile stream)
 {
 	if (plainmemoff + len > unclen) return 0;  /* shouldn't happen */
 	memcpy(buf, plainmembuf + plainmemoff, len);
@@ -652,16 +820,16 @@ static size_t mem_read(void *buf, size_t len, gzFile *stream)
 }
 
 /* replacement for GZWRITE */
-static size_t mem_write(const void *buf, size_t len, gzFile *stream)
+static size_t mem_write(const void *buf, size_t len, gzFile stream)
 {
-	if (plainmemoff + len > ALLOC_LEN) return 0;  /* shouldn't happen */
+	if (plainmemoff + len > unclen) return 0;  /* shouldn't happen */
 	memcpy(plainmembuf + plainmemoff, buf, len);
 	plainmemoff += len;
 	return len;
 }
 
-#endif /* #ifdef MEMCOMPR */
+#endif /* defined(MEMCOMPR) || defined(LIBATARI800) */
 
 /*
-vim:ts=4:sw=4:
-*/
+ vim:ts=4:sw=4:
+ */

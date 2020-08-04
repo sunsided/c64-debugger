@@ -324,9 +324,11 @@ void midi_store(WORD a, BYTE b)
 #endif
     if (maincpu_rmw_flag) {
         maincpu_clk--;
+		c64d_maincpu_clk--;
         maincpu_rmw_flag = 0;
         midi_store(a, midi_last_read);
         maincpu_clk++;
+		c64d_maincpu_clk++;
     }
 
     a &= midi_interface[midi_mode].mask;

@@ -10,8 +10,9 @@ class CSlrString;
 class CImageData;
 class CDebugInterface;
 class C64DebugInterface;
+class CSlrDataAdapter;
 
-CSlrFontProportional *ProcessCBMFonts(uint8 *charsetData, bool useScreenCodes);
+CSlrFontProportional *ProcessFonts(uint8 *charsetData, bool useScreenCodes);
 void InvertCBMText(CSlrString *text);
 void ClearInvertCBMText(CSlrString *text);
 
@@ -49,5 +50,15 @@ void RenderColorRectangle(float px, float py, float ledSizeX, float ledSizeY, fl
 
 //
 uint16 GetSidAddressByChipNum(int chipNum);
+
+// convert SID file to PRG, returns buffer with PRG
+CByteBuffer *ConvertSIDtoPRG(CByteBuffer *sidFileData);
+bool C64LoadSIDToRam(char *filePath, u16 *fromAddr, u16 *toAddr, u16 *initAddr, u16 *playAddr);
+
+//
+bool C64SaveMemory(int fromAddr, int toAddr, bool isPRG, CSlrDataAdapter *dataAdapter, char *filePath);
+int C64LoadMemory(int fromAddr, CSlrDataAdapter *dataAdapter, char *filePath);
+bool C64SaveMemoryExomizerPRG(int fromAddr, int toAddr, int jmpAddr, char *filePath);
+u8 *C64ExomizeMemoryRaw(int fromAddr, int toAddr, int *compressedSize);
 
 #endif

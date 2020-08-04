@@ -372,8 +372,9 @@ void C64KeyMap::InitDefault()
 	AddKeyCode('@', 7, 3, LEFT_SHIFT);
 	
 	AddKeyCode(MTKEY_LCONTROL, 7, 2, NO_SHIFT);
-	AddKeyCode(MTKEY_LALT, 7, 5, NO_SHIFT);
+	AddKeyCode(MTKEY_LCONTROL | MTKEY_SPECIAL_SHIFT, 7, 2, LEFT_SHIFT);
 
+	AddKeyCode(MTKEY_LALT, 7, 5, NO_SHIFT | ALLOW_SHIFT);
 	AddKeyCode(MTKEY_LALT | MTKEY_SPECIAL_SHIFT, 7, 5, LEFT_SHIFT);
 
 	AddKeyCode('`', 7, 1, NO_SHIFT);

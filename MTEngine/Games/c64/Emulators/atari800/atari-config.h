@@ -4,8 +4,12 @@
 /* Define if building universal (internal helper macro) */
 /* #undef AC_APPLE_UNIVERSAL_BUILD */
 
+#define ATRD_STATE_BUFFER 1
+
 /* The Austin Franklin 80 column card. */
 #define AF80 1
+
+#define POKEYREC 1
 
 /* Target: Android */
 /* #undef ANDROID */
@@ -41,7 +45,8 @@
 /* #undef DIRECTX */
 
 /* Define to use dirty screen partial repaints. */
-/* #undef DIRTYRECT */
+#undef DIRTYRECT
+//#define DIRTYRECT
 
 /* Define to use back slash as directory separator. */
 /* #undef DIR_SEP_BACKSLASH */
@@ -350,25 +355,25 @@
 /* #undef MKDIR_TAKES_ONE_ARG */
 
 /* Define to activate assembler in monitor. */
-#define MONITOR_ASSEMBLER 1
+//#define MONITOR_ASSEMBLER 1
 
 /* Define to activate code breakpoints and execution history. */
-#define MONITOR_BREAK 1
+//#define MONITOR_BREAK 1
 
 /* Define to activate user-defined breakpoints. */
-#define MONITOR_BREAKPOINTS 1
+//#define MONITOR_BREAKPOINTS 1
 
 /* Define to activate hints in disassembler. */
-#define MONITOR_HINTS 1
+//#define MONITOR_HINTS 1
 
 /* Define to activate 6502 opcode profiling. */
-#define MONITOR_PROFILE 1
+//#define MONITOR_PROFILE 1
 
 /* Define to activate readline support in monitor. */
 //#define MONITOR_READLINE 1
 
 /* Define to activate TRACE command in monitor. */
-#define MONITOR_TRACE 1
+//#define MONITOR_TRACE 1
 
 /* Target: X11 with Motif. */
 /* #undef MOTIF */
@@ -389,13 +394,13 @@
 #define PACKAGE_NAME "Atari800"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Atari800 3.1.0"
+#define PACKAGE_STRING "Atari800 4.2.0"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "atari800"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "3.1.0"
+#define PACKAGE_VERSION "4.2.0"
 
 /* Define to use page-based attribute array. */
 /* #undef PAGED_ATTRIB */
@@ -479,7 +484,7 @@
 #define SUPPORTS_PLATFORM_CONFIGURE 1
 
 /* Update the Palette if it changed. */
-#define SUPPORTS_PLATFORM_PALETTEUPDATE 1
+//#define SUPPORTS_PLATFORM_PALETTEUPDATE 1
 
 /* Platform-specific sleep function. */
 /* #undef SUPPORTS_PLATFORM_SLEEP */
