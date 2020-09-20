@@ -132,6 +132,8 @@ public:
 	CViewC64MenuItem *menuItemBreakpointsC64;
 	CSlrKeyboardShortcut *kbsBreakpointsAtari;
 	CViewC64MenuItem *menuItemBreakpointsAtari;
+	CSlrKeyboardShortcut *kbsBreakpointsNes;
+	CViewC64MenuItem *menuItemBreakpointsNes;
 
 	CSlrKeyboardShortcut *kbsInsertCartridge;
 	CViewC64MenuItem *menuItemInsertCartridge;

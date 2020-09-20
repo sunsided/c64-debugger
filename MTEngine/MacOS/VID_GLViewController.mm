@@ -182,13 +182,16 @@ bool VID_isAlwaysOnTop = false;
 void VID_SetWindowAlwaysOnTop(bool isAlwaysOnTop)
 {
 	VID_isAlwaysOnTop = isAlwaysOnTop;
-	[glView setWindowAlwaysOnTop:isAlwaysOnTop];
+
+	// TODO: NEWGL
+//	[glView setWindowAlwaysOnTop:isAlwaysOnTop];
 }
 
 // do not store value
 void VID_SetWindowAlwaysOnTopTemporary(bool isAlwaysOnTop)
 {
-	[glView setWindowAlwaysOnTop:isAlwaysOnTop];
+	// TODO: NEWGL
+//	[glView setWindowAlwaysOnTop:isAlwaysOnTop];
 }
 
 bool VID_IsWindowAlwaysOnTop()
@@ -1209,7 +1212,8 @@ void GUI_GetRealScreenPixelSizes(double *pixelSizeX, double *pixelSizeY)
 //
 bool VID_IsWindowFullScreen()
 {
-	return [glView isWindowFullScreen];
+	// TODO: NEWGL
+//	return [glView isWindowFullScreen];
 }
 
 void VID_ShowMouseCursor()
@@ -1230,16 +1234,19 @@ void VID_HideMouseCursor()
 
 void VID_StoreMainWindowPosition()
 {
-	[glView storeMainWindowPosition];
+	// TODO: NEWGL
+//	[glView storeMainWindowPosition];
 }
 
 void VID_RestoreMainWindowPosition()
 {
-	[glView restoreMainWindowPosition];
+	// TODO: NEWGL
+//	[glView restoreMainWindowPosition];
 }
 
 void VID_TestMenu()
 {
-	[glView testMenu];
+	// TODO: NEWGL
+//	[glView testMenu];
 }
 

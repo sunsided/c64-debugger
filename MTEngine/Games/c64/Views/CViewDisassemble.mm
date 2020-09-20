@@ -2348,7 +2348,13 @@ bool CViewDisassemble::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 	if (keyboardShortcut == viewC64->keyboardShortcuts->kbsToggleBreakpoint)
 	{
 		TogglePCBreakpoint(cursorAddress);
-		viewC64->viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		
+		// TODO: refactor, generalize this below:
+		if (viewC64->debugInterfaceC64)
+		{
+			viewC64->viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		}
+		
 		return true;
 	}
 	

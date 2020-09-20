@@ -437,7 +437,7 @@ CViewC64::CViewC64(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfl
 	// start
 	ShowMainScreen();
 	
-	// init plugins
+	// TODO: generalize me, init plugins
 	if (debugInterfaceC64)
 	{
 		debugInterfaceC64->InitPlugins();
@@ -630,7 +630,6 @@ void CViewC64::InitViews()
 	
 	viewAtariBreakpoints = new CViewBreakpoints(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT, this->debugInterfaceAtari);
 	guiMain->AddGuiElement(viewAtariBreakpoints);
-	
 #endif
 	
 
@@ -823,11 +822,9 @@ void CViewC64::InitViews()
 												debugInterfaceNes->dataAdapter, viewNesMemoryMap, viewNesDisassemble,
 												debugInterfaceNes);
 	this->AddGuiElement(viewNesMemoryDataDump);
-
 	
-	
-	//	viewAtariBreakpoints = new CViewBreakpoints(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT, this->debugInterfaceAtari);
-	//	guiMain->AddGuiElement(viewAtariBreakpoints);
+	viewNesBreakpoints = new CViewBreakpoints(0, 0, -3.0, SCREEN_WIDTH, SCREEN_HEIGHT, this->debugInterfaceNes);
+	guiMain->AddGuiElement(viewNesBreakpoints);
 	
 #endif
 	
@@ -2101,6 +2098,9 @@ void CViewC64::InitLayouts()
 	screenPositions[m]->nesDataDumpGapHexData = screenPositions[m]->nesDataDumpFontSize*0.5f;
 	screenPositions[m]->nesDataDumpGapDataCharacters = screenPositions[m]->nesDataDumpFontSize*0.5f;
 	screenPositions[m]->nesDataDumpNumberOfBytesPerLine = 16;
+	screenPositions[m]->debugOnNes = true;
+	screenPositions[m]->debugOnAtari = false;
+	screenPositions[m]->debugOnC64 = false;
 	
 	
 #endif
@@ -3286,11 +3286,11 @@ bool CViewC64::ProcessGlobalKeyboardShortcut(u32 keyCode, bool isShift, bool isA
 			{
 				return true;
 			}
-//			else if (shortcut == viewC64MainMenu->kbsBreakpointsNes)
-//			{
-//				viewNesBreakpoints->SwitchBreakpointsScreen();
-//				return true;
-//			}
+			else if (shortcut == viewC64MainMenu->kbsBreakpointsNes)
+			{
+				viewNesBreakpoints->SwitchBreakpointsScreen();
+				return true;
+			}
 			else if (shortcut == viewC64MainMenu->kbsSnapshotsNes)
 			{
 				viewNesSnapshots->SwitchSnapshotsScreen();
@@ -3744,7 +3744,7 @@ void CViewC64::StepOverInstruction()
 
 	if (debugInterfaceNes)
 	{
-		debugInterfaceNes->snapshotsManager->CancelRestore();
+//		debugInterfaceNes->snapshotsManager->CancelRestore();
 		debugInterfaceNes->SetDebugMode(DEBUGGER_MODE_RUN_ONE_INSTRUCTION);
 	}
 }
@@ -3915,27 +3915,52 @@ void CViewC64::SwitchUseKeyboardAsJoystick()
 void CViewC64::SwitchIsDataDirectlyFromRam()
 {
 	LOGTODO("CViewC64::SwitchIsDataDirectlyFromRam(): make generic");
-	
 	LOGError("CViewC64::SwitchIsDataDirectlyFromRam(): NOT IMPLEMENTED FOR ATARI");
 	
-	if (viewC64MemoryMap->isDataDirectlyFromRAM == false)
+	if (viewC64->debugInterfaceC64)
 	{
-		viewC64MemoryMap->isDataDirectlyFromRAM = true;
-		viewC64MemoryDataDump->SetDataAdapter(debugInterfaceC64->dataAdapterC64DirectRam);
-		viewDrive1541MemoryMap->isDataDirectlyFromRAM = true;
-		viewDrive1541MemoryDataDump->SetDataAdapter(debugInterfaceC64->dataAdapterDrive1541DirectRam);
-		
-//		viewAtariMemoryMap->isDataDirectlyFromRAM = true;
-//		viewAtariMemoryDataDump->SetDataAdapter(debugInterfaceAtari->data)
+		if (viewC64MemoryMap->isDataDirectlyFromRAM == false)
+		{
+			SwitchIsDataDirectlyFromRam(true);
+		}
+		else
+		{
+			SwitchIsDataDirectlyFromRam(false);
+		}
 	}
-	else
-	{
-		viewC64MemoryMap->isDataDirectlyFromRAM = false;
-		viewC64MemoryDataDump->SetDataAdapter(debugInterfaceC64->dataAdapterC64);
-		viewDrive1541MemoryMap->isDataDirectlyFromRAM = false;
-		viewDrive1541MemoryDataDump->SetDataAdapter(debugInterfaceC64->dataAdapterDrive1541);
-	}
+	
 }
+
+void CViewC64::SwitchIsDataDirectlyFromRam(bool setIsDirectlyFromRam)
+{
+	LOGTODO("CViewC64::SwitchIsDataDirectlyFromRam(): make generic");
+	LOGError("CViewC64::SwitchIsDataDirectlyFromRam(): NOT IMPLEMENTED FOR ATARI");
+	
+	if (viewC64->debugInterfaceC64)
+	{
+		if (setIsDirectlyFromRam == true)
+		{
+			viewC64MemoryMap->isDataDirectlyFromRAM = true;
+			viewC64MemoryDataDump->SetDataAdapter(debugInterfaceC64->dataAdapterC64DirectRam);
+			viewDrive1541MemoryMap->isDataDirectlyFromRAM = true;
+			viewDrive1541MemoryDataDump->SetDataAdapter(debugInterfaceC64->dataAdapterDrive1541DirectRam);
+			
+			//		viewAtariMemoryMap->isDataDirectlyFromRAM = true;
+			//		viewAtariMemoryDataDump->SetDataAdapter(debugInterfaceAtari->data)
+		}
+		else
+		{
+			viewC64MemoryMap->isDataDirectlyFromRAM = false;
+			viewC64MemoryDataDump->SetDataAdapter(debugInterfaceC64->dataAdapterC64);
+			viewDrive1541MemoryMap->isDataDirectlyFromRAM = false;
+			viewDrive1541MemoryDataDump->SetDataAdapter(debugInterfaceC64->dataAdapterDrive1541);
+		}
+		
+		viewC64->viewC64AllGraphics->UpdateShowIOButton();
+	}
+	
+}
+
 
 bool CViewC64::CanSelectView(CGuiView *view)
 {
@@ -5241,7 +5266,8 @@ CScreenLayout::CScreenLayout()
 	nesDisassembleShowCodeCycles = false;
 	nesDisassembleCodeCyclesOffset = -1.5f;
 	nesDisassembleShowLabels = false;
-
+	nesDataDumpShowCharacters = true;
+	
 }
 
 // drag & drop callbacks

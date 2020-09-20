@@ -57,7 +57,7 @@ void cli_show_usage() {
 }
 
 void cli_show_version() {
-	printf("Nestopia UE 1.49\n"); //, VERSION);
+	printf("Nestopia UE 1.50\n"); //, VERSION);
 }
 
 void cli_handle_command(int argc, char *argv[]) {

@@ -99,8 +99,42 @@ CSlrImage::CSlrImage(char *fileName, bool linearScaling, bool fromResources)
 
 	if (fromResources == true)
 	{
-		CSlrImage::CSlrImage(fileName, linearScaling);
-	}
+        #ifndef USE_DOCS_INSTEAD_OF_RESOURCES
+            char resNameNoPath[2048];
+            int i = strlen(fileName)-1;
+            for (  ; i >= 0; i--)
+            {
+                if (fileName[i] == '/')
+                    break;
+            }
+            
+            int j = 0;
+            while(true)
+            {
+                resNameNoPath[j] = fileName[i];
+                if (fileName[i] == '\0')
+                    break;
+                j++;
+                i++;
+            }
+
+            //    char *buffer = (char*)fileName.c_str();
+            //    NSString* nsFileName = [[NSString alloc] initWithBytes:fileName length:sizeof(fileName) encoding:NSASCIIStringEncoding];
+            //    NSString* nsFileName = [NSString stringWithCString:fileName.c_str()];
+            NSString* nsFileName = [NSString stringWithCString:resNameNoPath encoding:NSASCIIStringEncoding];
+        #else
+
+            NSString* nsFileName = [NSString stringWithCString:fileName encoding:NSASCIIStringEncoding];
+            
+        #endif
+            
+            //[[NSString alloc] initWithBytes:buffer length:sizeof(buffer) encoding:NSASCIIStringEncoding];
+            
+            this->InitImageLoad(linearScaling);
+            this->LoadImage(nsFileName, @"png", true);
+            this->BindImage();
+            this->FreeLoadImage();
+    }
 	else
 	{
 		loadImageData = NULL;

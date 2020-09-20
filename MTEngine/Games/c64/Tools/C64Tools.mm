@@ -14,7 +14,7 @@
 #include "SidTuneMod.h"
 #include <float.h>
 
-u8 ConvertPetsciiToSreenCode(u8 chr)
+u8 ConvertPetsciiToScreenCode(u8 chr)
 {
 	if (chr >= 0x00 && chr <= 0x1F)
 		return chr + 0x80;

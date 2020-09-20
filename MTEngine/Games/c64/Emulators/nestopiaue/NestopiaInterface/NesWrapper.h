@@ -8,8 +8,9 @@ class CByteBuffer;
 
 extern volatile int nesd_debug_mode;
 
-void NestopiaUE_Initialize();
-void NestopiaUE_Run();
+bool NestopiaUE_Initialize();
+bool NestopiaUE_PostInitialize();
+bool NestopiaUE_Run();
 
 bool nesd_insert_cartridge(char *filePath);
 
@@ -25,11 +26,14 @@ unsigned char nesd_peek_io(unsigned short addr);
 unsigned char nesd_peek_safe_io(unsigned short addr);
 
 
-//void nesd_mark_atari_cell_read(uint16 addr);
-//void nesd_mark_atari_cell_write(uint16 addr, uint8 value);
-//void nesd_mark_atari_cell_execute(uint16 addr, uint8 opcode);
-//void nesd_check_pc_breakpoint(uint16 pc);
-//void nesd_debug_pause_check();
+bool nesd_is_debug_on();
+void nesd_update_cpu_pc_by_emulator(uint16 cpuPC);
+void nesd_mark_cell_read(uint16 addr);
+void nesd_mark_cell_write(uint16 addr, uint8 value);
+void nesd_mark_cell_execute(uint16 addr, uint8 opcode);
+void nesd_check_pc_breakpoint(uint16 pc);
+void nesd_debug_pause_check();
+
 //
 //void nesd_async_check();
 //
@@ -44,13 +48,15 @@ void nesd_joystick_down(int port, uint32 axis);
 void nesd_joystick_up(int port, uint32 axis);
 
 void nesd_audio_callback(uint8 *stream, int numSamples);
-void nesd_sound_lock();
-void nesd_sound_unlock();
+void nesd_sound_lock(char *whoLocked);
+void nesd_sound_unlock(char *whoLocked);
+
+void nesd_reset_sync();
 
 //void nesd_mutex_lock();
 //void nesd_mutex_unlock();
 //
-//int nesd_is_debug_on_atari();
+
 //
 //int nesd_get_joystick_state(int port);
 
