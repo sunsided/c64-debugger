@@ -99,9 +99,9 @@ void LOG_Init(void)
 	LOG_SetLevel(DBGLVL_MAIN, true);
 	LOG_SetLevel(DBGLVL_DEBUG, true);
 	LOG_SetLevel(DBGLVL_DEBUG2, true);
-	LOG_SetLevel(DBGLVL_INPUT, true);
+	LOG_SetLevel(DBGLVL_INPUT, false);
 	LOG_SetLevel(DBGLVL_RES, false);
-	LOG_SetLevel(DBGLVL_GUI, true);
+	LOG_SetLevel(DBGLVL_GUI, false);
 	LOG_SetLevel(DBGLVL_MEMORY, false);
 	LOG_SetLevel(DBGLVL_ANIMATION, true);
 	LOG_SetLevel(DBGLVL_LEVEL, true);
@@ -402,6 +402,8 @@ int _LOGGER(unsigned int level, const char *fileName, unsigned int lineNum, cons
 
 bool logThisLevel(unsigned int level)
 {
+	return false;
+	
 #if defined(FULL_LOG)
     return true;
 #elif defined(LOCAL_DEBUG_OFF)

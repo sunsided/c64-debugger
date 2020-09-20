@@ -649,20 +649,20 @@ bool CViewNesScreen::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl
 
 void CViewNesScreen::JoystickDown(u32 axis)
 {
-	LOGD("CViewNesScreen::JoystickDown: axis=%02x", axis);
+	LOGI("CViewNesScreen::JoystickDown: axis=%02x", axis);
 	debugInterface->LockIoMutex();
 
 	if (c64SettingsJoystickPort == 0)
 	{
 		// both ports
+		debugInterface->JoystickDown(0, axis);
 		debugInterface->JoystickDown(1, axis);
-		debugInterface->JoystickDown(2, axis);
 	}
 	else
 	{
 		if (c64SettingsJoystickPort == 1)
 		{
-			debugInterface->JoystickDown(2, axis);
+			debugInterface->JoystickDown(0, axis);
 		}
 		else if (c64SettingsJoystickPort == 2)
 		{
@@ -670,7 +670,7 @@ void CViewNesScreen::JoystickDown(u32 axis)
 		}
 		else
 		{
-			debugInterface->JoystickDown(c64SettingsJoystickPort, axis);
+			debugInterface->JoystickDown(c64SettingsJoystickPort-1, axis);
 		}
 	}
 	
@@ -679,29 +679,29 @@ void CViewNesScreen::JoystickDown(u32 axis)
 
 void CViewNesScreen::JoystickUp(u32 axis)
 {
-	LOGD("CViewNesScreen::JoystickUp: axis=%02x", axis);
+	LOGI("CViewNesScreen::JoystickUp: axis=%02x", axis);
 
 	debugInterface->LockIoMutex();
 
 	if (c64SettingsJoystickPort == 0)
 	{
 		// both ports
+		debugInterface->JoystickUp(0, axis);
 		debugInterface->JoystickUp(1, axis);
-		debugInterface->JoystickUp(2, axis);
 	}
 	else
 	{
 		if (c64SettingsJoystickPort == 1)
 		{
-			debugInterface->JoystickDown(2, axis);
+			debugInterface->JoystickUp(0, axis);
 		}
 		else if (c64SettingsJoystickPort == 2)
 		{
-			debugInterface->JoystickDown(1, axis);
+			debugInterface->JoystickUp(1, axis);
 		}
 		else
 		{
-			debugInterface->JoystickDown(c64SettingsJoystickPort, axis);
+			debugInterface->JoystickUp(c64SettingsJoystickPort-1, axis);
 		}
 	}
 

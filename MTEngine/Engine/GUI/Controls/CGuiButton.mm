@@ -877,3 +877,8 @@ void CGuiButton::SetFontScale(float fontScale)
 	this->RecalcTextPosition();
 }
 
+void CGuiButton::RenderFocusBorder()
+{
+	return;
+}
+

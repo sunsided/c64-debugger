@@ -7,6 +7,7 @@
 #include "CGuiMain.h"
 #include "SYS_KeyCodes.h"
 #include "SND_SoundEngine.h"
+#include "CSnapshotsManager.h"
 #include "C64Tools.h"
 #include "C64KeyMap.h"
 #include "C64SettingsStorage.h"
@@ -27,16 +28,21 @@ NesDebugInterface::NesDebugInterface(CViewC64 *viewC64) //, uint8 *memory)
 	LOGM("NesDebugInterface: NestopiaUE v%s init", NST_VERSION);
 	
 	debugInterfaceNes = this;
+	isInitialised = false;
 	
 	CreateScreenData();
 	
 	audioChannel = NULL;
-	
+	snapshotsManager = new CSnapshotsManager(this);
+
 	dataAdapter = new NesDataAdapter(this);
 
 	isDebugOn = true;
 	
-	NestopiaUE_Initialize();	
+	if (NestopiaUE_Initialize())
+	{
+		isInitialised = true;
+	}
 }
 
 NesDebugInterface::~NesDebugInterface()
@@ -102,8 +108,22 @@ void NesDebugInterface::RunEmulationThread()
 	CDebugInterface::RunEmulationThread();
 
 	this->isRunning = true;
+
+	while (isInitialised == false)
+	{
+		if (NestopiaUE_Initialize())
+		{
+			isInitialised = true;
+			guiMain->ShowMessage("disksys.rom missing");
+		}
+		else
+		{
+			SYS_Sleep(1000);
+		}
+	}
 	
 #if defined(RUN_NES)
+	NestopiaUE_PostInitialize();
 	NestopiaUE_Run();
 	audioChannel->Stop();
 #endif
@@ -207,10 +227,18 @@ int NesDebugInterface::GetScreenSizeY()
 }
 
 //
+void NesDebugInterface::RefreshScreenNoCallback()
+{
+	LOGTODO("NesDebugInterface::RefreshScreenNoCallback");
+}
+
+//
 void NesDebugInterface::SetDebugMode(uint8 debugMode)
 {
 	LOGD("NesDebugInterface::SetDebugMode: debugMode=%d", debugMode);
 	nesd_debug_mode = debugMode;
+	
+	nesd_reset_sync();
 	
 	CDebugInterface::SetDebugMode(debugMode);
 }
@@ -269,15 +297,13 @@ void NesDebugInterface::KeyboardUp(uint32 mtKeyCode)
 
 void NesDebugInterface::JoystickDown(int port, uint32 axis)
 {
-	LOGD("NesDebugInterface::JoystickDown: %d %d", port, axis);
-	
+//	LOGD("NesDebugInterface::JoystickDown: %d %d", port, axis);
 	nesd_joystick_down(port, axis);
 }
 
 void NesDebugInterface::JoystickUp(int port, uint32 axis)
 {
-	LOGD("NesDebugInterface::JoystickUp: %d %d", port, axis);
-
+//	LOGD("NesDebugInterface::JoystickUp: %d %d", port, axis);
 	nesd_joystick_up(port, axis);
 }
 

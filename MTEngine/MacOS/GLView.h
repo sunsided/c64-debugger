@@ -1,49 +1,28 @@
-#import <Cocoa/Cocoa.h>
-#import <QuartzCore/CVDisplayLink.h>
+//
+//  GLView.h
+//  MTEngine-MacOS
+//
+//  Created by Marcin Skoczylas on 18/09/2020.
+//  Copyright © 2020 Marcin Skoczylas. All rights reserved.
+//
 
+#import <Cocoa/Cocoa.h>
 #include "SYS_Threading.h"
 
-@class GLViewController;
+NS_ASSUME_NONNULL_BEGIN
 
-@interface GLView : NSView
+@interface GLView : NSOpenGLView
 {
-	
-	NSOpenGLContext *openGLContext;
-	NSOpenGLPixelFormat *pixelFormat;
-	
-	GLViewController *controller;
-	
-	CVDisplayLinkRef displayLink;
-	BOOL isAnimating;
-	
 	int viewWidth;
 	int viewHeight;
+
+	bool isAltKeyDown;
+	bool isShiftKeyDown;
+	bool isControlKeyDown;
 }
 
-- (void) initGL;
-
-- (id) initWithFrame:(NSRect)frameRect;
-- (id) initWithFrame:(NSRect)frameRect shareContext:(NSOpenGLContext*)context;
-
-- (NSOpenGLContext*) openGLContext;
-
-- (void) setMainController:(GLViewController*)theController;
-
-- (void) updateSize;
-
-- (void) drawView;
-
-- (void) startAnimation;
-- (void) stopAnimation;
-
-- (void)setWindowAlwaysOnTop:(BOOL)isAlwaysOnTop;
-
-- (bool)isWindowFullScreen;
-
-- (void)storeMainWindowPosition;
-- (void)restoreMainWindowPosition;
-
-- (void)testMenu;
+-(void)startAnimation;
+- (void)updateSize;
 
 @end
 
@@ -57,3 +36,5 @@ public:
 	CMacOsOpenFileThread(char *threadName);
 	virtual void ThreadRun(void *data);
 };
+
+NS_ASSUME_NONNULL_END

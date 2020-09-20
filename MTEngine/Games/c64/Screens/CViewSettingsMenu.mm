@@ -2426,17 +2426,24 @@ void CViewSettingsMenu::ResetEmulationFrameCounter()
 
 void CViewSettingsMenu::ClearMemoryMarkers()
 {
+	// TODO: Generalize me by debugInterface->GetView...
+	
 	if (viewC64->debugInterfaceC64)
 	{
 		viewC64->viewC64MemoryMap->ClearExecuteMarkers();
 		viewC64->viewDrive1541MemoryMap->ClearExecuteMarkers();
+		return;
 	}
 	
 	if (viewC64->debugInterfaceAtari)
 	{
 		viewC64->viewAtariMemoryMap->ClearExecuteMarkers();
 	}
-	
+
+	if (viewC64->debugInterfaceNes)
+	{
+		viewC64->viewNesMemoryMap->ClearExecuteMarkers();
+	}
 //	guiMain->ShowMessage("Memory markers cleared");
 }
 

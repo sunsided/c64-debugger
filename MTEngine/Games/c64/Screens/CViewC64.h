@@ -611,7 +611,8 @@ public:
 	void SoftReset();
 	
 	void SwitchIsDataDirectlyFromRam();
-	
+	void SwitchIsDataDirectlyFromRam(bool setIsDirectlyFromRam);
+
 	//
 	CViewDisassemble *GetActiveDisassembleView();
 	

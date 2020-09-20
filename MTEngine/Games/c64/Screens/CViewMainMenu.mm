@@ -329,10 +329,10 @@ CViewMainMenu::CViewMainMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 		menuItemSnapshotsNes = new CViewC64MenuItem(fontHeight*1.7, new CSlrString("Snapshots..."), kbsSnapshotsNes, tr, tg, tb);
 		viewMenu->AddMenuItem(menuItemSnapshotsNes);
 		
-//		kbsBreakpointsAtari = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Breakpoints screen", 'b', false, false, true);
-//		viewC64->keyboardShortcuts->AddShortcut(kbsBreakpointsAtari);
-//		menuItemBreakpointsAtari = new CViewC64MenuItem(fontHeight*1.7, new CSlrString("Breakpoints..."), kbsBreakpointsAtari, tr, tg, tb);
-//		viewMenu->AddMenuItem(menuItemBreakpointsAtari);
+		kbsBreakpointsNes = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Breakpoints screen", 'b', false, false, true);
+		viewC64->keyboardShortcuts->AddShortcut(kbsBreakpointsNes);
+		menuItemBreakpointsNes = new CViewC64MenuItem(fontHeight*1.7, new CSlrString("Breakpoints..."), kbsBreakpointsNes, tr, tg, tb);
+		viewMenu->AddMenuItem(menuItemBreakpointsNes);
 	}
 	
 
@@ -423,6 +423,10 @@ void CViewMainMenu::MenuCallbackItemEntered(CGuiViewMenuItem *menuItem)
 	else if (menuItem == menuItemBreakpointsAtari)
 	{
 		viewC64->viewAtariBreakpoints->SwitchBreakpointsScreen();
+	}
+	else if (menuItem == menuItemBreakpointsNes)
+	{
+		viewC64->viewNesBreakpoints->SwitchBreakpointsScreen();
 	}
 	else if (menuItem == menuItemSnapshotsC64)
 	{

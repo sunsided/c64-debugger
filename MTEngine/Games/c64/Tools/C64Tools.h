@@ -31,7 +31,7 @@ void ConvertColorSpriteDataToImage(u8 *spriteData, CImageData *imageData, u8 col
 
 void GetCBMColor(u8 colorNum, float *r, float *g, float *b);
 
-u8 ConvertPetsciiToSreenCode(u8 chr);
+u8 ConvertPetsciiToScreenCode(u8 chr);
 
 void CopyHiresCharsetToImage(u8 *charsetData, CImageData *imageData, int numColumns,
 							 u8 colorBackground, u8 colorForeground, C64DebugInterface *debugInterface);

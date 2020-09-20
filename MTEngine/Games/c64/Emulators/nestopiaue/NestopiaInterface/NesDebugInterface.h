@@ -7,7 +7,7 @@
 #include "CDebugInterface.h"
 #include "CSlrDataAdapter.h"
 
-#define NST_VERSION "1.49"
+#define NST_VERSION "1.50"
 
 class CNesAudioChannel;
 
@@ -17,6 +17,8 @@ class NesDebugInterface : public CDebugInterface
 public:
 	NesDebugInterface(CViewC64 *viewC64); //, uint8 *memory);
 	~NesDebugInterface();
+	
+	volatile bool isInitialised;
 	
 	virtual int GetEmulatorType();
 	virtual CSlrString *GetEmulatorVersionString();
@@ -58,6 +60,9 @@ public:
 	//
 	virtual bool LoadFullSnapshot(char *filePath);
 	virtual void SaveFullSnapshot(char *filePath);
+	
+	//
+	virtual void RefreshScreenNoCallback();
 	
 	// state
 	virtual int GetCpuPC();

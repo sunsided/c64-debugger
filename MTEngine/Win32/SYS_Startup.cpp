@@ -20,7 +20,7 @@
 
 #include "..\\resource.h"
 
-#define CATCH_CRASH
+//#define CATCH_CRASH
 
 #ifdef _MSC_VER
 #   pragma comment(lib, "pthreadVC2-static.lib")

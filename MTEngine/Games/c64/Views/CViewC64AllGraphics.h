@@ -118,6 +118,9 @@ public:
 	CGuiLabel *lblCharsetAddress;
 	CGuiLockableList *lstCharsetAddresses;
 
+	CGuiButtonSwitch *btnShowRAMorIO;
+	void UpdateShowIOButton();
+	
 	virtual bool ListElementPreSelect(CGuiList *listBox, int elementNum);
 
 	volatile u8 forcedRenderScreenMode;

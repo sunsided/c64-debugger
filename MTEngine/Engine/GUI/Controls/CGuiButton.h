@@ -163,7 +163,8 @@ class CGuiButton : public CGuiElement
 	
 	bool centerText;
 	float textOffsetY;
-	
+	virtual void RenderFocusBorder();
+
 	virtual void UpdateTheme();
 };
 

@@ -72,7 +72,7 @@ CViewC64AllGraphics::CViewC64AllGraphics(GLfloat posX, GLfloat posY, GLfloat pos
 
 	float px = posX + 350;
 	float py = posY + 15;
-	float buttonSizeX = 28.0f;
+	float buttonSizeX = 31.0f;//28.0f;
 	float buttonSizeY = 10.0f;
 	float gap = 5.0f;
 	float mgap = 2.5f;
@@ -236,6 +236,22 @@ CViewC64AllGraphics::CViewC64AllGraphics(GLfloat posX, GLfloat posY, GLfloat pos
 	this->lstCharsetAddresses->Init(txtCharsetAddresses, 0x20, true);
 	this->lstCharsetAddresses->SetGaps(0.0f, -0.25f);
 	this->AddGuiElement(this->lstCharsetAddresses);
+
+	//
+	px = posX + 386 + buttonSizeX + gap;
+	py = by + 55;
+	btnShowRAMorIO = new CGuiButtonSwitch(NULL, NULL, NULL,
+												  px, py, posZ, buttonSizeX, buttonSizeY,
+												  new CSlrString("I/O"),
+												  FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
+												  font, fontScale,
+												  1.0, 1.0, 1.0, 1.0,
+												  1.0, 1.0, 1.0, 1.0,
+												  0.3, 0.3, 0.3, 1.0,
+												  this);
+	btnShowRAMorIO->SetOn(true);
+	SetSwitchButtonDefaultColors(btnShowRAMorIO);
+	this->AddGuiElement(btnShowRAMorIO);
 
 	// sprites sheet, init images for sprites
 	for (int i = 0; i < (0x10000/0x40); i++)
@@ -868,6 +884,11 @@ void CViewC64AllGraphics::UpdateCharsets(bool useColors, u8 colorD021, u8 colorD
 	}
 }
 
+void CViewC64AllGraphics::UpdateShowIOButton()
+{
+	btnShowRAMorIO->SetOn( ! viewC64->viewC64MemoryMap->isDataDirectlyFromRAM);
+}
+
 bool CViewC64AllGraphics::GetIsSelectedItem()
 {
 	if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_BITMAPS)
@@ -1313,6 +1334,11 @@ bool CViewC64AllGraphics::ButtonSwitchChanged(CGuiButtonSwitch *button)
 {
 	LOGD("CViewC64AllGraphics::ButtonSwitchChanged");
 	
+	if (button == btnShowRAMorIO)
+	{
+		viewC64->SwitchIsDataDirectlyFromRam(!btnShowRAMorIO->IsOn());
+	}
+	
 	return false;
 }
 
@@ -1438,12 +1464,15 @@ bool CViewC64AllGraphics::KeyPressed(u32 keyCode, bool isShift, bool isAlt, bool
 	return CGuiView::KeyPressed(keyCode, isShift, isAlt, isControl);
 }
 
+// bug: this event is not called when layout is set, and button state is updated on keyboard shortcut only
 void CViewC64AllGraphics::ActivateView()
 {
 	LOGG("CViewC64AllGraphics::ActivateView()");
+	UpdateShowIOButton();
 }
 
 void CViewC64AllGraphics::DeactivateView()
 {
 	LOGG("CViewC64AllGraphics::DeactivateView()");
 }
+

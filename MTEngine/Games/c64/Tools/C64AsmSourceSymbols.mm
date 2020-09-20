@@ -996,7 +996,7 @@ void C64AsmSourceSymbols::LoadSource(C64AsmSourceFile *asmSourceFile, CSlrFile *
 	// push zero line
 	asmSourceFile->codeTextByLineNum.push_back(new CSlrString(""));
 
-	// replace tabs with 4 spaces
+	// TODO: UI -> replace tabs with 4 spaces
 	CSlrString *strTabs = new CSlrString("    ");
 	
 	while (true)
@@ -1074,7 +1074,7 @@ void C64AsmSourceSymbols::ActivateSegment(C64AsmSourceSegment *segment)
 	// TODO: we should store this directly and in a generic way.
 	//       this now is temporary and needs proper refactor:
 	
-	// first, copy current breakpoints to segment's in case they were changed
+	// first, copy current breakpoints to segment in case they have been changed
 	guiMain->LockMutex();
 	debugInterface->LockMutex();
 	

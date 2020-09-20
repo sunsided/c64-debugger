@@ -428,7 +428,7 @@ void CViewFileD64::RefreshDiskImageMenu()
 			continue;
 		}
 		
-		chr = ConvertPetsciiToSreenCode(chr);
+		chr = ConvertPetsciiToScreenCode(chr);
 
 		//LOGD("   chr=%02x (%c)", chr, chr);
 
@@ -450,7 +450,7 @@ void CViewFileD64::RefreshDiskImageMenu()
 			continue;
 		}
 		
-		chr = ConvertPetsciiToSreenCode(chr);
+		chr = ConvertPetsciiToScreenCode(chr);
 		
 		chr |= 0x80;
 		
@@ -482,7 +482,7 @@ void CViewFileD64::RefreshDiskImageMenu()
 				continue;
 			}
 			
-			chr = ConvertPetsciiToSreenCode(chr);
+			chr = ConvertPetsciiToScreenCode(chr);
 			strFileEntry->Concatenate(chr);
 		}
 		
