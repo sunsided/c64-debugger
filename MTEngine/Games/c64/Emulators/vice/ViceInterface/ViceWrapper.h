@@ -156,9 +156,12 @@ extern int c64d_is_receive_channels_data[MAX_NUM_SIDS];
 void c64d_sid_receive_channels_data(int sidNum, int isOn);
 void c64d_sid_channels_data(int sidNum, int v1, int v2, int v3, short mix);
 void c64d_set_volume(float volume);
+extern int c64d_skip_sound_run_sound_in_sound_store;
 
 // VIC
 void c64d_set_color_register(uint8 colorRegisterNum, uint8 value);
+
+extern int c64d_skip_drawing_sprites;
 
 // ROM patch
 extern int c64d_patch_kernal_fast_boot_flag;
@@ -180,7 +183,7 @@ unsigned int c64d_get_frame_num();
 void c64d_reset_counters();
 
 int c64d_is_performing_snapshot_restore();
-void c64d_check_cpu_snapshot_manager_restore();
+int c64d_check_cpu_snapshot_manager_restore();
 void c64d_check_cpu_snapshot_manager_store();
 void c64d_check_snapshot_interval();
 

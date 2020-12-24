@@ -68,7 +68,7 @@ public:
 	
 	void CleanTempStorage();
 	
-	std::vector<CFileItem *> *GetFiles(UTFString *directoryPath, std::list<UTFString *> *extensions);
+	std::vector<CFileItem *> *GetFiles(UTFString *directoryPath, std::list<UTFString *> *extensions, bool withFolders);
 	bool OpenForRead(UTFString *fileName);
 	bool ReadAllToBuffer(UTFString *fileName);
 	bool OpenResourceForRead(UTFString *fileName); //, UTFString *extension);

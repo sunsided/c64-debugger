@@ -78,6 +78,12 @@ Ctrl+Shift+F5
 	Show VIC Display screen
 Ctrl+Shift+F6
 	Show VIC Editor screen
+Ctrl+Shift+F7
+	Show All Graphics screen
+Ctrl+Shift+F8
+	Show music notes tracker screen
+Ctrl+Shift+F9
+	Show memory debugger screen
 TAB
 	Change focus to next view
 Shift+TAB
@@ -100,6 +106,8 @@ Ctrl+8
 	Insert D64 file
 Ctrl+Shift+8
 	Detach D64 file
+Ctrl+Alt+8
+	Insert next D64 file from folder
 Ctrl+O
 	Load PRG file
 Ctrl+L
@@ -250,7 +258,8 @@ You can change colours to ICU-standard (read marked by green) in Settings.
 You can Mouse Click inside memory map to scroll data dump view to a clicked 
 memory address. You can double Mouse Click to scroll disassemble view to a 
 memory address under cursor. You can Ctrl+Mouse Click to scroll Disassembly 
-to code address that stored value under cursor.
+to code address that stored value under cursor. You can Shift+Ctrl+Mouse Click
+to scroll Disassembly to code address that last read value under cursor.
 
 You can zoom-in using mouse wheel and move around by holding right mouse click
 (Windows, Linux, MacOS) or use mulitouch gestures such as pinch zoom and 
@@ -356,8 +365,8 @@ Button "Scroll" will switch if VIC scroll register should be applied to VIC Disp
 position. When code is opening side borders then applying the scroll register may make
 the display jump a lot, so you can select if you need this behaviour.
 
-Button "Bad Line" shows a bad line condition when text is red, switching it on will 
-display lines that are in bad line condition.  
+Button "Bad Line" shows a fetch line condition when text is red, switching it on will 
+display lines that are in fetch line condition.  
 
 Button "Border" changes if side border should be shown. It has three states: no border,
 viewable area with border, full frame scan.
@@ -382,7 +391,9 @@ view cursor under C64 screen will be moved to address that holds the value at cu
 For Charset mode the memory view cursor will point to a charset and definition of char
 under cursor.  
 
-You can Right-Click on C64 Screen in right top to replace it to a zoomed raster view. 
+You can Right-Click on C64 Screen in right top to replace it to a zoomed raster view,
+Right-Click again to convert it to VIC Display, and Right-Click again to see standard
+real-view Screen. 
 
 Keys that you can use in this view are:
 
@@ -445,7 +456,8 @@ done on C64 bitmap).
 
 Painting depends on selected mode. In all modes you are free to paint, however if you 
 exceed available number of colors the painting will be blocked. To un-block and force
-color replace you can hold Ctrl key  (this can be configured in Settings). 
+color replace you can hold Ctrl key (if blocking should occur at all can be configured 
+in Settings). 
 
 The replacement color will be selected and it will be replaced: 
 - in Hires Bitmap this will be color under cursor in 8x8 char,
@@ -589,8 +601,29 @@ Ctrl+B
 	Toggle top bar with icons
 ESCAPE
 	Back to C64 Debugger
-	
-	
+
+
+* All Graphics screen
+
+This screen allows you to see all images stored in memory at once. You can force
+mode (Hires, Multi) by selecting respective buttons. All colours are updated 
+in realtime and show current values. You can lock the colour by pressing left
+mouse button, or force your own colour by pressing right mouse button on the colour
+box.
+
+
+* Music tracker screen
+
+This screen allows to see notes played in realtime on piano keyboard. Sound chip
+states are stored and displayed in a tracker-like format. You can scroll the 
+tracker using mouse scroll or Arrow UP or Arrow DOWN keys, press SHIFT or PAGE UP/DOWN
+to scroll 16 rows. SPACEBAR resets tracker position and also pauses or unpauses 
+emulation (i.e. the music). You can also play notes when piano keyboard is selected, 
+notes are mapped to q2w3er5t6y7ui keys and [, ] allow to select octave. 
+
+Midi support is in progress.
+
+
 * Monitor screen
 
 You can use these instructions in code monitor:
@@ -614,10 +647,16 @@ L [PRG] [from address] [file name]
     load memory (with option from PRG file)
 S [PRG] <from address> <to address> [file name]
     save memory (with option as PRG file)
-D [NH] <from address> <to address> [file name]
+D [NH] [from address] [to address] [file name]
     disassemble memory (with option NH without hex codes)
+M [from address] [to address]
+    print memory 
 G <address>
     jmp to address
+
+
+You can just press ENTER key (i.e. empty command) to continue disassemble
+or memory print.
 
 
 * Breakpoints screen
@@ -712,6 +751,8 @@ section 9.5: Writing to User Defined Files.
      set sound out device by name or number
 -playlist <file>
      load and start jukebox playlist from json file
+-fullscreen
+     start debugger in full screen mode
 -clearsettings
      clear all config settings
 -pass
@@ -724,7 +765,7 @@ see Vice documentation for additional command line options).
 
 * Code labels (symbols)
 
-You can load a symbols file wit code lables via -symbols <file> command line
+You can load a symbols file with code lables via -symbols <file> command line
 option. Also, if near loaded PRG a file with "labels" file extension is found
 then it is loaded automatically. Two file formats are accepted, a standard
 Vice code labels format and 64Tass compatible file format.
@@ -767,7 +808,7 @@ This was written with great help of Mads Nielsen:
 
 C64Debugger - KickAss format 
 ------------------------------
-Here are the basic format. To make it easier to read I have given a param named 'values' that explains the values of the comma separated lists. 
+Here is the basic format. To make it easier to read I have given a param named 'values' that explains the values of the comma separated lists. 
 
 
 <C64debugger version="1.0">
@@ -1326,10 +1367,41 @@ Native File Dialog
 	Tomasz Konojacki for microutf8
 	Denis Kolodin for mingw support.
 	Tom Mason for Zenity support.
+resampler
+	resampler.cpp, Separable filtering image rescaler v2.2, public domain, Rich Geldreich - richgel99@gmail.com
+circlebuf.h
+	Copyright (c) 2013 Hugh Bailey <obs.jim@gmail.com>
+
+
 
 *
 * Change log
 *
+
+v0.64.58.2 (2020/12/24) X-mas release!
+Added C64: Key shortcut to insert next disk from current folder (Ctrl+Alt+8)
+Added C64: Bitmaps, screens, charsets and sprites sheet in All Graphics layout at Ctrl+Shift+F7 (thanks to Digger/Elysium for the idea)
+Added C64: SIDs layout with piano keyboard at Ctrl+Shift+F8 (thanks to me and Alex Goldblat for the idea and pushing this forward)
+Added C64: C64/Drive Memory debugger layout at Ctrl+Shift+F9 (thanks to Brush/Elysium for the idea)
+Added C64: Setting to skip drawing of VIC sprites (thanks to Isildur/Samar for the idea)
+Added C64: Show raster breakpoints and VIC IRQs as lines in VIC Display (shown using BADLINES switch)
+Added C64: Drag-drop of *.REU files on debugger window
+Added: New command line option -fullscreen (requested by Gary Metheringham)
+Added: M command (print memory) and tweaks for D command in monitor, Enter key continues memory and disassemble
+Added: Setting to select decimal or hex representation of raster and sprite positions (default is hex now)
+Added: Setting to restart audio engine on emulation reset, needed when selected audio out device changes its properties (thanks to Brush/Elysium for the hint)
+Bug fixed: Backwards stepping (Alt+F10) was not pausing code when it was running
+Bug fixed: Rewinding to not available frame (f.e. negative time) using keyboard caused video refresh to be blocked (thanks to Alex Goldblat)
+Bug fixed: Mouse scroll and multitouch zoom on a raster/zoomed C64 screen (Ctrl+Shift+F1, Ctrl+Shift+F2) was not receiving zoom events
+Bug fixed: When C64 emulation speed was below 100% then C64 Debugger crashed on startup (thanks to Steve West)
+Bug fixed Linux: Open/Save file NFD library was crashing in new GTK3, replaced default method to use Zenity instead (thanks to Compyx for help)
+Changed: Updated *.dbg parser to reflect new KickAss label format (thanks to Yugorin/Samar for checking this)
+Changed: Performance tweaks for images re-binding mechanism
+Added Windows: Remember window position and size
+Added macOS: Automatic update of audio out routing on change device event when 'Default' audio out device is selected
+Added macOS: Big Sur support, thanks to Steve West and Brush/Elysium for extensive testing
+Added NES: NestopiaUE v1.50 integrated, new views added, NES Debugger first alpha release!
+
 
 v0.64.58 (2020/2/22), a celebration of my birthday
 Bug fixed: Some edge cases for timeline and code-backstepping fixed
@@ -1365,7 +1437,7 @@ Added Windows: Possibility to set process priority and boosting (Settings/UI)
 And a lot other	fixes and tweaks for the Atari XL/XE debugger!
 
 
-v0.64.56.8 
+v0.64.56.8 (2019/12/24) X-mas release!
 Bug fixed: Changing layout was also changing VIC Display's layout border mode
 Bug fixed: Crash when adding PC breakpoint in Layout #4
 Bug fixed: Passing empty breakpoints.txt file was hanging the debugger 
@@ -1387,7 +1459,7 @@ Added Linux: Full screen mode on Linux, activate using Alt+Enter.
 Added MacOS: Window size and position are properly restored after app restart 
              (thanks to Mojzesh/Arise for reporting)
 Added MacOS and Linux: Integration via standard fifo named pipe, check specs 
-             how to interact remotely with the C64 Debugger (good for UI/IDEs!).
+             how to interact remotely with the C64 Debugger (good for UI/IDEs!)
 
 
 v0.64.56.6 (2019/05/17), released at Moonshine Dragons demo party

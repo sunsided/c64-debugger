@@ -5,16 +5,17 @@
 #include "SND_SoundEngine.h"
 #include "C64SettingsStorage.h"
 
-/// TODO:
+#include "M_Circlebuf.h"
 
 // TODO: rewriting map frame snapshot...  (?)
 // DONE?: attach regular snapshots -> clear rewind data
 // DONE?: store roms on cart change
 // TODO: what to do with REU?
 
-//CPU JAM - odwieszanie przy przewijaniu ?
+//CPU JAM - un-jam when rewind ?
 //DONE?: DUMP all snapshots & history => fix problem with cycle on frame# change
 
+// this is to debug snapshots manager, as it is quite heavy it normally should be switched off
 #undef LOGS
 //#define LOGS LOGD
 #define LOGS {}
@@ -612,8 +613,8 @@ CStoredDiskSnapshot *CSnapshotsManager::GetNewDiskSnapshot(u32 frame, u32 cycle)
 
 void CSnapshotsManager::ClearSnapshotsHistory()
 {
-	LOGD("CSnapshotsManager::ClearSnapshotsHistory");
 	// this will completely remove all history, used when new PRG is loaded or cart is inserted/detached
+	LOGD("CSnapshotsManager::ClearSnapshotsHistory");
 	
 	this->LockMutex();
 	LOGD("CSnapshotsManager::ClearSnapshotsHistory: locked");

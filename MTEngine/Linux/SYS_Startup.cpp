@@ -72,6 +72,7 @@ XWindowAttributes gwa;
 XEvent xev;
 
 void SYS_InitSharedMemorySignalHandlers();
+void C64DebuggerInitStartupTasks();
 void C64DebuggerParseCommandLine0();
 
 void SYS_InitCharBufPool();
@@ -100,6 +101,7 @@ int main(int argc, char *argv[])
 
 	SYS_InitFileSystem();
 
+	C64DebuggerInitStartupTasks();
 	C64DebuggerParseCommandLine0();
 
 

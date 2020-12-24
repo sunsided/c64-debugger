@@ -337,13 +337,18 @@ void C64AsmSourceSymbols::ParseXML(CByteBuffer *byteBuffer, CDebugInterface *deb
 			if (words->size() == 0)
 				continue;
 			
-			if (words->size() != 3)
+			// Note, Mads changed format recently and now labels also include information about code lines which are not needed for us now
+			if (words->size() < 3)
 			{
-				LOGError("Wrong format for labels (%d words)", words->size()); // at line #%d", tag.line);
+				LOGError("Not enough words for label definition (%d words)", words->size()); // at line #%d", tag.line);
 				CSlrString::DeleteVectorElements(words);
 				continue;
 			}
-			
+//			if (words->size() > 3)
+//			{
+//				LOGWarning("Wrong format for labels (%d words)", words->size()); // at line #%d", tag.line);
+//			}
+
 			CSlrString *segmentName = (*words)[0];
 			CSlrString *strAddr = (*words)[1];
 			int address = strAddr->ToIntFromHex();

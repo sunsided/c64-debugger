@@ -92,10 +92,11 @@ void CViewFileD64::StartFileEntry(DiskImageFileEntry *fileEntry, bool showLoadAd
 		{
 			guiMain->ShowMessage("Load error");
 		}
-		else
-		{
-			viewC64->ShowMainScreen();
-		}
+		// note: this is handled by LoadPRG asynchronously
+//		else
+//		{
+//			viewC64->ShowMainScreen();
+//		}
 		
 		delete byteBuffer;
 		return;
@@ -373,6 +374,9 @@ void CViewFileD64::RefreshInsertedDiskImage()
 void CViewFileD64::RefreshInsertedDiskImageAsync()
 {
 	LOGD("CViewFileD64::RefreshInsertedDiskImageAsync");
+	if (this->isRunning)
+		return;
+	
 	SYS_StartThread(this);
 }
 

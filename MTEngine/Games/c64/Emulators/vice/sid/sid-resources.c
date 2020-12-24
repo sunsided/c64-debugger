@@ -562,6 +562,8 @@ static int sid_check_engine_model(int engine, int model)
 
 int sid_set_engine_model(int engine, int model)
 {
+	LOGD("sid_set_engine_model: engine=%d model=%d", engine, model);
+	
     if (sid_check_engine_model(engine, model) < 0) {
         return -1;
     }

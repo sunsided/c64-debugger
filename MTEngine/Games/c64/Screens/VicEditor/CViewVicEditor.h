@@ -296,6 +296,9 @@ public:
 	CSlrImage *imgToolLine;
 	CSlrImage *imgToolPen;
 	CSlrImage *imgToolRectangle;
+	CSlrImage *imgToolAlwaysOnTopOn;
+	CSlrImage *imgToolAlwaysOnTopOff;
+	CGuiButton *btnToolAlwaysOnTop;
 
 	void SetSpritesFramesVisible(bool showSpriteFrames);
 	void SetTopBarVisible(bool isTopBarVisible);

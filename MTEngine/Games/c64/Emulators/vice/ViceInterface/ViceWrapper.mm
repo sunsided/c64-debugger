@@ -29,6 +29,7 @@ extern "C" {
 #include "CViewC64StateSID.h"
 #include "CSnapshotsManager.h"
 #include "CByteBuffer.h"
+#include "SND_SoundEngine.h"
 
 volatile int c64d_debug_mode = DEBUGGER_MODE_RUNNING;
 
@@ -36,6 +37,8 @@ int c64d_patch_kernal_fast_boot_flag = 0;
 int c64d_setting_run_sid_when_in_warp = 1;
 
 int c64d_setting_run_sid_emulation = 1;
+
+int c64d_skip_drawing_sprites = 0;
 
 volatile int c64d_start_frame_for_snapshots_manager = 0;
 volatile unsigned int c64d_previous_instruction_maincpu_clk = 0;
@@ -1153,7 +1156,14 @@ void c64d_debug_pause_check(int allowRestore)
 {
 	if (allowRestore)
 	{
-		c64d_check_cpu_snapshot_manager_restore();
+		if (c64d_check_cpu_snapshot_manager_restore() == 0)
+		{
+			if (debugInterfaceVice->sidDataToRestore)
+			{
+				debugInterfaceVice->sidDataToRestore->RestoreSids();
+				debugInterfaceVice->sidDataToRestore = NULL;
+			}
+		}
 	}
 	else
 	{
@@ -1181,6 +1191,13 @@ void c64d_debug_pause_check(int allowRestore)
 					return;
 				}
 			}
+			
+			if (debugInterfaceVice->sidDataToRestore)
+			{
+				debugInterfaceVice->sidDataToRestore->RestoreSids();
+				debugInterfaceVice->sidDataToRestore = NULL;
+			}
+
 			vsync_do_vsync(vicii.raster.canvas, 0, 1);
 			//mt_SYS_Sleep(50);
 		}
@@ -1281,6 +1298,18 @@ void c64d_lock_mutex()
 void c64d_unlock_mutex()
 {
 	debugInterfaceVice->UnlockIoMutex();
+}
+
+extern "C" {
+	void c64d_lock_sound_mutex(char *whoLocked)
+	{
+		gSoundEngine->LockMutex(whoLocked);
+	}
+
+	void c64d_unlock_sound_mutex(char *whoLocked)
+	{
+		gSoundEngine->UnlockMutex(whoLocked);
+	}
 }
 
 ////////////

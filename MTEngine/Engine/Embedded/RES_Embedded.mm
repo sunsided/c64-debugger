@@ -29,7 +29,8 @@
 //#include "icon_toolbox_export_gfx.h"
 #include "icon_raw_export_gfx.h"
 #include "icon_raw_import_gfx.h"
-
+#include "icon_tool_on_top_on_gfx.h"
+#include "icon_tool_on_top_off_gfx.h"
 
 void RES_InitEmbeddedData()
 {
@@ -65,5 +66,8 @@ void RES_InitEmbeddedData()
 
 	RES_AddEmbeddedDataToDeploy("/gfx/icon_small_export", DEPLOY_FILE_TYPE_GFX, icon_small_export_gfx, icon_small_export_gfx_length);
 	RES_AddEmbeddedDataToDeploy("/gfx/icon_small_import", DEPLOY_FILE_TYPE_GFX, icon_small_import_gfx, icon_small_import_gfx_length);
+
+	RES_AddEmbeddedDataToDeploy("/gfx/icon_tool_on_top_off", DEPLOY_FILE_TYPE_GFX, icon_tool_on_top_off_gfx, icon_tool_on_top_off_gfx_length);
+	RES_AddEmbeddedDataToDeploy("/gfx/icon_tool_on_top_on", DEPLOY_FILE_TYPE_GFX, icon_tool_on_top_on_gfx, icon_tool_on_top_on_gfx_length);
 }
 

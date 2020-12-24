@@ -210,7 +210,7 @@ void CGuiViewSelectFile::UpdatePath()
 	if (this->files && this->files->size() > 0)
 		DeleteItems();
 
-	this->files = gFileSystem->GetFiles(currentDirectoryPath, extensions);
+	this->files = gFileSystem->GetFiles(currentDirectoryPath, extensions, true);
 
 	int numFiles = files->size();
 

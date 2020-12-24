@@ -276,6 +276,7 @@ public:
 	void RenderRasterCursor(int rasterX, int rasterY);
 	
 	void RenderBadLines();
+	void RenderBreakpointsLines();
 	
 	bool showGridLines;
 	
@@ -304,6 +305,7 @@ public:
 	int charsetAddress;
 	
 	int GetAddressForRaster(int x, int y);
+	int GetBitmapAddressForRaster(int x, int y);
 	int GetScreenAddressForRaster(int x, int y);
 	int GetBitmapModeAddressForRaster(int x, int y);
 	int GetColorAddressForRaster(int x, int y);

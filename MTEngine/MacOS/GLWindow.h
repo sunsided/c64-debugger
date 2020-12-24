@@ -18,4 +18,6 @@
 ////! Close the window if escape key is receieved.
 //- (void) keyDown:(NSEvent*)event;
 
+- (void)windowDidMove:(NSNotification *)notification;
+
 @end

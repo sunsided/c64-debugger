@@ -75,6 +75,8 @@ void SYS_StartThread(CSlrThread *run, void *passData, float priority)
 		SYS_FatalExit("thread %d is already running", run->threadId);
 	}
 	
+	run->isRunning = true;
+
 	CThreadPassData *passArg = new CThreadPassData();
 	passArg->passData = passData;
 	passArg->threadStarter = run;
@@ -223,8 +225,9 @@ CSlrMutex::~CSlrMutex()
 void CSlrMutex::Lock()
 {
 //	if (strcmp(this->name, "CSoundEngine"))
+//	if (!strcmp(this->name, "CGuiMain::renderMutex"))
 //	{
-//		LOGD("CSlrMutex::Lock: name=%s lockedLevel=%d (after=%d)", this->name, lockedLevel, lockedLevel+1);
+//		LOGD("CSlrMutex::Lock: name=%s lockedLevel=%d (waiting, after=%d)", this->name, lockedLevel, lockedLevel+1);
 //	}
 	
 #if defined(USE_WIN32_THREADS)
@@ -258,14 +261,22 @@ void CSlrMutex::Lock()
 		pthread_mutex_lock(&mutex);
 		lockedLevel++;
 	#endif
+	
+//	if (strcmp(this->name, "CSoundEngine"))
+//	if (!strcmp(this->name, "CGuiMain::renderMutex"))
+//	{
+//		LOGD("CSlrMutex::Lock: name=%s LOCKED lockedLevel=%d", this->name, lockedLevel);
+//	}
+	
 #endif
 }
 
 void CSlrMutex::Unlock()
 {
 //	if (strcmp(this->name, "CSoundEngine"))
+//	if (!strcmp(this->name, "CGuiMain::renderMutex"))
 //	{
-//		LOGD("CSlrMutex::Unlock: name=%s level before=%d (after=%d)", this->name, lockedLevel, lockedLevel-1);
+//		LOGD("CSlrMutex::Unlock: name=%s level before=%d (waiting, after=%d)", this->name, lockedLevel, lockedLevel-1);
 //	}
 
 #if defined(USE_WIN32_THREADS)

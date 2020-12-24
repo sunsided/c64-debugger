@@ -162,7 +162,7 @@ CGuiRichTextLabel::~CGuiRichTextLabel()
 	}
 }
 
-void CGuiRichTextLabel::SetText(char *text)
+void CGuiRichTextLabel::SetText(const char *text)
 {
 	this->beingClicked = false;
 	this->clickConsumed = false;

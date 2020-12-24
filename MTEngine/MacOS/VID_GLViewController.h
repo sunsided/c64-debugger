@@ -106,6 +106,8 @@ void VID_SetWindowAlwaysOnTop(bool isAlwaysOnTop);
 void VID_SetWindowAlwaysOnTopTemporary(bool isAlwaysOnTop);
 bool VID_IsWindowAlwaysOnTop();
 
+void VID_SetWindowFullScreen(bool isFullScreen);
+
 void VID_ShowActionSheet();
 
 void VID_SetOrthoScreen();

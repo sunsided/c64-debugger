@@ -62,7 +62,7 @@ bool CGuiEditBoxFloat::KeyPressed(u32 keyCode, bool isShift, bool isAlt, bool is
 	if (this->editing == false)
 		return false;
 
-	LOGD("keyCode=%2.2x", keyCode);
+//	LOGD("keyCode=%2.2x", keyCode);
 	if (keyCode == 0x60)	// `
 	{
 		textBuffer[0] = '\0';

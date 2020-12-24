@@ -433,10 +433,17 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 		options = new std::vector<CSlrString *>();
 		options->push_back(new CSlrString("Copy to RAM"));
 		options->push_back(new CSlrString("PSID64"));
-		menuItemSIDImportMode = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("SID import: "),
+		menuItemSIDImportMode = new CViewC64MenuItemOption(fontHeight*1, new CSlrString("SID import: "),
 														 NULL, tr, tg, tb, options, font, fontScale);
 		menuItemSIDImportMode->SetSelectedOption(c64SettingsC64SidImportMode, false);
 		menuItemSubMenuAudio->AddMenuItem(menuItemSIDImportMode);
+
+		//
+		menuItemSIDHistoryMaxSize = new CViewC64MenuItemFloat(fontHeight*2, new CSlrString("SID History size: "),
+															  NULL, tr, tg, tb,
+															  50.0f, 120000.0f, 50.00f, font, fontScale);
+		menuItemSIDHistoryMaxSize->SetValue(c64SettingsSidDataHistoryMaxSize, false);
+		menuItemSubMenuAudio->AddMenuItem(menuItemSIDHistoryMaxSize);
 
 	}
 	
@@ -454,9 +461,15 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 	}
 
 	//
+	menuItemRestartAudioOnEmulationReset = new CViewC64MenuItemOption(fontHeight, new CSlrString("Restart audio on reset: "),
+																	  NULL, tr, tg, tb, optionsYesNo, font, fontScale);
+	menuItemRestartAudioOnEmulationReset->SetSelectedOption(c64SettingsRestartAudioOnEmulationReset ? 1 : 0, false);
+	menuItemSubMenuAudio->AddMenuItem(menuItemRestartAudioOnEmulationReset);
+	
 	kbsSwitchSoundOnOff = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Switch sound mute On/Off", 't', false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsSwitchSoundOnOff);
 	
+
 	//
 	options = new std::vector<CSlrString *>();
 	options->push_back(new CSlrString("RGB"));
@@ -610,6 +623,13 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 		//menuItemSubMenuVicEditor
 
 	}
+	//
+	menuItemShowPositionsInHex = new CViewC64MenuItemOption(fontHeight*2, new CSlrString("Show positions in hex: "),
+																	  NULL, tr, tg, tb, optionsYesNo, font, fontScale);
+	menuItemShowPositionsInHex->SetSelectedOption(c64SettingsShowPositionsInHex ? 1 : 0, false);
+	menuItemSubMenuUI->AddMenuItem(menuItemShowPositionsInHex);
+
+	
 	
 	//
 	menuItemDisassemblyExecuteColor = new CViewC64MenuItemOption(fontHeight, new CSlrString("Disassembly execute color: "),
@@ -1127,6 +1147,11 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 		menuItemEmulateVSPBug->SetSelectedOption(c64SettingsEmulateVSPBug, false);
 		menuItemSubMenuEmulation->AddMenuItem(menuItemEmulateVSPBug);
 
+		menuItemVicSetSkipDrawingSprites = new CViewC64MenuItemOption(fontHeight, new CSlrString("Skip drawing sprites: "),
+														   NULL, tr, tg, tb, optionsYesNo, font, fontScale);
+		menuItemVicSetSkipDrawingSprites->SetSelectedOption(c64SettingsVicSkipDrawingSprites, false);
+		menuItemSubMenuEmulation->AddMenuItem(menuItemVicSetSkipDrawingSprites);
+
 		//
 		options = new std::vector<CSlrString *>();
 		options->push_back(new CSlrString("None"));
@@ -1244,7 +1269,7 @@ void CViewSettingsMenu::UpdateMapC64MemoryToFileLabels()
 			delete menuItemMapC64MemoryToFile->str2;
 		
 		menuItemMapC64MemoryToFile->str2 = new CSlrString(fname);
-		delete fname;
+		delete [] fname;
 	}
 	guiMain->UnlockMutex();
 }
@@ -1270,10 +1295,10 @@ void CViewSettingsMenu::UpdateC64ProfilerFilePath()
 		char *fname = SYS_GetFileNameFromFullPath(asciiPath);
 		
 		if (menuItemC64ProfilerFilePath->str2 != NULL)
-		delete menuItemC64ProfilerFilePath->str2;
+			delete menuItemC64ProfilerFilePath->str2;
 		
 		menuItemC64ProfilerFilePath->str2 = new CSlrString(fname);
-		delete fname;
+		delete [] fname;
 	}
 	
 	guiMain->UnlockMutex();
@@ -1305,9 +1330,9 @@ void CViewSettingsMenu::UpdateAudioOutDevices()
 	
 	menuItemAudioOutDevice->SetOptions(audioDevices);
 	
-	LOGD("CViewSettingsMenu::UpdateAudioOutDevices: selected AudioOut device=%s", gSoundEngine->deviceOutName);
+	LOGD("CViewSettingsMenu::UpdateAudioOutDevices: selected AudioOut device=%s", gSoundEngine->audioOutDeviceName);
 
-	CSlrString *deviceOutNameStr = new CSlrString(gSoundEngine->deviceOutName);
+	CSlrString *deviceOutNameStr = gSoundEngine->audioOutDeviceName;
 	
 	int i = 0;
 	for (std::vector<CSlrString *>::iterator it = audioDevices->begin(); it != audioDevices->end(); it++)
@@ -1452,6 +1477,11 @@ void CViewSettingsMenu::MenuCallbackItemChanged(CGuiViewMenuItem *menuItem)
 		i32 v = (i32)(menuItemRESIDFilterBias->value);
 		C64DebuggerSetSetting("RESIDFilterBias", &v);
 	}
+	else if (menuItem == menuItemSIDHistoryMaxSize)
+	{
+		i32 v = (i32)(menuItemSIDHistoryMaxSize->value);
+		C64DebuggerSetSetting("SIDDataHistoryMaxSize", &v);
+	}
 	else if (menuItem == menuItemSIDStereo)
 	{
 		C64DebuggerSetSetting("SIDStereo", &(menuItemSIDStereo->selectedOption));
@@ -1497,7 +1527,17 @@ void CViewSettingsMenu::MenuCallbackItemChanged(CGuiViewMenuItem *menuItem)
 		int v = menuItemSIDImportMode->selectedOption;
 		C64DebuggerSetSetting("SIDImportMode", &(v));
 	}
-	
+	else if (menuItem == menuItemRestartAudioOnEmulationReset)
+	{
+		bool v = menuItemRestartAudioOnEmulationReset->selectedOption == 0 ? false : true;
+		C64DebuggerSetSetting("RestartAudioOnEmulationReset", &(v));
+	}
+	else if (menuItem == menuItemShowPositionsInHex)
+	{
+		bool v = menuItemShowPositionsInHex->selectedOption == 0 ? false : true;
+		C64DebuggerSetSetting("ShowPositionsInHex", &(v));
+	}
+
 	else if (menuItem == menuItemAtariPokeyStereo)
 	{
 		bool v = menuItemAtariPokeyStereo->selectedOption == 0 ? false : true;
@@ -1537,6 +1577,11 @@ void CViewSettingsMenu::MenuCallbackItemChanged(CGuiViewMenuItem *menuItem)
 	{
 		bool v = menuItemEmulateVSPBug->selectedOption == 0 ? false : true;
 		C64DebuggerSetSetting("EmulateVSPBug", &(v));
+	}
+	else if (menuItem == menuItemVicSetSkipDrawingSprites)
+	{
+		bool v = menuItemVicSetSkipDrawingSprites->selectedOption == 0 ? false : true;
+		C64DebuggerSetSetting("VicSkipDrawingSprites", &(v));
 	}
 	else if (menuItem == menuItemReuEnabled)
 	{

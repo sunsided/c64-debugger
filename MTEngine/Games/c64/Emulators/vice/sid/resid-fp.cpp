@@ -69,6 +69,8 @@ typedef struct sound_s sound_t;
 
 static sound_t *residfp_open(BYTE *sidstate, int chipNo)
 {
+	LOGD("residfp_open: chipNo=%d", chipNo);
+	
     sound_t *psid;
     int i;
 
@@ -81,12 +83,15 @@ static sound_t *residfp_open(BYTE *sidstate, int chipNo)
 	
 	psid->chipNo = chipNo;
 
+	LOGD("residfp_open: psid=%x sid=%x", psid, psid->sid);
     return psid;
 }
 
 	// TODO: factor
 static int residfp_init(sound_t *psid, int speed, int cycles_per_sec, int factor)
 {
+	LOGD("residfp_init: psid=%x psid->chipNo=%d sid=%x", psid, psid->chipNo, psid->sid);
+	
     sampling_method method;
     char model_text[100];
     char method_text[100];
@@ -107,7 +112,7 @@ static int residfp_init(sound_t *psid, int speed, int cycles_per_sec, int factor
 
     passband = speed * passband_percentage / 200.f;
  
-    /* Some mostly-common settings for all modes abstracted here. */	
+    /* Some mostly-common settings for all modes abstracted here. */
     psid->sid->input(0);
 
 	psid->sid->set_chip_number(psid->chipNo);

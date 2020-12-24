@@ -217,7 +217,7 @@ void CGuiViewSelectFolder::UpdatePath()
 	LOGTODO("CGuiViewSelectFolder::UpdatePath()");
 #endif
 	
-	this->files = gFileSystem->GetFiles(currentDirectoryPath, &(extensions));
+	this->files = gFileSystem->GetFiles(currentDirectoryPath, &(extensions), true);
 
 	int numFiles = files->size();
 

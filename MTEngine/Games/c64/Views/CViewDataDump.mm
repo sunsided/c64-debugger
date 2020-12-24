@@ -36,7 +36,7 @@ CViewDataDump::CViewDataDump(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 	
 	this->debugInterface = debugInterface;
 	
-	this->viewMemoryMap->SetViewC64DataDump(this);
+	this->viewMemoryMap->SetDataDumpView(this);
 
 	if (this->debugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
 	{
@@ -79,6 +79,7 @@ CViewDataDump::CViewDataDump(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 	numberOfSpritesToShow = 4;
 	
 	showCharacters = true;
+	showDataCharacters = true;
 	showSprites = true;
 	
 	editHex = new CGuiEditHex(this);
@@ -163,10 +164,22 @@ void CViewDataDump::SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloa
 	gapAddress = fontSize;
 	gapHexData = 0.5f*fontBytesSize;
 	gapDataCharacters = 0.5f*fontBytesSize;
-
 	
 	CGuiView::SetPosition(posX, posY, posZ, sizeX, sizeY);
 }
+
+void CViewDataDump::SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, bool recalculateFontSizes)
+{
+	if (recalculateFontSizes)
+	{
+		this->SetPosition(posX, posY, posZ, sizeX, sizeY);
+	}
+	else
+	{
+		CGuiView::SetPosition(posX, posY, posZ, sizeX, sizeY);
+	}
+}
+
 
 void CViewDataDump::DoLogic()
 {	
@@ -571,8 +584,9 @@ void CViewDataDump::UpdateSprites(bool useColors, byte colorD021, byte colorD025
 			}
 			else
 			{
-				ConvertColorSpriteDataToImage(spriteData, imageData, colorD021, colorD025, colorD026, colorD027,
-											  (C64DebugInterface*)debugInterface, 4);
+				ConvertColorSpriteDataToImage(spriteData, imageData,
+											  colorD021, colorD025, colorD026, colorD027,
+											  (C64DebugInterface*)debugInterface, 4, 0);
 			}
 		}
 		else
@@ -802,7 +816,7 @@ void CViewDataDump::ScrollToAddress(int address)
 
 bool CViewDataDump::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
-//	LOGD("CViewDataDump::keyDown=%4.4x", keyCode);
+	LOGD("CViewDataDump::keyDown=%4.4x", keyCode);
 	
 	u32 bareKey = SYS_GetBareKey(keyCode, isShift, isAlt, isControl);
 	
@@ -836,6 +850,18 @@ bool CViewDataDump::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContro
 	if (isEditingValue || isEditingValueAddr)
 	{
 		editHex->KeyDown(keyCode);
+		return true;
+	}
+	
+	if (keyCode == MTKEY_HOME && isControl)
+	{
+		this->ScrollToAddress(0x0000);
+		return true;
+	}
+	
+	if (keyCode == MTKEY_END && isControl)
+	{
+		this->ScrollToAddress(dataAdapter->AdapterGetDataLength()-1);
 		return true;
 	}
 	

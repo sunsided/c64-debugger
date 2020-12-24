@@ -79,9 +79,8 @@ void CDebugInterface::DoVSync()
 {
 	emulationFrameCounter++;
 	
-//	LOGD("DoVSync: frame=%d", emulationFrameCounter);
-	
-	viewC64->EmulationStartFrameCallback();
+//	LOGD("DoVSync: frame=%d", emulationFrameCounter);	
+	viewC64->EmulationStartFrameCallback(this);
 
 }
 

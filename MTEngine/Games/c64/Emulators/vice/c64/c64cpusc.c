@@ -4162,7 +4162,7 @@ fail:
 	return -1;
 }
 
-void c64d_check_cpu_snapshot_manager_restore()
+int c64d_check_cpu_snapshot_manager_restore()
 {
 	if (c64d_check_snapshot_restore())
 	{
@@ -4254,8 +4254,9 @@ void c64d_check_cpu_snapshot_manager_restore()
 		
 		LOGD("after alarm_context_dispatch: viceCurrentC64PC=%04x reg_pc=%04x cycle=%d", viceCurrentC64PC, reg_pc, maincpu_clk);
 		
-		return;
+		return 1;
 	}
+	return 0;
 }
 
 void c64d_check_cpu_snapshot_manager_store()

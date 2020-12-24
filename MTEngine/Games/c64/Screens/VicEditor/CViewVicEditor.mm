@@ -25,6 +25,7 @@
 #include "MTH_Random.h"
 #include "C64Tools.h"
 
+#include "CViewC64.h"
 #include "CViewC64Screen.h"
 #include "CViewC64VicControl.h"
 #include "CViewMemoryMap.h"
@@ -100,10 +101,11 @@ CViewVicEditor::CViewVicEditor(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	importFileExtensions.push_back(new CSlrString("g64"));
 	importFileExtensions.push_back(new CSlrString("prg"));
 	importFileExtensions.push_back(new CSlrString("crt"));
+	importFileExtensions.push_back(new CSlrString("reu"));
 	importFileExtensions.push_back(new CSlrString("snap"));
 	importFileExtensions.push_back(new CSlrString("vsf"));
 	importFileExtensions.push_back(new CSlrString("sid"));
-	
+
 	exportVCEFileExtensions.push_back(new CSlrString("vce"));
 	exportHyperBitmapFileExtensions.push_back(new CSlrString("bin"));
 	exportMultiBitmapFileExtensions.push_back(new CSlrString("kla"));
@@ -297,9 +299,13 @@ CViewVicEditor::CViewVicEditor(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	viewTopBar->AddIcon(imgExport);
 	imgSettings = RES_GetImage("/gfx/icon_settings", false);
 	viewTopBar->AddIcon(imgSettings);
-
 	imgClear = RES_GetImage("/gfx/icon_clear", false);
 	viewTopBar->AddIcon(imgClear);
+
+	imgToolAlwaysOnTopOn = RES_GetImage("/gfx/icon_tool_on_top_on", false);
+	imgToolAlwaysOnTopOff = RES_GetImage("/gfx/icon_tool_on_top_off", false);
+	btnToolAlwaysOnTop = viewTopBar->AddIcon(c64SettingsWindowAlwaysOnTop ? imgToolAlwaysOnTopOn : imgToolAlwaysOnTopOff,
+											 563, viewTopBar->nextIconY);
 
 	viewTopBar->SetPosition(0, 0, posZ, SCREEN_WIDTH, viewTopBar->sizeY);
 	
@@ -327,7 +333,10 @@ CViewVicEditor::CViewVicEditor(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 
 	imgToolDither = RES_GetImage("/gfx/icon_tool_dither", false);
 	viewToolBox->AddIcon(imgToolDither);
-	
+
+	imgToolDither = RES_GetImage("/gfx/icon_tool_dither", false);
+	viewToolBox->AddIcon(imgToolDither);
+
 	viewToolBox->SetPosition(60, 85, posZ, viewToolBox->sizeX, viewToolBox->sizeY);
 
 	
@@ -426,7 +435,7 @@ void CViewVicEditor::Render()
 	
 	// update just the VIC state for main C64View screen to correctly render C64 Sprites
 	vicii_cycle_state_t *displayVicState = viewC64->viewC64VicDisplay->UpdateViciiStateNonVisible(viewC64->viewC64VicDisplay->rasterCursorPosX,
-																								  viewC64->viewC64VicDisplay->rasterCursorPosY);
+															   viewC64->viewC64VicDisplay->rasterCursorPosY);
 	viewC64->viewC64VicDisplay->RefreshScreenStateOnly(displayVicState);
 	viewVicDisplaySmall->RefreshScreenStateOnly(displayVicState);
 	
@@ -449,7 +458,7 @@ void CViewVicEditor::Render()
 		layerToolPreview->RenderMain(viciiState);
 	}
 	
-	// render main screen layers
+	// render main screen layers from top to bottom
 	for (std::list<CVicEditorLayer *>::iterator it = this->layers.begin();
 		 it != this->layers.end(); it++)
 	{
@@ -496,7 +505,7 @@ void CViewVicEditor::Render()
 	
 	CGuiView::Render();
 	
-	// TODO: timeline for C64 only now
+	// TODO: timeline for C64 and Atari only now
 	if (c64SettingsSnapshotsRecordIsActive && c64SettingsTimelineIsActive)
 	{
 		if (viewC64->debugInterfaceC64)
@@ -2257,8 +2266,17 @@ void CViewVicEditor::ToolBoxIconPressed(CSlrImage *imgIcon)
 	{
 		this->ClearScreen();
 	}
-	
-	
+	else if (imgIcon == imgToolAlwaysOnTopOff
+			 || imgIcon == imgToolAlwaysOnTopOn)
+	{
+		viewC64->viewC64SettingsMenu->menuItemWindowAlwaysOnTop->SetSelectedOption(c64SettingsWindowAlwaysOnTop ? false : true, true);
+		btnToolAlwaysOnTop->SetImage(c64SettingsWindowAlwaysOnTop ? imgToolAlwaysOnTopOn : imgToolAlwaysOnTopOff);
+	}
+	else if (imgIcon == imgToolAlwaysOnTopOn)
+	{
+		btnToolAlwaysOnTop->SetImage(imgToolAlwaysOnTopOff);
+	}
+
 }
 
 //
@@ -3523,8 +3541,9 @@ bool CViewVicEditor::ExportPNG(CSlrString *path)
 			}
 			else
 			{
-				ConvertColorSpriteDataToImage(spriteData, imageDataSprite, paintColorD021, paintColorD025, paintColorD026, paintColorSprite,
-											  viewVicDisplayMain->debugInterface, 0);
+				ConvertColorSpriteDataToImage(spriteData, imageDataSprite,
+											  paintColorD021, paintColorD025, paintColorD026, paintColorSprite,
+											  viewVicDisplayMain->debugInterface, 0, 0);
 			}
 			
 			//

@@ -810,6 +810,8 @@ void sdl_ui_reverse_colors(void)
     menu_draw.color_back = color;
 }
 
+ui_menu_action_t sdljoy_autorepeat(void);
+
 ui_menu_action_t sdl_ui_menu_poll_input(void)
 {
     ui_menu_action_t retval = MENU_ACTION_NONE;

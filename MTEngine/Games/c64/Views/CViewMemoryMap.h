@@ -139,7 +139,7 @@ public:
 	
 	CViewDataDump *viewDataDump;
 	
-	void SetViewC64DataDump(CViewDataDump *viewDataDump);
+	void SetDataDumpView(CViewDataDump *viewDataDump);
 	
 	bool IsExecuteCodeAddress(int address);
 	void ClearExecuteMarkers();

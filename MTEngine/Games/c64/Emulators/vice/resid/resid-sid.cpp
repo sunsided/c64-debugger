@@ -22,6 +22,9 @@
 #include "resid-sid.h"
 #include <math.h>
 
+#include "ViceWrapper.h"
+#include "DebuggerDefs.h"
+
 #ifndef round
 #define round(x) (x>=0.0?floor(x+0.5):ceil(x-0.5))
 #endif
@@ -158,14 +161,22 @@ void SID::write(reg8 offset, reg8 value)
   bus_value = value;
   bus_value_ttl = 0x4000;
 
-  if (sid_model == MOS8580) {
-    // One cycle pipeline delay on the MOS8580; delay write.
-    write_pipeline = 1;
-  }
-  else {
-    // No pipeline delay on the MOS6581; write immediately.
-    write();
-  }
+	// play immediatelly when code is paused
+	if (c64d_debug_mode == DEBUGGER_MODE_PAUSED)
+	{
+		write();
+	}
+	else
+	{
+		if (sid_model == MOS8580) {
+		  // One cycle pipeline delay on the MOS8580; delay write.
+		  write_pipeline = 1;
+		}
+		else {
+		  // No pipeline delay on the MOS6581; write immediately.
+		  write();
+		}
+	}
 }
 
 

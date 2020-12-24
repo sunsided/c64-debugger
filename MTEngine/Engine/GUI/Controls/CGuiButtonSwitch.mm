@@ -263,7 +263,7 @@ void CGuiButtonSwitch::RenderUTFButton(GLfloat posX, GLfloat posY)
 
 void CGuiButtonSwitch::Render(GLfloat posX, GLfloat posY)
 {
-	//LOGD("CGuiButtonSwitch='%s'", this->name);
+//	LOGD("CGuiButtonSwitch='%s'", this->name);
 
 	if (this->visible)
 	{
@@ -303,6 +303,7 @@ void CGuiButtonSwitch::Render(GLfloat posX, GLfloat posY)
 				//LOGD("--isOff");
 				if (this->imageOff != NULL)
 				{
+//					LOGD("image=%x", image);
 					image->Render(posX, posY, posZ, sizeX, sizeY);
 				}
 				else

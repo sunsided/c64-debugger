@@ -373,6 +373,12 @@ void C64DebugInterface::SetSidFilterBias(int filterBias)
 	SYS_FatalExit("C64DebugInterface::SetSidFilterBias");
 }
 
+int C64DebugInterface::GetNumSids()
+{
+	SYS_FatalExit("C64DebugInterface::GetNumSids");
+	return 0;
+}
+
 void C64DebugInterface::SetSidStereo(int stereoMode)
 {
 	SYS_FatalExit("C64DebugInterface::SetSidStereo");
@@ -416,6 +422,11 @@ void C64DebugInterface::SetEmulationMaximumSpeed(int maximumSpeed)
 void C64DebugInterface::SetVSPBugEmulation(bool isVSPBugEmulation)
 {
 	SYS_FatalExit("C64DebugInterface::SetVSPBugEmulation");
+}
+
+void C64DebugInterface::SetSkipDrawingSprites(bool isSkipDrawingSprites)
+{
+	SYS_FatalExit("C64DebugInterface::SetSkipDrawingSprites");
 }
 
 void C64DebugInterface::SetByteC64(uint16 addr, uint8 val)
@@ -674,6 +685,11 @@ u8 C64DebugInterface::GetSidRegister(uint8 sidId, uint8 registerNum)
 {
 	SYS_FatalExit("C64DebugInterface::GetSidRegister");
 	return 0;
+}
+
+void C64DebugInterface::UpdateSidDataHistory()
+{
+	SYS_FatalExit("C64DebugInterface::UpdateSidDataHistory");
 }
 
 void C64DebugInterface::SetViaRegister(uint8 driveId, uint8 viaId, uint8 registerNum, uint8 value)

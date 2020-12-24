@@ -247,7 +247,8 @@ void C64VicDisplayCanvasHiresBitmap::RenderCanvasSpecificGridValues()
 			
 			float cx = vicDisplay->displayPosWithScrollX + vicDisplay->rasterCrossOffsetX;
 			
-			for (int rasterX = 0.0f; rasterX < 320.0f; rasterX += 8.0f)
+//			for (int rasterX = 0.0f; rasterX < 320.0f; rasterX += 8.0f)
+			for (int rasterX = 0; rasterX < 320; rasterX += 8)
 			{
 				if (rasterY % 8 == 0)
 				{
@@ -259,9 +260,6 @@ void C64VicDisplayCanvasHiresBitmap::RenderCanvasSpecificGridValues()
 					int charRow = floor((float)((float)rasterY / 8.0f));
 					
 					int offset = charColumn + charRow * 40;
-					
-					
-					
 					
 					fgcolor = (screen_ptr[(charRow * 40) + charColumn] & 0xf0) >> 4;
 					bgcolor = screen_ptr[(charRow * 40) + charColumn] & 0xf;

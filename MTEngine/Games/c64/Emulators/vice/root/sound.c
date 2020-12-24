@@ -928,10 +928,17 @@ static int sid_open(void)
 {
     int c;
 
-    for (c = 0; c < snddata.sound_chip_channels; c++) {
-        if (!(snddata.psid[c] = sound_machine_open(c))) {
+	LOGD("--------sid_open, snddata.sound_chip_channels=%d", snddata.sound_chip_channels);
+
+    for (c = 0; c < snddata.sound_chip_channels; c++)
+	{
+		LOGD("...sid_open: c=%d", c);
+        if (!(snddata.psid[c] = sound_machine_open(c)))
+		{
             return sound_error(translate_text(IDGS_CANNOT_OPEN_SID_ENGINE));
         }
+		
+		LOGD("...sid_open: snddata.psid[%d]=%x", c, snddata.psid[c]);
     }
 
     return 0;
@@ -942,6 +949,8 @@ static int sid_init(void)
 {
     int c, speed, speed_factor;
 
+	LOGD("sid_init");
+
     /* Special handling for cycle based as opposed to sample based sound
        engines. reSID is cycle based. */
     cycle_based = sound_machine_cycle_based();
@@ -951,8 +960,11 @@ static int sid_init(void)
     speed_factor = speed_percent ? speed_percent : 100;
     speed = sample_rate * 100 / speed_factor;
 
-    for (c = 0; c < snddata.sound_chip_channels; c++) {
-        if (!sound_machine_init(snddata.psid[c], speed, cycles_per_sec)) {
+    for (c = 0; c < snddata.sound_chip_channels; c++)
+	{
+		LOGD("...sid_init: snddata.psid[%d]=%x", c, snddata.psid[c]);
+        if (!sound_machine_init(snddata.psid[c], speed, cycles_per_sec))
+		{
             return sound_error(translate_text(IDGS_CANNOT_INIT_SID_ENGINE));
         }
     }
@@ -1240,6 +1252,8 @@ void sound_close(void)
 int c64d_get_warp_mode();
 extern int c64d_setting_run_sid_when_in_warp;
 extern int c64d_setting_run_sid_emulation;
+void c64d_lock_sound_mutex(char *whoLocked);
+void c64d_unlock_sound_mutex(char *whoLocked);
 
 static int sound_run_sound(void)
 {
@@ -1259,7 +1273,9 @@ static int sound_run_sound(void)
 
     if (!snddata.playdev)
 	{
+		c64d_lock_sound_mutex("vice::sound_run_sound");
         i = sound_open();
+		c64d_unlock_sound_mutex("vice::sound_run_sound");
         if (i)
 		{
             return i;
@@ -1408,7 +1424,9 @@ int c64d_sound_run_sound_when_paused(void)
 	
 	if (!snddata.playdev)
 	{
+		c64d_lock_sound_mutex("vice::c64d_sound_run_sound_when_paused");
 		i = sound_open();
+		c64d_unlock_sound_mutex("vice::c64d_sound_run_sound_when_paused");
 		if (i)
 		{
 			return i;
@@ -1905,13 +1923,18 @@ int sound_read(WORD addr, int chipno)
     return sound_machine_read(snddata.psid[chipno], addr);
 }
 
+int c64d_skip_sound_run_sound_in_sound_store = FALSE;
+
 void sound_store(WORD addr, BYTE val, int chipno)
 {
     int i;
 
-    if (sound_run_sound()) {
-        return;
-    }
+	if (c64d_skip_sound_run_sound_in_sound_store == FALSE)
+	{
+		if (sound_run_sound()) {
+			return;
+		}
+	}
 
     if (chipno >= snddata.sound_chip_channels) {
         return;

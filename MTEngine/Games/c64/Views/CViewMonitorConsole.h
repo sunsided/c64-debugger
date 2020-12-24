@@ -49,6 +49,7 @@ public:
 	void CommandHunt();
 	void CommandHuntContinue();
 	
+	void CommandMemoryDump();
 	void CommandMemorySave();
 	void CommandMemorySavePRG();
 	void CommandMemorySaveDump();
@@ -62,6 +63,7 @@ public:
 	
 	bool memoryDumpAsPRG;
 
+	void DoMemoryDump(int addrStart, int addrEnd);
 	bool DoMemoryDumpToFile(int addrStart, int addrEnd, bool isPRG, CSlrString *filePath);
 	bool DoMemoryDumpFromFile(int addrStart, bool isPRG, CSlrString *filePath);
 

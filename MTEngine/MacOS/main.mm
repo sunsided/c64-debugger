@@ -16,6 +16,8 @@
 #include "DBG_Log.h"
 #include "SYS_CommandLine.h"
 #include "SYS_CFileSystem.h"
+#include "C64CommandLine.h"
+#include "C64D_Version.h"
 
 void SYS_InitCharBufPool();
 void SYS_InitStrings();
@@ -36,9 +38,11 @@ NSMenu* createMenuBar(NSString *appName) {
   return menubar;
 }
 
+GLWindow *mainWindow;
+
 int main(int argc, char *argv[])
 {
-	NSLog(@"main");
+	NSLog(@"MTEngine: main");
 	
 	@autoreleasepool
 	{
@@ -51,36 +55,43 @@ int main(int argc, char *argv[])
 		
 		SYS_InitFileSystem();
 		
+		C64DebuggerInitStartupTasks();
 		C64DebuggerParseCommandLine0();
 
-		NSLog(@"delegate");
-	
 		AppDelegate *delegate = [[AppDelegate alloc] init];
 		[[NSApplication sharedApplication] setDelegate:delegate];
 
-		NSLog(@"conf NSApp");
-
 		[NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+		
+#if defined(RUN_COMMODORE64)
+		NSString *appName = @"C64 Debugger";
+#elif defined(RUN_ATARI)
+		NSString *appName = @"65XE Debugger";
+#elif defined(RUN_NES)
+		NSString *appName = @"NES Debugger";
+#else
 		NSString *appName = [[NSProcessInfo processInfo] processName];
-
+#endif
 		[NSApp activateIgnoringOtherApps:YES];
 
 		[NSApp setMainMenu:createMenuBar(appName)];
-
-		NSLog(@"conf window");
-		NSRect frame = NSRectFromCGRect(CGRectMake(100, 100, 800, 600));
-		GLWindow *window = [[GLWindow alloc] initWithContentRect:frame
+		
+		NSRect frame = [GLView getStoredMainWindowPosition];
+//		NSLog(@"frame=%@", NSStringFromRect(frame));
+		
+		mainWindow = [[GLWindow alloc] initWithContentRect:frame
 												styleMask:NSTitledWindowMask | NSResizableWindowMask | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable
 												  backing:NSBackingStoreBuffered
 													defer:NO];
-		[delegate setWindow:window];
-		[window setTitle:appName];
-		[window makeFirstResponder: glView];
-		[window setBackgroundColor: NSColor.blackColor];
-		[window makeKeyAndOrderFront:nil];
+		[delegate setWindow: mainWindow];
+		[mainWindow setTitle: appName];
+		[mainWindow setFrame: frame display:NO];
+		[mainWindow makeFirstResponder: glView];
+		[mainWindow setBackgroundColor: NSColor.blackColor];
+		[mainWindow makeKeyAndOrderFront:nil];
 
 		[NSApp activateIgnoringOtherApps:YES];
-
+		
 //		[NSApp run];
 //		return 0;
 		return NSApplicationMain(argc,  (const char **) argv);

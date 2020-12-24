@@ -164,7 +164,7 @@ void RES_AddFileToDeploy(char *fileName, u16 fileType)
 {
 	CDeployFileDetails *deployFileDetails = NULL;
 	
-	LOGD("RES_AddFileToDeploy: %s %d", fileName, fileType);
+	LOGR("RES_AddFileToDeploy: %s %d", fileName, fileType);
 	
 	u64 hashCode = GetHashCode64(fileName);
 

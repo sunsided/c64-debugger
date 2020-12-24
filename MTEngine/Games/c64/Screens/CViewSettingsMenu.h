@@ -223,7 +223,9 @@ public:
 	CViewC64MenuItemOption *menuItemScreenRasterCrossInteriorColorScheme;
 	CViewC64MenuItemOption *menuItemScreenRasterCrossExteriorColorScheme;
 	CViewC64MenuItemOption *menuItemScreenRasterCrossTipColorScheme;
-	
+
+	CViewC64MenuItemOption *menuItemShowPositionsInHex;
+
 	CViewC64MenuItemOption *menuItemMenusColorTheme;
 	
 	CViewC64MenuItemFloat *menuItemPaintGridCharactersColorR;
@@ -246,6 +248,8 @@ public:
 	CViewC64MenuItemFloat *menuItemRESIDPassBand;
 	CViewC64MenuItemFloat *menuItemRESIDFilterBias;
 
+	CViewC64MenuItemFloat *menuItemSIDHistoryMaxSize;
+
 	CViewC64MenuItemOption *menuItemSIDStereo;
 	CViewC64MenuItemOption *menuItemSIDStereoAddress;
 	CViewC64MenuItemOption *menuItemSIDTripleAddress;
@@ -254,6 +258,8 @@ public:
 	CViewC64MenuItemOption *menuItemRunSIDWhenInWarp;
 	CViewC64MenuItemOption *menuItemAudioOutDevice;
 	void UpdateAudioOutDevices();
+
+	CViewC64MenuItemOption *menuItemRestartAudioOnEmulationReset;
 
 	CViewC64MenuItemOption *menuItemRunSIDEmulation;
 	CViewC64MenuItemFloat *menuItemAudioVolume;
@@ -266,7 +272,8 @@ public:
 	CViewC64MenuItemOption *menuItemC64Model;
 	CViewC64MenuItemOption *menuItemFastBootKernalPatch;
 	CViewC64MenuItemOption *menuItemEmulateVSPBug;
-	
+	CViewC64MenuItemOption *menuItemVicSetSkipDrawingSprites;
+
 	CViewC64MenuItemFloat *menuItemFocusBorderLineWidth;
 
 	CViewC64MenuItemOption *menuItemDisassembleExecuteAware;

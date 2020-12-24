@@ -270,7 +270,15 @@ static void generate_partial_pmpl_colls(int l, int r)
 		l = 0;
 
 	for (i = l; i <= r; i++) {
-		UBYTE p = GTIA_pm_scanline[i];
+		UBYTE p;
+
+		// bug fix by slajerek, i may be out of bounds ^^^^
+		if (i >= sizeof(GTIA_pm_scanline))
+		{
+			continue;
+		}
+		
+		p = GTIA_pm_scanline[i];
 /* It is possible that some bits are set in PxPL/MxPL here, which would
  * not otherwise be set ever in GTIA_NewPmScanline.  This is because the
  * player collisions are always generated in order in GTIA_NewPmScanline.

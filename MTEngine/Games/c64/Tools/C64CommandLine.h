@@ -3,6 +3,7 @@
 
 class CByteBuffer;
 
+void C64DebuggerInitStartupTasks();
 void C64DebuggerParseCommandLine1();
 void C64DebuggerParseCommandLine2();
 
@@ -29,11 +30,21 @@ typedef enum c64d_pass_config_data_e {
 	C64D_PASS_CONFIG_DATA_AUTO_RUN_DISK,
 	C64D_PASS_CONFIG_DATA_ALWAYS_JMP,
 	C64D_PASS_CONFIG_DATA_SOUND_DEVICE_OUT,
-	C64D_PASS_CONFIG_DATA_HARD_RESET
+	C64D_PASS_CONFIG_DATA_HARD_RESET,
+	C64D_PASS_CONFIG_DATA_FULL_SCREEN
 } c64d_pass_config_data_t;
 
 
 void C64DebuggerPerformNewConfigurationTasks(CByteBuffer *byteBuffer);
+
+class C64DebuggerStartupTaskCallback
+{
+public:
+	virtual void PreRunStartupTaskCallback();
+	virtual void PostRunStartupTaskCallback();
+};
+
+void C64DebuggerAddStartupTaskCallback(C64DebuggerStartupTaskCallback *callback);
 
 #endif
 

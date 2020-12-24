@@ -106,6 +106,8 @@ CViewSnapshots::CViewSnapshots(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	viewC64->keyboardShortcuts->AddShortcut(kbsStoreSnapshot5);
 	kbsStoreSnapshot6 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Store snapshot #6", '6', true, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsStoreSnapshot6);
+	kbsStoreSnapshot7 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Store snapshot #7", '7', true, false, true);
+	viewC64->keyboardShortcuts->AddShortcut(kbsStoreSnapshot7);
 
 	// ctrl+1,2,3,... restore snapshot
 	kbsRestoreSnapshot1 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Restore snapshot #1", '1', false, false, true);
@@ -120,6 +122,8 @@ CViewSnapshots::CViewSnapshots(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	viewC64->keyboardShortcuts->AddShortcut(kbsRestoreSnapshot5);
 	kbsRestoreSnapshot6 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Restore snapshot #6", '6', false, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsRestoreSnapshot6);
+	kbsRestoreSnapshot7 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Restore snapshot #7", '7', false, false, true);
+	viewC64->keyboardShortcuts->AddShortcut(kbsRestoreSnapshot7);
 
 	//
 	strStoreSnapshotText = new CSlrString("Quick store snapshot");
@@ -219,6 +223,16 @@ bool CViewSnapshots::ProcessKeyboardShortcut(CSlrKeyboardShortcut *shortcut)
 	else if (shortcut == kbsRestoreSnapshot6)
 	{
 		QuickRestoreFullSnapshot(5);
+		return true;
+	}
+	else if (shortcut == kbsStoreSnapshot7)
+	{
+		QuickStoreFullSnapshot(6);
+		return true;
+	}
+	else if (shortcut == kbsRestoreSnapshot7)
+	{
+		QuickRestoreFullSnapshot(6);
 		return true;
 	}
 	
@@ -788,6 +802,9 @@ CSnapshotUpdateThread::CSnapshotUpdateThread()
 void CSnapshotUpdateThread::ThreadRun(void *data)
 {
 	LOGD("CSnapshotUpdateThread::ThreadRun");
+	
+	// come back t0 me to me
+	SYS_Sleep(1000);
 	
 	viewC64->debugInterfaceC64->LockIoMutex();
 	

@@ -255,8 +255,9 @@ void CViewC64Sprite::Render()
 			}
 			else
 			{
-				ConvertColorSpriteDataToImage(currentSpriteData, imageDataSprite, paintColorD021, paintColorD025, paintColorD026, paintColorSprite,
-											  debugInterface, 4);
+				ConvertColorSpriteDataToImage(currentSpriteData, imageDataSprite,
+											  paintColorD021, paintColorD025, paintColorD026, paintColorSprite,
+											  debugInterface, 4, 0);
 			}
 			
 			// re-bind image

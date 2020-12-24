@@ -81,6 +81,9 @@ public:
 	void putString(char *str, int begin, int len);
 	char *getString();
 	
+	void PutByteBuffer(CByteBuffer *byteBuffer);
+	CByteBuffer *GetByteBuffer();
+	
 	void PutSlrString(CSlrString *str);
 	CSlrString *GetSlrString();
 	

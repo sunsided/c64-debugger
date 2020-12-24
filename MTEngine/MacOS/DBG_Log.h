@@ -25,7 +25,10 @@
 #ifndef __DBG_LOGF_H__
 #define __DBG_LOGF_H__
 
-//#define GLOBAL_DEBUG_OFF
+#define GLOBAL_DEBUG_OFF
+
+//#define MT_DBGLOG_SKIP_NSSTRING
+//#define MT_DBGLOG_SKIP_CPP
 
 #define DBGLVL_DEBUG		(1 << 0)
 #define DBGLVL_MAIN			(1 << 1)
@@ -61,7 +64,11 @@
 #define DBGLVL_LEVEL	DBGLVL_FLURRY
 
 void LOG_Init(void);
+
+#if !defined(MT_DBGLOG_SKIP_CPP)
 void LOG_SetLevel(unsigned int level, bool isOn);
+#endif
+
 void LOG_Shutdown(void);
 
 #if !defined(GLOBAL_DEBUG_OFF)

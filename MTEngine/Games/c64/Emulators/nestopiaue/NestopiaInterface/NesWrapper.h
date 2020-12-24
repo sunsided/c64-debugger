@@ -53,6 +53,15 @@ void nesd_sound_unlock(char *whoLocked);
 
 void nesd_reset_sync();
 
+void nesd_mute_channels(bool muteSquare1, bool muteSquare2, bool muteTriangle, bool muteNoise, bool muteDmc, bool muteExt);
+extern volatile bool nesd_isReceiveChannelsData;
+void nesd_receive_channels_data(unsigned int valSquare1, unsigned int valSquare2, unsigned int valTriangle, unsigned int valNoise, unsigned int valDmc, unsigned int valExt, unsigned int valMix);
+
+uint8 nesd_get_apu_register(uint16 addr);
+bool nesd_is_pal();
+double nesd_get_cpu_clock_frquency();
+
+
 //void nesd_mutex_lock();
 //void nesd_mutex_unlock();
 //

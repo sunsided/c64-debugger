@@ -948,16 +948,16 @@ bool CByteBuffer::readFromFile(CSlrString *filePath)
 	if (this->data != NULL)
 		delete [] this->data;
 	this->data = new uint8[this->length];
-	int readed = fread(this->data, 1, this->length, fp);
+	int numRead = fread(this->data, 1, this->length, fp);
 	this->index = 0;
 	this->wholeDataBufferSize = this->length;
 	fclose(fp);
 	
-	LOGD("CByteBuffer::readFromFile: length=%d readed=%d", this->length, readed);
+	LOGD("CByteBuffer::readFromFile: length=%d numRead=%d", this->length, numRead);
 	
-	if (this->length != readed)
+	if (this->length != numRead)
 	{
-		LOGError("CByteBuffer::readFromFile failed: length=%d readed=%d", this->length, readed);
+		LOGError("CByteBuffer::readFromFile failed: length=%d numRead=%d", this->length, numRead);
 		delete [] this->data;
 		this->length = 0;
 		this->wholeDataBufferSize = 0;
@@ -1394,6 +1394,16 @@ char *CByteBuffer::GetString()
 	return this->getString();
 }
 
+void CByteBuffer::PutByteBuffer(CByteBuffer *byteBuffer)
+{
+	this->putByteBuffer(byteBuffer);
+}
+
+CByteBuffer *CByteBuffer::GetByteBuffer()
+{
+	return this->getByteBuffer();
+}
+
 void CByteBuffer::PutBool(bool val)
 {
 	this->putBoolean(val);
@@ -1438,7 +1448,7 @@ void CByteBuffer::PutSlrString(CSlrString *str)
 {
 	if (str == NULL)
 	{
-		this->PutU32(0);
+		this->PutU32(0xFFFFFFFF);
 	}
 	else
 	{
@@ -1450,8 +1460,10 @@ CSlrString *CByteBuffer::GetSlrString()
 {
 	u32 len = this->GetU32();
 	
-	if (len == 0)
+	if (len == 0xFFFFFFFF)
+	{
 		return NULL;
+	}
 	
 	this->index -= 4;
 

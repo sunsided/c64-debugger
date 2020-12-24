@@ -9,6 +9,9 @@
 
 #define NST_VERSION "1.50"
 
+#define NES_ASYNC_TASK_NONE		0
+#define NES_ASYNC_TASK_LOAD_ROM	1
+
 class CNesAudioChannel;
 
 class NesDebugInterface : public CDebugInterface
@@ -24,6 +27,9 @@ public:
 	virtual CSlrString *GetEmulatorVersionString();
 	virtual CSlrString *GetPlatformNameString();
 
+	virtual bool IsPal();
+	virtual double GetCpuClockFrequency();
+	
 	virtual void RunEmulationThread();
 
 	CNesAudioChannel *audioChannel;
@@ -31,7 +37,6 @@ public:
 
 	void RestartEmulation();
 	//	virtual void InitKeyMap(C64KeyMap *keyMap);
-	
 
 	virtual void DoFrame();
 	virtual int GetScreenSizeX();
@@ -86,7 +91,15 @@ public:
 	
 	// make jmp and reset CPU
 	virtual void MakeJmpAndReset(uint16 addr);
+
+	// APU
+	virtual void SetApuMuteChannels(int apuNumber, bool mute1, bool mute2, bool mute3, bool mute4, bool mute5, bool muteExt);
+	virtual void SetApuReceiveChannelsData(int apuNumber, bool isReceiving);
+	virtual unsigned char GetApuRegister(u16 addr);
 	
+	// TODO: add proper async tasks
+	u8 asyncTaskType;
+	char *asyncTaskPath;
 	
 	//	virtual uint8 GetByteFromRamC64(uint16 addr);
 //	virtual void MakeJmpC64(uint16 addr);
@@ -173,9 +186,7 @@ public:
 //	virtual void RenderStateSID(uint16 sidBase, float posX, float posY, float posZ, CSlrFont *fontBytes, float fontSize);
 //	void PrintSidWaveform(uint8 wave, char *buf);
 //	
-//	// SID
-//	virtual void SetSIDMuteChannels(int sidNumber, bool mute1, bool mute2, bool mute3, bool muteExt);
-//	virtual void SetSIDReceiveChannelsData(int sidNumber, bool isReceiving);
+	
 //	
 //	// memory
 //	uint8 *c64memory;

@@ -273,6 +273,13 @@ char *SYS_GetFileNameFromFullPath(char *fileNameFull)
 {
 	int len = strlen(fileNameFull);
 	
+	if (len == 0)
+	{
+		char *ret = new char[1];
+		ret[0] = 0x00;
+		return ret;
+	}
+	
 	// check if there's a path sign inside
 	bool foundPathSign = false;
 	for (int i = 0; i < len; i++)

@@ -11,6 +11,8 @@
 #include <Foundation/Foundation.h>
 
 #import "GLView.h"
+#import "GLWindow.h"
+
 #include "DBG_Log.h"
 #import <OpenGL/OpenGL.h>
 #import <OpenGL/gl.h>
@@ -110,7 +112,9 @@ static CVReturn displayLinkCallback(CVDisplayLinkRef displayLink,
 
 	NSWindow *mainWindow = [self window];
 	[mainWindow setAcceptsMouseMovedEvents:YES];
-	[self restoreMainWindowPosition];
+	
+	// this is not needed as window is created in main.mm with correct dimensions already
+//	[self restoreMainWindowPosition];
 
 	SYS_UpdateMenuItems();
 
@@ -139,9 +143,14 @@ static CVReturn displayLinkCallback(CVDisplayLinkRef displayLink,
 	CVDisplayLinkStart(displayLink);
 		
 	// register to be notified when the window closes so we can stop the displaylink
-	[[NSNotificationCenter defaultCenter] addObserver:self
+	[[NSNotificationCenter defaultCenter] addObserver:[self window]
 											 selector:@selector(windowWillClose:)
 												 name:NSWindowWillCloseNotification
+											   object:[self window]];
+	
+	[[NSNotificationCenter defaultCenter] addObserver:[self window]
+											 selector:@selector(windowDidMove:)
+												 name:NSWindowDidMoveNotification
 											   object:[self window]];
 	
 	// and for mouseMoved events
@@ -150,11 +159,6 @@ static CVReturn displayLinkCallback(CVDisplayLinkRef displayLink,
 											 NSTrackingMouseEnteredAndExited | NSTrackingMouseMoved
 									   owner:self userInfo:nil];
     [self addTrackingArea:trackingArea];
-}
-
-- (void) windowWillClose:(NSNotification*)notification
-{
-	CVDisplayLinkStop(displayLink);
 }
 
 - (void) initGL
@@ -215,6 +219,7 @@ static CVReturn displayLinkCallback(CVDisplayLinkRef displayLink,
 
 - (void)viewDidEndLiveResize
 {
+	[self storeMainWindowPosition];
 	[self updateSize];
 }
 
@@ -356,6 +361,10 @@ u32 mapKey(int c, int keyCodeBare, bool isShift)
 		return MTKEY_PAGE_UP;
 	else if (c == 0x0079)
 		return MTKEY_PAGE_DOWN;
+	else if (c == 0x0073)
+		return MTKEY_HOME;
+	else if (c == 0x0077)
+		return MTKEY_END;
 	else if (c == 0x0027)				// workaround for spanish keyboard
 	{
 		if (isShift)
@@ -462,7 +471,6 @@ bool wasKeyDownControl = false;
 
 - (void) keyDown:(NSEvent *)event
 {
-	NSLog(@"keyDown");
 	// https://stackoverflow.com/questions/3202629/where-can-i-find-a-list-of-mac-virtual-key-codes
 
 	LOGI(">>>>> GLViewController: keyDown event, keyCode=%d", [event keyCode]);
@@ -505,12 +513,8 @@ bool wasKeyDownControl = false;
 		if (key == quitKeyCode && isShift == quitIsShift && isAlt == quitIsAlt && isControl == quitIsControl)
 		{
 			LOGM("QUIT.");
-			SYS_ApplicationShutdown();
-			gSoundEngine->StopAudioUnit();
-			[self stopAnimation];
-			//exit(0);
-			//_Exit(0);
-			_exit(0);
+			NSWindow *mainWindow = [self window];
+			[mainWindow close];
 		}
 	}
 	else
@@ -524,12 +528,8 @@ bool wasKeyDownControl = false;
 		if (keyCode == quitKeyCode && isShift == quitIsShift && isAlt == quitIsAlt && isControl == quitIsControl)
 		{
 			LOGM("QUIT.");
-			SYS_ApplicationShutdown();
-			gSoundEngine->StopAudioUnit();
-			[self stopAnimation];
-			//exit(0);
-			//_Exit(0);
-			_exit(0);
+			NSWindow *mainWindow = [self window];
+			[mainWindow close];
 		}
 		
 		int keyCodeBare = [self characterWithoutModifierKeysIncludingShift:event];
@@ -599,7 +599,7 @@ bool wasKeyDownControl = false;
 
 -(void)mouseDragged:(NSEvent *)theEvent
 {
-	LOGD("mouseDragged");
+//	LOGD("mouseDragged");
 	NSPoint mousePointInWindow = [theEvent locationInWindow];
 
 	NSPoint backingPoint = [self convertPointToBacking:mousePointInWindow];
@@ -700,10 +700,15 @@ bool wasKeyDownControl = false;
 
 - (void)scrollWheel:(NSEvent *)theEvent
 {
-//	NSLog(@"user scrolled %f horizontally and %f vertically", [theEvent deltaX], [theEvent deltaY]);
-
+//	NSLog(@"user scrolled %f horizontally and %f vertically. precise=%d", [theEvent deltaX], [theEvent deltaY], [theEvent hasPreciseScrollingDeltas]);
+	
 	float deltaX = [theEvent deltaX];
 	float deltaY = [theEvent deltaY];
+	if ([theEvent hasPreciseScrollingDeltas] == FALSE)
+	{
+		deltaX *= 10.0f;
+		deltaY *= 10.0f;
+	}
 	VID_TouchesScrollWheel(deltaX, deltaY);
 }
 
@@ -940,7 +945,7 @@ bool wasKeyDownControl = false;
 
 - (void)setWindowAlwaysOnTop:(BOOL)isAlwaysOnTop
 {
-	NSLog(@"setWindowAlwaysOnTop: %d", isAlwaysOnTop);
+	LOGD("setWindowAlwaysOnTop: %d", isAlwaysOnTop);
 	if (isAlwaysOnTop)
 	{
 		[self.window setLevel:NSFloatingWindowLevel];
@@ -954,28 +959,68 @@ bool wasKeyDownControl = false;
 - (void)storeMainWindowPosition
 {
 	NSWindow *mainWindow = [self window];
-	NSRect frame = mainWindow.frame;
-	
+	NSRect frame = mainWindow.frame;	
 	[[NSUserDefaults standardUserDefaults] setObject:NSStringFromRect(frame) forKey:@"MainWindowFrameKey"];
 }
 
 - (void)restoreMainWindowPosition
 {
 	NSWindow *mainWindow = [self window];
-	
+	NSString *winFrameString = [[NSUserDefaults standardUserDefaults] stringForKey:@"MainWindowFrameKey"];
+
+	if (winFrameString != nil)
+	{
+		NSRect savedRect = NSRectFromString(winFrameString);
+		
+		if (CGRectContainsRect([NSScreen mainScreen].visibleFrame, savedRect))
+		{
+			if (savedRect.size.width > 10 && savedRect.size.height > 10)
+			{
+				dispatch_async(dispatch_get_main_queue(), ^{
+					[mainWindow setFrame:savedRect display:NO];
+				});
+			}
+		}
+	}
+}
+
++ (NSRect)getStoredMainWindowPosition
+{
 	NSString *winFrameString = [[NSUserDefaults standardUserDefaults] stringForKey:@"MainWindowFrameKey"];
 	
 	if (winFrameString != nil)
 	{
 		NSRect savedRect = NSRectFromString(winFrameString);
-		if (CGRectContainsRect([NSScreen mainScreen].visibleFrame, savedRect))
+		
+		for (id screen in [NSScreen screens])
 		{
-			if (savedRect.size.width > 10 && savedRect.size.height > 10)
+			if (CGRectContainsRect(((NSScreen *)screen).visibleFrame, savedRect))
 			{
-				[mainWindow setFrame:savedRect display:NO];
+				if (savedRect.size.width > 10 && savedRect.size.height > 10)
+				{
+					return savedRect;
+				}
 			}
 		}
 	}
+
+	// set startup dimensions
+	float sizeX = 640;
+	float sizeY = 640 * 0.596875;
+	return NSRectFromCGRect(CGRectMake(100, 100, 100 + sizeX, 100 + sizeY));
+}
+
+- (void)goFullScreen
+{
+	dispatch_async(dispatch_get_main_queue(), ^{
+		// go full screen
+		[self.window setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
+		[self.window toggleFullScreen:self];
+		
+		// exit full screen
+//		[self.window setCollectionBehavior:NSWindowCollectionBehaviorFullScreenAuxiliary];
+//		[self.window toggleFullScreen:self];
+	});
 }
 
 // TODO: move me
@@ -1010,9 +1055,11 @@ bool wasKeyDownControl = false;
 
 	if ([strExt isEqual:@"prg"] || [strExt isEqual:@"d64"] || [strExt isEqual:@"g64"]
 		|| [strExt isEqual:@"crt"] || [strExt isEqual:@"tap"] || [strExt isEqual:@"t64"]
+		|| [strExt isEqualToString:@"reu"]
 		|| [strExt isEqualToString:@"snap"] || [strExt isEqualToString:@"vce"] || [strExt isEqualToString:@"png"]
 		|| [strExt isEqual:@"PRG"] || [strExt isEqual:@"D64"] || [strExt isEqual:@"G64"]
 		|| [strExt isEqual:@"CRT"] || [strExt isEqual:@"TAP"] || [strExt isEqual:@"T64"]
+		|| [strExt isEqualToString:@"REU"]
 		|| [strExt isEqualToString:@"SNAP"] || [strExt isEqualToString:@"VCE"] || [strExt isEqualToString:@"PNG"]
 		|| [strExt isEqual:@"sid"] || [strExt isEqual:@"SID"]
 		|| [strExt isEqual:@"xex"] || [strExt isEqual:@"XEX"]
@@ -1035,11 +1082,11 @@ bool wasKeyDownControl = false;
 	}
 }
 
-
 // drag & drop callbacks
 void C64D_DragDropCallbackPRG(CSlrString *filePath);
 void C64D_DragDropCallbackD64(CSlrString *filePath);
 void C64D_DragDropCallbackCRT(CSlrString *filePath);
+void C64D_DragDropCallbackREU(CSlrString *filePath);
 void C64D_DragDropCallbackSID(CSlrString *filePath);
 void C64D_DragDropCallbackSNAP(CSlrString *filePath);
 void C64D_DragDropCallbackXEX(CSlrString *filePath);
@@ -1066,6 +1113,7 @@ enum
 	MACOS_OPEN_FILE_TYPE_D64,
 	MACOS_OPEN_FILE_TYPE_TAP,
 	MACOS_OPEN_FILE_TYPE_CRT,
+	MACOS_OPEN_FILE_TYPE_REU,
 	MACOS_OPEN_FILE_TYPE_SID,
 	MACOS_OPEN_FILE_TYPE_SNAP,
 	MACOS_OPEN_FILE_TYPE_VCE,
@@ -1083,6 +1131,73 @@ static int macOsThreadedOpenFileType = -1;
 static CSlrString *macOsThreadedOpenFilePath = NULL;
 static CMacOsOpenFileThread *macOsOpenFileThread = new CMacOsOpenFileThread("OpenFileThread");
 static bool macOsThreadedOpenFileAutoJMP = false;
+NSString *macOsStartupTaskOpenFilePath = NULL;
+
+BOOL MACOS_ApplicationStartWithFile(NSString *strPath)
+{
+	LOGD("MACOS_ApplicationStartWithFile");
+	macOsStartupTaskOpenFilePath = strPath;
+	[macOsStartupTaskOpenFilePath retain];
+	
+	C64DebuggerStartupTaskOpenFileCallback *callback = new C64DebuggerStartupTaskOpenFileCallback();
+	C64DebuggerAddStartupTaskCallback(callback);
+	
+	return YES;
+}
+
+void C64DebuggerStartupTaskOpenFileCallback::PreRunStartupTaskCallback()
+{
+	LOGD("C64DebuggerStartupTaskOpenFileCallback::PreRunStartupTaskCallback");
+	
+	LOGD("macOsStartupTaskOpenFilePath: %x", macOsStartupTaskOpenFilePath);
+	NSString *strExt = [macOsStartupTaskOpenFilePath pathExtension];
+	
+	LOGD("1");
+	LOGD("strExt=%x", strExt);
+	macOsThreadedOpenFileAutoJMP = c64SettingsAutoJmp;
+	if ([strExt isEqual:@"prg"] || [strExt isEqual:@"PRG"])
+	{
+		LOGD("prg");
+
+		//NSLog(@"%@", strPath);
+		c64SettingsAutoJmp = false;
+		if (c64SettingsPathToPRG != NULL)
+			delete c64SettingsPathToPRG;
+		c64SettingsPathToPRG = NULL;
+	}
+	else if ([strExt isEqual:@"d64"] || [strExt isEqual:@"D64"])
+	{
+		LOGD("d64");
+
+		//NSLog(@"%@", strPath);
+		c64SettingsAutoJmp = false;
+		if (c64SettingsPathToD64 != NULL)
+			delete c64SettingsPathToD64;
+		c64SettingsPathToD64 = NULL;
+	}
+	else if ([strExt isEqual:@"crt"] || [strExt isEqual:@"CRT"])
+	{
+		LOGD("crt");
+		
+		//NSLog(@"%@", strPath);
+		c64SettingsAutoJmp = false;
+		if (c64SettingsPathToCartridge != NULL)
+			delete c64SettingsPathToCartridge;
+		c64SettingsPathToCartridge = NULL;
+	}
+	LOGD("C64DebuggerStartupTaskOpenFileCallback::PreRunStartupTaskCallback done");
+}
+
+void C64DebuggerStartupTaskOpenFileCallback::PostRunStartupTaskCallback()
+{
+	LOGD("C64DebuggerStartupTaskOpenFileCallback::PostRunStartupTaskCallback");
+	
+	c64SettingsAutoJmp = macOsThreadedOpenFileAutoJMP;
+	MACOS_OpenFile(macOsStartupTaskOpenFilePath);
+
+	LOGD("C64DebuggerStartupTaskOpenFileCallback::PostRunStartupTaskCallback done");
+}
+
 
 BOOL MACOS_OpenFile(NSString *strPath)
 {
@@ -1139,6 +1254,17 @@ BOOL MACOS_OpenFile(NSString *strPath)
 		c64SettingsAutoJmp = false;
 
 		macOsThreadedOpenFileType = MACOS_OPEN_FILE_TYPE_CRT;
+		macOsThreadedOpenFilePath = FUN_ConvertNSStringToCSlrString(strPath);
+		
+		SYS_StartThread(macOsOpenFileThread);
+		return YES;
+	}
+	else if ([strExt isEqual:@"reu"] || [strExt isEqual:@"REU"])
+	{
+		//NSLog(@"%@", strPath);
+		c64SettingsAutoJmp = false;
+
+		macOsThreadedOpenFileType = MACOS_OPEN_FILE_TYPE_REU;
 		macOsThreadedOpenFilePath = FUN_ConvertNSStringToCSlrString(strPath);
 		
 		SYS_StartThread(macOsOpenFileThread);
@@ -1261,6 +1387,20 @@ void CMacOsOpenFileThread::ThreadRun(void *data)
 	LOGD("CMacOsOpenFileThread::ThreadRun: sleep");
 	SYS_Sleep(400);
 	
+	LOGD("CMacOsOpenFileThread::ThreadRun: check");
+	while (true)
+	{
+		if (viewC64 && viewC64->isInitialized == true)
+		{
+			break;
+		}
+		
+		LOGD("CMacOsOpenFileThread::ThreadRun: check NO, sleep");
+		SYS_Sleep(100);
+	}
+
+	LOGD("CMacOsOpenFileThread::ThreadRun: check COMPLETED");
+	
 	if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_PRG)
 	{
 		LOGD("CMacOsOpenFileThread::ThreadRun: C64D_DragDropCallbackPRG");
@@ -1277,6 +1417,10 @@ void CMacOsOpenFileThread::ThreadRun(void *data)
 	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_CRT)
 	{
 		C64D_DragDropCallbackCRT(macOsThreadedOpenFilePath);
+	}
+	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_REU)
+	{
+		C64D_DragDropCallbackREU(macOsThreadedOpenFilePath);
 	}
 	else if (macOsThreadedOpenFileType == MACOS_OPEN_FILE_TYPE_SID)
 	{
@@ -1330,21 +1474,31 @@ void CMacOsOpenFileThread::ThreadRun(void *data)
 	c64SettingsAutoJmp = macOsThreadedOpenFileAutoJMP;
 }
 
-
-- (void) dealloc
+- (void) shutdownMTEngine
 {
+	LOGM("shutdownMTEngine");
+	
 	SYS_ApplicationShutdown();
 	
-	// stop playing audio
+	// stop playing audio, and never unlock
 	gSoundEngine->LockMutex("shutdown");
-	
-	// Stop and release the display link
-	CVDisplayLinkStop(displayLink);
-    CVDisplayLinkRelease(displayLink);
+//	gSoundEngine->StopAudioUnit();	// does not return sometimes/endless lock... _exit will kill it anyway
+
+	// stop and release the display link
+	[self stopAnimation];
+	CVDisplayLinkRelease(displayLink);
 	
 	[[NSNotificationCenter defaultCenter] removeObserver:self
 													name:NSViewGlobalFrameDidChangeNotification
 												  object:self];
+//	[NSApp terminate:self];
+	LOG_Shutdown();
+	_exit(0);
+}
+
+- (void) dealloc
+{
+	[self shutdownMTEngine];
 	[super dealloc];
 }
 @end

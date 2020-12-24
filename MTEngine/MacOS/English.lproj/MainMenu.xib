@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="16097" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="17701" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="16097"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="17701"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="NSApplication"/>
@@ -10,10 +10,10 @@
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <menu title="AMainMenu" systemMenu="main" id="29">
             <items>
-                <menuItem title="NES Debugger" id="56" userLabel="NES Debugger">
-                    <menu key="submenu" title="NES Debugger" systemMenu="apple" id="57" customClass="MenuControllerSettings">
+                <menuItem title="65XE Debugger" id="56" userLabel="65XE Debugger">
+                    <menu key="submenu" title="65XE Debugger" systemMenu="apple" id="57" customClass="MenuControllerSettings">
                         <items>
-                            <menuItem title="About C64 65XE Debugger" tag="1" id="586">
+                            <menuItem title="About 65XE Debugger" tag="1" id="586">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="aboutKCT:" target="57" id="587"/>
@@ -67,6 +67,6 @@
             <point key="canvasLocation" x="140" y="331"/>
         </menu>
         <customObject id="420" customClass="NSFontManager"/>
-        <customObject id="550" userLabel="Main Controller" customClass="GLViewController"/>
+        <customObject id="550" userLabel="Main Controller"/>
     </objects>
 </document>

@@ -40,15 +40,17 @@ public:
 	std::list<CSlrString *> *EnumerateAvailableOutputDevices();
 	bool SetOutputAudioDevice(CSlrString *deviceName);
 
-	char deviceOutName[512];
+	CSlrString *audioOutDeviceName;
 	int deviceOutIndex;
-
 
 	bool StartAudioUnit(bool isPlayback, bool isRecording, int recordingFrequency);
 	void StopAudioUnit();
 	void AllocateInputBuffers(UInt32 inNumberFrames);
-	void ResetAudioUnit(bool isRecordingOn);
+	void RestartAudioUnit();
 
+	// callback when system default device changes
+	void DefaultAudioDeviceChanged();
+	
 	// portaudio
 	PaStream *streamOutput;
 	PaStream *streamInput;

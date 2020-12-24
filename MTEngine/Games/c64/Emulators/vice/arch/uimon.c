@@ -35,6 +35,8 @@
 #include "uimon.h"
 #include "ui.h"
 #include "uimenu.h"
+#include "log.h"
+#include "ViceWrapper.h"
 
 static console_t mon_console = {
     40,

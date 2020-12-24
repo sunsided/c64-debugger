@@ -4,6 +4,11 @@
 #include "C64DebugInterface.h"
 #include "ViceWrapper.h"
 #include "SYS_Threading.h"
+#include "CPool.h"
+
+#ifndef SOUND_SIDS_MAX
+#define SOUND_SIDS_MAX 3
+#endif
 
 //HAVE_NETWORK  ?
 
@@ -25,6 +30,7 @@ enum shift_type {
 
 
 class CViceAudioChannel;
+class CSidData;
 class C64DebugInterfaceVice;
 
 class CViceDriveFlushThread : public CSlrThread
@@ -58,6 +64,7 @@ public:
 	float numEmulationFPS;
 
 	virtual void RunEmulationThread();
+	virtual void DoVSync();
 	virtual void DoFrame();
 
 	virtual void Shutdown();
@@ -110,6 +117,7 @@ public:
 
 	virtual void GetSidTypes(std::vector<CSlrString *> *sidTypes);
 	virtual void SetSidType(int sidType);
+	virtual void SetSidTypeAsync(int sidType);
 	
 	// samplingMethod: Fast=0, Interpolating=1, Resampling=2, Fast Resampling=3
 	virtual void SetSidSamplingMethod(int samplingMethod);
@@ -121,6 +129,8 @@ public:
 	virtual void SetSidFilterBias(int filterBias);
 
 	// 0=none, 1=stereo, 2=triple
+	int numSids;
+	virtual int GetNumSids();
 	virtual void SetSidStereo(int stereoMode);
 	virtual void SetSidStereoAddress(uint16 sidAddress);
 	virtual void SetSidTripleAddress(uint16 sidAddress);
@@ -131,6 +141,8 @@ public:
 
 	virtual void SetVSPBugEmulation(bool isVSPBugEmulation);
 
+	virtual void SetSkipDrawingSprites(bool isSkipDrawingSprites);
+	
 	virtual void SetByteC64(uint16 addr, uint8 val);
 	virtual void SetByteToRamC64(uint16 addr, uint8 val);
 	virtual uint8 GetByteC64(uint16 addr);
@@ -245,6 +257,8 @@ public:
 	virtual u8 GetCiaRegister(uint8 ciaId, uint8 registerNum);
 	
 	// SID
+	CSidData *sidDataToRestore;
+	virtual void SetSid(CSidData *sidData);
 	virtual void SetSidRegister(uint8 sidId, uint8 registerNum, uint8 value);
 	virtual u8 GetSidRegister(uint8 sidId, uint8 registerNum);
 
@@ -269,6 +283,14 @@ public:
 	virtual void SetRunSIDEmulation(bool isSIDEmulationOn);
 	virtual void SetAudioVolume(float volume);
 		
+	// sid data history
+	CSlrMutex *mutexSidDataHistory;
+	int sidDataHistorySteps;
+	void SetSidDataHistorySteps(int numSteps);
+	std::list<CSidData *> sidDataHistory;
+	volatile int sidDataHistoryCurrentStep;
+	virtual void UpdateSidDataHistory();
+	
 	// profiler
 	// if fileName is NULL no file will be created, if runForNumCycles is -1 it will run till ProfilerDeactivate
 	virtual void ProfilerActivate(char *fileName, int runForNumCycles, bool pauseCpuWhenFinished);
@@ -289,6 +311,22 @@ public:
 	bool isCodeMonitorOpened;
 	virtual CSlrString *GetCodeMonitorPrompt();
 	virtual bool ExecuteCodeMonitorCommand(CSlrString *commandStr);
+};
+
+class CSidData
+{
+public:
+	CSidData();
+	
+	void PeekFromSids();
+	void RestoreSids();
+	u8 sidData[SOUND_SIDS_MAX][32];
+	
+private:
+	static CPool poolSidData;
+public:
+	static void* operator new(const size_t size) { return poolSidData.New(size); }
+	static void operator delete(void* pObject) { poolSidData.Delete(pObject); }
 };
 
 extern C64DebugInterfaceVice *debugInterfaceVice;

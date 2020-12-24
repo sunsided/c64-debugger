@@ -10,6 +10,7 @@
 #include "CViewBreakpoints.h"
 #include "C64AsmSourceSymbols.h"
 #include "CViewDataWatch.h"
+#include "CGuiMain.h"
 
 #include <fstream>
 #include <iostream>
@@ -60,6 +61,7 @@ void C64Symbols::ParseSymbols(CSlrFile *file)
 
 void C64Symbols::DeleteAllSymbols()
 {
+	guiMain->LockMutex();
 	debugInterface->LockMutex();
 
 	CViewDisassemble *viewDisassembleMainCpu = debugInterface->GetViewMainCpuDisassemble();
@@ -76,17 +78,21 @@ void C64Symbols::DeleteAllSymbols()
 	}
 
 	debugInterface->UnlockMutex();
+	guiMain->UnlockMutex();
 }
 
 void C64Symbols::ParseSymbols(CByteBuffer *byteBuffer)
 {
 	LOGM("C64Symbols::ParseSymbols");
 	
+	guiMain->LockMutex();
 	debugInterface->LockMutex();
 	
 	if (byteBuffer->length < 8)
 	{
 		LOGError("Empty symbols file");
+		debugInterface->UnlockMutex();
+		guiMain->UnlockMutex();
 		return;
 	}
 	
@@ -291,6 +297,7 @@ void C64Symbols::ParseSymbols(CByteBuffer *byteBuffer)
 		viewDisassembleDrive->UpdateLabelsPositions();
 	
 	debugInterface->UnlockMutex();
+	guiMain->UnlockMutex();
 	
 	LOGD("C64Symbols::ParseSymbols: done");
 }
@@ -298,9 +305,11 @@ void C64Symbols::ParseSymbols(CByteBuffer *byteBuffer)
 
 void C64Symbols::DeleteAllBreakpoints()
 {
+	guiMain->LockMutex();
 	debugInterface->LockMutex();
 	debugInterface->ClearBreakpoints();
 	debugInterface->UnlockMutex();
+	guiMain->UnlockMutex();
 }
 
 void C64Symbols::ParseBreakpoints(CSlrString *fileName)
@@ -961,6 +970,7 @@ void C64Symbols::ParseSourceDebugInfo(CSlrFile *file)
 
 void C64Symbols::DeleteSourceDebugInfo()
 {
+	guiMain->LockMutex();
 	debugInterface->LockMutex();
 	
 	if (this->asmSource)
@@ -970,12 +980,14 @@ void C64Symbols::DeleteSourceDebugInfo()
 	this->asmSource = NULL;
 	
 	debugInterface->UnlockMutex();
+	guiMain->UnlockMutex();
 }
 
 void C64Symbols::ParseSourceDebugInfo(CByteBuffer *byteBuffer)
 {
 	LOGM("C64Symbols::ParseSourceDebugInfo: byteBuffer=%x", byteBuffer);
 	
+	guiMain->LockMutex();
 	debugInterface->LockMutex();
 	
 	LOGTODO("move this->asmSource to debugInterfce->asmSource");
@@ -989,7 +1001,8 @@ void C64Symbols::ParseSourceDebugInfo(CByteBuffer *byteBuffer)
 	this->asmSource = new C64AsmSourceSymbols(byteBuffer, debugInterface);
 	
 	debugInterface->UnlockMutex();
-	
+	guiMain->UnlockMutex();
+
 	LOGD("C64Symbols::ParseSymbols: done");
 }
 

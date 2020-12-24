@@ -112,7 +112,9 @@ static sound_t *resid_open(BYTE *sidstate, int chipNo)
     sound_t *psid;
     int i;
 
-    psid = new sound_t;
+	LOGD("resid_open");
+
+	psid = new sound_t;
     psid->sid = new reSID::SID;
 
     for (i = 0x00; i <= 0x18; i++) {
@@ -126,11 +128,14 @@ static sound_t *resid_open(BYTE *sidstate, int chipNo)
 
 static int resid_init(sound_t *psid, int speed, int cycles_per_sec, int factor)
 {
+	
     sampling_method method;
     char model_text[100];
     char method_text[100];
     double passband, gain;
     int filters_enabled, model, sampling, passband_percentage, gain_percentage, filter_bias_mV;
+
+	LOGD("resid_init");
 
     if (resources_get_int("SidFilters", &filters_enabled) < 0) {
         return 0;

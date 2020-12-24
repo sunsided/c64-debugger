@@ -136,7 +136,7 @@ void CGuiViewLoadingScreen::LoadingFinishedSetView(CGuiView *nextView)
 	if (loadTime > DEBUG_LOG_LOAD_TIME)
 	{
 		TimeToStr(loadTime);
-		guiMain->ShowMessageAsync(strTime);
+		guiMain->ShowMessage(strTime);
 	}
 	
 	guiMain->SetView(nextView);

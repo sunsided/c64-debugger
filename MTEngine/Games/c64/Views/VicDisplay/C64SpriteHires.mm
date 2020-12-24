@@ -379,9 +379,7 @@ u8 C64SpriteHires::GetColorAtPixel(int x, int y)
 	u8 colorNum = this->GetPixel(spx, spy);
 	
 	// 0 00 = D021
-	// 1 01 = D025
-	// 2 10 = D027+sprId
-	// 3 11 = D026
+	// 1 10 = D027+sprId
 	
 	if (colorNum == 0)
 	{

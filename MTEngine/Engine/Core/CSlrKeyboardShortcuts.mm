@@ -23,11 +23,11 @@ void CSlrKeyboardShortcutsZone::AddShortcut(CSlrKeyboardShortcut *shortcutToAdd)
 		}
 		else
 		{
-			LOGD("...add shortcut keycode %d name=%s %d %d %d",
+			LOGG("...add shortcut keycode %d name=%s %d %d %d",
 				 shortcutToAdd->keyCode, shortcutToAdd->name, shortcutToAdd->isShift, shortcutToAdd->isAlt, shortcutToAdd->isControl);
 			
 			CSlrString *keyCodeName = SYS_KeyCodeToString(shortcutToAdd->keyCode, shortcutToAdd->isShift, shortcutToAdd->isAlt, shortcutToAdd->isControl);
-			keyCodeName->DebugPrint("keyCode=");
+//			keyCodeName->DebugPrint("keyCode=");
 			delete keyCodeName;
 			
 			listOfShortcuts = new std::list<CSlrKeyboardShortcut *>();
@@ -42,7 +42,9 @@ void CSlrKeyboardShortcutsZone::AddShortcut(CSlrKeyboardShortcut *shortcutToAdd)
 				&& shortcut->isAlt == shortcutToAdd->isAlt
 				&& shortcut->isControl == shortcutToAdd->isControl)
 			{
-				SYS_FatalExit("CSlrKeyboardShortcuts::AddShortcut: shortcut %4.4x already exists in list", shortcutToAdd->keyCode);
+				LOGError("CSlrKeyboardShortcuts::AddShortcut: shortcut %4.4x already exists in list", shortcutToAdd->keyCode);
+				return;
+				
 				listOfShortcuts->remove(shortcut);
 				this->shortcutByHashcode->erase(shortcutToAdd->hashCode);
 				break;

@@ -174,7 +174,7 @@ public:
 	virtual bool Clicked(GLfloat posX, GLfloat posY);
 	virtual bool Pressed(GLfloat posX, GLfloat posY);
 
-	void SetText(char *text);
+	void SetText(const char *text);
 	void SetText(CSlrString *text);
 	
 	CSlrString *text;

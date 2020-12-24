@@ -37,6 +37,9 @@ NesDebugInterface::NesDebugInterface(CViewC64 *viewC64) //, uint8 *memory)
 
 	dataAdapter = new NesDataAdapter(this);
 
+	asyncTaskType = NES_ASYNC_TASK_NONE;
+	asyncTaskPath = NULL;
+	
 	isDebugOn = true;
 	
 	if (NestopiaUE_Initialize())
@@ -102,6 +105,16 @@ CSlrString *NesDebugInterface::GetPlatformNameString()
 	return new CSlrString("NES");
 }
 
+bool NesDebugInterface::IsPal()
+{
+	return nesd_is_pal();
+}
+
+double NesDebugInterface::GetCpuClockFrequency()
+{
+	return nesd_get_cpu_clock_frquency();
+}
+
 void NesDebugInterface::RunEmulationThread()
 {
 	LOGM("NesDebugInterface::RunEmulationThread");
@@ -133,6 +146,21 @@ void NesDebugInterface::RunEmulationThread()
 
 void NesDebugInterface::DoFrame()
 {
+	// perform async tasks
+	
+	this->LockMutex();
+	
+	if (asyncTaskType == NES_ASYNC_TASK_LOAD_ROM)
+	{
+		bool ret = nesd_insert_cartridge(asyncTaskPath);
+		
+		STRFREE(asyncTaskPath);
+		asyncTaskPath = NULL;
+		asyncTaskType = NES_ASYNC_TASK_NONE;
+	}
+	
+	this->UnlockMutex();
+	
 	CDebugInterface::DoFrame();
 }
 
@@ -335,8 +363,15 @@ bool NesDebugInterface::MountDisk(char *fullFilePath, int diskNo, bool readOnly)
 bool NesDebugInterface::InsertCartridge(char *fullFilePath)
 {
 	LOGM("NesDebugInterface::InsertCartridge: %s", fullFilePath);
-	bool ret = nesd_insert_cartridge(fullFilePath);
-	return ret;
+	
+	this->LockMutex();
+	
+	this->asyncTaskPath = STRALLOC(fullFilePath);
+	this->asyncTaskType = NES_ASYNC_TASK_LOAD_ROM;
+	
+	this->UnlockMutex();
+	
+	return true;
 }
 
 bool NesDebugInterface::AttachTape(char *fullFilePath, bool readOnly)
@@ -393,5 +428,20 @@ void NesDebugInterface::SetVideoSystem(u8 videoSystem)
 
 void NesDebugInterface::SetMachineType(u8 machineType)
 {
+}
+
+void NesDebugInterface::SetApuMuteChannels(int apuNumber, bool muteSquare1, bool muteSquare2, bool muteTriangle, bool muteNoise, bool muteDmc, bool muteExt)
+{
+	nesd_mute_channels(muteSquare1, muteSquare2, muteTriangle, muteNoise, muteDmc, muteExt);
+}
+
+void NesDebugInterface::SetApuReceiveChannelsData(int apuNumber, bool isReceiving)
+{
+	nesd_isReceiveChannelsData = isReceiving;
+}
+
+u8 NesDebugInterface::GetApuRegister(u16 addr)
+{
+	return nesd_get_apu_register(addr);
 }
 

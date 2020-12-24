@@ -78,13 +78,17 @@ CGuiViewToolBox::CGuiViewToolBox(GLfloat posX, GLfloat posY, GLfloat posZ,
 //
 }
 
-void CGuiViewToolBox::AddIcon(CSlrImage *imgIcon)
+CGuiButton *CGuiViewToolBox::AddIcon(CSlrImage *imgIcon)
+{
+	return this->AddIcon(imgIcon, nextIconX, nextIconY);
+}
+
+CGuiButton *CGuiViewToolBox::AddIcon(CSlrImage *imgIcon, float iconX, float iconY)
 {
 	CGuiButton *btnIcon = new CGuiButton(imgIcon, 0, 0, posZ, iconSizeX, iconSizeY, BUTTON_ALIGNED_CENTER, this);
 	btnIcon->name = "CGuiButton ToolBox icon";
-	btnIcon->userData = imgIcon;
 	
-	btnIcon->SetPositionOffset(nextIconX, nextIconY, 0);
+	btnIcon->SetPositionOffset(iconX, iconY, 0);
 
 	//	pressed background: #23282C
 	btnIcon->buttonPressedColorR = 0.1373f;
@@ -92,6 +96,8 @@ void CGuiViewToolBox::AddIcon(CSlrImage *imgIcon)
 	btnIcon->buttonPressedColorB = 0.1725f;
 	this->AddGuiElement(btnIcon);
 	this->buttons.push_back(btnIcon);
+	
+	nextIconX = iconX; nextIconY = iconY;
 	
 	nextIconX += iconStepX;
 	numIconsInCurrentRow++;
@@ -124,7 +130,9 @@ void CGuiViewToolBox::AddIcon(CSlrImage *imgIcon)
 	{
 		viewFrame->SetSize(sx, sy);
 	}
+	return btnIcon;
 }
+
 
 void CGuiViewToolBox::UpdateSize(int numColumns)
 {
@@ -179,7 +187,7 @@ bool CGuiViewToolBox::ButtonPressed(CGuiButton *button)
 {
 	LOGD("CGuiViewToolBox::ButtonPressed");
 	
-	CSlrImage *img = (CSlrImage*)button->userData;
+	CSlrImage *img = (CSlrImage*)button->image;
 	
 	if (this->callback)
 	{

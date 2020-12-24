@@ -8,6 +8,7 @@
 
 #import "AppDelegate.h"
 #import "GLView.h"
+#include "CViewC64.h"
 
 @interface AppDelegate ()
 @end
@@ -18,7 +19,7 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
 	
-	NSLog(@"applicationDidFinishLaunching");
+	LOGD("applicationDidFinishLaunching");
 	
 	[NSApp activateIgnoringOtherApps:YES];
 	NSWindow *w = self.window;
@@ -30,9 +31,12 @@
 
 - (void)applicationDidBecomeActive:(NSNotification *)aNotification
 {
-	NSLog(@"applicationDidBecomeActive");
+	LOGD("applicationDidBecomeActive");
 	[glView becomeFirstResponder];
 	[NSApp activateIgnoringOtherApps:YES];
+	
+	// DEBUG
+//	MACOS_ApplicationStartWithFile(@"testfile.prg");
 }
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification {
@@ -50,17 +54,30 @@
 
 - (BOOL)application:(NSApplication *)sender openFile:(NSString *)filename
 {
-	NSLog(@"openFile");
+	LOGD("application:openFile");
+	
+	if (viewC64 == NULL)
+	{
+		return MACOS_ApplicationStartWithFile(filename);
+	}
+	
 	return MACOS_OpenFile(filename);
 }
 
 - (void)application:(NSApplication *)sender
 		  openFiles:(NSArray *) filenames
 {
-	NSLog(@"openFiles");
+	LOGD("application:openFiles");
 	NSString *strPath = [filenames objectAtIndex:0];
 	
-	MACOS_OpenFile(strPath);
+	if (viewC64 == NULL)
+	{
+		MACOS_ApplicationStartWithFile(strPath);
+	}
+	else
+	{
+		MACOS_OpenFile(strPath);
+	}
 }
 
 

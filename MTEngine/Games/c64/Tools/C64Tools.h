@@ -27,7 +27,7 @@ void ConvertSpriteDataToImage(u8 *spriteData, CImageData *imageData, u8 colorD02
 							  C64DebugInterface *debugInterface, int gap);
 void ConvertSpriteDataToImage(u8 *spriteData, CImageData *imageData, u8 bkgColorR, u8 bkgColorG, u8 bkgColorB, u8 spriteColorR, u8 spriteColorG, u8 spriteColorB, int gap);
 
-void ConvertColorSpriteDataToImage(u8 *spriteData, CImageData *imageData, u8 colorD021, u8 colorD025, u8 colorD026, u8 colorD027, C64DebugInterface *debugInterface, int gap);
+void ConvertColorSpriteDataToImage(u8 *spriteData, CImageData *imageData, u8 colorD021, u8 colorD025, u8 colorD026, u8 colorD027, C64DebugInterface *debugInterface, int gap, u8 alpha);
 
 void GetCBMColor(u8 colorNum, float *r, float *g, float *b);
 
@@ -46,6 +46,8 @@ float GetC64ColorDistance(u8 color1, u8 color2, C64DebugInterface *debugInterfac
 
 //
 void RenderColorRectangle(float px, float py, float ledSizeX, float ledSizeY, float gap, bool isLocked, u8 color,
+						  C64DebugInterface *debugInterface);
+void RenderColorRectangleWithHexCode(float px, float py, float ledSizeX, float ledSizeY, float gap, bool isLocked, u8 color, float fontSize,
 						  C64DebugInterface *debugInterface);
 
 //

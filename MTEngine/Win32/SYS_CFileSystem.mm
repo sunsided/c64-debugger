@@ -809,7 +809,7 @@ bool compare_CFileItem_nocase (CFileItem *first, CFileItem *second)
 	return false;
 }
 
-std::vector<CFileItem *> *CFileSystem::GetFiles(UTFString *directoryPath, std::list<UTFString *> *extensions)
+std::vector<CFileItem *> *CFileSystem::GetFiles(UTFString *directoryPath, std::list<UTFString *> *extensions, bool withFolders)
 {
 	LOGD("CFileSystem::GetFiles: %s", directoryPath);
 	std::vector<CFileItem *> *files = new std::vector<CFileItem *>();
@@ -841,6 +841,9 @@ std::vector<CFileItem *> *CFileSystem::GetFiles(UTFString *directoryPath, std::l
 	{
 		if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 		{
+			if (withFolders == false)
+				continue;
+			
 			LOGD("<DIR> %s", ffd.cFileName);
 
 			if (!strcmp(ffd.cFileName, ".") || !strcmp(ffd.cFileName, ".."))
@@ -1349,6 +1352,9 @@ bool SYS_FileExists(char *cPath)
 
 bool SYS_FileExists(CSlrString *path)
 {
+	if (path == NULL)
+		return false;
+		
 	char *cPath = path->GetStdASCII();
 	
 	struct stat info;

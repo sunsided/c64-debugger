@@ -16,6 +16,7 @@ class CSlrMutex;
 class CSlrString;
 class CAddrBreakpoint;
 class CViewMemoryMap;
+class CViewDataDump;
 class CSlrKeyboardShortcut;
 
 enum AssembleToken : uint8
@@ -50,7 +51,7 @@ class CViewDisassemble : public CGuiView, CGuiEditHexCallback, CGuiEditBoxTextCa
 {
 public:
 	CViewDisassemble(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
-						CSlrDataAdapter *dataAdapter, CViewMemoryMap *memoryMap,
+						CSlrDataAdapter *dataAdapter, CViewDataDump *viewDataDump, CViewMemoryMap *viewMemoryMap, 
 						std::map<uint16, CAddrBreakpoint *> *breakpointsMap, CDebugInterface *debugInterface);
 	virtual ~CViewDisassemble();
 
@@ -67,9 +68,14 @@ public:
 	virtual bool KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl);
 	
 	CViewMemoryMap *viewMemoryMap;
+	CViewDataDump *viewDataDump;
 	CSlrDataAdapter *dataAdapter;
 	CDebugInterface *debugInterface;
 	
+	
+	void SetViewDataDump(CViewDataDump *viewDataDump);
+	void SetViewMemoryMap(CViewMemoryMap *viewMemoryMap);
+
 	CSlrFont *fontDisassemble;
 	float fontSize;
 	float fontSize3;

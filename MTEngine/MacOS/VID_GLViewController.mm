@@ -183,20 +183,29 @@ void VID_SetWindowAlwaysOnTop(bool isAlwaysOnTop)
 {
 	VID_isAlwaysOnTop = isAlwaysOnTop;
 
-	// TODO: NEWGL
-//	[glView setWindowAlwaysOnTop:isAlwaysOnTop];
+	[glView setWindowAlwaysOnTop:isAlwaysOnTop];
 }
 
 // do not store value
 void VID_SetWindowAlwaysOnTopTemporary(bool isAlwaysOnTop)
 {
-	// TODO: NEWGL
-//	[glView setWindowAlwaysOnTop:isAlwaysOnTop];
+	[glView setWindowAlwaysOnTop:isAlwaysOnTop];
 }
 
 bool VID_IsWindowAlwaysOnTop()
 {
 	return VID_isAlwaysOnTop;
+}
+
+void VID_SetWindowFullScreen(bool isFullScreen)
+{
+	if (isFullScreen == false)
+	{
+		LOGTODO("VID_SetWindowFullScreen: isFullScreen=false not supported yet");
+		return;
+	}
+	
+	[glView goFullScreen];
 }
 
 void SysTextFieldEditFinishedCallback::SysTextFieldEditFinished(UTFString *str)
@@ -1212,8 +1221,7 @@ void GUI_GetRealScreenPixelSizes(double *pixelSizeX, double *pixelSizeY)
 //
 bool VID_IsWindowFullScreen()
 {
-	// TODO: NEWGL
-//	return [glView isWindowFullScreen];
+	return [glView isWindowFullScreen];
 }
 
 void VID_ShowMouseCursor()
@@ -1234,19 +1242,16 @@ void VID_HideMouseCursor()
 
 void VID_StoreMainWindowPosition()
 {
-	// TODO: NEWGL
-//	[glView storeMainWindowPosition];
+	[glView storeMainWindowPosition];
 }
 
 void VID_RestoreMainWindowPosition()
 {
-	// TODO: NEWGL
-//	[glView restoreMainWindowPosition];
+	[glView restoreMainWindowPosition];
 }
 
 void VID_TestMenu()
 {
-	// TODO: NEWGL
 //	[glView testMenu];
 }
 

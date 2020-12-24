@@ -141,6 +141,9 @@ public:
 	virtual void SetSidStereo(int stereoMode);
 	virtual void SetSidStereoAddress(uint16 sidAddress);
 	virtual void SetSidTripleAddress(uint16 sidAddress);
+	virtual int GetNumSids();
+
+	virtual void UpdateSidDataHistory();
 
 	//
 	virtual void GetC64ModelTypes(std::vector<CSlrString *> *modelTypeNames, std::vector<int> *modelTypeIds);
@@ -149,6 +152,8 @@ public:
 	virtual void SetEmulationMaximumSpeed(int maximumSpeed);
 	
 	virtual void SetVSPBugEmulation(bool isVSPBugEmulation);
+
+	virtual void SetSkipDrawingSprites(bool isSkipDrawingSprites);
 
 	// memory access
 	virtual void SetByteC64(uint16 addr, uint8 val);

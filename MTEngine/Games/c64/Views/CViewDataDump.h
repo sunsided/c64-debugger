@@ -67,7 +67,8 @@ public:
 	int GetAddrFromDataPosition(int dataPositionX, int dataPositionY);
 	
 	virtual void SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY);
-
+	virtual void SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, bool recalculateFontSizes);
+	
 	virtual void Render();
 	float gapAddress;
 	float gapHexData;

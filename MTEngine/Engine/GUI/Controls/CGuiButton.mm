@@ -54,8 +54,8 @@ CGuiButton::CGuiButton(CSlrImage *image, GLfloat posX, GLfloat posY, GLfloat pos
 	this->gapX = DEFAULT_BUTTON_GAPX;
 	this->gapY = DEFAULT_BUTTON_GAPY;
 	
-
 	this->alignment = alignment;
+	this->isExpanded = false;
 	this->centerText = true;
 	this->textOffsetY = 0.0f;
 	this->beingClicked = false;
@@ -108,6 +108,7 @@ CGuiButton::CGuiButton(char *text, GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 	this->gapY = DEFAULT_BUTTON_GAPY;
 
 	this->alignment = alignment;
+	this->isExpanded = false;
 	this->centerText = true;
 	this->textOffsetY = 0.0f;
 	this->beingClicked = false;
@@ -167,6 +168,7 @@ CGuiButton::CGuiButton(CSlrImage *bkgImage, CSlrImage *bkgImageDisabled,
 	this->gapY = DEFAULT_BUTTON_GAPY;
 	
 	this->alignment = BUTTON_ALIGNED_CENTER;
+	this->isExpanded = false;
 	this->centerText = true;
 	this->textOffsetY = 0.0f;
 	this->beingClicked = false;
@@ -200,6 +202,11 @@ CGuiButton::CGuiButton(CSlrImage *bkgImage, CSlrImage *bkgImageDisabled,
 	this->imageFlippedX = false;
 	
 	InitBackgroundColors();
+}
+
+void CGuiButton::SetImage(CSlrImage *image)
+{
+	this->image = image;
 }
 
 void CGuiButton::SetText(CSlrString *textUTF)
@@ -271,8 +278,18 @@ void CGuiButton::InitWithText(char *text)
 	SetText(text);
 }
 
-void CGuiButton::SetText(char *text)
+void CGuiButton::SetText(const char *text)
 {
+	LOGD("CGuiButton::SetText: text=%s", text);
+	
+	if (textUTF != NULL)
+	{
+		CSlrString *str = new CSlrString(text);
+		this->SetText(str);
+		delete str;
+		return;
+	}
+	
 	if (text == NULL)
 	{
 		LOGError("CGuiButton::SetText: NULL text");
@@ -346,6 +363,8 @@ void CGuiButton::Render()
 
 void CGuiButton::RenderText(GLfloat posX, GLfloat posY)
 {
+//	LOGD("CGuiButton::RenderText: %f %f %s", posX, posY, this->text2);
+	
 	if (this->text2 != NULL)
 	{
 		if (this->font == NULL)
@@ -586,7 +605,7 @@ bool CGuiButton::DoTap(GLfloat posX, GLfloat posY)
 
 bool CGuiButton::DoFinishTap(GLfloat posX, GLfloat posY)
 {
-	LOGD("CGuiButton::DoFinishTap: name=%s", this->name);
+	LOGG("CGuiButton::DoFinishTap: name=%s", this->name);
 	if (!this->visible)
 		return false;
 

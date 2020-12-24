@@ -1127,8 +1127,8 @@ void CViewMemoryMap::UpdateMapPosition()
 	
 	float nx = ceil(sizeX / cellSizeX);
 	float ny = ceil(sizeY / cellSizeY);
-	numCellsInWidth = nx+1;
-	numCellsInHeight = ny+1;
+	numCellsInWidth = (int)(nx+1);
+	numCellsInHeight = (int)(ny+1);
 	
 	////
 	currentFontDataScale = fontScale * cellSizeX;
@@ -1547,7 +1547,7 @@ bool CViewMemoryMap::KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl
 }
 
 
-void CViewMemoryMap::SetViewC64DataDump(CViewDataDump *viewDataDump)
+void CViewMemoryMap::SetDataDumpView(CViewDataDump *viewDataDump)
 {
 	this->viewDataDump = viewDataDump;
 }

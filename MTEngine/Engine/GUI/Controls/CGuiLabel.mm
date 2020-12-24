@@ -273,7 +273,7 @@ void CGuiLabel::InitWithText(char *text, bool stretched)
 	SetText(text, stretched);
 }
 
-void CGuiLabel::SetText(char *text, bool stretched)
+void CGuiLabel::SetText(const char *text, bool stretched)
 {
 	this->beingClicked = false;
 	this->clickConsumed = false;

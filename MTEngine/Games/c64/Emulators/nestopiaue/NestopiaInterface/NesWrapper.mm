@@ -9,6 +9,8 @@
 #include <sstream>
 #include <fstream>
 
+#include "M_Circlebuf.h"
+
 // this is based on libretro integration
 // https://docs.libretro.com/specs/api/
 
@@ -41,6 +43,7 @@
 #include "SYS_Threading.h"
 #include "SND_SoundEngine.h"
 #include "CSnapshotsManager.h"
+#include "CViewNesStateAPU.h"
 #include <string.h>
 
 volatile int nesd_debug_mode;
@@ -138,6 +141,9 @@ bool NestopiaUE_Initialize()
 	sprintf(db_path, "/Users/mars/develop/MTEngine/_RUNTIME_/Documents/nes/NstDatabase.xml");
 	sprintf(romPath, "/Users/mars/develop/MTEngine/_RUNTIME_/Documents/nes/disksys.rom");
 	sprintf(samp_dir, "/Users/mars/develop/MTEngine/_RUNTIME_/Documents/nes");
+	//	sprintf(db_path, "NstDatabase.xml");
+	//	sprintf(romPath, "disksys.rom");
+	//	sprintf(samp_dir, "nes");
 #endif
 	LOGTODO("ROM path is %s", romPath);
 	
@@ -248,6 +254,7 @@ bool NestopiaUE_PostInitialize()
 	char *defaultRomPath = "./default.nes";
 #else
 	char *defaultRomPath = "/Users/mars/develop/MTEngine/_RUNTIME_/Documents/nes/default.nes";
+//	char *defaultRomPath = "default.nes";
 	//	char *defaultRomPath = "/Users/mars/develop/MTEngine/_RUNTIME_/Documents/nes/contra.nes";
 	//	char *defaultRomPath = "/Users/mars/develop/MTEngine/_RUNTIME_/Documents/nes/mario.nes";
 	//	char *defaultRomPath = "/Users/mars/develop/MTEngine/_RUNTIME_/Documents/nes/alien3.nes";
@@ -259,6 +266,22 @@ bool NestopiaUE_PostInitialize()
 	
 	return true;
 }
+
+bool nesd_is_pal()
+{
+	return nst_pal();
+}
+
+double nesd_get_cpu_clock_frquency()
+{
+	if (nst_pal())
+	{
+		return 1662607.0;
+	}
+	
+	return 1789773.0;
+}
+
 
 bool nesd_insert_cartridge(char *filePath)
 {
@@ -291,10 +314,11 @@ bool nesd_insert_cartridge(char *filePath)
 	return true;
 }
 
-// sound sync is ugly, needs proper buffers.
+// sound sync is ugly, needs proper circular buffer.
 // threaded frame render sync is queueing samples, meaning sync is too fast... but why? see NestopiaUE_Run
-// TODO: https://github.com/embeddedartistry/embedded-resources/blob/master/examples/c/circular_buffer/circular_buffer.c
-std::list<i16> audioBuffer;
+
+struct circlebuf audioBufferCircle;
+#define MAX_NESD_AUDIO_BUFFER_SIZE 	(SOUND_SAMPLE_RATE * sizeof(i16))
 
 void nesd_sound_init()
 {
@@ -306,7 +330,15 @@ void nesd_sound_init()
 	}
 	
 	debugInterfaceNes->audioChannel->bypass = false;
+	
+	circlebuf_init(&audioBufferCircle);
+	circlebuf_reserve(&audioBufferCircle, (int)((float)SOUND_SAMPLE_RATE*1.25f) * sizeof(i16));
 	nesd_sound_unlock("nesd_sound_init");
+}
+
+void nesd_sound_destroy()
+{
+	circlebuf_free(&audioBufferCircle);
 }
 
 void nesd_audio_write(i16 *pbuf, int numSamples)
@@ -315,11 +347,8 @@ void nesd_audio_write(i16 *pbuf, int numSamples)
 	nesd_sound_lock("nesd_audio_write");
 
 //	LOGD("nesd_audio_write: adding %d samples", numSamples);
+	circlebuf_push_back(&audioBufferCircle, pbuf, numSamples * sizeof(i16));
 
-	for (int i = 0; i < numSamples; i++)
-	{
-		audioBuffer.push_back(pbuf[i]);
-	}
 	
 	nesd_sound_unlock("nesd_audio_write");
 //	LOGD("nesd_audio_write done");
@@ -337,19 +366,15 @@ void nesd_audio_callback(i16 *monoBuffer, int numSamples)
 	nesd_sound_lock("nesd_audio_callback");
 	
 	// check if we have too much audio in the buffer (more than a second)
-	if (audioBuffer.size() > SOUND_SAMPLE_RATE)
+	if (audioBufferCircle.size > MAX_NESD_AUDIO_BUFFER_SIZE)
 	{
-		// remove samples and leave only current buffer
-		int numSamplesToRemove = audioBuffer.size() - numSamples;
-		for (int i = 0; i < numSamplesToRemove; i++)
-		{
-			audioBuffer.pop_front();
-		}
+		audioBufferCircle.start_pos = 0;
+		audioBufferCircle.end_pos = 0;
 	}
 	
 	while (++lostBuffers < 2)
 	{
-		u32 availableSamples = audioBuffer.size();
+		u32 availableSamples = audioBufferCircle.size * sizeof(i16);
 		if (availableSamples < numSamples)
 		{
 			nesd_sound_unlock("nesd_audio_callback loop");
@@ -360,15 +385,9 @@ void nesd_audio_callback(i16 *monoBuffer, int numSamples)
 		}
 	}
 	
-	if (audioBuffer.size() >= numSamples)
+	if (audioBufferCircle.size > numSamples * sizeof(i16))
 	{
-		for (int i = 0; i < numSamples; i++)
-		{
-			i16 sample = audioBuffer.front();;
-			audioBuffer.pop_front();
-			
-			s[i] = sample;
-		}
+		circlebuf_pop_front(&audioBufferCircle, s, numSamples * sizeof(i16));
 	}
 	else
 	{
@@ -1454,12 +1473,52 @@ void nesd_debug_pause_check()
 	}
 }
 
+void nesd_mute_channels(bool muteSquare1, bool muteSquare2, bool muteTriangle, bool muteNoise, bool muteDmc, bool muteExt)
+{
+	bool channels[MAX_NESD_CHANNELS];
+	for (int i = 0; i < MAX_NESD_CHANNELS; i++)
+	{
+		channels[i] = false;
+	}
+	
+	channels[0] = muteSquare1;
+	channels[1] = muteSquare2;
+	channels[2] = muteTriangle;
+	channels[3] = muteNoise;
+	channels[4] = muteDmc;
+	channels[5] = muteExt;
+
+	Core::Machine& machineGet = emulator;
+	machineGet.cpu.apu.SetVolume(channels);
+}
+
+volatile bool nesd_isReceiveChannelsData = false;
+
+void nesd_receive_channels_data(unsigned int valSquare1, unsigned int valSquare2, unsigned int valTriangle, unsigned int valNoise, unsigned int valDmc, unsigned int valExt, unsigned int valMix)
+{
+	float f = 1.75f;
+	viewC64->viewNesStateAPU->AddWaveformData(0, (int)((float)valSquare1*f),
+												 (int)((float)valSquare2*f),
+												 (int)((float)valTriangle*f),
+												 (int)((float)valNoise*f),
+												 (int)((float)valDmc*f),
+												 (int)((float)valExt*f),
+												 (int)((float)valMix*f));
+}
+
+uint8 nesd_get_apu_register(uint16 addr)
+{
+	Core::Machine& machineGet = emulator;
+	u8 val = machineGet.cpu.apu.regs[addr & 0x001F];
+	return val;
+}
 
 ////
 //int nesd_get_joystick_state(int joystickNum)
 //{
 //	return debugInterfaceAtari->joystickState[joystickNum];
 //}
+
 
 
 void nesd_sound_pause()
@@ -1503,8 +1562,10 @@ void nesd_mutex_unlock()
 #else
 // no RUN_NES, dummy functions
 
-bool NestopiaUE_Initialize() {}
-bool NestopiaUE_Run() {}
+///// aka the ...RELEASE MEEEEEE FROM THIS CAGEEEEE... ghost
+
+bool NestopiaUE_Initialize() { return false; }
+bool NestopiaUE_Run() { return false; }
 
 bool nesd_insert_cartridge(char *filePath) { return false; }
 
@@ -1538,6 +1599,14 @@ unsigned char nesd_peek_safe_io(unsigned short addr) { return 0; }
 void nesd_get_cpu_regs(unsigned short *pc, unsigned char *a, unsigned char *x, unsigned char *y, unsigned char *p, unsigned char *s, unsigned char *irq) {}
 void nesd_check_pc_breakpoint(uint16 pc) {}
 void nesd_update_cpu_pc_by_emulator(uint16 cpuPC) {}
+
+void nesd_mute_channels(bool muteSquare1, bool muteSquare2, bool muteTriangle, bool muteNoise, bool muteDmc, bool muteExt) {}
+volatile bool nesd_isReceiveChannelsData;
+void nesd_receive_channels_data(unsigned int valSquare1, unsigned int valSquare2, unsigned int valTriangle, unsigned int valNoise, unsigned int valDmc, unsigned int valExt, unsigned int valMix) {}
+
+uint8 nesd_get_apu_register(uint16 addr) { return 0; }
+bool nesd_is_pal() { return false; }
+double nesd_get_cpu_clock_frquency() { return 0.0; }
 
 void nesd_audio_callback(uint8 *stream, int numSamples) {}
 void nesd_sound_lock() {}

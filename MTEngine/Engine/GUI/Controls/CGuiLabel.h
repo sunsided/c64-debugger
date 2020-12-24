@@ -58,7 +58,7 @@ public:
 	virtual bool Pressed(GLfloat posX, GLfloat posY);
 
 	void InitWithText(char *txt, bool stretched);
-	void SetText(char *text, bool stretched);
+	void SetText(const char *text, bool stretched);
 
 	void InitWithText(CSlrString *textUTF);
 	void SetText(CSlrString *textUTF);

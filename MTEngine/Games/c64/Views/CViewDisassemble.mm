@@ -41,7 +41,7 @@ enum editCursorPositions
 
 
 CViewDisassemble::CViewDisassemble(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
-										 CSlrDataAdapter *dataAdapter, CViewMemoryMap *memoryMap,
+										 CSlrDataAdapter *dataAdapter, CViewDataDump *viewDataDump, CViewMemoryMap *viewMemoryMap,
 										 std::map<uint16, CAddrBreakpoint *> *breakpointsMap,
 										 CDebugInterface *debugInterface)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
@@ -50,8 +50,9 @@ CViewDisassemble::CViewDisassemble(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 	
 	this->addrPositions = NULL;
 	this->numberOfLinesBack = 0;
-	
-	this->viewMemoryMap = memoryMap;
+
+	this->viewDataDump = viewDataDump;
+	this->viewMemoryMap = viewMemoryMap;
 	this->dataAdapter = dataAdapter;
 	this->memoryLength = dataAdapter->AdapterGetDataLength();
 	this->memory = new uint8[memoryLength];
@@ -66,6 +67,7 @@ CViewDisassemble::CViewDisassemble(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 	this->changedByUser = false;
 	this->cursorAddress = -1;
 	this->currentPC = -1;
+	this->fontSize = 5;
 	this->numberOfLinesBack = 31;
 	this->numberOfLinesBack3 = this->numberOfLinesBack * NUM_MULTIPLY_LINES_FOR_DISASSEMBLE;
 	
@@ -108,6 +110,16 @@ CViewDisassemble::CViewDisassemble(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 
 CViewDisassemble::~CViewDisassemble()
 {
+}
+
+void CViewDisassemble::SetViewDataDump(CViewDataDump *viewDataDump)
+{
+	this->viewDataDump = viewDataDump;
+}
+
+void CViewDisassemble::SetViewMemoryMap(CViewMemoryMap *viewMemoryMap)
+{
+	this->viewMemoryMap = viewMemoryMap;
 }
 
 void CViewDisassemble::AddNewCodeLabel(u16 address, char *text)
@@ -2650,7 +2662,7 @@ void CViewDisassemble::MoveAddressHistoryForward()
 		dataAdapter->AdapterReadByte(cursorAddress+2, &a2);
 		
 		u16 addr = a1 | (a2 << 8);
-		this->viewMemoryMap->viewDataDump->ScrollToAddress(addr);
+		this->viewDataDump->ScrollToAddress(addr);
 	}
 	else if (opcodes[opcode].addressingMode == ADDR_IND)
 	{
@@ -2664,7 +2676,7 @@ void CViewDisassemble::MoveAddressHistoryForward()
 		dataAdapter->AdapterReadByte(addr1+1, &a2);
 		
 		u16 addr = a1 | (a2 << 8);
-		this->viewMemoryMap->viewDataDump->ScrollToAddress(addr);
+		this->viewDataDump->ScrollToAddress(addr);
 	}
 	else if (opcodes[opcode].addressingMode == ADDR_ZP
 			 || opcodes[opcode].addressingMode == ADDR_ZPX
@@ -2676,7 +2688,7 @@ void CViewDisassemble::MoveAddressHistoryForward()
 		dataAdapter->AdapterReadByte(cursorAddress+1, &a);
 		
 		u16 addr = a;
-		this->viewMemoryMap->viewDataDump->ScrollToAddress(addr);
+		this->viewDataDump->ScrollToAddress(addr);
 	}
 	
 	guiMain->UnlockMutex();
@@ -2775,7 +2787,7 @@ void CViewDisassemble::ScrollUp()
 
 bool CViewDisassemble::DoScrollWheel(float deltaX, float deltaY)
 {
-	//LOGD("CViewDisassemble::DoScrollWheel: %f %f", deltaX, deltaY);
+//	LOGD("CViewDisassemble::DoScrollWheel: %f %f", deltaX, deltaY);
 	
 	if (this->IsInside(guiMain->mousePosX, guiMain->mousePosY) == false)
 	{
@@ -3291,17 +3303,15 @@ void CViewDisassemble::CreateAddrPositions()
 {
 	if (addrPositions != NULL)
 		delete [] addrPositions;
+	addrPositions = NULL;
 	
 	int numVisibleLines = (sizeY / fontSize);
+	
 	int numLines = numVisibleLines*2 + numberOfLinesBack + 1;	// additional for scrolling
-	if (numLines >= 0)
+
+	if (numLines > 0)
 	{
-//		addrPositions = new addrPosition_t[(numberOfLinesBack*5)+3];
 		addrPositions = new addrPosition_t[numLines];
-	}
-	else
-	{
-		addrPositions = NULL;
 	}
 }
 

@@ -16,7 +16,7 @@
 @implementation GLWindow
 
 - (void) close {
-	[NSApp terminate:self];
+	[glView shutdownMTEngine];	
 	[super close];
 }
 
@@ -36,6 +36,15 @@
 
 	
 	[super keyDown:event];
+}
+
+- (void) windowWillClose:(NSNotification*)notification
+{
+//	CVDisplayLinkStop(glView.displayLink);
+}
+
+- (void) windowDidMove:(NSNotification *)notification {
+	[glView storeMainWindowPosition];
 }
 
 @end

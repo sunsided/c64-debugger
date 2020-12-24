@@ -263,7 +263,7 @@ bool CGuiView::DoTapNoBackground(GLfloat x, GLfloat y)
 		
 		if (guiElement->DoTap(x, y))
 		{
-			if (focusElement != guiElement)
+			if (focusElement != NULL && focusElement != guiElement)
 			{
 				ClearFocus();
 			}
@@ -894,6 +894,7 @@ void CGuiView::UpdateTheme()
 // focus
 void CGuiView::ClearFocus()
 {
+	LOGD("CGuiView::ClearFocus");
 	if (focusElement != NULL)
 	{
 		focusElement->FocusLost();
@@ -912,13 +913,16 @@ void CGuiView::ClearFocus()
 
 bool CGuiView::SetFocus(CGuiElement *element)
 {
-	//LOGD("CGuiMain::SetFocus: %s", (element ? element->name : "NULL"));
+	LOGD("CGuiView::SetFocus: %s", (element ? element->name : "NULL"));
 	this->repeatTime = 0;
 	ClearFocus();
 
 	if (element != NULL && element->SetFocus(true))
 	{
-		focusElement = element;
+		this->focusElement = element;
+		element->hasFocus = true;
+		
+		LOGD("CGuiView::SetFocus: %s is set focus", element->name);
 	}
 	
 	return true;

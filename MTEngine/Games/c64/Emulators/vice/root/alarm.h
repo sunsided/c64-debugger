@@ -151,7 +151,7 @@ inline static void alarm_set(alarm_t *alarm, CLOCK cpu_clk)
     int idx;
 
     context = alarm->context;
-    idx = alarm->pending_idx;
+	idx = alarm->pending_idx;
 
     if (idx < 0) {
         int new_idx;

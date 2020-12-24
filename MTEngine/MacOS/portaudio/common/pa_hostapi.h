@@ -1,7 +1,7 @@
 #ifndef PA_HOSTAPI_H
 #define PA_HOSTAPI_H
 /*
- * $Id: pa_hostapi.h 1740 2011-08-25 07:17:48Z philburk $
+ * $Id$
  * Portable Audio I/O Library
  * host api representation
  *
@@ -59,7 +59,6 @@ The code below ensures that PA_USE_* macros are always defined and have value
 0 or 1. Undefined symbols are defaulted to 0. Symbols that are neither 0 nor 1 
 are defaulted to 1.
 */
-#define PA_USE_COREAUDIO 1
 
 #ifndef PA_USE_SKELETON
 #define PA_USE_SKELETON 0
@@ -140,12 +139,12 @@ are defaulted to 1.
 #define PA_USE_SGI 1
 #endif 
 
-#ifndef PA_USE_COREAUDIO
-#define PA_USE_COREAUDIO 0
-#elif (PA_USE_COREAUDIO != 0) && (PA_USE_COREAUDIO != 1)
-#undef PA_USE_COREAUDIO
+//#ifndef PA_USE_COREAUDIO
+//#define PA_USE_COREAUDIO 0
+//#elif (PA_USE_COREAUDIO != 0) && (PA_USE_COREAUDIO != 1)
+//#undef PA_USE_COREAUDIO
 #define PA_USE_COREAUDIO 1
-#endif 
+//#endif 
 
 #ifndef PA_USE_ASIHPI
 #define PA_USE_ASIHPI 0
@@ -265,7 +264,7 @@ typedef struct PaUtilHostApiRepresentation {
                 - if supplied its hostApi field matches the output device's host Api
  
             double sampleRate
-                - is not an 'absurd' rate (less than 1000. or greater than 200000.)
+                - is not an 'absurd' rate (less than 1000. or greater than 384000.)
                 - sampleRate is NOT validated against device capabilities
  
             PaStreamFlags streamFlags

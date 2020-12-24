@@ -1,3 +1,5 @@
+// TODO: move me to Engine/GUI
+
 /*
  *  CGuiLockableList.cpp
  *  MobiTracker
@@ -199,13 +201,18 @@ void CGuiLockableList::SetListLocked(bool isLocked)
 
 bool CGuiLockableList::IsFocusable()
 {
-	return true;
+	return allowFocus;
 }
 
 
 bool CGuiLockableList::SetFocus(bool focus)
 {
-	CGuiList::SetFocus(focus);
-	return true;
+	if (allowFocus)
+	{
+		CGuiList::SetFocus(focus);
+		return true;
+	}
+	
+	return false;
 }
 
