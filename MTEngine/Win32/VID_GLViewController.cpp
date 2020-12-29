@@ -394,6 +394,8 @@ void VID_UpdateViewPort(float newWidth, float newHeight)
 		else
 		{
 			LOGD("glViewport equal");
+			VIEW_START_X = 0;
+			VIEW_START_Y = 0;
 			glViewport(0, 0, vW, vH); // equal aspect ratios
 			SCREEN_SCALE = vH / SCREEN_HEIGHT;
 			
@@ -410,6 +412,9 @@ void VID_UpdateViewPort(float newWidth, float newHeight)
 	
 	LOGD("VID_UpdateViewPort done");
 }
+
+extern u32 windowWidth;
+extern u32 windowHeight;
 
 void VID_InitGL()
 {
@@ -541,6 +546,8 @@ void VID_InitGL()
 	glVertexPointer(3, GL_FLOAT, 0, vertices);
 	glNormalPointer(GL_FLOAT, 0, normals);
 	glColorPointer(3, GL_FLOAT, 0, colors);
+
+	VID_UpdateViewPort(windowWidth, windowHeight);
 
 #ifdef USE_THREADED_IMAGES_LOADING
 	VID_InitImageBindings();

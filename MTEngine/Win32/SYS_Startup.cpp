@@ -87,26 +87,6 @@ bool	active=TRUE;		// Window Active Flag Set To TRUE By Default
 bool	fullscreen=TRUE;	// Fullscreen Flag Set To Fullscreen Mode By Default
 
 LRESULT	CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);	// Declaration For WndProc
-GLvoid ReSizeGLScene(GLsizei width, GLsizei height)		// Resize And Initialize The GL Window
-{
-	return;
-
-	if (height==0)										// Prevent A Divide By Zero By
-	{
-		height=1;										// Making Height Equal One
-	}
-
-	glViewport(0,0,width,height);						// Reset The Current Viewport
-
-	glMatrixMode(GL_PROJECTION);						// Select The Projection Matrix
-	glLoadIdentity();									// Reset The Projection Matrix
-
-	// Calculate The Aspect Ratio Of The Window
-	gluPerspective(45.0f,(GLfloat)width/(GLfloat)height,0.1f,100.0f);
-
-	glMatrixMode(GL_MODELVIEW);							// Select The Modelview Matrix
-	glLoadIdentity();									// Reset The Modelview Matrix
-}
 
 void SetVSyncOn()
 {
@@ -386,7 +366,6 @@ BOOL CreateGLWindow(char* title, int bits, bool fullscreenflag)
 	ShowWindow(hWnd,SW_SHOW);						// Show The Window
 	SetForegroundWindow(hWnd);						// Slightly Higher Priority
 	SetFocus(hWnd);									// Sets Keyboard Focus To The Window
-	//ReSizeGLScene(width, height);					// Set Up Our Perspective GL Screen
 
 	// disable maximize button (done in window style)
 	//SetWindowLong( hWnd, GWL_STYLE, ::GetWindowLong(hWnd,GWL_STYLE) & ~WS_MAXIMIZEBOX );
@@ -1018,6 +997,8 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 							WPARAM	wParam,			// Additional Message Information
 							LPARAM	lParam)			// Additional Message Information
 {
+	LOGD("WndProc: uMsg=%d wParam=%d lParam=%d", uMsg, wParam, lParam);
+
 	switch (uMsg)									// Check For Windows Messages
 	{
 		case WM_ACTIVATE:							// Watch For Window Activate Message
@@ -1375,7 +1356,7 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 			return 0;
 		}
 
-		/*case WM_SIZING:								// Resize The OpenGL Window
+		case WM_SIZING:								// Resize The OpenGL Window
 		{
 			LOGD("WM_SIZING");
 			int edge = int(wParam);
@@ -1384,17 +1365,16 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 			float newWidth = rect.right - rect.left;
 			float newHeight = rect.bottom - rect.top;
 
-			SCREEN_SCALE = (float)newHeight / (float)SCREEN_HEIGHT;
-			LOGD("new SCREEN_SCALE=%f", SCREEN_SCALE);
-			newWidth = (unsigned int)(SCREEN_WIDTH * SCREEN_SCALE);
-			newHeight = (unsigned int)(SCREEN_HEIGHT * SCREEN_SCALE);
+			if (!isFullScreen)
+			{
+				windowWidth = newWidth;
+				windowHeight = newHeight;
+			}
 
-			rect.right = rect.left + newWidth;
-			rect.bottom = rect.top + newHeight;
+			VID_UpdateViewPort(newWidth, newHeight);
 
-			glViewport(0, 0, newWidth, newHeight);
-			return TRUE;
-		}*/
+			return 0;
+		}
 		case WM_MOVING:
 		{
 			LOGI("WM_MOVING: wParam=%x lParam=%x", wParam, lParam);
@@ -1418,17 +1398,15 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 			float newWidth = (float)(LOWORD(lParam));
 			float newHeight = (float)(HIWORD(lParam));
 
-			VID_UpdateViewPort(newWidth, newHeight);
-
 			if (!isFullScreen)
 			{
 				windowWidth = newWidth;
 				windowHeight = newHeight;
 			}
 
-			VID_StoreMainWindowPosition();
+			VID_UpdateViewPort(newWidth, newHeight);
 
-			//ReSizeGLScene(LOWORD(lParam),HIWORD(lParam));  // LoWord=Width, HiWord=Height
+			VID_StoreMainWindowPosition();
 			return 0;								// Jump Back
 		}
 
