@@ -633,7 +633,7 @@ void CViewC64AllGraphics::Render()
 		for (int i = 0; i < numVisibleDisplays; i++)
 		{
 			//		LOGD("Render VIC Display %d", i);
-			vicDisplays[i]->viewVicControl->forceDataFromRam = viewC64->viewC64MemoryMap->isDataDirectlyFromRAM;
+			vicDisplays[i]->viewVicControl->forceDataFromRam = viewC64->isDataDirectlyFromRAM;
 			
 			if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_BITMAPS)
 			{
@@ -1112,7 +1112,7 @@ void CViewC64AllGraphics::UpdateCharsets(bool useColors, u8 colorD021, u8 colorD
 
 void CViewC64AllGraphics::UpdateShowIOButton()
 {
-	btnShowRAMorIO->SetOn( ! viewC64->viewC64MemoryMap->isDataDirectlyFromRAM);
+	btnShowRAMorIO->SetOn( ! viewC64->isDataDirectlyFromRAM);
 }
 
 bool CViewC64AllGraphics::GetIsSelectedItem()

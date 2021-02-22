@@ -1012,7 +1012,7 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 	menuItemIsWarpSpeed = new CViewC64MenuItemOption(fontHeight, new CSlrString("Warp Speed: "), kbsIsWarpSpeed, tr, tg, tb, options, font, fontScale);
 	menuItemSubMenuEmulation->AddMenuItem(menuItemIsWarpSpeed);
 	
-	if (viewC64->debugInterfaceC64 || viewC64->debugInterfaceAtari)
+	if (viewC64->debugInterfaceC64 || viewC64->debugInterfaceAtari || viewC64->debugInterfaceNes)
 	{
 		//
 		kbsResetCpuCycleAndFrameCounters = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Reset cycle/frame counters", MTKEY_BACKSPACE, true, false, false);
@@ -1316,6 +1316,11 @@ void CViewSettingsMenu::UpdateAudioOutDevices()
 	{
 		viewC64->debugInterfaceAtari->snapshotsManager->LockMutex();
 	}
+
+	if (viewC64->debugInterfaceNes)
+	{
+		viewC64->debugInterfaceNes->snapshotsManager->LockMutex();
+	}
 	
 	std::list<CSlrString *> *audioDevicesList = NULL;
 	audioDevicesList = gSoundEngine->EnumerateAvailableOutputDevices();
@@ -1355,6 +1360,11 @@ void CViewSettingsMenu::UpdateAudioOutDevices()
 	if (viewC64->debugInterfaceAtari)
 	{
 		viewC64->debugInterfaceAtari->snapshotsManager->UnlockMutex();
+	}
+	
+	if (viewC64->debugInterfaceNes)
+	{
+		viewC64->debugInterfaceNes->snapshotsManager->UnlockMutex();
 	}
 	guiMain->UnlockMutex();
 }
@@ -2454,6 +2464,11 @@ void CViewSettingsMenu::ResetMainCpuDebugCycleCounter()
 	{
 		viewC64->debugInterfaceAtari->ResetMainCpuDebugCycleCounter();
 	}
+
+	if (viewC64->debugInterfaceNes)
+	{
+		viewC64->debugInterfaceNes->ResetMainCpuDebugCycleCounter();
+	}
 }
 
 void CViewSettingsMenu::ResetEmulationFrameCounter()
@@ -2466,6 +2481,11 @@ void CViewSettingsMenu::ResetEmulationFrameCounter()
 	if (viewC64->debugInterfaceAtari)
 	{
 		viewC64->debugInterfaceAtari->ResetEmulationFrameCounter();
+	}
+
+	if (viewC64->debugInterfaceNes)
+	{
+		viewC64->debugInterfaceNes->ResetEmulationFrameCounter();
 	}
 }
 
@@ -2745,14 +2765,14 @@ void CViewSettingsMenu::DumpC64MemoryMarkers(CSlrString *path)
 	// local copy of memory
 	uint8 *memoryBuffer = new uint8[0x10000];
 	
-	if (viewC64->viewC64MemoryMap->isDataDirectlyFromRAM)
+	SYS_FatalExit("if (viewC64->viewC64MemoryMap->isDataDirectlyFromRAM)");
 	{
 		viewC64->debugInterfaceC64->GetWholeMemoryMapFromRam(memoryBuffer);
 	}
-	else
-	{
-		viewC64->debugInterfaceC64->GetWholeMemoryMap(memoryBuffer);
-	}
+//	else
+//	{
+//		viewC64->debugInterfaceC64->GetWholeMemoryMap(memoryBuffer);
+//	}
 
 	memoryBuffer[0x0000] = viewC64->debugInterfaceC64->GetByteFromRamC64(0x0000);
 	memoryBuffer[0x0001] = viewC64->debugInterfaceC64->GetByteFromRamC64(0x0001);
@@ -2803,20 +2823,20 @@ void CViewSettingsMenu::DumpDisk1541MemoryMarkers(CSlrString *path)
 	// local copy of memory
 	uint8 *memoryBuffer = new uint8[0x10000];
 	
-	if (viewC64->viewDrive1541MemoryMap->isDataDirectlyFromRAM)
+	SYS_FatalExit("if (viewC64->viewDrive1541MemoryMap->isDataDirectlyFromRAM)");
 	{
 		for (int addr = 0; addr < 0x10000; addr++)
 		{
 			memoryBuffer[addr] = viewC64->debugInterfaceC64->GetByteFromRam1541(addr);
 		}
 	}
-	else
-	{
-		for (int addr = 0; addr < 0x10000; addr++)
-		{
-			memoryBuffer[addr] = viewC64->debugInterfaceC64->GetByte1541(addr);
-		}
-	}
+//	else
+//	{
+//		for (int addr = 0; addr < 0x10000; addr++)
+//		{
+//			memoryBuffer[addr] = viewC64->debugInterfaceC64->GetByte1541(addr);
+//		}
+//	}
 	
 	memoryBuffer[0x0000] = viewC64->debugInterfaceC64->GetByteFromRam1541(0x0000);
 	memoryBuffer[0x0001] = viewC64->debugInterfaceC64->GetByteFromRam1541(0x0001);

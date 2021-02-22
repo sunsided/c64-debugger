@@ -328,7 +328,7 @@ void VID_SetOrthoSwitchBack()
 
 void VID_UpdateViewPort(float newWidth, float newHeight)
 {
-	LOGD("VID_UpdateViewPort: %f %f", newWidth, newHeight);
+//	LOGG("VID_UpdateViewPort: %f %f", newWidth, newHeight);
 	
 	updateViewPort = true;
 	
@@ -345,16 +345,16 @@ void VID_UpdateViewPort(float newWidth, float newHeight)
 	double A = (double) SCREEN_WIDTH / (double) SCREEN_HEIGHT; //SCREEN_WIDTH / (float)SCREEN_HEIGHT;
 	double vA = (vW / vH);
 	
-	LOGD("vW=%f vH=%f A=%f vA=%f", vW, vH, A, vA);
+//	LOGD("vW=%f vH=%f A=%f vA=%f", vW, vH, A, vA);
 	
 	if (A > vA)
 	{
-		LOGD("glViewport A > vA");
+//		LOGD("glViewport A > vA");
 		VIEW_START_X = 0;
 		VIEW_START_Y = (vH * 0.5) - ((vW / A) * 0.5);
 		SCREEN_SCALE = vW / SCREEN_WIDTH;
 		
-		LOGD("glViewPort: %d %d %d %d", (GLint)VIEW_START_X, (GLint)VIEW_START_Y, (GLsizei)vW, (GLsizei)(vW/A));
+//		LOGD("glViewPort: %d %d %d %d", (GLint)VIEW_START_X, (GLint)VIEW_START_Y, (GLsizei)vW, (GLsizei)(vW/A));
 		
 		viewPortStartX = (GLint)VIEW_START_X;
 		viewPortStartY = (GLint)VIEW_START_Y;
@@ -365,12 +365,12 @@ void VID_UpdateViewPort(float newWidth, float newHeight)
 	{
 		if (A < vA)
 		{
-			LOGD("glViewport A < vA");
+//			LOGD("glViewport A < vA");
 			VIEW_START_X = (vW * 0.5) - ((vH * A) * 0.5);
 			VIEW_START_Y = 0;
 			SCREEN_SCALE = vH / SCREEN_HEIGHT;
 
-			LOGD("glViewPort: %d %d %d %d", (GLint)VIEW_START_X, (GLint)VIEW_START_Y, (GLsizei)(vH * A), (GLsizei)vH);
+//			LOGD("glViewPort: %d %d %d %d", (GLint)VIEW_START_X, (GLint)VIEW_START_Y, (GLsizei)(vH * A), (GLsizei)vH);
 			
 			viewPortStartX = (GLint)VIEW_START_X;
 			viewPortStartY = (GLint)VIEW_START_Y;
@@ -379,7 +379,7 @@ void VID_UpdateViewPort(float newWidth, float newHeight)
 		}
 		else
 		{
-			LOGD("glViewport equal");
+//			LOGD("glViewport equal");
 			SCREEN_SCALE = vH / SCREEN_HEIGHT;
 			
 			// equal aspect ratios
@@ -393,7 +393,7 @@ void VID_UpdateViewPort(float newWidth, float newHeight)
 	if (guiMain != NULL)
 		guiMain->NotifyGlobalOSWindowChangedCallbacks();
 	
-	LOGD("VID_UpdateViewPort: done");
+//	LOGG("VID_UpdateViewPort: done");
 }
 
 void VID_InitGL(float viewWidth, float viewHeight)
@@ -1224,11 +1224,17 @@ bool VID_IsWindowFullScreen()
 	return [glView isWindowFullScreen];
 }
 
+static volatile bool VID_isMouseCursorHidden = false;
+
 void VID_ShowMouseCursor()
 {
 	LOGM("VID_ShowMouseCursor");
 	dispatch_async(dispatch_get_main_queue(), ^{
-		[NSCursor unhide];
+		if (VID_isMouseCursorHidden == true)
+		{
+			VID_isMouseCursorHidden = false;
+			[NSCursor unhide];
+		}
 	});
 }
 
@@ -1236,7 +1242,11 @@ void VID_HideMouseCursor()
 {
 	LOGM("VID_HideMouseCursor");
 	dispatch_async(dispatch_get_main_queue(), ^{
-		[NSCursor hide];
+		if (VID_isMouseCursorHidden == false)
+		{
+			VID_isMouseCursorHidden = true;
+			[NSCursor hide];
+		}
 	});
 }
 

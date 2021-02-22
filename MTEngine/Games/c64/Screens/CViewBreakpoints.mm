@@ -528,7 +528,7 @@ bool CViewBreakpoints::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 		else if (cursorGroup == CURSOR_GROUP_C64_ADDR_PC)
 		{
 			cursorElement += 8;
-			if (cursorElement > debugInterface->breakpointsPC.size())
+			if (cursorElement > debugInterface->breakpointsPC->breakpoints.size())
 			{
 				cursorGroup = CURSOR_GROUP_C64_ENABLE_MEMORY;
 			}
@@ -541,7 +541,7 @@ bool CViewBreakpoints::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 		else if (cursorGroup == CURSOR_GROUP_C64_MEMORY)
 		{
 			cursorElement += 4;
-			if (cursorElement > debugInterface->breakpointsMemory.size())
+			if (cursorElement > debugInterface->breakpointsMemory->breakpoints.size())
 			{
 				cursorGroup = CURSOR_GROUP_C64_ENABLE_RASTER;
 			}
@@ -554,9 +554,9 @@ bool CViewBreakpoints::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 		else if (cursorGroup == CURSOR_GROUP_C64_RASTER)
 		{
 			cursorElement += 8;
-			if (cursorElement > debugInterface->breakpointsRaster.size())
+			if (cursorElement > debugInterface->breakpointsRaster->breakpoints.size())
 			{
-				cursorElement = debugInterface->breakpointsRaster.size();
+				cursorElement = debugInterface->breakpointsRaster->breakpoints.size();
 			}
 		}
 		// disk
@@ -572,7 +572,7 @@ bool CViewBreakpoints::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 		else if (cursorGroup == CURSOR_GROUP_DRIVE1541_ADDR_PC)
 		{
 			cursorElement += 8;
-			if (cursorElement > viewC64->debugInterfaceC64->breakpointsDrive1541PC.size())
+			if (cursorElement > viewC64->debugInterfaceC64->breakpointsDrive1541PC->breakpoints.size())
 			{
 				cursorGroup = CURSOR_GROUP_DRIVE1541_ENABLE_MEMORY;
 			}
@@ -585,9 +585,9 @@ bool CViewBreakpoints::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 		else if (cursorGroup == CURSOR_GROUP_DRIVE1541_MEMORY)
 		{
 			cursorElement += 4;
-			if (cursorElement > viewC64->debugInterfaceC64->breakpointsDrive1541Memory.size())
+			if (cursorElement > viewC64->debugInterfaceC64->breakpointsDrive1541Memory->breakpoints.size())
 			{
-				cursorElement = viewC64->debugInterfaceC64->breakpointsDrive1541Memory.size();
+				cursorElement = viewC64->debugInterfaceC64->breakpointsDrive1541Memory->breakpoints.size();
 			}
 		}
 	}
@@ -693,7 +693,7 @@ bool CViewBreakpoints::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 		}
 		else if (cursorGroup == CURSOR_GROUP_C64_ADDR_PC)
 		{
-			if (cursorElement < debugInterface->breakpointsPC.size())
+			if (cursorElement < debugInterface->breakpointsPC->breakpoints.size())
 			{
 				cursorElement += 1;
 			}
@@ -704,28 +704,28 @@ bool CViewBreakpoints::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 		}
 		else if (cursorGroup == CURSOR_GROUP_C64_MEMORY)
 		{
-			if (cursorElement < debugInterface->breakpointsMemory.size())
+			if (cursorElement < debugInterface->breakpointsMemory->breakpoints.size())
 			{
 				cursorElement += 1;
 			}
 		}
 		else if (cursorGroup == CURSOR_GROUP_C64_RASTER)
 		{
-			if (cursorElement < debugInterface->breakpointsRaster.size())
+			if (cursorElement < debugInterface->breakpointsRaster->breakpoints.size())
 			{
 				cursorElement += 1;
 			}
 		}
 		else if (cursorGroup == CURSOR_GROUP_DRIVE1541_ADDR_PC)
 		{
-			if (cursorElement < viewC64->debugInterfaceC64->breakpointsDrive1541PC.size())
+			if (cursorElement < viewC64->debugInterfaceC64->breakpointsDrive1541PC->breakpoints.size())
 			{
 				cursorElement += 1;
 			}
 		}
 		else if (cursorGroup == CURSOR_GROUP_DRIVE1541_MEMORY)
 		{
-			if (cursorElement < viewC64->debugInterfaceC64->breakpointsDrive1541Memory.size())
+			if (cursorElement < viewC64->debugInterfaceC64->breakpointsDrive1541Memory->breakpoints.size())
 			{
 				cursorElement += 1;
 			}
@@ -798,15 +798,15 @@ bool CViewBreakpoints::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 		}
 		else if (cursorGroup == CURSOR_GROUP_C64_ADDR_PC)
 		{
-			StartEditingSelectedAddrBreakpoint(&(debugInterface->breakpointsPC), "....");
+			StartEditingSelectedAddrBreakpoint(debugInterface->breakpointsPC, "....");
 		}
 		else if (cursorGroup == CURSOR_GROUP_C64_MEMORY)
 		{
-			StartEditingSelectedMemoryBreakpoint(&(debugInterface->breakpointsMemory));
+			StartEditingSelectedMemoryBreakpoint(debugInterface->breakpointsMemory);
 		}
 		else if (cursorGroup == CURSOR_GROUP_C64_RASTER)
 		{
-			StartEditingSelectedAddrBreakpoint(&(debugInterface->breakpointsRaster), "...");
+			StartEditingSelectedAddrBreakpoint(debugInterface->breakpointsRaster, "...");
 		}
 		//
 		if (cursorGroup == CURSOR_GROUP_DRIVE1541_IRQVIA1)
@@ -831,11 +831,11 @@ bool CViewBreakpoints::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 		}
 		else if (cursorGroup == CURSOR_GROUP_DRIVE1541_ADDR_PC)
 		{
-			StartEditingSelectedAddrBreakpoint(&(viewC64->debugInterfaceC64->breakpointsDrive1541PC), "....");
+			StartEditingSelectedAddrBreakpoint(viewC64->debugInterfaceC64->breakpointsDrive1541PC, "....");
 		}
 		else if (cursorGroup == CURSOR_GROUP_DRIVE1541_MEMORY)
 		{
-			StartEditingSelectedMemoryBreakpoint(&(viewC64->debugInterfaceC64->breakpointsDrive1541Memory));
+			StartEditingSelectedMemoryBreakpoint(viewC64->debugInterfaceC64->breakpointsDrive1541Memory);
 		}
 
 	}
@@ -856,23 +856,23 @@ bool CViewBreakpoints::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 	{
 		if (cursorGroup == CURSOR_GROUP_C64_ADDR_PC)
 		{
-			DeleteSelectedAddrBreakpoint(&(debugInterface->breakpointsPC));
+			DeleteSelectedAddrBreakpoint(debugInterface->breakpointsPC);
 		}
 		else if (cursorGroup == CURSOR_GROUP_C64_MEMORY)
 		{
-			DeleteSelectedMemoryBreakpoint(&(debugInterface->breakpointsMemory));
+			DeleteSelectedMemoryBreakpoint(debugInterface->breakpointsMemory);
 		}
 		else if (cursorGroup == CURSOR_GROUP_C64_RASTER)
 		{
-			DeleteSelectedAddrBreakpoint(&(debugInterface->breakpointsRaster));
+			DeleteSelectedAddrBreakpoint(debugInterface->breakpointsRaster);
 		}
 		else if (cursorGroup == CURSOR_GROUP_DRIVE1541_ADDR_PC)
 		{
-			DeleteSelectedAddrBreakpoint(&(viewC64->debugInterfaceC64->breakpointsDrive1541PC));
+			DeleteSelectedAddrBreakpoint(viewC64->debugInterfaceC64->breakpointsDrive1541PC);
 		}
 		else if (cursorGroup == CURSOR_GROUP_DRIVE1541_MEMORY)
 		{
-			DeleteSelectedMemoryBreakpoint(&(viewC64->debugInterfaceC64->breakpointsDrive1541Memory));
+			DeleteSelectedMemoryBreakpoint(viewC64->debugInterfaceC64->breakpointsDrive1541Memory);
 		}
 	}
 	
@@ -881,11 +881,11 @@ bool CViewBreakpoints::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 	return CGuiView::KeyDown(keyCode, isShift, isAlt, isControl);
 }
 
-void CViewBreakpoints::StartEditingSelectedAddrBreakpoint(std::map<uint16, CAddrBreakpoint *> *breakpointsMap, char *emptyAddrStr)
+void CViewBreakpoints::StartEditingSelectedAddrBreakpoint(CDebuggerAddrBreakpoints *addrBreakpoints, char *emptyAddrStr)
 {
-	if (cursorElement < breakpointsMap->size())
+	if (cursorElement < addrBreakpoints->breakpoints.size())
 	{
-		std::map<uint16, CAddrBreakpoint *>::iterator it = breakpointsMap->begin();
+		std::map<int, CAddrBreakpoint *>::iterator it = addrBreakpoints->breakpoints.begin();
 		for (int i = 0; i < cursorElement; i++)
 		{
 			it++;
@@ -902,11 +902,11 @@ void CViewBreakpoints::StartEditingSelectedAddrBreakpoint(std::map<uint16, CAddr
 	
 }
 
-void CViewBreakpoints::StartEditingSelectedMemoryBreakpoint(std::map<uint16, CMemoryBreakpoint *> *breakpointsMap)
+void CViewBreakpoints::StartEditingSelectedMemoryBreakpoint(CDebuggerMemoryBreakpoints *memoryBreakpoints)
 {
-	if (cursorElement < breakpointsMap->size())
+	if (cursorElement < memoryBreakpoints->breakpoints.size())
 	{
-		std::map<uint16, CMemoryBreakpoint *>::iterator it = breakpointsMap->begin();
+		std::map<int, CMemoryBreakpoint *>::iterator it = memoryBreakpoints->breakpoints.begin();
 		for (int i = 0; i < cursorElement; i++)
 		{
 			it++;
@@ -923,35 +923,35 @@ void CViewBreakpoints::StartEditingSelectedMemoryBreakpoint(std::map<uint16, CMe
 	this->cursorPosition = 1;
 }
 
-void CViewBreakpoints::DeleteSelectedAddrBreakpoint(std::map<uint16, CAddrBreakpoint *> *breakpointsMap)
+void CViewBreakpoints::DeleteSelectedAddrBreakpoint(CDebuggerAddrBreakpoints *addrBreakpoints)
 {
 	debugInterface->LockMutex();
-	if (cursorElement < breakpointsMap->size())
+	if (cursorElement < addrBreakpoints->breakpoints.size())
 	{
-		std::map<uint16, CAddrBreakpoint *>::iterator it = breakpointsMap->begin();
+		std::map<int, CAddrBreakpoint *>::iterator it = addrBreakpoints->breakpoints.begin();
 		for (int i = 0; i < cursorElement; i++)
 		{
 			it++;
 		}
 		CAddrBreakpoint *breakpoint = it->second;
-		breakpointsMap->erase(it);
+		addrBreakpoints->breakpoints.erase(it);
 		delete breakpoint;
 	}
 	debugInterface->UnlockMutex();
 }
 
-void CViewBreakpoints::DeleteSelectedMemoryBreakpoint(std::map<uint16, CMemoryBreakpoint *> *breakpointsMap)
+void CViewBreakpoints::DeleteSelectedMemoryBreakpoint(CDebuggerMemoryBreakpoints *memoryBreakpoints)
 {
 	debugInterface->LockMutex();
-	if (cursorElement < breakpointsMap->size())
+	if (cursorElement < memoryBreakpoints->breakpoints.size())
 	{
-		std::map<uint16, CMemoryBreakpoint *>::iterator it = breakpointsMap->begin();
+		std::map<int, CMemoryBreakpoint *>::iterator it = memoryBreakpoints->breakpoints.begin();
 		for (int i = 0; i < cursorElement; i++)
 		{
 			it++;
 		}
 		CMemoryBreakpoint *breakpoint = it->second;
-		breakpointsMap->erase(it);
+		memoryBreakpoints->breakpoints.erase(it);
 		delete breakpoint;
 	}
 	debugInterface->UnlockMutex();
@@ -966,31 +966,31 @@ void CViewBreakpoints::GuiEditHexEnteredValue(CGuiEditHex *editHex, u32 lastKeyC
 	
 	if (cursorGroup == CURSOR_GROUP_C64_ADDR_PC)
 	{
-		GuiEditHexEnteredValueAddr(editHex, &(debugInterface->breakpointsPC));
+		GuiEditHexEnteredValueAddr(editHex, debugInterface->breakpointsPC);
 		this->btnBreakpointsPC->SetOn(true);
 		debugInterface->breakOnPC = true;
 	}
 	else if (cursorGroup == CURSOR_GROUP_C64_MEMORY)
 	{
-		GuiEditHexEnteredValueMemory(editHex, lastKeyCode, &(debugInterface->breakpointsMemory));
+		GuiEditHexEnteredValueMemory(editHex, lastKeyCode, debugInterface->breakpointsMemory);
 		this->btnBreakpointsMemory->SetOn(true);
 		debugInterface->breakOnMemory = true;
 	}
 	else if (cursorGroup == CURSOR_GROUP_C64_RASTER)
 	{
-		GuiEditHexEnteredValueAddr(editHex, &(debugInterface->breakpointsRaster));
+		GuiEditHexEnteredValueAddr(editHex, debugInterface->breakpointsRaster);
 		this->btnBreakpointsRaster->SetOn(true);
 		debugInterface->breakOnRaster = true;
 	}
 	else if (cursorGroup == CURSOR_GROUP_DRIVE1541_ADDR_PC)
 	{
-		GuiEditHexEnteredValueAddr(editHex, &(viewC64->debugInterfaceC64->breakpointsDrive1541PC));
+		GuiEditHexEnteredValueAddr(editHex, viewC64->debugInterfaceC64->breakpointsDrive1541PC);
 		this->btnBreakpointsDrive1541PC->SetOn(true);
 		((C64DebugInterface *)debugInterface)->breakOnDrive1541PC = true;
 	}
 	else if (cursorGroup == CURSOR_GROUP_DRIVE1541_MEMORY)
 	{
-		GuiEditHexEnteredValueMemory(editHex, lastKeyCode, &(viewC64->debugInterfaceC64->breakpointsDrive1541Memory));
+		GuiEditHexEnteredValueMemory(editHex, lastKeyCode, viewC64->debugInterfaceC64->breakpointsDrive1541Memory);
 		this->btnBreakpointsDrive1541Memory->SetOn(true);
 		((C64DebugInterface *)debugInterface)->breakOnDrive1541Memory = true;
 	}
@@ -999,34 +999,34 @@ void CViewBreakpoints::GuiEditHexEnteredValue(CGuiEditHex *editHex, u32 lastKeyC
 	
 }
 
-void CViewBreakpoints::GuiEditHexEnteredValueAddr(CGuiEditHex *editHex, std::map<uint16, CAddrBreakpoint *> *breakpointsMap)
+void CViewBreakpoints::GuiEditHexEnteredValueAddr(CGuiEditHex *editHex, CDebuggerAddrBreakpoints *addrBreakpoints)
 {
-	if (cursorElement < breakpointsMap->size())
+	if (cursorElement < addrBreakpoints->breakpoints.size())
 	{
-		std::map<uint16, CAddrBreakpoint *>::iterator it = breakpointsMap->begin();
+		std::map<int, CAddrBreakpoint *>::iterator it = addrBreakpoints->breakpoints.begin();
 		for (int i = 0; i < cursorElement; i++)
 		{
 			it++;
 		}
 		CAddrBreakpoint *addrBreakpoint = it->second;
-		breakpointsMap->erase(it);
+		addrBreakpoints->breakpoints.erase(it);
 		addrBreakpoint->addr = editHex->value;
-		(*breakpointsMap)[addrBreakpoint->addr] = addrBreakpoint;
+		addrBreakpoints->breakpoints[addrBreakpoint->addr] = addrBreakpoint;
 	}
 	else
 	{
-		std::map<uint16, CAddrBreakpoint *>::iterator it = breakpointsMap->find(editHex->value);
-		if (it == breakpointsMap->end())
+		std::map<int, CAddrBreakpoint *>::iterator it = addrBreakpoints->breakpoints.find(editHex->value);
+		if (it == addrBreakpoints->breakpoints.end())
 		{
 			CAddrBreakpoint *addrBreakpoint = new CAddrBreakpoint(editHex->value);
-			(*breakpointsMap)[addrBreakpoint->addr] = addrBreakpoint;
+			addrBreakpoints->breakpoints[addrBreakpoint->addr] = addrBreakpoint;
 		}
 	}
 	
 	// position cursor on this
 	cursorElement = 0;
-	for (std::map<uint16, CAddrBreakpoint *>::iterator it = breakpointsMap->begin();
-		 it != breakpointsMap->end(); it++)
+	for (std::map<int, CAddrBreakpoint *>::iterator it = addrBreakpoints->breakpoints.begin();
+		 it != addrBreakpoints->breakpoints.end(); it++)
 	{
 		CAddrBreakpoint *addrBreakpoint = it->second;
 		if (addrBreakpoint->addr == editHex->value)
@@ -1039,7 +1039,7 @@ void CViewBreakpoints::GuiEditHexEnteredValueAddr(CGuiEditHex *editHex, std::map
 	this->cursorPosition = -1;
 }
 
-void CViewBreakpoints::GuiEditHexEnteredValueMemory(CGuiEditHex *editHex, u32 lastKeyCode, std::map<uint16, CMemoryBreakpoint *> *breakpointsMap)
+void CViewBreakpoints::GuiEditHexEnteredValueMemory(CGuiEditHex *editHex, u32 lastKeyCode, CDebuggerMemoryBreakpoints *memoryBreakpoints)
 {
 	if (cursorPosition == 1)
 	{
@@ -1062,28 +1062,28 @@ void CViewBreakpoints::GuiEditHexEnteredValueMemory(CGuiEditHex *editHex, u32 la
 		}
 		else
 		{
-			uint16 addr;
+			u16 addr;
 			
-			if (cursorElement < breakpointsMap->size())
+			if (cursorElement < memoryBreakpoints->breakpoints.size())
 			{
-				std::map<uint16, CMemoryBreakpoint *>::iterator it = breakpointsMap->begin();
+				std::map<int, CMemoryBreakpoint *>::iterator it = memoryBreakpoints->breakpoints.begin();
 				for (int i = 0; i < cursorElement; i++)
 				{
 					it++;
 				}
 				CMemoryBreakpoint *memoryBreakpoint = it->second;
-				breakpointsMap->erase(it);
+				memoryBreakpoints->breakpoints.erase(it);
 				memoryBreakpoint->value = editHex->value;
-				(*breakpointsMap)[memoryBreakpoint->addr] = memoryBreakpoint;
+				memoryBreakpoints->breakpoints[memoryBreakpoint->addr] = memoryBreakpoint;
 				addr = memoryBreakpoint->addr;
 			}
 			else
 			{
 				CMemoryBreakpoint *memoryBreakpoint = (CMemoryBreakpoint *)editingBreakpoint;
-				std::map<uint16, CMemoryBreakpoint *>::iterator it = breakpointsMap->find(addr);
-				if (it == breakpointsMap->end())
+				std::map<int, CMemoryBreakpoint *>::iterator it = memoryBreakpoints->breakpoints.find(memoryBreakpoint->addr);
+				if (it == memoryBreakpoints->breakpoints.end())
 				{
-					(*breakpointsMap)[memoryBreakpoint->addr] = memoryBreakpoint;
+					memoryBreakpoints->breakpoints[memoryBreakpoint->addr] = memoryBreakpoint;
 					addr = memoryBreakpoint->addr;
 					memoryBreakpoint->value = editHex->value;
 				}
@@ -1098,8 +1098,8 @@ void CViewBreakpoints::GuiEditHexEnteredValueMemory(CGuiEditHex *editHex, u32 la
 			
 			// position cursor on this
 			cursorElement = 0;
-			for (std::map<uint16, CMemoryBreakpoint *>::iterator it = breakpointsMap->begin();
-				 it != breakpointsMap->end(); it++)
+			for (std::map<int, CMemoryBreakpoint *>::iterator it = memoryBreakpoints->breakpoints.begin();
+				 it != memoryBreakpoints->breakpoints.end(); it++)
 			{
 				CMemoryBreakpoint *addrBreakpoint = it->second;
 				if (addrBreakpoint->addr == addr)
@@ -1164,21 +1164,21 @@ void CViewBreakpoints::UpdateCursor()
 	}
 	else if (cursorGroup == CURSOR_GROUP_C64_ADDR_PC)
 	{
-		if (cursorElement > debugInterface->breakpointsPC.size())
+		if (cursorElement > debugInterface->breakpointsPC->breakpoints.size())
 		{
 			cursorGroup = CURSOR_GROUP_C64_ENABLE_MEMORY;
 		}
 	}
 	else if (cursorGroup == CURSOR_GROUP_C64_MEMORY)
 	{
-		if (cursorElement > debugInterface->breakpointsMemory.size())
+		if (cursorElement > debugInterface->breakpointsMemory->breakpoints.size())
 		{
 			cursorGroup = CURSOR_GROUP_C64_ENABLE_RASTER;
 		}
 	}
 	else if (cursorGroup == CURSOR_GROUP_C64_RASTER)
 	{
-		if (cursorElement > debugInterface->breakpointsRaster.size())
+		if (cursorElement > debugInterface->breakpointsRaster->breakpoints.size())
 		{
 			cursorGroup = CURSOR_GROUP_DRIVE1541_IRQVIA1;
 			//cursorElement = debugInterface->breakpointsRaster.size();
@@ -1207,16 +1207,16 @@ void CViewBreakpoints::UpdateCursor()
 	}
 	else if (cursorGroup == CURSOR_GROUP_DRIVE1541_ADDR_PC)
 	{
-		if (cursorElement > viewC64->debugInterfaceC64->breakpointsDrive1541PC.size())
+		if (cursorElement > viewC64->debugInterfaceC64->breakpointsDrive1541PC->breakpoints.size())
 		{
 			cursorGroup = CURSOR_GROUP_DRIVE1541_ENABLE_MEMORY;
 		}
 	}
 	else if (cursorGroup == CURSOR_GROUP_C64_MEMORY)
 	{
-		if (cursorElement > viewC64->debugInterfaceC64->breakpointsDrive1541Memory.size())
+		if (cursorElement > viewC64->debugInterfaceC64->breakpointsDrive1541Memory->breakpoints.size())
 		{
-			cursorElement = viewC64->debugInterfaceC64->breakpointsDrive1541Memory.size();
+			cursorElement = viewC64->debugInterfaceC64->breakpointsDrive1541Memory->breakpoints.size();
 		}
 	}
 }
@@ -1234,16 +1234,16 @@ void CViewBreakpoints::UpdateRenderBreakpoints()
 		
 		// c64
 		viewC64->viewC64Disassemble->renderBreakpoints.clear();
-		for (std::map<uint16, CAddrBreakpoint *>::iterator it = debugInterface->breakpointsPC.begin();
-			 it != debugInterface->breakpointsPC.end(); it++)
+		for (std::map<int, CAddrBreakpoint *>::iterator it = debugInterface->breakpointsPC->breakpoints.begin();
+			 it != debugInterface->breakpointsPC->breakpoints.end(); it++)
 		{
 			CAddrBreakpoint *breakpoint = it->second;
 			viewC64->viewC64Disassemble->renderBreakpoints[breakpoint->addr] = breakpoint->addr;
 		}
 		// Drive1541
 		viewC64->viewDrive1541Disassemble->renderBreakpoints.clear();
-		for (std::map<uint16, CAddrBreakpoint *>::iterator it = viewC64->debugInterfaceC64->breakpointsDrive1541PC.begin();
-			 it != viewC64->debugInterfaceC64->breakpointsDrive1541PC.end(); it++)
+		for (std::map<int, CAddrBreakpoint *>::iterator it = viewC64->debugInterfaceC64->breakpointsDrive1541PC->breakpoints.begin();
+			 it != viewC64->debugInterfaceC64->breakpointsDrive1541PC->breakpoints.end(); it++)
 		{
 			CAddrBreakpoint *breakpoint = it->second;
 			viewC64->viewDrive1541Disassemble->renderBreakpoints[breakpoint->addr] = breakpoint->addr;
@@ -1260,8 +1260,8 @@ void CViewBreakpoints::UpdateRenderBreakpoints()
 
 		// atari
 		viewC64->viewAtariDisassemble->renderBreakpoints.clear();
-		for (std::map<uint16, CAddrBreakpoint *>::iterator it = debugInterface->breakpointsPC.begin();
-			 it != debugInterface->breakpointsPC.end(); it++)
+		for (std::map<int, CAddrBreakpoint *>::iterator it = debugInterface->breakpointsPC->breakpoints.begin();
+			 it != debugInterface->breakpointsPC->breakpoints.end(); it++)
 		{
 			CAddrBreakpoint *breakpoint = it->second;
 			viewC64->viewAtariDisassemble->renderBreakpoints[breakpoint->addr] = breakpoint->addr;
@@ -1380,25 +1380,25 @@ void CViewBreakpoints::Render()
 	}
 
 	// c64 pc breakpoints
-	RenderAddrBreakpoints(&(debugInterface->breakpointsPC), pcBreakpointsX, pcBreakpointsY, CURSOR_GROUP_C64_ADDR_PC,
+	RenderAddrBreakpoints(debugInterface->breakpointsPC, pcBreakpointsX, pcBreakpointsY, CURSOR_GROUP_C64_ADDR_PC,
 						  "%4.4X", "....");
 	
 	// c64 memory breakpoints
-	RenderMemoryBreakpoints(&(debugInterface->breakpointsMemory), memoryBreakpointsX, memoryBreakpointsY, CURSOR_GROUP_C64_MEMORY);
+	RenderMemoryBreakpoints(debugInterface->breakpointsMemory, memoryBreakpointsX, memoryBreakpointsY, CURSOR_GROUP_C64_MEMORY);
 	
 	if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
 	{
 		//// c64 raster breakpoints
-		RenderAddrBreakpoints(&(debugInterface->breakpointsRaster), rasterBreakpointsX, rasterBreakpointsY,
+		RenderAddrBreakpoints(debugInterface->breakpointsRaster, rasterBreakpointsX, rasterBreakpointsY,
 							  CURSOR_GROUP_C64_RASTER, " %3.3X", " ...");
 		
 		///////////
 		// Drive1541 pc breakpoints
-		RenderAddrBreakpoints(&(viewC64->debugInterfaceC64->breakpointsDrive1541PC), Drive1541PCBreakpointsX, Drive1541PCBreakpointsY,
+		RenderAddrBreakpoints(viewC64->debugInterfaceC64->breakpointsDrive1541PC, Drive1541PCBreakpointsX, Drive1541PCBreakpointsY,
 							  CURSOR_GROUP_DRIVE1541_ADDR_PC, "%4.4X", "....");
 		
 		// Drive1541 memory breakpoints
-		RenderMemoryBreakpoints(&(viewC64->debugInterfaceC64->breakpointsDrive1541Memory), Drive1541MemoryBreakpointsX, Drive1541MemoryBreakpointsY, CURSOR_GROUP_DRIVE1541_MEMORY);
+		RenderMemoryBreakpoints(viewC64->debugInterfaceC64->breakpointsDrive1541Memory, Drive1541MemoryBreakpointsX, Drive1541MemoryBreakpointsY, CURSOR_GROUP_DRIVE1541_MEMORY);
 	}
 	
 	if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
@@ -1418,7 +1418,7 @@ void CViewBreakpoints::Render()
 ///
 
 
-void CViewBreakpoints::RenderAddrBreakpoints(std::map<uint16, CAddrBreakpoint *> *breakpointsMap, float pStartX, float pStartY, int cursorGroupId,
+void CViewBreakpoints::RenderAddrBreakpoints(CDebuggerAddrBreakpoints *addrBreakpoints, float pStartX, float pStartY, int cursorGroupId,
 												char *addrFormatStr, char *addrEmptyStr)
 {
 	///////
@@ -1430,8 +1430,8 @@ void CViewBreakpoints::RenderAddrBreakpoints(std::map<uint16, CAddrBreakpoint *>
 	float py = pStartY;
 	
 	int elemNum = 0;
-	for (std::map<uint16, CAddrBreakpoint *>::iterator it = breakpointsMap->begin();
-		 it != breakpointsMap->end(); it++)
+	for (std::map<int, CAddrBreakpoint *>::iterator it = addrBreakpoints->breakpoints.begin();
+		 it != addrBreakpoints->breakpoints.end(); it++)
 	{
 		CAddrBreakpoint *addrBreakpoint = it->second;
 		int addr = addrBreakpoint->addr;
@@ -1490,7 +1490,7 @@ void CViewBreakpoints::RenderAddrBreakpoints(std::map<uint16, CAddrBreakpoint *>
 	font->BlitTextColor(strTemp, px, py, -1, fontNumbersScale, tr, tg, tb, 1, FONT_ALIGN_LEFT);
 }
 
-void CViewBreakpoints::RenderMemoryBreakpoints(std::map<uint16, CMemoryBreakpoint *> *breakpointsMap, float pStartX, float pStartY, int cursorGroupId)
+void CViewBreakpoints::RenderMemoryBreakpoints(CDebuggerMemoryBreakpoints *memoryBreakpoints, float pStartX, float pStartY, int cursorGroupId)
 {
 	float width = fontWidth*8.5f;
 	
@@ -1499,8 +1499,8 @@ void CViewBreakpoints::RenderMemoryBreakpoints(std::map<uint16, CMemoryBreakpoin
 	
 	/// memory
 	int elemNum = 0;
-	for (std::map<uint16, CMemoryBreakpoint *>::iterator it = breakpointsMap->begin();
-		 it != breakpointsMap->end(); it++)
+	for (std::map<int, CMemoryBreakpoint *>::iterator it = memoryBreakpoints->breakpoints.begin();
+		 it != memoryBreakpoints->breakpoints.end(); it++)
 	{
 		CMemoryBreakpoint *memoryBreakpoint = it->second;
 		
@@ -1701,7 +1701,7 @@ void CViewBreakpoints::RenderMemoryBreakpoints(std::map<uint16, CMemoryBreakpoin
 }
 
 bool CViewBreakpoints::CheckTapAddrBreakpoints(float x, float y,
-												  std::map<uint16, CAddrBreakpoint *> *breakpointsMap,
+												  CDebuggerAddrBreakpoints *addrBreakpoints,
 												  float pStartX, float pStartY, int cursorGroupId)
 {
 	///////
@@ -1712,7 +1712,7 @@ bool CViewBreakpoints::CheckTapAddrBreakpoints(float x, float y,
 	float px = pStartX;
 	float py = pStartY;
 	
-	int numElems = breakpointsMap->size() + 1;
+	int numElems = addrBreakpoints->breakpoints.size() + 1;
 	
 	for (int elemNum = 0; elemNum < numElems; )
 	{
@@ -1742,8 +1742,8 @@ bool CViewBreakpoints::CheckTapAddrBreakpoints(float x, float y,
 }
 
 bool CViewBreakpoints::CheckTapMemoryBreakpoints(float x, float y,
-													std::map<uint16, CMemoryBreakpoint *> *breakpointsMap,
-													float pStartX, float pStartY, int cursorGroupId)
+												 CDebuggerMemoryBreakpoints *memoryBreakpoints,
+												 float pStartX, float pStartY, int cursorGroupId)
 {
 	float width = fontWidth*8.5f;
 	
@@ -1751,7 +1751,7 @@ bool CViewBreakpoints::CheckTapMemoryBreakpoints(float x, float y,
 	float py = pStartY;
 	
 	/// memory
-	int numElems = breakpointsMap->size() + 1;
+	int numElems = memoryBreakpoints->breakpoints.size() + 1;
 	
 	for (int elemNum = 0; elemNum < numElems; )
 	{
@@ -1860,14 +1860,14 @@ bool CViewBreakpoints::DoTap(GLfloat x, GLfloat y)
 {
 	LOGG("CViewBreakpoints::DoTap:  x=%f y=%f", x, y);
 	
-	if (CheckTapAddrBreakpoints(x, y, &(debugInterface->breakpointsPC),
+	if (CheckTapAddrBreakpoints(x, y, debugInterface->breakpointsPC,
 								pcBreakpointsX, pcBreakpointsY,
 								CURSOR_GROUP_C64_ADDR_PC))
 	{
 		return true;
 	}
 
-	if (CheckTapMemoryBreakpoints(x, y, &(debugInterface->breakpointsMemory),
+	if (CheckTapMemoryBreakpoints(x, y, debugInterface->breakpointsMemory,
 								  memoryBreakpointsX, memoryBreakpointsY,
 								  CURSOR_GROUP_C64_MEMORY))
 	{
@@ -1876,21 +1876,21 @@ bool CViewBreakpoints::DoTap(GLfloat x, GLfloat y)
 
 	if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
 	{
-		if (CheckTapAddrBreakpoints(x, y, &(debugInterface->breakpointsRaster),
+		if (CheckTapAddrBreakpoints(x, y, debugInterface->breakpointsRaster,
 									rasterBreakpointsX, rasterBreakpointsY,
 									CURSOR_GROUP_C64_RASTER))
 		{
 			return true;
 		}
 		
-		if (CheckTapAddrBreakpoints(x, y, &(viewC64->debugInterfaceC64->breakpointsDrive1541PC),
+		if (CheckTapAddrBreakpoints(x, y, viewC64->debugInterfaceC64->breakpointsDrive1541PC,
 									Drive1541PCBreakpointsX, Drive1541PCBreakpointsY,
 									CURSOR_GROUP_DRIVE1541_ADDR_PC))
 		{
 			return true;
 		}
 		
-		if (CheckTapMemoryBreakpoints(x, y, &(viewC64->debugInterfaceC64->breakpointsDrive1541Memory),
+		if (CheckTapMemoryBreakpoints(x, y, viewC64->debugInterfaceC64->breakpointsDrive1541Memory,
 									  Drive1541MemoryBreakpointsX, Drive1541MemoryBreakpointsY,
 									  CURSOR_GROUP_DRIVE1541_MEMORY))
 		{

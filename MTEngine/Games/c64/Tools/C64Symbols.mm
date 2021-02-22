@@ -421,13 +421,13 @@ void C64Symbols::ParseBreakpoints(CByteBuffer *byteBuffer)
 			
 			LOGD(".. adding breakOnPC %4.4x", address);
 			
-			std::map<uint16, CAddrBreakpoint *>::iterator it = debugInterface->breakpointsPC.find(address);
-			if (it == debugInterface->breakpointsPC.end())
+			std::map<int, CAddrBreakpoint *>::iterator it = debugInterface->breakpointsPC->breakpoints.find(address);
+			if (it == debugInterface->breakpointsPC->breakpoints.end())
 			{
 				// not found
 				CAddrBreakpoint *addrBreakpoint = new CAddrBreakpoint(address);
 				addrBreakpoint->actions = ADDR_BREAKPOINT_ACTION_STOP;
-				debugInterface->breakpointsPC[address] = addrBreakpoint;
+				debugInterface->breakpointsPC->breakpoints[address] = addrBreakpoint;
 				
 				debugInterface->breakOnPC = true;
 			}
@@ -456,14 +456,14 @@ void C64Symbols::ParseBreakpoints(CByteBuffer *byteBuffer)
 			
 			LOGD(".. adding setBkg %4.4x %2.2x", address, value);
 			
-			std::map<uint16, CAddrBreakpoint *>::iterator it = debugInterface->breakpointsPC.find(address);
-			if (it == debugInterface->breakpointsPC.end())
+			std::map<int, CAddrBreakpoint *>::iterator it = debugInterface->breakpointsPC->breakpoints.find(address);
+			if (it == debugInterface->breakpointsPC->breakpoints.end())
 			{
 				// not found
 				CAddrBreakpoint *addrBreakpoint = new CAddrBreakpoint(address);
 				addrBreakpoint->actions = ADDR_BREAKPOINT_ACTION_SET_BACKGROUND;
 				addrBreakpoint->data = value;
-				debugInterface->breakpointsPC[address] = addrBreakpoint;
+				debugInterface->breakpointsPC->breakpoints[address] = addrBreakpoint;
 				
 				debugInterface->breakOnPC = true;
 			}
@@ -491,7 +491,7 @@ void C64Symbols::ParseBreakpoints(CByteBuffer *byteBuffer)
 			LOGD(".. adding breakOnRaster %4.4x", rasterNum);
 			
 			CAddrBreakpoint *addrBreakpoint = new CAddrBreakpoint(rasterNum);
-			debugInterface->breakpointsRaster[rasterNum] = addrBreakpoint;
+			debugInterface->breakpointsRaster->breakpoints[rasterNum] = addrBreakpoint;
 			
 			debugInterface->breakOnRaster = true;
 		}
@@ -607,7 +607,7 @@ void C64Symbols::ParseBreakpoints(CByteBuffer *byteBuffer)
 			LOGD("..... value=%2.2x", value);
 			
 			CMemoryBreakpoint *memBreakpoint = new CMemoryBreakpoint(address, memBreakType, value);
-			debugInterface->breakpointsMemory[address] = memBreakpoint;
+			debugInterface->breakpointsMemory->breakpoints[address] = memBreakpoint;
 			
 			debugInterface->breakOnMemory = true;
 		}

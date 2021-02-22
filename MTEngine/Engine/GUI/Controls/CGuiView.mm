@@ -803,6 +803,7 @@ void CGuiView::DeactivateView()
 void CGuiView::Render()
 {
 //#define LOGGUIVIEW
+//#define MEASURETIME
 	
 	
 #if defined(LOGGUIVIEW)
@@ -822,14 +823,27 @@ void CGuiView::Render()
 		LOGD("....render %f: %s", (*enumGuiElems).first, guiElement->name);
 #endif
 
-
+#if defined(MEASURETIME) || defined(LOGGUIVIEW)
+		long t1 = SYS_GetCurrentTimeInMillis();
+#endif
+		
 		guiElement->Render();
 
-
+#if defined(MEASURETIME) || defined(LOGGUIVIEW)
+		long t2 = SYS_GetCurrentTimeInMillis();
+#endif
+		
 #if defined(LOGGUIVIEW)
-		LOGD("....render done %f: %s", (*enumGuiElems).first, guiElement->name);
+		LOGD("....render done %f: %s time=%d", (*enumGuiElems).first, guiElement->name, t2-t1);
 #endif
 
+#if defined(MEASURETIME)
+		if (t2-t1 > 10)
+		{
+			LOGError("rendering %s took %dms", guiElement->name, t2-t1);
+		}
+#endif
+		
 	}
 }
 
@@ -894,7 +908,7 @@ void CGuiView::UpdateTheme()
 // focus
 void CGuiView::ClearFocus()
 {
-	LOGD("CGuiView::ClearFocus");
+	LOGG("CGuiView::ClearFocus");
 	if (focusElement != NULL)
 	{
 		focusElement->FocusLost();
@@ -913,7 +927,7 @@ void CGuiView::ClearFocus()
 
 bool CGuiView::SetFocus(CGuiElement *element)
 {
-	LOGD("CGuiView::SetFocus: %s", (element ? element->name : "NULL"));
+	LOGG("CGuiView::SetFocus: %s", (element ? element->name : "NULL"));
 	this->repeatTime = 0;
 	ClearFocus();
 
@@ -922,7 +936,7 @@ bool CGuiView::SetFocus(CGuiElement *element)
 		this->focusElement = element;
 		element->hasFocus = true;
 		
-		LOGD("CGuiView::SetFocus: %s is set focus", element->name);
+		LOGG("CGuiView::SetFocus: %s is set focus", element->name);
 	}
 	
 	return true;

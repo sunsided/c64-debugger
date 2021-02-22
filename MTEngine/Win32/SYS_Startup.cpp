@@ -997,7 +997,7 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 							WPARAM	wParam,			// Additional Message Information
 							LPARAM	lParam)			// Additional Message Information
 {
-	LOGD("WndProc: uMsg=%d wParam=%d lParam=%d", uMsg, wParam, lParam);
+	//LOGD("WndProc: uMsg=%d wParam=%d lParam=%d", uMsg, wParam, lParam);
 
 	switch (uMsg)									// Check For Windows Messages
 	{

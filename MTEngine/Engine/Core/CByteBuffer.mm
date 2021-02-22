@@ -304,6 +304,36 @@ void CByteBuffer::ForwardToEnd()
 // 32kB memory chunks
 #define MEM_CHUNK	1024*32
 
+void CByteBuffer::EnsureDataBufferSize(u32 len)
+{
+	if (this->wholeDataBufferSize < len)
+	{
+		uint8 *newData = new uint8[len];
+		memcpy(newData, this->data, this->wholeDataBufferSize);
+		delete [] this->data;
+		this->data = newData;
+		this->wholeDataBufferSize = len;
+	}
+}
+
+void CByteBuffer::ReserveDataForInsert(u32 len)
+{
+	int newLen =  this->index + len;
+	if (this->wholeDataBufferSize < newLen)
+	{
+		uint8 *newData = new uint8[newLen];
+		memcpy(newData, this->data, this->wholeDataBufferSize);
+		delete [] this->data;
+		this->data = newData;
+		this->wholeDataBufferSize = newLen;
+	}
+}
+
+uint8 *CByteBuffer::GetDataPointerAtIndex()
+{
+	return this->data + this->index;
+}
+
 void CByteBuffer::putByte(uint8 b)
 {
 #ifdef PRINT_BUFFER_OPS
@@ -312,11 +342,7 @@ void CByteBuffer::putByte(uint8 b)
 
 	if (this->index >= this->wholeDataBufferSize)
 	{
-		uint8 *newData = new uint8[this->wholeDataBufferSize + MEM_CHUNK];
-		memcpy(newData, this->data, this->wholeDataBufferSize);
-		delete [] this->data;
-		this->data = newData;
-		this->wholeDataBufferSize += MEM_CHUNK;
+		EnsureDataBufferSize(this->wholeDataBufferSize + MEM_CHUNK);
 	}
 	this->data[this->index++] = b;
 	this->length++;

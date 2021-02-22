@@ -82,12 +82,13 @@ public:
 	virtual void DiskDriveReset();
 
 	// this is main emulation cpu cycle counter
-	virtual unsigned int GetMainCpuCycleCounter();
-	virtual unsigned int GetPreviousCpuInstructionCycleCounter();
+	virtual u64 GetMainCpuCycleCounter();
+	virtual u64 GetCurrentCpuInstructionCycleCounter();
+	virtual u64 GetPreviousCpuInstructionCycleCounter();
 	
 	// resettable counters for debug purposes
 	virtual void ResetMainCpuDebugCycleCounter();
-	virtual unsigned int GetMainCpuDebugCycleCounter();
+	virtual u64 GetMainCpuDebugCycleCounter();
 	virtual void ResetEmulationFrameCounter();
 	virtual unsigned int GetEmulationFrameNumber();
 	

@@ -926,14 +926,14 @@ bool wasKeyDownControl = false;
 
 - (void) startAnimation
 {
-	LOGD("startAnimation");
+//	LOGD("startAnimation");
 	if (displayLink && !CVDisplayLinkIsRunning(displayLink))
 		CVDisplayLinkStart(displayLink);
 }
 
 - (void) stopAnimation
 {
-	LOGD("stopAnimation");
+//	LOGD("stopAnimation");
 	if (displayLink && CVDisplayLinkIsRunning(displayLink))
 		CVDisplayLinkStop(displayLink);
 }

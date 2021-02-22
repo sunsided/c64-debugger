@@ -173,8 +173,9 @@ extern int c64d_setting_run_sid_when_in_warp;
 extern int c64d_setting_run_sid_emulation;
 
 // Main CPU cycle of previous instruction
-extern volatile unsigned int c64d_previous_instruction_maincpu_clk;
-extern volatile unsigned int c64d_previous2_instruction_maincpu_clk;
+extern unsigned int c64d_maincpu_current_instruction_clk;
+extern volatile unsigned int c64d_maincpu_previous_instruction_clk;
+extern volatile unsigned int c64d_maincpu_previous2_instruction_clk;
 
 //// render transparent c64 screen (for Vic Display), transparent color = $d021
 //extern int c64d_setting_render_transparent_screen;

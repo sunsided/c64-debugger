@@ -1,3 +1,4 @@
+#define MT_DBGLOG_NSSTRING
 #include "SYS_Defs.h"
 #include "SND_SoundEngine.h"
 #include "CSlrMusicFileOgg.h"

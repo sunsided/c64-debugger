@@ -752,6 +752,7 @@ void CViewMainMenu::LoadFile(CSlrString *path)
 void CViewMainMenu::InsertD64(CSlrString *path, bool updatePathToD64, bool autoRun, int autoRunEntryNum, bool showLoadAddressInfo)
 {
 	LOGD("CViewMainMenu::InsertD64: path=%x autoRun=%s autoRunEntryNum=%d", path, STRBOOL(autoRun), autoRunEntryNum);
+	path->DebugPrint("CViewMainMenu::InsertD64: path=");
 	
 	if (SYS_FileExists(path) == false)
 	{
@@ -1535,6 +1536,9 @@ void CViewMainMenu::InsertATR(CSlrString *path, bool updatePathToATR, bool autoR
 
 bool CViewMainMenu::LoadNES(CSlrString *path, bool updateNESFolderPath)
 {
+	if (path == NULL)
+		return false;
+	
 	path->DebugPrint("CViewMainMenu::LoadNES: path=");
 	
 	LOGD("   >>> LoadNES");
@@ -1574,22 +1578,19 @@ bool CViewMainMenu::LoadNES(CSlrString *path, bool updateNESFolderPath)
 	}
 	
 	// display file name in menu
-	//	char *fname = SYS_GetFileNameFromFullPath(asciiPath);
+	char *fname = SYS_GetFileNameFromFullPath(asciiPath);
+		
+	guiMain->LockMutex();
+	if (menuItemOpenFile->str2 != NULL)
+		delete menuItemOpenFile->str2;
+
+	menuItemOpenFile->str2 = new CSlrString(fname);
+	delete [] fname;
+
+	LOGTODO("NES: load labels/symbols/watches");
+//	LoadLabelsAndWatches(path);
 	
-	LOGTODO("NES: load labels/symbols/watches & update menu item");
-	
-	/*
-	 guiMain->LockMutex();
-	 if (menuItemLoadPRG->str2 != NULL)
-		delete menuItemLoadPRG->str2;
-	 
-	 menuItemLoadPRG->str2 = new CSlrString(fname);
-	 delete [] fname;
-	 
-	 LoadLabelsAndWatches(path);
-	 guiMain->UnlockMutex();
-	 
-	 */
+	guiMain->UnlockMutex();
 	
 	//
 	debugInterfaceNes->LockMutex();

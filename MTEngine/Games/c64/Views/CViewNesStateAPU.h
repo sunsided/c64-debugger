@@ -18,6 +18,9 @@ class CSlrMutex;
 class NesDebugInterface;
 class CViewC64StateSIDWaveform;
 
+// TODO: move me to NES APU VIEW
+class CViewNesPianoKeyboard;
+
 #define MAX_NUM_NES_APUS 1
 
 class CViewNesStateAPU : public CGuiView, CGuiEditHexCallback
@@ -54,6 +57,9 @@ public:
 
 	//
 	virtual void RenderState(float px, float py, float posZ, CSlrFont *fontBytes, float fontSize, int apuId);
+	float GetFrequencyForChannel(int chanNum);
+	
+	bool IsChannelActive(int chanNum);
 	
 	// editing registers
 	bool showRegistersOnly;
@@ -64,6 +70,8 @@ public:
 	//
 	virtual void RenderFocusBorder();
 
+	//
+	CViewNesPianoKeyboard *viewPianoKeyboard;
 };
 
 

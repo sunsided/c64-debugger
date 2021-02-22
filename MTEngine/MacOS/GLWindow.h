@@ -8,7 +8,7 @@
 
 #import <Cocoa/Cocoa.h>
 
-@interface GLWindow : NSWindow
+@interface GLWindow : NSWindow <NSWindowDelegate>
 
 - (void) close;
 

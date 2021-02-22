@@ -298,7 +298,7 @@ void CGuiElement::FocusLost()
 
 bool CGuiElement::HasFocus()
 {
-	LOGD("CGuiElement::HasFocus: element=%s hasFocus=%s", this->name, STRBOOL(this->hasFocus));
+//	LOGD("CGuiElement::HasFocus: element=%s hasFocus=%s", this->name, STRBOOL(this->hasFocus));
 	return this->hasFocus;
 }
 

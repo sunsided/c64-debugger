@@ -1,3 +1,4 @@
+#define MT_DBGLOG_NSSTRING
 #include "CSlrFileFromResources.h"
 #include "SYS_Main.h"
 #include "SYS_CFileSystem.h"

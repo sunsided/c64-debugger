@@ -31,6 +31,7 @@ enum monitorSaveFileType
 CViewMonitorConsole::CViewMonitorConsole(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, CDebugInterface *debugInterface)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
 {
+	this->name = "CViewMonitorConsole";
 	this->debugInterface = debugInterface;
 	
 	this->viewConsole = new CGuiViewConsole(posX, posY, posZ, sizeX, sizeY, viewC64->fontCBMShifted, 1.250f, 20, true, this);
@@ -54,6 +55,7 @@ CViewMonitorConsole::CViewMonitorConsole(GLfloat posX, GLfloat posY, GLfloat pos
 	debugInterface->SetCodeMonitorCallback(this);
 	
 	PrintInitPrompt();
+	CommandHelp();
 	
 	RestoreMonitorHistory();
 }
@@ -163,8 +165,10 @@ void CViewMonitorConsole::PrintInitPrompt()
 		sprintf(buf, "C64 Debugger v%s monitor", C64DEBUGGER_VERSION_STRING);
 #elif defined(RUN_ATARI)
 		sprintf(buf, "65XE Debugger v%s monitor", C64DEBUGGER_VERSION_STRING);
+#elif defined(RUN_NES)
+		sprintf(buf, "NES Debugger v%s monitor", C64DEBUGGER_VERSION_STRING);
 #else
-		sprintf(buf, "C64 65XE Debugger v%s monitor", C64DEBUGGER_VERSION_STRING);
+			sprintf(buf, "C64 65XE NES Debugger v%s monitor", C64DEBUGGER_VERSION_STRING);
 #endif
 		this->viewConsole->PrintLine(buf);
 	}
@@ -409,7 +413,7 @@ void CViewMonitorConsole::CommandHelp()
 	this->viewConsole->PrintLine("    find values that addresses are in previous hunt");
 	this->viewConsole->PrintLine("T <from address> <to address> <destination address>");
 	this->viewConsole->PrintLine("    copy memory");
-	this->viewConsole->PrintLine("L [PRG] [from address] [file name]");
+	this->viewConsole->PrintLine("L [PRG] [to address] [file name]");
 	this->viewConsole->PrintLine("    load memory");
 	this->viewConsole->PrintLine("S [PRG] <from address> <to address> [file name]");
 	this->viewConsole->PrintLine("    save memory (with option as PRG file)");

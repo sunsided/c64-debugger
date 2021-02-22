@@ -863,8 +863,12 @@ void C64DebuggerSetSetting(char *name, void *value)
 		{
 			viewC64->debugInterfaceAtari->snapshotsManager->SetRecordingStoreInterval(v);
 		}
-		
-		if (viewC64->debugInterfaceC64 || viewC64->debugInterfaceAtari)
+		if (viewC64->debugInterfaceNes)
+		{
+			viewC64->debugInterfaceNes->snapshotsManager->SetRecordingStoreInterval(v);
+		}
+
+		if (viewC64->debugInterfaceC64 || viewC64->debugInterfaceAtari || viewC64->debugInterfaceNes)
 		{
 			viewC64->viewC64SettingsMenu->menuItemC64SnapshotsManagerStoreInterval->SetValue(v, false);
 		}
@@ -881,7 +885,12 @@ void C64DebuggerSetSetting(char *name, void *value)
 		{
 			viewC64->debugInterfaceAtari->snapshotsManager->SetRecordingLimit(v);
 		}
-		if (viewC64->debugInterfaceC64 || viewC64->debugInterfaceAtari)
+		if (viewC64->debugInterfaceNes)
+		{
+			viewC64->debugInterfaceNes->snapshotsManager->SetRecordingLimit(v);
+		}
+
+		if (viewC64->debugInterfaceC64 || viewC64->debugInterfaceAtari || viewC64->debugInterfaceNes)
 		{
 			viewC64->viewC64SettingsMenu->menuItemC64SnapshotsManagerLimit->SetValue(v, false);
 		}

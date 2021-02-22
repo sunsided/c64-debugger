@@ -14,8 +14,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "8D1107260486CEB800E47090"
-               BuildableName = "65XE Debugger.app"
-               BlueprintName = "65XEDebugger"
+               BuildableName = "NES Debugger.app"
+               BlueprintName = "NES Debugger"
                ReferencedContainer = "container:MTEngine-MacOS.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -30,8 +30,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8D1107260486CEB800E47090"
-            BuildableName = "65XE Debugger.app"
-            BlueprintName = "65XEDebugger"
+            BuildableName = "NES Debugger.app"
+            BlueprintName = "NES Debugger"
             ReferencedContainer = "container:MTEngine-MacOS.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -39,29 +39,35 @@
       </Testables>
    </TestAction>
    <LaunchAction
-      buildConfiguration = "Release"
+      buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+      enableASanStackUseAfterReturn = "YES"
       disableMainThreadChecker = "YES"
       launchStyle = "0"
       useCustomWorkingDirectory = "NO"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
+      enableGPUValidationMode = "1"
       allowLocationSimulation = "YES">
       <BuildableProductRunnable
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8D1107260486CEB800E47090"
-            BuildableName = "65XE Debugger.app"
-            BlueprintName = "65XEDebugger"
+            BuildableName = "NES Debugger.app"
+            BlueprintName = "NES Debugger"
             ReferencedContainer = "container:MTEngine-MacOS.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
             argument = "-prg"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-autorun"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
@@ -102,11 +108,11 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-wait"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "2500"
-            isEnabled = "NO">
+            argument = "1000"
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-debuginfo"
@@ -170,15 +176,15 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-d64"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "/Users/mars/develop/MTEngine/_RUNTIME_/Documents/c64/disks/commando.d64"
-            isEnabled = "NO">
+            argument = "/Users/mars/develop/MTEngine/_RUNTIME_/Documents/c64/disks/games/commando.d64"
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-autorundisk"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-layout"
@@ -256,8 +262,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8D1107260486CEB800E47090"
-            BuildableName = "65XE Debugger.app"
-            BlueprintName = "65XEDebugger"
+            BuildableName = "NES Debugger.app"
+            BlueprintName = "NES Debugger"
             ReferencedContainer = "container:MTEngine-MacOS.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

@@ -56,6 +56,9 @@ public:
 	void Rewind();
 	void Reset();
 	void SetData(uint8 *s, u32 len);
+	void EnsureDataBufferSize(u32 len);
+	void ReserveDataForInsert(u32 len);
+	uint8 *GetDataPointerAtIndex();
 	void InsertBytes(CByteBuffer *byteBuffer);
 	bool IsEof();
 	bool IsEmpty();

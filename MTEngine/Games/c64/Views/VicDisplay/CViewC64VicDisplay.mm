@@ -1879,11 +1879,11 @@ void CViewC64VicDisplay::RenderBreakpointsLines()
 {
 	viewC64->debugInterfaceC64->LockMutex();
 	
-	std::map<uint16, CAddrBreakpoint *> *breakpointsMap = &(viewC64->debugInterfaceC64->breakpointsRaster);
+	std::map<int, CAddrBreakpoint *> *breakpointsMap = &(viewC64->debugInterfaceC64->breakpointsRaster->breakpoints);
 	
 	float cy = displayPosY + rasterCrossOffsetY - (0x33 * rasterScaleFactorY) + rasterScaleFactorY/2.0f;
 
-	for (std::map<uint16, CAddrBreakpoint *>::iterator it = breakpointsMap->begin();
+	for (std::map<int, CAddrBreakpoint *>::iterator it = breakpointsMap->begin();
 		 it != breakpointsMap->end(); it++)
 	{
 		CAddrBreakpoint *breakpoint = it->second;
@@ -1953,7 +1953,7 @@ bool CViewC64VicDisplay::ScrollMemoryAndDisassembleToRasterPosition(float rx, fl
 	rasterCursorPosX = rx;
 	rasterCursorPosY = ry;
 	
-	viewC64->viewC64MemoryDataDump->ScrollToAddress(addr);
+	viewC64->viewC64MemoryDataDump->ScrollToAddress(addr, true);
 	
 	if (canScrollDisassemble == true)
 	{
@@ -2538,10 +2538,10 @@ void CViewC64VicDisplay::ToggleVICRasterBreakpoint()
 		
 		viewC64->debugInterfaceC64->LockMutex();
 
-		std::map<uint16, CAddrBreakpoint *> *breakpointsMap = &(viewC64->debugInterfaceC64->breakpointsRaster);
+		std::map<int, CAddrBreakpoint *> *breakpointsMap = &(viewC64->debugInterfaceC64->breakpointsRaster->breakpoints);
 
 		// find if breakpoint exists
-		std::map<uint16, CAddrBreakpoint *>::iterator it = breakpointsMap->find(rasterLine);
+		std::map<int, CAddrBreakpoint *>::iterator it = breakpointsMap->find(rasterLine);
 		
 		if (it == breakpointsMap->end())
 		{

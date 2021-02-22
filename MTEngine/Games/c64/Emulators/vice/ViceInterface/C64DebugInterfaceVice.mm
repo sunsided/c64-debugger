@@ -458,19 +458,25 @@ void C64DebugInterfaceVice::DiskDriveReset()
 
 extern "C" {
 	unsigned int c64d_get_vice_maincpu_clk();
+	unsigned int c64d_get_vice_maincpu_current_instruction_clk();
 	void c64d_refresh_screen_no_callback();
 }
 
-unsigned int C64DebugInterfaceVice::GetMainCpuCycleCounter()
+u64 C64DebugInterfaceVice::GetMainCpuCycleCounter()
 {
 	return c64d_get_vice_maincpu_clk();
 }
 
-unsigned int C64DebugInterfaceVice::GetPreviousCpuInstructionCycleCounter()
+u64 C64DebugInterfaceVice::GetCurrentCpuInstructionCycleCounter()
 {
-	unsigned int viceMainCpuClk = c64d_get_vice_maincpu_clk();
-	unsigned int previousInstructionClk = c64d_previous_instruction_maincpu_clk;
-	unsigned int previous2InstructionClk = c64d_previous2_instruction_maincpu_clk;
+	return c64d_get_vice_maincpu_current_instruction_clk();
+}
+
+u64 C64DebugInterfaceVice::GetPreviousCpuInstructionCycleCounter()
+{
+	u64 viceMainCpuClk = c64d_get_vice_maincpu_clk();
+	u64 previousInstructionClk = c64d_maincpu_previous_instruction_clk;
+	u64 previous2InstructionClk = c64d_maincpu_previous2_instruction_clk;
 	LOGD(">>>>>>>>>................ previous_inst_clk=%d previous2InstructionClk=%d | mainclk=%d", previousInstructionClk, previous2InstructionClk, viceMainCpuClk);
 	
 	if (previousInstructionClk == viceMainCpuClk)
@@ -493,7 +499,7 @@ extern "C" {
 	unsigned int c64d_get_vice_maincpu_clk();
 };
 
-unsigned int C64DebugInterfaceVice::GetMainCpuDebugCycleCounter()
+u64 C64DebugInterfaceVice::GetMainCpuDebugCycleCounter()
 {
 	return c64d_maincpu_clk;
 }

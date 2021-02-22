@@ -5,10 +5,11 @@
 #include "DebuggerDefs.h"
 
 class C64;
+class CDebugInterface;
+class CSlrDataAdapter;
 class CImageData;
 class CSlrImage;
 class CViewDataDump;
-class CDebugInterface;
 class CSlrFont;
 
 #define MEMORY_MAP_VALUES_STYLE_RGB			0
@@ -58,10 +59,15 @@ public:
 	// last write PC & raster (where was PC & raster when cell was written)
 	int writePC;
 	int writeRasterLine, writeRasterCycle;
-	
+	u64 writeCycle;
+
 	// last read PC & raster (where was PC & raster when cell was read)
 	int readPC;
 	int readRasterLine, readRasterCycle;
+	u64 readCycle;
+	
+	// last execute cycle
+	u64 executeCycle;
 };
 
 void C64DebuggerSetMemoryMapCellsFadeSpeed(float fadeSpeed);
@@ -70,7 +76,9 @@ class CViewMemoryMap : public CGuiView
 {
 public:
 	CViewMemoryMap(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
-				   CDebugInterface *debugInterface, int imageWidth, int imageHeight, int ramSize, bool isFromDisk);
+				   CDebugInterface *debugInterface, CSlrDataAdapter *dataAdapter,
+				   int imageWidth, int imageHeight, int ramSize, bool showCurrentExecutePC,
+				   bool isFromDisk);
 	~CViewMemoryMap();
 	
 	virtual void SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY);
@@ -118,29 +126,31 @@ public:
 
 	void UpdateWholeMap();
 	
-	void CellRead(uint16 addr);
-	void CellRead(uint16 addr, uint16 pc, int rasterX, int rasterY);
-	void CellWrite(uint16 addr, uint8 value);
-	void CellWrite(uint16 addr, uint8 value, uint16 pc, int rasterX, int rasterY);
-	void CellExecute(uint16 addr, uint8 opcode);
+	void CellRead(int addr);
+	void CellRead(int addr, int pc, int rasterX, int rasterY);
+	void CellWrite(int addr, uint8 value);
+	void CellWrite(int addr, uint8 value, int pc, int rasterX, int rasterY);
+	void CellExecute(int addr, uint8 opcode);
 	
 	void CellsAnimationLogic();
 	void DriveROMCellsAnimationLogic();
+	void UpdateMapColorsForCell(CViewMemoryMapCell *cell);
 	
 	CImageData *imageDataMemoryMap;
 	CSlrImage *imageMemoryMap;
 	
+	bool showCurrentExecutePC;
 	bool isFromDisk;
 	
 	int frameCounter;
 	int nextScreenUpdateFrame;
 	
-	bool isDataDirectlyFromRAM;
-	
 	CViewDataDump *viewDataDump;
-	
 	void SetDataDumpView(CViewDataDump *viewDataDump);
 	
+	CSlrDataAdapter *dataAdapter;
+	void SetDataAdapter(CSlrDataAdapter *newDataAdapter);
+
 	bool IsExecuteCodeAddress(int address);
 	void ClearExecuteMarkers();
 	void ClearReadWriteMarkers();

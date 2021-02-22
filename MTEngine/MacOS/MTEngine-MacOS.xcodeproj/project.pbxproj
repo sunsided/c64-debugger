@@ -139,6 +139,12 @@
 		39042B05186892A800B570B1 /* trees.c in Sources */ = {isa = PBXBuildFile; fileRef = 39042953186892A800B570B1 /* trees.c */; };
 		39042B06186892A800B570B1 /* uncompr.c in Sources */ = {isa = PBXBuildFile; fileRef = 39042955186892A800B570B1 /* uncompr.c */; };
 		39042B07186892A800B570B1 /* zutil.c in Sources */ = {isa = PBXBuildFile; fileRef = 39042958186892A800B570B1 /* zutil.c */; };
+		410158DD25CC618B00F78202 /* CViewNesPpuNametables.mm in Sources */ = {isa = PBXBuildFile; fileRef = 410158DC25CC618B00F78202 /* CViewNesPpuNametables.mm */; };
+		410158E825CD2C7900F78202 /* CViewNesPpuOam.mm in Sources */ = {isa = PBXBuildFile; fileRef = 410158E025CD2C7700F78202 /* CViewNesPpuOam.mm */; };
+		410158E925CD2C7900F78202 /* CViewNesPpuAttributes.mm in Sources */ = {isa = PBXBuildFile; fileRef = 410158E325CD2C7800F78202 /* CViewNesPpuAttributes.mm */; };
+		410158EA25CD2C7900F78202 /* CViewNesPpuPatterns.mm in Sources */ = {isa = PBXBuildFile; fileRef = 410158E525CD2C7800F78202 /* CViewNesPpuPatterns.mm */; };
+		410158EB25CD2C7900F78202 /* CViewNesPpuPalette.mm in Sources */ = {isa = PBXBuildFile; fileRef = 410158E625CD2C7800F78202 /* CViewNesPpuPalette.mm */; };
+		410158F025CD2E5600F78202 /* CViewNesStatePPU.mm in Sources */ = {isa = PBXBuildFile; fileRef = 410158EF25CD2E5500F78202 /* CViewNesStatePPU.mm */; };
 		4101B24F20F91DA500A3C8C6 /* CVicEditorLayerImage.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4101B24D20F91DA500A3C8C6 /* CVicEditorLayerImage.mm */; };
 		4101B25220FA1DAF00A3C8C6 /* CViewVicEditorCreateNewPicture.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4101B25020FA1DAF00A3C8C6 /* CViewVicEditorCreateNewPicture.mm */; };
 		410250A81CF5A89F00F6681D /* CViewEmulationState.mm in Sources */ = {isa = PBXBuildFile; fileRef = 410250A71CF5A89F00F6681D /* CViewEmulationState.mm */; };
@@ -270,6 +276,8 @@
 		412BB9AC1614AB6800533AD3 /* SYS_CFileSystem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 412BB99E1614AB6800533AD3 /* SYS_CFileSystem.mm */; };
 		412BB9AD1614AB6800533AD3 /* VID_Blits.mm in Sources */ = {isa = PBXBuildFile; fileRef = 412BB9A01614AB6800533AD3 /* VID_Blits.mm */; };
 		412BB9AE1614AB6800533AD3 /* VID_GLViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 412BB9A21614AB6800533AD3 /* VID_GLViewController.mm */; };
+		412E16CF25D2AFA100F8A3BC /* CDebugInterfaceTask.mm in Sources */ = {isa = PBXBuildFile; fileRef = 412E16CD25D2AFA100F8A3BC /* CDebugInterfaceTask.mm */; };
+		412E16D425D2B41900F8A3BC /* NesDebugInterfaceTasks.mm in Sources */ = {isa = PBXBuildFile; fileRef = 412E16D225D2B41900F8A3BC /* NesDebugInterfaceTasks.mm */; };
 		412F0E8821F7549700652B0B /* sidconfig.h.in in Resources */ = {isa = PBXBuildFile; fileRef = 412F0E8521F7549700652B0B /* sidconfig.h.in */; };
 		412F0E9321F75A8400652B0B /* SidDatabase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 412F0E8E21F75A8400652B0B /* SidDatabase.cpp */; };
 		412F0E9821F75B5100652B0B /* MD5.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 412F0E9621F75B5100652B0B /* MD5.cpp */; };
@@ -655,6 +663,9 @@
 		4159DE0117A7E5390016187E /* SYS_Memory.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4159DE0017A7E5390016187E /* SYS_Memory.mm */; };
 		415A260A221AD09B00BDF694 /* CDebuggerAPI.mm in Sources */ = {isa = PBXBuildFile; fileRef = 415A2608221AD09B00BDF694 /* CDebuggerAPI.mm */; };
 		415B4B2719848A0700B13FFF /* CSlrImageContainer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 415B4B2519848A0700B13FFF /* CSlrImageContainer.mm */; };
+		415BC59525CBFFA900BD1087 /* CDebugDataAdapter.h in Sources */ = {isa = PBXBuildFile; fileRef = 415BC59225CBFF9500BD1087 /* CDebugDataAdapter.h */; };
+		415BC59625CBFFA900BD1087 /* CDebugDataAdapter.mm in Sources */ = {isa = PBXBuildFile; fileRef = 415BC59325CBFF9500BD1087 /* CDebugDataAdapter.mm */; };
+		415FF31425C1EB3D005EF389 /* CViewNesPianoKeyboard.mm in Sources */ = {isa = PBXBuildFile; fileRef = 415FF31225C1EB3D005EF389 /* CViewNesPianoKeyboard.mm */; };
 		4160B20C1CEB16AB00EAD217 /* CGuiViewConsole.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4160B20A1CEB16AB00EAD217 /* CGuiViewConsole.mm */; };
 		4160B20F1CEB1FC400EAD217 /* CViewMonitorConsole.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4160B20D1CEB1FC400EAD217 /* CViewMonitorConsole.mm */; };
 		4163BAF11E9F8C3A00E3C077 /* godotdrv.c in Sources */ = {isa = PBXBuildFile; fileRef = 4163BAEE1E9F8C3A00E3C077 /* godotdrv.c */; };
@@ -691,6 +702,7 @@
 		4165797E23C52E0C0051CEFE /* residfp-sid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165797123C52E0C0051CEFE /* residfp-sid.cpp */; };
 		4165797F23C52E0C0051CEFE /* residfp-voice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165797423C52E0C0051CEFE /* residfp-voice.cpp */; };
 		4165798023C52E0C0051CEFE /* residfp-wave.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165797623C52E0C0051CEFE /* residfp-wave.cpp */; };
+		4168AFF925B254C200877B0D /* asm6f.c in Sources */ = {isa = PBXBuildFile; fileRef = 4168AFF825B254C200877B0D /* asm6f.c */; };
 		416AF7801CC8D68700E56DDC /* CSlrTextParser.mm in Sources */ = {isa = PBXBuildFile; fileRef = 416AF77F1CC8D68700E56DDC /* CSlrTextParser.mm */; };
 		41706DBA1F9A71EA00B1B2BA /* CViewJukeboxPlaylist.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41706DB91F9A71EA00B1B2BA /* CViewJukeboxPlaylist.mm */; };
 		41706DBD1F9A726F00B1B2BA /* CJukeboxPlaylist.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41706DBB1F9A726F00B1B2BA /* CJukeboxPlaylist.mm */; };
@@ -994,10 +1006,15 @@
 		4172F0F321F2B490003F49FB /* nes_ntsc.txt in Resources */ = {isa = PBXBuildFile; fileRef = 4172EFA721F2B48F003F49FB /* nes_ntsc.txt */; };
 		4172F0F421F2B490003F49FB /* readme.txt in Resources */ = {isa = PBXBuildFile; fileRef = 4172EFAA21F2B48F003F49FB /* readme.txt */; };
 		4172F0F921F2B490003F49FB /* CNesAudioChannel.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4172EFB221F2B48F003F49FB /* CNesAudioChannel.mm */; };
-		4172F0FA21F2B490003F49FB /* NesDataAdapters.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4172EFB421F2B48F003F49FB /* NesDataAdapters.mm */; };
+		4172F0FA21F2B490003F49FB /* NesRamDataAdapter.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4172EFB421F2B48F003F49FB /* NesRamDataAdapter.mm */; };
 		4172F0FB21F2B490003F49FB /* NesDebugInterface.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4172EFB621F2B48F003F49FB /* NesDebugInterface.mm */; };
 		4172F0FC21F2B490003F49FB /* NesWrapper.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4172EFB921F2B48F003F49FB /* NesWrapper.mm */; };
 		4172F0FE21F2B490003F49FB /* nstcursor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4172EFBD21F2B48F003F49FB /* nstcursor.cpp */; };
+		4175B8FD25CA9684001346E6 /* NesPpuNmtDataAdapter.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4175B8FC25CA9684001346E6 /* NesPpuNmtDataAdapter.mm */; };
+		4175B90725CA96BA001346E6 /* NesPpuOamDataAdapter.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4175B8FF25CA96B9001346E6 /* NesPpuOamDataAdapter.mm */; };
+		4175B90825CA96BA001346E6 /* NesPpuPaletteDataAdapter.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4175B90025CA96B9001346E6 /* NesPpuPaletteDataAdapter.mm */; };
+		4175B90925CA96BA001346E6 /* NesPpuDataAdapter.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4175B90325CA96B9001346E6 /* NesPpuDataAdapter.mm */; };
+		4175B90A25CA96BA001346E6 /* NesPpuChrDataAdapter.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4175B90525CA96BA001346E6 /* NesPpuChrDataAdapter.mm */; };
 		4177D5AA1ED6EB250053D9EE /* CVicEditorUndoData.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4177D5A21ED6EB250053D9EE /* CVicEditorUndoData.mm */; };
 		4177D5AB1ED6EB250053D9EE /* CViewVicEditor.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4177D5A41ED6EB250053D9EE /* CViewVicEditor.mm */; };
 		4177D5AC1ED6EB250053D9EE /* CViewC64Charset.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4177D5A51ED6EB250053D9EE /* CViewC64Charset.mm */; };
@@ -1667,6 +1684,18 @@
 		39042957186892A800B570B1 /* zlib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = zlib.h; sourceTree = "<group>"; };
 		39042958186892A800B570B1 /* zutil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = zutil.c; sourceTree = "<group>"; };
 		39042959186892A800B570B1 /* zutil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = zutil.h; sourceTree = "<group>"; };
+		410158DB25CC618B00F78202 /* CViewNesPpuNametables.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewNesPpuNametables.h; path = ../Games/c64/Views/CViewNesPpuNametables.h; sourceTree = "<group>"; };
+		410158DC25CC618B00F78202 /* CViewNesPpuNametables.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewNesPpuNametables.mm; path = ../Games/c64/Views/CViewNesPpuNametables.mm; sourceTree = "<group>"; };
+		410158E025CD2C7700F78202 /* CViewNesPpuOam.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewNesPpuOam.mm; path = ../Games/c64/Views/CViewNesPpuOam.mm; sourceTree = "<group>"; };
+		410158E125CD2C7800F78202 /* CViewNesPpuPalette.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewNesPpuPalette.h; path = ../Games/c64/Views/CViewNesPpuPalette.h; sourceTree = "<group>"; };
+		410158E225CD2C7800F78202 /* CViewNesPpuOam.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewNesPpuOam.h; path = ../Games/c64/Views/CViewNesPpuOam.h; sourceTree = "<group>"; };
+		410158E325CD2C7800F78202 /* CViewNesPpuAttributes.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewNesPpuAttributes.mm; path = ../Games/c64/Views/CViewNesPpuAttributes.mm; sourceTree = "<group>"; };
+		410158E425CD2C7800F78202 /* CViewNesPpuPatterns.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewNesPpuPatterns.h; path = ../Games/c64/Views/CViewNesPpuPatterns.h; sourceTree = "<group>"; };
+		410158E525CD2C7800F78202 /* CViewNesPpuPatterns.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewNesPpuPatterns.mm; path = ../Games/c64/Views/CViewNesPpuPatterns.mm; sourceTree = "<group>"; };
+		410158E625CD2C7800F78202 /* CViewNesPpuPalette.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewNesPpuPalette.mm; path = ../Games/c64/Views/CViewNesPpuPalette.mm; sourceTree = "<group>"; };
+		410158E725CD2C7800F78202 /* CViewNesPpuAttributes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewNesPpuAttributes.h; path = ../Games/c64/Views/CViewNesPpuAttributes.h; sourceTree = "<group>"; };
+		410158EE25CD2E5500F78202 /* CViewNesStatePPU.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewNesStatePPU.h; path = ../Games/c64/Views/CViewNesStatePPU.h; sourceTree = "<group>"; };
+		410158EF25CD2E5500F78202 /* CViewNesStatePPU.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewNesStatePPU.mm; path = ../Games/c64/Views/CViewNesStatePPU.mm; sourceTree = "<group>"; };
 		4101B24D20F91DA500A3C8C6 /* CVicEditorLayerImage.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CVicEditorLayerImage.mm; path = ../Games/c64/Screens/VicEditor/CVicEditorLayerImage.mm; sourceTree = "<group>"; };
 		4101B24E20F91DA500A3C8C6 /* CVicEditorLayerImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CVicEditorLayerImage.h; path = ../Games/c64/Screens/VicEditor/CVicEditorLayerImage.h; sourceTree = "<group>"; };
 		4101B25020FA1DAF00A3C8C6 /* CViewVicEditorCreateNewPicture.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewVicEditorCreateNewPicture.mm; path = ../Games/c64/Screens/VicEditor/CViewVicEditorCreateNewPicture.mm; sourceTree = "<group>"; };
@@ -1962,6 +1991,10 @@
 		412BBDE91614ACCC00533AD3 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk/System/Library/Frameworks/AudioToolbox.framework; sourceTree = DEVELOPER_DIR; };
 		412BBDEA1614ACCC00533AD3 /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk/System/Library/Frameworks/AudioUnit.framework; sourceTree = DEVELOPER_DIR; };
 		412BBDED1614ACD100533AD3 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk/System/Library/Frameworks/AVFoundation.framework; sourceTree = DEVELOPER_DIR; };
+		412E16CD25D2AFA100F8A3BC /* CDebugInterfaceTask.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CDebugInterfaceTask.mm; path = ../Games/c64/DebugInterface/CDebugInterfaceTask.mm; sourceTree = "<group>"; };
+		412E16CE25D2AFA100F8A3BC /* CDebugInterfaceTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CDebugInterfaceTask.h; path = ../Games/c64/DebugInterface/CDebugInterfaceTask.h; sourceTree = "<group>"; };
+		412E16D225D2B41900F8A3BC /* NesDebugInterfaceTasks.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = NesDebugInterfaceTasks.mm; sourceTree = "<group>"; };
+		412E16D325D2B41900F8A3BC /* NesDebugInterfaceTasks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NesDebugInterfaceTasks.h; sourceTree = "<group>"; };
 		412F0E7A21F7548000652B0B /* psid64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = psid64.h; path = ../Games/c64/Tools/libpsid64/psid64.h; sourceTree = "<group>"; };
 		412F0E7D21F7549700652B0B /* libini.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = libini.h; sourceTree = "<group>"; };
 		412F0E7E21F7549700652B0B /* SidDatabase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SidDatabase.h; sourceTree = "<group>"; };
@@ -2782,6 +2815,10 @@
 		415A2609221AD09B00BDF694 /* CDebuggerAPI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CDebuggerAPI.h; path = ../Games/c64/DebugInterface/CDebuggerAPI.h; sourceTree = "<group>"; };
 		415B4B2519848A0700B13FFF /* CSlrImageContainer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CSlrImageContainer.mm; sourceTree = "<group>"; };
 		415B4B2619848A0700B13FFF /* CSlrImageContainer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CSlrImageContainer.h; sourceTree = "<group>"; };
+		415BC59225CBFF9500BD1087 /* CDebugDataAdapter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CDebugDataAdapter.h; path = ../Games/c64/DebugInterface/CDebugDataAdapter.h; sourceTree = "<group>"; };
+		415BC59325CBFF9500BD1087 /* CDebugDataAdapter.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = CDebugDataAdapter.mm; path = ../Games/c64/DebugInterface/CDebugDataAdapter.mm; sourceTree = "<group>"; };
+		415FF31225C1EB3D005EF389 /* CViewNesPianoKeyboard.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewNesPianoKeyboard.mm; path = ../Games/c64/Views/CViewNesPianoKeyboard.mm; sourceTree = "<group>"; };
+		415FF31325C1EB3D005EF389 /* CViewNesPianoKeyboard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewNesPianoKeyboard.h; path = ../Games/c64/Views/CViewNesPianoKeyboard.h; sourceTree = "<group>"; };
 		4160B20A1CEB16AB00EAD217 /* CGuiViewConsole.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CGuiViewConsole.mm; sourceTree = "<group>"; };
 		4160B20B1CEB16AB00EAD217 /* CGuiViewConsole.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CGuiViewConsole.h; sourceTree = "<group>"; };
 		4160B20D1CEB1FC400EAD217 /* CViewMonitorConsole.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewMonitorConsole.mm; path = ../Games/c64/Views/CViewMonitorConsole.mm; sourceTree = "<group>"; };
@@ -2859,6 +2896,7 @@
 		4165797623C52E0C0051CEFE /* residfp-wave.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "residfp-wave.cpp"; sourceTree = "<group>"; };
 		4165797723C52E0C0051CEFE /* residfp-wave.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "residfp-wave.h"; sourceTree = "<group>"; };
 		41674802210790A1005C8D8A /* icon_new_gfx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = icon_new_gfx.h; path = ../Games/c64/Data/icon_new_gfx.h; sourceTree = "<group>"; };
+		4168AFF825B254C200877B0D /* asm6f.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = asm6f.c; path = ../Games/c64/Tools/asm6/asm6f.c; sourceTree = "<group>"; };
 		416AF77D1CC7D52100E56DDC /* C64Opcodes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64Opcodes.h; path = ../Games/c64/Tools/C64Opcodes.h; sourceTree = "<group>"; };
 		416AF77E1CC8D68700E56DDC /* CSlrTextParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CSlrTextParser.h; sourceTree = "<group>"; };
 		416AF77F1CC8D68700E56DDC /* CSlrTextParser.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CSlrTextParser.mm; sourceTree = "<group>"; };
@@ -3500,8 +3538,8 @@
 		4172EFAA21F2B48F003F49FB /* readme.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = readme.txt; sourceTree = "<group>"; };
 		4172EFB121F2B48F003F49FB /* CNesAudioChannel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CNesAudioChannel.h; sourceTree = "<group>"; };
 		4172EFB221F2B48F003F49FB /* CNesAudioChannel.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CNesAudioChannel.mm; sourceTree = "<group>"; };
-		4172EFB321F2B48F003F49FB /* NesDataAdapters.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NesDataAdapters.h; sourceTree = "<group>"; };
-		4172EFB421F2B48F003F49FB /* NesDataAdapters.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = NesDataAdapters.mm; sourceTree = "<group>"; };
+		4172EFB321F2B48F003F49FB /* NesRamDataAdapter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NesRamDataAdapter.h; sourceTree = "<group>"; };
+		4172EFB421F2B48F003F49FB /* NesRamDataAdapter.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = NesRamDataAdapter.mm; sourceTree = "<group>"; };
 		4172EFB521F2B48F003F49FB /* NesDebugInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NesDebugInterface.h; sourceTree = "<group>"; };
 		4172EFB621F2B48F003F49FB /* NesDebugInterface.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = NesDebugInterface.mm; sourceTree = "<group>"; };
 		4172EFB721F2B48F003F49FB /* NesPalette.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NesPalette.h; sourceTree = "<group>"; };
@@ -3509,6 +3547,16 @@
 		4172EFB921F2B48F003F49FB /* NesWrapper.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = NesWrapper.mm; sourceTree = "<group>"; };
 		4172EFBD21F2B48F003F49FB /* nstcursor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = nstcursor.cpp; sourceTree = "<group>"; };
 		4172EFBE21F2B48F003F49FB /* nstcursor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = nstcursor.h; sourceTree = "<group>"; };
+		4175B8FB25CA9683001346E6 /* NesPpuNmtDataAdapter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NesPpuNmtDataAdapter.h; sourceTree = "<group>"; };
+		4175B8FC25CA9684001346E6 /* NesPpuNmtDataAdapter.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = NesPpuNmtDataAdapter.mm; sourceTree = "<group>"; };
+		4175B8FF25CA96B9001346E6 /* NesPpuOamDataAdapter.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = NesPpuOamDataAdapter.mm; sourceTree = "<group>"; };
+		4175B90025CA96B9001346E6 /* NesPpuPaletteDataAdapter.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = NesPpuPaletteDataAdapter.mm; sourceTree = "<group>"; };
+		4175B90125CA96B9001346E6 /* NesPpuChrDataAdapter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NesPpuChrDataAdapter.h; sourceTree = "<group>"; };
+		4175B90225CA96B9001346E6 /* NesPpuDataAdapter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NesPpuDataAdapter.h; sourceTree = "<group>"; };
+		4175B90325CA96B9001346E6 /* NesPpuDataAdapter.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = NesPpuDataAdapter.mm; sourceTree = "<group>"; };
+		4175B90425CA96BA001346E6 /* NesPpuPaletteDataAdapter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NesPpuPaletteDataAdapter.h; sourceTree = "<group>"; };
+		4175B90525CA96BA001346E6 /* NesPpuChrDataAdapter.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = NesPpuChrDataAdapter.mm; sourceTree = "<group>"; };
+		4175B90625CA96BA001346E6 /* NesPpuOamDataAdapter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NesPpuOamDataAdapter.h; sourceTree = "<group>"; };
 		4177D5A11ED6D8260053D9EE /* CGlobalOSWindowChangedCallback.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CGlobalOSWindowChangedCallback.h; sourceTree = "<group>"; };
 		4177D5A21ED6EB250053D9EE /* CVicEditorUndoData.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CVicEditorUndoData.mm; path = ../Games/c64/Screens/VicEditor/CVicEditorUndoData.mm; sourceTree = "<group>"; };
 		4177D5A31ED6EB250053D9EE /* CVicEditorUndoData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CVicEditorUndoData.h; path = ../Games/c64/Screens/VicEditor/CVicEditorUndoData.h; sourceTree = "<group>"; };
@@ -3884,6 +3932,7 @@
 		41E7718B2515633D005C8B6F /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		41E7718C2515633D005C8B6F /* GLView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GLView.h; sourceTree = "<group>"; };
 		41E7718D2515633D005C8B6F /* AppDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = AppDelegate.mm; sourceTree = "<group>"; };
+		41E7745825CF6A4900AD14AE /* console_inverted_plain_gfx.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = console_inverted_plain_gfx.h; path = Embedded/console_inverted_plain_gfx.h; sourceTree = "<group>"; };
 		41E907B01EB72C430036CE0C /* C64SIDFrequencies.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64SIDFrequencies.h; path = ../Games/c64/Tools/C64SIDFrequencies.h; sourceTree = "<group>"; };
 		41E907B11EB72C430036CE0C /* C64SIDFrequencies.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64SIDFrequencies.mm; path = ../Games/c64/Tools/C64SIDFrequencies.mm; sourceTree = "<group>"; };
 		41EB74ED1E8F8A4400492B27 /* CViewFileD64.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewFileD64.mm; path = ../Games/c64/Screens/CViewFileD64.mm; sourceTree = "<group>"; };
@@ -4238,7 +4287,7 @@
 		41FE272D23575BE900E8F255 /* CViewC64AllGraphics.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewC64AllGraphics.mm; path = ../Games/c64/Views/CViewC64AllGraphics.mm; sourceTree = "<group>"; };
 		41FE272E23575BE900E8F255 /* CViewC64AllGraphics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewC64AllGraphics.h; path = ../Games/c64/Views/CViewC64AllGraphics.h; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* MTEngine-MacOS-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "MTEngine-MacOS-Info.plist"; sourceTree = "<group>"; };
-		8D1107320486CEB800E47090 /* 65XE Debugger.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "65XE Debugger.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		8D1107320486CEB800E47090 /* NES Debugger.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "NES Debugger.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AF9DBBC5113C611C00D05754 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		AFBD7715113895850015E685 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		AFD4D889113C504F00C2DE76 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
@@ -4300,7 +4349,7 @@
 		19C28FACFE9D520D11CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				8D1107320486CEB800E47090 /* 65XE Debugger.app */,
+				8D1107320486CEB800E47090 /* NES Debugger.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -4310,6 +4359,7 @@
 			children = (
 				41FA0AAF2215C02B0091F64A /* Plugins */,
 				39042590186892A700B570B1 /* Engine */,
+				4168AFF725B2549700877B0D /* asm6 */,
 				390424891868928B00B570B1 /* Games */,
 				4198011216510185000ABB83 /* MTEngine.entitlements */,
 				080E96DDFE201D6D7F000001 /* macOS */,
@@ -4437,8 +4487,8 @@
 				4177D5A11ED6D8260053D9EE /* CGlobalOSWindowChangedCallback.h */,
 				41E0F4AE1CCE584D00CE367D /* CSlrFileFromMemory.mm */,
 				41E0F4AF1CCE584D00CE367D /* CSlrFileFromMemory.h */,
-				4152D6E71C96F86F00EBA9E5 /* CSlrDataAdapter.h */,
 				4152D6E81C96F86F00EBA9E5 /* CSlrDataAdapter.mm */,
+				4152D6E71C96F86F00EBA9E5 /* CSlrDataAdapter.h */,
 				4152D6EA1C96F86F00EBA9E5 /* CSlrKeyboardShortcuts.mm */,
 				4152D6E91C96F86F00EBA9E5 /* CSlrKeyboardShortcuts.h */,
 				41646C0C1C8DE93E006BBE25 /* SYS_CommandLine.mm */,
@@ -5006,8 +5056,8 @@
 		411C4BC921F2B36F00356433 /* atari800 */ = {
 			isa = PBXGroup;
 			children = (
-				41D0683023C0BCC200C0B93E /* roms */,
 				411C4BEA21F2B36F00356433 /* AtariInterface */,
+				41D0683023C0BCC200C0B93E /* roms */,
 				411C4BCA21F2B36F00356433 /* a-cartridge.c */,
 				411C4BCB21F2B36F00356433 /* a-cartridge.h */,
 				411C4BCC21F2B36F00356433 /* a-crc32.c */,
@@ -5151,12 +5201,12 @@
 		411C4BEA21F2B36F00356433 /* AtariInterface */ = {
 			isa = PBXGroup;
 			children = (
-				411C4BEC21F2B36F00356433 /* AtariDataAdapters.mm */,
-				411C4BEB21F2B36F00356433 /* AtariDataAdapters.h */,
 				411C4BEE21F2B36F00356433 /* AtariDebugInterface.mm */,
 				411C4BED21F2B36F00356433 /* AtariDebugInterface.h */,
 				411C4BF021F2B36F00356433 /* AtariWrapper.mm */,
 				411C4BEF21F2B36F00356433 /* AtariWrapper.h */,
+				411C4BEC21F2B36F00356433 /* AtariDataAdapters.mm */,
+				411C4BEB21F2B36F00356433 /* AtariDataAdapters.h */,
 				411C4BF221F2B36F00356433 /* CAtariAudioChannel.mm */,
 				411C4BF121F2B36F00356433 /* CAtariAudioChannel.h */,
 			);
@@ -6662,16 +6712,16 @@
 		414539D31CB3DC1B00020916 /* ViceInterface */ = {
 			isa = PBXGroup;
 			children = (
-				41F9775D1CB90DFD00927516 /* CViceAudioChannel.mm */,
-				41F9775E1CB90DFD00927516 /* CViceAudioChannel.h */,
+				414539D71CB3DC1B00020916 /* C64DebugInterfaceVice.mm */,
+				414539D61CB3DC1B00020916 /* C64DebugInterfaceVice.h */,
 				41F9771A1CB6B93900927516 /* ViceWrapper.mm */,
 				41F9771B1CB6B93900927516 /* ViceWrapper.h */,
+				41F9775D1CB90DFD00927516 /* CViceAudioChannel.mm */,
+				41F9775E1CB90DFD00927516 /* CViceAudioChannel.h */,
 				414539DC1CB3F2B400020916 /* ViceLogWrapper.mm */,
 				414539DB1CB3F2B400020916 /* ViceLogWrapper.h */,
 				414539D51CB3DC1B00020916 /* C64DataAdaptersVice.mm */,
 				414539D41CB3DC1B00020916 /* C64DataAdaptersVice.h */,
-				414539D71CB3DC1B00020916 /* C64DebugInterfaceVice.mm */,
-				414539D61CB3DC1B00020916 /* C64DebugInterfaceVice.h */,
 			);
 			path = ViceInterface;
 			sourceTree = "<group>";
@@ -6696,11 +6746,15 @@
 				41FA0AAB2215A9AF0091F64A /* CDebuggerEmulatorPlugin.h */,
 				417F8F53208BC565004C6A1F /* CDebugInterface.mm */,
 				417F8F54208BC565004C6A1F /* CDebugInterface.h */,
+				412E16CD25D2AFA100F8A3BC /* CDebugInterfaceTask.mm */,
+				412E16CE25D2AFA100F8A3BC /* CDebugInterfaceTask.h */,
 				41A9AC8D1CBBFCF6004592CF /* DebuggerDefs.h */,
 				4152D6DB1C96F73300EBA9E5 /* C64DebugInterface.mm */,
 				4152D6DA1C96F73300EBA9E5 /* C64DebugInterface.h */,
 				4152D6DF1C96F73300EBA9E5 /* CDebuggerBreakpoints.mm */,
 				4152D6DE1C96F73300EBA9E5 /* CDebuggerBreakpoints.h */,
+				415BC59325CBFF9500BD1087 /* CDebugDataAdapter.mm */,
+				415BC59225CBFF9500BD1087 /* CDebugDataAdapter.h */,
 			);
 			name = DebugInterface;
 			sourceTree = "<group>";
@@ -6793,6 +6847,14 @@
 				41674802210790A1005C8D8A /* icon_new_gfx.h */,
 			);
 			name = Data;
+			sourceTree = "<group>";
+		};
+		4168AFF725B2549700877B0D /* asm6 */ = {
+			isa = PBXGroup;
+			children = (
+				4168AFF825B254C200877B0D /* asm6f.c */,
+			);
+			name = asm6;
 			sourceTree = "<group>";
 		};
 		41706DB71F9A71BB00B1B2BA /* JukeboxPlaylist */ = {
@@ -7522,12 +7584,13 @@
 		4172EFB021F2B48F003F49FB /* NestopiaInterface */ = {
 			isa = PBXGroup;
 			children = (
+				4175B8F225CA91B4001346E6 /* DataAdapters */,
 				4172EFB621F2B48F003F49FB /* NesDebugInterface.mm */,
 				4172EFB521F2B48F003F49FB /* NesDebugInterface.h */,
 				4172EFB921F2B48F003F49FB /* NesWrapper.mm */,
 				4172EFB821F2B48F003F49FB /* NesWrapper.h */,
-				4172EFB421F2B48F003F49FB /* NesDataAdapters.mm */,
-				4172EFB321F2B48F003F49FB /* NesDataAdapters.h */,
+				412E16D225D2B41900F8A3BC /* NesDebugInterfaceTasks.mm */,
+				412E16D325D2B41900F8A3BC /* NesDebugInterfaceTasks.h */,
 				4172EFB221F2B48F003F49FB /* CNesAudioChannel.mm */,
 				4172EFB121F2B48F003F49FB /* CNesAudioChannel.h */,
 				4172EFB721F2B48F003F49FB /* NesPalette.h */,
@@ -7542,6 +7605,25 @@
 				4172EFBE21F2B48F003F49FB /* nstcursor.h */,
 			);
 			path = sdl;
+			sourceTree = "<group>";
+		};
+		4175B8F225CA91B4001346E6 /* DataAdapters */ = {
+			isa = PBXGroup;
+			children = (
+				4175B90525CA96BA001346E6 /* NesPpuChrDataAdapter.mm */,
+				4175B90125CA96B9001346E6 /* NesPpuChrDataAdapter.h */,
+				4175B90325CA96B9001346E6 /* NesPpuDataAdapter.mm */,
+				4175B90225CA96B9001346E6 /* NesPpuDataAdapter.h */,
+				4175B8FF25CA96B9001346E6 /* NesPpuOamDataAdapter.mm */,
+				4175B90625CA96BA001346E6 /* NesPpuOamDataAdapter.h */,
+				4175B90025CA96B9001346E6 /* NesPpuPaletteDataAdapter.mm */,
+				4175B90425CA96BA001346E6 /* NesPpuPaletteDataAdapter.h */,
+				4175B8FC25CA9684001346E6 /* NesPpuNmtDataAdapter.mm */,
+				4175B8FB25CA9683001346E6 /* NesPpuNmtDataAdapter.h */,
+				4172EFB421F2B48F003F49FB /* NesRamDataAdapter.mm */,
+				4172EFB321F2B48F003F49FB /* NesRamDataAdapter.h */,
+			);
+			path = DataAdapters;
 			sourceTree = "<group>";
 		};
 		4180557E18DC676300F6EE8F /* ImageProcessing */ = {
@@ -7622,12 +7704,26 @@
 		4190ACB62590C36D007F15F8 /* NES */ = {
 			isa = PBXGroup;
 			children = (
-				418C856C21E8FEA3003F7648 /* CViewNesScreen.mm */,
-				418C856B21E8FEA3003F7648 /* CViewNesScreen.h */,
 				417B3D6C21FD4A5200D9721D /* CViewNesStateCPU.mm */,
 				417B3D6B21FD4A5200D9721D /* CViewNesStateCPU.h */,
 				4190ACBA2590C4D0007F15F8 /* CViewNesStateAPU.mm */,
 				4190ACB92590C4D0007F15F8 /* CViewNesStateAPU.h */,
+				418C856C21E8FEA3003F7648 /* CViewNesScreen.mm */,
+				418C856B21E8FEA3003F7648 /* CViewNesScreen.h */,
+				410158EF25CD2E5500F78202 /* CViewNesStatePPU.mm */,
+				410158EE25CD2E5500F78202 /* CViewNesStatePPU.h */,
+				410158E525CD2C7800F78202 /* CViewNesPpuPatterns.mm */,
+				410158E425CD2C7800F78202 /* CViewNesPpuPatterns.h */,
+				410158DC25CC618B00F78202 /* CViewNesPpuNametables.mm */,
+				410158DB25CC618B00F78202 /* CViewNesPpuNametables.h */,
+				410158E325CD2C7800F78202 /* CViewNesPpuAttributes.mm */,
+				410158E725CD2C7800F78202 /* CViewNesPpuAttributes.h */,
+				410158E025CD2C7700F78202 /* CViewNesPpuOam.mm */,
+				410158E225CD2C7800F78202 /* CViewNesPpuOam.h */,
+				410158E625CD2C7800F78202 /* CViewNesPpuPalette.mm */,
+				410158E125CD2C7800F78202 /* CViewNesPpuPalette.h */,
+				415FF31225C1EB3D005EF389 /* CViewNesPianoKeyboard.mm */,
+				415FF31325C1EB3D005EF389 /* CViewNesPianoKeyboard.h */,
 			);
 			name = NES;
 			sourceTree = "<group>";
@@ -8066,6 +8162,7 @@
 				41E0F4AB1CCE547900CE367D /* RES_Embedded.mm */,
 				41E0F4AC1CCE547900CE367D /* RES_Embedded.h */,
 				41E0F4A81CCE546100CE367D /* console_plain_gfx.h */,
+				41E7745825CF6A4900AD14AE /* console_inverted_plain_gfx.h */,
 				41E0F4A91CCE546100CE367D /* default_font_fnt.h */,
 				41E0F4AA1CCE546100CE367D /* default_font_gfx.h */,
 			);
@@ -8152,9 +8249,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		8D1107260486CEB800E47090 /* 65XEDebugger */ = {
+		8D1107260486CEB800E47090 /* NES Debugger */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "65XEDebugger" */;
+			buildConfigurationList = C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "NES Debugger" */;
 			buildPhases = (
 				8D1107290486CEB800E47090 /* Resources */,
 				8D11072C0486CEB800E47090 /* Sources */,
@@ -8164,10 +8261,10 @@
 			);
 			dependencies = (
 			);
-			name = 65XEDebugger;
+			name = "NES Debugger";
 			productInstallPath = "$(HOME)/Applications";
 			productName = GLFullScreen;
-			productReference = 8D1107320486CEB800E47090 /* 65XE Debugger.app */;
+			productReference = 8D1107320486CEB800E47090 /* NES Debugger.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -8197,7 +8294,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				8D1107260486CEB800E47090 /* 65XEDebugger */,
+				8D1107260486CEB800E47090 /* NES Debugger */,
 			);
 		};
 /* End PBXProject section */
@@ -8231,6 +8328,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				415BC59525CBFFA900BD1087 /* CDebugDataAdapter.h in Sources */,
+				415BC59625CBFFA900BD1087 /* CDebugDataAdapter.mm in Sources */,
 				4145377F1CB2D1A300020916 /* vicii.c in Sources */,
 				41F2AA151E9D0E6B00ADE8DF /* zaxxon.c in Sources */,
 				4172EFD921F2B48F003F49FB /* NstApiTapeRecorder.cpp in Sources */,
@@ -8384,6 +8483,7 @@
 				414535AC1CB2D1A300020916 /* catweaselmkiii.c in Sources */,
 				414537E91CB2D27C00020916 /* drv-ascii.c in Sources */,
 				4145377D1CB2D1A300020916 /* vicii-snapshot.c in Sources */,
+				410158EA25CD2C7900F78202 /* CViewNesPpuPatterns.mm in Sources */,
 				414539CD1CB2E94F00020916 /* translate.c in Sources */,
 				414537141CB2D1A300020916 /* raster-canvas.c in Sources */,
 				419737F5173B9A37007654BD /* pa_cpuload.c in Sources */,
@@ -8471,6 +8571,7 @@
 				414537731CB2D1A300020916 /* vicii-color.c in Sources */,
 				411C4C8121F2B36F00356433 /* img_tape.c in Sources */,
 				411C4C6A21F2B36F00356433 /* atari.c in Sources */,
+				412E16D425D2B41900F8A3BC /* NesDebugInterfaceTasks.mm in Sources */,
 				4172EFFC21F2B48F003F49FB /* NstBoardBmcBallgames11in1.cpp in Sources */,
 				4172F04221F2B48F003F49FB /* NstBoardJalecoJf13.cpp in Sources */,
 				41F2AAD91E9D0EDA00ADE8DF /* drive.c in Sources */,
@@ -8519,6 +8620,7 @@
 				414535B11CB2D1A300020916 /* hardsid.c in Sources */,
 				411C4C7F21F2B36F00356433 /* gtia.c in Sources */,
 				414535BC1CB2D1A300020916 /* menu_drive.c in Sources */,
+				4175B90825CA96BA001346E6 /* NesPpuPaletteDataAdapter.mm in Sources */,
 				41925DAC1B1DD82F00B33B7F /* rdgif.c in Sources */,
 				41F2A9DD1E9D0E6B00ADE8DF /* atomicpower.c in Sources */,
 				414535CD1CB2D1A300020916 /* menu_snapshot.c in Sources */,
@@ -8564,7 +8666,7 @@
 				39042AEA186892A800B570B1 /* block.c in Sources */,
 				414539A91CB2E94F00020916 /* embedded.c in Sources */,
 				41474DD21D08B15900F1B83F /* CViewC64KeyMap.mm in Sources */,
-				4172F0FA21F2B490003F49FB /* NesDataAdapters.mm in Sources */,
+				4172F0FA21F2B490003F49FB /* NesRamDataAdapter.mm in Sources */,
 				4172F0A421F2B48F003F49FB /* NstInpExcitingBoxing.cpp in Sources */,
 				4191A8E61E9EA1F5004AC6E0 /* userport.c in Sources */,
 				4172F04921F2B48F003F49FB /* NstBoardKasing.cpp in Sources */,
@@ -8618,6 +8720,7 @@
 				411C4CA021F2B36F00356433 /* voicebox.c in Sources */,
 				411C4C6421F2B36F00356433 /* a-ui.c in Sources */,
 				411C4C8C21F2B36F00356433 /* pia.c in Sources */,
+				410158EB25CD2C7900F78202 /* CViewNesPpuPalette.mm in Sources */,
 				414538051CB2D2D100020916 /* bmpdrv.c in Sources */,
 				414536D91CB2D1A300020916 /* asm6502.c in Sources */,
 				4172F09121F2B48F003F49FB /* NstBoardUnlWorldHero.cpp in Sources */,
@@ -8693,6 +8796,7 @@
 				414535C11CB2D1A300020916 /* menu_lightpen.c in Sources */,
 				41F2A9EF1E9D0E6B00ADE8DF /* finalplus.c in Sources */,
 				4172F00F21F2B48F003F49FB /* NstBoardBmcSuperBig7in1.cpp in Sources */,
+				4168AFF925B254C200877B0D /* asm6f.c in Sources */,
 				4152D6F61C970F0800EBA9E5 /* C64Tools.mm in Sources */,
 				4172F06D21F2B48F003F49FB /* NstBoardSachenSa72008.cpp in Sources */,
 				4145378A1CB2D1A300020916 /* render2x4crt.c in Sources */,
@@ -8738,11 +8842,13 @@
 				41F2AA681E9D0E7900ADE8DF /* c64cia2.c in Sources */,
 				41925DB61B1DD82F00B33B7F /* wrtarga.c in Sources */,
 				4172F02121F2B48F003F49FB /* NstBoardBtlSmb2b.cpp in Sources */,
+				415FF31425C1EB3D005EF389 /* CViewNesPianoKeyboard.mm in Sources */,
 				4172F00321F2B48F003F49FB /* NstBoardBmcGolden190in1.cpp in Sources */,
 				414535EC1CB2D1A300020916 /* x64sc_ui.c in Sources */,
 				4172F01021F2B48F003F49FB /* NstBoardBmcSuperGun20in1.cpp in Sources */,
 				4172F0B221F2B48F003F49FB /* NstInpPowerPad.cpp in Sources */,
 				414536DE1CB2D1A300020916 /* mon_assemble6502.c in Sources */,
+				410158DD25CC618B00F78202 /* CViewNesPpuNametables.mm in Sources */,
 				4172F05421F2B48F003F49FB /* NstBoardMagicSeries.cpp in Sources */,
 				4172F0AA21F2B48F003F49FB /* NstInpMouse.cpp in Sources */,
 				41925D7E1B1DD82F00B33B7F /* jcapistd.c in Sources */,
@@ -8931,6 +9037,7 @@
 				4172EFE821F2B48F003F49FB /* NstBoardBandaiLz93d50ex.cpp in Sources */,
 				41F2A9F11E9D0E6B00ADE8DF /* freezeframe.c in Sources */,
 				414535B51CB2D1A300020916 /* menu_c64_common_expansions.c in Sources */,
+				4175B8FD25CA9684001346E6 /* NesPpuNmtDataAdapter.mm in Sources */,
 				411C4C7A21F2B36F00356433 /* cycle_map.c in Sources */,
 				414536F21CB2D1A300020916 /* monitor.c in Sources */,
 				4145386E1CB2DBC200020916 /* fsdevice-close.c in Sources */,
@@ -9112,6 +9219,7 @@
 				4172F0BF21F2B48F003F49FB /* NstChecksum.cpp in Sources */,
 				414539B21CB2E94F00020916 /* interrupt.c in Sources */,
 				4172F02E21F2B48F003F49FB /* NstBoardCxRom.cpp in Sources */,
+				410158E925CD2C7900F78202 /* CViewNesPpuAttributes.mm in Sources */,
 				390429EB186892A800B570B1 /* MTH_Random.mm in Sources */,
 				41EFD1E223746D550040CD53 /* 64tass-eval.c in Sources */,
 				4165797C23C52E0C0051CEFE /* residfp-filter.cpp in Sources */,
@@ -9152,6 +9260,7 @@
 				4163BAF11E9F8C3A00E3C077 /* godotdrv.c in Sources */,
 				41CFB02621F75413002D2702 /* stilcomm.cpp in Sources */,
 				41188F8F1E9EA7FF00040048 /* sampler2bit.c in Sources */,
+				410158F025CD2E5600F78202 /* CViewNesStatePPU.mm in Sources */,
 				4172F0C621F2B490003F49FB /* NstImage.cpp in Sources */,
 				39042A23186892A800B570B1 /* CGuiButtonText.mm in Sources */,
 				414538851CB2DC0E00020916 /* rs232drv.c in Sources */,
@@ -9214,6 +9323,7 @@
 				415838571DC9E89100A56E0E /* C64AsmSourceSymbols.mm in Sources */,
 				4172EFF321F2B48F003F49FB /* NstBoardBmc35in1.cpp in Sources */,
 				41F2AA621E9D0E7900ADE8DF /* c64-cmdline-options.c in Sources */,
+				4175B90A25CA96BA001346E6 /* NesPpuChrDataAdapter.mm in Sources */,
 				4172F09321F2B48F003F49FB /* NstBoardUxRom.cpp in Sources */,
 				39042AF0186892A800B570B1 /* mdct.c in Sources */,
 				4172F01A21F2B48F003F49FB /* NstBoardBtlAx5705.cpp in Sources */,
@@ -9317,6 +9427,7 @@
 				39042A2B186892A800B570B1 /* CGuiListTree.mm in Sources */,
 				41F2AA761E9D0E7900ADE8DF /* c64memsc.c in Sources */,
 				39042A29186892A800B570B1 /* CGuiLabel.mm in Sources */,
+				410158E825CD2C7900F78202 /* CViewNesPpuOam.mm in Sources */,
 				4177D5B21ED6EE240053D9EE /* CVicEditorLayerC64Canvas.mm in Sources */,
 				4172EFD721F2B48F003F49FB /* NstApiRewinder.cpp in Sources */,
 				4172F0C221F2B48F003F49FB /* NstCpu.cpp in Sources */,
@@ -9435,6 +9546,7 @@
 				41F2AA6F1E9D0E7900ADE8DF /* c64gluelogic.c in Sources */,
 				411C4C7021F2B36F00356433 /* binload.c in Sources */,
 				4172EFF421F2B48F003F49FB /* NstBoardBmc36in1.cpp in Sources */,
+				4175B90925CA96BA001346E6 /* NesPpuDataAdapter.mm in Sources */,
 				414537AF1CB2D1CE00020916 /* serial-realdevice.c in Sources */,
 				410586AE1A30BBD6001B6BCD /* CGuiViewBaseResourceManager.mm in Sources */,
 				4172F03A21F2B48F003F49FB /* NstBoardHes.cpp in Sources */,
@@ -9466,6 +9578,7 @@
 				41925DAE1B1DD82F00B33B7F /* rdrle.c in Sources */,
 				41925DA91B1DD82F00B33B7F /* jutils.c in Sources */,
 				414536DA1CB2D1A300020916 /* asm6502dtv.c in Sources */,
+				4175B90725CA96BA001346E6 /* NesPpuOamDataAdapter.mm in Sources */,
 				4145377E1CB2D1A300020916 /* vicii-timing.c in Sources */,
 				4172F05F21F2B48F003F49FB /* NstBoardNihon.cpp in Sources */,
 				4145387C1CB2DBE700020916 /* p64.c in Sources */,
@@ -9476,6 +9589,7 @@
 				4145380C1CB2D2D100020916 /* ppmdrv.c in Sources */,
 				390429D2186892A800B570B1 /* CContinuousParam.mm in Sources */,
 				411C4C9721F2B36F00356433 /* a-video.c in Sources */,
+				412E16CF25D2AFA100F8A3BC /* CDebugInterfaceTask.mm in Sources */,
 				41F2AA841E9D0E7900ADE8DF /* psid.c in Sources */,
 				4172F0B721F2B48F003F49FB /* NstInpZapper.cpp in Sources */,
 				414535CF1CB2D1A300020916 /* menu_speed.c in Sources */,
@@ -9612,14 +9726,15 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD)";
-				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon 65XE";
+				ARCHS = x86_64;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon NES";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CODE_SIGN_IDENTITY = "Developer ID Application";
 				"CODE_SIGN_IDENTITY[sdk=*]" = "Developer ID Application";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 0.64.58.4;
 				DEVELOPMENT_TEAM = APV7Y7Q9JY;
 				EXCLUDED_SOURCE_FILE_NAMES = (
 					"*.txt",
@@ -9641,13 +9756,14 @@
 				INFOPLIST_FILE = "MTEngine-MacOS-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MARKETING_VERSION = 0.64.58.4;
 				OTHER_CFLAGS = "-Wno-implicit-function-declaration";
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
 					"-Wno-c++11-narrowing",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = pl.rabidus.65XEDebugger;
-				PRODUCT_NAME = "65XE Debugger";
+				PRODUCT_BUNDLE_IDENTIFIER = pl.rabidus.NESDebugger;
+				PRODUCT_NAME = "NES Debugger";
 				PROVISIONING_PROFILE = "";
 				SDKROOT = macosx;
 				VALID_ARCHS = x86_64;
@@ -9660,12 +9776,13 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
-				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon 65XE";
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon NES";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CODE_SIGN_IDENTITY = "Developer ID Application";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 0.64.58.4;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = APV7Y7Q9JY;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "*.nib *.lproj *.framework *.gch *.xcode* *.xcassets (*) .DS_Store CVS .svn .git .hg *.pbproj *.pbxproj *.txt *.in *.inl";
@@ -9686,13 +9803,14 @@
 				INFOPLIST_FILE = "MTEngine-MacOS-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MARKETING_VERSION = 0.64.58.4;
 				OTHER_CFLAGS = "-Wno-implicit-function-declaration";
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
 					"-Wno-c++11-narrowing",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = pl.rabidus.65XEDebugger;
-				PRODUCT_NAME = "65XE Debugger";
+				PRODUCT_BUNDLE_IDENTIFIER = pl.rabidus.NESDebugger;
+				PRODUCT_NAME = "NES Debugger";
 				PROVISIONING_PROFILE = "";
 				SDKROOT = macosx;
 				VALID_ARCHS = x86_64;
@@ -9703,7 +9821,7 @@
 		C01FCF4F08A954540054247B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				ARCHS = x86_64;
 				CODE_SIGN_IDENTITY = "Mac Developer: Marcin Skoczylas (6N2SK67R3R)";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -9721,7 +9839,7 @@
 		C01FCF5008A954540054247B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				ARCHS = x86_64;
 				CODE_SIGN_IDENTITY = "Mac Developer: Marcin Skoczylas (6N2SK67R3R)";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
@@ -9737,7 +9855,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "65XEDebugger" */ = {
+		C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "NES Debugger" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C01FCF4B08A954540054247B /* Debug */,

@@ -8,6 +8,7 @@
  */
 
 // iCloud: http://stackoverflow.com/questions/8375891/apple-icloud-implementation-on-mac-apps
+#define MT_DBGLOG_NSSTRING
 
 #include "SYS_CFileSystem.h"
 #include "TargetConditionals.h"

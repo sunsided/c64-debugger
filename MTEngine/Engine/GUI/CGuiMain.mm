@@ -70,16 +70,12 @@ void CGuiMain::Startup()
 	LOGG("GUI_Startup()");
 	
 	//RES_GenerateEmbedDefaults();
-
-
-	guiMain = this;
-
 	SYS_InitCharBufPool();
 	
 #if defined(USE_DEBUGSCREEN)
 	debugScreen = new CDebugScreen(40, 20);
 #endif
-	
+		
 	// resource manager: preload graphics only on startup
 	//RES_SetStateSkipResourcesLoading();
 	
@@ -101,6 +97,8 @@ void CGuiMain::Startup()
 #else
 	globalConfig = new CConfigStorage();
 #endif
+
+	isMouseCursorVisible = false;
 
 	renderMutex = new CSlrMutex("CGuiMain::renderMutex");
 	uiThreadTasksMutex = new CSlrMutex("CGuiMain::uiThreadTasksMutex");
@@ -133,12 +131,10 @@ void CGuiMain::Startup()
 #if defined(LOAD_CONSOLE_INVERTED_FONT)
 	imgConsoleInvertedFonts = RES_GetImage("/Engine/console-inverted-plain");
 	imgConsoleInvertedFonts->ResourceSetPriority(RESOURCE_PRIORITY_STATIC);
-	//imgConsoleInvertedFonts = new CSlrImage("/Engine/console_plain_inverted", true);
 	fntConsoleInverted = new CSlrFontBitmap("console-inverted",
 			imgConsoleInvertedFonts, CONSOLE_FONT_SIZE_X, CONSOLE_FONT_SIZE_Y, CONSOLE_FONT_PITCH_X,
 			CONSOLE_FONT_PITCH_Y);
 	fntConsoleInverted->ResourceSetPriority(RESOURCE_PRIORITY_STATIC);
-	//gScaleDownImages = tmp;
 #endif
 
 #if defined(LOAD_DEFAULT_UI_THEME)
@@ -1662,6 +1658,12 @@ void CViewLoaderThread::ThreadRun(void *data)
 
 void CGuiMain::SetMouseCursorVisible(bool isVisible)
 {
+//	LOGD("CGuiMain::SetMouseCursorVisible isNowMouseCursorVisible=%s setToVisible=%s", STRBOOL(isMouseCursorVisible), STRBOOL(isVisible));
+	if (isVisible == isMouseCursorVisible)
+	{
+		return;
+	}
+	
 	CUiThreadTaskSetMouseCursorVisible *task = new CUiThreadTaskSetMouseCursorVisible(isVisible);
 	this->AddUiThreadTask(task);
 }
@@ -2367,6 +2369,7 @@ CUiThreadTaskSetMouseCursorVisible::CUiThreadTaskSetMouseCursorVisible(bool mous
 	
 void CUiThreadTaskSetMouseCursorVisible::RunUIThreadTask()
 {
+//	LOGD(" CUiThreadTaskSetMouseCursorVisible::RunUIThreadTask");
 	if (mouseCursorVisible)
 	{
 		VID_ShowMouseCursor();
@@ -2375,6 +2378,8 @@ void CUiThreadTaskSetMouseCursorVisible::RunUIThreadTask()
 	{
 		VID_HideMouseCursor();
 	}
+	
+	guiMain->isMouseCursorVisible = mouseCursorVisible;
 }
 
 CUiThreadTaskSetFullScreen::CUiThreadTaskSetFullScreen(bool isFullScreen)

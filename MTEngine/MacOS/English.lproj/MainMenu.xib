@@ -10,10 +10,10 @@
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <menu title="AMainMenu" systemMenu="main" id="29">
             <items>
-                <menuItem title="65XE Debugger" id="56" userLabel="65XE Debugger">
-                    <menu key="submenu" title="65XE Debugger" systemMenu="apple" id="57" customClass="MenuControllerSettings">
+                <menuItem title="NES Debugger" id="56" userLabel="NES Debugger">
+                    <menu key="submenu" title="NES Debugger" systemMenu="apple" id="57" customClass="MenuControllerSettings">
                         <items>
-                            <menuItem title="About 65XE Debugger" tag="1" id="586">
+                            <menuItem title="About NES Debugger" tag="1" id="586">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="aboutKCT:" target="57" id="587"/>

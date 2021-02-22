@@ -16,7 +16,8 @@ LDFLAGS		      = `pkg-config --libs gtk+-3.0 x11 gl xcb-util alsa` -pthread
 CEXTRA                = 
 CXXEXTRA              = 
 RCEXTRA               =
-DEFINES               = 
+#DEFINES               = -Og -g
+DEFINES               =
 
 ### Ugly hack, will be fixed hopefully!
 INCLUDE_PATH          = \
@@ -63,7 +64,7 @@ DEFINCL = $(INCLUDE_PATH) $(DEFINES) $(OPTIONS)
 	@$(CXX) -c $(CXXFLAGS) $(CXXEXTRA) $(DEFINCL) -o $@ $<
 
 ### Seems like someone treats ObjC files like C++ ones, because XCode and things
-### Please, don't
+### Please, don't. Note: this has been fixed in ImGui branch
 
 .mm.o:
 	@echo "MM -- $@"

@@ -8,6 +8,8 @@
 #include <map>
 #include <list>
 
+class CDebugInterfaceTask;
+
 class CViewC64;
 class CSlrMutex;
 class CImageData;
@@ -58,13 +60,26 @@ public:
 	// frame is painted on canvas and ready to be consumed
 	virtual void DoFrame();
 	
+	// run various tasks when emulation is in defined state
+	
+	// tasks to be executed when emulation just finished rendering frame
+	std::list<CDebugInterfaceTask *> vsyncTasks;
+	virtual void AddVSyncTask(CDebugInterfaceTask *task);
+	virtual void ExecuteVSyncTasks();
+	
+	// tasks to be executed when emulation is about to execute instruction
+	std::list<CDebugInterfaceTask *> cpuDebugInterruptTasks;
+	virtual void AddCpuDebugInterruptTask(CDebugInterfaceTask *task);
+	virtual void ExecuteDebugInterruptTasks();
+
 	// this is main emulation cpu cycle counter
-	virtual unsigned int GetMainCpuCycleCounter();
-	virtual unsigned int GetPreviousCpuInstructionCycleCounter();
+	virtual u64 GetMainCpuCycleCounter();
+	virtual u64 GetCurrentCpuInstructionCycleCounter();
+	virtual u64 GetPreviousCpuInstructionCycleCounter();
 	
 	// resettable counters for debug purposes
 	virtual void ResetMainCpuDebugCycleCounter();
-	virtual unsigned int GetMainCpuDebugCycleCounter();
+	virtual u64 GetMainCpuDebugCycleCounter();
 	virtual void ResetEmulationFrameCounter();
 	virtual unsigned int GetEmulationFrameNumber();
 	
@@ -144,16 +159,12 @@ public:
 	virtual void SetDebugOn(bool debugOn);
 
 	bool breakOnPC;
-	std::map<uint16, CAddrBreakpoint *> breakpointsPC;
+	CDebuggerAddrBreakpoints *breakpointsPC;
 	bool breakOnMemory;
-	std::map<uint16, CMemoryBreakpoint *> breakpointsMemory;
+	CDebuggerMemoryBreakpoints *breakpointsMemory;
 	bool breakOnRaster;
-	std::map<uint16, CAddrBreakpoint *> breakpointsRaster;
+	CDebuggerAddrBreakpoints *breakpointsRaster;
 	
-	virtual void ClearAddrBreakpoints(std::map<uint16, CAddrBreakpoint *> *breakpointsMap);
-	virtual void AddAddrBreakpoint(std::map<uint16, CAddrBreakpoint *> *breakpointsMap, CAddrBreakpoint *breakpoint);
-	virtual void RemoveAddrBreakpoint(std::map<uint16, CAddrBreakpoint *> *breakpointsMap, uint16 addr);
-	virtual void ClearMemoryBreakpoints(std::map<uint16, CMemoryBreakpoint *> *breakpointsMap);
 	virtual void ClearBreakpoints();
 
 	int temporaryBreakpointPC;
@@ -200,6 +211,10 @@ public:
 	virtual void LockIoMutex();
 	virtual void UnlockIoMutex();
 	
+	CSlrMutex *tasksMutex;
+	virtual void LockTasksMutex();
+	virtual void UnlockTasksMutex();
+
 	//
 protected:
 	volatile int debugMode;

@@ -134,7 +134,7 @@ void LOG_Shutdown(void);
 
 int _LOGGER(unsigned int level, const char *fileName, unsigned int lineNum, const char *functionName, const char *format, ...);
 
-#ifndef MT_DBGLOG_SKIP_NSSTRING
+#ifdef MT_DBGLOG_NSSTRING
 int _LOGGER(unsigned int level, const char *fileName, unsigned int lineNum, const char *functionName, const NSString *format, ...);
 #endif
 

@@ -18,8 +18,7 @@ class CViewDataDump : public CGuiView, CGuiEditHexCallback
 {
 public:
 	CViewDataDump(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
-				  CSlrDataAdapter *dataAdapter, CViewMemoryMap *viewMemoryMap, CViewDisassemble *viewDisassemble,
-				  CDebugInterface *debugInterface);
+				  CDebugInterface *debugInterface, CSlrDataAdapter *dataAdapter, CViewMemoryMap *viewMemoryMap, CViewDisassemble *viewDisassemble);
 	
 	virtual bool KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl);
 	virtual bool KeyUp(u32 keyCode, bool isShift, bool isAlt, bool isControl);
@@ -107,6 +106,7 @@ public:
 	void UpdateSprites(bool useColors, byte colorD021, byte colorD025, byte colorD026, byte colorD027);
 	
 	void ScrollToAddress(int address);
+	void ScrollToAddress(int address, bool updateDataShowStart);
 	
 	long previousClickTime;
 	int previousClickAddr;

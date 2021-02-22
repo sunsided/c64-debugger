@@ -12,6 +12,7 @@
 class CSlrDataAdapter;
 class CSlrFont;
 class CDebugInterface;
+class CDebuggerAddrBreakpoints;
 class CSlrMutex;
 class CSlrString;
 class CAddrBreakpoint;
@@ -51,8 +52,8 @@ class CViewDisassemble : public CGuiView, CGuiEditHexCallback, CGuiEditBoxTextCa
 {
 public:
 	CViewDisassemble(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
-						CSlrDataAdapter *dataAdapter, CViewDataDump *viewDataDump, CViewMemoryMap *viewMemoryMap, 
-						std::map<uint16, CAddrBreakpoint *> *breakpointsMap, CDebugInterface *debugInterface);
+					 CSlrDataAdapter *dataAdapter, CViewDataDump *viewDataDump, CViewMemoryMap *viewMemoryMap,
+					 CDebuggerAddrBreakpoints *breakpoints, CDebugInterface *debugInterface);
 	virtual ~CViewDisassemble();
 
 	virtual void Render();
@@ -114,10 +115,10 @@ public:
 
 	// this is only for rendering (to not lock emulation mutex during render)
 	CSlrMutex *renderBreakpointsMutex;
-	std::map<uint16, uint16> renderBreakpoints;
+	std::map<int, int> renderBreakpoints;
 	
 	// these point to real breakpoints (emulation mutex will be locked when these are edited)
-	std::map<uint16, CAddrBreakpoint *> *breakpointsMap;
+	CDebuggerAddrBreakpoints *breakpoints;
 	 
 	int previousOpAddr;
 	int nextOpAddr;

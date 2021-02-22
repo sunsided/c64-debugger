@@ -42,7 +42,7 @@ GLWindow *mainWindow;
 
 int main(int argc, char *argv[])
 {
-	NSLog(@"MTEngine: main");
+//	NSLog(@"MTEngine: main");
 	
 	@autoreleasepool
 	{
@@ -84,6 +84,7 @@ int main(int argc, char *argv[])
 												  backing:NSBackingStoreBuffered
 													defer:NO];
 		[delegate setWindow: mainWindow];
+		[mainWindow setDelegate:mainWindow];
 		[mainWindow setTitle: appName];
 		[mainWindow setFrame: frame display:NO];
 		[mainWindow makeFirstResponder: glView];

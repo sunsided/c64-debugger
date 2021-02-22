@@ -23,6 +23,7 @@
 
 //http://www.iphonedevsdk.com/forum/iphone-sdk-game-development/7479-loading-texture2d-parallel-thread.html
 
+#define MT_DBGLOG_NSSTRING
 #include "CSlrImage.h"
 #include "SYS_Main.h"
 #include "SYS_Funct.h"

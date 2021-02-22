@@ -78,29 +78,29 @@ public:
 
 	// breakpoints
 	bool breakOnPC;
-	std::map<u16, CAddrBreakpoint *> breakpointsPC;
+	std::map<int, CAddrBreakpoint *> breakpointsPC;
 	bool breakOnMemory;
-	std::map<u16, CMemoryBreakpoint *> breakpointsMemory;
+	std::map<int, CMemoryBreakpoint *> breakpointsMemory;
 	bool breakOnRaster;
-	std::map<u16, CAddrBreakpoint *> breakpointsRaster;
+	std::map<int, CAddrBreakpoint *> breakpointsRaster;
 
 	bool breakOnC64IrqVIC;
 	bool breakOnC64IrqCIA;
 	bool breakOnC64IrqNMI;
 	
 	//
-	void AddBreakpointPC(u16 address);
-	void AddBreakpointSetBackground(u16 address, u8 value);
-	void AddBreakpointRaster(u16 rasterNum);
-	void AddBreakpointMemory(u16 address, u8 breakpointType, int value);
+	void AddBreakpointPC(int address);
+	void AddBreakpointSetBackground(int address, int value);
+	void AddBreakpointRaster(int rasterNum);
+	void AddBreakpointMemory(int address, u8 breakpointType, int value);
 	void AddBreakpointVIC();
 	void AddBreakpointCIA();
 	void AddBreakpointNMI();
 	
 	// labels
-	std::map<u16, CDisassembleCodeLabel *> codeLabels;
-	void AddCodeLabel(u16 address, char *text);
-	CDisassembleCodeLabel *FindLabel(u16 address);
+	std::map<int, CDisassembleCodeLabel *> codeLabels;
+	void AddCodeLabel(int address, char *text);
+	CDisassembleCodeLabel *FindLabel(int address);
 	
 	// watches
 	std::map<int, CDataWatchDetails *> watches;

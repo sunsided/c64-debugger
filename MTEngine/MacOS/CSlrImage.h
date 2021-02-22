@@ -15,6 +15,9 @@
 #include "CSlrFile.h"
 #include "CSlrImageTexture.h"
 
+#import <Cocoa/Cocoa.h>
+#import <OpenGL/OpenGL.h>
+
 #define IMAGE_LOAD_ERROR_NONE		0x00
 #define IMAGE_LOAD_ERROR_NOT_LOADED	0x01
 #define IMAGE_LOAD_ERROR_NOT_FOUND	0x02

@@ -22,9 +22,8 @@
 #include "C64AsmSourceSymbols.h"
 
 CViewSourceCode::CViewSourceCode(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
-										 CSlrDataAdapter *dataAdapter, CViewMemoryMap *memoryMap,
-										 CViewDisassemble *viewDisassemble,
-										 CDebugInterface *debugInterface)
+								 CDebugInterface *debugInterface, CSlrDataAdapter *dataAdapter, CViewMemoryMap *memoryMap,
+								 CViewDisassemble *viewDisassemble)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
 {
 	this->name = "CViewSourceCode";

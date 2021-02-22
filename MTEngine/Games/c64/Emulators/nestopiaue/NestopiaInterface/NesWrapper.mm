@@ -14,7 +14,6 @@
 // this is based on libretro integration
 // https://docs.libretro.com/specs/api/
 
-#if defined(RUN_NES)
 #include "NstApiMachine.hpp"
 #include "NstMachine.hpp"
 #include "NstApiEmulator.hpp"
@@ -26,7 +25,7 @@
 #include "NstApiUser.hpp"
 #include "NstApiFds.hpp"
 #include "NstMachine.hpp"
-#endif
+#include "NstPpu.hpp"
 
 #include "C64D_Version.h"
 #include "NesWrapper.h"
@@ -46,7 +45,13 @@
 #include "CViewNesStateAPU.h"
 #include <string.h>
 
+// TODO: considering that Nestopia is C++ we need to move this below to NesDebugInterface and access nesEmulator through interface
+// the below code is quick POC that was based on ANSI C integration for Atari800 & NestopiaUE SDL, and it is hight time to make it right
+
 volatile int nesd_debug_mode;
+volatile unsigned int nesdFrame;
+
+Nes::Api::Emulator nesEmulator;
 
 #if defined(RUN_NES)
 
@@ -54,13 +59,14 @@ volatile int nesd_debug_mode;
 #define NES_PAL_PAR ((Api::Video::Output::WIDTH - (overscan_h ? 16 : 0)) * (2950000.0 / 2128137.0)) / (Api::Video::Output::HEIGHT - (overscan_v ? 16 : 0))
 #define NES_4_3_DAR (4.0 / 3.0);
 
+volatile int nesd_start_frame_for_snapshots_manager = 0;
+
 using namespace Nes;
 
 static u32 *video_buffer = NULL;
 
 static i16 audio_buffer[(SOUND_SAMPLE_RATE / 50)];
 static i16 audio_stereo_buffer[2 * (SOUND_SAMPLE_RATE / 50)];
-static Api::Emulator emulator;
 static Api::Machine *machine;
 static Api::Fds *fds;
 static char g_basename[256];
@@ -107,7 +113,7 @@ u16 currentNesPC = 0;
 CSlrMutex *audioBufferMutex;
 
 bool nst_pal() {
-	Api::Machine machine(emulator);
+	Api::Machine machine(nesEmulator);
 	bool isPal = machine.GetMode() == Api::Machine::PAL;
 //	LOGD("nst_pal=%d", isPal);
 	return isPal;
@@ -122,7 +128,7 @@ bool NestopiaUE_Initialize()
 	
 	video_buffer = (u32*)malloc(Api::Video::Output::NTSC_WIDTH * Api::Video::Output::HEIGHT * sizeof(u32));
 	
-	machine = new Api::Machine(emulator);
+	machine = new Api::Machine(nesEmulator);
 	input = new Api::Input::Controllers;
 	Api::User::fileIoCallback.Set(nes_file_io_callback, 0);
 
@@ -149,7 +155,7 @@ bool NestopiaUE_Initialize()
 	
 	LOGM("NstDatabase.xml path: %s", db_path);
 	
-	Api::Cartridge::Database database(emulator);
+	Api::Cartridge::Database database(nesEmulator);
 	std::ifstream *db_file = new std::ifstream(db_path, std::ifstream::in|std::ifstream::binary);
 	
 	if (db_file->is_open())
@@ -165,7 +171,7 @@ bool NestopiaUE_Initialize()
 		dbpresent = false;
 	}
 
-	fds = new Api::Fds(emulator);
+	fds = new Api::Fds(nesEmulator);
 	if (!fds)
 	{
 		SYS_FatalExit("Api::Fds failed");
@@ -200,7 +206,7 @@ bool NestopiaUE_Initialize()
 //	}
 //	else {
 	
-//	Api::Video ivideo(emulator);
+//	Api::Video ivideo(nesEmulator);
 //	ivideo.SetSharpness(Api::Video::DEFAULT_SHARPNESS_RGB);
 //	ivideo.SetColorResolution(Api::Video::DEFAULT_COLOR_RESOLUTION_RGB);
 //	ivideo.SetColorBleed(Api::Video::DEFAULT_COLOR_BLEED_RGB);
@@ -233,8 +239,8 @@ bool NestopiaUE_Initialize()
 	
 	///
 	
-	Api::Input(emulator).AutoSelectController(0);
-	Api::Input(emulator).AutoSelectController(1);
+	Api::Input(nesEmulator).AutoSelectController(0);
+	Api::Input(nesEmulator).AutoSelectController(1);
 	
 	videoOutput = new Api::Video::Output(video_buffer, video_width * sizeof(u32));
 
@@ -247,20 +253,18 @@ bool NestopiaUE_Initialize()
 
 bool NestopiaUE_PostInitialize()
 {
-	//
-#if defined(WIN32)
-	char *defaultRomPath = ".\\default.nes";
-#elif defined(LINUX)
-	char *defaultRomPath = "./default.nes";
-#else
-	char *defaultRomPath = "/Users/mars/develop/MTEngine/_RUNTIME_/Documents/nes/default.nes";
-//	char *defaultRomPath = "default.nes";
-	//	char *defaultRomPath = "/Users/mars/develop/MTEngine/_RUNTIME_/Documents/nes/contra.nes";
-	//	char *defaultRomPath = "/Users/mars/develop/MTEngine/_RUNTIME_/Documents/nes/mario.nes";
-	//	char *defaultRomPath = "/Users/mars/develop/MTEngine/_RUNTIME_/Documents/nes/alien3.nes";
-#endif
-	
-	nesd_insert_cartridge(defaultRomPath);
+//	//
+//#if defined(WIN32)
+//	char *defaultRomPath = ".\\default.nes";
+//#elif defined(LINUX)
+//	char *defaultRomPath = "./default.nes";
+//#else
+//	char *defaultRomPath = "/Users/mars/develop/MTEngine/_RUNTIME_/Documents/nes/default.nes";
+////	char *defaultRomPath = ".";
+////	char *defaultRomPath = "default.nes";
+//#endif
+//	
+//	nesd_insert_cartridge(defaultRomPath);
 	
 	LOGM("[Nestopia]: Machine is %s.\n", nst_pal() ? "PAL" : "NTSC");
 	
@@ -276,10 +280,11 @@ double nesd_get_cpu_clock_frquency()
 {
 	if (nst_pal())
 	{
-		return 1662607.0;
+		return 1662607.125;
 	}
 	
-	return 1789773.0;
+	//(dendy ? 1773447.467 : 1789772.7272727272727272)
+	return 1789772.7272727272727272;
 }
 
 
@@ -308,17 +313,19 @@ bool nesd_insert_cartridge(char *filePath)
 	{
 		fds->InsertDisk(0, 0);
 	}
-	
+
+	debugInterfaceNes->ResetEmulationFrameCounter();
+	debugInterfaceNes->ResetClockCounters();
+
 	nesd_sound_unlock("nesd_insert_cartridge");
 	debugInterfaceNes->UnlockMutex();
 	return true;
 }
 
-// sound sync is ugly, needs proper circular buffer.
 // threaded frame render sync is queueing samples, meaning sync is too fast... but why? see NestopiaUE_Run
 
 struct circlebuf audioBufferCircle;
-#define MAX_NESD_AUDIO_BUFFER_SIZE 	(SOUND_SAMPLE_RATE * sizeof(i16))
+#define MAX_NESD_AUDIO_BUFFER_SIZE 	(int)((float)(SOUND_SAMPLE_RATE * sizeof(i16)) * 0.25f)
 
 void nesd_sound_init()
 {
@@ -332,7 +339,7 @@ void nesd_sound_init()
 	debugInterfaceNes->audioChannel->bypass = false;
 	
 	circlebuf_init(&audioBufferCircle);
-	circlebuf_reserve(&audioBufferCircle, (int)((float)SOUND_SAMPLE_RATE*1.25f) * sizeof(i16));
+	circlebuf_reserve(&audioBufferCircle, (int)((float)SOUND_SAMPLE_RATE*1.50f) * sizeof(i16));
 	nesd_sound_unlock("nesd_sound_init");
 }
 
@@ -365,20 +372,13 @@ void nesd_audio_callback(i16 *monoBuffer, int numSamples)
 	int lostBuffers = 0;
 	nesd_sound_lock("nesd_audio_callback");
 	
-	// check if we have too much audio in the buffer (more than a second)
-	if (audioBufferCircle.size > MAX_NESD_AUDIO_BUFFER_SIZE)
-	{
-		audioBufferCircle.start_pos = 0;
-		audioBufferCircle.end_pos = 0;
-	}
-	
 	while (++lostBuffers < 2)
 	{
 		u32 availableSamples = audioBufferCircle.size * sizeof(i16);
 		if (availableSamples < numSamples)
 		{
 			nesd_sound_unlock("nesd_audio_callback loop");
-//			LOGD("nesd_audio_callback: sleep audioBuffer.size=%d", audioBuffer.size());
+//			LOGWarning("nesd_audio_callback: buffer underrun audioBuffer.size=%d", audioBufferCircle.size);
 			SYS_Sleep(20);
 			nesd_sound_lock("nesd_audio_callback loop");
 			continue;
@@ -391,13 +391,26 @@ void nesd_audio_callback(i16 *monoBuffer, int numSamples)
 	}
 	else
 	{
-//		LOGD("nesd_audio_callback: buffer underrun");
+		if (debugInterfaceNes->GetDebugMode() == DEBUGGER_MODE_RUNNING)
+		{
+			LOGWarning("nesd_audio_callback: buffer underrun");
+		}
+		
 		for (int i = 0; i < numSamples; i++)
 		{
 			s[i] = 0;
 		}
 	}
 	
+	// check if we have too much audio in the buffer (too much latency)
+	if (audioBufferCircle.size > MAX_NESD_AUDIO_BUFFER_SIZE)
+	{
+		LOGWarning("Resetting audio buffer: audioBufferCircle.size=%d > MAX_NESD_AUDIO_BUFFER_SIZE=%d", audioBufferCircle.size, MAX_NESD_AUDIO_BUFFER_SIZE);
+		audioBufferCircle.start_pos = 0;
+		audioBufferCircle.end_pos = 0;
+		audioBufferCircle.size = 0;
+	}
+
 	nesd_sound_unlock("nesd_audio_callback");
 	
 	// debug: synced audio & emulation version below:
@@ -408,7 +421,7 @@ void nesd_audio_callback(i16 *monoBuffer, int numSamples)
 ////			LOGWarning("audioBuffer.empty()");
 ////			debugInterfaceNes->LockMutex();
 //			
-//			emulator.Execute(video, audio, input);
+//			nesEmulator.Execute(video, audio, input);
 //			
 //			unsigned numSamples = nst_pal() ? (double)SOUND_SAMPLE_RATE / 50.0 : (double)SOUND_SAMPLE_RATE / 60.0;
 //			nesd_audio_write(audio_buffer, numSamples);
@@ -450,47 +463,136 @@ int audio_sdl_bufferspace(void)
 
 bool nesd_finished = false;
 
-double previous;
-double lag;
+double nesdSyncPreviousTime;
+double nesdSyncLag;
 
 void nesd_reset_sync()
 {
-	previous = SYS_GetCurrentTimeInMillis();
-	lag = 0;
+	nesdSyncPreviousTime = SYS_GetCurrentTimeInMillis();
+	nesdSyncLag = 0;
 }
 
 // TODO: add synced events (i.e. reset, insert rom, ...)
+
+void nesd_update_screen(bool lockRenderMutex)
+{
+	if (debugInterfaceNes->snapshotsManager->SkipRefreshOfVideoFrame())
+		return;
+
+	// update screen
+	if (lockRenderMutex)
+	{
+		debugInterfaceNes->LockRenderScreenMutex();
+	}
+	
+//	video_buffer = (u32*)malloc(Api::Video::Output::NTSC_WIDTH * Api::Video::Output::HEIGHT * sizeof(u32));
+
+	int dif = blargg_ntsc ? 18 : 8;
+	
+	u8 *screenBuffer = (u8*) video_buffer + (overscan_v ? ((overscan_h ? dif : 0) + (blargg_ntsc ? Api::Video::Output::NTSC_WIDTH : Api::Video::Output::WIDTH) * 8) : (overscan_h ? dif : 0) + 0);
+//	LOGD("screenBuffer=%x", screenBuffer);
+
+	// dest screen width is 512*supersampling
+	
+	uint8 *srcScreenPtr = screenBuffer;
+	uint8 *destScreenPtr = (uint8 *)debugInterfaceNes->screenImage->resultData;
+	
+	int screenWidth = video_width - (overscan_h ? 2 * dif : 0);
+	int screenHeight = Api::Video::Output::HEIGHT - (overscan_v ? 16 : 0);
+
+	int superSample = debugInterfaceNes->screenSupersampleFactor;
+		
+	if (superSample == 1)
+	{
+		for (int y = 0; y < screenHeight; y++)
+		{
+			uint8 *srcPtr = srcScreenPtr;
+			uint8 *destPtr = destScreenPtr;
+			
+			for (int x = 0; x < screenWidth; x++)
+			{
+				*destPtr++ = *srcPtr++;
+				*destPtr++ = *srcPtr++;
+				*destPtr++ = *srcPtr++;
+				*destPtr++ = 255; srcPtr++;
+			}
+			
+			srcScreenPtr += pitch;
+			destScreenPtr += 512*4;
+		}
+	}
+	else
+	{
+		for (int y = 0; y < screenHeight; y++)
+		{
+			for (int j = 0; j < superSample; j++)
+			{
+				uint8 *pScreenPtrSrc = srcScreenPtr;
+				uint8 *pScreenPtrDest = destScreenPtr;
+				
+				for (int x = 0; x < screenWidth; x++)
+				{
+					u8 r = *pScreenPtrSrc++;
+					u8 g = *pScreenPtrSrc++;
+					u8 b = *pScreenPtrSrc++;
+					pScreenPtrSrc++;
+					for (int i = 0; i < superSample; i++)
+					{
+						*pScreenPtrDest++ = r;
+						*pScreenPtrDest++ = g;
+						*pScreenPtrDest++ = b;
+						*pScreenPtrDest++ = 255;
+					}
+				}
+				
+				destScreenPtr += (512)*superSample*4;
+			}
+			
+			srcScreenPtr += pitch;
+		}
+
+	}
+	
+	if (lockRenderMutex)
+	{
+		debugInterfaceNes->UnlockRenderScreenMutex();
+	}
+}
+
+extern volatile unsigned int nesdFrame;
 
 bool NestopiaUE_Run()
 {
 	LOGM("NestopiaUE_Run()");
 	
-	previous = SYS_GetCurrentTimeInMillis();
+	nesdSyncPreviousTime = SYS_GetCurrentTimeInMillis();
 	
 //	double t0 = SYS_GetCurrentTimeInMillis();
 
 	while(!nesd_finished)
 	{
+		nesd_start_frame_for_snapshots_manager = 1;
+		
 		double current = SYS_GetCurrentTimeInMillis();
 		double desiredTime = nst_pal() ? 1000.0 / 50.0 : 1000.0 / 60.0;
 
-		double elapsed = current - previous;
+		double elapsed = current - nesdSyncPreviousTime;
 		
-		previous = current;
-		lag += elapsed;
+		nesdSyncPreviousTime = current;
+		nesdSyncLag += elapsed;
 
 //		unsigned numSamples = nst_pal() ? (double)SOUND_SAMPLE_RATE / 50.0 : (double)SOUND_SAMPLE_RATE / 60.0;
 
 //		LOGD("numSamples 1 = %d", numSamples);
 		
-		if (lag >= desiredTime)
+		if (nesdSyncLag >= desiredTime)
 		{
-			while (lag >= desiredTime)
+			while (nesdSyncLag >= desiredTime)
 			{
 
 				//		update_input();
 				
-//						LOGD("NestopiaUE_Run: emulator.Execute");
+//						LOGD("NestopiaUE_Run: nesEmulator.Execute");
 				
 				double framerate = nst_pal() ? (60.0 / 6.0) * 5.0 : 60.0;
 				//
@@ -502,15 +604,19 @@ bool NestopiaUE_Run()
 				audioOutput->samples[0] = audio_buffer;
 				audioOutput->length[0] = SOUND_SAMPLE_RATE / framerate;
 
+				
+				nesd_async_check();
+
+				
 //				double t1 = SYS_GetCurrentTimeInMillis();
 //				LOGD("t = %f desired=%f", t1 - t0, desiredTime);
 //				debugInterfaceNes->LockMutex();
-				emulator.Execute(videoOutput, audioOutput, input);
+				nesEmulator.Execute(videoOutput, audioOutput, input);
 //				debugInterfaceNes->UnlockMutex();
 
 //				t0 = t1;
 				
-				//		if (Api::Input(emulator).GetConnectedController(1) == 5)
+				//		if (Api::Input(nesEmulator).GetConnectedController(1) == 5)
 				//			draw_crosshair(crossx, crossy);
 //
 
@@ -539,7 +645,7 @@ bool NestopiaUE_Run()
 				//				 pitch);
 				
 				
-				lag -= desiredTime;
+				nesdSyncLag -= desiredTime;
 			}
 			
 			
@@ -547,81 +653,16 @@ bool NestopiaUE_Run()
 			// TODO: MOVE THIS TO REFRESH SCREEN AND COPY SCREEN AFTER FRAME / PPU IS COMPLETED
 			// TODO: ADD CODE TO REFRESH SCREEN TILL CURRENT RASTER POSITION CYCLE
 			
-			// update screen
-			debugInterfaceNes->LockRenderScreenMutex();
+			nesd_update_screen(true);
 			
-			int dif = blargg_ntsc ? 18 : 8;
+			debugInterfaceNes->DoVSync();
+			debugInterfaceNes->DoFrame();
 			
-			u8 *screenBuffer = (u8*) video_buffer + (overscan_v ? ((overscan_h ? dif : 0) + (blargg_ntsc ? Api::Video::Output::NTSC_WIDTH : Api::Video::Output::WIDTH) * 8) : (overscan_h ? dif : 0) + 0);
-			
-			// dest screen width is 512*supersampling
-			
-			uint8 *srcScreenPtr = screenBuffer;
-			uint8 *destScreenPtr = (uint8 *)debugInterfaceNes->screenImage->resultData;
-			
-			int screenWidth = video_width - (overscan_h ? 2 * dif : 0);
-			int screenHeight = Api::Video::Output::HEIGHT - (overscan_v ? 16 : 0);
-
-			int superSample = debugInterfaceNes->screenSupersampleFactor;
-			
-			if (superSample == 1)
-			{
-				for (int y = 0; y < screenHeight; y++)
-				{
-					uint8 *srcPtr = srcScreenPtr;
-					uint8 *destPtr = destScreenPtr;
-					
-					for (int x = 0; x < screenWidth; x++)
-					{
-						*destPtr++ = *srcPtr++;
-						*destPtr++ = *srcPtr++;
-						*destPtr++ = *srcPtr++;
-						*destPtr++ = 255; srcPtr++;
-					}
-					
-					srcScreenPtr += pitch;
-					destScreenPtr += 512*4;
-				}
-			}
-			else
-			{
-				for (int y = 0; y < screenHeight; y++)
-				{
-					for (int j = 0; j < superSample; j++)
-					{
-						uint8 *pScreenPtrSrc = srcScreenPtr;
-						uint8 *pScreenPtrDest = destScreenPtr;
-						
-						for (int x = 0; x < screenWidth; x++)
-						{
-							u8 r = *pScreenPtrSrc++;
-							u8 g = *pScreenPtrSrc++;
-							u8 b = *pScreenPtrSrc++;
-							pScreenPtrSrc++;
-							for (int i = 0; i < superSample; i++)
-							{
-								*pScreenPtrDest++ = r;
-								*pScreenPtrDest++ = g;
-								*pScreenPtrDest++ = b;
-								*pScreenPtrDest++ = 255;
-							}
-						}
-						
-						destScreenPtr += (512)*superSample*4;
-					}
-					
-					srcScreenPtr += pitch;
-				}
-
-			}
-			
-			debugInterfaceNes->UnlockRenderScreenMutex();
-
-			debugInterfaceNes->DoFrame();			
+			nesdFrame = debugInterfaceNes->GetEmulationFrameNumber();
 		}
 		else
 		{
-			long s = desiredTime - lag; // - 2;
+			long s = desiredTime - nesdSyncLag; // - 2;
 			
 			if (s > 0)
 			{
@@ -669,6 +710,28 @@ void NestopiaUE_Unload()
 	video_buffer = NULL;
 }
 
+// check async tasks
+void nesd_async_check()
+{
+	nesd_mutex_lock();
+	
+	if (nesd_check_snapshot_restore())
+	{
+		nesd_mutex_unlock();
+		return;
+	}
+		
+	if (nesd_is_performing_snapshot_restore())
+	{
+		nesd_mutex_unlock();
+		return;
+	}
+
+	nesd_mutex_unlock();
+	return;
+}
+
+
 // save state
 CByteBuffer *nesd_store_state()
 {
@@ -690,6 +753,118 @@ CByteBuffer *nesd_store_state()
 	
 	return byteBuffer;
 }
+
+bool nesd_store_nesd_state_to_bytebuffer(CByteBuffer *byteBuffer)
+{
+	debugInterfaceNes->LockMutex();
+	gSoundEngine->LockMutex("nesd_store_nesd_state_to_bytebuffer");
+
+	byteBuffer->Rewind();
+
+	std::stringstream ss;
+	if (machine->SaveState(ss, Api::Machine::NO_COMPRESSION))
+	{
+		LOGError("nesd_store_state_to_bytebuffer: machine->SaveState failed");
+		gSoundEngine->UnlockMutex("nesd_store_nesd_state_to_bytebuffer");
+		debugInterfaceNes->UnlockMutex();
+		return false;
+	}
+	
+	std::string state = ss.str();
+
+	byteBuffer->PutU64(state.size());
+	byteBuffer->ReserveDataForInsert(state.size());
+	
+	u8 *dataPointer = byteBuffer->GetDataPointerAtIndex();
+	std::copy(state.begin(), state.end(), reinterpret_cast<char*>(dataPointer));
+
+	byteBuffer->length += state.size();
+	byteBuffer->index += state.size();
+	
+	// store additional nesd data
+	byteBuffer->PutU32(debugInterfaceNes->emulationFrameCounter);
+	
+	Core::Machine& machine = nesEmulator;
+	machine.cpu.SaveNesDebuggerState(byteBuffer);
+	machine.cpu.apu.SaveNesDebuggerState(byteBuffer);
+	machine.ppu.SaveNesDebuggerState(byteBuffer);
+	
+////	Video::Screen::Pixel* const NST_RESTRICT target = output.target++;
+//	u32 pixelNum = machine.ppu.output.target - machine.ppu.output.pixels;
+//	LOGD("store pixelNum=%d", pixelNum);
+//	byteBuffer->PutU32(pixelNum);
+	
+	// store screen
+	//	video_buffer = (u32*)malloc(Api::Video::Output::NTSC_WIDTH * Api::Video::Output::HEIGHT * sizeof(u32));
+	int dif = blargg_ntsc ? 18 : 8;
+	u8 *screenBuffer = (u8*) video_buffer + (overscan_v ? ((overscan_h ? dif : 0) + (blargg_ntsc ? Api::Video::Output::NTSC_WIDTH : Api::Video::Output::WIDTH) * 8) : (overscan_h ? dif : 0) + 0);
+	int screenWidth = video_width - (overscan_h ? 2 * dif : 0);
+	int screenHeight = Api::Video::Output::HEIGHT - (overscan_v ? 16 : 0);
+
+	byteBuffer->PutU32(screenWidth);
+	byteBuffer->PutU32(screenHeight);
+	byteBuffer->PutBytes(screenBuffer, screenWidth*screenHeight*4);
+	
+	byteBuffer->Rewind();
+	
+	gSoundEngine->UnlockMutex("nesd_store_nesd_state_to_bytebuffer");
+	debugInterfaceNes->UnlockMutex();
+	return true;
+}
+
+bool nesd_restore_nesd_state_from_bytebuffer(CByteBuffer *byteBuffer)
+{
+	debugInterfaceNes->LockMutex();
+	gSoundEngine->LockMutex("nesd_restore_nesd_state_from_bytebuffer");
+
+	byteBuffer->Rewind();
+	
+	u64 stateSize = byteBuffer->GetU64();
+	u8 *dataPointer = byteBuffer->GetDataPointerAtIndex();
+	std::stringstream ss(std::string(reinterpret_cast<const char*>(dataPointer),
+									 reinterpret_cast<const char*>(dataPointer) + stateSize));
+	bool ret = !machine->LoadState(ss);
+	if (ret == false)
+	{
+		LOGError("nesd_restore_nesd_state_from_bytebuffer: load state failed");
+	}
+	
+	byteBuffer->index += stateSize;
+	
+	// restore additional nesd data
+	debugInterfaceNes->emulationFrameCounter = byteBuffer->GetU32();
+	nesdFrame = debugInterfaceNes->emulationFrameCounter;
+
+	Core::Machine& machine = nesEmulator;
+	machine.cpu.LoadNesDebuggerState(byteBuffer);
+	machine.cpu.apu.LoadNesDebuggerState(byteBuffer);
+	machine.ppu.LoadNesDebuggerState(byteBuffer);
+	
+////	Video::Screen::Pixel* const NST_RESTRICT target = output.target++;
+//	u32 pixelNum = byteBuffer->GetU32();
+//	LOGD("restore pixelNum=%d", pixelNum);
+//	machine.ppu.output.target = machine.ppu.output.pixels + pixelNum;
+
+	// restore screen
+	//	video_buffer = (u32*)malloc(Api::Video::Output::NTSC_WIDTH * Api::Video::Output::HEIGHT * sizeof(u32));
+	int dif = blargg_ntsc ? 18 : 8;
+	u8 *screenBuffer = (u8*) video_buffer + (overscan_v ? ((overscan_h ? dif : 0) + (blargg_ntsc ? Api::Video::Output::NTSC_WIDTH : Api::Video::Output::WIDTH) * 8) : (overscan_h ? dif : 0) + 0);
+	
+//	int screenWidth = video_width - (overscan_h ? 2 * dif : 0);
+	int screenWidth = byteBuffer->GetU32();
+//
+//	int screenHeight = Api::Video::Output::HEIGHT - (overscan_v ? 16 : 0);
+	int screenHeight = byteBuffer->GetU32();
+
+	byteBuffer->GetBytes(screenBuffer, screenWidth*screenHeight*4);
+
+	
+	gSoundEngine->UnlockMutex("nesd_restore_nesd_state_from_bytebuffer");
+	debugInterfaceNes->UnlockMutex();
+	return ret;
+}
+
+
 
 bool nesd_restore_state(CByteBuffer *byteBuffer)
 {
@@ -748,36 +923,45 @@ unsigned int nesd_get_cpu_pc()
 
 void nesd_get_cpu_regs(unsigned short *pc, unsigned char *a, unsigned char *x, unsigned char *y, unsigned char *p, unsigned char *s, unsigned char *irq)
 {
-	Core::Machine& machineGet = emulator;
+	Core::Machine& machine = nesEmulator;
 	
 //	LOGD("pc=%d", machineGet.cpu.pc);
 	*pc = currentNesPC; //machineGet.cpu.pc;
 
-	*a = machineGet.cpu.a;
-	*x = machineGet.cpu.x;
-	*y = machineGet.cpu.y;
-	*p = machineGet.cpu.flags.Pack();
-	*s = machineGet.cpu.sp;
-	*irq = machineGet.cpu.interrupt.low;
+	*a = machine.cpu.a;
+	*x = machine.cpu.x;
+	*y = machine.cpu.y;
+	*p = machine.cpu.flags.Pack();
+	*s = machine.cpu.sp;
+	*irq = machine.cpu.interrupt.low;
+}
+
+void nesd_get_ppu_clocks(unsigned int *hClock, unsigned int *vClock, unsigned int *cycle)
+{
+	Core::Machine& machine = nesEmulator;
+	
+	*hClock = machine.ppu.cycles.hClock;
+	*vClock = machine.ppu.cycles.vClock;
+	*cycle =  machine.ppu.cycles.count;
 }
 
 u8 *nesd_get_ram()
 {
-	Core::Machine& machineGet = emulator;
-	return &machineGet.cpu.GetRam()[0];
+	Core::Machine& machine = nesEmulator;
+	return &machine.cpu.GetRam()[0];
 }
 
 u8 nesd_peek_io(u16 addr)
 {
-	Core::Machine& machineGet = emulator;
-	return machineGet.cpu.Peek(addr);
+	Core::Machine& machine = nesEmulator;
+	return machine.cpu.Peek(addr);
 }
 
 u8 nesd_peek_safe_io(u16 addr)
 {
 //	LOGD("nesd_peek_safe_io");
-	Core::Machine& machineGet = emulator;
-	u8 *ram = &machineGet.cpu.GetRam()[0];
+	Core::Machine& machine = nesEmulator;
+	u8 *ram = &machine.cpu.GetRam()[0];
 //	if (addr > 0x0000 && addr < 0x10000)
 //	{
 //		return ram[addr];
@@ -786,7 +970,7 @@ u8 nesd_peek_safe_io(u16 addr)
 
 	if (addr > 0x0000 && addr < 0x2000)
 	{
-		return machineGet.cpu.Peek_NoMarking(addr);
+		return machine.cpu.Peek_NoMarking(addr);
 	}
 
 	// PPU
@@ -811,9 +995,9 @@ u8 nesd_peek_safe_io(u16 addr)
 //		return ram[addr];
 //	}
 
-	if (addr > 0x5000 && addr < 0x10000)
+	if (addr > 0x5000 && addr <= 0xFFFF)
 	{
-		return machineGet.cpu.Peek_NoMarking(addr);
+		return machine.cpu.Peek_NoMarking(addr);
 	}
 
 	return ram[addr];
@@ -973,18 +1157,18 @@ void nesd_set_defaults()
 	debugInterfaceNes->LockMutex();
 	nesd_sound_lock("nesd_set_defaults");
 
-	Api::Sound sound(emulator);
+	Api::Sound sound(nesEmulator);
 	sound.SetSampleBits(16);
 	sound.SetSampleRate(SOUND_SAMPLE_RATE);
 	sound.SetSpeaker(Api::Sound::SPEAKER_MONO);
 
-	Api::Video video(emulator);
+	Api::Video video(nesEmulator);
 	Api::Video::RenderState renderState;
 	Api::Video::RenderState::Filter filter;
 
 	is_pal = false;
 
-	Api::Machine machine(emulator);
+	Api::Machine machine(nesEmulator);
 	machine.SetMode(machine.GetDesiredMode());
 	if (machine.GetMode() == Api::Machine::PAL)
 	{
@@ -1023,9 +1207,9 @@ void nesd_set_defaults()
 	
 	aspect_ratio_mode = 0;
 	
-	Api::Input(emulator).AutoSelectController(2);
-	Api::Input(emulator).AutoSelectController(3);
-	Api::Input(emulator).AutoSelectAdapter();
+	Api::Input(nesEmulator).AutoSelectController(2);
+	Api::Input(nesEmulator).AutoSelectController(3);
+	Api::Input(nesEmulator).AutoSelectAdapter();
 	
 	tpulse = 2;
 	
@@ -1115,7 +1299,7 @@ int nesd_joystick_axis_to_pad_button(uint32 axis)
 
 void nesd_joystick_down(int port, uint32 axis)
 {
-	LOGD("nesd_joystick_down: %d %x btns=%x", port, axis, input->pad[port].buttons);
+//	LOGD("nesd_joystick_down: %d %x btns=%x", port, axis, input->pad[port].buttons);
 
 	int padButton = nesd_joystick_axis_to_pad_button(axis);
 
@@ -1148,22 +1332,22 @@ void nesd_joystick_down(int port, uint32 axis)
 		}
 	}
 
-	LOGD("         padButton: %x", padButton);
+//	LOGD("         padButton: %x", padButton);
 	input->pad[port].buttons |= padButton;
 	
-	LOGD("                  : buttons=%x", input->pad[port].buttons);
+//	LOGD("                  : buttons=%x", input->pad[port].buttons);
 }
 
 void nesd_joystick_up(int port, uint32 axis)
 {
-	LOGD("^ nesd_joystick_up: %d %x btns=%x", port, axis, input->pad[port].buttons);
+//	LOGD("^ nesd_joystick_up: %d %x btns=%x", port, axis, input->pad[port].buttons);
 
 	int padButton = nesd_joystick_axis_to_pad_button(axis);
-	LOGD("         padButton: %x", padButton);
+//	LOGD("         padButton: %x", padButton);
 
 	input->pad[port].buttons &= ~padButton;
 
-	LOGD("^^^^^^^^^^^^^^^^^^: buttons=%x", input->pad[port].buttons);
+//	LOGD("^^^^^^^^^^^^^^^^^^: buttons=%x", input->pad[port].buttons);
 }
 
 /*
@@ -1328,7 +1512,6 @@ void NestopiaUE_Run_SDL()
 	*/
 }
 
-
 // TODO: memory read breakpoints
 void nesd_mark_cell_read(uint16 addr)
 {
@@ -1354,55 +1537,11 @@ void nesd_mark_cell_write(uint16 addr, uint8 value)
 	{
 		debugInterface->LockMutex();
 		
-		std::map<uint16, CMemoryBreakpoint *>::iterator it = debugInterface->breakpointsMemory.find(addr);
-		if (it != debugInterface->breakpointsMemory.end())
+		if (debugInterface->breakpointsMemory->EvaluateBreakpoint(addr, value) != NULL)
 		{
-			CMemoryBreakpoint *memoryBreakpoint = it->second;
-			
-			if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_EQUAL)
-			{
-				if (value == memoryBreakpoint->value)
-				{
-					debugInterface->SetDebugMode(DEBUGGER_MODE_PAUSED);
-				}
-			}
-			else if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_NOT_EQUAL)
-			{
-				if (value != memoryBreakpoint->value)
-				{
-					debugInterface->SetDebugMode(DEBUGGER_MODE_PAUSED);
-				}
-			}
-			else if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_LESS)
-			{
-				if (value < memoryBreakpoint->value)
-				{
-					debugInterface->SetDebugMode(DEBUGGER_MODE_PAUSED);
-				}
-			}
-			else if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_LESS_OR_EQUAL)
-			{
-				if (value <= memoryBreakpoint->value)
-				{
-					debugInterface->SetDebugMode(DEBUGGER_MODE_PAUSED);
-				}
-			}
-			else if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_GREATER)
-			{
-				if (value > memoryBreakpoint->value)
-				{
-					debugInterface->SetDebugMode(DEBUGGER_MODE_PAUSED);
-				}
-			}
-			else if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_GREATER_OR_EQUAL)
-			{
-				if (value >= memoryBreakpoint->value)
-				{
-					debugInterface->SetDebugMode(DEBUGGER_MODE_PAUSED);
-				}
-			}
+			debugInterface->SetDebugMode(DEBUGGER_MODE_PAUSED);
 		}
-		
+				
 		debugInterface->UnlockMutex();
 	}
 }
@@ -1422,6 +1561,10 @@ void nesd_check_pc_breakpoint(uint16 pc)
 {
 //	LOGD("nesd_check_pc_breakpoint: pc=%04x", pc);
 
+	// skip checking breakpoints when quick fast-forward/restoring snapshot
+	if (debugInterfaceNes->snapshotsManager->IsPerformingSnapshotRestore())
+		return;
+
 	NesDebugInterface *debugInterface = debugInterfaceNes;
 
 	if ((int)pc == debugInterface->temporaryBreakpointPC)
@@ -1432,16 +1575,10 @@ void nesd_check_pc_breakpoint(uint16 pc)
 	else if (debugInterface->breakOnPC)
 	{
 		debugInterface->LockMutex();
-		std::map<uint16, CAddrBreakpoint *>::iterator it = debugInterface->breakpointsPC.find(pc);
-		if (it != debugInterface->breakpointsPC.end())
+		CAddrBreakpoint *addrBreakpoint = debugInterface->breakpointsPC->EvaluateBreakpoint(pc);
+		
+		if (addrBreakpoint != NULL)
 		{
-			CAddrBreakpoint *addrBreakpoint = it->second;
-
-			if (IS_SET(addrBreakpoint->actions, ADDR_BREAKPOINT_ACTION_SET_BACKGROUND))
-			{
-				// Not supported
-			}
-
 			if (IS_SET(addrBreakpoint->actions, ADDR_BREAKPOINT_ACTION_STOP))
 			{
 				debugInterface->SetDebugMode(DEBUGGER_MODE_PAUSED);
@@ -1451,10 +1588,85 @@ void nesd_check_pc_breakpoint(uint16 pc)
 	}
 }
 
+///
+int nesd_check_maincpu_cycle()
+{
+//	LOGD("nesd_check_maincpu_cycle");
+	if (debugInterfaceNes->snapshotsManager->CheckMainCpuCycle())
+	{
+		return TRUE;
+	}
+	return FALSE;
+}
 
-void nesd_debug_pause_check()
+int nesd_is_performing_snapshot_restore()
+{
+	if (debugInterfaceNes->snapshotsManager->IsPerformingSnapshotRestore())
+	{
+		return 1;
+	}
+	return 0;
+}
+
+int nesd_check_snapshot_restore()
+{
+//	LOGD("nesd_check_snapshot_restore");
+	
+	debugInterfaceNes->snapshotsManager->CheckMainCpuCycle();
+	
+	if (debugInterfaceNes->snapshotsManager->CheckSnapshotRestore())
+	{
+		return 1;
+	}
+	
+	return 0;
+}
+
+void nesd_check_snapshot_interval()
+{
+	if (nesd_start_frame_for_snapshots_manager)
+	{
+//		LOGD("nesd_check_snapshot_interval: %d", nesd_start_frame_for_snapshots_manager);
+		nesd_start_frame_for_snapshots_manager = 0;
+		debugInterfaceNes->snapshotsManager->CheckSnapshotInterval();
+	}
+}
+
+void nesd_check_cpu_snapshot_manager_restore()
+{
+	if (nesd_check_snapshot_restore())
+	{
+//		LOGD("after nesd_check_cpu_snapshot_manager_restore: CPU_regPC=%04x reg_pc=%04x cycle=", CPU_regPC, reg_pc, maincpu_clk);
+				
+		return;
+	}
+}
+
+void nesd_check_cpu_snapshot_manager_store()
+{
+	// check snapshot interval by snapshot manager
+	nesd_check_snapshot_interval();
+}
+
+int nesd_debug_pause_check(int allowRestore)
 {
 //	LOGD("nesd_debug_pause_check, nesd_debug_mode=%d", nesd_debug_mode);
+	int shouldSkipOneInstructionStep = nesd_check_maincpu_cycle();
+
+	if (allowRestore)
+	{
+		nesd_check_cpu_snapshot_manager_restore();
+	}
+	else
+	{
+		if (nesd_is_performing_snapshot_restore())
+			return FALSE;
+	}
+	
+	debugInterfaceNes->ExecuteDebugInterruptTasks();
+	
+	nesd_check_cpu_snapshot_manager_store();
+	
 	if (nesd_debug_mode == DEBUGGER_MODE_PAUSED)
 	{
 		//		c64d_refresh_previous_lines();
@@ -1467,10 +1679,17 @@ void nesd_debug_pause_check()
 			mt_SYS_Sleep(10);
 			//			vsync_do_vsync(vicii.raster.canvas, 0, 1);
 			//mt_SYS_Sleep(50);
+			
+			if (debugInterfaceNes->snapshotsManager->snapshotToRestore != NULL)
+				break;
 		}
 
-		LOGD("nesd_debug_pause_check: new mode is %d PC=%04x", nesd_debug_mode, nesd_get_cpu_pc());
+		LOGD("nesd_debug_pause_check: new mode is %d PC=%04x cycle=%d", nesd_debug_mode, nesd_get_cpu_pc(), debugInterfaceNes->GetMainCpuCycleCounter());
+		
+		return shouldSkipOneInstructionStep;
 	}
+	
+	return FALSE;
 }
 
 void nesd_mute_channels(bool muteSquare1, bool muteSquare2, bool muteTriangle, bool muteNoise, bool muteDmc, bool muteExt)
@@ -1488,8 +1707,8 @@ void nesd_mute_channels(bool muteSquare1, bool muteSquare2, bool muteTriangle, b
 	channels[4] = muteDmc;
 	channels[5] = muteExt;
 
-	Core::Machine& machineGet = emulator;
-	machineGet.cpu.apu.SetVolume(channels);
+	Core::Machine& machine = nesEmulator;
+	machine.cpu.apu.SetVolume(channels);
 }
 
 volatile bool nesd_isReceiveChannelsData = false;
@@ -1508,8 +1727,8 @@ void nesd_receive_channels_data(unsigned int valSquare1, unsigned int valSquare2
 
 uint8 nesd_get_apu_register(uint16 addr)
 {
-	Core::Machine& machineGet = emulator;
-	u8 val = machineGet.cpu.apu.regs[addr & 0x001F];
+	Core::Machine& machine = nesEmulator;
+	u8 val = machine.cpu.apu.registers[addr & 0x001F];
 	return val;
 }
 
@@ -1567,6 +1786,8 @@ void nesd_mutex_unlock()
 bool NestopiaUE_Initialize() { return false; }
 bool NestopiaUE_Run() { return false; }
 
+void nesd_update_screen(bool lockRenderMutex) {}
+
 bool nesd_insert_cartridge(char *filePath) { return false; }
 
 void nesd_reset() {}
@@ -1574,6 +1795,8 @@ unsigned char *nesd_get_ram() { return NULL; }
 
 CByteBuffer *nesd_store_state() { return NULL; }
 bool nesd_restore_state(CByteBuffer *byteBuffer) { return false; }
+bool nesd_store_nesd_state_to_bytebuffer(CByteBuffer *byteBuffer) { return false; }
+bool nesd_restore_nesd_state_from_bytebuffer(CByteBuffer *byteBuffer) { return false; }
 
 void nesd_sound_init() {}
 void nesd_sound_pause() {}
@@ -1588,10 +1811,12 @@ void nesd_mark_cell_read(uint16 addr) {}
 void nesd_mark_cell_write(uint16 addr, uint8 value) {}
 void nesd_mark_cell_execute(uint16 addr, uint8 opcode) {}
 
-void nesd_debug_pause_check() {}
+int nesd_debug_pause_check(int allowRestore) { return 0; }
 
 void nesd_joystick_down(int port, uint32 axis) {}
 void nesd_joystick_up(int port, uint32 axis) {}
+
+void nesd_get_ppu_clocks(unsigned int *hClock, unsigned int *vClock, unsigned int *cycle) {}
 
 unsigned int nesd_get_cpu_pc() { return 0; }
 unsigned char nesd_peek_io(unsigned short addr) { return 0; }
@@ -1608,7 +1833,7 @@ uint8 nesd_get_apu_register(uint16 addr) { return 0; }
 bool nesd_is_pal() { return false; }
 double nesd_get_cpu_clock_frquency() { return 0.0; }
 
-void nesd_audio_callback(uint8 *stream, int numSamples) {}
+//void nesd_audio_callback(unsigned char *stream, int numSamples) {}
 void nesd_sound_lock() {}
 void nesd_sound_unlock() {}
 

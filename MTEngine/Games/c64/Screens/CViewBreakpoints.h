@@ -10,6 +10,8 @@
 
 class CAddrBreakpoint;
 class CMemoryBreakpoint;
+class CDebuggerAddrBreakpoints;
+class CDebuggerMemoryBreakpoints;
 
 class CViewBreakpoints : public CGuiView, CGuiButtonSwitchCallback, CGuiEditHexCallback
 {
@@ -123,27 +125,27 @@ public:
 	void UpdateRenderBreakpoints();
 	
 	//
-	void RenderAddrBreakpoints(std::map<uint16, CAddrBreakpoint *> *breakpointsMap, float pStartX, float pStartY, int cursorGroupId,
+	void RenderAddrBreakpoints(CDebuggerAddrBreakpoints *addrBreakpoints, float pStartX, float pStartY, int cursorGroupId,
 							   char *addrFormatStr, char *addrEmptyStr);
-	void RenderMemoryBreakpoints(std::map<uint16, CMemoryBreakpoint *> *breakpointsMap, float pStartX, float pStartY, int cursorGroupId);
+	void RenderMemoryBreakpoints(CDebuggerMemoryBreakpoints *memoryBreakpoints, float pStartX, float pStartY, int cursorGroupId);
 	
 	bool CheckTapAddrBreakpoints(float x, float y,
-								  std::map<uint16, CAddrBreakpoint *> *breakpointsMap,
-								  float pStartX, float pStartY, int cursorGroupId);
+								 CDebuggerAddrBreakpoints *addrBreakpoints,
+								 float pStartX, float pStartY, int cursorGroupId);
 	
 	bool CheckTapMemoryBreakpoints(float x, float y,
-								   std::map<uint16, CMemoryBreakpoint *> *breakpointsMap,
+								   CDebuggerMemoryBreakpoints *memoryBreakpoints,
 								   float pStartX, float pStartY, int cursorGroupId);
 
 	
-	void GuiEditHexEnteredValueAddr(CGuiEditHex *editHex, std::map<uint16, CAddrBreakpoint *> *breakpointsMap);
-	void GuiEditHexEnteredValueMemory(CGuiEditHex *editHex, u32 lastKeyCode, std::map<uint16, CMemoryBreakpoint *> *breakpointsMap);
+	void GuiEditHexEnteredValueAddr(CGuiEditHex *editHex, CDebuggerAddrBreakpoints *addrBreakpoints);
+	void GuiEditHexEnteredValueMemory(CGuiEditHex *editHex, u32 lastKeyCode, CDebuggerMemoryBreakpoints *memoryBreakpoints);
 	
-	void StartEditingSelectedAddrBreakpoint(std::map<uint16, CAddrBreakpoint *> *breakpointsMap, char *emptyAddrStr);
-	void StartEditingSelectedMemoryBreakpoint(std::map<uint16, CMemoryBreakpoint *> *breakpointsMap);
+	void StartEditingSelectedAddrBreakpoint(CDebuggerAddrBreakpoints *addrBreakpoints, char *emptyAddrStr);
+	void StartEditingSelectedMemoryBreakpoint(CDebuggerMemoryBreakpoints *memoryBreakpoints);
 	
-	void DeleteSelectedAddrBreakpoint(std::map<uint16, CAddrBreakpoint *> *breakpointsMap);
-	void DeleteSelectedMemoryBreakpoint(std::map<uint16, CMemoryBreakpoint *> *breakpointsMap);
+	void DeleteSelectedAddrBreakpoint(CDebuggerAddrBreakpoints *addrBreakpoints);
+	void DeleteSelectedMemoryBreakpoint(CDebuggerMemoryBreakpoints *memoryBreakpoints);
 	
 	CGuiView *prevView;
 	

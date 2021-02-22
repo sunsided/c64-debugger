@@ -1,6 +1,9 @@
 #include "C64D_Version.h"
 #if defined(RUN_NES)
 
+#include "NstApiMachine.hpp"
+#include "NstMachine.hpp"
+#include "NstApiEmulator.hpp"
 #include "NstCpu.hpp"
 
 #include "CViewNesStateAPU.h"
@@ -21,11 +24,8 @@
 #include "VID_ImageBinding.h"
 #include "C64SIDFrequencies.h"
 
-// KOLORY BY KK do PIANO
-// RED
-// GREEN
-// BLUE
-// YELLOW
+// TODO: move me
+#include "CViewNesPianoKeyboard.h"
 
 CViewNesStateAPU::CViewNesStateAPU(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, NesDebugInterface *debugInterface)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
@@ -54,6 +54,9 @@ CViewNesStateAPU::CViewNesStateAPU(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 	waveformPos = 0;
 	
 	this->SetPosition(posX, posY, posZ, sizeX, sizeY);
+	
+	// TODO: move me
+	viewPianoKeyboard = new CViewNesPianoKeyboard(2, 122, -1, 393, 50, NULL);
 }
 
 void CViewNesStateAPU::SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY)
@@ -142,6 +145,7 @@ void CViewNesStateAPU::SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 
 void CViewNesStateAPU::SetVisible(bool isVisible)
 {
+	LOGG("CViewNesStateAPU::SetVisible: isVisible=%s", STRBOOL(isVisible));
 	CGuiElement::SetVisible(isVisible);
 	
 	int selectedApuNumber = 0;
@@ -151,6 +155,7 @@ void CViewNesStateAPU::SetVisible(bool isVisible)
 
 void CViewNesStateAPU::DoLogic()
 {
+	viewPianoKeyboard->DoLogic();
 }
 
 void CViewNesStateAPU::Render()
@@ -175,6 +180,8 @@ void CViewNesStateAPU::Render()
 	nesMixWaveform[selectedApuNumber]->Render();
 
 	this->RenderState(posX, posY, posZ, fontBytes, fontSize, 1);
+	
+	this->viewPianoKeyboard->Render();
 }
 
 
@@ -229,7 +236,7 @@ void CViewNesStateAPU::RenderState(float px, float py, float posZ, CSlrFont *fon
 			
 			if (pulseTimer != 0)
 			{
-				freqPulse = cpuClockFreq / (16.0 * (((double)pulseTimer) + 1.0));
+				freqPulse = cpuClockFreq / 16.0 / (((double)pulseTimer) + 1.0);
 			}
 					
 			u16 pulseLen = (regs[0x03 + regOffset] >> 3) & 0x1F;
@@ -297,7 +304,7 @@ void CViewNesStateAPU::RenderState(float px, float py, float posZ, CSlrFont *fon
 			
 			if (pulseTimer != 0)
 			{
-				freqPulse = cpuClockFreq / (16.0 * (((double)pulseTimer) + 1.0));
+				freqPulse = cpuClockFreq / 16.0 / (((double)pulseTimer) + 1.0);
 			}
 					
 			u16 pulseLen = (regs[0x03 + regOffset] >> 3) & 0x1F;
@@ -357,7 +364,7 @@ void CViewNesStateAPU::RenderState(float px, float py, float posZ, CSlrFont *fon
 			
 			if (pulseTimer != 0)
 			{
-				freqPulse = cpuClockFreq / (32.0 * (((double)pulseTimer) + 1.0));
+				freqPulse = cpuClockFreq / 32.0 / (((double)pulseTimer) + 1.0);
 			}
 					
 			const sid_frequency_t *freq = FrequencyToSidFrequency(freqPulse);
@@ -594,11 +601,6 @@ void CViewNesStateAPU::RenderState(float px, float py, float posZ, CSlrFont *fon
 			
 			py = ply;
 		 }
-
-
-
-	
-
 	//
 	py += fontSize;
 
@@ -607,7 +609,7 @@ void CViewNesStateAPU::RenderState(float px, float py, float posZ, CSlrFont *fon
 
 void CViewNesStateAPU::AddWaveformData(int apuNumber, int v1, int v2, int v3, int v4, int v5, int v6, short mix)
 {
-//	LOGD("CViewNesStateAPU::AddWaveformData: pokey #%d, %d %d %d %d %d %d | %d", apuNumber, v1, v2, v3, v4, v5, v6, mix);
+//	LOGD("CViewNesStateAPU::AddWaveformData: #%d, %d %d %d %d %d %d | %d", apuNumber, v1, v2, v3, v4, v5, v6, mix);
 	
 	// apu channels
 	nesChannelWaveform[apuNumber][0]->waveformData[waveformPos] = v1;
@@ -624,19 +626,9 @@ void CViewNesStateAPU::AddWaveformData(int apuNumber, int v1, int v2, int v3, in
 	
 	if (waveformPos == SID_WAVEFORM_LENGTH)
 	{
-//		guiMain->LockRenderMutex();
-//		pokeyChannelWaveform[pokeyNumber][0]->CalculateWaveform();
-//		pokeyChannelWaveform[pokeyNumber][1]->CalculateWaveform();
-//		pokeyChannelWaveform[pokeyNumber][2]->CalculateWaveform();
-//		pokeyChannelWaveform[pokeyNumber][3]->CalculateWaveform();
-//		pokeyMixWaveform[pokeyNumber]->CalculateWaveform();
-//		guiMain->UnlockRenderMutex();
-		
 		waveformPos = 0;
 	}
 }
-
-
 
 bool CViewNesStateAPU::DoTap(GLfloat x, GLfloat y)
 {
@@ -850,6 +842,129 @@ void CViewNesStateAPU::RenderFocusBorder()
 //	CGuiView::RenderFocusBorder();
 	//
 }
+
+float CViewNesStateAPU::GetFrequencyForChannel(int chanNum)
+{
+	// https://www.mattmontag.com/uncategorized/nes-apu-note-table
+	
+	u8 regs[0x20];
+	for (int i = 0; i < 0x20; i++)
+	{
+		regs[i] = viewC64->debugInterfaceNes->GetApuRegister(i);
+	}
+	
+	double cpuClockFreq = debugInterfaceNes->GetCpuClockFrequency();
+
+	u16 regOffset = 0;
+
+	// PULSE 1
+	if (chanNum == 0)
+	{
+		u16 pulseTimer = ((regs[0x03 + regOffset] & 0x07) << 8) | regs[0x02 + regOffset];
+		
+		double freqPulse = 0.0;
+		
+		if (pulseTimer != 0)
+		{
+			freqPulse = cpuClockFreq / 16.0 / (((double)pulseTimer) + 1.0);
+		}
+		
+		return freqPulse;
+	}
+	
+	// PULSE 2
+	if (chanNum == 1)
+	{
+		regOffset = 0x04;
+
+		u16 pulseTimer = ((regs[0x03 + regOffset] & 0x07) << 8) | regs[0x02 + regOffset];
+		double freqPulse = 0.0;
+		
+		if (pulseTimer != 0)
+		{
+			freqPulse = cpuClockFreq / 16.0 / (((double)pulseTimer) + 1.0);
+		}
+
+		return freqPulse;
+	}
+	
+	// TRIANGLE
+	if (chanNum == 2)
+	{
+		u16 pulseTimer = ((regs[0x0B] & 0x07) << 8) | regs[0x0A];
+
+		double freqPulse = 0.0;
+		
+		if (pulseTimer != 0)
+		{
+			freqPulse = cpuClockFreq / 32.0 / (((double)pulseTimer) + 1.0);
+		}
+		
+		return freqPulse;
+	}
+	
+	if (chanNum == 3)
+	{
+		// NOISE
+
+		u16 period = regs[0x0E] & 0x0F;
+
+		const float apuNoiseFreqs[0x10] = {
+			4811.2, 2405.6, 1202.8, 601.4, 300.7, 200.5, 150.4, 120.3,
+			95.3, 75.8, 50.6, 37.9, 25.3, 18.9, 9.5, 4.7
+		};
+		
+		float freqNoise = apuNoiseFreqs[period];
+		return freqNoise;
+	}
+
+	if (chanNum == 4)
+	{
+		// DMC
+		u16 rate = regs[0x10] & 0x0F;
+
+		const int rateNTSC[0x10] = { 428, 380, 340, 320, 286, 254, 226, 214, 190, 160, 142, 128, 106,  84,  72,  54 };
+		const int ratePAL[0x10]  = { 398, 354, 316, 298, 276, 236, 210, 198, 176, 148, 132, 118,  98,  78,  66,  50 };
+
+		int rateVal = debugInterfaceNes->IsPal() ? ratePAL[rate] : rateNTSC[rate];
+		double cpuClockFreq = debugInterfaceNes->GetCpuClockFrequency();
+		double freqDMC = cpuClockFreq / (double)rateVal;
+		
+		if (freqDMC > 4100.0)
+			return 0.0f;
+		
+		return freqDMC;
+	}
+	
+	return 0.0f;
+}
+
+extern Nes::Api::Emulator nesEmulator;
+
+bool CViewNesStateAPU::IsChannelActive(int chanNum)
+{
+	Nes::Core::Machine& machine = nesEmulator;
+	
+	switch(chanNum)
+	{
+		case 0:
+			return machine.cpu.apu.square[0].CanOutput();
+		case 1:
+			return machine.cpu.apu.square[1].CanOutput();
+		case 2:
+			return machine.cpu.apu.triangle.CanOutput();
+		case 3:
+			return machine.cpu.apu.noise.CanOutput();
+			
+			// TODO: check if DMC active
+//		case 4:
+//			return machine.cpu.apu.dmc.
+			
+	}
+	
+	return false;
+}
+
 
 #else
 // dummy

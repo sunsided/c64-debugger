@@ -230,6 +230,10 @@ Ctrl+Mouse Click
 	Scroll Disassembly to code address that stored that value
 Ctrl+Shift+Mouse Click
 	Scroll Disassembly to code address that last read that value
+Ctrl+Alt+Mouse Click
+	Rewind emulation state to cycle that stored that value
+Ctrl+Shift+Alt+Mouse Click
+	Rewind emulation state to cycle that last read that value
 Alt+Shift
 	Change CBM charset
 Ctrl+K
@@ -255,11 +259,18 @@ Memory access:
 
 You can change colours to ICU-standard (read marked by green) in Settings.
 
-You can Mouse Click inside memory map to scroll data dump view to a clicked 
-memory address. You can double Mouse Click to scroll disassemble view to a 
-memory address under cursor. You can Ctrl+Mouse Click to scroll Disassembly 
-to code address that stored value under cursor. You can Shift+Ctrl+Mouse Click
-to scroll Disassembly to code address that last read value under cursor.
+Mouse Click on hex value
+        Scroll data dump view to memory address
+Double Mouse Click on hex value
+        Scroll disassemble view to selected address
+Ctrl+Mouse Click
+	Scroll Disassembly to code address that stored that value
+Ctrl+Shift+Mouse Click
+	Scroll Disassembly to code address that last read that value
+Ctrl+Alt+Mouse Click
+	Rewind emulation state to cycle that stored that value
+Ctrl+Shift+Alt+Mouse Click
+	Rewind emulation state to cycle that last read that value
 
 You can zoom-in using mouse wheel and move around by holding right mouse click
 (Windows, Linux, MacOS) or use mulitouch gestures such as pinch zoom and 
@@ -1377,6 +1388,13 @@ circlebuf.h
 *
 * Change log
 *
+
+v0.64.58.4 (2021/02/22), a celebration of my birthday
+Added: Possibility to rewind emulation to state when memory was last written by Alt+Ctrl+click on value in memory dump/memory map view, or last read by Alt+Ctrl+Shift+click
+Added: You can click a few pixels above bottom Timeline to make it sticky and always visible, click again to hide it
+Bug Fixed C64: -autorundisk command line option was not working properly, thanks to Franck Gotthold
+Added NES: New layouts, emulation rewind, back-stepping code, Nametables view, PPU state, APU and piano view, etc.
+
 
 v0.64.58.2 (2020/12/24) X-mas release!
 Added C64: Key shortcut to insert next disk from current folder (Ctrl+Alt+8)

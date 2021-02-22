@@ -41,9 +41,8 @@ enum editCursorPositions
 
 
 CViewDisassemble::CViewDisassemble(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
-										 CSlrDataAdapter *dataAdapter, CViewDataDump *viewDataDump, CViewMemoryMap *viewMemoryMap,
-										 std::map<uint16, CAddrBreakpoint *> *breakpointsMap,
-										 CDebugInterface *debugInterface)
+								   CSlrDataAdapter *dataAdapter, CViewDataDump *viewDataDump, CViewMemoryMap *viewMemoryMap,
+								   CDebuggerAddrBreakpoints *breakpoints, CDebugInterface *debugInterface)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
 {
 	this->name = "CViewDisassemble";
@@ -57,7 +56,7 @@ CViewDisassemble::CViewDisassemble(GLfloat posX, GLfloat posY, GLfloat posZ, GLf
 	this->memoryLength = dataAdapter->AdapterGetDataLength();
 	this->memory = new uint8[memoryLength];
 	
-	this->breakpointsMap = breakpointsMap;
+	this->breakpoints = breakpoints;
 	
 	this->debugInterface = debugInterface;
 
@@ -961,7 +960,7 @@ int CViewDisassemble::RenderDisassembleLine(float px, float py, int addr, uint8 
 	char bufHexCodes[16];
 	int length;
 	
-	std::map<uint16, uint16>::iterator it = renderBreakpoints.find(addr);
+	std::map<int, int>::iterator it = renderBreakpoints.find(addr);
 	if (it != renderBreakpoints.end())
 	{
 		BlitFilledRectangle(posX, py, -1.0f,
@@ -1454,7 +1453,7 @@ void CViewDisassemble::RenderHexLine(float px, float py, int addr)
 	char buf[128];
 	char buf1[16];
 	
-	std::map<uint16, uint16>::iterator it = renderBreakpoints.find(addr);
+	std::map<int, int>::iterator it = renderBreakpoints.find(addr);
 	if (it != renderBreakpoints.end())
 	{
 		BlitFilledRectangle(posX, py, -1.0f,
@@ -2172,14 +2171,14 @@ void CViewDisassemble::TogglePCBreakpoint(int addr)
 	bool found = false;
 	
 	// keep local copy to not lock mutex during rendering
-	std::map<uint16, uint16>::iterator it2 = renderBreakpoints.find(addr);
+	std::map<int, int>::iterator it2 = renderBreakpoints.find(addr);
 	if (it2 != renderBreakpoints.end())
 	{
 		// remove breakpoint
 		//LOGD("remove breakpoint addr=%4.4x", addr);
 
 		renderBreakpoints.erase(it2);
-		debugInterface->RemoveAddrBreakpoint(breakpointsMap, addr);
+		breakpoints->DeleteBreakpoint(addr);
 		
 		found = true;
 	}
@@ -2193,7 +2192,7 @@ void CViewDisassemble::TogglePCBreakpoint(int addr)
 		CAddrBreakpoint *breakpoint = new CAddrBreakpoint(addr);
 		breakpoint->actions = ADDR_BREAKPOINT_ACTION_STOP;
 		
-		debugInterface->AddAddrBreakpoint(breakpointsMap, breakpoint);
+		breakpoints->AddBreakpoint(breakpoint);
 	}
 	
 	debugInterface->UnlockMutex();
@@ -2338,6 +2337,11 @@ bool CViewDisassemble::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 		{
 //			viewC64->viewAtariScreen->KeyUpModifierKeys(isShift, isAlt, isControl);
 		}
+		if (viewC64->debugInterfaceNes)
+		{
+			viewC64->viewNesScreen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		}
+
 		keyCode = MTKEY_PAGE_DOWN;
 	}
 
@@ -2352,6 +2356,10 @@ bool CViewDisassemble::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 //		{
 ////			viewC64->viewAtariScreen->KeyUpModifierKeys(isShift, isAlt, isControl);
 //		}
+		if (viewC64->debugInterfaceNes)
+		{
+			viewC64->viewNesScreen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		}
 		keyCode = MTKEY_PAGE_UP;
 	}
 	
@@ -2362,18 +2370,41 @@ bool CViewDisassemble::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 		TogglePCBreakpoint(cursorAddress);
 		
 		// TODO: refactor, generalize this below:
+		// TODO: make generic and iterate over interfaces
 		if (viewC64->debugInterfaceC64)
 		{
 			viewC64->viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
 		}
-		
+		if (viewC64->debugInterfaceAtari)
+		{
+			viewC64->viewAtariScreen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		}
+		if (viewC64->debugInterfaceNes)
+		{
+			viewC64->viewNesScreen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		}
+
 		return true;
 	}
 	
 	if (keyboardShortcut == viewC64->keyboardShortcuts->kbsStepOverJsr)
 	{
 		StepOverJsr();
-		viewC64->viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		
+		// TODO: make generic and iterate over interfaces
+		if (viewC64->debugInterfaceC64)
+		{
+			viewC64->viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		}
+		if (viewC64->debugInterfaceAtari)
+		{
+			viewC64->viewAtariScreen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		}
+		if (viewC64->debugInterfaceNes)
+		{
+			viewC64->viewNesScreen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		}
+
 		return true;
 	}
 	
@@ -2411,10 +2442,18 @@ bool CViewDisassemble::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 			changedByUser = true;
 		}
 
-		// TODO: make generic
+		// TODO: make generic and iterate over interfaces
 		if (viewC64->debugInterfaceC64)
 		{
 			viewC64->viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		}
+		if (viewC64->debugInterfaceAtari)
+		{
+			viewC64->viewAtariScreen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		}
+		if (viewC64->debugInterfaceNes)
+		{
+			viewC64->viewNesScreen->KeyUpModifierKeys(isShift, isAlt, isControl);
 		}
 		return true;
 	}
@@ -2424,10 +2463,18 @@ bool CViewDisassemble::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isCon
 		isEnteringGoto = true;
 		StartEditingAtCursorPosition(EDIT_CURSOR_POS_ADDR, true);
 		
-		// TODO: make generic
+		// TODO: make generic and iterate over interfaces
 		if (viewC64->debugInterfaceC64)
 		{
 			viewC64->viewC64Screen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		}
+		if (viewC64->debugInterfaceAtari)
+		{
+			viewC64->viewAtariScreen->KeyUpModifierKeys(isShift, isAlt, isControl);
+		}
+		if (viewC64->debugInterfaceNes)
+		{
+			viewC64->viewNesScreen->KeyUpModifierKeys(isShift, isAlt, isControl);
 		}
 		return true;
 	}
@@ -2534,7 +2581,7 @@ void CViewDisassemble::StepOverJsr()
 	debugInterface->LockMutex();
 	
 	bool a;
-	if (breakpointsMap == &(debugInterface->breakpointsPC))
+	if (breakpoints == debugInterface->breakpointsPC)
 	{
 		int pc = debugInterface->GetCpuPC();
 		uint8 opcode;
@@ -2563,7 +2610,7 @@ void CViewDisassemble::StepOverJsr()
 #if defined(RUN_COMMODORE64)
 	
 	// TODO: refactor this into new Drive1541DebugInterface
-	else if (breakpointsMap == &(viewC64->debugInterfaceC64->breakpointsDrive1541PC))
+	else if (breakpoints == viewC64->debugInterfaceC64->breakpointsDrive1541PC)
 	{
 		int pc = viewC64->debugInterfaceC64->GetDrive1541PC();
 		uint8 opcode;
@@ -2836,7 +2883,7 @@ void CViewDisassemble::SetBreakpointPC(u16 address, bool setOn)
 	bool found = false;
 	
 	// keep local copy to not lock mutex during rendering
-	std::map<uint16, uint16>::iterator it2 = renderBreakpoints.find(address);
+	std::map<int, int>::iterator it2 = renderBreakpoints.find(address);
 	if (it2 != renderBreakpoints.end())
 	{
 		if (setOn)
@@ -2850,7 +2897,7 @@ void CViewDisassemble::SetBreakpointPC(u16 address, bool setOn)
 			LOGD("CViewDisassemble::SetBreakpointPC: remove breakpoint addr=%04x", address);
 			
 			renderBreakpoints.erase(it2);
-			debugInterface->RemoveAddrBreakpoint(breakpointsMap, address);
+			breakpoints->DeleteBreakpoint(address);
 		}
 		
 		found = true;
@@ -2867,7 +2914,7 @@ void CViewDisassemble::SetBreakpointPC(u16 address, bool setOn)
 			CAddrBreakpoint *breakpoint = new CAddrBreakpoint(address);
 			breakpoint->actions = ADDR_BREAKPOINT_ACTION_STOP;
 			
-			debugInterface->AddAddrBreakpoint(breakpointsMap, breakpoint);
+			breakpoints->AddBreakpoint(breakpoint);
 		}
 		else
 		{

@@ -86,6 +86,9 @@ C64KeyboardShortcuts::C64KeyboardShortcuts()
 	kbsStepBackInstruction = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Step back instruction", MTKEY_F10, false, true, false);
 	AddShortcut(kbsStepBackInstruction);
 	
+	kbsStepBackMultipleInstructions = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Multiple step back", MTKEY_F10, true, true, false);
+	AddShortcut(kbsStepBackMultipleInstructions);
+	
 	kbsStepOneCycle = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Step one cycle", MTKEY_F10, true, false, false);
 	AddShortcut(kbsStepOneCycle);
 	

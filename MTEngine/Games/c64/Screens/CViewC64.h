@@ -84,6 +84,13 @@ class CViewAtariStatePOKEY;
 class CViewNesScreen;
 class CViewNesStateCPU;
 class CViewNesStateAPU;
+class CViewNesStatePPU;
+class CViewNesPpuPatterns;
+class CViewNesPpuNametables;
+class CViewNesPpuAttributes;
+class CViewNesPpuOam;
+class CViewNesPpuPalette;
+class CViewNesPianoKeyboard;
 
 class CViewJukeboxPlaylist;
 class CViewMainMenu;
@@ -132,8 +139,12 @@ enum screenLayouts
 	// nes
 	SCREEN_LAYOUT_NES_ONLY,
 	SCREEN_LAYOUT_NES_DATA_DUMP,
+	SCREEN_LAYOUT_NES_DEBUGGER,
 	SCREEN_LAYOUT_NES_SHOW_STATES,
-	
+	SCREEN_LAYOUT_NES_APU,
+	SCREEN_LAYOUT_NES_MEMORY_MAP,
+	SCREEN_LAYOUT_NES_MONITOR_CONSOLE,
+
 	// other
 	SCREEN_LAYOUT_C64_AND_ATARI,
 	
@@ -145,7 +156,7 @@ enum screenLayouts
 #define FIRST_ATARI_SCREEN_LAYOUT	SCREEN_LAYOUT_ATARI_ONLY
 #define LAST_ATARI_SCREEN_LAYOUT	SCREEN_LAYOUT_ATARI_SOURCE_CODE
 #define FIRST_NES_SCREEN_LAYOUT		SCREEN_LAYOUT_NES_ONLY
-#define LAST_NES_SCREEN_LAYOUT		SCREEN_LAYOUT_NES_SHOW_STATES
+#define LAST_NES_SCREEN_LAYOUT		SCREEN_LAYOUT_NES_MONITOR_CONSOLE
 
 class CScreenLayout
 {
@@ -482,8 +493,8 @@ public:
 	bool nesDisassembleShowCodeCycles;
 	float nesDisassembleCodeCyclesOffset;
 	bool nesDisassembleShowLabels;
-	bool nesDisassembleShowSourceCode;
 	int nesDisassembleNumberOfLabelCharacters;
+	bool nesDisassembleShowSourceCode;
 
 	bool nesDataDumpVisible;
 	float nesDataDumpX, nesDataDumpY;
@@ -500,10 +511,62 @@ public:
 	bool nesMemoryMapVisible;
 	float nesMemoryMapX, nesMemoryMapY;
 	float nesMemoryMapSizeX, nesMemoryMapSizeY;
+
+	//
+	bool nesMemoryMapPpuNmtVisible;
+	float nesMemoryMapPpuNmtX, nesMemoryMapPpuNmtY;
+	float nesMemoryMapPpuNmtSizeX, nesMemoryMapPpuNmtSizeY;
+
+	bool nesDataDumpPpuNametablesVisible;
+	float nesDataDumpPpuNametablesX, nesDataDumpPpuNametablesY;
+	float nesDataDumpPpuNametablesSizeX, nesDataDumpPpuNametablesSizeY;
+	float nesDataDumpPpuNametablesFontSize;
+	float nesDataDumpPpuNametablesGapAddress;
+	float nesDataDumpPpuNametablesGapHexData;
+	float nesDataDumpPpuNametablesGapDataCharacters;
+	bool nesDataDumpPpuNametablesShowCharacters;
+	bool nesDataDumpPpuNametablesShowDataCharacters;
+	bool nesDataDumpPpuNametablesShowSprites;
+	int nesDataDumpPpuNametablesNumberOfBytesPerLine;
 	
 	bool nesStateAPUVisible;
 	float nesStateAPUX, nesStateAPUY;
 	float nesStateAPUFontSize;
+
+	bool nesStatePPUVisible;
+	float nesStatePPUX, nesStatePPUY;
+	float nesStatePPUFontSize;
+
+	bool nesPpuPatternsVisible;
+	float nesPpuPatternsX, nesPpuPatternsY;
+	float nesPpuPatternsSizeX, nesPpuPatternsSizeY;
+
+	bool nesPpuNametablesVisible;
+	float nesPpuNametablesX, nesPpuNametablesY;
+	float nesPpuNametablesSizeX, nesPpuNametablesSizeY;
+
+	bool nesPpuAttributesVisible;
+	float nesPpuAttributesX, nesPpuAttributesY;
+	float nesPpuAttributesSizeX, nesPpuAttributesSizeY;
+
+	bool nesPpuOamVisible;
+	float nesPpuOamX, nesPpuOamY;
+	float nesPpuOamSizeX, nesPpuOamSizeY;
+
+	bool nesPpuPaletteVisible;
+	float nesPpuPaletteX, nesPpuPaletteY;
+	float nesPpuPaletteSizeX, nesPpuPaletteSizeY;
+
+	bool nesMonitorConsoleVisible;
+	float nesMonitorConsoleX, nesMonitorConsoleY;
+	float nesMonitorConsoleSizeX, nesMonitorConsoleSizeY;
+	float nesMonitorConsoleFontScale;
+	int nesMonitorConsoleNumLines;
+
+	bool nesEmulationCountersVisible;
+	float nesEmulationCountersX, nesEmulationCountersY;
+	float nesEmulationCountersFontSize;
+
 };
 
 class CEmulationThreadC64 : public CSlrThread
@@ -634,8 +697,7 @@ public:
 	CViewEmulationState *viewEmulationState;
 
 	CViewTimeline *viewC64Timeline;
-	CViewTimeline *viewAtariTimeline;
-	
+
 	CViewC64VicDisplay *viewC64VicDisplay;
 	CViewC64VicControl *viewC64VicControl;
 	CViewC64MemoryDebuggerLayoutToolbar *viewC64MemoryDebuggerLayoutToolbar;
@@ -654,6 +716,7 @@ public:
 	// Atari
 	CViewAtariScreen *viewAtariScreen;
 	CViewDisassemble *viewAtariDisassemble;
+	CViewSourceCode *viewAtariSourceCode;
 	CViewDataDump *viewAtariMemoryDataDump;
 	CViewDataWatch *viewAtariMemoryDataWatch;
 	CViewMemoryMap *viewAtariMemoryMap;
@@ -666,19 +729,33 @@ public:
 	CViewMonitorConsole *viewAtariMonitorConsole;
 	CViewEmulationCounters *viewAtariEmulationCounters;
 	CViewSnapshots *viewAtariSnapshots;
+	CViewTimeline *viewAtariTimeline;
 
 	// NES
 	CViewNesScreen *viewNesScreen;
 	CViewNesStateCPU *viewNesStateCPU;
 	CViewNesStateAPU *viewNesStateAPU;
+	CViewNesStatePPU *viewNesStatePPU;
+	CViewNesPpuPatterns *viewNesPpuPatterns;
+	CViewNesPpuNametables *viewNesPpuNametables;
+	CViewNesPpuAttributes *viewNesPpuAttributes;
+	CViewNesPpuOam *viewNesPpuOam;
+	CViewNesPpuPalette *viewNesPpuPalette;
 	CViewDisassemble *viewNesDisassemble;
-	CViewSourceCode *viewAtariSourceCode;
-	CViewDataDump *viewNesMemoryDataDump;
+	CViewSourceCode *viewNesSourceCode;
 	CViewMemoryMap *viewNesMemoryMap;
+	CViewDataDump *viewNesMemoryDataDump;
+	CViewMemoryMap *viewNesPpuNametableMemoryMap;
+	CViewDataDump *viewNesPpuNametableMemoryDataDump;
+	CViewMonitorConsole *viewNesMonitorConsole;
 	CViewBreakpoints *viewNesBreakpoints;
+	CViewEmulationCounters *viewNesEmulationCounters;
 	CViewSnapshots *viewNesSnapshots;
+	CViewTimeline *viewNesTimeline;
 
-
+	//
+	bool isDataDirectlyFromRAM;
+	
 	// TODO: these below are C64 related, move to debug interface
 	// updated every render frame
 	vicii_cycle_state_t currentViciiState;
@@ -787,6 +864,11 @@ public:
 	
 	// mouse cursor for scrolling where cursor is
 	float mouseCursorX, mouseCursorY;
+	
+	//
+	bool IsMouseCursorOnTimeline();
+	int mouseCursorVisibilityCounter;
+	int mouseCursorNumFramesToHideCursor;
 	
 	//
 	virtual void SharedMemorySignalCallback(CByteBuffer *sharedMemoryData);

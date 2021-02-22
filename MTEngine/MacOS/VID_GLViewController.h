@@ -3,9 +3,6 @@
 
 #include "SYS_Defs.h"
 
-#import <Cocoa/Cocoa.h>
-#import <OpenGL/OpenGL.h>
-
 #include "VID_Blits.h"
 
 extern GLfloat SCREEN_WIDTH;

@@ -19,9 +19,14 @@ unsigned char *nesd_get_ram();
 unsigned int nesd_get_cpu_pc();
 unsigned char nesd_peek_io(unsigned short addr);
 void nesd_get_cpu_regs(unsigned short *pc, unsigned char *a, unsigned char *x, unsigned char *y, unsigned char *p, unsigned char *s, unsigned char *irq);
+void nesd_get_ppu_clocks(unsigned int *hClock, unsigned int *vClock, unsigned int *cycle);
+
+void nesd_async_check();
 
 CByteBuffer *nesd_store_state();
 bool nesd_restore_state(CByteBuffer *byteBuffer);
+bool nesd_store_nesd_state_to_bytebuffer(CByteBuffer *byteBuffer);
+bool nesd_restore_nesd_state_from_bytebuffer(CByteBuffer *byteBuffer);
 unsigned char nesd_peek_io(unsigned short addr);
 unsigned char nesd_peek_safe_io(unsigned short addr);
 
@@ -32,7 +37,15 @@ void nesd_mark_cell_read(uint16 addr);
 void nesd_mark_cell_write(uint16 addr, uint8 value);
 void nesd_mark_cell_execute(uint16 addr, uint8 opcode);
 void nesd_check_pc_breakpoint(uint16 pc);
-void nesd_debug_pause_check();
+
+int nesd_is_performing_snapshot_restore();
+int nesd_check_snapshot_restore();
+void nesd_check_snapshot_interval();
+void nesd_check_cpu_snapshot_manager_restore();
+void nesd_check_cpu_snapshot_manager_store();
+int nesd_debug_pause_check(int allowRestore);
+
+void nesd_update_screen(bool lockRenderMutex);
 
 //
 //void nesd_async_check();
@@ -62,8 +75,9 @@ bool nesd_is_pal();
 double nesd_get_cpu_clock_frquency();
 
 
-//void nesd_mutex_lock();
-//void nesd_mutex_unlock();
+void nesd_mutex_lock();
+void nesd_mutex_unlock();
+
 //
 
 //

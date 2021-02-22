@@ -250,6 +250,7 @@ public:
 
 	void UpdateControlKeys(u32 keyCode);
 	
+	volatile bool isMouseCursorVisible;
 	void SetMouseCursorVisible(bool isVisible);
 	void SetApplicationWindowFullScreen(bool isFullScreen);
 	void SetApplicationWindowAlwaysOnTop(bool isAlwaysOnTop);

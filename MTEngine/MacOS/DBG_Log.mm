@@ -99,6 +99,7 @@ void LOG_Init(void)
 #endif
 
 	LOG_SetLevel(DBGLVL_MAIN, true);
+	LOG_SetLevel(DBGLVL_WARN, false);
 	LOG_SetLevel(DBGLVL_DEBUG, true);
 	LOG_SetLevel(DBGLVL_DEBUG2, false);
 	LOG_SetLevel(DBGLVL_INPUT, false);
@@ -109,7 +110,7 @@ void LOG_Init(void)
 	LOG_SetLevel(DBGLVL_LEVEL, false);
 	LOG_SetLevel(DBGLVL_XMPLAYER, false);
 	LOG_SetLevel(DBGLVL_AUDIO, false);
-	LOG_SetLevel(DBGLVL_TODO, true);
+	LOG_SetLevel(DBGLVL_TODO, false);
 	
 	LOG_SetLevel(DBGLVL_PAINT, false);
 	

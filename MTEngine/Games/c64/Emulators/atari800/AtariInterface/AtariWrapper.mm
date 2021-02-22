@@ -59,53 +59,9 @@ void atrd_mark_atari_cell_write(uint16 addr, uint8 value)
 	{
 		debugInterface->LockMutex();
 		
-		std::map<uint16, CMemoryBreakpoint *>::iterator it = debugInterface->breakpointsMemory.find(addr);
-		if (it != debugInterface->breakpointsMemory.end())
+		if (debugInterface->breakpointsMemory->EvaluateBreakpoint(addr, value) != NULL)
 		{
-			CMemoryBreakpoint *memoryBreakpoint = it->second;
-			
-			if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_EQUAL)
-			{
-				if (value == memoryBreakpoint->value)
-				{
-					debugInterface->SetDebugMode(DEBUGGER_MODE_PAUSED);
-				}
-			}
-			else if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_NOT_EQUAL)
-			{
-				if (value != memoryBreakpoint->value)
-				{
-					debugInterface->SetDebugMode(DEBUGGER_MODE_PAUSED);
-				}
-			}
-			else if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_LESS)
-			{
-				if (value < memoryBreakpoint->value)
-				{
-					debugInterface->SetDebugMode(DEBUGGER_MODE_PAUSED);
-				}
-			}
-			else if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_LESS_OR_EQUAL)
-			{
-				if (value <= memoryBreakpoint->value)
-				{
-					debugInterface->SetDebugMode(DEBUGGER_MODE_PAUSED);
-				}
-			}
-			else if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_GREATER)
-			{
-				if (value > memoryBreakpoint->value)
-				{
-					debugInterface->SetDebugMode(DEBUGGER_MODE_PAUSED);
-				}
-			}
-			else if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_GREATER_OR_EQUAL)
-			{
-				if (value >= memoryBreakpoint->value)
-				{
-					debugInterface->SetDebugMode(DEBUGGER_MODE_PAUSED);
-				}
-			}
+			debugInterface->SetDebugMode(DEBUGGER_MODE_PAUSED);
 		}
 		
 		debugInterface->UnlockMutex();
@@ -146,11 +102,9 @@ void atrd_check_pc_breakpoint(uint16 pc)
 	else if (debugInterface->breakOnPC)
 	{
 		debugInterface->LockMutex();
-		std::map<uint16, CAddrBreakpoint *>::iterator it = debugInterface->breakpointsPC.find(pc);
-		if (it != debugInterface->breakpointsPC.end())
+		CAddrBreakpoint *addrBreakpoint = debugInterface->breakpointsPC->EvaluateBreakpoint(pc);
+		if (addrBreakpoint != NULL)
 		{
-			CAddrBreakpoint *addrBreakpoint = it->second;
-			
 			if (IS_SET(addrBreakpoint->actions, ADDR_BREAKPOINT_ACTION_SET_BACKGROUND))
 			{
 				// Not supported

@@ -23,9 +23,8 @@ class CViewSourceCode : public CGuiView, CGuiEditHexCallback, CGuiEditBoxTextCal
 {
 public:
 	CViewSourceCode(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
-						CSlrDataAdapter *dataAdapter, CViewMemoryMap *memoryMap,
-						CViewDisassemble *viewDisassemble,
-						CDebugInterface *debugInterface);
+					CDebugInterface *debugInterface, CSlrDataAdapter *dataAdapter,
+					CViewMemoryMap *memoryMap, CViewDisassemble *viewDisassemble);
 	virtual ~CViewSourceCode();
 
 	virtual void Render();
@@ -61,7 +60,7 @@ public:
 	std::map<uint16, uint16> renderBreakpoints;
 	
 	// these point to real breakpoints (emulation mutex will be locked when these are edited)
-	std::map<uint16, CAddrBreakpoint *> *breakpointsMap;
+	std::map<int, CAddrBreakpoint *> *breakpointsMap;
 	 */
 	
 	void SetViewParameters(float posX, float posY, float posZ, float sizeX, float sizeY, CSlrFont *font, float fontSize);

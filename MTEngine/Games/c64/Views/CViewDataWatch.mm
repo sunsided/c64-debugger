@@ -52,7 +52,8 @@ CDataWatchDetails::~CDataWatchDetails()
 }
 
 CViewDataWatch::CViewDataWatch(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
-									 CSlrDataAdapter *dataAdapter, CViewMemoryMap *viewMemoryMap, CDebugInterface *debugInterface)
+							   CDebugInterface *debugInterface, CSlrDataAdapter *dataAdapter,
+							   CViewMemoryMap *viewMemoryMap)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
 {
 	this->name = "CViewDataWatch";

@@ -36,7 +36,8 @@ class CViewDataWatch : public CGuiView
 {
 public:
 	CViewDataWatch(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
-				   CSlrDataAdapter *dataAdapter, CViewMemoryMap *viewMemoryMap, CDebugInterface *debugInterface);
+				   CDebugInterface *debugInterface, CSlrDataAdapter *dataAdapter,
+				   CViewMemoryMap *viewMemoryMap);
 	~CViewDataWatch();
 	
 	virtual void SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY);

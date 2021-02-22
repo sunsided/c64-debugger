@@ -11,6 +11,7 @@
 #include "SYS_KeyCodes.h"
 #include "CViewDataDump.h"
 #include "CViewDisassemble.h"
+#include "CSnapshotsManager.h"
 #include "C64DebugInterface.h"
 #include "AtariDebugInterface.h"
 #include "C64DebugInterfaceVice.h"
@@ -319,7 +320,9 @@ void CViewMemoryMapCell::MarkCellExecuteArgument()
 }
 
 CViewMemoryMap::CViewMemoryMap(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
-									 CDebugInterface *debugInterface, int imageWidth, int imageHeight, int ramSize, bool isFromDisk)
+							   CDebugInterface *debugInterface, CSlrDataAdapter *dataAdapter,
+							   int imageWidth, int imageHeight, int ramSize, bool showCurrentExecutePC,
+							   bool isFromDisk)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
 {
 	this->name = "CViewMemoryMap";
@@ -327,8 +330,11 @@ CViewMemoryMap::CViewMemoryMap(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	viewDataDump = NULL;
 	
 	this->debugInterface = debugInterface;
+	this->dataAdapter = dataAdapter;
 	
+	this->showCurrentExecutePC = showCurrentExecutePC;
 	this->isFromDisk = isFromDisk;
+	
 	this->imageWidth = imageWidth;
 	this->imageHeight = imageHeight;
 	this->ramSize = ramSize;
@@ -369,8 +375,6 @@ CViewMemoryMap::CViewMemoryMap(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	frameCounter = 0;
 	nextScreenUpdateFrame = 0;
 	
-	isDataDirectlyFromRAM = false;
-	
 	cursorInside = false;
 	cursorX = cursorY = 0.5f;
 	
@@ -403,63 +407,91 @@ void CViewMemoryMap::DoLogic()
 	////
 }
 
+void CViewMemoryMap::SetDataAdapter(CSlrDataAdapter *newDataAdapter)
+{
+	this->dataAdapter = newDataAdapter;
+}
+
+void CViewMemoryMap::UpdateMapColorsForCell(CViewMemoryMapCell *cell)
+{
+	int pc;
+
+	if (showCurrentExecutePC)
+	{
+		if (isFromDisk == false)
+		{
+			pc = debugInterface->GetCpuPC();
+		}
+		else
+		{
+			// TODO: generalise this, create debugInterface for drive
+			C64DebugInterfaceVice *debugInterfaceVice = (C64DebugInterfaceVice *)debugInterface;
+			pc = debugInterfaceVice->GetDrive1541PC();
+		}
+		
+		if (cell->addr == pc)
+		{
+			cell->sr = 1.0f;
+			cell->sg = 1.0f;
+			cell->sb = 1.0f;
+			cell->sa = 1.0f;
+		}
+	}
+	
+	if (cell->isExecuteCode)
+	{
+		cell->rr = cell->sr + colorExecuteCodeR2;// + cell->vr;
+		cell->rg = cell->sg + colorExecuteCodeG2;// + cell->vg;
+		cell->rb = cell->sb + colorExecuteCodeB2;// + cell->vb;
+		cell->ra = cell->sa + colorExecuteCodeA2;// + cell->va;
+	}
+	else if (cell->isExecuteArgument)
+	{
+		cell->rr = cell->sr + colorExecuteArgumentR2;// + cell->vr;
+		cell->rg = cell->sg + colorExecuteArgumentG2;// + cell->vg;
+		cell->rb = cell->sb + colorExecuteArgumentB2;// + cell->vb;
+		cell->ra = cell->sa + colorExecuteArgumentA2;// + cell->va;
+	}
+	else
+	{
+		cell->rr = cell->vr + cell->sr;
+		cell->rg = cell->vg + cell->sg;
+		cell->rb = cell->vb + cell->sb;
+		cell->ra = cell->va + cell->sa;
+	}
+	
+	if (cell->rr > 1.0) cell->rr = 1.0;
+	if (cell->rg > 1.0) cell->rg = 1.0;
+	if (cell->rb > 1.0) cell->rb = 1.0;
+	if (cell->ra > 1.0) cell->ra = 1.0;
+}
+
 void CViewMemoryMap::UpdateWholeMap()
 {
 	//LOGD("FRAMES_PER_SECOND=%d", FRAMES_PER_SECOND);
 	
-	uint16 pc;
+	int pc;
 	
-	
-	if (isFromDisk == false)
+	if (showCurrentExecutePC)
 	{
-		pc = debugInterface->GetCpuPC();
+		if (isFromDisk == false)
+		{
+			pc = debugInterface->GetCpuPC();
+		}
+		else
+		{
+			// TODO: generalise this, create debugInterface for drive
+			C64DebugInterfaceVice *debugInterfaceVice = (C64DebugInterfaceVice *)debugInterface;
+			pc = debugInterfaceVice->GetDrive1541PC();
+		}
 	}
-	else
-	{
-		// TODO: generalise this
-		C64DebugInterfaceVice *debugInterfaceVice = (C64DebugInterfaceVice *)debugInterface;
-		pc = debugInterfaceVice->GetDrive1541PC();
-	}
-	
 
 	// use bitmap
 	int vx = 0;
 	int vy = 0;
-	
 
-//	if (isDataDirectlyFromRAM)
-//	{
-//		debugInterface->GetWholeMemoryMapFromRam(memoryBuffer);
-//	}
-//	else
-//	{
-//		debugInterface->GetWholeMemoryMap(memoryBuffer);
-//	}
-
-	if (isFromDisk == false)
-	{
-		if (isDataDirectlyFromRAM)
-		{
-			debugInterface->GetWholeMemoryMapFromRam(memoryBuffer);
-		}
-		else
-		{
-			debugInterface->GetWholeMemoryMap(memoryBuffer);
-		}
-	}
-	else
-	{
-		C64DebugInterfaceVice *debugInterfaceVice = (C64DebugInterfaceVice *)debugInterface;
-		if (isDataDirectlyFromRAM)
-		{
-			debugInterfaceVice->GetWholeMemoryMapFromRam1541(memoryBuffer);
-		}
-		else
-		{
-			debugInterfaceVice->GetWholeMemoryMap1541(memoryBuffer);
-		}
-	}
-	
+	// read whole map from data adapter
+	dataAdapter->AdapterReadBlockDirect(memoryBuffer, 0, dataAdapter->AdapterGetDataLength());
 	
 	u16 addr = 0x0000;
 	
@@ -482,7 +514,7 @@ void CViewMemoryMap::UpdateWholeMap()
 
 				ColorFromValue(v, &(cell->vr), &(cell->vg), &(cell->vb), &(cell->va));
 				
-				if (addr == pc)
+				if (showCurrentExecutePC && addr == pc)
 				{
 					cell->sr = 1.0f;
 					cell->sg = 1.0f;
@@ -511,7 +543,6 @@ void CViewMemoryMap::UpdateWholeMap()
 					cell->rb = cell->vb + cell->sb;
 					cell->ra = cell->va + cell->sa;
 				}
-
 				
 				if (cell->rr > 1.0) cell->rr = 1.0;
 				if (cell->rg > 1.0) cell->rg = 1.0;
@@ -594,13 +625,13 @@ void CViewMemoryMap::UpdateWholeMap()
 	}
 }
 
-void CViewMemoryMap::CellRead(uint16 addr)
+void CViewMemoryMap::CellRead(int addr)
 {
 	CViewMemoryMapCell *cell = memoryCells[addr];
 	cell->MarkCellRead();
 }
 
-void CViewMemoryMap::CellRead(uint16 addr, uint16 pc, int readRasterLine, int readRasterCycle)
+void CViewMemoryMap::CellRead(int addr, int pc, int readRasterLine, int readRasterCycle)
 {
 	CViewMemoryMapCell *cell = memoryCells[addr];
 	cell->MarkCellRead();
@@ -608,16 +639,18 @@ void CViewMemoryMap::CellRead(uint16 addr, uint16 pc, int readRasterLine, int re
 	cell->readPC = pc;
 	cell->readRasterLine = readRasterLine;
 	cell->readRasterCycle = readRasterCycle;
+
+	cell->readCycle = debugInterface->GetCurrentCpuInstructionCycleCounter();
 }
 
-void CViewMemoryMap::CellWrite(uint16 addr, uint8 value)
+void CViewMemoryMap::CellWrite(int addr, uint8 value)
 {
 	CViewMemoryMapCell *cell = memoryCells[addr];
 
 	cell->MarkCellWrite(value);
 }
 
-void CViewMemoryMap::CellWrite(uint16 addr, uint8 value, uint16 pc, int writeRasterLine, int writeRasterCycle)
+void CViewMemoryMap::CellWrite(int addr, uint8 value, int pc, int writeRasterLine, int writeRasterCycle)
 {
 	CViewMemoryMapCell *cell = memoryCells[addr];
 	cell->MarkCellWrite(value);
@@ -625,30 +658,36 @@ void CViewMemoryMap::CellWrite(uint16 addr, uint8 value, uint16 pc, int writeRas
 	cell->writePC = pc;
 	cell->writeRasterLine = writeRasterLine;
 	cell->writeRasterCycle = writeRasterCycle;
+	
+	cell->writeCycle = debugInterface->GetCurrentCpuInstructionCycleCounter();
 }
 
-void CViewMemoryMap::CellExecute(uint16 addr, uint8 opcode)
+void CViewMemoryMap::CellExecute(int addr, uint8 opcode)
 {
 	//LOGD("CViewMemoryMap::CellExecute: addr=%4.4x", addr);
 	CViewMemoryMapCell *cell = memoryCells[addr];
 
 	cell->MarkCellExecuteCode(opcode);
-	
+	cell->executeCycle = debugInterface->GetCurrentCpuInstructionCycleCounter();
+
 	uint8 l = opcodes[opcode].addressingLength;
 	if (l == 2)
 	{
 		addr++;
 		cell = memoryCells[addr];
 		cell->MarkCellExecuteArgument();
+		cell->executeCycle = debugInterface->GetCurrentCpuInstructionCycleCounter();
 	}
 	else if (l == 3)
 	{
 		addr++;
 		cell = memoryCells[addr];
 		cell->MarkCellExecuteArgument();
+		cell->executeCycle = debugInterface->GetCurrentCpuInstructionCycleCounter();
 		addr++;
 		cell = memoryCells[addr];
 		cell->MarkCellExecuteArgument();
+		cell->executeCycle = debugInterface->GetCurrentCpuInstructionCycleCounter();
 	}
 }
 
@@ -1223,11 +1262,11 @@ void CViewMemoryMap::Render()
 {
 	bool renderMapValuesInThisFrame = renderMapValues;
 	
-	// TODO: fix me
 	if (debugInterface->GetSettingIsWarpSpeed() == false)
 	{
-		CellsAnimationLogic();
-		
+		// Note, the CellsAnimationLogic is run by CViewC64 separately for all memory map views
+		// CellsAnimationLogic();
+
 		// do not update too often
 		if (nextScreenUpdateFrame < frameCounter)
 		{
@@ -1255,7 +1294,6 @@ void CViewMemoryMap::Render()
 
 	frameCounter++;
 	
-	
 	float gap = 1.0f;
 	
 	BlitRectangle(posX-gap, posY-gap, -1, sizeX+gap*2, sizeY+gap*2, 0.3, 0.3, 0.3, 0.7f);
@@ -1274,7 +1312,6 @@ void CViewMemoryMap::Render()
 		 renderTextureEndX,
 		 renderTextureEndY);
 
-	
 	if (renderMapValuesInThisFrame)
 	{
 		float cx, cy;
@@ -1483,12 +1520,30 @@ bool CViewMemoryMap::DoTap(GLfloat x, GLfloat y)
 						{
 							viewDataDump->viewDisassemble->ScrollToAddress(cell->readPC);
 						}
+						
+						if (guiMain->isAltPressed)
+						{
+							if (debugInterface->snapshotsManager)
+							{
+								LOGM("============######################### RESTORE TO READ CYCLE=%d", cell->readCycle);
+								debugInterface->snapshotsManager->RestoreSnapshotByCycle(cell->readCycle);
+							}
+						}
 					}
 					else
 					{
 						if (cell->writePC != -1)
 						{
 							viewDataDump->viewDisassemble->ScrollToAddress(cell->writePC);
+						}
+						
+						if (guiMain->isAltPressed)
+						{
+							if (debugInterface->snapshotsManager)
+							{
+								LOGM("============######################### RESTORE TO WRITE CYCLE=%d", cell->writeCycle);
+								debugInterface->snapshotsManager->RestoreSnapshotByCycle(cell->writeCycle);
+							}
 						}
 					}
 				}

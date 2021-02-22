@@ -6,8 +6,6 @@
 #include "CViewSnapshots.h"
 #include "CSlrString.h"
 #include "RES_ResourceManager.h"
-#include "C64DebugInterface.h"
-#include "AtariDebugInterface.h"
 #include "C64SettingsStorage.h"
 #include "C64SharedMemory.h"
 #include "CViewVicEditor.h"
@@ -15,6 +13,10 @@
 #include "SND_SoundEngine.h"
 #include "CViewJukeboxPlaylist.h"
 #include "C64D_Version.h"
+
+#include "C64DebugInterface.h"
+#include "AtariDebugInterface.h"
+#include "NesDebugInterface.h"
 
 #define C64D_PASS_CONFIG_DATA_MARKER	0x029A
 #define C64D_PASS_CONFIG_DATA_VERSION	0x0002
@@ -133,7 +135,12 @@ void c64PrintCommandLineHelp()
 	printHelp("-atr <file>\n");
 	printHelp("     insert ATR disk\n");
 #endif
-	
+
+#if defined(RUN_NES)
+	printHelp("-nes <file>\n");
+	printHelp("     insert iNES cartridge\n");
+#endif
+
 	printHelp("-soundout <\"device name\" | device number>\n");
 	printHelp("     set sound out device by name or number\n");
 	printHelp("-fullscreen");
@@ -368,8 +375,32 @@ void C64DebuggerParseCommandLine0()
 			}
 #endif
 			
+#if defined(RUN_NES)
+			if (ext->CompareWith("nes"))
+			{
+				char *path = sysCommandLineArguments[0];
+				sysCommandLineArguments.clear();
+				sysCommandLineArguments.push_back("-pass");
+				sysCommandLineArguments.push_back("-wait");
+				sysCommandLineArguments.push_back("100");
+				sysCommandLineArguments.push_back("-nes");
+				sysCommandLineArguments.push_back(path);
+				
+				LOGD("delete filePath");
+				delete filePath;
+				
+				c64SettingsWaitOnStartup = 50;
+				LOGD("delete ext");
+				delete ext;
+				
+				// pass to running instance if exists
+				C64DebuggerInitSharedMemory();
+				C64DebuggerPassConfigToRunningInstance();
+				
+				return;
+			}
 
-			
+#endif
 			delete filePath;
 			delete ext;
 			
@@ -760,6 +791,14 @@ void c64PerformStartupTasksThreaded()
 	}
 	
 	///////////
+	
+	if (viewC64->debugInterfaceNes)
+	{
+		if (c64SettingsPathToNES != NULL)
+		{
+			viewC64->viewC64MainMenu->LoadNES(c64SettingsPathToNES, false);
+		}
+	}
 
 	if (c64SettingsJmpOnStartupAddr > 0 && c64SettingsJmpOnStartupAddr < 0x10000)
 	{
@@ -791,10 +830,10 @@ class C64PerformStartupTasksThread : public CSlrThread
 		if (c64SettingsPathToAtariSnapshot != NULL && c64SettingsWaitOnStartup < 150)
 			c64SettingsWaitOnStartup = 150;
 
-		if (c64dStartupTime == 0 || (SYS_GetCurrentTimeInMillis() - c64dStartupTime < 500))
+		if (c64dStartupTime == 0 || (SYS_GetCurrentTimeInMillis() - c64dStartupTime < 100))
 		{
-			LOGD("C64PerformStartupTasksThread: early run, wait 500ms");
-			c64SettingsWaitOnStartup += 500;
+			LOGD("C64PerformStartupTasksThread: early run, wait 100ms");
+			c64SettingsWaitOnStartup += 100;
 		}
 		
 		LOGD("C64PerformStartupTasksThread: c64SettingsWaitOnStartup=%d", c64SettingsWaitOnStartup);
@@ -863,6 +902,7 @@ void C64DebuggerParseCommandLine2()
 		{
 			char *arg = c64ParseCommandLineGetArgument();
 			c64SettingsPathToD64 = new CSlrString(arg);
+			isD64InCommandLine = true;
 		}
 		else if (!strcmp(cmd, "tap"))
 		{
@@ -896,6 +936,12 @@ void C64DebuggerParseCommandLine2()
 			char *arg = c64ParseCommandLineGetArgument();
 			LOGD("C64DebuggerParseCommandLine2: set c64SettingsPathToATR=%s", arg);
 			c64SettingsPathToATR = new CSlrString(arg);
+		}
+		else if (!strcmp(cmd, "nes"))
+		{
+			char *arg = c64ParseCommandLineGetArgument();
+			LOGD("C64DebuggerParseCommandLine2: set c64SettingsPathToNES=%s", arg);
+			c64SettingsPathToNES = new CSlrString(arg);
 		}
 
 		else if (!strcmp(cmd, "jmp"))
@@ -1053,6 +1099,12 @@ void C64DebuggerPassConfigToRunningInstance()
 	{
 		byteBuffer->PutU8(C64D_PASS_CONFIG_DATA_PATH_TO_XEX);
 		byteBuffer->PutSlrString(c64SettingsPathToXEX);
+	}
+	
+	if (c64SettingsPathToNES)
+	{
+		byteBuffer->PutU8(C64D_PASS_CONFIG_DATA_PATH_TO_NES);
+		byteBuffer->PutSlrString(c64SettingsPathToNES);
 	}
 	
 	if (c64SettingsPathToATR)
@@ -1264,6 +1316,12 @@ void c64PerformNewConfigurationTasksThreaded(CByteBuffer *byteBuffer)
 			viewC64->viewC64MainMenu->InsertATR(str, false, c64SettingsAutoJmpFromInsertedDiskFirstPrg, 0, true);
 			delete str;
 		}
+		else if (t == C64D_PASS_CONFIG_DATA_PATH_TO_NES)
+		{
+			CSlrString *str = byteBuffer->GetSlrString();
+			viewC64->viewC64MainMenu->LoadNES(str, true);
+			delete str;
+		}
 		else if (t == C64D_PASS_CONFIG_DATA_SET_AUTOJMP)
 		{
 			bool b = byteBuffer->GetBool();
@@ -1335,6 +1393,10 @@ void c64PerformNewConfigurationTasksThreaded(CByteBuffer *byteBuffer)
 		if (viewC64->debugInterfaceAtari)
 		{
 			viewC64->debugInterfaceAtari->SetDebugMode(DEBUGGER_MODE_RUNNING);
+		}
+		if (viewC64->debugInterfaceNes)
+		{
+			viewC64->debugInterfaceNes->SetDebugMode(DEBUGGER_MODE_RUNNING);
 		}
 	}
 	

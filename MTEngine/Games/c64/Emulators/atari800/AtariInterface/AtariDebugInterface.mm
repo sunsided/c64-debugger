@@ -246,12 +246,12 @@ void AtariDebugInterface::DoFrame()
 
 //
 // this is main emulation cpu cycle counter
-unsigned int AtariDebugInterface::GetMainCpuCycleCounter()
+u64 AtariDebugInterface::GetMainCpuCycleCounter()
 {
 	return atrdMainCpuCycle;
 }
 
-unsigned int AtariDebugInterface::GetPreviousCpuInstructionCycleCounter()
+u64 AtariDebugInterface::GetPreviousCpuInstructionCycleCounter()
 {
 	LOGD("AtariDebugInterface::GetPreviousCpuInstructionCycleCounter: now=%d previous=%d", atrdMainCpuCycle, atrdMainCpuPreviousInstructionCycle);
 	return atrdMainCpuPreviousInstructionCycle;
@@ -263,7 +263,7 @@ void AtariDebugInterface::ResetMainCpuDebugCycleCounter()
 	atrdMainCpuDebugCycle = 0;
 }
 
-unsigned int AtariDebugInterface::GetMainCpuDebugCycleCounter()
+u64 AtariDebugInterface::GetMainCpuDebugCycleCounter()
 {
 	return atrdMainCpuDebugCycle;
 }
@@ -1312,10 +1312,10 @@ CViewBreakpoints *AtariDebugInterface::GetViewBreakpoints() { return NULL; }
 CViewDataWatch *AtariDebugInterface::GetViewMemoryDataWatch() { return NULL; }
 CSlrDataAdapter *AtariDebugInterface::GetDataAdapter() { return NULL; }
 float AtariDebugInterface::GetEmulationFPS() { return 0; }
-unsigned int AtariDebugInterface::GetMainCpuCycleCounter() { return 0; }
-unsigned int AtariDebugInterface::GetPreviousCpuInstructionCycleCounter() { return 0; }
+u64 AtariDebugInterface::GetMainCpuCycleCounter() { return 0; }
+u64 AtariDebugInterface::GetPreviousCpuInstructionCycleCounter() { return 0; }
 void AtariDebugInterface::ResetMainCpuDebugCycleCounter() {}
-unsigned int AtariDebugInterface::GetMainCpuDebugCycleCounter() { return 0; }
+u64 AtariDebugInterface::GetMainCpuDebugCycleCounter() { return 0; }
 bool AtariDebugInterface::IsDriveDirtyForSnapshot() { return false; }
 void AtariDebugInterface::ClearDriveDirtyForSnapshotFlag() {}
 bool AtariDebugInterface::LoadChipsSnapshotSynced(CByteBuffer *byteBuffer) { return NULL; }

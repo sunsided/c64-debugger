@@ -41,12 +41,13 @@ public:
 	virtual float GetEmulationFPS();
 
 	// this is main emulation cpu cycle counter
-	virtual unsigned int GetMainCpuCycleCounter();
-	virtual unsigned int GetPreviousCpuInstructionCycleCounter();
+	virtual u64 GetMainCpuCycleCounter();
+	virtual u64 GetCurrentCpuInstructionCycleCounter();
+	virtual u64 GetPreviousCpuInstructionCycleCounter();
 	
 	// resettable counters for debug purposes
 	virtual void ResetMainCpuDebugCycleCounter();
-	virtual unsigned int GetMainCpuDebugCycleCounter();
+	virtual u64 GetMainCpuDebugCycleCounter();
 	virtual void ResetEmulationFrameCounter();
 	virtual unsigned int GetEmulationFrameNumber();
 
@@ -71,15 +72,10 @@ public:
 	bool breakOnDrive1541IrqVIA2;
 	bool breakOnDrive1541IrqIEC;
 	bool breakOnDrive1541PC;
-	std::map<uint16, CAddrBreakpoint *> breakpointsDrive1541PC;
+	CDebuggerAddrBreakpoints *breakpointsDrive1541PC;
 	bool breakOnDrive1541Memory;
-	std::map<uint16, CMemoryBreakpoint *> breakpointsDrive1541Memory;
+	CDebuggerMemoryBreakpoints *breakpointsDrive1541Memory;
 	
-	// TODO: make new debug interface solely for Drive1541 and do not override this:
-	virtual void ClearBreakpoints();
-	virtual void AddAddrBreakpoint(std::map<uint16, CAddrBreakpoint *> *breakpointsMap, CAddrBreakpoint *breakpoint);
-	virtual void RemoveAddrBreakpoint(std::map<uint16, CAddrBreakpoint *> *breakpointsMap, uint16 addr);
-
 	// data adapters
 	CSlrDataAdapter *dataAdapterC64;
 	CSlrDataAdapter *dataAdapterC64DirectRam;
