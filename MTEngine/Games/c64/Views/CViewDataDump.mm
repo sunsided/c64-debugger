@@ -20,6 +20,7 @@
 #include "CSnapshotsManager.h"
 #include <math.h>
 
+#include "VID_Blits.h"
 
 #include "CViewC64Screen.h"
 #include "CViewAtariScreen.h"

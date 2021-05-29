@@ -30,9 +30,9 @@
 #if !defined (GLOBAL_DEBUG_OFF)
 
 //#define LOCAL_DEBUG_OFF
-//#define FULL_LOG
+#define FULL_LOG
 
-//#define LOG_FILE
+#define LOG_FILE
 
 ///////////////////////////////////////////////////////////////
 

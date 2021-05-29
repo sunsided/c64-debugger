@@ -1086,6 +1086,7 @@ void CViewBreakpoints::GuiEditHexEnteredValueMemory(CGuiEditHex *editHex, u32 la
 					memoryBreakpoints->breakpoints[memoryBreakpoint->addr] = memoryBreakpoint;
 					addr = memoryBreakpoint->addr;
 					memoryBreakpoint->value = editHex->value;
+					debugInterface->breakOnMemory = true;
 				}
 				else
 				{
@@ -1269,6 +1270,23 @@ void CViewBreakpoints::UpdateRenderBreakpoints()
 
 		debugInterface->UnlockMutex();
 		viewC64->viewAtariDisassemble->renderBreakpointsMutex->Unlock();
+	}
+	else if (debugInterface->GetEmulatorType() == EMULATOR_TYPE_NESTOPIA)
+	{
+		viewC64->viewNesDisassemble->renderBreakpointsMutex->Lock();
+		debugInterface->LockMutex();
+
+		// NES
+		viewC64->viewNesDisassemble->renderBreakpoints.clear();
+		for (std::map<int, CAddrBreakpoint *>::iterator it = debugInterface->breakpointsPC->breakpoints.begin();
+			 it != debugInterface->breakpointsPC->breakpoints.end(); it++)
+		{
+			CAddrBreakpoint *breakpoint = it->second;
+			viewC64->viewNesDisassemble->renderBreakpoints[breakpoint->addr] = breakpoint->addr;
+		}
+
+		debugInterface->UnlockMutex();
+		viewC64->viewNesDisassemble->renderBreakpointsMutex->Unlock();
 	}
 
 

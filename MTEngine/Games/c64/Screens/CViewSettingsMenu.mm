@@ -503,6 +503,7 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 
 	//
 	options = new std::vector<CSlrString *>();
+	options->push_back(new CSlrString("0"));
 	options->push_back(new CSlrString("1"));
 	options->push_back(new CSlrString("10"));
 	options->push_back(new CSlrString("20"));
@@ -513,7 +514,7 @@ CViewSettingsMenu::CViewSettingsMenu(GLfloat posX, GLfloat posY, GLfloat posZ, G
 	options->push_back(new CSlrString("400"));
 	options->push_back(new CSlrString("500"));
 	options->push_back(new CSlrString("1000"));
-	
+
 	menuItemMemoryMapFadeSpeed = new CViewC64MenuItemOption(fontHeight, new CSlrString("Markers fade out speed: "),
 													  NULL, tr, tg, tb, options, font, fontScale);
 	menuItemMemoryMapFadeSpeed->SetSelectedOption(5, false);
@@ -1893,45 +1894,49 @@ void CViewSettingsMenu::MenuCallbackItemChanged(CGuiViewMenuItem *menuItem)
 		int newFadeSpeed = 100;
 		if (sel == 0)
 		{
-			newFadeSpeed = 1;
+			newFadeSpeed = 0;
 		}
 		else if (sel == 1)
 		{
-			newFadeSpeed = 10;
+			newFadeSpeed = 1;
 		}
 		else if (sel == 2)
 		{
-			newFadeSpeed = 20;
+			newFadeSpeed = 10;
 		}
 		else if (sel == 3)
 		{
-			newFadeSpeed = 50;
+			newFadeSpeed = 20;
 		}
 		else if (sel == 4)
 		{
-			newFadeSpeed = 100;
+			newFadeSpeed = 50;
 		}
 		else if (sel == 5)
 		{
-			newFadeSpeed = 200;
+			newFadeSpeed = 100;
 		}
 		else if (sel == 6)
 		{
-			newFadeSpeed = 300;
+			newFadeSpeed = 200;
 		}
 		else if (sel == 7)
 		{
-			newFadeSpeed = 400;
+			newFadeSpeed = 300;
 		}
 		else if (sel == 8)
 		{
-			newFadeSpeed = 500;
+			newFadeSpeed = 400;
 		}
 		else if (sel == 9)
 		{
+			newFadeSpeed = 500;
+		}
+		else if (sel == 10)
+		{
 			newFadeSpeed = 1000;
 		}
-		
+
 		C64DebuggerSetSetting("MemMapFadeSpeed", &newFadeSpeed);
 	}
 	else if (menuItem == menuItemMaximumSpeed)
@@ -2765,14 +2770,14 @@ void CViewSettingsMenu::DumpC64MemoryMarkers(CSlrString *path)
 	// local copy of memory
 	uint8 *memoryBuffer = new uint8[0x10000];
 	
-	SYS_FatalExit("if (viewC64->viewC64MemoryMap->isDataDirectlyFromRAM)");
+	if (viewC64->isDataDirectlyFromRAM)
 	{
 		viewC64->debugInterfaceC64->GetWholeMemoryMapFromRam(memoryBuffer);
 	}
-//	else
-//	{
-//		viewC64->debugInterfaceC64->GetWholeMemoryMap(memoryBuffer);
-//	}
+	else
+	{
+		viewC64->debugInterfaceC64->GetWholeMemoryMap(memoryBuffer);
+	}
 
 	memoryBuffer[0x0000] = viewC64->debugInterfaceC64->GetByteFromRamC64(0x0000);
 	memoryBuffer[0x0001] = viewC64->debugInterfaceC64->GetByteFromRamC64(0x0001);
@@ -2823,20 +2828,20 @@ void CViewSettingsMenu::DumpDisk1541MemoryMarkers(CSlrString *path)
 	// local copy of memory
 	uint8 *memoryBuffer = new uint8[0x10000];
 	
-	SYS_FatalExit("if (viewC64->viewDrive1541MemoryMap->isDataDirectlyFromRAM)");
+	if (viewC64->isDataDirectlyFromRAM)
 	{
 		for (int addr = 0; addr < 0x10000; addr++)
 		{
 			memoryBuffer[addr] = viewC64->debugInterfaceC64->GetByteFromRam1541(addr);
 		}
 	}
-//	else
-//	{
-//		for (int addr = 0; addr < 0x10000; addr++)
-//		{
-//			memoryBuffer[addr] = viewC64->debugInterfaceC64->GetByte1541(addr);
-//		}
-//	}
+	else
+	{
+		for (int addr = 0; addr < 0x10000; addr++)
+		{
+			memoryBuffer[addr] = viewC64->debugInterfaceC64->GetByte1541(addr);
+		}
+	}
 	
 	memoryBuffer[0x0000] = viewC64->debugInterfaceC64->GetByteFromRam1541(0x0000);
 	memoryBuffer[0x0001] = viewC64->debugInterfaceC64->GetByteFromRam1541(0x0001);

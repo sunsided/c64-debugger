@@ -1389,6 +1389,15 @@ circlebuf.h
 * Change log
 *
 
+v0.64.58.6 (2021/05/29) maintenance release
+Changed: Data watch view shows more characters of the variable name (requested by multiple people)
+Added: Option to set markers speed to 0 (requested by Jens Björnhager)
+Bug fixed: Adding a breakpoint by clicking on disassemble did not work sometimes (thanks to Markus Dano Burgstaller)
+Bug fixed: Adding a NES cartridge did not clean up timeline snapshots
+Bug fixed: Dumping memory markers to a file crashed the debugger
+Bug fixed: Koala export has now more compatible address $6000 instead of $2000 (thanks to Isildur)
+
+
 v0.64.58.4 (2021/02/22), a celebration of my birthday
 Added: Possibility to rewind emulation to state when memory was last written by Alt+Ctrl+click on value in memory dump/memory map view, or last read by Alt+Ctrl+Shift+click
 Added: You can click a few pixels above bottom Timeline to make it sticky and always visible, click again to hide it

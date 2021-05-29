@@ -32,9 +32,9 @@
 #include "types.h"
 
 extern void magicdesk_config_init(void);
-extern void magicdesk_config_setup(BYTE *rawcart);
-extern int magicdesk_bin_attach(const char *filename, BYTE *rawcart);
-extern int magicdesk_crt_attach(FILE *fd, BYTE *rawcart);
+extern void magicdesk_config_setup(unsigned char *rawcart);
+extern int magicdesk_bin_attach(const char *filename, unsigned char *rawcart);
+extern int magicdesk_crt_attach(FILE *fd, unsigned char *rawcart);
 extern void magicdesk_detach(void);
 
 struct snapshot_s;

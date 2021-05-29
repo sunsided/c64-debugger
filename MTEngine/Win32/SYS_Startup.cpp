@@ -1564,7 +1564,6 @@ void SYS_AttachConsoleToStdOutIfNotRedirected()
 			fprintf(stdout, "\n");
 		}	
 	}
-
 }
 
 /*FILE *wlogdfile = NULL;

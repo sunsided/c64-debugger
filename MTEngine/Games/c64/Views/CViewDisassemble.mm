@@ -2193,6 +2193,7 @@ void CViewDisassemble::TogglePCBreakpoint(int addr)
 		breakpoint->actions = ADDR_BREAKPOINT_ACTION_STOP;
 		
 		breakpoints->AddBreakpoint(breakpoint);
+		debugInterface->breakOnPC = true;
 	}
 	
 	debugInterface->UnlockMutex();
@@ -2915,6 +2916,7 @@ void CViewDisassemble::SetBreakpointPC(u16 address, bool setOn)
 			breakpoint->actions = ADDR_BREAKPOINT_ACTION_STOP;
 			
 			breakpoints->AddBreakpoint(breakpoint);
+			debugInterface->breakOnPC = true;
 		}
 		else
 		{

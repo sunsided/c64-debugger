@@ -86,6 +86,8 @@ public:
 	
 	int startItemIndex;
 	
+	int numCharsInColumn;
+	
 	void ScrollDataUp();
 	void ScrollDataDown();
 };

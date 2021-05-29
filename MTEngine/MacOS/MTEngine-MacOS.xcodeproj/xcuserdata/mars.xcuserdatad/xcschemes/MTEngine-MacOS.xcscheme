@@ -14,8 +14,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "8D1107260486CEB800E47090"
-               BuildableName = "NES Debugger.app"
-               BlueprintName = "NES Debugger"
+               BuildableName = "C64 Debugger.app"
+               BlueprintName = "C64 Debugger"
                ReferencedContainer = "container:MTEngine-MacOS.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -30,8 +30,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8D1107260486CEB800E47090"
-            BuildableName = "NES Debugger.app"
-            BlueprintName = "NES Debugger"
+            BuildableName = "C64 Debugger.app"
+            BlueprintName = "C64 Debugger"
             ReferencedContainer = "container:MTEngine-MacOS.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -56,8 +56,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8D1107260486CEB800E47090"
-            BuildableName = "NES Debugger.app"
-            BlueprintName = "NES Debugger"
+            BuildableName = "C64 Debugger.app"
+            BlueprintName = "C64 Debugger"
             ReferencedContainer = "container:MTEngine-MacOS.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -262,8 +262,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8D1107260486CEB800E47090"
-            BuildableName = "NES Debugger.app"
-            BlueprintName = "NES Debugger"
+            BuildableName = "C64 Debugger.app"
+            BlueprintName = "C64 Debugger"
             ReferencedContainer = "container:MTEngine-MacOS.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

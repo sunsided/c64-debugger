@@ -25,7 +25,7 @@
 #ifndef __DBG_LOGF_H__
 #define __DBG_LOGF_H__
 
-#define GLOBAL_DEBUG_OFF
+//#define GLOBAL_DEBUG_OFF
 
 //#define MT_DBGLOG_SKIP_NSSTRING
 //#define MT_DBGLOG_SKIP_CPP

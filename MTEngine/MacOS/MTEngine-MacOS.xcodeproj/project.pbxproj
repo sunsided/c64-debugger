@@ -3932,7 +3932,6 @@
 		41E7718B2515633D005C8B6F /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		41E7718C2515633D005C8B6F /* GLView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GLView.h; sourceTree = "<group>"; };
 		41E7718D2515633D005C8B6F /* AppDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = AppDelegate.mm; sourceTree = "<group>"; };
-		41E7745825CF6A4900AD14AE /* console_inverted_plain_gfx.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = console_inverted_plain_gfx.h; path = Embedded/console_inverted_plain_gfx.h; sourceTree = "<group>"; };
 		41E907B01EB72C430036CE0C /* C64SIDFrequencies.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64SIDFrequencies.h; path = ../Games/c64/Tools/C64SIDFrequencies.h; sourceTree = "<group>"; };
 		41E907B11EB72C430036CE0C /* C64SIDFrequencies.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64SIDFrequencies.mm; path = ../Games/c64/Tools/C64SIDFrequencies.mm; sourceTree = "<group>"; };
 		41EB74ED1E8F8A4400492B27 /* CViewFileD64.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewFileD64.mm; path = ../Games/c64/Screens/CViewFileD64.mm; sourceTree = "<group>"; };
@@ -3943,6 +3942,7 @@
 		41EC74FC1CDB22CA00D0E99F /* CViewMainMenu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewMainMenu.h; path = ../Games/c64/Screens/CViewMainMenu.h; sourceTree = "<group>"; };
 		41EC74FE1CE1E51F00D0E99F /* C64SettingsStorage.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = C64SettingsStorage.mm; path = ../Games/c64/Tools/C64SettingsStorage.mm; sourceTree = "<group>"; };
 		41EC74FF1CE1E51F00D0E99F /* C64SettingsStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = C64SettingsStorage.h; path = ../Games/c64/Tools/C64SettingsStorage.h; sourceTree = "<group>"; };
+		41EE300B25E9298F0050257F /* console_inverted_plain_gfx.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = console_inverted_plain_gfx.h; path = Embedded/console_inverted_plain_gfx.h; sourceTree = "<group>"; };
 		41EF00AE2260DB550031F708 /* CViewC64StateREU.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewC64StateREU.mm; path = ../Games/c64/Views/CViewC64StateREU.mm; sourceTree = "<group>"; };
 		41EF00AF2260DB550031F708 /* CViewC64StateREU.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewC64StateREU.h; path = ../Games/c64/Views/CViewC64StateREU.h; sourceTree = "<group>"; };
 		41EFD1CE23746D550040CD53 /* 64tass-eval.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "64tass-eval.c"; path = "../Games/c64/Tools/64tass/64tass-eval.c"; sourceTree = "<group>"; };
@@ -4287,7 +4287,7 @@
 		41FE272D23575BE900E8F255 /* CViewC64AllGraphics.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CViewC64AllGraphics.mm; path = ../Games/c64/Views/CViewC64AllGraphics.mm; sourceTree = "<group>"; };
 		41FE272E23575BE900E8F255 /* CViewC64AllGraphics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CViewC64AllGraphics.h; path = ../Games/c64/Views/CViewC64AllGraphics.h; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* MTEngine-MacOS-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "MTEngine-MacOS-Info.plist"; sourceTree = "<group>"; };
-		8D1107320486CEB800E47090 /* NES Debugger.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "NES Debugger.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		8D1107320486CEB800E47090 /* C64 Debugger.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "C64 Debugger.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AF9DBBC5113C611C00D05754 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		AFBD7715113895850015E685 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		AFD4D889113C504F00C2DE76 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
@@ -4349,7 +4349,7 @@
 		19C28FACFE9D520D11CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				8D1107320486CEB800E47090 /* NES Debugger.app */,
+				8D1107320486CEB800E47090 /* C64 Debugger.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -6821,6 +6821,7 @@
 		416748012107908C005C8D8A /* Data */ = {
 			isa = PBXGroup;
 			children = (
+				41EE300B25E9298F0050257F /* console_inverted_plain_gfx.h */,
 				414F55412569419C00B33CE5 /* icon_tool_on_top_off_gfx.h */,
 				414F55422569419C00B33CE5 /* icon_tool_on_top_on_gfx.h */,
 				41ADF3C52172550D002E1D20 /* icon_raw_import_gfx.h */,
@@ -8162,7 +8163,6 @@
 				41E0F4AB1CCE547900CE367D /* RES_Embedded.mm */,
 				41E0F4AC1CCE547900CE367D /* RES_Embedded.h */,
 				41E0F4A81CCE546100CE367D /* console_plain_gfx.h */,
-				41E7745825CF6A4900AD14AE /* console_inverted_plain_gfx.h */,
 				41E0F4A91CCE546100CE367D /* default_font_fnt.h */,
 				41E0F4AA1CCE546100CE367D /* default_font_gfx.h */,
 			);
@@ -8249,9 +8249,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		8D1107260486CEB800E47090 /* NES Debugger */ = {
+		8D1107260486CEB800E47090 /* C64 Debugger */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "NES Debugger" */;
+			buildConfigurationList = C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "C64 Debugger" */;
 			buildPhases = (
 				8D1107290486CEB800E47090 /* Resources */,
 				8D11072C0486CEB800E47090 /* Sources */,
@@ -8261,10 +8261,10 @@
 			);
 			dependencies = (
 			);
-			name = "NES Debugger";
+			name = "C64 Debugger";
 			productInstallPath = "$(HOME)/Applications";
 			productName = GLFullScreen;
-			productReference = 8D1107320486CEB800E47090 /* NES Debugger.app */;
+			productReference = 8D1107320486CEB800E47090 /* C64 Debugger.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -8294,7 +8294,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				8D1107260486CEB800E47090 /* NES Debugger */,
+				8D1107260486CEB800E47090 /* C64 Debugger */,
 			);
 		};
 /* End PBXProject section */
@@ -9727,14 +9727,14 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = x86_64;
-				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon NES";
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon C64";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CODE_SIGN_IDENTITY = "Developer ID Application";
 				"CODE_SIGN_IDENTITY[sdk=*]" = "Developer ID Application";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 0.64.58.4;
+				CURRENT_PROJECT_VERSION = 0.64.58.5;
 				DEVELOPMENT_TEAM = APV7Y7Q9JY;
 				EXCLUDED_SOURCE_FILE_NAMES = (
 					"*.txt",
@@ -9756,16 +9756,17 @@
 				INFOPLIST_FILE = "MTEngine-MacOS-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
-				MARKETING_VERSION = 0.64.58.4;
+				MARKETING_VERSION = 0.64.58.5;
 				OTHER_CFLAGS = "-Wno-implicit-function-declaration";
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
 					"-Wno-c++11-narrowing",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = pl.rabidus.NESDebugger;
-				PRODUCT_NAME = "NES Debugger";
+				PRODUCT_BUNDLE_IDENTIFIER = pl.rabidus.C64Debugger;
+				PRODUCT_NAME = "C64 Debugger";
 				PROVISIONING_PROFILE = "";
 				SDKROOT = macosx;
+				STRIP_INSTALLED_PRODUCT = YES;
 				VALID_ARCHS = x86_64;
 				WARNING_CFLAGS = "-Wno-write-strings";
 			};
@@ -9776,13 +9777,13 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
-				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon NES";
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon C64";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CODE_SIGN_IDENTITY = "Developer ID Application";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 0.64.58.4;
+				CURRENT_PROJECT_VERSION = 0.64.58.5;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = APV7Y7Q9JY;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "*.nib *.lproj *.framework *.gch *.xcode* *.xcassets (*) .DS_Store CVS .svn .git .hg *.pbproj *.pbxproj *.txt *.in *.inl";
@@ -9803,16 +9804,17 @@
 				INFOPLIST_FILE = "MTEngine-MacOS-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
-				MARKETING_VERSION = 0.64.58.4;
+				MARKETING_VERSION = 0.64.58.5;
 				OTHER_CFLAGS = "-Wno-implicit-function-declaration";
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
 					"-Wno-c++11-narrowing",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = pl.rabidus.NESDebugger;
-				PRODUCT_NAME = "NES Debugger";
+				PRODUCT_BUNDLE_IDENTIFIER = pl.rabidus.C64Debugger;
+				PRODUCT_NAME = "C64 Debugger";
 				PROVISIONING_PROFILE = "";
 				SDKROOT = macosx;
+				STRIP_INSTALLED_PRODUCT = YES;
 				VALID_ARCHS = x86_64;
 				WARNING_CFLAGS = "-Wno-write-strings";
 			};
@@ -9855,7 +9857,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "NES Debugger" */ = {
+		C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "C64 Debugger" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C01FCF4B08A954540054247B /* Debug */,

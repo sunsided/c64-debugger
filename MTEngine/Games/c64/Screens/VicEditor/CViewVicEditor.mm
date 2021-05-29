@@ -334,9 +334,6 @@ CViewVicEditor::CViewVicEditor(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	imgToolDither = RES_GetImage("/gfx/icon_tool_dither", false);
 	viewToolBox->AddIcon(imgToolDither);
 
-	imgToolDither = RES_GetImage("/gfx/icon_tool_dither", false);
-	viewToolBox->AddIcon(imgToolDither);
-
 	viewToolBox->SetPosition(60, 85, posZ, viewToolBox->sizeX, viewToolBox->sizeY);
 
 	
@@ -3178,7 +3175,7 @@ bool CViewVicEditor::ExportKoala(CSlrString *path)
 	
 	// load address
 	file->WriteByte(0x00);
-	file->WriteByte(0x20);
+	file->WriteByte(0x60);
 	
 	//
 	file->Write(bitmap_low_ptr,  0x1000);

@@ -901,7 +901,7 @@ void C64DebuggerSetSetting(char *name, void *value)
 		bool v = *((bool*)value);
 		c64SettingsTimelineIsActive = v;
 		
-		if (viewC64->debugInterfaceC64 || viewC64->debugInterfaceAtari)
+		if (viewC64->debugInterfaceC64 || viewC64->debugInterfaceAtari || viewC64->debugInterfaceNes)
 		{
 			viewC64->viewC64SettingsMenu->menuItemC64TimelineIsActive->SetSelectedOption(v, false);
 		}
@@ -1788,45 +1788,49 @@ void C64DebuggerSetSetting(char *name, void *value)
 	else if (!strcmp(name, "MemMapFadeSpeed"))
 	{
 		int v = *((int*)value);
-		if (v == 1)
+		if (v == 0)
 		{
 			viewC64->viewC64SettingsMenu->menuItemMemoryMapFadeSpeed->SetSelectedOption(0, false);
 		}
-		else if (v == 10)
+		else if (v == 1)
 		{
 			viewC64->viewC64SettingsMenu->menuItemMemoryMapFadeSpeed->SetSelectedOption(1, false);
 		}
-		else if (v == 20)
+		else if (v == 10)
 		{
 			viewC64->viewC64SettingsMenu->menuItemMemoryMapFadeSpeed->SetSelectedOption(2, false);
 		}
-		else if (v == 50)
+		else if (v == 20)
 		{
 			viewC64->viewC64SettingsMenu->menuItemMemoryMapFadeSpeed->SetSelectedOption(3, false);
 		}
-		else if (v == 100)
+		else if (v == 50)
 		{
 			viewC64->viewC64SettingsMenu->menuItemMemoryMapFadeSpeed->SetSelectedOption(4, false);
 		}
-		else if (v == 200)
+		else if (v == 100)
 		{
 			viewC64->viewC64SettingsMenu->menuItemMemoryMapFadeSpeed->SetSelectedOption(5, false);
 		}
-		else if (v == 300)
+		else if (v == 200)
 		{
 			viewC64->viewC64SettingsMenu->menuItemMemoryMapFadeSpeed->SetSelectedOption(6, false);
 		}
-		else if (v == 400)
+		else if (v == 300)
 		{
 			viewC64->viewC64SettingsMenu->menuItemMemoryMapFadeSpeed->SetSelectedOption(7, false);
 		}
-		else if (v == 500)
+		else if (v == 400)
 		{
 			viewC64->viewC64SettingsMenu->menuItemMemoryMapFadeSpeed->SetSelectedOption(8, false);
 		}
-		else if (v == 1000)
+		else if (v == 500)
 		{
 			viewC64->viewC64SettingsMenu->menuItemMemoryMapFadeSpeed->SetSelectedOption(9, false);
+		}
+		else if (v == 1000)
+		{
+			viewC64->viewC64SettingsMenu->menuItemMemoryMapFadeSpeed->SetSelectedOption(10, false);
 		}
 		
 		c64SettingsMemoryMapFadeSpeed = v;
