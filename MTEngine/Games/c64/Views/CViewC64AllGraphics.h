@@ -15,6 +15,7 @@ class CSlrFont;
 #define VIEW_C64_ALL_GRAPHICS_MODE_SCREENS	2
 #define VIEW_C64_ALL_GRAPHICS_MODE_CHARSETS	3
 #define VIEW_C64_ALL_GRAPHICS_MODE_SPRITES	4
+#define VIEW_C64_ALL_GRAPHICS_MODE_COLOR	5
 
 #define VIEW_C64_ALL_GRAPHICS_FORCED_NONE	0
 #define VIEW_C64_ALL_GRAPHICS_FORCED_GRAY	1
@@ -36,6 +37,8 @@ public:
 
 	virtual bool DoTap(GLfloat x, GLfloat y);
 	virtual bool DoFinishTap(GLfloat x, GLfloat y);
+
+	virtual bool DoRightClick(GLfloat x, GLfloat y);
 
 	virtual bool DoDoubleTap(GLfloat x, GLfloat y);
 	virtual bool DoFinishDoubleTap(GLfloat posX, GLfloat posY);
@@ -66,6 +69,7 @@ public:
 	CSlrFont *font;
 	float fontScale;
 	float fontHeight;
+	float fontSize;
 
 	bool ButtonClicked(CGuiButton *button);
 	bool ButtonPressed(CGuiButton *button);
@@ -104,8 +108,9 @@ public:
 	CGuiButtonSwitch *btnShowScreens;
 	CGuiButtonSwitch *btnShowCharsets;
 	CGuiButtonSwitch *btnShowSprites;
+	CGuiButtonSwitch *btnShowColor;
 
-	CGuiButtonSwitch *btnModeBitmapColorsGrayscale;
+	CGuiButtonSwitch *btnModeBitmapColorsBlackWhite;
 	CGuiButtonSwitch *btnModeHires;
 	CGuiButtonSwitch *btnModeMulti;
 	void SetSwitchButtonDefaultColors(CGuiButtonSwitch *btn);
@@ -118,6 +123,11 @@ public:
 	CGuiLabel *lblCharsetAddress;
 	CGuiLockableList *lstCharsetAddresses;
 
+	CGuiButtonSwitch *btnShowRAMorIO;
+	void UpdateShowIOButton();
+	CGuiButtonSwitch *btnShowGrid;
+	void UpdateShowGrid();
+	
 	virtual bool ListElementPreSelect(CGuiList *listBox, int elementNum);
 
 	volatile u8 forcedRenderScreenMode;
@@ -128,6 +138,7 @@ public:
 	bool isSelectedItemScreen;
 	bool isSelectedItemCharset;
 	bool isSelectedItemSprite;
+	bool isSelectedItemColor;
 	volatile int selectedBitmapId;
 	volatile int selectedScreenId;
 	volatile int selectedCharsetId;
@@ -147,6 +158,10 @@ public:
 	std::vector<CSlrImage *> charsetsImages;
 	void UpdateCharsets(bool useColors, u8 colorD021, u8 colorD022, u8 colorD023, u8 colorD800);
 	
+	// color
+	CImageData *colorImageData;
+	CSlrImage *colorImage;
+
 	// handle ctrl+k shortcut
 	void UpdateRenderDataWithColors();
 

@@ -157,6 +157,13 @@ bool VID_IsWindowFullScreen()
 	return X11IsFullScreen();
 }
 
+void SYS_SetFullScreen(bool isFullScreen);
+
+void VID_SetWindowFullScreen(bool isFullScreen)
+{
+    SYS_SetFullScreen(isFullScreen);
+}
+
 void VID_HideMouseCursor()
 {
 	X11HideCursor(true);

@@ -38,6 +38,7 @@ extern "C" {
 
 // docs: http://codebase64.org/doku.php?id=base:vicii_memory_organizing
 
+// TODO: NOTE from slajerek: VicDisplay is based on wrong calculations taken from Vice and needs to be corrected. I've checked this on my Sony BVM and definitely C64 can render a bit more pixels. Values were taken from default settings for Vice 3.1 and are not correct. This below needs to be refined AND the code for VicDisplay fixed.
 
 // screen is:
 //
@@ -673,6 +674,12 @@ int CViewC64VicDisplay::GetAddressForRaster(int x, int y)
 	
 	return -1;
 }
+
+int CViewC64VicDisplay::GetBitmapAddressForRaster(int x, int y)
+{
+	return this->GetBitmapModeAddressForRaster(x, y);
+}
+
 
 #define C64D_PHI1_TYPE_RAM		0
 #define C64D_PHI1_TYPE_CHARROM	1
@@ -1394,7 +1401,12 @@ void CViewC64VicDisplay::RenderDisplaySprites(vicii_cycle_state_t *viciiState)
 			
 			if (showSpritesFrames)
 			{
-				BlitRectangle(px, py, posZ, spriteSizeX, spriteSizeY, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f);
+				const float correctionX = 0.25f;
+				const float correctionY = 0.5f;
+				BlitRectangle(px,
+							  py+correctionY, posZ,
+							  spriteSizeX-correctionX,
+							  spriteSizeY-correctionY, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f);
 				
 				if (sprPosY < 54)
 				{
@@ -1402,13 +1414,19 @@ void CViewC64VicDisplay::RenderDisplaySprites(vicii_cycle_state_t *viciiState)
 					{
 						float y = sprPosY - 0x31 + 0xFF;
 						float py = displayPosY + (float)y * rasterScaleFactorY  + rasterCrossOffsetY;
-						BlitRectangle(px, py, posZ, spriteSizeX, spriteSizeY, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+						BlitRectangle(px,
+									  py+correctionY, posZ,
+									  spriteSizeX-correctionX,
+									  spriteSizeY-correctionY, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f);
 					}
 					else
 					{
 						float y = sprPosY - 0x32 - 0x36;
 						float py = displayPosY + (float)y * rasterScaleFactorY  + rasterCrossOffsetY;
-						BlitRectangle(px, py, posZ, spriteSizeX, spriteSizeY, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f);
+						BlitRectangle(px,
+									  py+correctionY, posZ,
+									  spriteSizeX-correctionX,
+									  spriteSizeY-correctionY, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f);
 					}
 				}
 				
@@ -1847,9 +1865,34 @@ void CViewC64VicDisplay::RenderBadLines()
 			BlitFilledRectangle(posX, cy, posZ, sizeX, rasterScaleFactorY, 0.0f, 1.0f, 1.0f, c64SettingsScreenGridLinesAlpha);
 		}
 		
+		uint8 irqMask = viciiState->regs[0x1a];
+		if (irqMask & 0x01 && rasterLine == viciiState->raster_irq_line)
+		{
+			BlitFilledRectangle(posX, cy, posZ, sizeX, rasterScaleFactorY, 1.0f, 1.0f, 0.0f, c64SettingsScreenGridLinesAlpha * 0.75f);
+		}
+		
 		cy += rasterScaleFactorY;
 	}
+}
 
+void CViewC64VicDisplay::RenderBreakpointsLines()
+{
+	viewC64->debugInterfaceC64->LockMutex();
+	
+	std::map<int, CAddrBreakpoint *> *breakpointsMap = &(viewC64->debugInterfaceC64->breakpointsRaster->breakpoints);
+	
+	float cy = displayPosY + rasterCrossOffsetY - (0x33 * rasterScaleFactorY) + rasterScaleFactorY/2.0f;
+
+	for (std::map<int, CAddrBreakpoint *>::iterator it = breakpointsMap->begin();
+		 it != breakpointsMap->end(); it++)
+	{
+		CAddrBreakpoint *breakpoint = it->second;
+		float rasterLine = breakpoint->addr;
+		float lineY = cy + rasterScaleFactorY * rasterLine;
+		BlitFilledRectangle(posX, lineY, posZ, sizeX, rasterScaleFactorY, 1.0f, 0.0f, 0.0f, c64SettingsScreenGridLinesAlpha);
+	}
+	
+	viewC64->debugInterfaceC64->UnlockMutex();
 }
 
 
@@ -1891,7 +1934,7 @@ bool CViewC64VicDisplay::ScrollMemoryAndDisassembleToRasterPosition(float rx, fl
 	}
 	else if (autoScrollMode == AUTOSCROLL_DISASSEMBLE_BITMAP_ADDRESS)
 	{
-		addr = GetAddressForRaster(rx, ry);
+		addr = GetBitmapAddressForRaster(rx, ry);
 	}
 	else if (autoScrollMode == AUTOSCROLL_DISASSEMBLE_CHARSET_ADDRESS)
 	{
@@ -1910,7 +1953,7 @@ bool CViewC64VicDisplay::ScrollMemoryAndDisassembleToRasterPosition(float rx, fl
 	rasterCursorPosX = rx;
 	rasterCursorPosY = ry;
 	
-	viewC64->viewC64MemoryDataDump->ScrollToAddress(addr);
+	viewC64->viewC64MemoryDataDump->ScrollToAddress(addr, true);
 	
 	if (canScrollDisassemble == true)
 	{
@@ -2495,10 +2538,10 @@ void CViewC64VicDisplay::ToggleVICRasterBreakpoint()
 		
 		viewC64->debugInterfaceC64->LockMutex();
 
-		std::map<uint16, CAddrBreakpoint *> *breakpointsMap = &(viewC64->debugInterfaceC64->breakpointsRaster);
+		std::map<int, CAddrBreakpoint *> *breakpointsMap = &(viewC64->debugInterfaceC64->breakpointsRaster->breakpoints);
 
 		// find if breakpoint exists
-		std::map<uint16, CAddrBreakpoint *>::iterator it = breakpointsMap->find(rasterLine);
+		std::map<int, CAddrBreakpoint *>::iterator it = breakpointsMap->find(rasterLine);
 		
 		if (it == breakpointsMap->end())
 		{

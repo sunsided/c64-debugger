@@ -1288,7 +1288,7 @@ void RES_DebugPrintResourcesToLoad()
 
 void RES_DebugPrintMemory()
 {	
-	LOGD("RES_DebugPrintMemory");
+	LOGMEM("RES_DebugPrintMemory");
 	
 	// compute memory usage and log if different by >= 100k
     static long prevMemUsage = 0;
@@ -1302,7 +1302,7 @@ void RES_DebugPrintMemory()
 	
 	if (memUsageDiff/1000.0f > 15000)
 	{
-		LOGM("--------");
+		LOGMEM("--------");
 	}
     //}
 	

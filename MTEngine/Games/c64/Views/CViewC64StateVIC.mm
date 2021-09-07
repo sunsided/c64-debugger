@@ -22,6 +22,7 @@ extern "C" {
 #include "VID_ImageBinding.h"
 #include "C64DebugInterfaceVice.h"
 #include "C64Tools.h"
+#include "C64SettingsStorage.h"
 
 CViewC64StateVIC::CViewC64StateVIC(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, C64DebugInterface *debugInterface)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
@@ -108,31 +109,7 @@ void CViewC64StateVIC::UpdateSpritesImages()
 
 void CViewC64StateVIC::RenderColorRectangle(float px, float py, float ledSizeX, float ledSizeY, float gap, bool isLocked, u8 color)
 {
-	float colorR, colorG, colorB;
-	viewC64->debugInterfaceC64->GetFloatCBMColor(color, &colorR, &colorG, &colorB);
-	
-	BlitFilledRectangle(px, py, posZ, ledSizeX, ledSizeY,
-						colorR, colorG, colorB, 1.0f);
-	
-	
-	if (!isLocked)
-	{
-		colorR = colorG = colorB = 0.3f;
-	}
-	else
-	{
-		colorR = 1.0f;
-		colorG = colorB = 0.3f;
-	}
-	
-	BlitRectangle(px, py - gap, posZ, ledSizeX, ledSizeY,
-				  colorR, colorG, colorB, 1.0f, gap);
-	
-	// blit hex color code
-	char buf[2];
-	Byte2Hex1digitR(color, buf);
-	buf[1] = 0x00;
-	guiMain->fntConsole->BlitText(buf, px + ledSizeX/2.0f - fontSize/2.0f, py+0.5f, posZ, fontSize);
+	RenderColorRectangleWithHexCode(px, py, ledSizeX, ledSizeY, gap, isLocked, color, fontSize, viewC64->debugInterfaceC64);
 }
 
 void CViewC64StateVIC::Render()
@@ -222,9 +199,7 @@ void CViewC64StateVIC::Render()
 			
 			px += step;
 		}
-
 	}
-
 }
 
 bool CViewC64StateVIC::DoTap(GLfloat x, GLfloat y)
@@ -269,8 +244,7 @@ bool CViewC64StateVIC::DoTap(GLfloat x, GLfloat y)
 			}
 		}
 	}
-	
-	
+		
 	// lock / unlock
 	if (isVertical == false)
 	{
@@ -382,7 +356,6 @@ bool CViewC64StateVIC::DoTap(GLfloat x, GLfloat y)
 			
 			px += step;
 		}
-		
 	}
 	
 	// replace mode of display
@@ -737,7 +710,7 @@ void CViewC64StateVIC::RenderStateVIC(vicii_cycle_state_t *viciiState,
 			step = 4;
 		}
 		
-	 // get VIC sprite colors
+		// get VIC sprite colors
 		uint8 cD021 = viciiState->regs[0x21];
 		uint8 cD025 = viciiState->regs[0x25];
 		uint8 cD026 = viciiState->regs[0x26];
@@ -838,7 +811,14 @@ void CViewC64StateVIC::RenderStateVIC(vicii_cycle_state_t *viciiState,
 			sprintf(buf, "X-Pos:   ");
 			for (i = startId; i < endId; i++)
 			{
-				sprintf(buf2, "%-4d  ", viciiState->sprite[i].x);
+				if (c64SettingsShowPositionsInHex)
+				{
+					sprintf(buf2, "%-4x  ", viciiState->sprite[i].x);
+				}
+				else
+				{
+					sprintf(buf2, "%-4d  ", viciiState->sprite[i].x);
+				}
 				
 				/*
 				 int x = viciiState->regs[0 + (i << 1)];
@@ -862,7 +842,14 @@ void CViewC64StateVIC::RenderStateVIC(vicii_cycle_state_t *viciiState,
 			sprintf(buf, "Y-Pos:   ");
 			for (i = startId; i < endId; i++)
 			{
-				sprintf(buf2, "%-4d  ", viciiState->regs[1 + (i << 1)]);
+				if (c64SettingsShowPositionsInHex)
+				{
+					sprintf(buf2, "%-4x  ", viciiState->regs[1 + (i << 1)]);
+				}
+				else
+				{
+					sprintf(buf2, "%-4d  ", viciiState->regs[1 + (i << 1)]);
+				}
 				strcat(buf, buf2);
 			}
 			fontBytes->BlitText(buf, px, py, posZ, fontSize); py += fontSize;
@@ -927,7 +914,7 @@ void CViewC64StateVIC::RenderStateVIC(vicii_cycle_state_t *viciiState,
 			const float spriteSizeX = 6*fontSize;
 			const float spriteSizeY = (21.0f * spriteSizeX) / 24.0f;
 			
-			// sprites are rendered upside down
+			// sprites are rendered upside down, note this is fixed in Gui branch
 			const float spriteTexStartX = 4.0/32.0;
 			const float spriteTexStartY = (32.0-4.0)/32.0;
 			const float spriteTexEndX = (4.0+24.0)/32.0;
@@ -973,7 +960,8 @@ void CViewC64StateVIC::RenderStateVIC(vicii_cycle_state_t *viciiState,
 				else
 				{
 					uint8 spriteColor = viciiState->regs[0x27+zi];
-					ConvertColorSpriteDataToImage(spriteData, imageData, cD021, cD025, cD026, spriteColor, this->debugInterface, 4);
+					ConvertColorSpriteDataToImage(spriteData, imageData,
+												  cD021, cD025, cD026, spriteColor, this->debugInterface, 4, 0);
 				}
 				
 				// re-bind image
@@ -1054,7 +1042,9 @@ void CViewC64StateVIC::UpdateVICSpritesImages(vicii_cycle_state_t *viciiState,
 		else
 		{
 			uint8 spriteColor = viciiState->regs[0x27+zi];
-			ConvertColorSpriteDataToImage(spriteData, imageData, cD021, cD025, cD026, spriteColor, this->debugInterface, 4);
+			ConvertColorSpriteDataToImage(spriteData, imageData,
+										  cD021, cD025, cD026, spriteColor,
+										  this->debugInterface, 4, 0);
 		}
 		
 		// re-bind image

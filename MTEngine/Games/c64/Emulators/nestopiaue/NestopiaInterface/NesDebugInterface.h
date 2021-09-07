@@ -2,12 +2,13 @@
 #define _NESDEBUGINTERFACE_H_
 
 #include "SYS_Defs.h"
-#include "CImageData.h"
-#include "CViewC64.h"
 #include "CDebugInterface.h"
-#include "CSlrDataAdapter.h"
+#include "CDebugDataAdapter.h"
 
-#define NST_VERSION "1.49"
+class CImageData;
+class CViewC64;
+
+#define NST_VERSION "1.50"
 
 class CNesAudioChannel;
 
@@ -18,19 +19,26 @@ public:
 	NesDebugInterface(CViewC64 *viewC64); //, uint8 *memory);
 	~NesDebugInterface();
 	
+	volatile bool isInitialised;
+	
 	virtual int GetEmulatorType();
 	virtual CSlrString *GetEmulatorVersionString();
 	virtual CSlrString *GetPlatformNameString();
 
+	virtual bool IsPal();
+	virtual double GetCpuClockFrequency();
+	virtual float GetEmulationFPS();
+
 	virtual void RunEmulationThread();
 
 	CNesAudioChannel *audioChannel;
-	CSlrDataAdapter *dataAdapter;
+	CDebugDataAdapter *dataAdapter;
+	CDebugDataAdapter *dataAdapterPpuNmt;
 
 	void RestartEmulation();
 	//	virtual void InitKeyMap(C64KeyMap *keyMap);
-	
 
+	virtual void RefreshScreenNoCallback();
 	virtual void DoFrame();
 	virtual int GetScreenSizeX();
 	virtual int GetScreenSizeY();
@@ -49,6 +57,14 @@ public:
 	//
 	virtual void Reset();
 	virtual void HardReset();
+	
+	// this is main emulation cpu cycle counter
+	virtual u64 GetMainCpuCycleCounter();
+	virtual u64 GetPreviousCpuInstructionCycleCounter();
+	
+	// resettable counters for debug purposes
+	virtual void ResetMainCpuDebugCycleCounter();
+	virtual u64 GetMainCpuDebugCycleCounter();
 
 	virtual bool LoadExecutable(char *fullFilePath);
 	virtual bool MountDisk(char *fullFilePath, int diskNo, bool readOnly);
@@ -58,6 +74,12 @@ public:
 	//
 	virtual bool LoadFullSnapshot(char *filePath);
 	virtual void SaveFullSnapshot(char *filePath);
+	virtual bool LoadChipsSnapshotSynced(CByteBuffer *byteBuffer);
+	virtual bool SaveChipsSnapshotSynced(CByteBuffer *byteBuffer);
+	virtual bool LoadDiskDataSnapshotSynced(CByteBuffer *byteBuffer);
+	virtual bool SaveDiskDataSnapshotSynced(CByteBuffer *byteBuffer);
+	virtual bool IsDriveDirtyForSnapshot();
+	virtual void ClearDriveDirtyForSnapshotFlag();
 	
 	// state
 	virtual int GetCpuPC();
@@ -67,6 +89,7 @@ public:
 
 	//
 	void GetCpuRegs(u16 *PC, u8 *A, u8 *X, u8 *Y, u8 *P, u8 *S, u8 *IRQ);
+	void GetPpuClocks(u32 *hClock, u32 *vClock, u32 *cycle);
 	
 	void SetVideoSystem(u8 videoSystem);
 	void SetMachineType(u8 machineType);
@@ -81,7 +104,16 @@ public:
 	
 	// make jmp and reset CPU
 	virtual void MakeJmpAndReset(uint16 addr);
-	
+
+	virtual CSlrDataAdapter *GetDataAdapter();
+
+	// APU
+	virtual void SetApuMuteChannels(int apuNumber, bool mute1, bool mute2, bool mute3, bool mute4, bool mute5, bool muteExt);
+	virtual void SetApuReceiveChannelsData(int apuNumber, bool isReceiving);
+	virtual unsigned char GetApuRegister(u16 addr);
+	virtual unsigned char GetPpuRegister(u16 addr);
+
+	void ResetClockCounters();
 	
 	//	virtual uint8 GetByteFromRamC64(uint16 addr);
 //	virtual void MakeJmpC64(uint16 addr);
@@ -168,9 +200,7 @@ public:
 //	virtual void RenderStateSID(uint16 sidBase, float posX, float posY, float posZ, CSlrFont *fontBytes, float fontSize);
 //	void PrintSidWaveform(uint8 wave, char *buf);
 //	
-//	// SID
-//	virtual void SetSIDMuteChannels(int sidNumber, bool mute1, bool mute2, bool mute3, bool muteExt);
-//	virtual void SetSIDReceiveChannelsData(int sidNumber, bool isReceiving);
+	
 //	
 //	// memory
 //	uint8 *c64memory;

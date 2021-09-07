@@ -60,7 +60,6 @@ extern int c64SettingsDefaultScreenLayoutId;
 extern bool c64SettingsIsInVicEditor;
 
 extern int c64SettingsScreenSupersampleFactor;
-
 extern bool c64SettingsUsePipeIntegration;
 
 extern uint8 c64SettingsMemoryValuesStyle;
@@ -93,7 +92,10 @@ extern int c64SettingsAudioVolume;
 extern bool c64SettingsRunSIDEmulation;
 extern uint8 c64SettingsMuteSIDMode;
 
+extern int c64SettingsSidDataHistoryMaxSize;
+
 extern bool c64SettingsEmulateVSPBug;
+extern bool c64SettingsVicSkipDrawingSprites;
 
 extern uint8 c64SettingsVicStateRecordingMode;
 extern uint16 c64SettingsVicPalette;
@@ -103,8 +105,8 @@ extern uint8 c64SettingsJoystickPort;
 extern bool c64SettingsUseKeyboardAsJoystick;
 
 extern bool c64SettingsRenderDisassembleExecuteAware;
-
 extern bool c64SettingsWindowAlwaysOnTop;
+extern CByteBuffer *c64SettingsWindowPosition;
 
 extern float c64SettingsScreenGridLinesAlpha;
 extern uint8 c64SettingsScreenGridLinesColorScheme;
@@ -115,6 +117,8 @@ extern float c64SettingsScreenRasterCrossAlpha;
 extern uint8 c64SettingsScreenRasterCrossExteriorColorScheme;
 extern uint8 c64SettingsScreenRasterCrossInteriorColorScheme;
 extern uint8 c64SettingsScreenRasterCrossTipColorScheme;
+
+extern bool c64SettingsShowPositionsInHex;
 
 // startup
 extern int c64SettingsWaitOnStartup;
@@ -184,6 +188,7 @@ extern int c64SettingsSnapshotsLimit;
 extern u8 c64SettingsC64SidImportMode;
 
 extern CSlrString *c64SettingsAudioOutDevice;
+extern bool c64SettingsRestartAudioOnEmulationReset;
 
 extern int c64SettingsJmpOnStartupAddr;
 

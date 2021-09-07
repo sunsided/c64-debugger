@@ -8,6 +8,7 @@
  */
 
 // iCloud: http://stackoverflow.com/questions/8375891/apple-icloud-implementation-on-mac-apps
+#define MT_DBGLOG_NSSTRING
 
 #include "SYS_CFileSystem.h"
 #include "TargetConditionals.h"
@@ -22,10 +23,17 @@
 #include <sys/syslimits.h>
 
 CFileSystem *gFileSystem;
+
 NSString *gOSPathToDocuments;
 char *gPathToDocuments;
 char *gCPathToDocuments;
 CSlrString *gUTFPathToDocuments;
+
+NSString *gOSPathToDesktop;
+char *gPathToDesktop;
+char *gCPathToDesktop;
+CSlrString *gUTFPathToDesktop;
+
 NSString *gOSPathToTemp;
 char *gPathToTemp;
 char *gCPathToTemp;
@@ -76,10 +84,7 @@ void SYS_InitFileSystem()
 	/// get documents folder
 	NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
 	NSString *documentsDirectory = [paths firstObject];
-	
-	//gOSPathToDocuments = [[NSString alloc] initWithFormat:@"%@/", documentsDirectory];
 	gOSPathToDocuments = [[NSString alloc] initWithFormat:@"%@", documentsDirectory];
-	
 	//NSLog(@"gOSPathToDocuments=%@", gOSPathToDocuments);
 	
 	
@@ -96,10 +101,21 @@ void SYS_InitFileSystem()
 
 	//NSLog(@"gOSPathToSettings=%@", gOSPathToSettings);
 
+	paths = NSSearchPathForDirectoriesInDomains(NSDesktopDirectory, NSUserDomainMask, YES);
+	NSString *desktopDirectory = [paths firstObject];
+	gOSPathToDesktop = [[NSString alloc] initWithFormat:@"%@", desktopDirectory];
+	//NSLog(@"gOSPathToDesktop=%@", gOSPathToDesktop);
+	
+	// LINUX
+//	char *path = SYS_GetCharBuf();
+//	strcpy(path, getenv("HOME"));
+//	memcpy(path + strlen(path), "/Desktop", 8);
+//	gPathToDesktop = STRALLOC(path);
+//	SYS_ReleaseCharBuf(path);
 	
 	// create CSlrString / ANSI-C versions
-	const char *path = (const char *)[gOSPathToDocuments UTF8String];
-	gCPathToDocuments = strdup(path);
+	const char *pathToDocuments = (const char *)[gOSPathToDocuments UTF8String];
+	gCPathToDocuments = strdup(pathToDocuments);
 	gPathToDocuments = gCPathToDocuments;
 	gUTFPathToDocuments = FUN_ConvertNSStringToCSlrString(gOSPathToDocuments);
 
@@ -112,6 +128,12 @@ void SYS_InitFileSystem()
 	gCPathToSettings = strdup(pathSettings);
 	gPathToSettings = gCPathToSettings;
 	gUTFPathToSettings = FUN_ConvertNSStringToCSlrString(gOSPathToSettings);
+	
+	const char *pathToDesktop = (const char *)[gOSPathToDesktop UTF8String];
+	gCPathToDocuments = strdup(pathToDesktop);
+	gPathToDocuments = gCPathToDesktop;
+	gUTFPathToDocuments = FUN_ConvertNSStringToCSlrString(gOSPathToDesktop);
+
 	
 #else
 	
@@ -927,7 +949,7 @@ bool compare_CFileItem_nocase (CFileItem *first, CFileItem *second)
 	return false;
 }
 
-std::vector<CFileItem *> *CFileSystem::GetFiles(char *directoryPath, std::list<char *> *extensions)
+std::vector<CFileItem *> *CFileSystem::GetFiles(char *directoryPath, std::list<char *> *extensions, bool withFolders)
 {
 	std::vector<CFileItem *> *files = new std::vector<CFileItem *>();
 	
@@ -949,6 +971,9 @@ std::vector<CFileItem *> *CFileSystem::GetFiles(char *directoryPath, std::list<c
 		
 		if ([[fileDict objectForKey:NSFileType] isEqualToString: @"NSFileTypeDirectory"])
 		{
+			if (withFolders == false)
+				continue;
+			
 			//fname = [fname stringByAppendingString:@"/"];
 			
 			//LOGD("adding");
@@ -978,7 +1003,8 @@ std::vector<CFileItem *> *CFileSystem::GetFiles(char *directoryPath, std::list<c
 					char *modDateDup = strdup([modDate UTF8String]);
 					
 					CFileItem *item = new CFileItem(fileNameDup, modDateDup, false); 
-					files->push_back(item);
+					files->push_back(item);					
+					break;
 				}
 			}
 		}
@@ -1265,6 +1291,9 @@ bool SYS_FileExists(char *path)
 
 bool SYS_FileExists(CSlrString *path)
 {
+	if (path == NULL)
+		return false;
+	
 	char *cPath = path->GetStdASCII();
 	
 	struct stat info;
@@ -1334,7 +1363,7 @@ uint8 *SYS_MapMemoryToFile(int memorySize, char *filePath, void **fileDescriptor
 	
 	if(*fileHandle == -1)
 	{
-		LOGError("SYS_MapMemoryToFile: error opening file for writing, path=%s", filePath);
+		LOGError("SYS_MapMemoryToFile: error opening file for write, path=%s", filePath);
 		return NULL;
 	}
 	

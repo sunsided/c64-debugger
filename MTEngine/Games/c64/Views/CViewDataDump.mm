@@ -17,16 +17,18 @@
 #include "C64KeyboardShortcuts.h"
 #include "SYS_SharedMemory.h"
 #include "CViewC64VicDisplay.h"
+#include "CSnapshotsManager.h"
 #include <math.h>
 
+#include "VID_Blits.h"
 
 #include "CViewC64Screen.h"
 #include "CViewAtariScreen.h"
 #include "CViewNesScreen.h"
 
 CViewDataDump::CViewDataDump(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
-							 CSlrDataAdapter *dataAdapter, CViewMemoryMap *viewMemoryMap, CViewDisassemble *viewDisassemble,
-							 CDebugInterface *debugInterface)
+							 CDebugInterface *debugInterface, CSlrDataAdapter *dataAdapter,
+							 CViewMemoryMap *viewMemoryMap, CViewDisassemble *viewDisassemble)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
 {
 	this->name = "CViewDataDump";
@@ -36,7 +38,7 @@ CViewDataDump::CViewDataDump(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 	
 	this->debugInterface = debugInterface;
 	
-	this->viewMemoryMap->SetViewC64DataDump(this);
+	this->viewMemoryMap->SetDataDumpView(this);
 
 	if (this->debugInterface->GetEmulatorType() == EMULATOR_TYPE_C64_VICE)
 	{
@@ -79,6 +81,7 @@ CViewDataDump::CViewDataDump(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 	numberOfSpritesToShow = 4;
 	
 	showCharacters = true;
+	showDataCharacters = true;
 	showSprites = true;
 	
 	editHex = new CGuiEditHex(this);
@@ -163,10 +166,22 @@ void CViewDataDump::SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloa
 	gapAddress = fontSize;
 	gapHexData = 0.5f*fontBytesSize;
 	gapDataCharacters = 0.5f*fontBytesSize;
-
 	
 	CGuiView::SetPosition(posX, posY, posZ, sizeX, sizeY);
 }
+
+void CViewDataDump::SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, bool recalculateFontSizes)
+{
+	if (recalculateFontSizes)
+	{
+		this->SetPosition(posX, posY, posZ, sizeX, sizeY);
+	}
+	else
+	{
+		CGuiView::SetPosition(posX, posY, posZ, sizeX, sizeY);
+	}
+}
+
 
 void CViewDataDump::DoLogic()
 {	
@@ -243,6 +258,7 @@ void CViewDataDump::Render()
 	float px = posX;
 	float py = posY;
 	
+	int addrOffset = dataAdapter->GetDataOffset();
 	int addr = dataShowStart;
 		
 	int dy = 0;
@@ -273,13 +289,13 @@ void CViewDataDump::Render()
 				if (dy == editCursorPositionY)
 				{
 					int addrEdit = GetAddrFromDataPosition(editCursorPositionX, editCursorPositionY);
-					sprintfHexCode16(buf, addrEdit);
+					sprintfHexCode16(buf, addrEdit + addrOffset);
 					
 					BlitFilledRectangle(px, py, posZ, fontBytesSize40, fontBytesSize, 0.0f, 0.7f, 0.0f, 1.0f);
 				}
 				else
 				{
-					sprintfHexCode16(buf, addr);
+					sprintfHexCode16(buf, addr + addrOffset);
 				}
 			}
 			fontBytes->BlitText(buf, px, py, posZ, fontBytesSize);
@@ -292,7 +308,7 @@ void CViewDataDump::Render()
 			}
 			else
 			{
-				sprintfHexCode16(buf, addr);
+				sprintfHexCode16(buf, addr + addrOffset);
 				fontBytes->BlitText(buf, px, py, posZ, fontBytesSize);
 			}
 		}
@@ -304,6 +320,7 @@ void CViewDataDump::Render()
 		{
 			bool isAvailable;
 			uint8 value;
+			
 			dataAdapter->AdapterReadByte(a, &value, &isAvailable);
 			if (isAvailable)
 			{
@@ -323,6 +340,11 @@ void CViewDataDump::Render()
 								
 				//BlitTextColor(CSlrString *text, GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat scale, GLfloat colorR, GLfloat colorG, GLfloat colorB, GLfloat alpha)
 				
+				if (this->viewMemoryMap->visible == false)
+				{
+					this->viewMemoryMap->UpdateMapColorsForCell(cell);
+				}
+				
 				if (/*isVisibleEditCursor &&*/ editCursorPositionY == dy && editCursorPositionX == dx)
 				{
 					cx = px;
@@ -331,13 +353,48 @@ void CViewDataDump::Render()
 					if (isEditingValue == false)
 					{
 						sprintfHexCode8(buf, value);
-						fontBytes->BlitText(buf, px, py, posZ, fontBytesSize);
+
+						CViewMemoryMapCell *cell = viewMemoryMap->memoryCells[this->dataAddr];
+//						fontBytes->BlitTextColor(buf, px, py, posZ, fontBytesSize,
+
+//						fontBytesSize*2.0f, fontCharactersWidth, 0.3f,  1.0f, 0.3f, 0.5f, 1.3f);
+
+						float r = cell->rr;
+						float g = cell->rg;
+						float b = cell->rb;
+						float a = cell->ra;
+
+						// prevent white color on white background
+						float s = cell->rr + cell->rg + cell->rb;
+						
+//						if (s > 2.7f)
+//						{
+							r = cell->rr < 0.40f ? cell->rr : 0.4f;
+							g = cell->rg < 0.40f ? cell->rg : 0.4f;
+							b = cell->rb < 0.40f ? cell->rb : 0.4f;
+							a = cell->ra;
+//						}
+//						else if (s > 1.2f)
+//						{
+//							r = cell->rr < 0.5f ? cell->rr : 0.6f;
+//							g = cell->rg < 0.5f ? cell->rg : 0.6f;
+//							b = cell->rb < 0.5f ? cell->rb : 0.6f;
+//							a = cell->ra;
+//						}
+
+						BlitFilledRectangle(px, py, posZ, fontBytesSize*2.0f, fontCharactersWidth, r, g, b, a);
+						
+//
+//						guiMain->fntConsoleInverted->BlitTextColor(buf, px, py, posZ, fontBytesSize, cell->rb, cell->rg, cell->rr, 1.0f);
+						guiMain->fntConsoleInverted->BlitTextColor(buf, px, py, posZ, fontBytesSize, 1.0f, 1.0f, 1.0f, 0.7f);
 					}
 					else
 					{
 //						if (cell->isExecute)
 						{
 							fontBytes->BlitTextColor(editHex->textWithCursor, px, py, posZ, fontBytesSize, 1.0f, 1.0f, 1.0f, 1.0f);
+//							guiMain->fntConsoleInverted->BlitTextColor(editHex->textWithCursor, px, py, posZ, fontBytesSize, 1.0f, 1.0f, 1.0f, 1.0f);
+//							fontBytes->BlitTextColor(editHex->textWithCursor, px, py, posZ, fontBytesSize, 1.0f, 1.0f, 1.0f, 1.0f);
 						}
 //						else
 //						{
@@ -396,13 +453,18 @@ void CViewDataDump::Render()
 	dataShowSize = dataShowEnd - dataShowStart;
 	numberOfLines = dy;
 	
+	
+	//
 	// blit data cursor
+	//
+	
 	//if (isVisibleEditCursor)
 	{
 		if (cx >= posX-5 && cx <= posEndX+5
 			&& cy >= posY-5 && cy <= posEndY+5)
 		{
-			BlitRectangle(cx, cy, posZ, fontBytesSize*2.0f, fontCharactersWidth, 0.3f, 1.0f, 0.3f, 0.5f, 1.3f);
+//			BlitFilledRectangle(cx, cy, posZ, fontBytesSize*2.0f, fontCharactersWidth, 0.6f,  0.6f, 0.6f, 0.4f);
+			BlitRectangle(cx, cy, posZ, fontBytesSize*2.0f, fontCharactersWidth, 0.3f,  1.0f, 0.3f, 0.5f, 1.3f);
 		}
 	}
 //	else
@@ -571,8 +633,9 @@ void CViewDataDump::UpdateSprites(bool useColors, byte colorD021, byte colorD025
 			}
 			else
 			{
-				ConvertColorSpriteDataToImage(spriteData, imageData, colorD021, colorD025, colorD026, colorD027,
-											  (C64DebugInterface*)debugInterface, 4);
+				ConvertColorSpriteDataToImage(spriteData, imageData,
+											  colorD021, colorD025, colorD026, colorD027,
+											  (C64DebugInterface*)debugInterface, 4, 0);
 			}
 		}
 		else
@@ -637,6 +700,15 @@ bool CViewDataDump::DoTap(GLfloat x, GLfloat y)
 			{
 				viewDisassemble->ScrollToAddress(cell->readPC);
 			}
+			
+			if (guiMain->isAltPressed)
+			{
+				if (debugInterface->snapshotsManager)
+				{
+					LOGM("============######################### RESTORE TO READ CYCLE=%d", cell->readCycle);
+					debugInterface->snapshotsManager->RestoreSnapshotByCycle(cell->readCycle);
+				}
+			}
 		}
 		else
 		{
@@ -645,6 +717,14 @@ bool CViewDataDump::DoTap(GLfloat x, GLfloat y)
 				viewDisassemble->ScrollToAddress(cell->writePC);
 			}
 			
+			if (guiMain->isAltPressed)
+			{
+				if (debugInterface->snapshotsManager)
+				{
+					LOGM("============######################### RESTORE TO WRITE CYCLE=%d", cell->writeCycle);					
+					debugInterface->snapshotsManager->RestoreSnapshotByCycle(cell->writeCycle);
+				}
+			}
 		}
 	}
 	else
@@ -684,7 +764,7 @@ bool CViewDataDump::DoScrollWheel(float deltaX, float deltaY)
 		return false;
 	}
 	
-	LOGD("CViewDataDump::DoScrollWheel: %f %f", deltaX, deltaY);
+	LOGG("CViewDataDump::DoScrollWheel: %f %f", deltaX, deltaY);
 	
 	guiMain->LockMutex();
 	
@@ -763,10 +843,20 @@ void CViewDataDump::ScrollDataPageDown()
 
 void CViewDataDump::ScrollToAddress(int address)
 {
-	//LOGD("CViewDataDump::ScrollToAddress: address=%4.4x", address);
+	this->ScrollToAddress(address, true);
+}
+
+void CViewDataDump::ScrollToAddress(int address, bool updateDataShowStart)
+{
+	LOGD("CViewDataDump::ScrollToAddress: address=%4.4x", address);
 
 	if (this->visible == false || numberOfBytesPerLine == 0)
 		return;
+	
+	if (address >= dataAdapter->AdapterGetDataLength())
+	{
+		address = dataAdapter->AdapterGetDataLength()-1;
+	}
 	
 	int laddr = floor((double)(address / numberOfBytesPerLine)) * numberOfBytesPerLine;
 	
@@ -790,19 +880,39 @@ void CViewDataDump::ScrollToAddress(int address)
 	
 	int caddr = address - saddr;
 	
-	dataShowStart = saddr;
+	if (updateDataShowStart == false)
+	{
+		int caddr = address - dataShowStart;
+		editCursorPositionY = floor((double)(caddr / numberOfBytesPerLine));
+		editCursorPositionX = caddr - (numberOfBytesPerLine * editCursorPositionY);
+//		LOGD("editCursorPositionX=%d / %d  |  editCursorPositionY=%d / %d", editCursorPositionX, numberOfBytesPerLine, editCursorPositionY, numberOfLines);
+		
+		// check if outside and then also scroll data start position
+		if (editCursorPositionX < 0 || editCursorPositionX >= numberOfBytesPerLine
+			|| editCursorPositionY < 0 || editCursorPositionY >= numberOfLines)
+		{
+			updateDataShowStart = true;
+		}
+	}
+	
+	if (updateDataShowStart)
+	{
+		dataShowStart = saddr;
+		editCursorPositionY = floor((double)(caddr / numberOfBytesPerLine));
+		editCursorPositionX = caddr - (numberOfBytesPerLine * editCursorPositionY);
+	}
+	else
+	{
+	}
 
 	//isVisibleEditCursor = true;
-	editCursorPositionY = floor((double)(caddr / numberOfBytesPerLine));
-	editCursorPositionX = caddr - (numberOfBytesPerLine * editCursorPositionY);
 	dataAddr = address;
-
 }
 
 
 bool CViewDataDump::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
-//	LOGD("CViewDataDump::keyDown=%4.4x", keyCode);
+	LOGG("CViewDataDump::keyDown=%4.4x", keyCode);
 	
 	u32 bareKey = SYS_GetBareKey(keyCode, isShift, isAlt, isControl);
 	
@@ -839,6 +949,18 @@ bool CViewDataDump::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContro
 		return true;
 	}
 	
+	if (keyCode == MTKEY_HOME && isControl)
+	{
+		this->ScrollToAddress(0x0000);
+		return true;
+	}
+	
+	if (keyCode == MTKEY_END && isControl)
+	{
+		this->ScrollToAddress(dataAdapter->AdapterGetDataLength()-1);
+		return true;
+	}
+	
 	CSlrKeyboardShortcut *keyboardShortcut = viewC64->keyboardShortcuts->FindShortcut(KBZONE_DISASSEMBLE, bareKey, isShift, isAlt, isControl);
 	if (keyboardShortcut == viewC64->keyboardShortcuts->kbsToggleTrackPC)
 	{
@@ -849,7 +971,7 @@ bool CViewDataDump::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContro
 	
 	if (keyboardShortcut == viewC64->keyboardShortcuts->kbsGoToAddress)
 	{
-		int adr = dataShowStart + dataShowSize/2;
+		int adr = dataShowStart + dataShowSize/2 + dataAdapter->GetDataOffset();
 		editHex->SetValue(adr, 4);
 		
 		isEditingValue = false;
@@ -1031,6 +1153,7 @@ bool CViewDataDump::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isContro
 		else if (keyCode == MTKEY_ENTER)
 		{
 			int addr = GetAddrFromDataPosition(editCursorPositionX, editCursorPositionY);
+			addr -= dataAdapter->GetDataOffset();
 			byte v;
 			dataAdapter->AdapterReadByte(addr, &v);
 			editHex->SetValue(v, 2);
@@ -1078,7 +1201,17 @@ void CViewDataDump::GuiEditHexEnteredValue(CGuiEditHex *editHex, u32 lastKeyCode
 	}
 	else
 	{
+		int addrOffset = dataAdapter->GetDataOffset();
 		int addr = editHex->value;
+
+		// ux, when user entered value below data offset let us add it
+		if (addr < addrOffset)
+		{
+			addr += addrOffset;
+		}
+		
+		addr -= addrOffset;
+		
 		ScrollToAddress(addr);
 		isEditingValueAddr = false;
 	}
@@ -1087,7 +1220,7 @@ void CViewDataDump::GuiEditHexEnteredValue(CGuiEditHex *editHex, u32 lastKeyCode
 
 void CViewDataDump::PasteHexValuesFromClipboard()
 {
-	LOGD("CViewDataDump::PasteHexValuesFromClipboard");
+	LOGG("CViewDataDump::PasteHexValuesFromClipboard");
 	
 	int addrCursor = GetAddrFromDataPosition(editCursorPositionX, editCursorPositionY);
 	int addr = addrCursor;
@@ -1161,7 +1294,7 @@ void CViewDataDump::PasteHexValuesFromClipboard()
 
 void CViewDataDump::CopyHexValuesToClipboard()
 {
-	LOGD("CViewDataDump::CopyHexValuesToClipboard");
+	LOGG("CViewDataDump::CopyHexValuesToClipboard");
 	
 	int addrCursor = GetAddrFromDataPosition(editCursorPositionX, editCursorPositionY);
 	
@@ -1189,7 +1322,7 @@ void CViewDataDump::CopyHexValuesToClipboard()
 
 void CViewDataDump::CopyHexAddressToClipboard()
 {
-	LOGD("CViewDataDump::CopyHexAddressToClipboard");
+	LOGG("CViewDataDump::CopyHexAddressToClipboard");
 	
 	int addrCursor = GetAddrFromDataPosition(editCursorPositionX, editCursorPositionY);
 

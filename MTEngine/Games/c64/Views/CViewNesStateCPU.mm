@@ -37,19 +37,16 @@ void CViewNesStateCPU::RenderRegisters()
 	u8 a, x, y, flags, sp, irq;
 	((NesDebugInterface*)debugInterface)->GetCpuRegs(&pc, &a, &x, &y, &flags, &sp, &irq);
 	
+	u32 hClock, vClock, cycles;
+	((NesDebugInterface*)debugInterface)->GetPpuClocks(&hClock, &vClock, &cycles);
 	
 	char buf[128];
-	strcpy(buf, "PC   AR XR YR SP NV-BDIZC  IRQ");
+	strcpy(buf, "PC   AR XR YR SP NV-BDIZC  IRQ  HCLK VCLK");
 
 	font->BlitText(buf, px, py, -1, fontSize);
 	py += fontSize;
 	
 	////////////////////////////
-	// TODO: SHOW Atari CPU CYCLE
-	//		Byte2Bits(diskCpuState.processorFlags, flags);
-	//		sprintf(buf, "%4.4x %2.2x %2.2x %2.2x %2.2x %s  %2.2x",
-	//				diskCpuState.pc, diskCpuState.a, diskCpuState.x, diskCpuState.y, (diskCpuState.sp & 0x00ff),
-	//				flags, diskState.headTrackPosition);
 	
 	char *bufPtr = buf;
 	sprintfHexCode16WithoutZeroEnding(bufPtr, pc); bufPtr += 5;
@@ -60,6 +57,10 @@ void CViewNesStateCPU::RenderRegisters()
 	Byte2BitsWithoutEndingZero(flags, bufPtr); bufPtr += 10;
 	*bufPtr = ' '; bufPtr += 1;
 	sprintfHexCode8WithoutZeroEnding(bufPtr, irq); bufPtr += 3;
+	*bufPtr = ' '; bufPtr += 1;
+	sprintfHexCode16WithoutZeroEnding(bufPtr, hClock); bufPtr += 5;
+	sprintfHexCode16WithoutZeroEnding(bufPtr, vClock); bufPtr += 5;
+
 	
 	font->BlitText(buf, px, py, -1, fontSize);
 }

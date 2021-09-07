@@ -52,6 +52,7 @@ public:
 	CDebugInterface *debugInterface;
 	
 	bool isScrubbing;
+	bool isLockedVisible;
 	
 	float fontSize;
 	

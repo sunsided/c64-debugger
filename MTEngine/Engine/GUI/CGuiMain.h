@@ -55,6 +55,12 @@ extern float SCREEN_HEIGHTd2;
 // for ADs
 extern float gHudLevelOffsetY;
 
+class CUiThreadTaskCallback
+{
+public:
+	virtual void RunUIThreadTask();
+};
+
 class CGuiMain : public CGuiButtonCallback, public CGuiMessageBoxCallback
 {
 public:
@@ -115,6 +121,11 @@ public:
 	void ClearGlobalOSWindowChangedCallbacks();
 	void NotifyGlobalOSWindowChangedCallbacks();
 
+	std::list<CUiThreadTaskCallback *> uiThreadTasks;
+	CSlrMutex *uiThreadTasksMutex;
+	void AddUiThreadTask(CUiThreadTaskCallback *taskCallback);
+	void RunUiTasks();
+	
 #if defined(USE_DEBUGSCREEN)
 	CDebugScreen *debugScreen;
 #endif
@@ -153,8 +164,11 @@ public:
 	CGuiView *guiMainView;
 	CGuiView *currentView;
 	
-	// set as current view
+	// set current view as task to be run on UI thread
 	void SetView(CGuiView *element);
+	
+	// set as current view, must be run on UI thread
+	void SetViewAsync(CGuiView *element);
 
 	// load resources and set as current view
 	volatile bool isLoadingResources;
@@ -169,10 +183,10 @@ public:
 	//void ShowMessage(const UTFString *popMessage);
 	//void ShowMessage(const UTFString *popMessage, GLfloat showMessageColorR, GLfloat showMessageColorG, GLfloat showMessageColorB);
 	void ShowMessage(CSlrString *showMessage);
-	void ShowMessage(char *popMessage);
-	void ShowMessageAsync(char *popMessage);
-	void ShowMessage(char *popMessage, GLfloat showMessageColorR, GLfloat showMessageColorG, GLfloat showMessageColorB);
-	void ShowMessageAsync(char *popMessage, GLfloat showMessageColorR, GLfloat showMessageColorG, GLfloat showMessageColorB);
+	void ShowMessage(char *showMessage);
+	void ShowMessageAsync(char *showMessage);
+	void ShowMessage(char *showMessage, float showMessageColorR, float showMessageColorG, float showMessageColorB);
+	void ShowMessageAsync(char *showMessage, float showMessageColorR, float showMessageColorG, float showMessageColorB);
 	void StopShowingMessage();
 
 	CGuiViewMessageBox *messageBox;
@@ -236,6 +250,11 @@ public:
 
 	void UpdateControlKeys(u32 keyCode);
 	
+	volatile bool isMouseCursorVisible;
+	void SetMouseCursorVisible(bool isVisible);
+	void SetApplicationWindowFullScreen(bool isFullScreen);
+	void SetApplicationWindowAlwaysOnTop(bool isAlwaysOnTop);
+	
 	void LockRenderMutex(); //char *functionName);
 	void UnlockRenderMutex(); //char *functionName);
 
@@ -275,7 +294,56 @@ public:
 	virtual void LoadingResourcesUpdate(float percentage);
 	virtual void LoadingResourcesFinish();
 };
-			
+
+class CUiThreadTaskSetView : public CUiThreadTaskCallback
+{
+public:
+	CUiThreadTaskSetView(CGuiView *view) { this->view = view; };
+	CGuiView *view;
+	virtual void RunUIThreadTask();
+};
+
+class CUiThreadTaskShowMessage : public CUiThreadTaskCallback
+{
+public:
+	CUiThreadTaskShowMessage(char *showMessage, float showMessageColorR,
+						 float showMessageColorG, float showMessageColorB);
+	char *showMessage;
+	float showMessageColorR;
+	float showMessageColorG;
+	float showMessageColorB;
+	
+	virtual void RunUIThreadTask();
+};
+
+class CUiThreadTaskSetMouseCursorVisible : public CUiThreadTaskCallback
+{
+public:
+	CUiThreadTaskSetMouseCursorVisible(bool mouseCursorVisible);
+	
+	bool mouseCursorVisible;
+	virtual void RunUIThreadTask();
+};
+
+class CUiThreadTaskSetFullScreen : public CUiThreadTaskCallback
+{
+public:
+	CUiThreadTaskSetFullScreen(bool isFullScreen);
+	
+	bool isFullScreen;
+	virtual void RunUIThreadTask();
+};
+
+class CUiThreadTaskSetAlwaysOnTop : public CUiThreadTaskCallback
+{
+public:
+	CUiThreadTaskSetAlwaysOnTop(bool isAlwaysOnTop);
+	
+	bool isAlwaysOnTop;
+	virtual void RunUIThreadTask();
+};
+
+
 extern CGuiMain *guiMain;
 
 #endif

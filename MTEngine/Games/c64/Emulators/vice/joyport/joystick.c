@@ -138,6 +138,8 @@ static void joystick_latch_matrix(CLOCK offset)
 {
     BYTE idx;
 
+//	LOGD("joystick_latch_matrix");
+
     if (network_connected()) {
         idx = network_joystick_value[0];
         if (idx > 0) {
@@ -186,6 +188,7 @@ void joystick_event_playback(CLOCK offset, void *data)
 
 static void joystick_latch_handler(CLOCK offset, void *data)
 {
+	LOGD("joystick_latch_handler");
     alarm_unset(joystick_alarm);
     alarm_context_update_next_pending(joystick_alarm->context);
 
@@ -216,18 +219,25 @@ void joystick_register_delay(unsigned int delay)
 /*-----------------------------------------------------------------------*/
 static void joystick_process_latch(void)
 {
-    CLOCK delay = lib_unsigned_rand(1, (unsigned int)machine_get_cycles_per_frame());
+//	LOGD("joystick_process_latch");
+	CLOCK delay = 0; //lib_unsigned_rand(1, (unsigned int)machine_get_cycles_per_frame());
 
     if (network_connected()) {
         network_event_record(EVENT_JOYSTICK_DELAY, (void *)&delay, sizeof(delay));
         network_event_record(EVENT_JOYSTICK_VALUE, (void *)latch_joystick_value, sizeof(latch_joystick_value));
     } else {
-        alarm_set(joystick_alarm, maincpu_clk + delay);
+//		LOGD("delay=%d", delay);
+//		LOGD("joystick_alarm at clk %d alarm=%x", maincpu_clk + delay, joystick_alarm);
+//        alarm_set(joystick_alarm, maincpu_clk + delay);
+		
+		joystick_latch_matrix(0);
+		joystick_event_record();
     }
 }
 
 void joystick_set_value_absolute(unsigned int joyport, BYTE value)
 {
+	LOGD("joystick_set_value_absolute: value=%d joyport=%d", value, joyport);
     if (event_playback_active()) {
         return;
     }
@@ -784,7 +794,10 @@ void c64d_joystick_key_up(int key, unsigned int joyport)
 	int keysetnum = JOYDEV_KEYSET1;
 	int value;
 	int column = 0;
-	
+
+	LOGD("c64d_joystick_key_up: key=%x joyport=%d", key, joyport);
+	c64d_lock_mutex();
+
 	if (key == JOYPAD_N)
 	{
 		column = JOYSTICK_KEYSET_N;
@@ -822,16 +835,16 @@ void c64d_joystick_key_up(int key, unsigned int joyport)
 	}
 	
 	joystick_set_value_absolute(joyport, (BYTE)value);
-	
-	
+	c64d_unlock_mutex();
 }
 
 void c64d_joystick_key_down(int key, unsigned int joyport)
 {
 	int keysetnum = JOYDEV_KEYSET1;
 	int value;
-	
 	int column = 0;
+
+	c64d_lock_mutex();
 	
 	if (key == JOYPAD_N)
 	{
@@ -854,28 +867,39 @@ void c64d_joystick_key_down(int key, unsigned int joyport)
 		column = JOYSTICK_KEYSET_FIRE;
 	}
 	
-	
 	joypad_status[keysetnum][column] = 1;
 	value = getjoyvalue(joypad_status[keysetnum]);
 	
-	
-	if (key == JOYPAD_N)
+	if (!joystick_opposite_enable)
 	{
-		joypad_vmask[keysetnum] = ~JOYPAD_S;
+		/* if two opposite directions are set, mask out the opposite side of
+		 * the last pressed key */
+		if ((value & joypad_bits[JOYSTICK_KEYSET_N]) && (value & joypad_bits[JOYSTICK_KEYSET_S])) {
+			value &= joypad_vmask[keysetnum];
+		}
+		if ((value & joypad_bits[JOYSTICK_KEYSET_E]) && (value & joypad_bits[JOYSTICK_KEYSET_W])) {
+			value &= joypad_hmask[keysetnum];
+		}
 	}
-	else if (key == JOYPAD_S)
-	{
-		joypad_vmask[keysetnum] = ~JOYPAD_N;
-	}
-	else if (key == JOYPAD_W)
-	{
-		joypad_hmask[keysetnum] = ~JOYPAD_E;
-	}
-	else if (key == JOYPAD_E)
-	{
-		joypad_hmask[keysetnum] = ~JOYPAD_W;
-	}
+
+//	if (key == JOYPAD_N)
+//	{
+//		joypad_vmask[keysetnum] = ~JOYPAD_S;
+//	}
+//	else if (key == JOYPAD_S)
+//	{
+//		joypad_vmask[keysetnum] = ~JOYPAD_N;
+//	}
+//	else if (key == JOYPAD_W)
+//	{
+//		joypad_hmask[keysetnum] = ~JOYPAD_E;
+//	}
+//	else if (key == JOYPAD_E)
+//	{
+//		joypad_hmask[keysetnum] = ~JOYPAD_W;
+//	}
 	
 	joystick_set_value_absolute(joyport, (BYTE)value);
+	c64d_unlock_mutex();
 }
 

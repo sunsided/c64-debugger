@@ -1,4 +1,5 @@
 #include "CDebugInterface.h"
+#include "CDebugInterfaceTask.h"
 #include "CViewC64.h"
 #include "SYS_Threading.h"
 #include "C64SettingsStorage.h"
@@ -18,15 +19,19 @@ CDebugInterface::CDebugInterface(CViewC64 *viewC64)
 	breakpointsMutex = new CSlrMutex("CDebugInterface::breakpointsMutex");
 	renderScreenMutex = new CSlrMutex("CDebugInterface::renderScreenMutex");
 	ioMutex = new CSlrMutex("CDebugInterface::ioMutex");
-	
-	breakOnPC = false;
-	breakOnMemory = false;
-	breakOnRaster = false;
+	tasksMutex = new CSlrMutex("CDebugInterface::tasksMutex");
 
+	breakOnPC = true;
+	breakOnMemory = true;
+	breakOnRaster = true;
+
+	breakpointsPC = new CDebuggerAddrBreakpoints();
+	breakpointsMemory = new CDebuggerMemoryBreakpoints();
+	breakpointsRaster = new CDebuggerAddrBreakpoints();
+	
 	screenSupersampleFactor = c64SettingsScreenSupersampleFactor;
 	
 	temporaryBreakpointPC = -1;
-	
 	emulationFrameCounter = 0;
 	
 	this->debugMode = DEBUGGER_MODE_RUNNING;
@@ -79,9 +84,8 @@ void CDebugInterface::DoVSync()
 {
 	emulationFrameCounter++;
 	
-//	LOGD("DoVSync: frame=%d", emulationFrameCounter);
-	
-	viewC64->EmulationStartFrameCallback();
+//	LOGD("DoVSync: frame=%d", emulationFrameCounter);	
+	viewC64->EmulationStartFrameCallback(this);
 
 }
 
@@ -95,10 +99,15 @@ void CDebugInterface::DoFrame()
 	}
 }
 
-unsigned int CDebugInterface::GetMainCpuCycleCounter()
+u64 CDebugInterface::GetMainCpuCycleCounter()
 {
 	LOGError("CDebugInterface::GetMainCpuCycleCounter: not implemented");
 	return 0;
+}
+
+u64 CDebugInterface::GetCurrentCpuInstructionCycleCounter()
+{
+	return GetMainCpuCycleCounter();
 }
 
 void CDebugInterface::ResetMainCpuDebugCycleCounter()
@@ -106,13 +115,13 @@ void CDebugInterface::ResetMainCpuDebugCycleCounter()
 	LOGError("CDebugInterface::ResetMainCpuDebugCycleCounter: not implemented");
 }
 
-unsigned int CDebugInterface::GetMainCpuDebugCycleCounter()
+u64 CDebugInterface::GetMainCpuDebugCycleCounter()
 {
 	LOGError("CDebugInterface::GetMainCpuDebugCycleCounter: not implemented");
 	return 0;
 }
 
-unsigned int CDebugInterface::GetPreviousCpuInstructionCycleCounter()
+u64 CDebugInterface::GetPreviousCpuInstructionCycleCounter()
 {
 	LOGError("CDebugInterface::GetPreviousCpuInstructionCycleCounter: not implemented");
 	return 0;
@@ -327,68 +336,9 @@ void CDebugInterface::MakeJmpAndReset(uint16 addr)
 //
 void CDebugInterface::ClearBreakpoints()
 {
-	ClearAddrBreakpoints(&(this->breakpointsPC));
-	ClearMemoryBreakpoints(&(this->breakpointsMemory));
-	ClearAddrBreakpoints(&(this->breakpointsRaster));
-}
-
-void CDebugInterface::ClearAddrBreakpoints(std::map<uint16, CAddrBreakpoint *> *breakpointsMap)
-{
-	while(!breakpointsMap->empty())
-	{
-		std::map<uint16, CAddrBreakpoint *>::iterator it = breakpointsMap->begin();
-		CAddrBreakpoint *breakpoint = it->second;
-		
-		breakpointsMap->erase(it);
-		delete breakpoint;
-	}
-}
-
-void CDebugInterface::ClearMemoryBreakpoints(std::map<uint16, CMemoryBreakpoint *> *breakpointsMap)
-{
-	while(!breakpointsMap->empty())
-	{
-		std::map<uint16, CMemoryBreakpoint *>::iterator it = breakpointsMap->begin();
-		CMemoryBreakpoint *breakpoint = it->second;
-		
-		breakpointsMap->erase(it);
-		delete breakpoint;
-	}
-}
-
-
-void CDebugInterface::AddAddrBreakpoint(std::map<uint16, CAddrBreakpoint *> *breakpointsMap, CAddrBreakpoint *breakpoint)
-{
-	(*breakpointsMap)[breakpoint->addr] = breakpoint;
-	
-	if (breakpointsMap == &(this->breakpointsPC))
-	{
-		breakOnPC = true;
-	}
-	else if (breakpointsMap == &(this->breakpointsRaster))
-	{
-		breakOnRaster = true;
-	}
-}
-
-void CDebugInterface::RemoveAddrBreakpoint(std::map<uint16, CAddrBreakpoint *> *breakpointsMap, uint16 addr)
-{
-	std::map<uint16, CAddrBreakpoint *>::iterator it = breakpointsMap->find(addr);
-	CAddrBreakpoint *breakpoint = it->second;
-	breakpointsMap->erase(it);
-	delete breakpoint;
-	
-	if (breakpointsMap->empty())
-	{
-		if (breakpointsMap == &(this->breakpointsPC))
-		{
-			breakOnPC = false;
-		}
-		else if (breakpointsMap == &(this->breakpointsRaster))
-		{
-			breakOnRaster = false;
-		}
-	}
+	this->breakpointsPC->ClearBreakpoints();
+	this->breakpointsMemory->ClearBreakpoints();
+	this->breakpointsRaster->ClearBreakpoints();
 }
 
 // address -1 means no breakpoint
@@ -421,6 +371,49 @@ CViewBreakpoints *CDebugInterface::GetViewBreakpoints()
 CViewDataWatch *CDebugInterface::GetViewMemoryDataWatch()
 {
 	return NULL;
+}
+
+//
+void CDebugInterface::AddVSyncTask(CDebugInterfaceTask *task)
+{
+	this->LockTasksMutex();
+	vsyncTasks.push_back(task);
+	this->UnlockTasksMutex();
+}
+
+// tasks to be executed when emulation is safe in vsync, i.e. completed frame rendering
+void CDebugInterface::ExecuteVSyncTasks()
+{
+	this->LockTasksMutex();
+	while(!vsyncTasks.empty())
+	{
+		CDebugInterfaceTask *task = vsyncTasks.front();
+		vsyncTasks.pop_front();
+		task->ExecuteTask();
+		delete task;
+	}
+	this->UnlockTasksMutex();
+}
+
+// tasks to be executed when emulation is safe in debugger interrupt (depends on emulation, but f.e. cpu is about to execute instruction)
+void CDebugInterface::AddCpuDebugInterruptTask(CDebugInterfaceTask *task)
+{
+	this->LockTasksMutex();
+	cpuDebugInterruptTasks.push_back(task);
+	this->UnlockTasksMutex();
+}
+
+void CDebugInterface::ExecuteDebugInterruptTasks()
+{
+	this->LockTasksMutex();
+	while(!cpuDebugInterruptTasks.empty())
+	{
+		CDebugInterfaceTask *task = cpuDebugInterruptTasks.front();
+		cpuDebugInterruptTasks.pop_front();
+		task->ExecuteTask();
+		delete task;
+	}
+	this->UnlockTasksMutex();
 }
 
 //
@@ -457,7 +450,7 @@ bool CDebugInterface::ExecuteCodeMonitorCommand(CSlrString *commandStr)
 	return false;
 }
 
-//
+// TODO: ADD "#define DEBUGMUTEX" and push/pull names of locks here, list to be displayed when this locks here again
 void CDebugInterface::LockMutex()
 {
 //		LOGD("CDebugInterface::LockMutex");
@@ -488,6 +481,16 @@ void CDebugInterface::LockIoMutex()
 void CDebugInterface::UnlockIoMutex()
 {
 	ioMutex->Unlock();
+}
+
+void CDebugInterface::LockTasksMutex()
+{
+	tasksMutex->Lock();
+}
+
+void CDebugInterface::UnlockTasksMutex()
+{
+	tasksMutex->Unlock();
 }
 
 void CDebugInterfaceCodeMonitorCallback::CodeMonitorCallbackPrintLine(CSlrString *printLine)

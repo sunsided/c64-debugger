@@ -406,18 +406,21 @@ static DRAW_INLINE void draw_sprites(int i)
         int s = active_sprite;
         BYTE spri = sprite_pri_bits & (1 << s);
         if (!(pixel_pri && spri)) {
-            switch (sbuf_pixel_reg[s]) {
-                case 1:
-                    render_buffer[i] = COL_D025;
-                    break;
-                case 2:
-                    render_buffer[i] = COL_D027 + s;
-                    break;
-                case 3:
-                    render_buffer[i] = COL_D026;
-                    break;
-                default:
-                    break;
+			// isildur: skip drawing sprites
+			if (c64d_skip_drawing_sprites == 0) {
+				switch (sbuf_pixel_reg[s]) {
+					case 1:
+						render_buffer[i] = COL_D025;
+						break;
+					case 2:
+						render_buffer[i] = COL_D027 + s;
+						break;
+					case 3:
+						render_buffer[i] = COL_D026;
+						break;
+					default:
+						break;
+				}
             }
         }
         /* if there was a foreground pixel, trigger collision */

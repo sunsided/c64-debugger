@@ -52,7 +52,8 @@ CDataWatchDetails::~CDataWatchDetails()
 }
 
 CViewDataWatch::CViewDataWatch(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY,
-									 CSlrDataAdapter *dataAdapter, CViewMemoryMap *viewMemoryMap, CDebugInterface *debugInterface)
+							   CDebugInterface *debugInterface, CSlrDataAdapter *dataAdapter,
+							   CViewMemoryMap *viewMemoryMap)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
 {
 	this->name = "CViewDataWatch";
@@ -66,6 +67,8 @@ CViewDataWatch::CViewDataWatch(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat
 	this->font = guiMain->fntConsole;
 	this->fontSize = 5.0f;
 	
+	numCharsInColumn = 20.5;
+
 	this->startItemIndex = 0;
 	
 	this->isShowAddr = false;
@@ -159,8 +162,6 @@ void CViewDataWatch::DeleteAllWatches()
 void CViewDataWatch::Render()
 {
 //	LOGD("CViewDataWatch::Render");
-	
-	int numCharsInColumn = 15.5;
 	
 	int index = 0;
 	
@@ -284,8 +285,6 @@ void CViewDataWatch::ScrollDataDown()
 	{
 		startItemIndex++;
 	}
-	
-	int numCharsInColumn = 15.5;
 	
 	int index = 0;
 	

@@ -11,6 +11,9 @@
 #include "CViewC64Screen.h"
 #include "CViewVicEditor.h"
 
+// JukeBox playlist is a tool for having fun. It was created for the first ever C64 emulator in VR created by slajerek
+// and ought to be a demo player for VR. never finished, but definitely that was first C64 VR attempt i.e. world first :)
+// At least now we have a tool to create playlist and watch demos in a loop...
 
 CViewJukeboxPlaylist::CViewJukeboxPlaylist(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
@@ -310,6 +313,12 @@ void CViewJukeboxPlaylist::ThreadRun(void *data)
 		else if (ext->CompareWith("crt") || ext->CompareWith("CRT"))
 		{
 			viewC64->viewC64MainMenu->InsertCartridge(entry->filePath, false);
+		}
+		else if (ext->CompareWith("reu") || ext->CompareWith("REU"))
+		{
+			bool val = true;
+			C64DebuggerSetSetting("ReuEnabled", &val);
+			viewC64->viewC64MainMenu->AttachReu(entry->filePath, false, false);
 		}
 		else if (ext->CompareWith("snap") || ext->CompareWith("SNAP")
 				 || ext->CompareWith("vsf") || ext->CompareWith("VSF"))

@@ -24,6 +24,16 @@ extern "C" {
 #include "CGuiEditHex.h"
 #include "VID_ImageBinding.h"
 
+// KOLORY BY KK do PIANO
+// RED
+// GREEN
+// BLUE
+// YELLOW
+
+// https://www.atarimagazines.com/compute/issue34/112_1_16-BIT_ATARI_MUSIC.php
+// http://krap.pl/mirrorz/atari/homepage.ntlworld.com/kryten_droid/Atari/800XL/atari_hw/pokey.htm
+
+
 #if defined(RUN_ATARI)
 
 CViewAtariStatePOKEY::CViewAtariStatePOKEY(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, AtariDebugInterface *debugInterface)
@@ -59,6 +69,8 @@ void CViewAtariStatePOKEY::SetPosition(GLfloat posX, GLfloat posY, GLfloat posZ,
 {
 	CGuiView::SetPosition(posX, posY, posZ, sizeX, sizeY);
 
+	// TODO: fix the size, it is to default now. we need to calculate size like in CViewNesStateAPU
+	
 	// UX workaround for now...
 	if (viewC64->currentScreenLayoutId != SCREEN_LAYOUT_ATARI_MEMORY_MAP)
 	{
@@ -170,12 +182,12 @@ void CViewAtariStatePOKEY::Render()
 }
 
 
-void CViewAtariStatePOKEY::RenderState(float px, float py, float posZ, CSlrFont *fontBytes, float fontSize, int ciaId)
+void CViewAtariStatePOKEY::RenderState(float px, float py, float posZ, CSlrFont *fontBytes, float fontSize, int pokeyId)
 {
 	float startX = px;
 	float startY = py;
 	
-	char buf[256];
+	char buf[256] = {0};
 	
 #ifdef STEREO_SOUND
 	if (POKEYSND_stereo_enabled)

@@ -12,9 +12,10 @@
 #include "CViewC64.h"
 #include "exomizer.h"
 #include "SidTuneMod.h"
+#include "CGuiMain.h"
 #include <float.h>
 
-u8 ConvertPetsciiToSreenCode(u8 chr)
+u8 ConvertPetsciiToScreenCode(u8 chr)
 {
 	if (chr >= 0x00 && chr <= 0x1F)
 		return chr + 0x80;
@@ -280,7 +281,7 @@ void ConvertSpriteDataToImage(u8 *spriteData, CImageData *imageData, u8 bkgColor
 }
 
 
-void ConvertColorSpriteDataToImage(u8 *spriteData, CImageData *imageData, u8 colorD021, u8 colorD025, u8 colorD026, u8 colorD027, C64DebugInterface *debugInterface, int gap)
+void ConvertColorSpriteDataToImage(u8 *spriteData, CImageData *imageData, u8 colorD021, u8 colorD025, u8 colorD026, u8 colorD027, C64DebugInterface *debugInterface, int gap, u8 alpha)
 {
 	u8 cD021r, cD021g, cD021b;
 	u8 cD025r, cD025g, cD025b;
@@ -298,7 +299,7 @@ void ConvertColorSpriteDataToImage(u8 *spriteData, CImageData *imageData, u8 col
 	int chy = 0 + gap;
 	
 	// erase with transparent pixels
-	imageData->EraseContent(cD021r, cD021g, cD021b, 0);
+	imageData->EraseContent(cD021r, cD021g, cD021b, alpha);
 	
 	// copy pixels around character for better linear scaling
 	for (int y = 0; y < 21; y++)
@@ -472,6 +473,7 @@ CSlrFontProportional *ProcessFonts(u8 *charsetData, bool useScreenCodes)
 	}
 	
 	// don't ask me why - there's a bug in macos engine part waiting to be fixed
+	// this has been fixed in imgui branch
 #if !defined(WIN32) && !defined(LINUX)
 	imageData->FlipVertically();
 #endif
@@ -1040,6 +1042,34 @@ void RenderColorRectangle(float px, float py, float ledSizeX, float ledSizeY, fl
 	BlitRectangle(px, py - gap, -1, ledSizeX, ledSizeY,
 				  colorR, colorG, colorB, 1.0f, gap);
 	
+}
+
+void RenderColorRectangleWithHexCode(float px, float py, float ledSizeX, float ledSizeY, float gap, bool isLocked, u8 color, float fontSize, C64DebugInterface *debugInterface)
+{
+	float colorR, colorG, colorB;
+	debugInterface->GetFloatCBMColor(color, &colorR, &colorG, &colorB);
+	
+	BlitFilledRectangle(px, py, -1, ledSizeX, ledSizeY,
+						colorR, colorG, colorB, 1.0f);
+	
+	if (!isLocked)
+	{
+		colorR = colorG = colorB = 0.3f;
+	}
+	else
+	{
+		colorR = 1.0f;
+		colorG = colorB = 0.3f;
+	}
+	
+	BlitRectangle(px, py - gap, -1, ledSizeX, ledSizeY,
+				  colorR, colorG, colorB, 1.0f, gap);
+	
+	// blit hex color code
+	char buf[2];
+	Byte2Hex1digitR(color, buf);
+	buf[1] = 0x00;
+	guiMain->fntConsole->BlitText(buf, px + ledSizeX/2.0f - fontSize/2.0f, py+0.5f, -1, fontSize);
 }
 
 uint16 GetSidAddressByChipNum(int chipNum)

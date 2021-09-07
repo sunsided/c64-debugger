@@ -13,15 +13,15 @@ CNesAudioChannel::CNesAudioChannel(NesDebugInterface *debugInterface)
 	sprintf(this->name, "nes");
 	this->bypass = true;
 	
-	monoBuffer = new u16[NES_AUDIO_BUFFER_FRAMES];
+	monoBuffer = new i16[NES_AUDIO_BUFFER_FRAMES];
 }
 
-void nesd_audio_callback(uint8 *stream, int numSamples);
+void nesd_audio_callback(i16 *monoBuffer, int numSamples);
 
 void CNesAudioChannel::FillBuffer(int *mixBuffer, u32 numSamples)
 {
 //	LOGD("FillBuffer: %d", numSamples);
-	nesd_audio_callback((u8*)monoBuffer, numSamples);
+	nesd_audio_callback(monoBuffer, numSamples);
 	
 	// TODO: refactor me c64SettingsMuteSIDOnPause-> mute emulation sound on pause
 	if (c64SettingsMuteSIDOnPause)

@@ -3,9 +3,6 @@
 
 #include "SYS_Defs.h"
 
-#import <Cocoa/Cocoa.h>
-#import <OpenGL/OpenGL.h>
-
 #include "VID_Blits.h"
 
 extern GLfloat SCREEN_WIDTH;
@@ -105,6 +102,8 @@ void VID_ResetLogicClock();
 void VID_SetWindowAlwaysOnTop(bool isAlwaysOnTop);
 void VID_SetWindowAlwaysOnTopTemporary(bool isAlwaysOnTop);
 bool VID_IsWindowAlwaysOnTop();
+
+void VID_SetWindowFullScreen(bool isFullScreen);
 
 void VID_ShowActionSheet();
 

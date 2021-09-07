@@ -1,55 +1,43 @@
+//
+//  GLView.h
+//  MTEngine-MacOS
+//
+//  Created by Marcin Skoczylas on 18/09/2020.
+//  Copyright © 2020 Marcin Skoczylas. All rights reserved.
+//
+
 #import <Cocoa/Cocoa.h>
-#import <QuartzCore/CVDisplayLink.h>
-
 #include "SYS_Threading.h"
+#include "C64CommandLine.h"
 
-@class GLViewController;
+NS_ASSUME_NONNULL_BEGIN
 
-@interface GLView : NSView
+@interface GLView : NSOpenGLView
 {
-	
-	NSOpenGLContext *openGLContext;
-	NSOpenGLPixelFormat *pixelFormat;
-	
-	GLViewController *controller;
-	
-	CVDisplayLinkRef displayLink;
-	BOOL isAnimating;
-	
 	int viewWidth;
 	int viewHeight;
+
+	bool isAltKeyDown;
+	bool isShiftKeyDown;
+	bool isControlKeyDown;
 }
 
-- (void) initGL;
-
-- (id) initWithFrame:(NSRect)frameRect;
-- (id) initWithFrame:(NSRect)frameRect shareContext:(NSOpenGLContext*)context;
-
-- (NSOpenGLContext*) openGLContext;
-
-- (void) setMainController:(GLViewController*)theController;
-
-- (void) updateSize;
-
-- (void) drawView;
-
-- (void) startAnimation;
-- (void) stopAnimation;
-
-- (void)setWindowAlwaysOnTop:(BOOL)isAlwaysOnTop;
-
+- (void)startAnimation;
+- (void)updateSize;
 - (bool)isWindowFullScreen;
-
+- (void)setWindowAlwaysOnTop:(BOOL)isAlwaysOnTop;
 - (void)storeMainWindowPosition;
 - (void)restoreMainWindowPosition;
-
-- (void)testMenu;
++ (NSRect)getStoredMainWindowPosition;
+- (void)goFullScreen;
+- (void)shutdownMTEngine;
 
 @end
 
 extern GLView *glView;
 
 BOOL MACOS_OpenFile(NSString *strPath);
+BOOL MACOS_ApplicationStartWithFile(NSString *strPath);
 
 class CMacOsOpenFileThread : public CSlrThread
 {
@@ -57,3 +45,12 @@ public:
 	CMacOsOpenFileThread(char *threadName);
 	virtual void ThreadRun(void *data);
 };
+
+class C64DebuggerStartupTaskOpenFileCallback : public C64DebuggerStartupTaskCallback
+{
+public:
+	virtual void PreRunStartupTaskCallback();
+	virtual void PostRunStartupTaskCallback();
+};
+
+NS_ASSUME_NONNULL_END

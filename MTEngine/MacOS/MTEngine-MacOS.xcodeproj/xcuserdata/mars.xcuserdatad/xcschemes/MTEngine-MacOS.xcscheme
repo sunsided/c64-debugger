@@ -14,8 +14,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "8D1107260486CEB800E47090"
-               BuildableName = "C64Debugger.app"
-               BlueprintName = "C64Debugger"
+               BuildableName = "C64 Debugger.app"
+               BlueprintName = "C64 Debugger"
                ReferencedContainer = "container:MTEngine-MacOS.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -26,37 +26,38 @@
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
-      <Testables>
-      </Testables>
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8D1107260486CEB800E47090"
-            BuildableName = "C64Debugger.app"
-            BlueprintName = "C64Debugger"
+            BuildableName = "C64 Debugger.app"
+            BlueprintName = "C64 Debugger"
             ReferencedContainer = "container:MTEngine-MacOS.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
-      <AdditionalOptions>
-      </AdditionalOptions>
+      <Testables>
+      </Testables>
    </TestAction>
    <LaunchAction
-      buildConfiguration = "Release"
+      buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+      enableASanStackUseAfterReturn = "YES"
+      disableMainThreadChecker = "YES"
       launchStyle = "0"
       useCustomWorkingDirectory = "NO"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
+      enableGPUValidationMode = "1"
       allowLocationSimulation = "YES">
       <BuildableProductRunnable
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8D1107260486CEB800E47090"
-            BuildableName = "C64Debugger.app"
-            BlueprintName = "C64Debugger"
+            BuildableName = "C64 Debugger.app"
+            BlueprintName = "C64 Debugger"
             ReferencedContainer = "container:MTEngine-MacOS.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -66,7 +67,11 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "/Users/mars/develop/MTEngine/docs/C64Debugger/other/debuginfo-test/sprites-full1.prg"
+            argument = "-autorun"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "/Users/mars/Desktop/test/samar-ecm-compo.prg"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
@@ -103,11 +108,11 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-wait"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "350"
-            isEnabled = "NO">
+            argument = "1000"
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-debuginfo"
@@ -126,7 +131,7 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "/Users/mars/Desktop/breaks.txt"
+            argument = "/Users/mars/Desktop/test/breakpoints.txt"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
@@ -134,11 +139,11 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-vicesymbols"
+            argument = "-symbols"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "/Users/mars/develop/MTEngine/tools/_other/c64/KickAss/source.vs"
+            argument = "/Users/mars/Desktop/test/samar-ecm-compo.vs"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
@@ -171,15 +176,15 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-d64"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "/Users/mars/develop/MTEngine/_RUNTIME_/Documents/c64/disks/commando.d64"
-            isEnabled = "NO">
+            argument = "/Users/mars/develop/MTEngine/_RUNTIME_/Documents/c64/disks/games/commando.d64"
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-autorundisk"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-layout"
@@ -245,8 +250,6 @@
             isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>
-      <AdditionalOptions>
-      </AdditionalOptions>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -259,8 +262,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8D1107260486CEB800E47090"
-            BuildableName = "C64Debugger.app"
-            BlueprintName = "C64Debugger"
+            BuildableName = "C64 Debugger.app"
+            BlueprintName = "C64 Debugger"
             ReferencedContainer = "container:MTEngine-MacOS.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

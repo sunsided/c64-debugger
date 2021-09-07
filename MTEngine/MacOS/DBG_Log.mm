@@ -30,9 +30,9 @@
 #if !defined (GLOBAL_DEBUG_OFF)
 
 //#define LOCAL_DEBUG_OFF
-//#define FULL_LOG
+#define FULL_LOG
 
-//#define LOG_FILE
+#define LOG_FILE
 
 ///////////////////////////////////////////////////////////////
 
@@ -87,36 +87,61 @@ void LOG_Init(void)
 	time ( &rawtime );
 	timeinfo = localtime ( &rawtime );
 
+	// log to Documents: NSDocumentDirectory
+	// log to Desktop
     NSString *path = [NSString stringWithFormat:@"%@/C64Debugger-%02d%02d%02d-%02d%02d.txt",
-                      [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0],
+                      [NSSearchPathForDirectoriesInDomains(NSDesktopDirectory, NSUserDomainMask, YES) objectAtIndex:0],
                       (timeinfo->tm_year-100), (timeinfo->tm_mon+1), timeinfo->tm_mday, timeinfo->tm_hour, timeinfo->tm_min];
 
     NSLog(@"logger file path=%@", path);
 
 	fpLog = fopen([path fileSystemRepresentation], "wb");
 #endif
-	
+
 	LOG_SetLevel(DBGLVL_MAIN, true);
+	LOG_SetLevel(DBGLVL_WARN, false);
 	LOG_SetLevel(DBGLVL_DEBUG, true);
-	LOG_SetLevel(DBGLVL_DEBUG2, true);
-	LOG_SetLevel(DBGLVL_INPUT, true);
+	LOG_SetLevel(DBGLVL_DEBUG2, false);
+	LOG_SetLevel(DBGLVL_INPUT, false);
+	LOG_SetLevel(DBGLVL_GUI, false);
 	LOG_SetLevel(DBGLVL_RES, false);
-	LOG_SetLevel(DBGLVL_GUI, true);
 	LOG_SetLevel(DBGLVL_MEMORY, false);
-	LOG_SetLevel(DBGLVL_ANIMATION, true);
-	LOG_SetLevel(DBGLVL_LEVEL, true);
+	LOG_SetLevel(DBGLVL_ANIMATION, false);
+	LOG_SetLevel(DBGLVL_LEVEL, false);
 	LOG_SetLevel(DBGLVL_XMPLAYER, false);
 	LOG_SetLevel(DBGLVL_AUDIO, false);
-	LOG_SetLevel(DBGLVL_TODO, true);
-
+	LOG_SetLevel(DBGLVL_TODO, false);
+	
 	LOG_SetLevel(DBGLVL_PAINT, false);
 	
 	LOG_SetLevel(DBGLVL_VICE_DEBUG, false);
 	LOG_SetLevel(DBGLVL_VICE_MAIN, false);
 	LOG_SetLevel(DBGLVL_VICE_VERBOSE, false);
+	
+	LOG_SetLevel(DBGLVL_ATARI_MAIN, false);
+	LOG_SetLevel(DBGLVL_ATARI_DEBUG, false);
 
-	LOG_SetLevel(DBGLVL_ATARI_MAIN, true);
-	LOG_SetLevel(DBGLVL_ATARI_DEBUG, true);
+//	LOG_SetLevel(DBGLVL_MAIN, true);
+//	LOG_SetLevel(DBGLVL_DEBUG, true);
+//	LOG_SetLevel(DBGLVL_DEBUG2, true);
+//	LOG_SetLevel(DBGLVL_INPUT, false);
+//	LOG_SetLevel(DBGLVL_RES, false);
+//	LOG_SetLevel(DBGLVL_GUI, false);
+//	LOG_SetLevel(DBGLVL_MEMORY, false);
+//	LOG_SetLevel(DBGLVL_ANIMATION, true);
+//	LOG_SetLevel(DBGLVL_LEVEL, true);
+//	LOG_SetLevel(DBGLVL_XMPLAYER, false);
+//	LOG_SetLevel(DBGLVL_AUDIO, false);
+//	LOG_SetLevel(DBGLVL_TODO, true);
+//
+//	LOG_SetLevel(DBGLVL_PAINT, false);
+//	
+//	LOG_SetLevel(DBGLVL_VICE_DEBUG, false);
+//	LOG_SetLevel(DBGLVL_VICE_MAIN, false);
+//	LOG_SetLevel(DBGLVL_VICE_VERBOSE, false);
+//
+//	LOG_SetLevel(DBGLVL_ATARI_MAIN, true);
+//	LOG_SetLevel(DBGLVL_ATARI_DEBUG, true);
 
 	
 	/// leave only debug2:

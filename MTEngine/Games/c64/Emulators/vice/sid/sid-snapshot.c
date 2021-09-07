@@ -170,6 +170,9 @@ fail:
     return -1;
 }
 
+void c64d_lock_sound_mutex(char *whoLocked);
+void c64d_unlock_sound_mutex(char *whoLocked);
+
 static int sid_snapshot_read_module_simple(snapshot_t *s, int sidnr)
 {
     BYTE major_version, minor_version;
@@ -238,8 +241,12 @@ static int sid_snapshot_read_module_simple(snapshot_t *s, int sidnr)
             goto fail;
         }
         memcpy(sid_get_siddata(sidnr), &tmp[2], 32);
+		
+		c64d_lock_sound_mutex("vice::sid_snapshot_read_module_simple");
         sound_open();
-        return snapshot_module_close(m);
+		c64d_unlock_sound_mutex("vice::sid_snapshot_read_module_simple");
+
+		return snapshot_module_close(m);
     }
 
     /* Handle 1.2 snapshots differently */
@@ -275,8 +282,12 @@ static int sid_snapshot_read_module_simple(snapshot_t *s, int sidnr)
         set_sid_engine_with_fallback(tmp[1]);
 
         memcpy(sid_get_siddata(sidnr), &tmp[2], 32);
-        sound_open();
-        return snapshot_module_close(m);
+
+		c64d_lock_sound_mutex("vice::sid_snapshot_read_module_simple 2");
+		sound_open();
+		c64d_unlock_sound_mutex("vice::sid_snapshot_read_module_simple 2");
+
+		return snapshot_module_close(m);
     }
 
     /* If more than 32 bytes are present then the resource "Sound" and
@@ -305,7 +316,10 @@ static int sid_snapshot_read_module_simple(snapshot_t *s, int sidnr)
             intended_sid_engine = res_engine;
             set_sid_engine_with_fallback(res_engine);
             memcpy(sid_get_siddata(0), &tmp[2], 32);
+						
+			c64d_lock_sound_mutex("vice::sid_snapshot_read_module_simple 3");
             sound_open();
+			c64d_unlock_sound_mutex("vice::sid_snapshot_read_module_simple 3");
         }
     }
 
@@ -1045,20 +1059,24 @@ int sid_snapshot_write_module(snapshot_t *s)
     int sids = 0;
     int i;
 
-    resources_get_int("SidStereo", &sids);
+	// slajerek: when sid_enable is off then saving snapshot crashes
+	if (c64d_get_sid_enable())
+	{
+		resources_get_int("SidStereo", &sids);
 
-    ++sids;
+		++sids;
 
-    for (i = 0; i < sids; ++i) {
-        if (sid_snapshot_write_module_simple(s, i) < 0) {
-           return -1;
-        }
+		for (i = 0; i < sids; ++i) {
+			if (sid_snapshot_write_module_simple(s, i) < 0) {
+			   return -1;
+			}
 
-        if (sid_snapshot_write_module_extended(s, i) < 0) {
-            return -1;
-        }
-    }
-
+			if (sid_snapshot_write_module_extended(s, i) < 0) {
+				return -1;
+			}
+		}
+	}
+	
     return 0;
 }
 

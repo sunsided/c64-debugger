@@ -19,7 +19,12 @@ CSlrDataAdapter::~CSlrDataAdapter()
 
 int CSlrDataAdapter::AdapterGetDataLength()
 {
-	return -1;
+	return 0;
+}
+
+int CSlrDataAdapter::GetDataOffset()
+{
+	return 0;
 }
 
 void CSlrDataAdapter::AdapterReadByte(int pointer, byte *value)

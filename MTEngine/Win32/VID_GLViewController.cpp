@@ -139,7 +139,12 @@ bool VID_IsWindowAlwaysOnTop()
 	return VID_isAlwaysOnTop;
 }
 
+void SYS_SetFullScreen(bool fullscreen);
 
+void VID_SetWindowFullScreen(bool isFullScreen)
+{
+	SYS_SetFullScreen(isFullScreen);
+}
 
 void SysTextFieldEditFinishedCallback::SysTextFieldEditFinished(UTFString *str)
 {
@@ -389,6 +394,8 @@ void VID_UpdateViewPort(float newWidth, float newHeight)
 		else
 		{
 			LOGD("glViewport equal");
+			VIEW_START_X = 0;
+			VIEW_START_Y = 0;
 			glViewport(0, 0, vW, vH); // equal aspect ratios
 			SCREEN_SCALE = vH / SCREEN_HEIGHT;
 			
@@ -406,10 +413,13 @@ void VID_UpdateViewPort(float newWidth, float newHeight)
 	LOGD("VID_UpdateViewPort done");
 }
 
+extern u32 windowWidth;
+extern u32 windowHeight;
+
 void VID_InitGL()
 {
 	LOGM("initGL");
-
+	
 	SYS_InitStrings();
 	SYS_InitPlatformSettings();
 	SYS_InitApplicationPauseResume();
@@ -536,6 +546,8 @@ void VID_InitGL()
 	glVertexPointer(3, GL_FLOAT, 0, vertices);
 	glNormalPointer(GL_FLOAT, 0, normals);
 	glColorPointer(3, GL_FLOAT, 0, colors);
+
+	VID_UpdateViewPort(windowWidth, windowHeight);
 
 #ifdef USE_THREADED_IMAGES_LOADING
 	VID_InitImageBindings();
@@ -3705,25 +3717,50 @@ bool VID_IsWindowFullScreen()
 	return isFullScreen;
 }
 
+HCURSOR hCursor = NULL;
+
 void VID_ShowMouseCursor()
 {
 	ShowCursor(TRUE);
 }
 
+extern HWND	hWnd;
+
 void VID_HideMouseCursor()
 {
-	// rule #1: don't ever trust windows
+	LOGD("VID_HideMouseCursor");
+
+	// rule #1: don't ever trust microsoft
 	//while(ShowCursor(FALSE)>=0);
 
 	for (int i = 0; i < 1000; i++)
 	{
-		if (ShowCursor(FALSE) < 0)
+		int result = ShowCursor(FALSE);
+		LOGD("ShowCursor(FALSE): result=%d", result);
+		if (result < 0)
 			break;
 	}
-}
+	
+	/*
+	Note: it seems on startup cursor belongs to Explorer so can't hide it on startup.
+			no workaround so far for this
 
-// TODO:
-void VID_StoreMainWindowPosition()
-{
+	// rule #2: don't ever fucking trust microsoft
+	UpdateWindow(hWnd);
+	SYS_Sleep(250);
+
+	INPUT	MI[5] = { 0 };
+	for (int i = 0; i < 5; i++)
+	{
+		MI[i].type = INPUT_MOUSE;
+		MI[i].mi.dwFlags = MOUSEEVENTF_MOVE;
+		MI[i].mi.dx = 1;
+		MI[i].mi.dy = 1;
+	}
+
+	SendInput(5, (LPINPUT) &MI, sizeof(INPUT));
+	*/
+
+	LOGD("VID_HideMouseCursor finished");
 }
 

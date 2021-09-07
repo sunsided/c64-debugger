@@ -860,6 +860,16 @@ void CViewC64Screen::JoystickUp(u32 axis)
 	}
 }
 
+bool CViewC64Screen::IsInsideZoomedScreen(float x, float y)
+{
+	if (x >= this->zoomedScreenPosX && x <= (this->zoomedScreenPosX + this->zoomedScreenSizeX)
+		&& y >= this->zoomedScreenPosY && y <= (this->zoomedScreenPosY + this->zoomedScreenSizeY))
+	{
+		return true;
+	}
+	
+	return false;
+}
 
 void CViewC64Screen::ActivateView()
 {

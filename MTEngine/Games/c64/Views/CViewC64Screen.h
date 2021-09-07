@@ -47,7 +47,8 @@ public:
 	virtual int GetJoystickAxis(u32 keyCode, bool isShift, bool isAlt, bool isControl);
 	virtual void JoystickDown(u32 axis);
 	virtual void JoystickUp(u32 axis);
-	
+
+	virtual bool IsInsideZoomedScreen(float x, float y);
 
 	virtual void ActivateView();
 	virtual void DeactivateView();

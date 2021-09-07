@@ -91,6 +91,7 @@ public:
 	CSlrKeyboardShortcut *kbsStoreSnapshot4;
 	CSlrKeyboardShortcut *kbsStoreSnapshot5;
 	CSlrKeyboardShortcut *kbsStoreSnapshot6;
+	CSlrKeyboardShortcut *kbsStoreSnapshot7;
 
 	CSlrKeyboardShortcut *kbsRestoreSnapshot1;
 	CSlrKeyboardShortcut *kbsRestoreSnapshot2;
@@ -98,6 +99,7 @@ public:
 	CSlrKeyboardShortcut *kbsRestoreSnapshot4;
 	CSlrKeyboardShortcut *kbsRestoreSnapshot5;
 	CSlrKeyboardShortcut *kbsRestoreSnapshot6;
+	CSlrKeyboardShortcut *kbsRestoreSnapshot7;
 
 	bool ProcessKeyboardShortcut(CSlrKeyboardShortcut *shortcut);
 	

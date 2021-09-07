@@ -12,7 +12,7 @@ public:
 	NesDebugInterface *debugInterface;
 	virtual void FillBuffer(int *mixBuffer, u32 numSamples);
 	
-	u16 *monoBuffer;
+	i16 *monoBuffer;
 };
 
 #endif

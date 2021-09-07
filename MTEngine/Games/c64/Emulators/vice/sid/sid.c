@@ -207,6 +207,11 @@ static int sid_dump_chip(int chipno)
     return -1;
 }
 
+void c64d_store_sid_data(BYTE *sidDataStore, int sidNum)
+{
+	memcpy(sidDataStore, siddata[sidNum], 32);
+}
+
 /* ------------------------------------------------------------------------- */
 
 BYTE sid_read(WORD addr)
@@ -525,7 +530,8 @@ int sid_sound_machine_channels(void)
 
 static void set_sound_func(void)
 {
-    if (sid_enable) {
+    if (sid_enable)
+	{
         if (sid_engine_type == SID_ENGINE_FASTSID) {
             sid_read_func = sound_read;
             sid_store_func = sound_store;
@@ -664,4 +670,9 @@ void sid_set_machine_parameter(long clock_rate)
 #ifdef HAVE_HARDSID
     hardsid_set_machine_parameter(clock_rate);
 #endif
+}
+
+int c64d_get_sid_enable()
+{
+	return sid_enable;
 }

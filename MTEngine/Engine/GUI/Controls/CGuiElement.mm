@@ -34,6 +34,8 @@ CGuiElement::CGuiElement(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX
 	this->repeatTime = 0;
 	this->isKeyDown = false;
 	
+	this->drawFocusBorder = true;
+	
 	this->userData = NULL;
 }
 
@@ -140,9 +142,12 @@ void CGuiElement::Render(GLfloat posX, GLfloat posY, GLfloat sizeX, GLfloat size
 
 void CGuiElement::RenderFocusBorder()
 {
-	// TODO: render focus rectangle based on colours from theme!
-	const float lineWidth = 0.7f;
-	BlitRectangle(this->posX, this->posY, this->posZ, this->sizeX, this->sizeY, 1.0f, 0.0f, 0.0f, 0.5f, lineWidth);
+	if (drawFocusBorder)
+	{
+		// TODO: render focus rectangle based on colours from theme!
+		const float lineWidth = 0.7f;
+		BlitRectangle(this->posX, this->posY, this->posZ, this->sizeX, this->sizeY, 1.0f, 0.0f, 0.0f, 0.5f, lineWidth);		
+	}
 }
 
 bool CGuiElement::IsFocusable()
@@ -291,6 +296,12 @@ void CGuiElement::FocusLost()
 	this->hasFocus = false;
 }
 
+bool CGuiElement::HasFocus()
+{
+//	LOGD("CGuiElement::HasFocus: element=%s hasFocus=%s", this->name, STRBOOL(this->hasFocus));
+	return this->hasFocus;
+}
+
 bool CGuiElement::KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl)
 {
 	LOGI("CGuiElement::KeyDown: %d %s %s %s", keyCode, STRBOOL(isShift), STRBOOL(isAlt), STRBOOL(isControl));
@@ -313,6 +324,12 @@ void CGuiElement::ResourcesPrepare()
 
 void CGuiElement::ResourcesPostLoad()
 {
+}
+
+bool CGuiElement::SetFocus()
+{
+	this->FocusReceived();
+	return true;
 }
 
 bool CGuiElement::SetFocus(bool focus)

@@ -65,6 +65,7 @@ void GUI_HideVirtualKeyboard();
 void VID_SetWindowAlwaysOnTop(bool isAlwaysOnTop);
 void VID_SetWindowAlwaysOnTopTemporary(bool isAlwaysOnTop);
 bool VID_IsWindowAlwaysOnTop();
+void VID_SetWindowFullScreen(bool isFullScreen);
 
 bool VID_IsWindowFullScreen();
 void VID_HideMouseCursor();

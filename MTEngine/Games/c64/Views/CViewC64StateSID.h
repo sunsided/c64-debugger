@@ -65,6 +65,8 @@ public:
 	virtual void Render();
 	virtual void DoLogic();
 	
+	bool renderHorizontal;
+	
 	C64DebugInterface *debugInterface;
 	
 	void DumpSidWaveform(uint8 wave, char *buf);
@@ -89,7 +91,7 @@ public:
 	
 	void UpdateSidButtonsState();
 	
-	int waveformPos;
+	volatile int waveformPos;
 	void AddWaveformData(int sidNumber, int v1, int v2, int v3, short mix);
 	
 	// editing registers

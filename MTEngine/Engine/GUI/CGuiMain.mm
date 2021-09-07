@@ -70,16 +70,12 @@ void CGuiMain::Startup()
 	LOGG("GUI_Startup()");
 	
 	//RES_GenerateEmbedDefaults();
-
-
-	guiMain = this;
-
 	SYS_InitCharBufPool();
 	
 #if defined(USE_DEBUGSCREEN)
 	debugScreen = new CDebugScreen(40, 20);
 #endif
-	
+		
 	// resource manager: preload graphics only on startup
 	//RES_SetStateSkipResourcesLoading();
 	
@@ -102,7 +98,10 @@ void CGuiMain::Startup()
 	globalConfig = new CConfigStorage();
 #endif
 
+	isMouseCursorVisible = false;
+
 	renderMutex = new CSlrMutex("CGuiMain::renderMutex");
+	uiThreadTasksMutex = new CSlrMutex("CGuiMain::uiThreadTasksMutex");
 
 	LOGM("sound engine init");
 	SYS_InitSoundEngine();
@@ -132,12 +131,10 @@ void CGuiMain::Startup()
 #if defined(LOAD_CONSOLE_INVERTED_FONT)
 	imgConsoleInvertedFonts = RES_GetImage("/Engine/console-inverted-plain");
 	imgConsoleInvertedFonts->ResourceSetPriority(RESOURCE_PRIORITY_STATIC);
-	//imgConsoleInvertedFonts = new CSlrImage("/Engine/console_plain_inverted", true);
 	fntConsoleInverted = new CSlrFontBitmap("console-inverted",
 			imgConsoleInvertedFonts, CONSOLE_FONT_SIZE_X, CONSOLE_FONT_SIZE_Y, CONSOLE_FONT_PITCH_X,
 			CONSOLE_FONT_PITCH_Y);
 	fntConsoleInverted->ResourceSetPriority(RESOURCE_PRIORITY_STATIC);
-	//gScaleDownImages = tmp;
 #endif
 
 #if defined(LOAD_DEFAULT_UI_THEME)
@@ -280,6 +277,13 @@ void CGuiMain::Startup()
 	
 	LOGM("CGuiMain init done");
 
+}
+
+void CGuiMain::AddUiThreadTask(CUiThreadTaskCallback *taskCallback)
+{
+	uiThreadTasksMutex->Lock();
+	uiThreadTasks.push_back(taskCallback);
+	uiThreadTasksMutex->Unlock();
 }
 
 void CGuiMain::AddGuiElement(CGuiElement *guiElement)
@@ -1322,6 +1326,8 @@ void CGuiMain::Render()
 {
 	//LOGD("-------------- GUI_Render() --------------");
 
+	RunUiTasks();
+	
 	this->LockRenderMutex(); //"CGuiMain::Render");
 
 //	this->imgBackgroundBlue->Render(0, 0, -3.0, 320, 200);
@@ -1481,8 +1487,24 @@ void CGuiMain::Render()
 
 	guiMain->UnlockRenderMutex(); //"CGuiMain::Render");
 
+	RunUiTasks();
+	
 //	LOGD("------------ GUI_Render done -------------");
 
+}
+
+void CGuiMain::RunUiTasks()
+{
+	uiThreadTasksMutex->Lock();
+	while(!uiThreadTasks.empty())
+	{
+		CUiThreadTaskCallback *taskCallback = uiThreadTasks.front();
+		uiThreadTasks.pop_front();
+		
+		taskCallback->RunUIThreadTask();
+		delete taskCallback;
+	}
+	uiThreadTasksMutex->Unlock();
 }
 
 void CGuiMain::DoLogic()
@@ -1634,17 +1656,60 @@ void CViewLoaderThread::ThreadRun(void *data)
 
 }
 
+void CGuiMain::SetMouseCursorVisible(bool isVisible)
+{
+//	LOGD("CGuiMain::SetMouseCursorVisible isNowMouseCursorVisible=%s setToVisible=%s", STRBOOL(isMouseCursorVisible), STRBOOL(isVisible));
+	if (isVisible == isMouseCursorVisible)
+	{
+		return;
+	}
+	
+	CUiThreadTaskSetMouseCursorVisible *task = new CUiThreadTaskSetMouseCursorVisible(isVisible);
+	this->AddUiThreadTask(task);
+}
+
+void CGuiMain::SetApplicationWindowFullScreen(bool isFullScreen)
+{
+	CUiThreadTaskSetFullScreen *task = new CUiThreadTaskSetFullScreen(isFullScreen);
+	this->AddUiThreadTask(task);
+}
+
+void CGuiMain::SetApplicationWindowAlwaysOnTop(bool isAlwaysOnTop)
+{
+	CUiThreadTaskSetAlwaysOnTop *task = new CUiThreadTaskSetAlwaysOnTop(isAlwaysOnTop);
+	this->AddUiThreadTask(task);
+}
+
 void CGuiMain::SetView(CGuiView *element)
 {
-#if !defined(FINAL_RELEASE)
-	if (element == NULL) {
-		SYS_FatalExit("CGuiMain::SetView: element NULL");
+	if (element == NULL)
+	{
+		return;
 	}
-#endif
 
 	LOGG("CGuiMain::SetView: view=%s", element->name);
+
+	if (this->currentView == NULL)
+	{
+		this->SetViewAsync(element);
+	}
+	else
+	{
+		CUiThreadTaskSetView *task = new CUiThreadTaskSetView(element);
+		this->AddUiThreadTask(task);
+	}
+}
+
+void CGuiMain::SetViewAsync(CGuiView *element)
+{
+	if (element == NULL)
+	{
+		return;
+	}
+
+	LOGG("CGuiMain::SetViewAsync: view=%s", element->name);
 	
-	LOGG("CGuiMain::SetView: LockMutex");
+	LOGG("CGuiMain::SetViewAsync: LockMutex");
 	guiMain->LockMutex();
 	
 	bool found = false;
@@ -1671,15 +1736,15 @@ void CGuiMain::SetView(CGuiView *element)
 
 	if (!found)
 	{
-		SYS_FatalExit("CGuiMain::SetView: view not found (%s)", element->name);
+		SYS_FatalExit("CGuiMain::SetViewAsync: view not found (%s)", element->name);
 	}
 	
 	SetFocus(element);
 	
-	LOGG("CGuiMain::SetView: UnlockMutex");
+	LOGG("CGuiMain::SetViewAsync: UnlockMutex");
 	guiMain->UnlockMutex();
 	
-	LOGG("CGuiMain::SetView: finished");
+	LOGG("CGuiMain::SetViewAsync: finished");
 }
 
 void CGuiMain::ShowMessage(CSlrString *showMessage)
@@ -1699,46 +1764,43 @@ void CGuiMain::ShowMessageAsync(char *showMessage)
 	guiMain->ShowMessageAsync(showMessage, 0.7, 0.7, 0.7);
 }
 
-void CGuiMain::ShowMessage(char *showMessage, GLfloat showMessageColorR,
-		GLfloat showMessageColorG, GLfloat showMessageColorB)
+void CGuiMain::ShowMessage(char *showMessage, float showMessageColorR, float showMessageColorG, float showMessageColorB)
 {
 	LOGM("CGuiMain::ShowMessage");
-
-	LOGG("CGuiMain::ShowMessage: LockMutex");
-	guiMain->LockMutex();
-	this->ShowMessageAsync(showMessage, showMessageColorR, showMessageColorG,
-			showMessageColorB);
-	guiMain->UnlockMutex();
-	LOGG("CGuiMain::ShowMessage: UnlockMutex");
+	CUiThreadTaskShowMessage *taskShowMessage = new CUiThreadTaskShowMessage(showMessage, showMessageColorR, showMessageColorG, showMessageColorB);
+	this->AddUiThreadTask(taskShowMessage);
 }
 
+CUiThreadTaskShowMessage::CUiThreadTaskShowMessage(char *showMessage, float showMessageColorR, float showMessageColorG, float showMessageColorB)
+{
+	this->showMessage = strdup(showMessage); this->showMessageColorR = showMessageColorR; this->showMessageColorG = showMessageColorG; this->showMessageColorB = showMessageColorB;
+}
+
+void CUiThreadTaskShowMessage::RunUIThreadTask()
+{
+	guiMain->ShowMessageAsync(this->showMessage, showMessageColorR, showMessageColorG, showMessageColorB);
+}
+
+// note: ShowMessageAsync assumes that showMessage was allocated by CGuiMain and thus can be safely deleted
 void CGuiMain::ShowMessageAsync(char *showMessage, GLfloat showMessageColorR,
 		GLfloat showMessageColorG, GLfloat showMessageColorB)
 {
 	LOGM("CGuiMain::ShowMessageAsync");
-	if (this->showMessage != NULL) {
-//#if defined(IPHONE)
-//		[this->showMessage release];
-//#else
+	if (this->showMessage != NULL)
+	{
 		free(this->showMessage);
-//		UTFRELEASE(this->showMessage);
-//#endif
 	}
 
-	if (showMessage == NULL) {
+	if (showMessage == NULL)
+	{
 		this->showMessage = NULL;
 		return;
 	}
 
 	LOGM("showMessage='%s'", showMessage);
 
-//#if defined(IPHONE)
-//	// TODO: copy string?!!
-//	this->showMessage = showMessage;
-//#else
-	this->showMessage = strdup(showMessage);
+	this->showMessage = showMessage;
 	this->showMessageLen = strlen(showMessage);
-//#endif
 
 	this->showMessageCurrentScale = 0.75;
 	this->showMessageAlpha = 2.0;
@@ -1752,12 +1814,7 @@ void CGuiMain::StopShowingMessage()
 	guiMain->LockRenderMutex(); //CGuiMain::StopShowingMessage");
 
 	if (this->showMessage != NULL) {
-//#if defined(IPHONE)
-//		[this->showMessage release];
-//#else
 		free(this->showMessage);
-//		UTFRELEASE(this->showMessage);
-//#endif
 	}
 
 	this->showMessage = NULL;
@@ -1765,47 +1822,7 @@ void CGuiMain::StopShowingMessage()
 	this->showMessageCurrentScale = 0.0f;
 
 	guiMain->UnlockRenderMutex(); //CGuiMain::StopShowingMessage");
-
 }
-
-/*
- void CGuiMain::ShowMessage(const UTFString *showMessage)
- {
- guiMain->ShowMessage(showMessage, 0.7, 0.7, 0.7);
- }
-
- void CGuiMain::ShowMessage(const UTFString *showMessage, GLfloat showMessageColorR, GLfloat showMessageColorG, GLfloat showMessageColorB)
- {
- LOGD("CGuiMain::ShowMessage");
- LOGD(showMessage);
-
- guiMain->LockRenderMutex();
-
- if (this->showMessage != NULL)
- {
- #if defined(IPHONE)
- [this->showMessage release];
- #else
- LOGTODO("UTFRELEASE()");
- free(this->showMessage);
- #endif
- }
-
- #if defined(IPHONE)
- this->showMessage = [[NSString alloc] initWithString: showMessage];
- #else
- LOGTODO("UTFALLOC()");
- this->showMessage = strdup(showMessage);
- #endif
- this->showMessageCurrentScale = 2.0;
- this->showMessageAlpha = 2.0;
- this->showMessageColorR = showMessageColorR;
- this->showMessageColorG = showMessageColorG;
- this->showMessageColorB = showMessageColorB;
-
- guiMain->UnlockRenderMutex();
- }
- */
 
 void CGuiMain::ShowMessageBox(UTFString *text,
 		CGuiMessageBoxCallback *messageBoxCallback)
@@ -2335,3 +2352,52 @@ void CLoadingResourcesCallback::LoadingResourcesFinish()
 	LOGWarning("CLoadingResourcesCallback::LoadingResourcesFinish not implemented");
 }
 
+void CUiThreadTaskCallback::RunUIThreadTask()
+{
+}
+
+void CUiThreadTaskSetView::RunUIThreadTask()
+{
+	LOGD("CUiThreadTaskSetView::RunUIThreadTask");
+	guiMain->SetViewAsync(this->view);
+}
+
+CUiThreadTaskSetMouseCursorVisible::CUiThreadTaskSetMouseCursorVisible(bool mouseCursorVisible)
+{
+	this->mouseCursorVisible = mouseCursorVisible;
+}
+	
+void CUiThreadTaskSetMouseCursorVisible::RunUIThreadTask()
+{
+//	LOGD(" CUiThreadTaskSetMouseCursorVisible::RunUIThreadTask");
+	if (mouseCursorVisible)
+	{
+		VID_ShowMouseCursor();
+	}
+	else
+	{
+		VID_HideMouseCursor();
+	}
+	
+	guiMain->isMouseCursorVisible = mouseCursorVisible;
+}
+
+CUiThreadTaskSetFullScreen::CUiThreadTaskSetFullScreen(bool isFullScreen)
+{
+	this->isFullScreen = isFullScreen;
+}
+	
+void CUiThreadTaskSetFullScreen::RunUIThreadTask()
+{
+	VID_SetWindowFullScreen(isFullScreen);
+}
+
+CUiThreadTaskSetAlwaysOnTop::CUiThreadTaskSetAlwaysOnTop(bool isAlwaysOnTop)
+{
+	this->isAlwaysOnTop = isAlwaysOnTop;
+}
+	
+void CUiThreadTaskSetAlwaysOnTop::RunUIThreadTask()
+{
+	VID_SetWindowAlwaysOnTop(isAlwaysOnTop);
+}

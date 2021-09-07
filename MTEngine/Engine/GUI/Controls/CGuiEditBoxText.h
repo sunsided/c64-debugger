@@ -98,7 +98,7 @@ public:
 
 	virtual bool KeyDown(u32 keyCode, bool isShift, bool isAlt, bool isControl);	// repeats
 
-	virtual void SetText(char *setText);
+	virtual void SetText(const char *setText);
 	virtual char *GetText();
 
 	GLfloat colorR;

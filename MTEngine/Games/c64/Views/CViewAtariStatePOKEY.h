@@ -50,7 +50,7 @@ public:
 	void AddWaveformData(int pokeyNumber, int v1, int v2, int v3, int v4, short mix);
 
 	//
-	virtual void RenderState(float px, float py, float posZ, CSlrFont *fontBytes, float fontSize, int ciaId);
+	virtual void RenderState(float px, float py, float posZ, CSlrFont *fontBytes, float fontSize, int pokeyId);
 	
 	// editing registers
 	bool showRegistersOnly;

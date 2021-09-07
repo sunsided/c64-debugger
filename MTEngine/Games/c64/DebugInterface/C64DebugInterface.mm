@@ -23,6 +23,9 @@ C64DebugInterface::C64DebugInterface(CViewC64 *viewC64)
 	breakOnDrive1541PC = false;
 	breakOnDrive1541Memory = false;
 
+	breakpointsDrive1541PC = new CDebuggerAddrBreakpoints();
+	breakpointsDrive1541Memory = new CDebuggerMemoryBreakpoints();
+	
 	temporaryDrive1541BreakpointPC = -1;
 
 	debugMode = DEBUGGER_MODE_RUNNING;
@@ -66,9 +69,14 @@ float C64DebugInterface::GetEmulationFPS()
 	return -1;
 }
 
-unsigned int C64DebugInterface::GetMainCpuCycleCounter()
+u64 C64DebugInterface::GetMainCpuCycleCounter()
 {
 	return CDebugInterface::GetMainCpuCycleCounter();
+}
+
+u64 C64DebugInterface::GetCurrentCpuInstructionCycleCounter()
+{
+	return GetMainCpuCycleCounter();
 }
 
 void C64DebugInterface::ResetMainCpuDebugCycleCounter()
@@ -76,12 +84,12 @@ void C64DebugInterface::ResetMainCpuDebugCycleCounter()
 	CDebugInterface::ResetMainCpuDebugCycleCounter();
 }
 
-unsigned int C64DebugInterface::GetMainCpuDebugCycleCounter()
+u64 C64DebugInterface::GetMainCpuDebugCycleCounter()
 {
 	return CDebugInterface::GetMainCpuDebugCycleCounter();
 }
 
-unsigned int C64DebugInterface::GetPreviousCpuInstructionCycleCounter()
+u64 C64DebugInterface::GetPreviousCpuInstructionCycleCounter()
 {
 	return CDebugInterface::GetPreviousCpuInstructionCycleCounter();
 }
@@ -129,39 +137,6 @@ uint8 C64DebugInterface::GetC64MachineType()
 {
 	return 0;
 }
-
-//
-void C64DebugInterface::ClearBreakpoints()
-{
-	CDebugInterface::ClearBreakpoints();
-	
-	ClearAddrBreakpoints(&(this->breakpointsDrive1541PC));
-	ClearMemoryBreakpoints(&(this->breakpointsDrive1541Memory));
-}
-
-void C64DebugInterface::AddAddrBreakpoint(std::map<uint16, CAddrBreakpoint *> *breakpointsMap, CAddrBreakpoint *breakpoint)
-{
-	CDebugInterface::AddAddrBreakpoint(breakpointsMap, breakpoint);
-
-	if (breakpointsMap == &(this->breakpointsDrive1541PC))
-	{
-		breakOnDrive1541PC = true;
-	}
-}
-
-void C64DebugInterface::RemoveAddrBreakpoint(std::map<uint16, CAddrBreakpoint *> *breakpointsMap, uint16 addr)
-{
-	CDebugInterface::RemoveAddrBreakpoint(breakpointsMap, addr);
-
-	if (breakpointsMap->empty())
-	{
-		if (breakpointsMap == &(this->breakpointsDrive1541PC))
-		{
-			breakOnDrive1541PC = false;
-		}
-	}
-}
-
 
 // video
 
@@ -373,6 +348,12 @@ void C64DebugInterface::SetSidFilterBias(int filterBias)
 	SYS_FatalExit("C64DebugInterface::SetSidFilterBias");
 }
 
+int C64DebugInterface::GetNumSids()
+{
+	SYS_FatalExit("C64DebugInterface::GetNumSids");
+	return 0;
+}
+
 void C64DebugInterface::SetSidStereo(int stereoMode)
 {
 	SYS_FatalExit("C64DebugInterface::SetSidStereo");
@@ -416,6 +397,11 @@ void C64DebugInterface::SetEmulationMaximumSpeed(int maximumSpeed)
 void C64DebugInterface::SetVSPBugEmulation(bool isVSPBugEmulation)
 {
 	SYS_FatalExit("C64DebugInterface::SetVSPBugEmulation");
+}
+
+void C64DebugInterface::SetSkipDrawingSprites(bool isSkipDrawingSprites)
+{
+	SYS_FatalExit("C64DebugInterface::SetSkipDrawingSprites");
 }
 
 void C64DebugInterface::SetByteC64(uint16 addr, uint8 val)
@@ -674,6 +660,11 @@ u8 C64DebugInterface::GetSidRegister(uint8 sidId, uint8 registerNum)
 {
 	SYS_FatalExit("C64DebugInterface::GetSidRegister");
 	return 0;
+}
+
+void C64DebugInterface::UpdateSidDataHistory()
+{
+	SYS_FatalExit("C64DebugInterface::UpdateSidDataHistory");
 }
 
 void C64DebugInterface::SetViaRegister(uint8 driveId, uint8 viaId, uint8 registerNum, uint8 value)

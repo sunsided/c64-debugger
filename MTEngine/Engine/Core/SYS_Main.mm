@@ -3,7 +3,7 @@
  *  MobiTracker
  *
  *  Created by Marcin Skoczylas on 09-11-19.
- *  Copyright 2009 __MyCompanyName__. All rights reserved.
+ *  Copyright 2009 Marcin Skoczylas. All rights reserved.
  *
  */
 
@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include "DBG_Log.h"
 #include "SYS_Threading.h"
+#include "SYS_Funct.h"
 #include <list>
 
 
@@ -261,6 +262,11 @@ void SYS_FatalExit(const char *fmt, ... )
 
 	LOGError(buffer);
 
+	//
+#ifndef FINAL_RELEASE
+	abort();
+#endif
+
 #ifdef IOS
 #if defined(FINAL_RELEASE)
 	GUI_ShowFatalExitAlert(buffer);
@@ -268,44 +274,51 @@ void SYS_FatalExit(const char *fmt, ... )
 	
 #endif
 
-#ifdef WIN32
-//#ifdef FINAL_RELEASE
+#if defined(WIN32)
 	MessageBox(NULL, buffer, "Fatal Error", MB_OK|MB_ICONEXCLAMATION);
 	SYS_CreateMiniDump( NULL );
-//#endif
-#endif
-
-#ifdef MACOS
-	NSString *str = [NSString stringWithUTF8String:buffer];
-	dispatch_async(dispatch_get_main_queue(), ^{
-		NSAlert *alert = [[NSAlert alloc] init];
-		[alert addButtonWithTitle:@"OK"];
-		//[alert addButtonWithTitle:@"Cancel"];
-		[alert setMessageText:@"Fatal Error!"];
-		[alert setInformativeText:str];
-		[alert setAlertStyle:NSCriticalAlertStyle];
-		
-		if ([alert runModal] == NSAlertFirstButtonReturn) {
-		}
-		[alert release];
-		
-	});
-#endif
-
-#ifdef LINUX
-	GtkMessageBox((const char*)buffer, "Fatal Error");
-#endif
-
-
-#ifndef FINAL_RELEASE
-	abort();
-#endif
-
-#if defined(WIN32)
 	if (isWin32ConsoleAttached) FreeConsole();
+#elif defined(MACOS)
+	NSString *str = [NSString stringWithUTF8String:buffer];
+//	dispatch_async(dispatch_get_main_queue(), ^{
+
+		NSUserNotification *notification = [[NSUserNotification alloc] init];
+		NSString *appName = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleName"];
+		notification.title = [NSString stringWithFormat:@"%@ crashed", appName];
+		notification.informativeText = str;
+		notification.soundName = NSUserNotificationDefaultSoundName;
+		
+		[[NSUserNotificationCenter defaultUserNotificationCenter] deliverNotification:notification];
+		[notification release];
+		
+//		NSAlert *alert = [[NSAlert alloc] init];
+//		[alert addButtonWithTitle:@"OK"];
+//		//[alert addButtonWithTitle:@"Cancel"];
+//		[alert setMessageText:@"Fatal Error!"];
+//		[alert setInformativeText:str];
+//		[alert setAlertStyle:NSCriticalAlertStyle];
+//		
+//		if ([alert runModal] == NSAlertFirstButtonReturn) {
+//		}
+//		[alert release];
+	
+	LOGD("fatal exit...");
+	SYS_Sleep(1000);
+		exit(-1);
+//	});
+	
+	while (true) {
+		SYS_Sleep(1000);
+	}
+	
+//	NSRunLoop *theRL = [NSRunLoop currentRunLoop];
+//	while ([theRL runMode:NSRunLoopCommonModes beforeDate:[NSDate distantFuture]]);
+	
+#elif defined(LINUX)
+	GtkMessageBox((const char*)buffer, "Fatal Error");
+	exit(-1);
 #endif
 
-	exit(-1);
 }
 
 void SYS_FatalExit()
@@ -431,8 +444,48 @@ void SYS_ShowError(const char *fmt, ... )
 #ifdef LINUX
 	GtkMessageBox(buffer, "Error");
 #endif
+}
 
-
+void SYS_FatalErrorShowMessage(const char *fmt, ... )
+{
+	char buffer[4096] = {0};
+	
+	va_list args;
+	
+	va_start(args, fmt);
+	vsprintf(buffer, fmt, args);
+	va_end(args);
+	
+	LOGError(buffer);
+	
+#if defined(WIN32)
+	MessageBox(NULL, buffer, "Error", MB_OK | MB_ICONERROR);
+	SYS_CleanExit();
+#elif defined(MACOS)
+	NSString *str = [NSString stringWithUTF8String:buffer];
+	
+	dispatch_async(dispatch_get_main_queue(), ^{
+		NSAlert *alert = [[NSAlert alloc] init];
+		[alert addButtonWithTitle:@"OK"];
+		//[alert addButtonWithTitle:@"Cancel"];
+		[alert setMessageText:str];
+		//	[alert setInformativeText:@"Informative text."];
+		[alert setAlertStyle:NSWarningAlertStyle];
+		
+		if ([alert runModal] == NSAlertFirstButtonReturn) {
+		}
+		[alert release];
+		
+		SYS_CleanExit();
+	});
+	
+	// wait for the user to close dialog
+	while(true) { SYS_Sleep(1000); }
+	
+#elif defined(LINUX)
+	GtkMessageBox(buffer, "Error");
+	SYS_CleanExit();
+#endif
 }
 
 void SYS_CleanExit(char *fmt, ... )

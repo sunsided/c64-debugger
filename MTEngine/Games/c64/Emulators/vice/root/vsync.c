@@ -338,6 +338,9 @@ void vsync_sync_reset(void)
     sync_reset = 1;
 }
 
+void c64d_lock_sound_mutex(char *whoLocked);
+void c64d_unlock_sound_mutex(char *whoLocked);
+
 /* This is called at the end of each screen frame. It flushes the
    audio buffer and keeps control of the emulation speed. */
 int vsync_do_vsync(struct video_canvas_s *c, int been_skipped, int isPaused)
@@ -443,7 +446,9 @@ int vsync_do_vsync(struct video_canvas_s *c, int been_skipped, int isPaused)
     }
 
     /* Flush sound buffer, get delay in seconds. */
+	c64d_lock_sound_mutex("vsync_do_vsync: sound_flush");
     sound_delay = sound_flush(isPaused);
+	c64d_unlock_sound_mutex("vsync_do_vsync: sound_flush");
 
 
     /* Get current time, directly after getting the sound delay. */

@@ -13,19 +13,19 @@ public:
 	
 	CSnapshotsManager *manager;
 	
-	virtual void Use(u32 frame, u32 cycle);
+	virtual void Use(u32 frame, u64 cycle);
 	virtual void ClearSnapshot();
 	
 	CByteBuffer *byteBuffer;
 	
 	u32 frame;
-	u32 cycle;
+	u64 cycle;
 };
 
 class CStoredDiskSnapshot : public CStoredSnapshot
 {
 public:
-	CStoredDiskSnapshot(CSnapshotsManager *manager, u32 frame, u32 cycle);
+	CStoredDiskSnapshot(CSnapshotsManager *manager, u32 frame, u64 cycle);
 	
 	int numLinkedChipsSnapshots;
 	
@@ -36,9 +36,9 @@ public:
 class CStoredChipsSnapshot : public CStoredSnapshot
 {
 public:
-	CStoredChipsSnapshot(CSnapshotsManager *manager, u32 frame, u32 cycle, CStoredDiskSnapshot *diskSnapshot);
+	CStoredChipsSnapshot(CSnapshotsManager *manager, u32 frame, u64 cycle, CStoredDiskSnapshot *diskSnapshot);
 	
-	virtual void Use(u32 frame, u32 cycle, CStoredDiskSnapshot *diskSnapshot);
+	virtual void Use(u32 frame, u64 cycle, CStoredDiskSnapshot *diskSnapshot);
 	
 	CStoredDiskSnapshot *diskSnapshot;
 
@@ -59,7 +59,7 @@ public:
 
 	std::map<u32, CStoredDiskSnapshot *> diskSnapshotsByFrame;
 	std::list<CStoredDiskSnapshot *> diskSnapshotsToReuse;
-
+	
 	virtual bool CheckSnapshotInterval();
 	
 	CStoredDiskSnapshot *currentDiskSnapshot;
@@ -69,21 +69,22 @@ public:
 	
 	virtual void StoreSnapshot();
 	virtual void RestoreSnapshot(CStoredChipsSnapshot *snapshot);
-	virtual bool RestoreSnapshotByFrame(int frame, int cycleNum);
+	virtual bool RestoreSnapshotByFrame(int frame, long cycleNum);
 	virtual bool RestoreSnapshotByCycle(u64 cycle);
 	
-	CStoredChipsSnapshot *GetNewChipSnapshot(u32 frame, u32 cycle, CStoredDiskSnapshot *diskSnapshot);
-	CStoredDiskSnapshot *GetNewDiskSnapshot(u32 frame, u32 cycle);
+	CStoredChipsSnapshot *GetNewChipSnapshot(u32 frame, u64 cycle, CStoredDiskSnapshot *diskSnapshot);
+	CStoredDiskSnapshot *GetNewDiskSnapshot(u32 frame, u64 cycle);
 	
 	bool CheckMainCpuCycle();
 	
+	void ResetLastStoredFrameCounter();
 	void ClearSnapshotsHistory();
 	
 	void RestoreSnapshotByNumFramesOffset(int numFramesOffset);
 	void RestoreSnapshotBackstepInstruction();
 	
 	int pauseNumFrame;
-	unsigned long pauseNumCycle;
+	long pauseNumCycle;
 	volatile bool skipFrameRender;
 	bool SkipRefreshOfVideoFrame();
 	
@@ -104,7 +105,10 @@ public:
 	void SetRecordingLimit(int recordingLimit);
 	
 	void GetFramesLimits(int *minFrame, int *maxFrame);
-	
+
+//	void StoreToFile(CSlrString *filePath);
+//	void RestoreFromFile(CSlrString *filePath);
+
 private:
 	CSlrMutex *mutex;
 	u32 lastStoredFrame;

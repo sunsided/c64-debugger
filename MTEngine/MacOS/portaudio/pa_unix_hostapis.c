@@ -1,5 +1,5 @@
 /*
- * $Id: pa_unix_hostapis.c 1740 2011-08-25 07:17:48Z philburk $
+ * $Id$
  * Portable Audio I/O Library UNIX initialization table
  *
  * Based on the Open Source API proposed by Ross Bencina
@@ -41,8 +41,6 @@
 */
 
 #include "pa_hostapi.h"
-
-//#define PA_USE_COREAUDIO
 
 PaError PaJack_Initialize( PaUtilHostApiRepresentation **hostApi, PaHostApiIndex index );
 PaError PaAlsa_Initialize( PaUtilHostApiRepresentation **hostApi, PaHostApiIndex index );

@@ -61,11 +61,13 @@ public:
 	std::list<CSlrString *> *EnumerateAvailableOutputDevices();
 	bool SetOutputAudioDevice(CSlrString *deviceName);
 	
-	char deviceOutName[512];
+	CSlrString *audioOutDeviceName;
 	int deviceOutIndex;
 	
 	void StartAudioUnit(bool isPlayback, bool isRecording, int recordingFrequency);
 	void StopAudioUnit();
+	void RestartAudioUnit();
+	void DefaultAudioDeviceChanged();
 	
 	// portaudio
 	PaStream *streamOutput;
@@ -86,8 +88,6 @@ public:
 	
 	void AllocateInputBuffers(UInt32 inNumberFrames);
 	
-	void ResetAudioUnit(bool isRecordingOn);
-	
 	volatile bool isMuted;
 	
 	bool removeDC;
@@ -102,6 +102,10 @@ public:
 	
 	CSlrMutex *audioEngineMutex;
 };
+
+extern "C" {
+	void MTEngine_PA_LOG_Callback(const char *str);
+}
 
 extern CSoundEngine *gSoundEngine;
 

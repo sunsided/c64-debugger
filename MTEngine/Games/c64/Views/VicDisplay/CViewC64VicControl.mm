@@ -356,6 +356,7 @@ void CViewC64VicControl::AddGuiButtons()
 									  1.0f, 1.0f, 1.0f, 1.0f,
 									  0.0f, 0.0f, NULL);
 	lblAutolockText->image = NULL;
+	lblAutolockText->drawFocusBorder = false;
 	this->AddGuiElement(lblAutolockText);
 	
 	lblAutolockScrollMode =	new CGuiLabel(new CSlrString(""), px, py, posZ, fs, fontHeight*2, LABEL_ALIGNED_CENTER, font, fontScale*2,
@@ -363,6 +364,7 @@ void CViewC64VicControl::AddGuiButtons()
 										  0.9f, 0.9f, 0.9f, 1.0f,
 										  0.0f, 0.0f, NULL);
 	lblAutolockScrollMode->image = NULL;
+	lblAutolockScrollMode->drawFocusBorder = false;
 	this->AddGuiElement(lblAutolockScrollMode);
 	
 	
@@ -633,7 +635,7 @@ void CViewC64VicControl::SetPosition(GLfloat posX, GLfloat posY)
 	px = startX;
 	
 	float listSizeX = 25.0f; //lstScreenAddresses->sizeX;
-	float listSizeY = 49.5f;
+	float listSizeY = 50.0f;
 	float listGapY = 3.0f;
 	float listGapX = 1.0f;
 	
@@ -976,12 +978,26 @@ void CViewC64VicControl::Render()
 	
 	if (rx >= 0 && rx < 320 && ry >= 0 && ry < 200)
 	{
-		sprintf(buf, "%3d %3d", rx, ry);
+		if (c64SettingsShowPositionsInHex)
+		{
+			sprintf(buf, "%3x %3x", rx, ry);
+		}
+		else
+		{
+			sprintf(buf, "%3d %3d", rx, ry);
+		}
 		this->font->BlitText(buf, txtCursorPosX, txtCursorPosY, posZ, fontScale);
 		
 		int cx = (int) rx/8;
 		int cy = (int) ry/8;
-		sprintf(buf, "%3d %3d", cx, cy);
+		if (c64SettingsShowPositionsInHex)
+		{
+			sprintf(buf, "%3x %3x", cx, cy);
+		}
+		else
+		{
+			sprintf(buf, "%3d %3d", cx, cy);
+		}
 		this->font->BlitText(buf, txtCursorCharPosX, txtCursorCharPosY, posZ, fontScale);
 	}
 	
@@ -1008,10 +1024,10 @@ void CViewC64VicControl::Render()
 			LOGD("rasterLine=%02x", rasterLine);
 			
 
-			std::map<uint16, CAddrBreakpoint *> *breakpointsMap = &(viewC64->debugInterfaceC64->breakpointsRaster);
+			std::map<int, CAddrBreakpoint *> *breakpointsMap = &(viewC64->debugInterfaceC64->breakpointsRaster->breakpoints);
 			
 			// find if breakpoint exists
-			std::map<uint16, CAddrBreakpoint *>::iterator it = breakpointsMap->find(rasterLine);
+			std::map<int, CAddrBreakpoint *>::iterator it = breakpointsMap->find(rasterLine);
 			if (it == breakpointsMap->end())
 			{
 				btnToggleBreakpoint->SetOn(false);
@@ -1057,6 +1073,7 @@ void CViewC64VicControl::Render()
 		btnShowBadLines->textColorOffB = 1.0f;
 	}
 	
+	this->vicDisplay->RenderBreakpointsLines();
 	
 	// render UI
 	CGuiView::Render();

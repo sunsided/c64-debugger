@@ -1,3 +1,5 @@
+// TODO: it is high time to convert settings into JSON as the parser is finally available and tested
+
 #include "C64SettingsStorage.h"
 #include "CViewMemoryMap.h"
 #include "CSlrFileFromOS.h"
@@ -67,6 +69,7 @@ uint8 c64SettingsJoystickPort = 0;
 bool c64SettingsUseKeyboardAsJoystick = false;
 
 bool c64SettingsWindowAlwaysOnTop = false;
+CByteBuffer *c64SettingsWindowPosition = NULL;
 
 bool c64SettingsRenderDisassembleExecuteAware = true;
 
@@ -81,6 +84,7 @@ uint8 c64SettingsC64Model = 0;
 int c64SettingsEmulationMaximumSpeed = 100;		// percentage
 bool c64SettingsFastBootKernalPatch = false;
 bool c64SettingsEmulateVSPBug = false;
+bool c64SettingsVicSkipDrawingSprites = false;
 
 // TODO: refactor SID to Sid for better readability
 
@@ -110,6 +114,8 @@ bool c64SettingsMuteSIDOnPause = false;
 int c64SettingsAudioVolume = 100;				// percentage
 bool c64SettingsRunSIDEmulation = true;
 uint8 c64SettingsMuteSIDMode = MUTE_SID_MODE_ZERO_VOLUME;
+
+int c64SettingsSidDataHistoryMaxSize = 6000;	// 120 seconds for PAL
 
 uint16 c64SettingsVicPalette = 0;
 bool c64SettingsC64ProfilerDoVicProfile = false;
@@ -187,6 +193,7 @@ u8 c64SettingsProcessPriority = MT_PRIORITY_ABOVE_NORMAL;
 CSlrString *c64SettingsC64ProfilerFileOutputPath = NULL;
 
 CSlrString *c64SettingsAudioOutDevice = NULL;
+bool c64SettingsRestartAudioOnEmulationReset = false;
 
 float c64SettingsScreenGridLinesAlpha = 0.3f;
 uint8 c64SettingsScreenGridLinesColorScheme = 0;	// 0=red, 1=green, 2=blue, 3=black, 4=dark gray 5=light gray 6=white 7=yellow
@@ -198,6 +205,8 @@ float c64SettingsScreenRasterCrossAlpha = 0.85f;
 uint8 c64SettingsScreenRasterCrossInteriorColorScheme = 6;	// 0=red, 1=green, 2=blue, 3=black, 4=dark gray 5=light gray 6=white 7=yellow
 uint8 c64SettingsScreenRasterCrossExteriorColorScheme = 0;	// 0=red, 1=green, 2=blue, 3=black, 4=dark gray 5=light gray 6=white 7=yellow
 uint8 c64SettingsScreenRasterCrossTipColorScheme = 3;	// 0=red, 1=green, 2=blue, 3=black, 4=dark gray 5=light gray 6=white 7=yellow
+
+bool c64SettingsShowPositionsInHex = true;
 
 uint8 c64SettingsVicStateRecordingMode = C64D_VICII_RECORD_MODE_EVERY_CYCLE;
 bool c64SettingsRenderScreenNearest = true;
@@ -311,10 +320,14 @@ void storeSettingString(CByteBuffer *byteBuffer, char *name, CSlrString *value)
 	byteBuffer->PutSlrString(value);
 }
 
-void storeSettingCustom(CByteBuffer *byteBuffer, char *name)
+void storeSettingCustom(CByteBuffer *byteBuffer, char *name, CByteBuffer *value)
 {
-	byteBuffer->PutU8(C64DEBUGGER_SETTING_CUSTOM);
-	byteBuffer->PutString(name);
+	if (value != NULL)
+	{
+		byteBuffer->PutU8(C64DEBUGGER_SETTING_CUSTOM);
+		byteBuffer->PutString(name);
+		byteBuffer->PutByteBuffer(value);
+	}
 }
 
 void C64DebuggerClearSettings()
@@ -376,14 +389,18 @@ void C64DebuggerStoreSettings()
 	storeSettingString(byteBuffer, "PathMemMapFile", c64SettingsPathToC64MemoryMapFile);
 
 	storeSettingString(byteBuffer, "AudioOutDevice", c64SettingsAudioOutDevice);
-	
+	storeSettingBool(byteBuffer, "RestartAudioOnEmulationReset", c64SettingsRestartAudioOnEmulationReset);
+
+	storeSettingBool(byteBuffer, "ShowPositionsInHex", c64SettingsShowPositionsInHex);
+
 	storeSettingBool(byteBuffer, "FastBootPatch", c64SettingsFastBootKernalPatch);
 	
+
 	storeSettingU8(byteBuffer, "ScreenLayoutId", c64SettingsDefaultScreenLayoutId);
 	storeSettingBool(byteBuffer, "IsInVicEditor", c64SettingsIsInVicEditor);
 	
 	storeSettingBool(byteBuffer, "DisassembleExecuteAware", c64SettingsRenderDisassembleExecuteAware);
-	
+		
 	storeSettingBool(byteBuffer, "WindowAlwaysOnTop", c64SettingsWindowAlwaysOnTop);
 
 	storeSettingU16(byteBuffer, "ScreenSupersampleFactor", c64SettingsScreenSupersampleFactor);
@@ -406,6 +423,8 @@ void C64DebuggerStoreSettings()
 	storeSettingString(byteBuffer, "C64ProfilerOutputPath", c64SettingsC64ProfilerFileOutputPath);
 	storeSettingBool(byteBuffer, "C64ProfilerDoVic", c64SettingsC64ProfilerDoVicProfile);
 #endif
+	
+	storeSettingCustom(byteBuffer, "WindowPosition", c64SettingsWindowPosition);
 	
 	storeSettingBlock(byteBuffer, C64DEBUGGER_BLOCK_POSTLAUNCH);
 	storeSettingU8(byteBuffer, "JoystickPort", c64SettingsJoystickPort);
@@ -435,7 +454,8 @@ void C64DebuggerStoreSettings()
 
 	storeSettingU8(byteBuffer, "SIDImportMode", c64SettingsC64SidImportMode);
 	
-	
+	storeSettingI32(byteBuffer, "SIDDataHistoryMaxSize", c64SettingsSidDataHistoryMaxSize);
+
 	storeSettingU8(byteBuffer, "VicStateRecording", c64SettingsVicStateRecordingMode);
 	storeSettingU16(byteBuffer, "VicPalette", c64SettingsVicPalette);
 	storeSettingBool(byteBuffer, "RenderScreenNearest", c64SettingsRenderScreenNearest);
@@ -443,6 +463,7 @@ void C64DebuggerStoreSettings()
 	storeSettingU16(byteBuffer, "EmulationMaximumSpeed", c64SettingsEmulationMaximumSpeed);
 	
 	storeSettingBool(byteBuffer, "EmulateVSPBug", c64SettingsEmulateVSPBug);
+	storeSettingBool(byteBuffer, "VicSkipDrawingSprites", c64SettingsVicSkipDrawingSprites);
 	
 	storeSettingU8(byteBuffer, "VicDisplayBorder", c64SettingsVicDisplayBorderType);
 	storeSettingBool(byteBuffer, "VicDisplayShowGrid", c64SettingsVicDisplayShowGridLines);
@@ -661,6 +682,12 @@ void C64DebuggerReadSettingsValues(CByteBuffer *byteBuffer, uint8 settingsBlockT
 
 void C64DebuggerReadSettingCustom(char *name, CByteBuffer *byteBuffer)
 {
+	if (!strcmp(name, "WindowPosition"))
+	{
+		if (byteBuffer->length > 0)
+			c64SettingsWindowPosition = new CByteBuffer(byteBuffer);
+	}
+	
 //	if (!strcmp(name, "MonitorHistory"))
 //	{
 //		int historySize = byteBuffer->GetByte();
@@ -836,8 +863,12 @@ void C64DebuggerSetSetting(char *name, void *value)
 		{
 			viewC64->debugInterfaceAtari->snapshotsManager->SetRecordingStoreInterval(v);
 		}
-		
-		if (viewC64->debugInterfaceC64 || viewC64->debugInterfaceAtari)
+		if (viewC64->debugInterfaceNes)
+		{
+			viewC64->debugInterfaceNes->snapshotsManager->SetRecordingStoreInterval(v);
+		}
+
+		if (viewC64->debugInterfaceC64 || viewC64->debugInterfaceAtari || viewC64->debugInterfaceNes)
 		{
 			viewC64->viewC64SettingsMenu->menuItemC64SnapshotsManagerStoreInterval->SetValue(v, false);
 		}
@@ -854,7 +885,12 @@ void C64DebuggerSetSetting(char *name, void *value)
 		{
 			viewC64->debugInterfaceAtari->snapshotsManager->SetRecordingLimit(v);
 		}
-		if (viewC64->debugInterfaceC64 || viewC64->debugInterfaceAtari)
+		if (viewC64->debugInterfaceNes)
+		{
+			viewC64->debugInterfaceNes->snapshotsManager->SetRecordingLimit(v);
+		}
+
+		if (viewC64->debugInterfaceC64 || viewC64->debugInterfaceAtari || viewC64->debugInterfaceNes)
 		{
 			viewC64->viewC64SettingsMenu->menuItemC64SnapshotsManagerLimit->SetValue(v, false);
 		}
@@ -865,7 +901,7 @@ void C64DebuggerSetSetting(char *name, void *value)
 		bool v = *((bool*)value);
 		c64SettingsTimelineIsActive = v;
 		
-		if (viewC64->debugInterfaceC64 || viewC64->debugInterfaceAtari)
+		if (viewC64->debugInterfaceC64 || viewC64->debugInterfaceAtari || viewC64->debugInterfaceNes)
 		{
 			viewC64->viewC64SettingsMenu->menuItemC64TimelineIsActive->SetSelectedOption(v, false);
 		}
@@ -1098,6 +1134,13 @@ void C64DebuggerSetSetting(char *name, void *value)
 			viewC64->viewC64SettingsMenu->menuItemSIDImportMode->SetSelectedOption(v, false);
 			return;
 		}
+		else if (!strcmp(name, "SIDDataHistoryMaxSize"))
+		{
+			int v = *((int*)value);
+			viewC64->viewC64SettingsMenu->menuItemSIDHistoryMaxSize->SetValue(v, false);
+			c64SettingsSidDataHistoryMaxSize = v;
+			return;
+		}
 		
 		else if (!strcmp(name, "EmulationMaximumSpeed"))
 		{
@@ -1135,6 +1178,15 @@ void C64DebuggerSetSetting(char *name, void *value)
 			viewC64->debugInterfaceC64->SetVSPBugEmulation(c64SettingsEmulateVSPBug);
 			return;
 		}
+		else if (!strcmp(name, "VicSkipDrawingSprites"))
+		{
+			bool v = *((bool*)value);
+			c64SettingsVicSkipDrawingSprites = v;
+			viewC64->debugInterfaceC64->SetSkipDrawingSprites(c64SettingsVicSkipDrawingSprites);
+			viewC64->viewC64SettingsMenu->menuItemVicSetSkipDrawingSprites->SetSelectedOption(c64SettingsVicSkipDrawingSprites ? 1 : 0, false);
+			return;
+		}
+
 		else if (!strcmp(name, "AutoJmpDoReset"))
 		{
 			int v = *((int*)value);
@@ -1641,7 +1693,19 @@ void C64DebuggerSetSetting(char *name, void *value)
 		gSoundEngine->SetOutputAudioDevice(c64SettingsAudioOutDevice);
 		return;
 	}
-	
+	else if (!strcmp(name, "RestartAudioOnEmulationReset"))
+	{
+		bool v = *((bool*)value);
+		c64SettingsRestartAudioOnEmulationReset = v;
+		return;
+	}
+	else if (!strcmp(name, "ShowPositionsInHex"))
+	{
+		bool v = *((bool*)value);
+		c64SettingsShowPositionsInHex = v;
+		return;
+	}
+
 	
 	else if (!strcmp(name, "RenderScreenNearest"))
 	{
@@ -1724,45 +1788,49 @@ void C64DebuggerSetSetting(char *name, void *value)
 	else if (!strcmp(name, "MemMapFadeSpeed"))
 	{
 		int v = *((int*)value);
-		if (v == 1)
+		if (v == 0)
 		{
 			viewC64->viewC64SettingsMenu->menuItemMemoryMapFadeSpeed->SetSelectedOption(0, false);
 		}
-		else if (v == 10)
+		else if (v == 1)
 		{
 			viewC64->viewC64SettingsMenu->menuItemMemoryMapFadeSpeed->SetSelectedOption(1, false);
 		}
-		else if (v == 20)
+		else if (v == 10)
 		{
 			viewC64->viewC64SettingsMenu->menuItemMemoryMapFadeSpeed->SetSelectedOption(2, false);
 		}
-		else if (v == 50)
+		else if (v == 20)
 		{
 			viewC64->viewC64SettingsMenu->menuItemMemoryMapFadeSpeed->SetSelectedOption(3, false);
 		}
-		else if (v == 100)
+		else if (v == 50)
 		{
 			viewC64->viewC64SettingsMenu->menuItemMemoryMapFadeSpeed->SetSelectedOption(4, false);
 		}
-		else if (v == 200)
+		else if (v == 100)
 		{
 			viewC64->viewC64SettingsMenu->menuItemMemoryMapFadeSpeed->SetSelectedOption(5, false);
 		}
-		else if (v == 300)
+		else if (v == 200)
 		{
 			viewC64->viewC64SettingsMenu->menuItemMemoryMapFadeSpeed->SetSelectedOption(6, false);
 		}
-		else if (v == 400)
+		else if (v == 300)
 		{
 			viewC64->viewC64SettingsMenu->menuItemMemoryMapFadeSpeed->SetSelectedOption(7, false);
 		}
-		else if (v == 500)
+		else if (v == 400)
 		{
 			viewC64->viewC64SettingsMenu->menuItemMemoryMapFadeSpeed->SetSelectedOption(8, false);
 		}
-		else if (v == 1000)
+		else if (v == 500)
 		{
 			viewC64->viewC64SettingsMenu->menuItemMemoryMapFadeSpeed->SetSelectedOption(9, false);
+		}
+		else if (v == 1000)
+		{
+			viewC64->viewC64SettingsMenu->menuItemMemoryMapFadeSpeed->SetSelectedOption(10, false);
 		}
 		
 		c64SettingsMemoryMapFadeSpeed = v;

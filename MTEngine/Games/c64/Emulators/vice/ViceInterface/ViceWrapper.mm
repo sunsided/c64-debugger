@@ -29,6 +29,7 @@ extern "C" {
 #include "CViewC64StateSID.h"
 #include "CSnapshotsManager.h"
 #include "CByteBuffer.h"
+#include "SND_SoundEngine.h"
 
 volatile int c64d_debug_mode = DEBUGGER_MODE_RUNNING;
 
@@ -37,9 +38,11 @@ int c64d_setting_run_sid_when_in_warp = 1;
 
 int c64d_setting_run_sid_emulation = 1;
 
+int c64d_skip_drawing_sprites = 0;
+
 volatile int c64d_start_frame_for_snapshots_manager = 0;
-volatile unsigned int c64d_previous_instruction_maincpu_clk = 0;
-volatile unsigned int c64d_previous2_instruction_maincpu_clk = 0;
+volatile unsigned int c64d_maincpu_previous_instruction_clk = 0;
+volatile unsigned int c64d_maincpu_previous2_instruction_clk = 0;
 
 uint16 viceCurrentC64PC;
 uint16 viceCurrentDiskPC[4];
@@ -118,53 +121,9 @@ void c64d_mark_c64_cell_write(uint16 addr, uint8 value)
 	{
 		debugInterfaceVice->LockMutex();
 		
-		std::map<uint16, CMemoryBreakpoint *>::iterator it = debugInterfaceVice->breakpointsMemory.find(addr);
-		if (it != debugInterfaceVice->breakpointsMemory.end())
+		if (debugInterfaceVice->breakpointsMemory->EvaluateBreakpoint(addr, value) != NULL)
 		{
-			CMemoryBreakpoint *memoryBreakpoint = it->second;
-			
-			if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_EQUAL)
-			{
-				if (value == memoryBreakpoint->value)
-				{
-					debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
-				}
-			}
-			else if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_NOT_EQUAL)
-			{
-				if (value != memoryBreakpoint->value)
-				{
-					debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
-				}
-			}
-			else if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_LESS)
-			{
-				if (value < memoryBreakpoint->value)
-				{
-					debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
-				}
-			}
-			else if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_LESS_OR_EQUAL)
-			{
-				if (value <= memoryBreakpoint->value)
-				{
-					debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
-				}
-			}
-			else if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_GREATER)
-			{
-				if (value > memoryBreakpoint->value)
-				{
-					debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
-				}
-			}
-			else if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_GREATER_OR_EQUAL)
-			{
-				if (value >= memoryBreakpoint->value)
-				{
-					debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
-				}
-			}
+			debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
 		}
 		
 		debugInterfaceVice->UnlockMutex();
@@ -196,53 +155,9 @@ void c64d_mark_disk_cell_write(uint16 addr, uint8 value)
 	{
 		debugInterfaceVice->LockMutex();
 		
-		std::map<uint16, CMemoryBreakpoint *>::iterator it = debugInterfaceVice->breakpointsDrive1541Memory.find(addr);
-		if (it != debugInterfaceVice->breakpointsDrive1541Memory.end())
+		if (debugInterfaceVice->breakpointsDrive1541Memory->EvaluateBreakpoint(addr, value))
 		{
-			CMemoryBreakpoint *memoryBreakpoint = it->second;
-			
-			if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_EQUAL)
-			{
-				if (value == memoryBreakpoint->value)
-				{
-					debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
-				}
-			}
-			else if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_NOT_EQUAL)
-			{
-				if (value != memoryBreakpoint->value)
-				{
-					debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
-				}
-			}
-			else if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_LESS)
-			{
-				if (value < memoryBreakpoint->value)
-				{
-					debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
-				}
-			}
-			else if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_LESS_OR_EQUAL)
-			{
-				if (value <= memoryBreakpoint->value)
-				{
-					debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
-				}
-			}
-			else if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_GREATER)
-			{
-				if (value > memoryBreakpoint->value)
-				{
-					debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
-				}
-			}
-			else if (memoryBreakpoint->breakpointType == MEMORY_BREAKPOINT_GREATER_OR_EQUAL)
-			{
-				if (value >= memoryBreakpoint->value)
-				{
-					debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
-				}
-			}
+			debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
 		}
 		
 		debugInterfaceVice->UnlockMutex();
@@ -609,11 +524,10 @@ void c64d_c64_check_pc_breakpoint(uint16 pc)
 	else if (debugInterfaceVice->breakOnPC)
 	{
 		debugInterfaceVice->LockMutex();
-		std::map<uint16, CAddrBreakpoint *>::iterator it = debugInterfaceVice->breakpointsPC.find(pc);
-		if (it != debugInterfaceVice->breakpointsPC.end())
+		
+		CAddrBreakpoint *addrBreakpoint = debugInterfaceVice->breakpointsPC->EvaluateBreakpoint(pc);
+		if (addrBreakpoint != NULL)
 		{
-			CAddrBreakpoint *addrBreakpoint = it->second;
-			
 			if (IS_SET(addrBreakpoint->actions, ADDR_BREAKPOINT_ACTION_SET_BACKGROUND))
 			{
 				// VIC can't modify two registers at once
@@ -672,8 +586,7 @@ void c64d_drive1541_check_pc_breakpoint(uint16 pc)
 	else if (debugInterfaceVice->breakOnDrive1541PC)
 	{
 		debugInterfaceVice->LockMutex();
-		std::map<uint16, CAddrBreakpoint *>::iterator it = debugInterfaceVice->breakpointsDrive1541PC.find(pc);
-		if (it != debugInterfaceVice->breakpointsDrive1541PC.end())
+		if (debugInterfaceVice->breakpointsDrive1541PC->EvaluateBreakpoint(pc) != NULL)
 		{
 			debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
 		}
@@ -1048,8 +961,7 @@ void c64d_c64_check_raster_breakpoint(uint16 rasterLine)
 	if (debugInterfaceVice->breakOnRaster)
 	{
 		debugInterfaceVice->LockMutex();
-		std::map<uint16, CAddrBreakpoint *>::iterator it = debugInterfaceVice->breakpointsRaster.find(rasterLine);
-		if (it != debugInterfaceVice->breakpointsRaster.end())
+		if (debugInterfaceVice->breakpointsRaster->EvaluateBreakpoint(rasterLine) != NULL)
 		{
 			debugInterfaceVice->SetDebugMode(DEBUGGER_MODE_PAUSED);
 			//			TheCPU->lastValidPC = TheCPU->pc;
@@ -1153,7 +1065,14 @@ void c64d_debug_pause_check(int allowRestore)
 {
 	if (allowRestore)
 	{
-		c64d_check_cpu_snapshot_manager_restore();
+		if (c64d_check_cpu_snapshot_manager_restore() == 0)
+		{
+			if (debugInterfaceVice->sidDataToRestore)
+			{
+				debugInterfaceVice->sidDataToRestore->RestoreSids();
+				debugInterfaceVice->sidDataToRestore = NULL;
+			}
+		}
 	}
 	else
 	{
@@ -1181,6 +1100,13 @@ void c64d_debug_pause_check(int allowRestore)
 					return;
 				}
 			}
+			
+			if (debugInterfaceVice->sidDataToRestore)
+			{
+				debugInterfaceVice->sidDataToRestore->RestoreSids();
+				debugInterfaceVice->sidDataToRestore = NULL;
+			}
+
 			vsync_do_vsync(vicii.raster.canvas, 0, 1);
 			//mt_SYS_Sleep(50);
 		}
@@ -1281,6 +1207,18 @@ void c64d_lock_mutex()
 void c64d_unlock_mutex()
 {
 	debugInterfaceVice->UnlockIoMutex();
+}
+
+extern "C" {
+	void c64d_lock_sound_mutex(char *whoLocked)
+	{
+		gSoundEngine->LockMutex(whoLocked);
+	}
+
+	void c64d_unlock_sound_mutex(char *whoLocked)
+	{
+		gSoundEngine->UnlockMutex(whoLocked);
+	}
 }
 
 ////////////
@@ -1490,6 +1428,11 @@ int c64d_snapshot_read_module(snapshot_t *s)
 unsigned int c64d_get_vice_maincpu_clk()
 {
 	return maincpu_clk;
+}
+
+unsigned int c64d_get_vice_maincpu_current_instruction_clk()
+{
+	return c64d_maincpu_current_instruction_clk;
 }
 
 

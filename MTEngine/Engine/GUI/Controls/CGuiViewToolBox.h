@@ -77,10 +77,11 @@ public:
 	float backgroundColorB;
 	float backgroundColorA;
 	
-	void AddIcon(CSlrImage *imgIcon);
+	CGuiButton *AddIcon(CSlrImage *imgIcon);
+	CGuiButton *AddIcon(CSlrImage *imgIcon, float iconX, float iconY);
 	void UpdateSize(int numColumns);
 	
-private:
+//private:
 	float nextIconX;
 	float nextIconY;
 	int numIconsInCurrentRow;

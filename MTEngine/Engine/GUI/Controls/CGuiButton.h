@@ -96,7 +96,7 @@ class CGuiButton : public CGuiElement
 	virtual void InitBackgroundColors();
 	
 	virtual void InitWithText(char *txt);
-	void SetText(char *text);
+	void SetText(const char *text);
 	char *text2;
 	GLfloat fontWidth;
 	GLfloat fontHeight;
@@ -131,6 +131,8 @@ class CGuiButton : public CGuiElement
 	CSlrString *textUTF;
 	void SetText(CSlrString *textUTF);
 	
+	void SetImage(CSlrImage *image);
+	
 	GLfloat buttonPosX;
 	GLfloat buttonPosY;
 	GLfloat buttonSizeX;
@@ -163,7 +165,8 @@ class CGuiButton : public CGuiElement
 	
 	bool centerText;
 	float textOffsetY;
-	
+	virtual void RenderFocusBorder();
+
 	virtual void UpdateTheme();
 };
 

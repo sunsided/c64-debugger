@@ -226,6 +226,8 @@ bool CGuiViewHorizontalScroll::DoTap(GLfloat x, GLfloat y)
 	if (!IsInside(x, y))
 		return false;
 
+	// TODO: callback to CPiano
+	
 	return true;
 }
 

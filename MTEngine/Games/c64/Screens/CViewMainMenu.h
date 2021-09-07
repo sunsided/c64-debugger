@@ -94,11 +94,14 @@ public:
 	CSlrKeyboardShortcut *kbsScreenLayout12;
 	CSlrKeyboardShortcut *kbsScreenLayout13;
 	CSlrKeyboardShortcut *kbsScreenLayout14;
+	CSlrKeyboardShortcut *kbsScreenLayout15;
+	CSlrKeyboardShortcut *kbsScreenLayout16;
 
 	CSlrKeyboardShortcut *kbsInsertD64;
 	CViewC64MenuItem *menuItemInsertD64;
 	CSlrKeyboardShortcut *kbsBrowseD64;
 //	CViewC64MenuItem *menuItemBrowseD64;
+	CSlrKeyboardShortcut *kbsInsertNextD64;
 
 	CSlrKeyboardShortcut *kbsInsertATR;
 	CViewC64MenuItem *menuItemInsertATR;
@@ -132,6 +135,8 @@ public:
 	CViewC64MenuItem *menuItemBreakpointsC64;
 	CSlrKeyboardShortcut *kbsBreakpointsAtari;
 	CViewC64MenuItem *menuItemBreakpointsAtari;
+	CSlrKeyboardShortcut *kbsBreakpointsNes;
+	CViewC64MenuItem *menuItemBreakpointsNes;
 
 	CSlrKeyboardShortcut *kbsInsertCartridge;
 	CViewC64MenuItem *menuItemInsertCartridge;
@@ -160,6 +165,8 @@ public:
 	void LoadFile(CSlrString *path);
 	void OpenDialogInsertD64();
 	void InsertD64(CSlrString *path, bool updatePathToD64, bool autoRun, int autoRunEntryNum, bool showLoadAddressInfo);
+	std::list<char *> cDiskExtensions;
+	void InsertNextD64();
 	void OpenDialogInsertCartridge();
 	void InsertCartridge(CSlrString *path, bool updatePathToCRT);
 	void OpenDialogInsertAtariCartridge();
@@ -204,7 +211,6 @@ public:
 	void OpenDialogStartJukeboxPlaylist();
 
 	// LoadPRG threaded
-	CByteBuffer *loadPrgByteBuffer;
 	bool loadPrgAutoStart;
 	bool loadPrgShowAddressInfo;
 	bool loadPrgForceFastReset;

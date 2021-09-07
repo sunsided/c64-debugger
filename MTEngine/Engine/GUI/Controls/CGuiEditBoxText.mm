@@ -299,7 +299,7 @@ void CGuiEditBoxText::Render(GLfloat posX, GLfloat posY, GLfloat sizeX, GLfloat 
 	this->Render(posX, posY);
 }
 
-void CGuiEditBoxText::SetText(char *setText)
+void CGuiEditBoxText::SetText(const char *setText)
 {
 	//guiMain->LockRenderMutex();
 	if (setText == NULL)

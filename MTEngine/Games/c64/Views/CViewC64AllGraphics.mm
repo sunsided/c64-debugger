@@ -11,6 +11,9 @@
 #include "CViewDataDump.h"
 #include "CGuiLockableList.h"
 #include "CSlrString.h"
+#include "CViewC64StateVIC.h"
+
+// TODO: colour leds are just rectangles with hitbox and lot of copy pasted code, replace them to proper buttons!
 
 CViewC64AllGraphics::CViewC64AllGraphics(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat sizeX, GLfloat sizeY, C64DebugInterface *debugInterface)
 : CGuiView(posX, posY, posZ, sizeX, sizeY)
@@ -27,7 +30,13 @@ CViewC64AllGraphics::CViewC64AllGraphics(GLfloat posX, GLfloat posY, GLfloat pos
 	this->isSelectedItemScreen = false;
 	this->isSelectedItemCharset = false;
 	this->isSelectedItemSprite = false;
+	this->isSelectedItemColor = false;
 
+	this->selectedScreenId = 0;
+	this->selectedBitmapId = 0;
+	this->selectedSpriteId = 0;
+	this->selectedCharsetId = 0;
+	
 	this->charsetScale = 0.3287f;
 	this->charsetSizeX = 256.0f * charsetScale;
 	this->charsetSizeY = 64.0f * charsetScale;
@@ -69,15 +78,16 @@ CViewC64AllGraphics::CViewC64AllGraphics(GLfloat posX, GLfloat posY, GLfloat pos
 	font = viewC64->fontCBMShifted;
 	fontScale = 0.8;
 	fontHeight = font->GetCharHeight('@', fontScale) + 2;
+	fontSize = fontHeight;
 
 	float px = posX + 350;
 	float py = posY + 15;
-	float buttonSizeX = 28.0f;
+	float buttonSizeX = 31.0f;//28.0f;
 	float buttonSizeY = 10.0f;
 	float gap = 5.0f;
 	float mgap = 2.5f;
 
-	btnModeBitmapColorsGrayscale = new CGuiButtonSwitch(NULL, NULL, NULL,
+	btnModeBitmapColorsBlackWhite = new CGuiButtonSwitch(NULL, NULL, NULL,
 										   px, py, posZ, buttonSizeX, buttonSizeY,
 										   new CSlrString("B/W"),
 										   FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
@@ -86,9 +96,9 @@ CViewC64AllGraphics::CViewC64AllGraphics(GLfloat posX, GLfloat posY, GLfloat pos
 										   1.0, 1.0, 1.0, 1.0,
 										   0.3, 0.3, 0.3, 1.0,
 										   this);
-	btnModeBitmapColorsGrayscale->SetOn(false);
-	SetSwitchButtonDefaultColors(btnModeBitmapColorsGrayscale);
-	this->AddGuiElement(btnModeBitmapColorsGrayscale);
+	btnModeBitmapColorsBlackWhite->SetOn(false);
+	SetSwitchButtonDefaultColors(btnModeBitmapColorsBlackWhite);
+	this->AddGuiElement(btnModeBitmapColorsBlackWhite);
 
 	px += buttonSizeX + gap;
 
@@ -183,6 +193,21 @@ CViewC64AllGraphics::CViewC64AllGraphics(GLfloat posX, GLfloat posY, GLfloat pos
 	SetLockableButtonDefaultColors(btnShowSprites);
 	this->AddGuiElement(btnShowSprites);
 
+	py += buttonSizeY + mgap;
+	
+	btnShowColor = new CGuiButtonSwitch(NULL, NULL, NULL,
+										px, py, posZ, buttonSizeX, buttonSizeY,
+										new CSlrString("COLOR"),
+										FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
+										font, fontScale,
+										1.0, 1.0, 1.0, 1.0,
+										1.0, 1.0, 1.0, 1.0,
+										0.3, 0.3, 0.3, 1.0,
+										this);
+	btnShowColor->SetOn(false);
+	SetLockableButtonDefaultColors(btnShowColor);
+	this->AddGuiElement(btnShowColor);
+
 	// list of screen addresses
 	px = posX + 350 + buttonSizeX + gap;
 	py = by;
@@ -213,7 +238,7 @@ CViewC64AllGraphics::CViewC64AllGraphics(GLfloat posX, GLfloat posY, GLfloat pos
 
 	// list of charset addresses
 	px = posX + 350 + buttonSizeX + gap;
-	py = by;
+	py = by; // + 5.0f;
 	
 	char **txtCharsetAddresses = new char *[0x40];
 	
@@ -227,6 +252,7 @@ CViewC64AllGraphics::CViewC64AllGraphics(GLfloat posX, GLfloat posY, GLfloat pos
 		txtCharsetAddresses[i] = txtCharsetAddr;
 	}
 
+	//																					  61.0f
 	this->lstCharsetAddresses = new CGuiLockableList(px, py, posZ+0.01, lstFontSize*6.5f, 65.0f, lstFontSize,
 													NULL, 0, false,
 													guiMain->fntConsole,
@@ -237,6 +263,36 @@ CViewC64AllGraphics::CViewC64AllGraphics(GLfloat posX, GLfloat posY, GLfloat pos
 	this->lstCharsetAddresses->SetGaps(0.0f, -0.25f);
 	this->AddGuiElement(this->lstCharsetAddresses);
 
+	//
+	px = posX + 386 + buttonSizeX + gap;
+	py = by + 55;
+	btnShowRAMorIO = new CGuiButtonSwitch(NULL, NULL, NULL,
+												  px, py, posZ, buttonSizeX, buttonSizeY,
+												  new CSlrString("ROM"),
+												  FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
+												  font, fontScale,
+												  1.0, 1.0, 1.0, 1.0,
+												  1.0, 1.0, 1.0, 1.0,
+												  0.3, 0.3, 0.3, 1.0,
+												  this);
+	btnShowRAMorIO->SetOn(true);
+	SetSwitchButtonDefaultColors(btnShowRAMorIO);
+	this->AddGuiElement(btnShowRAMorIO);
+
+	py -= buttonSizeY + mgap;
+	btnShowGrid = new CGuiButtonSwitch(NULL, NULL, NULL,
+										  px, py, posZ, buttonSizeX, buttonSizeY,
+										  new CSlrString("GRID"),
+										  FONT_ALIGN_CENTER, buttonSizeX/2, 3.5,
+										  font, fontScale,
+										  1.0, 1.0, 1.0, 1.0,
+										  1.0, 1.0, 1.0, 1.0,
+										  0.3, 0.3, 0.3, 1.0,
+										  this);
+	btnShowGrid->SetOn(true);
+	SetSwitchButtonDefaultColors(btnShowGrid);
+	this->AddGuiElement(btnShowGrid);
+	
 	// sprites sheet, init images for sprites
 	for (int i = 0; i < (0x10000/0x40); i++)
 	{
@@ -276,16 +332,33 @@ CViewC64AllGraphics::CViewC64AllGraphics(GLfloat posX, GLfloat posY, GLfloat pos
 		CImageData *emptyImageData = new CImageData(256, 64, IMG_TYPE_RGBA);
 		emptyImageData->AllocImage(false, true);
 		
-		CSlrImage *imageCharset = new CSlrImage(true, false);
-		imageCharset->LoadImage(emptyImageData, RESOURCE_PRIORITY_STATIC, false);
-		imageCharset->resourceType = RESOURCE_TYPE_IMAGE_DYNAMIC;
-		imageCharset->resourcePriority = RESOURCE_PRIORITY_STATIC;
-		VID_PostImageBinding(imageCharset, NULL);
+		CSlrImage *charsetImage = new CSlrImage(true, false);
+		charsetImage->LoadImage(emptyImageData, RESOURCE_PRIORITY_STATIC, false);
+		charsetImage->resourceType = RESOURCE_TYPE_IMAGE_DYNAMIC;
+		charsetImage->resourcePriority = RESOURCE_PRIORITY_STATIC;
+		VID_PostImageBinding(charsetImage, NULL);
 		
-		charsetsImages.push_back(imageCharset);
+		charsetsImages.push_back(charsetImage);
 		
 		delete emptyImageData;
 	}
+	
+	// alloc image that will store charset pixels
+	colorImageData = new CImageData(64, 32, IMG_TYPE_RGBA);
+	colorImageData->AllocImage(false, true);
+	
+	/// init CSlrImage with empty image (will be deleted by loader)
+	// TODO: fixme on GUI branch and use LoadForRebinding...
+	CImageData *emptyImageData = new CImageData(64, 32, IMG_TYPE_RGBA);
+	emptyImageData->AllocImage(false, true);
+	
+	colorImage = new CSlrImage(true, false);
+	colorImage->LoadImage(emptyImageData, RESOURCE_PRIORITY_STATIC, false);
+	colorImage->resourceType = RESOURCE_TYPE_IMAGE_DYNAMIC;
+	colorImage->resourcePriority = RESOURCE_PRIORITY_STATIC;
+	VID_PostImageBinding(colorImage, NULL);
+	
+	delete emptyImageData;
 
 	this->SetMode(VIEW_C64_ALL_GRAPHICS_MODE_SCREENS);
 }
@@ -367,7 +440,7 @@ void CViewC64AllGraphics::SetMode(int newMode)
 			py = 0.0f;
 			for (int y = 0; y < numDisplaysRows; y++)
 			{
-				LOGD("......px=%f py=%f", px, py);
+//				LOGD("......px=%f py=%f", px, py);
 				vicDisplays[i]->SetDisplayPosition(px, py, 0.45f, true);
 				py += displaySizeY;
 				
@@ -380,7 +453,7 @@ void CViewC64AllGraphics::SetMode(int newMode)
 			px += displaySizeX;
 		}
 		
-		btnModeBitmapColorsGrayscale->SetVisible(true);
+		btnModeBitmapColorsBlackWhite->SetVisible(true);
 		btnModeHires->SetVisible(true);
 		btnModeMulti->SetVisible(true);
 		lstScreenAddresses->SetVisible(true);
@@ -406,7 +479,7 @@ void CViewC64AllGraphics::SetMode(int newMode)
 			py = 0.0f;
 			for (int y = 0; y < numDisplaysRows; y++)
 			{
-				LOGD("......px=%f py=%f", px, py);
+//				LOGD("......px=%f py=%f", px, py);
 				vicDisplays[i]->SetDisplayPosition(px, py, 0.129f, true);
 				py += displaySizeY;
 				
@@ -420,7 +493,7 @@ void CViewC64AllGraphics::SetMode(int newMode)
 			px += displaySizeX;
 		}
 
-		btnModeBitmapColorsGrayscale->SetVisible(true);
+		btnModeBitmapColorsBlackWhite->SetVisible(true);
 		btnModeHires->SetVisible(true);
 		btnModeMulti->SetVisible(true);
 		lstScreenAddresses->SetVisible(false);
@@ -428,7 +501,7 @@ void CViewC64AllGraphics::SetMode(int newMode)
 	}
 	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_CHARSETS)
 	{
-		btnModeBitmapColorsGrayscale->SetVisible(false);
+		btnModeBitmapColorsBlackWhite->SetVisible(true);
 		btnModeHires->SetVisible(true);
 		btnModeMulti->SetVisible(true);
 		lstScreenAddresses->SetVisible(false);
@@ -437,7 +510,7 @@ void CViewC64AllGraphics::SetMode(int newMode)
 		switch(forcedRenderScreenMode)
 		{
 			case VIEW_C64_ALL_GRAPHICS_FORCED_GRAY:
-				forcedRenderScreenMode = VIEW_C64_ALL_GRAPHICS_FORCED_NONE;
+				viewC64->viewC64MemoryDataDump->renderDataWithColors = false;
 				break;
 			case VIEW_C64_ALL_GRAPHICS_FORCED_HIRES:
 				viewC64->viewC64MemoryDataDump->renderDataWithColors = false;
@@ -449,7 +522,7 @@ void CViewC64AllGraphics::SetMode(int newMode)
 	}
 	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SPRITES)
 	{
-		btnModeBitmapColorsGrayscale->SetVisible(false);
+		btnModeBitmapColorsBlackWhite->SetVisible(true);
 		btnModeHires->SetVisible(true);
 		btnModeMulti->SetVisible(true);
 		lstScreenAddresses->SetVisible(false);
@@ -458,7 +531,7 @@ void CViewC64AllGraphics::SetMode(int newMode)
 		switch(forcedRenderScreenMode)
 		{
 			case VIEW_C64_ALL_GRAPHICS_FORCED_GRAY:
-				forcedRenderScreenMode = VIEW_C64_ALL_GRAPHICS_FORCED_NONE;
+				viewC64->viewC64MemoryDataDump->renderDataWithColors = false;
 				break;
 			case VIEW_C64_ALL_GRAPHICS_FORCED_HIRES:
 				viewC64->viewC64MemoryDataDump->renderDataWithColors = false;
@@ -468,7 +541,15 @@ void CViewC64AllGraphics::SetMode(int newMode)
 				break;
 		}
 	}
-	
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SPRITES)
+	{
+		btnModeBitmapColorsBlackWhite->SetVisible(true);
+		btnModeHires->SetVisible(true);
+		btnModeMulti->SetVisible(true);
+		lstScreenAddresses->SetVisible(false);
+		lstCharsetAddresses->SetVisible(false);
+	}
+
 	guiMain->UnlockMutex();
 }
 
@@ -479,6 +560,15 @@ void CViewC64AllGraphics::DoLogic()
 
 void CViewC64AllGraphics::Render()
 {
+	float ledX = posX + fontSize * 82.1725f;
+	float ledY = posY + fontSize * 5.5;
+	
+	char ledBuf[8] = { 'D', '0', '2', '0', 0x00 };
+	float ledSizeX = fontSize*4.0f;
+	float gap = fontSize * 0.1f;
+	float step = fontSize * 0.75f;
+	float ledSizeY = fontSize + gap + gap;
+	
 	if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_BITMAPS
 		|| displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SCREENS)
 	{
@@ -532,7 +622,7 @@ void CViewC64AllGraphics::Render()
 			
 			mc = (viciiState->regs[0x16] & 0x10) >> 4;
 			
-			btnModeBitmapColorsGrayscale->SetOn(false);
+			btnModeBitmapColorsBlackWhite->SetOn(false);
 			btnModeHires->SetOn(!mc);
 			btnModeMulti->SetOn(mc);
 		}
@@ -543,7 +633,7 @@ void CViewC64AllGraphics::Render()
 		for (int i = 0; i < numVisibleDisplays; i++)
 		{
 			//		LOGD("Render VIC Display %d", i);
-			vicDisplays[i]->viewVicControl->forceDataFromRam = viewC64->viewC64MemoryMap->isDataDirectlyFromRAM;
+			vicDisplays[i]->viewVicControl->forceDataFromRam = viewC64->isDataDirectlyFromRAM;
 			
 			if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_BITMAPS)
 			{
@@ -601,6 +691,37 @@ void CViewC64AllGraphics::Render()
 				CViewC64VicDisplay *vicDisplay = vicDisplays[selectedBitmapId];
 				BlitRectangle(vicDisplay->posX, vicDisplay->posY, posZ, vicDisplay->sizeX, vicDisplay->sizeY, 1.0, 0.0, 0.0f, 0.7f);
 			}
+
+			// render color leds for bitmap. todo: convert them to proper buttons
+			if (btnModeHires->IsOn())
+			{
+				float px = ledX;
+				float py = ledY;
+				
+				// D021
+				int i = 0x01;
+				u8 color = viewC64->colorsToShow[i];
+				bool isForced = (viewC64->viewC64StateVIC->forceColors[i] != -1);
+				RenderColorRectangleWithHexCode(px, py, ledSizeX, ledSizeY, gap, isForced, color, fontSize, viewC64->debugInterfaceC64);
+			}
+			else if (btnModeMulti->IsOn())
+			{
+				float px = ledX;
+				float py = ledY;
+				
+				// D021
+				int i = 0x01;
+				u8 color = viewC64->colorsToShow[i];
+				bool isForced = (viewC64->viewC64StateVIC->forceColors[i] != -1);
+				RenderColorRectangleWithHexCode(px, py, ledSizeX, ledSizeY, gap, isForced, color, fontSize, viewC64->debugInterfaceC64);
+				py += fontSize + step;
+
+				/* D800
+				color = viewC64->colorToShowD800;
+				isForced = (viewC64->viewC64StateVIC->forceColorD800 != -1);
+				RenderColorRectangleWithHexCode(px, py, ledSizeX, ledSizeY, gap, isForced, color, fontSize, viewC64->debugInterfaceC64);
+				 */
+			}
 		}
 		else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SCREENS)
 		{
@@ -621,18 +742,57 @@ void CViewC64AllGraphics::Render()
 				vicDisplay->Render();
 				vicDisplay->SetDisplayPosition(ppx, ppy, 0.129f, true);
 			}
+			
+			// render color leds for screens when in hires
+			if (btnModeHires->IsOn())
+			{
+				float px = ledX;
+				float py = ledY;
+				
+				// D021
+				int i = 0x01;
+				u8 color = viewC64->colorsToShow[i];
+				bool isForced = (viewC64->viewC64StateVIC->forceColors[i] != -1);
+				RenderColorRectangleWithHexCode(px, py, ledSizeX, ledSizeY, gap, isForced, color, fontSize, viewC64->debugInterfaceC64);
+				py += fontSize + step;
+
+				/* D800
+				color = viewC64->colorToShowD800;
+				isForced = (viewC64->viewC64StateVIC->forceColorD800 != -1);
+				RenderColorRectangleWithHexCode(px, py, ledSizeX, ledSizeY, gap, isForced, color, fontSize, viewC64->debugInterfaceC64);
+				 */
+			}
+			else if (btnModeMulti->IsOn())
+			{
+				float px = ledX;
+				float py = ledY;
+				
+				// D021-D023
+				for (int i = 0x01; i < 0x04; i++)
+				{
+					u8 color = viewC64->colorsToShow[i];
+					bool isForced = (viewC64->viewC64StateVIC->forceColors[i] != -1);
+					RenderColorRectangleWithHexCode(px, py, ledSizeX, ledSizeY, gap, isForced, color, fontSize, viewC64->debugInterfaceC64);
+					py += fontSize + step;
+				}
+
+				/* D800
+				u8 color = viewC64->colorToShowD800;
+				bool isForced = (viewC64->viewC64StateVIC->forceColorD800 != -1);
+				RenderColorRectangleWithHexCode(px, py, ledSizeX, ledSizeY, gap, isForced, color, fontSize, viewC64->debugInterfaceC64);
+				 */
+			}
+						
 		}
 		
 	}
 	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_CHARSETS)
 	{
 		// get VIC colors
-		u8 cD021, cD022, cD023, cD800;
-		
-		cD021 = viewC64->colorsToShow[1];
-		cD022 = viewC64->colorsToShow[2];
-		cD023 = viewC64->colorsToShow[3];
-		cD800 = viewC64->colorToShowD800;
+		u8 cD021 = viewC64->colorsToShow[1];
+		u8 cD022 = viewC64->colorsToShow[2];
+		u8 cD023 = viewC64->colorsToShow[3];
+		u8 cD800 = viewC64->colorToShowD800;
 		
 		// render charsets
 		UpdateCharsets(viewC64->viewC64MemoryDataDump->renderDataWithColors, cD021, cD022, cD023, cD800);
@@ -685,26 +845,39 @@ void CViewC64AllGraphics::Render()
 		//
 		if (forcedRenderScreenMode == VIEW_C64_ALL_GRAPHICS_FORCED_NONE)
 		{
-			btnModeBitmapColorsGrayscale->SetOn(false);
+			btnModeBitmapColorsBlackWhite->SetOn(false);
 			btnModeHires->SetOn(! (viewC64->viewC64MemoryDataDump->renderDataWithColors) );
 			btnModeMulti->SetOn(  (viewC64->viewC64MemoryDataDump->renderDataWithColors) );
+		}
+		
+		// render color leds for charsets when in multi
+		if (btnModeMulti->IsOn())
+		{
+			px = ledX;
+			py = ledY;
+			
+			// D021-D023
+			for (int i = 0x01; i < 0x04; i++)
+			{
+				u8 color = viewC64->colorsToShow[i];
+				bool isForced = (viewC64->viewC64StateVIC->forceColors[i] != -1);
+				RenderColorRectangleWithHexCode(px, py, ledSizeX, ledSizeY, gap, isForced, color, fontSize, viewC64->debugInterfaceC64);
+				py += fontSize + step;
+			}
+
+			// D800
+			u8 color = viewC64->colorToShowD800;
+			bool isForced = (viewC64->viewC64StateVIC->forceColorD800 != -1);
+			RenderColorRectangleWithHexCode(px, py, ledSizeX, ledSizeY, gap, isForced, color, fontSize, viewC64->debugInterfaceC64);
 		}
 	}
 	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SPRITES)
 	{
 		// get VIC colors
-		u8 cD021, cD022, cD023;
-		u8 cD800;
-		u8 cD025, cD026, cD027;
-		
-		cD021 = viewC64->colorsToShow[1];
-		cD022 = viewC64->colorsToShow[2];
-		cD023 = viewC64->colorsToShow[3];
-		cD800 = viewC64->colorToShowD800;
-		
-		cD025 = viewC64->colorsToShow[5];
-		cD026 = viewC64->colorsToShow[6];
-		cD027 = viewC64->colorsToShow[7];
+		u8 cD021 = viewC64->colorsToShow[1];
+		u8 cD025 = viewC64->colorsToShow[5];
+		u8 cD026 = viewC64->colorsToShow[6];
+		u8 cD027 = viewC64->colorsToShow[7];
 		
 		// render sprites
 		UpdateSprites(viewC64->viewC64MemoryDataDump->renderDataWithColors, cD021, cD025, cD026, cD027);
@@ -763,12 +936,81 @@ void CViewC64AllGraphics::Render()
 		//
 		if (forcedRenderScreenMode == VIEW_C64_ALL_GRAPHICS_FORCED_NONE)
 		{
-			btnModeBitmapColorsGrayscale->SetOn(false);
+			btnModeBitmapColorsBlackWhite->SetOn(false);
 			btnModeHires->SetOn(! (viewC64->viewC64MemoryDataDump->renderDataWithColors) );
 			btnModeMulti->SetOn(  (viewC64->viewC64MemoryDataDump->renderDataWithColors) );
 		}
+		
+		// render color leds for sprites
+		if (btnModeMulti->IsOn())
+		{
+			px = ledX;
+			py = ledY;
+			
+			// D021
+			int i = 0x01;
+			u8 color = viewC64->colorsToShow[i];
+			bool isForced = (viewC64->viewC64StateVIC->forceColors[i] != -1);
+			RenderColorRectangleWithHexCode(px, py, ledSizeX, ledSizeY, gap, isForced, color, fontSize, viewC64->debugInterfaceC64);
+			py += fontSize + step;
+
+			// D025-D027
+			for (int i = 0x05; i < 0x08; i++)
+			{
+				u8 color = viewC64->colorsToShow[i];
+				bool isForced = (viewC64->viewC64StateVIC->forceColors[i] != -1);
+				RenderColorRectangleWithHexCode(px, py, ledSizeX, ledSizeY, gap, isForced, color, fontSize, viewC64->debugInterfaceC64);
+				py += fontSize + step; //gap + ledSizeY + gap;
+			}
+		}
 	}
-	
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_COLOR)
+	{
+		vicii_cycle_state_t *viciiState = &(viewC64->viciiStateToShow);
+		u8 *screen_ptr, *color_ram_ptr, *chargen_ptr, *bitmap_low_ptr, *bitmap_high_ptr;
+		u8 colors[0x0F];
+		
+		viewC64->viewC64VicDisplay->GetViciiPointers(viciiState, &screen_ptr, &color_ram_ptr, &chargen_ptr, &bitmap_low_ptr, &bitmap_high_ptr, colors);
+
+		u8 fgcolor;
+		u8 fgColorR, fgColorG, fgColorB;
+		
+		for (int i = 0; i < 25; i++)
+		{
+			for (int j = 0; j < 40; j++)
+			{
+				fgcolor = color_ram_ptr[(i * 40) + j] & 0xf;
+				debugInterface->GetCBMColor(fgcolor, &fgColorR, &fgColorG, &fgColorB);
+				
+				//LOGD("i=%d j=%d %d | %d %d %d", i, j, fgcolor, fgColorR, fgColorG, fgColorB);
+				colorImageData->SetPixelResultRGBA(j, i, fgColorR, fgColorG, fgColorB, 255);
+			}
+		}
+		
+		colorImage->ReplaceImageData(colorImageData);
+		
+		// nearest neighbour
+		{
+			glBindTexture(GL_TEXTURE_2D, colorImage->texture[0]);
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+		}
+
+		// TODO: the image is v-flipped, this has been fixed in GUI branch
+		const float itex = 40.0f/64.0f;
+		const float itey = 1.0f - (25.0f/32.0f);
+
+		float s = 1.0f;
+		float px = 10.0f;
+		float py = 80.0f;
+		float sx = 320.0f * s;
+		float sy = 200.0f * s;
+		Blit(colorImage, px, py, posZ, sx, sy, 0, 1, itex, itey);
+		BlitRectangle(px, py, posZ, sx, sy, 1.0, 0.0, 0.0f, 0.7f);
+
+	}
+
+	btnShowGrid->SetOn(viewC64->viewC64VicControl->btnShowGrid->IsOn());
 
 	CGuiView::Render();	
 }
@@ -811,7 +1053,7 @@ void CViewC64AllGraphics::UpdateSprites(bool useColors, u8 colorD021, u8 colorD0
 		else
 		{
 			ConvertColorSpriteDataToImage(spriteData, imageData, colorD021, colorD025, colorD026, colorD027,
-										  viewC64->debugInterfaceC64, 4);
+										  viewC64->debugInterfaceC64, 4, 255);
 		}
 		
 		addr++;
@@ -868,6 +1110,11 @@ void CViewC64AllGraphics::UpdateCharsets(bool useColors, u8 colorD021, u8 colorD
 	}
 }
 
+void CViewC64AllGraphics::UpdateShowIOButton()
+{
+	btnShowRAMorIO->SetOn( ! viewC64->isDataDirectlyFromRAM);
+}
+
 bool CViewC64AllGraphics::GetIsSelectedItem()
 {
 	if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_BITMAPS)
@@ -885,6 +1132,10 @@ bool CViewC64AllGraphics::GetIsSelectedItem()
 	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SPRITES)
 	{
 		return isSelectedItemSprite;
+	}
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_COLOR)
+	{
+		return isSelectedItemColor;
 	}
 	return false;
 }
@@ -906,6 +1157,10 @@ void CViewC64AllGraphics::SetIsSelectedItem(bool isSelected)
 	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SPRITES)
 	{
 		isSelectedItemSprite = isSelected;
+	}
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_COLOR)
+	{
+		isSelectedItemColor = isSelected;
 	}
 }
 
@@ -950,7 +1205,517 @@ bool CViewC64AllGraphics::DoTap(GLfloat x, GLfloat y)
 		return true;
 	}
 	
+	guiMain->LockMutex();
+	
+	// TODO: note this is copy pasted code from C64ViewStateVIC, needs to be generalized
+	//       idea is to sync values with VIC state view. Leds should be replaced with proper buttons and callbacks.
+	//		 the below is just a temporary POC made in few minutes
+	
+	float ledX = posX + fontSize * 82.1725f;
+	float ledY = posY + fontSize * 5.5;
+	
+	float ledSizeX = fontSize*4.0f;
+	float gap = fontSize * 0.1f;
+	float step = fontSize * 0.75f;
+	float ledSizeY = fontSize + gap + gap;
+	float ledSizeY2 = fontSize + step;
+
+	if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_BITMAPS)
+	{
+		// TODO: warning! copy pasted code
+		// render color leds for bitmap. todo: convert them to proper buttons
+		if (btnModeHires->IsOn())
+		{
+			float px = ledX;
+			float py = ledY;
+
+			if (x >= px && x <= px + ledSizeX && y >= py && y <= py + ledSizeY2)
+			{
+				// D021
+				int i = 0x01;
+				
+				if (viewC64->viewC64StateVIC->forceColors[i] == -1)
+				{
+					viewC64->viewC64StateVIC->forceColors[i] = viewC64->colorsToShow[i];
+				}
+				else
+				{
+					viewC64->viewC64StateVIC->forceColors[i] = -1;
+				}
+				guiMain->UnlockMutex();
+				return true;
+			}
+		}
+		else if (btnModeMulti->IsOn())
+		{
+			float px = ledX;
+			float py = ledY;
+
+			if (x >= px && x <= px + ledSizeX && y >= py && y <= py + ledSizeY2)
+			{
+				// D021
+				int i = 0x01;
+				
+				if (viewC64->viewC64StateVIC->forceColors[i] == -1)
+				{
+					viewC64->viewC64StateVIC->forceColors[i] = viewC64->colorsToShow[i];
+				}
+				else
+				{
+					viewC64->viewC64StateVIC->forceColors[i] = -1;
+				}
+				guiMain->UnlockMutex();
+				return true;
+			}
+
+			py += fontSize + step;
+
+			/* D800
+			if (x >= px && x <= px + ledSizeX && y >= py && y <= py + ledSizeY2)
+			{
+				if (viewC64->viewC64StateVIC->forceColorD800 == -1)
+				{
+					viewC64->viewC64StateVIC->forceColorD800 = viewC64->colorToShowD800;
+				}
+				else
+				{
+					viewC64->viewC64StateVIC->forceColorD800 = -1;
+				}
+				guiMain->UnlockMutex();
+				return true;
+			}*/
+		}
+	}
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SCREENS)
+	{
+		// render color leds for screens when in hires
+		if (btnModeHires->IsOn())
+		{
+			float px = ledX;
+			float py = ledY;
+
+			if (x >= px && x <= px + ledSizeX && y >= py && y <= py + ledSizeY2)
+			{
+				// D021
+				int i = 0x01;
+				
+				if (viewC64->viewC64StateVIC->forceColors[i] == -1)
+				{
+					viewC64->viewC64StateVIC->forceColors[i] = viewC64->colorsToShow[i];
+				}
+				else
+				{
+					viewC64->viewC64StateVIC->forceColors[i] = -1;
+				}
+				guiMain->UnlockMutex();
+				return true;
+			}
+
+			py += fontSize + step;
+
+			/* D800
+			if (x >= px && x <= px + ledSizeX && y >= py && y <= py + ledSizeY2)
+			{
+				if (viewC64->viewC64StateVIC->forceColorD800 == -1)
+				{
+					viewC64->viewC64StateVIC->forceColorD800 = viewC64->colorToShowD800;
+				}
+				else
+				{
+					viewC64->viewC64StateVIC->forceColorD800 = -1;
+				}
+				guiMain->UnlockMutex();
+				return true;
+			}*/
+		}
+		else if (btnModeMulti->IsOn())
+		{
+			float px = ledX;
+			float py = ledY;
+
+			// D021-D023
+			for (int i = 1; i < 4; i++)
+			{
+				if (x >= px && x <= px + ledSizeX && y >= py && y <= py + ledSizeY2)
+				{
+					if (viewC64->viewC64StateVIC->forceColors[i] == -1)
+					{
+						viewC64->viewC64StateVIC->forceColors[i] = viewC64->colorsToShow[i];
+					}
+					else
+					{
+						viewC64->viewC64StateVIC->forceColors[i] = -1;
+					}
+					guiMain->UnlockMutex();
+					return true;
+				}
+
+				py += fontSize + step;
+			}
+
+			/* D800
+			if (x >= px && x <= px + ledSizeX && y >= py && y <= py + ledSizeY2)
+			{
+				if (viewC64->viewC64StateVIC->forceColorD800 == -1)
+				{
+					viewC64->viewC64StateVIC->forceColorD800 = viewC64->colorToShowD800;
+				}
+				else
+				{
+					viewC64->viewC64StateVIC->forceColorD800 = -1;
+				}
+				guiMain->UnlockMutex();
+				return true;
+			}*/
+		}
+	}
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_CHARSETS)
+	{
+		// render color leds for charsets when in multi
+		if (btnModeMulti->IsOn())
+		{
+			float px = ledX;
+			float py = ledY;
+
+			// D021-D023
+			for (int i = 1; i < 4; i++)
+			{
+				if (x >= px && x <= px + ledSizeX && y >= py && y <= py + ledSizeY2)
+				{
+					if (viewC64->viewC64StateVIC->forceColors[i] == -1)
+					{
+						viewC64->viewC64StateVIC->forceColors[i] = viewC64->colorsToShow[i];
+					}
+					else
+					{
+						viewC64->viewC64StateVIC->forceColors[i] = -1;
+					}
+					guiMain->UnlockMutex();
+					return true;
+				}
+
+				py += fontSize + step;
+			}
+
+			// D800
+			if (x >= px && x <= px + ledSizeX && y >= py && y <= py + ledSizeY2)
+			{
+				if (viewC64->viewC64StateVIC->forceColorD800 == -1)
+				{
+					viewC64->viewC64StateVIC->forceColorD800 = viewC64->colorToShowD800;
+				}
+				else
+				{
+					viewC64->viewC64StateVIC->forceColorD800 = -1;
+				}
+				guiMain->UnlockMutex();
+				return true;
+			}
+		}
+	}
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SPRITES)
+	{
+		// render color leds for sprites
+		if (btnModeMulti->IsOn())
+		{
+			float px = ledX;
+			float py = ledY;
+
+			if (x >= px && x <= px + ledSizeX && y >= py && y <= py + ledSizeY2)
+			{
+				// D021
+				int i = 0x01;
+				
+				if (viewC64->viewC64StateVIC->forceColors[i] == -1)
+				{
+					viewC64->viewC64StateVIC->forceColors[i] = viewC64->colorsToShow[i];
+				}
+				else
+				{
+					viewC64->viewC64StateVIC->forceColors[i] = -1;
+				}
+				guiMain->UnlockMutex();
+				return true;
+			}
+
+			py += fontSize + step;
+
+			// D025-D027
+			for (int i = 5; i < 8; i++)
+			{
+				if (x >= px && x <= px + ledSizeX && y >= py && y <= py + ledSizeY2)
+				{
+					if (viewC64->viewC64StateVIC->forceColors[i] == -1)
+					{
+						viewC64->viewC64StateVIC->forceColors[i] = viewC64->colorsToShow[i];
+					}
+					else
+					{
+						viewC64->viewC64StateVIC->forceColors[i] = -1;
+					}
+					guiMain->UnlockMutex();
+					return true;
+				}
+
+				py += fontSize + step;
+			}
+		}
+	}
+//	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_COLOR)
+//	{
+//	}
+
+	
+	guiMain->UnlockMutex();
+	
 	return CGuiView::DoTap(x, y);
+}
+
+bool CViewC64AllGraphics::DoRightClick(GLfloat x, GLfloat y)
+{
+	guiMain->LockMutex();
+	
+	// TODO: note this is copy pasted code from C64ViewStateVIC, needs to be generalized
+	//       idea is to sync values with VIC state view. Leds should be replaced with proper buttons and callbacks.
+	//		 the below is just a temporary POC made in few minutes
+	
+	float ledX = posX + fontSize * 82.1725f;
+	float ledY = posY + fontSize * 5.5;
+	
+	float ledSizeX = fontSize*4.0f;
+	float gap = fontSize * 0.1f;
+	float step = fontSize * 0.75f;
+	float ledSizeY = fontSize + gap + gap;
+	float ledSizeY2 = fontSize + step;
+
+	if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_BITMAPS)
+	{
+		// TODO: warning! copy pasted code
+		// render color leds for bitmap. todo: convert them to proper buttons
+		if (btnModeHires->IsOn())
+		{
+			float px = ledX;
+			float py = ledY;
+
+			if (x >= px && x <= px + ledSizeX && y >= py && y <= py + ledSizeY2)
+			{
+				// D021
+				int i = 0x01;
+				
+				if (viewC64->viewC64StateVIC->forceColors[i] == -1)
+				{
+					viewC64->viewC64StateVIC->forceColors[i] = viewC64->colorsToShow[i];
+				}
+				
+				viewC64->viewC64StateVIC->forceColors[i] = (viewC64->viewC64StateVIC->forceColors[i] + 1) & 0x0F;
+
+				guiMain->UnlockMutex();
+				return true;
+			}
+		}
+		else if (btnModeMulti->IsOn())
+		{
+			float px = ledX;
+			float py = ledY;
+
+			if (x >= px && x <= px + ledSizeX && y >= py && y <= py + ledSizeY2)
+			{
+				// D021
+				int i = 0x01;
+				
+				if (viewC64->viewC64StateVIC->forceColors[i] == -1)
+				{
+					viewC64->viewC64StateVIC->forceColors[i] = viewC64->colorsToShow[i];
+				}
+				viewC64->viewC64StateVIC->forceColors[i] = (viewC64->viewC64StateVIC->forceColors[i] + 1) & 0x0F;
+
+				guiMain->UnlockMutex();
+				return true;
+			}
+
+			py += fontSize + step;
+
+			/* D800
+			if (x >= px && x <= px + ledSizeX && y >= py && y <= py + ledSizeY2)
+			{
+				if (viewC64->viewC64StateVIC->forceColorD800 == -1)
+				{
+					viewC64->viewC64StateVIC->forceColorD800 = viewC64->colorToShowD800;
+				}
+				viewC64->viewC64StateVIC->forceColorD800 = (viewC64->viewC64StateVIC->forceColorD800 + 1) & 0x0F;
+
+				guiMain->UnlockMutex();
+				return true;
+			}*/
+		}
+	}
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SCREENS)
+	{
+		// render color leds for screens when in hires
+		if (btnModeHires->IsOn())
+		{
+			float px = ledX;
+			float py = ledY;
+
+			if (x >= px && x <= px + ledSizeX && y >= py && y <= py + ledSizeY2)
+			{
+				// D021
+				int i = 0x01;
+				
+				if (viewC64->viewC64StateVIC->forceColors[i] == -1)
+				{
+					viewC64->viewC64StateVIC->forceColors[i] = viewC64->colorsToShow[i];
+				}
+				viewC64->viewC64StateVIC->forceColors[i] = (viewC64->viewC64StateVIC->forceColors[i] + 1) & 0x0F;
+
+				guiMain->UnlockMutex();
+				return true;
+			}
+
+			py += fontSize + step;
+
+			/* D800
+			if (x >= px && x <= px + ledSizeX && y >= py && y <= py + ledSizeY2)
+			{
+				if (viewC64->viewC64StateVIC->forceColorD800 == -1)
+				{
+					viewC64->viewC64StateVIC->forceColorD800 = viewC64->colorToShowD800;
+				}
+				viewC64->viewC64StateVIC->forceColorD800 = (viewC64->viewC64StateVIC->forceColorD800 + 1) & 0x0F;
+
+				guiMain->UnlockMutex();
+				return true;
+			}*/
+		}
+		else if (btnModeMulti->IsOn())
+		{
+			float px = ledX;
+			float py = ledY;
+
+			// D021-D023
+			for (int i = 1; i < 4; i++)
+			{
+				if (x >= px && x <= px + ledSizeX && y >= py && y <= py + ledSizeY2)
+				{
+					if (viewC64->viewC64StateVIC->forceColors[i] == -1)
+					{
+						viewC64->viewC64StateVIC->forceColors[i] = viewC64->colorsToShow[i];
+					}
+					viewC64->viewC64StateVIC->forceColors[i] = (viewC64->viewC64StateVIC->forceColors[i] + 1) & 0x0F;
+
+					guiMain->UnlockMutex();
+					return true;
+				}
+
+				py += fontSize + step;
+			}
+
+			/* D800
+			if (x >= px && x <= px + ledSizeX && y >= py && y <= py + ledSizeY2)
+			{
+				if (viewC64->viewC64StateVIC->forceColorD800 == -1)
+				{
+					viewC64->viewC64StateVIC->forceColorD800 = viewC64->colorToShowD800;
+				}
+				viewC64->viewC64StateVIC->forceColorD800 = (viewC64->viewC64StateVIC->forceColorD800 + 1) & 0x0F;
+
+				guiMain->UnlockMutex();
+				return true;
+			}*/
+		}
+	}
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_CHARSETS)
+	{
+		// render color leds for charsets when in multi
+		if (btnModeMulti->IsOn())
+		{
+			float px = ledX;
+			float py = ledY;
+
+			// D021-D023
+			for (int i = 1; i < 4; i++)
+			{
+				if (x >= px && x <= px + ledSizeX && y >= py && y <= py + ledSizeY2)
+				{
+					if (viewC64->viewC64StateVIC->forceColors[i] == -1)
+					{
+						viewC64->viewC64StateVIC->forceColors[i] = viewC64->colorsToShow[i];
+					}
+					viewC64->viewC64StateVIC->forceColors[i] = (viewC64->viewC64StateVIC->forceColors[i] + 1) & 0x0F;
+
+					guiMain->UnlockMutex();
+					return true;
+				}
+
+				py += fontSize + step;
+			}
+
+			// D800
+			if (x >= px && x <= px + ledSizeX && y >= py && y <= py + ledSizeY2)
+			{
+				if (viewC64->viewC64StateVIC->forceColorD800 == -1)
+				{
+					viewC64->viewC64StateVIC->forceColorD800 = viewC64->colorToShowD800;
+				}
+				viewC64->viewC64StateVIC->forceColorD800 = (viewC64->viewC64StateVIC->forceColorD800 + 1) & 0x0F;
+
+				guiMain->UnlockMutex();
+				return true;
+			}
+		}
+	}
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SPRITES)
+	{
+		// render color leds for sprites
+		if (btnModeMulti->IsOn())
+		{
+			float px = ledX;
+			float py = ledY;
+
+			if (x >= px && x <= px + ledSizeX && y >= py && y <= py + ledSizeY2)
+			{
+				// D021
+				int i = 0x01;
+				
+				if (viewC64->viewC64StateVIC->forceColors[i] == -1)
+				{
+					viewC64->viewC64StateVIC->forceColors[i] = viewC64->colorsToShow[i];
+				}
+				viewC64->viewC64StateVIC->forceColors[i] = (viewC64->viewC64StateVIC->forceColors[i] + 1) & 0x0F;
+
+				guiMain->UnlockMutex();
+				return true;
+			}
+
+			py += fontSize + step;
+
+			// D025-D027
+			for (int i = 5; i < 8; i++)
+			{
+				if (x >= px && x <= px + ledSizeX && y >= py && y <= py + ledSizeY2)
+				{
+					if (viewC64->viewC64StateVIC->forceColors[i] == -1)
+					{
+						viewC64->viewC64StateVIC->forceColors[i] = viewC64->colorsToShow[i];
+					}
+					viewC64->viewC64StateVIC->forceColors[i] = (viewC64->viewC64StateVIC->forceColors[i] + 1) & 0x0F;
+
+					guiMain->UnlockMutex();
+					return true;
+				}
+
+				py += fontSize + step;
+			}
+		}
+	}
+//	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_COLOR)
+//	{
+//	}
+
+	
+	guiMain->UnlockMutex();
+	
+	return CGuiView::CGuiElement::DoRightClick(x, y);
 }
 
 bool CViewC64AllGraphics::DoNotTouchedMove(GLfloat x, GLfloat y)
@@ -1008,6 +1773,10 @@ int CViewC64AllGraphics::GetSelectedItemId()
 	{
 		return selectedSpriteId;
 	}
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_COLOR)
+	{
+		return -1;
+	}
 	return -1;
 }
 
@@ -1037,6 +1806,10 @@ void CViewC64AllGraphics::SetSelectedItemId(int itemId)
 		u16 spriteAddr = selectedSpriteId * 0x0040;
 		viewC64->viewC64MemoryDataDump->ScrollToAddress(spriteAddr);
 	}
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_COLOR)
+	{
+		// there's only one color screen
+	}
 }
 
 
@@ -1044,7 +1817,6 @@ void CViewC64AllGraphics::SetSelectedItemId(int itemId)
 // TODO: refactor me to GetItemAt(x, y), SetSelectedItem(id)
 int CViewC64AllGraphics::GetItemIdAt(float x, float y)
 {
-
 	if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_BITMAPS)
 	{
 		float px = posX;
@@ -1194,6 +1966,10 @@ int CViewC64AllGraphics::GetItemIdAt(float x, float y)
 		}
 		return -1;
 	}
+	else if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SPRITES)
+	{
+		return -1;
+	}
 	return -1;
 }
 
@@ -1214,31 +1990,51 @@ bool CViewC64AllGraphics::ButtonPressed(CGuiButton *button)
 {
 	LOGD("CViewC64AllGraphics::ButtonPressed");
 	
-	if (button == btnModeBitmapColorsGrayscale)
-	{
-		if (forcedRenderScreenMode != VIEW_C64_ALL_GRAPHICS_FORCED_GRAY)
-		{
-			btnModeMulti->SetOn(false);
-			btnModeHires->SetOn(false);
-			btnModeBitmapColorsGrayscale->SetOn(true);
-			forcedRenderScreenMode = VIEW_C64_ALL_GRAPHICS_FORCED_GRAY;
-			SetLockableButtonDefaultColors(btnModeBitmapColorsGrayscale);
-		}
-		else
-		{
-			ClearGraphicsForcedMode();
-		}
-	}
-	else if (button == btnModeHires)
+	if (button == btnModeBitmapColorsBlackWhite)
 	{
 		if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SPRITES
 			|| displayMode == VIEW_C64_ALL_GRAPHICS_MODE_CHARSETS)
 		{
 			viewC64->viewC64MemoryDataDump->renderDataWithColors = false;
 		}
+		if (forcedRenderScreenMode != VIEW_C64_ALL_GRAPHICS_FORCED_GRAY)
+		{
+			btnModeMulti->SetOn(false);
+			btnModeHires->SetOn(false);
+			btnModeBitmapColorsBlackWhite->SetOn(true);
+			forcedRenderScreenMode = VIEW_C64_ALL_GRAPHICS_FORCED_GRAY;
+			SetLockableButtonDefaultColors(btnModeBitmapColorsBlackWhite);
+		}
+		else
+		{
+			ClearGraphicsForcedMode();
+		}
+		return true;
+	}
+	else if (button == btnModeHires)
+	{
+		if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SPRITES
+			|| displayMode == VIEW_C64_ALL_GRAPHICS_MODE_CHARSETS)
+		{
+			// is it already set?
+			if (forcedRenderScreenMode == VIEW_C64_ALL_GRAPHICS_FORCED_HIRES)
+			{
+				// switch to multi
+				viewC64->viewC64MemoryDataDump->renderDataWithColors = true;
+
+				btnModeBitmapColorsBlackWhite->SetOn(false);
+				btnModeHires->SetOn(false);
+				btnModeMulti->SetOn(true);
+				forcedRenderScreenMode = VIEW_C64_ALL_GRAPHICS_FORCED_MULTI;
+				SetLockableButtonDefaultColors(btnModeMulti);
+				return true;
+			}
+			
+			viewC64->viewC64MemoryDataDump->renderDataWithColors = false;
+		}
 		if (forcedRenderScreenMode != VIEW_C64_ALL_GRAPHICS_FORCED_HIRES)
 		{
-			btnModeBitmapColorsGrayscale->SetOn(false);
+			btnModeBitmapColorsBlackWhite->SetOn(false);
 			btnModeMulti->SetOn(false);
 			btnModeHires->SetOn(true);
 			forcedRenderScreenMode = VIEW_C64_ALL_GRAPHICS_FORCED_HIRES;
@@ -1248,17 +2044,31 @@ bool CViewC64AllGraphics::ButtonPressed(CGuiButton *button)
 		{
 			ClearGraphicsForcedMode();
 		}
+		return true;
 	}
 	else if (button == btnModeMulti)
 	{
 		if (displayMode == VIEW_C64_ALL_GRAPHICS_MODE_SPRITES
 			|| displayMode == VIEW_C64_ALL_GRAPHICS_MODE_CHARSETS)
 		{
+			if (forcedRenderScreenMode == VIEW_C64_ALL_GRAPHICS_FORCED_MULTI)
+			{
+				// switch to hires
+				viewC64->viewC64MemoryDataDump->renderDataWithColors = false;
+				
+				btnModeBitmapColorsBlackWhite->SetOn(false);
+				btnModeMulti->SetOn(false);
+				btnModeHires->SetOn(true);
+				forcedRenderScreenMode = VIEW_C64_ALL_GRAPHICS_FORCED_HIRES;
+				SetLockableButtonDefaultColors(btnModeHires);
+				return true;
+			}
+			
 			viewC64->viewC64MemoryDataDump->renderDataWithColors = true;
 		}
 		if (forcedRenderScreenMode != VIEW_C64_ALL_GRAPHICS_FORCED_MULTI)
 		{
-			btnModeBitmapColorsGrayscale->SetOn(false);
+			btnModeBitmapColorsBlackWhite->SetOn(false);
 			btnModeHires->SetOn(false);
 			btnModeMulti->SetOn(true);
 			forcedRenderScreenMode = VIEW_C64_ALL_GRAPHICS_FORCED_MULTI;
@@ -1268,6 +2078,7 @@ bool CViewC64AllGraphics::ButtonPressed(CGuiButton *button)
 		{
 			ClearGraphicsForcedMode();
 		}
+		return true;
 	}
 	else if (button == btnShowBitmaps)
 	{
@@ -1275,8 +2086,10 @@ bool CViewC64AllGraphics::ButtonPressed(CGuiButton *button)
 		btnShowScreens->SetOn(false);
 		btnShowCharsets->SetOn(false);
 		btnShowSprites->SetOn(false);
+		btnShowColor->SetOn(false);
 		SetLockableButtonDefaultColors(btnShowBitmaps);
 		this->SetMode(VIEW_C64_ALL_GRAPHICS_MODE_BITMAPS);
+		return true;
 	}
 	else if (button == btnShowScreens)
 	{
@@ -1284,8 +2097,10 @@ bool CViewC64AllGraphics::ButtonPressed(CGuiButton *button)
 		btnShowScreens->SetOn(true);
 		btnShowCharsets->SetOn(false);
 		btnShowSprites->SetOn(false);
+		btnShowColor->SetOn(false);
 		SetLockableButtonDefaultColors(btnShowScreens);
 		this->SetMode(VIEW_C64_ALL_GRAPHICS_MODE_SCREENS);
+		return true;
 	}
 	else if (button == btnShowCharsets)
 	{
@@ -1293,8 +2108,10 @@ bool CViewC64AllGraphics::ButtonPressed(CGuiButton *button)
 		btnShowScreens->SetOn(false);
 		btnShowCharsets->SetOn(true);
 		btnShowSprites->SetOn(false);
+		btnShowColor->SetOn(false);
 		SetLockableButtonDefaultColors(btnShowCharsets);
 		this->SetMode(VIEW_C64_ALL_GRAPHICS_MODE_CHARSETS);
+		return true;
 	}
 	else if (button == btnShowSprites)
 	{
@@ -1302,8 +2119,26 @@ bool CViewC64AllGraphics::ButtonPressed(CGuiButton *button)
 		btnShowScreens->SetOn(false);
 		btnShowCharsets->SetOn(false);
 		btnShowSprites->SetOn(true);
+		btnShowColor->SetOn(false);
 		SetLockableButtonDefaultColors(btnShowSprites);
 		this->SetMode(VIEW_C64_ALL_GRAPHICS_MODE_SPRITES);
+		return true;
+	}
+	else if (button == btnShowColor)
+	{
+		btnShowBitmaps->SetOn(false);
+		btnShowScreens->SetOn(false);
+		btnShowCharsets->SetOn(false);
+		btnShowSprites->SetOn(false);
+		btnShowColor->SetOn(true);
+		SetLockableButtonDefaultColors(btnShowColor);
+		this->SetMode(VIEW_C64_ALL_GRAPHICS_MODE_COLOR);
+		return true;
+	}
+	else if (button == btnShowGrid)
+	{
+		viewC64->viewC64VicControl->btnShowGrid->DoSwitch();
+		return true;
 	}
 
 	return false;
@@ -1313,6 +2148,10 @@ bool CViewC64AllGraphics::ButtonSwitchChanged(CGuiButtonSwitch *button)
 {
 	LOGD("CViewC64AllGraphics::ButtonSwitchChanged");
 	
+	if (button == btnShowRAMorIO)
+	{
+		viewC64->SwitchIsDataDirectlyFromRam(!btnShowRAMorIO->IsOn());
+	}
 	return false;
 }
 
@@ -1353,7 +2192,7 @@ void CViewC64AllGraphics::UpdateRenderDataWithColors()
 void CViewC64AllGraphics::ClearGraphicsForcedMode()
 {
 	this->forcedRenderScreenMode = VIEW_C64_ALL_GRAPHICS_FORCED_NONE;
-	SetSwitchButtonDefaultColors(btnModeBitmapColorsGrayscale);
+	SetSwitchButtonDefaultColors(btnModeBitmapColorsBlackWhite);
 	SetSwitchButtonDefaultColors(btnModeHires);
 	SetSwitchButtonDefaultColors(btnModeMulti);
 }
@@ -1438,12 +2277,15 @@ bool CViewC64AllGraphics::KeyPressed(u32 keyCode, bool isShift, bool isAlt, bool
 	return CGuiView::KeyPressed(keyCode, isShift, isAlt, isControl);
 }
 
+// bug: this event is not called when layout is set, and button state is updated on keyboard shortcut only
 void CViewC64AllGraphics::ActivateView()
 {
 	LOGG("CViewC64AllGraphics::ActivateView()");
+	UpdateShowIOButton();
 }
 
 void CViewC64AllGraphics::DeactivateView()
 {
 	LOGG("CViewC64AllGraphics::DeactivateView()");
 }
+

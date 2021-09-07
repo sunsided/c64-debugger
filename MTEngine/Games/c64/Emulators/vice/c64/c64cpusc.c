@@ -49,6 +49,7 @@ CLOCK maincpu_clk = 0L;
 CLOCK maincpu_clk_limit = 0L;
 
 CLOCK c64d_maincpu_clk = 0L;
+CLOCK c64d_maincpu_current_instruction_clk = 0L;
 
 #define REWIND_FETCH_OPCODE(clock) /*clock-=2*/
 
@@ -2897,11 +2898,13 @@ INC_PC(1);                \
 			{
 				c64d_profiler_start_handle_cpu_instruction();
 
-				if (maincpu_clk != c64d_previous_instruction_maincpu_clk)
+				if (maincpu_clk != c64d_maincpu_previous_instruction_clk)
 				{
-					c64d_previous2_instruction_maincpu_clk = c64d_previous_instruction_maincpu_clk;
-					c64d_previous_instruction_maincpu_clk = maincpu_clk;
+					c64d_maincpu_previous2_instruction_clk = c64d_maincpu_previous_instruction_clk;
+					c64d_maincpu_previous_instruction_clk = maincpu_clk;
 				}
+				
+				c64d_maincpu_current_instruction_clk = maincpu_clk;
 				
 				if (c64d_debug_mode != DEBUGGER_MODE_RUN_ONE_INSTRUCTION
 					&& c64d_debug_mode != DEBUGGER_MODE_RUN_ONE_CYCLE)
@@ -3940,7 +3943,7 @@ INC_PC(1);                \
 			{
 				c64d_debug_mode = DEBUGGER_MODE_PAUSED;
 				LOGD("maincpuclk=%d previous=%d previous2=%d",
-					 maincpu_clk, c64d_previous_instruction_maincpu_clk, c64d_previous2_instruction_maincpu_clk);
+					 maincpu_clk, c64d_maincpu_previous_instruction_clk, c64d_maincpu_previous2_instruction_clk);
 			}
 			
 			//c64d_c64_check_pc_breakpoint(reg_pc);
@@ -4162,7 +4165,7 @@ fail:
 	return -1;
 }
 
-void c64d_check_cpu_snapshot_manager_restore()
+int c64d_check_cpu_snapshot_manager_restore()
 {
 	if (c64d_check_snapshot_restore())
 	{
@@ -4254,8 +4257,9 @@ void c64d_check_cpu_snapshot_manager_restore()
 		
 		LOGD("after alarm_context_dispatch: viceCurrentC64PC=%04x reg_pc=%04x cycle=%d", viceCurrentC64PC, reg_pc, maincpu_clk);
 		
-		return;
+		return 1;
 	}
+	return 0;
 }
 
 void c64d_check_cpu_snapshot_manager_store()

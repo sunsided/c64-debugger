@@ -337,13 +337,18 @@ void C64AsmSourceSymbols::ParseXML(CByteBuffer *byteBuffer, CDebugInterface *deb
 			if (words->size() == 0)
 				continue;
 			
-			if (words->size() != 3)
+			// Note, Mads changed format recently and now labels also include information about code lines which are not needed for us now
+			if (words->size() < 3)
 			{
-				LOGError("Wrong format for labels (%d words)", words->size()); // at line #%d", tag.line);
+				LOGError("Not enough words for label definition (%d words)", words->size()); // at line #%d", tag.line);
 				CSlrString::DeleteVectorElements(words);
 				continue;
 			}
-			
+//			if (words->size() > 3)
+//			{
+//				LOGWarning("Wrong format for labels (%d words)", words->size()); // at line #%d", tag.line);
+//			}
+
 			CSlrString *segmentName = (*words)[0];
 			CSlrString *strAddr = (*words)[1];
 			int address = strAddr->ToIntFromHex();
@@ -996,7 +1001,7 @@ void C64AsmSourceSymbols::LoadSource(C64AsmSourceFile *asmSourceFile, CSlrFile *
 	// push zero line
 	asmSourceFile->codeTextByLineNum.push_back(new CSlrString(""));
 
-	// replace tabs with 4 spaces
+	// TODO: UI -> replace tabs with 4 spaces
 	CSlrString *strTabs = new CSlrString("    ");
 	
 	while (true)
@@ -1074,7 +1079,7 @@ void C64AsmSourceSymbols::ActivateSegment(C64AsmSourceSegment *segment)
 	// TODO: we should store this directly and in a generic way.
 	//       this now is temporary and needs proper refactor:
 	
-	// first, copy current breakpoints to segment's in case they were changed
+	// first, copy current breakpoints to segment in case they have been changed
 	guiMain->LockMutex();
 	debugInterface->LockMutex();
 	
@@ -1126,9 +1131,9 @@ C64AsmSourceSegment::~C64AsmSourceSegment()
 	}
 }
 
-void C64AsmSourceSegment::AddBreakpointPC(u16 address)
+void C64AsmSourceSegment::AddBreakpointPC(int address)
 {
-	std::map<uint16, CAddrBreakpoint *>::iterator it = this->breakpointsPC.find(address);
+	std::map<int, CAddrBreakpoint *>::iterator it = this->breakpointsPC.find(address);
 	if (it == this->breakpointsPC.end())
 	{
 		// not found
@@ -1146,9 +1151,9 @@ void C64AsmSourceSegment::AddBreakpointPC(u16 address)
 	}
 }
 
-void C64AsmSourceSegment::AddBreakpointSetBackground(u16 address, u8 value)
+void C64AsmSourceSegment::AddBreakpointSetBackground(int address, int value)
 {
-	std::map<uint16, CAddrBreakpoint *>::iterator it = this->breakpointsPC.find(address);
+	std::map<int, CAddrBreakpoint *>::iterator it = this->breakpointsPC.find(address);
 	if (it == this->breakpointsPC.end())
 	{
 		// not found
@@ -1168,7 +1173,7 @@ void C64AsmSourceSegment::AddBreakpointSetBackground(u16 address, u8 value)
 	}
 }
 
-void C64AsmSourceSegment::AddBreakpointRaster(u16 rasterNum)
+void C64AsmSourceSegment::AddBreakpointRaster(int rasterNum)
 {
 	CAddrBreakpoint *addrBreakpoint = new CAddrBreakpoint(rasterNum);
 	this->breakpointsRaster[rasterNum] = addrBreakpoint;
@@ -1176,7 +1181,7 @@ void C64AsmSourceSegment::AddBreakpointRaster(u16 rasterNum)
 	this->breakOnRaster = true;
 }
 
-void C64AsmSourceSegment::AddBreakpointMemory(u16 address, u8 breakpointType, int value)
+void C64AsmSourceSegment::AddBreakpointMemory(int address, u8 breakpointType, int value)
 {
 	CMemoryBreakpoint *memBreakpoint = new CMemoryBreakpoint(address, breakpointType, value);
 	this->breakpointsMemory[address] = memBreakpoint;
@@ -1199,10 +1204,10 @@ void C64AsmSourceSegment::AddBreakpointNMI()
 	this->breakOnC64IrqNMI = true;
 }
 
-void C64AsmSourceSegment::AddCodeLabel(u16 address, char *text)
+void C64AsmSourceSegment::AddCodeLabel(int address, char *text)
 {
 	// check if exists
-	std::map<u16, CDisassembleCodeLabel *>::iterator it = codeLabels.find(address);
+	std::map<int, CDisassembleCodeLabel *>::iterator it = codeLabels.find(address);
 	
 	if (it != codeLabels.end())
 	{
@@ -1221,10 +1226,10 @@ void C64AsmSourceSegment::AddCodeLabel(u16 address, char *text)
 	codeLabels[address] = label;
 }
 
-CDisassembleCodeLabel *C64AsmSourceSegment::FindLabel(u16 address)
+CDisassembleCodeLabel *C64AsmSourceSegment::FindLabel(int address)
 {
 	// check if exists
-	std::map<u16, CDisassembleCodeLabel *>::iterator it = codeLabels.find(address);
+	std::map<int, CDisassembleCodeLabel *>::iterator it = codeLabels.find(address);
 	
 	if (it != codeLabels.end())
 	{
@@ -1396,26 +1401,27 @@ void C64AsmSourceSegment::Activate(CDebugInterface *debugInterface)
 	debugInterface->LockMutex();
 	
 	// PC breakpoints
-	debugInterface->breakpointsPC.clear();
-	for (std::map<u16, CAddrBreakpoint *>::iterator it = this->breakpointsPC.begin(); it != this->breakpointsPC.end(); it++)
+	debugInterface->breakpointsPC->breakpoints.clear();
+	for (std::map<int, CAddrBreakpoint *>::iterator it = this->breakpointsPC.begin();
+		 it != this->breakpointsPC.end(); it++)
 	{
-		debugInterface->breakpointsPC[it->first] = it->second;
+		debugInterface->breakpointsPC->breakpoints[it->first] = it->second;
 	}
 	debugInterface->breakOnPC = this->breakOnPC;
 	
 	// raster
-	debugInterface->breakpointsRaster.clear();
-	for (std::map<u16, CAddrBreakpoint *>::iterator it = this->breakpointsRaster.begin(); it != this->breakpointsRaster.end(); it++)
+	debugInterface->breakpointsRaster->breakpoints.clear();
+	for (std::map<int, CAddrBreakpoint *>::iterator it = this->breakpointsRaster.begin(); it != this->breakpointsRaster.end(); it++)
 	{
-		debugInterface->breakpointsRaster[it->first] = it->second;
+		debugInterface->breakpointsRaster->breakpoints[it->first] = it->second;
 	}
 	debugInterface->breakOnRaster = this->breakOnRaster;
 
 	// memory
-	debugInterface->breakpointsMemory.clear();
-	for (std::map<u16, CMemoryBreakpoint *>::iterator it = this->breakpointsMemory.begin(); it != this->breakpointsMemory.end(); it++)
+	debugInterface->breakpointsMemory->breakpoints.clear();
+	for (std::map<int, CMemoryBreakpoint *>::iterator it = this->breakpointsMemory.begin(); it != this->breakpointsMemory.end(); it++)
 	{
-		debugInterface->breakpointsMemory[it->first] = it->second;
+		debugInterface->breakpointsMemory->breakpoints[it->first] = it->second;
 	}
 	debugInterface->breakOnMemory = this->breakOnMemory;
 	
@@ -1426,7 +1432,7 @@ void C64AsmSourceSegment::Activate(CDebugInterface *debugInterface)
 	if (viewDisassembleMainCpu)
 	{
 		viewDisassembleMainCpu->codeLabels.clear();
-		for(std::map<u16, CDisassembleCodeLabel *> ::iterator it = this->codeLabels.begin(); it != this->codeLabels.end(); it++)
+		for(std::map<int, CDisassembleCodeLabel *> ::iterator it = this->codeLabels.begin(); it != this->codeLabels.end(); it++)
 		{
 			viewDisassembleMainCpu->codeLabels[it->first] = it->second;
 		}
@@ -1472,7 +1478,8 @@ void C64AsmSourceSegment::CopyBreakpointsAndWatchesFromDebugInterface(CDebugInte
 {
 	// PC breakpoints
 	this->breakpointsPC.clear();
-	for (std::map<u16, CAddrBreakpoint *>::iterator it = debugInterface->breakpointsPC.begin(); it != debugInterface->breakpointsPC.end(); it++)
+	for (std::map<int, CAddrBreakpoint *>::iterator it = debugInterface->breakpointsPC->breakpoints.begin();
+		 it != debugInterface->breakpointsPC->breakpoints.end(); it++)
 	{
 		this->breakpointsPC[it->first] = it->second;
 	}
@@ -1480,7 +1487,8 @@ void C64AsmSourceSegment::CopyBreakpointsAndWatchesFromDebugInterface(CDebugInte
 	
 	// raster
 	this->breakpointsRaster.clear();
-	for (std::map<u16, CAddrBreakpoint *>::iterator it = debugInterface->breakpointsRaster.begin(); it != debugInterface->breakpointsRaster.end(); it++)
+	for (std::map<int, CAddrBreakpoint *>::iterator it = debugInterface->breakpointsRaster->breakpoints.begin();
+		 it != debugInterface->breakpointsRaster->breakpoints.end(); it++)
 	{
 		this->breakpointsRaster[it->first] = it->second;
 	}
@@ -1488,7 +1496,7 @@ void C64AsmSourceSegment::CopyBreakpointsAndWatchesFromDebugInterface(CDebugInte
 	
 	// memory
 	this->breakpointsMemory.clear();
-	for (std::map<u16, CMemoryBreakpoint *>::iterator it = debugInterface->breakpointsMemory.begin(); it != debugInterface->breakpointsMemory.end(); it++)
+	for (std::map<int, CMemoryBreakpoint *>::iterator it = debugInterface->breakpointsMemory->breakpoints.begin(); it != debugInterface->breakpointsMemory->breakpoints.end(); it++)
 	{
 		this->breakpointsMemory[it->first] = it->second;
 	}
@@ -1522,11 +1530,11 @@ void C64AsmSourceSymbols::DeactivateSegment()
 	debugInterface->LockMutex();
 	
 	// PC breakpoints
-	debugInterface->breakpointsPC.clear();
+	debugInterface->breakpointsPC->breakpoints.clear();
 	debugInterface->breakOnPC = false;
-	debugInterface->breakpointsRaster.clear();
+	debugInterface->breakpointsRaster->breakpoints.clear();
 	debugInterface->breakOnRaster = false;
-	debugInterface->breakpointsMemory.clear();
+	debugInterface->breakpointsMemory->breakpoints.clear();
 	debugInterface->breakOnMemory = false;
 	
 	// TODO: this is really ugly code, make this generic

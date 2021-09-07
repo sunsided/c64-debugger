@@ -92,10 +92,14 @@ public:
 
 	virtual void DoLogic();
 
+	virtual bool HasFocus();
 	virtual bool IsFocusable();
 	virtual void FocusReceived();
 	virtual void FocusLost();
+	virtual bool SetFocus();
 	virtual bool SetFocus(bool focus);
+	
+	bool drawFocusBorder;
 	virtual void RenderFocusBorder();
 	volatile bool hasFocus;
 

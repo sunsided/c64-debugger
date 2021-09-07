@@ -44,6 +44,7 @@ extern "C" {
 #include "C64SIDFrequencies.h"
 #include "CViewC64.h"
 #include "CViewC64StateSID.h"
+#include "CViewSIDTrackerHistory.h"
 #include "CViewFileD64.h"
 #include "CViceAudioChannel.h"
 #include "CDebuggerEmulatorPlugin.h"
@@ -99,6 +100,7 @@ C64DebugInterfaceVice::C64DebugInterfaceVice(CViewC64 *viewC64, uint8 *c64memory
 		c64d_patch_kernal_fast_boot_flag = 0;
 	}
 
+	numSids = 1;
 	
 	// PAL
 	screenHeight = 272;
@@ -116,6 +118,11 @@ C64DebugInterfaceVice::C64DebugInterfaceVice(CViewC64 *viewC64, uint8 *c64memory
 	}
 
 	c64d_init_memory(this->c64memory);
+	
+	mutexSidDataHistory = new CSlrMutex("mutexSidDataHistory");
+	sidDataHistoryCurrentStep = 0;
+	sidDataHistorySteps = 1;
+	sidDataToRestore = NULL;
 	
 	int ret = vice_main_program(sysArgc, sysArgv, c64SettingsC64Model);
 	if (ret != 0)
@@ -162,6 +169,20 @@ void C64DebugInterfaceVice::SetPatchKernalFastBoot(bool isPatchKernal)
 	}
 	
 	c64d_update_rom();
+}
+
+void C64DebugInterfaceVice::SetSkipDrawingSprites(bool isSkipDrawingSprites)
+{
+	LOGM("C64DebugInterfaceVice::SetSkipDrawingSprites: %s", STRBOOL(isSkipDrawingSprites));
+	
+	if (isSkipDrawingSprites)
+	{
+		c64d_skip_drawing_sprites = 1;
+	}
+	else
+	{
+		c64d_skip_drawing_sprites = 0;
+	}
 }
 
 void C64DebugInterfaceVice::SetRunSIDWhenInWarp(bool isRunningSIDInWarp)
@@ -230,6 +251,9 @@ void C64DebugInterfaceVice::RunEmulationThread()
 	this->driveFlushThread = new CViceDriveFlushThread(this, 2500); // every 2.5s
 	SYS_StartThread(this->driveFlushThread);
 	
+	// update sid type
+	this->SetSidTypeAsync(c64SettingsSIDEngineModel);
+
 	vice_main_loop_run();
 	
 	audioChannel->Stop();
@@ -237,9 +261,55 @@ void C64DebugInterfaceVice::RunEmulationThread()
 	LOGM("C64DebugInterfaceVice::RunEmulationThread: finished");
 }
 
+void C64DebugInterfaceVice::SetSidDataHistorySteps(int numSteps)
+{
+	this->sidDataHistorySteps = numSteps;
+}
+
+void C64DebugInterfaceVice::UpdateSidDataHistory()
+{
+	mutexSidDataHistory->Lock();
+	
+	CSidData *sidData;
+	if (sidDataHistory.size() > c64SettingsSidDataHistoryMaxSize)
+	{
+		sidData = sidDataHistory.back();
+		sidDataHistory.pop_back();
+	}
+	else
+	{
+		sidData = new CSidData();
+	}
+	
+	sidData->PeekFromSids();
+	sidDataHistory.push_front(sidData);
+	
+	sidDataHistoryCurrentStep++;
+	
+	if (sidDataHistoryCurrentStep >= sidDataHistorySteps)
+	{
+		sidDataHistoryCurrentStep = 0;
+		
+		// TODO: make a proper callback for this:
+		viewC64->viewC64AllSids->viewTrackerHistory->VSyncStepsAdded();
+	}
+	mutexSidDataHistory->Unlock();
+}
+
+extern "C" {
+	void c64d_joystick_latch_matrix_workaround();
+};
+
+void C64DebugInterfaceVice::DoVSync()
+{
+//	LOGD("C64DebugInterfaceVice::DoVSync: store sid history for sid tracker view");
+	UpdateSidDataHistory();
+	C64DebugInterface::DoVSync();
+}
+
 void C64DebugInterfaceVice::DoFrame()
 {
-	CDebugInterface::DoFrame();
+	C64DebugInterface::DoFrame();
 }
 
 CViceDriveFlushThread::CViceDriveFlushThread(C64DebugInterfaceVice *debugInterface, int flushCheckIntervalInMS)
@@ -388,19 +458,25 @@ void C64DebugInterfaceVice::DiskDriveReset()
 
 extern "C" {
 	unsigned int c64d_get_vice_maincpu_clk();
+	unsigned int c64d_get_vice_maincpu_current_instruction_clk();
 	void c64d_refresh_screen_no_callback();
 }
 
-unsigned int C64DebugInterfaceVice::GetMainCpuCycleCounter()
+u64 C64DebugInterfaceVice::GetMainCpuCycleCounter()
 {
 	return c64d_get_vice_maincpu_clk();
 }
 
-unsigned int C64DebugInterfaceVice::GetPreviousCpuInstructionCycleCounter()
+u64 C64DebugInterfaceVice::GetCurrentCpuInstructionCycleCounter()
 {
-	unsigned int viceMainCpuClk = c64d_get_vice_maincpu_clk();
-	unsigned int previousInstructionClk = c64d_previous_instruction_maincpu_clk;
-	unsigned int previous2InstructionClk = c64d_previous2_instruction_maincpu_clk;
+	return c64d_get_vice_maincpu_current_instruction_clk();
+}
+
+u64 C64DebugInterfaceVice::GetPreviousCpuInstructionCycleCounter()
+{
+	u64 viceMainCpuClk = c64d_get_vice_maincpu_clk();
+	u64 previousInstructionClk = c64d_maincpu_previous_instruction_clk;
+	u64 previous2InstructionClk = c64d_maincpu_previous2_instruction_clk;
 	LOGD(">>>>>>>>>................ previous_inst_clk=%d previous2InstructionClk=%d | mainclk=%d", previousInstructionClk, previous2InstructionClk, viceMainCpuClk);
 	
 	if (previousInstructionClk == viceMainCpuClk)
@@ -423,7 +499,7 @@ extern "C" {
 	unsigned int c64d_get_vice_maincpu_clk();
 };
 
-unsigned int C64DebugInterfaceVice::GetMainCpuDebugCycleCounter()
+u64 C64DebugInterfaceVice::GetMainCpuDebugCycleCounter()
 {
 	return c64d_maincpu_clk;
 }
@@ -649,9 +725,31 @@ void C64DebugInterfaceVice::GetSidTypes(std::vector<CSlrString *> *sidTypes)
 	sidTypes->push_back(new CSlrString("8580R5 1489 + digi (ReSID-fp)"));
 }
 
+int c64_change_sid_type_value_to_set = 0;
+static void c64_change_sid_type_trap(WORD addr, void *v)
+{
+	gSoundEngine->LockMutex("c64_change_sid_type_trap");
+	
+	LOGD("c64_change_sid_type_trap: sidType=%d", c64_change_sid_type_value_to_set);
+	debugInterfaceVice->SetSidTypeAsync(c64_change_sid_type_value_to_set);
+	
+	gSoundEngine->UnlockMutex("c64_change_sid_type_trap");
+}
+
 void C64DebugInterfaceVice::SetSidType(int sidType)
 {
+	LOGM("C64DebugInterfaceVice::SetSidType: %d", sidType);
+	
+	c64_change_sid_type_value_to_set = sidType;
+	interrupt_maincpu_trigger_trap(c64_change_sid_type_trap, NULL);
+}
+
+void C64DebugInterfaceVice::SetSidTypeAsync(int sidType)
+{
+	LOGD("C64DebugInterfaceVice::SetSidTypeAsync: sidType=%d", sidType);
+	
 	snapshotsManager->LockMutex();
+	
 	switch(sidType)
 	{
 		default:
@@ -701,6 +799,7 @@ void C64DebugInterfaceVice::SetSidType(int sidType)
 			sid_set_engine_model(SID_ENGINE_RESID_FP, SID_MODEL_8580R5_1489D);
 			break;
 	}
+
 	snapshotsManager->UnlockMutex();
 }
 
@@ -736,11 +835,20 @@ void C64DebugInterfaceVice::SetSidFilterBias(int filterBias)
 	snapshotsManager->UnlockMutex();
 }
 
+int C64DebugInterfaceVice::GetNumSids()
+{
+	return this->numSids;
+}
+
 // 0=none, 1=stereo, 2=triple
 void C64DebugInterfaceVice::SetSidStereo(int stereoMode)
 {
 	snapshotsManager->LockMutex();
 	c64d_sid_set_stereo(stereoMode);
+	
+	// stereo: 0=none, 1=stereo, 2=triple
+	this->numSids = stereoMode + 1;
+
 	snapshotsManager->UnlockMutex();
 }
 
@@ -1012,14 +1120,14 @@ static void c64_set_sid_register_trap(WORD addr, void *v)
 {
 	guiMain->LockMutex();
 	debugInterfaceVice->LockMutex();
-	gSoundEngine->LockMutex("C64DebugInterfaceVice::SetSidRegister");
+	gSoundEngine->LockMutex("C64DebugInterfaceVice::c64_set_sid_register_trap");
 	
 	SetSidRegisterData *setSidRegisterData = (SetSidRegisterData *)v;
 	
 	sid_store_chip(setSidRegisterData->registerNum, setSidRegisterData->value, setSidRegisterData->sidId);
 	delete setSidRegisterData;
 	
-	gSoundEngine->UnlockMutex("C64DebugInterfaceVice::SetSidRegister");
+	gSoundEngine->UnlockMutex("C64DebugInterfaceVice::c64_set_sid_register_trap");
 	debugInterfaceVice->UnlockMutex();
 	guiMain->UnlockMutex();
 }
@@ -1027,7 +1135,6 @@ static void c64_set_sid_register_trap(WORD addr, void *v)
 void C64DebugInterfaceVice::SetSidRegister(uint8 sidId, uint8 registerNum, uint8 value)
 {
 	snapshotsManager->LockMutex();
-
 	this->LockMutex();
 	
 	if (this->GetDebugMode() == DEBUGGER_MODE_PAUSED)
@@ -1046,7 +1153,32 @@ void C64DebugInterfaceVice::SetSidRegister(uint8 sidId, uint8 registerNum, uint8
 	}
 
 	this->UnlockMutex();
+	snapshotsManager->UnlockMutex();
+}
+
+void c64_set_sid_data(void *v)
+{
+	guiMain->LockMutex();
+	debugInterfaceVice->LockMutex();
+	gSoundEngine->LockMutex("C64DebugInterfaceVice::c64_set_sid_data");
 	
+	CSidData *sidData = (CSidData *)v;
+	sidData->RestoreSids();
+	
+	gSoundEngine->UnlockMutex("C64DebugInterfaceVice::c64_set_sid_data");
+	debugInterfaceVice->UnlockMutex();
+	guiMain->UnlockMutex();
+}
+
+
+void C64DebugInterfaceVice::SetSid(CSidData *sidData)
+{
+	snapshotsManager->LockMutex();
+	this->LockMutex();
+
+	this->sidDataToRestore = sidData;
+
+	this->UnlockMutex();
 	snapshotsManager->UnlockMutex();
 }
 
@@ -1714,6 +1846,7 @@ static void load_snapshot_trap(WORD addr, void *v)
 {
 	LOGD("load_snapshot_trap");
 	
+	guiMain->LockMutex();
 	debugInterfaceVice->LockMutex();
 	
 	char *filePath = (char*)v;
@@ -1724,6 +1857,7 @@ static void load_snapshot_trap(WORD addr, void *v)
 	{
 		guiMain->ShowMessage("Snapshot not found");
 		debugInterfaceVice->UnlockMutex();
+		guiMain->UnlockMutex();
 		return;
 	}
 	fclose(fp);
@@ -1752,7 +1886,7 @@ static void load_snapshot_trap(WORD addr, void *v)
 	
 	c64d_update_c64_model();
 	
-	debugInterfaceVice->SetSidType(c64SettingsSIDEngineModel);
+	debugInterfaceVice->SetSidTypeAsync(c64SettingsSIDEngineModel);
 	debugInterfaceVice->SetSidSamplingMethod(c64SettingsRESIDSamplingMethod);
 	debugInterfaceVice->SetSidEmulateFilters(c64SettingsRESIDEmulateFilters);
 	debugInterfaceVice->SetSidPassBand(c64SettingsRESIDPassBand);
@@ -1777,6 +1911,7 @@ static void load_snapshot_trap(WORD addr, void *v)
 	debugInterfaceVice->snapshotsManager->ClearSnapshotsHistory();
 
 	debugInterfaceVice->UnlockMutex();
+	guiMain->UnlockMutex();
 }
 
 
@@ -1905,7 +2040,7 @@ bool C64DebugInterfaceVice::SaveDiskDataSnapshotSynced(CByteBuffer *byteBuffer)
 bool C64DebugInterfaceVice::SaveFullSnapshotSynced(CByteBuffer *byteBuffer,
 												   bool saveChips, bool saveRoms, bool saveDisks, bool eventMode,
 												   bool saveReuData, bool saveCartRoms, bool saveScreen)
-{
+{	
 	int snapshotSize = 0;
 	u8 *snapshotData = NULL;
 
@@ -2066,6 +2201,44 @@ bool C64DebugInterfaceVice::ExecuteCodeMonitorCommand(CSlrString *commandStr)
 	}
 
 	return true;
+}
+
+CPool CSidData::poolSidData(6000, sizeof(CSidData));
+
+CSidData::CSidData()
+{
+	memset(sidData[0], 0x00, 32);
+	memset(sidData[1], 0x00, 32);
+	memset(sidData[2], 0x00, 32);
+}
+
+extern "C" {
+void c64d_store_sid_data(BYTE *sidDataStore, int sidNum);
+}
+
+void CSidData::PeekFromSids()
+{
+	for (int sidNum = 0; sidNum < debugInterfaceVice->numSids; sidNum++)
+	{
+		c64d_store_sid_data(sidData[sidNum], sidNum);
+	}
+}
+
+void CSidData::RestoreSids()
+{
+//	LOGD("CSidData::RestoreSids");
+	gSoundEngine->LockMutex("CSidData::RestoreSids");
+	c64d_skip_sound_run_sound_in_sound_store = TRUE;
+	for (int sidNum = 0; sidNum < debugInterfaceVice->numSids; sidNum++)
+	{
+		for (int registerNum = 0; registerNum < 32; registerNum++)
+		{
+			sid_store_chip(registerNum, sidData[sidNum][registerNum], sidNum);
+		}
+	}
+	c64d_skip_sound_run_sound_in_sound_store = FALSE;
+	gSoundEngine->UnlockMutex("CSidData::RestoreSids");
+//	LOGD("CSidData::RestoreSids done");
 }
 
 

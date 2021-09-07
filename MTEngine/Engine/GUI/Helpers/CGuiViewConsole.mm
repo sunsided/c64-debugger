@@ -227,8 +227,7 @@ bool CGuiViewConsole::KeyDown(u32 keyCode)
 				commandLineHistoryIt--;
 				strcpy(commandLine, *commandLineHistoryIt);
 				commandLineCursorPos = strlen(commandLine);
-			}
-			
+			}			
 		}
 	}
 	else if (keyCode == MTKEY_ARROW_DOWN)

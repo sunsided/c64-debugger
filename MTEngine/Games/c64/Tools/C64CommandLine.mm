@@ -6,8 +6,6 @@
 #include "CViewSnapshots.h"
 #include "CSlrString.h"
 #include "RES_ResourceManager.h"
-#include "C64DebugInterface.h"
-#include "AtariDebugInterface.h"
 #include "C64SettingsStorage.h"
 #include "C64SharedMemory.h"
 #include "CViewVicEditor.h"
@@ -16,8 +14,15 @@
 #include "CViewJukeboxPlaylist.h"
 #include "C64D_Version.h"
 
+#include "C64DebugInterface.h"
+#include "AtariDebugInterface.h"
+#include "NesDebugInterface.h"
+
 #define C64D_PASS_CONFIG_DATA_MARKER	0x029A
 #define C64D_PASS_CONFIG_DATA_VERSION	0x0002
+
+CSlrMutex *c64DebuggerStartupTasksCallbacksMutex;
+std::list<C64DebuggerStartupTaskCallback *> c64DebuggerStartupTasksCallbacks;
 
 bool isPRGInCommandLine = false;
 bool isD64InCommandLine = false;
@@ -47,11 +52,19 @@ void C64DebuggerPassConfigToRunningInstance();
 
 #endif
 
+void C64DebuggerInitStartupTasks()
+{
+	LOGD("C64DebuggerInitStartupTasks");
+	c64DebuggerStartupTasksCallbacksMutex = new CSlrMutex("c64DebuggerStartupTasksCallbacksMutex");
+}
+
 void c64PrintC64DebuggerVersion()
 {
 #if defined(WIN32)
 	SYS_AttachConsoleToStdOutIfNotRedirected();
 #endif
+	
+#define C64DEBUGGER_NES_VERSION_STRING "1.50"
 	
 #if defined(RUN_COMMODORE64)
 	printHelp("C64 Debugger v%s by Slajerek/Samar, VICE %s by The VICE Team\n",
@@ -59,6 +72,9 @@ void c64PrintC64DebuggerVersion()
 #elif defined(RUN_ATARI)
 	printHelp("65XE Debugger v%s by Slajerek/Samar, Atari 800 Emulator, Version %s\n",
 			  C64DEBUGGER_VERSION_STRING, C64DEBUGGER_ATARI800_VERSION_STRING);
+#elif defined(RUN_NES)
+	printHelp("NES Debugger v%s by Slajerek/Samar, NestopiaUE, Version %s\n",
+			  C64DEBUGGER_VERSION_STRING, C64DEBUGGER_NES_VERSION_STRING);
 #endif
 
 }
@@ -119,9 +135,16 @@ void c64PrintCommandLineHelp()
 	printHelp("-atr <file>\n");
 	printHelp("     insert ATR disk\n");
 #endif
-	
+
+#if defined(RUN_NES)
+	printHelp("-nes <file>\n");
+	printHelp("     insert iNES cartridge\n");
+#endif
+
 	printHelp("-soundout <\"device name\" | device number>\n");
 	printHelp("     set sound out device by name or number\n");
+	printHelp("-fullscreen");
+	printHelp("     start in full screen mode");
 	printHelp("-playlist <file>\n");
 	printHelp("     load and start jukebox playlist from json file\n");
 	printHelp("\n");
@@ -352,8 +375,32 @@ void C64DebuggerParseCommandLine0()
 			}
 #endif
 			
+#if defined(RUN_NES)
+			if (ext->CompareWith("nes"))
+			{
+				char *path = sysCommandLineArguments[0];
+				sysCommandLineArguments.clear();
+				sysCommandLineArguments.push_back("-pass");
+				sysCommandLineArguments.push_back("-wait");
+				sysCommandLineArguments.push_back("100");
+				sysCommandLineArguments.push_back("-nes");
+				sysCommandLineArguments.push_back(path);
+				
+				LOGD("delete filePath");
+				delete filePath;
+				
+				c64SettingsWaitOnStartup = 50;
+				LOGD("delete ext");
+				delete ext;
+				
+				// pass to running instance if exists
+				C64DebuggerInitSharedMemory();
+				C64DebuggerPassConfigToRunningInstance();
+				
+				return;
+			}
 
-			
+#endif
 			delete filePath;
 			delete ext;
 			
@@ -428,20 +475,77 @@ void C64DebuggerParseCommandLine1()
 }
 
 ///////////
-CSlrString *c64CommandLineAudioOutDevice = NULL;
+void C64DebuggerAddStartupTaskCallback(C64DebuggerStartupTaskCallback *callback)
+{
+	c64DebuggerStartupTasksCallbacksMutex->Lock();
+	c64DebuggerStartupTasksCallbacks.push_back(callback);
+	c64DebuggerStartupTasksCallbacksMutex->Unlock();
+}
 
+CSlrString *c64CommandLineAudioOutDevice = NULL;
 bool c64CommandLineHardReset = false;
+bool c64CommandLineWindowFullScreen = false;
+
+void c64PreRunStartupCallbacks()
+{
+	c64DebuggerStartupTasksCallbacksMutex->Lock();
+	if (!c64DebuggerStartupTasksCallbacks.empty())
+	{
+		LOGD("pre-run c64DebuggerStartupTasksCallbacks");
+		for (std::list<C64DebuggerStartupTaskCallback *>::iterator it = c64DebuggerStartupTasksCallbacks.begin();
+			 it != c64DebuggerStartupTasksCallbacks.end(); it++)
+		{
+			C64DebuggerStartupTaskCallback *callback = *it;
+			callback->PreRunStartupTaskCallback();
+		}
+		LOGD("pre-run c64DebuggerStartupTasksCallbacks completed");
+	}
+	c64DebuggerStartupTasksCallbacksMutex->Unlock();
+}
+
+void c64PostRunStartupCallbacks()
+{
+	c64DebuggerStartupTasksCallbacksMutex->Lock();
+	if (!c64DebuggerStartupTasksCallbacks.empty())
+	{
+		LOGD("post-run c64DebuggerStartupTasksCallbacks");
+		while (!c64DebuggerStartupTasksCallbacks.empty())
+		{
+			C64DebuggerStartupTaskCallback *callback = c64DebuggerStartupTasksCallbacks.front();
+			callback->PostRunStartupTaskCallback();
+			
+			c64DebuggerStartupTasksCallbacks.pop_front();
+			delete callback;
+		}
+		LOGD("post-run c64DebuggerStartupTasksCallbacks completed, tasks deleted");
+	}
+	c64DebuggerStartupTasksCallbacksMutex->Unlock();
+}
 
 void c64PerformStartupTasksThreaded()
 {
 	LOGM("START c64PerformStartupTasksThreaded");
 	
+	SYS_Sleep(100);
+	guiMain->SetApplicationWindowAlwaysOnTop(c64SettingsWindowAlwaysOnTop);
+
+	LOGD("c64CommandLineWindowFullScreen=%s", STRBOOL(c64CommandLineWindowFullScreen));
+	
+	if (c64CommandLineWindowFullScreen)
+	{
+		viewC64->GoFullScreen();
+	}
+
+	c64PreRunStartupCallbacks();
+	
 	if (c64CommandLineAudioOutDevice != NULL)
 	{
+		gSoundEngine->LockMutex("c64PerformStartupTasksThreaded/c64CommandLineAudioOutDevice");
 		if (gSoundEngine->SetOutputAudioDevice(c64CommandLineAudioOutDevice) == false)
 		{
-			printInfo("Selected sound out device not found, fall back to default output.\n");
+			printInfo("Selected sound out device not found, falling back to default output.\n");
 		}
+		gSoundEngine->UnlockMutex("c64PerformStartupTasksThreaded/c64CommandLineAudioOutDevice");
 	}
 	
 	// load breakpoints & symbols
@@ -486,10 +590,17 @@ void c64PerformStartupTasksThreaded()
 	{
 		if (c64SettingsSIDEngineModel != 0)
 		{
+			//viewC64->debugInterfaceC64->LockMutex();
+			gSoundEngine->LockMutex("c64PerformStartupTasksThreaded/viewJukeboxPlaylist");
 			viewC64->debugInterfaceC64->SetSidType(c64SettingsSIDEngineModel);
+			gSoundEngine->UnlockMutex("c64PerformStartupTasksThreaded/viewJukeboxPlaylist");
+			//viewC64->debugInterfaceC64->UnlockMutex();
 		}
 		
 		viewC64->viewJukeboxPlaylist->StartPlaylist();
+		
+		c64PostRunStartupCallbacks();
+
 		return;
 	}
 	
@@ -515,7 +626,9 @@ void c64PerformStartupTasksThreaded()
 			// setup SID
 			if (c64SettingsSIDEngineModel != 0)
 			{
+				gSoundEngine->LockMutex("c64PerformStartupTasksThreaded");
 				viewC64->debugInterfaceC64->SetSidType(c64SettingsSIDEngineModel);
+				gSoundEngine->UnlockMutex("c64PerformStartupTasksThreaded");
 			}
 			
 			//
@@ -679,6 +792,13 @@ void c64PerformStartupTasksThreaded()
 	
 	///////////
 	
+	if (viewC64->debugInterfaceNes)
+	{
+		if (c64SettingsPathToNES != NULL)
+		{
+			viewC64->viewC64MainMenu->LoadNES(c64SettingsPathToNES, false);
+		}
+	}
 
 	if (c64SettingsJmpOnStartupAddr > 0 && c64SettingsJmpOnStartupAddr < 0x10000)
 	{
@@ -690,7 +810,12 @@ void c64PerformStartupTasksThreaded()
 	}
 
 	//
-	viewC64->viewVicEditor->RunDebug();
+	if (viewC64->debugInterfaceC64)
+	{
+		viewC64->viewVicEditor->RunDebug();
+	}
+	
+	c64PostRunStartupCallbacks();
 }
 
 class C64PerformStartupTasksThread : public CSlrThread
@@ -698,16 +823,17 @@ class C64PerformStartupTasksThread : public CSlrThread
 	virtual void ThreadRun(void *data)
 	{
 		LOGM("C64PerformStartupTasksThread: ThreadRun");
+		
 		if (c64SettingsPathToViceSnapshot != NULL && c64SettingsWaitOnStartup < 150)
 			c64SettingsWaitOnStartup = 150;
 
 		if (c64SettingsPathToAtariSnapshot != NULL && c64SettingsWaitOnStartup < 150)
 			c64SettingsWaitOnStartup = 150;
 
-		if (c64dStartupTime == 0 || (SYS_GetCurrentTimeInMillis() - c64dStartupTime < 500))
+		if (c64dStartupTime == 0 || (SYS_GetCurrentTimeInMillis() - c64dStartupTime < 100))
 		{
-			LOGD("C64PerformStartupTasksThread: early run, wait 500ms");
-			c64SettingsWaitOnStartup += 500;
+			LOGD("C64PerformStartupTasksThread: early run, wait 100ms");
+			c64SettingsWaitOnStartup += 100;
 		}
 		
 		LOGD("C64PerformStartupTasksThread: c64SettingsWaitOnStartup=%d", c64SettingsWaitOnStartup);
@@ -776,6 +902,7 @@ void C64DebuggerParseCommandLine2()
 		{
 			char *arg = c64ParseCommandLineGetArgument();
 			c64SettingsPathToD64 = new CSlrString(arg);
+			isD64InCommandLine = true;
 		}
 		else if (!strcmp(cmd, "tap"))
 		{
@@ -809,6 +936,12 @@ void C64DebuggerParseCommandLine2()
 			char *arg = c64ParseCommandLineGetArgument();
 			LOGD("C64DebuggerParseCommandLine2: set c64SettingsPathToATR=%s", arg);
 			c64SettingsPathToATR = new CSlrString(arg);
+		}
+		else if (!strcmp(cmd, "nes"))
+		{
+			char *arg = c64ParseCommandLineGetArgument();
+			LOGD("C64DebuggerParseCommandLine2: set c64SettingsPathToNES=%s", arg);
+			c64SettingsPathToNES = new CSlrString(arg);
 		}
 
 		else if (!strcmp(cmd, "jmp"))
@@ -859,6 +992,10 @@ void C64DebuggerParseCommandLine2()
 		{
 			c64CommandLineHardReset = true;
 		}
+		else if (!strcmp(cmd, "fullscreen"))
+		{
+			c64CommandLineWindowFullScreen = true;
+		}
 	}
 }
 
@@ -877,7 +1014,7 @@ void C64DebuggerPassConfigToRunningInstance()
 	//NSLog(@"C64DebuggerPassConfigToRunningInstance");
 	
 	c64SettingsPassConfigToRunningInstance = true;
-	printLine("-----< C64 65XE Debugger v%s by Slajerek/Samar >------\n", C64DEBUGGER_VERSION_STRING);
+	printLine("-----< C64 65XE NES Debugger v%s by Slajerek/Samar >------\n", C64DEBUGGER_VERSION_STRING);
 	fflush(stdout);
 	
 	//printLine("Passing parameters to running instance\n");
@@ -964,6 +1101,12 @@ void C64DebuggerPassConfigToRunningInstance()
 		byteBuffer->PutSlrString(c64SettingsPathToXEX);
 	}
 	
+	if (c64SettingsPathToNES)
+	{
+		byteBuffer->PutU8(C64D_PASS_CONFIG_DATA_PATH_TO_NES);
+		byteBuffer->PutSlrString(c64SettingsPathToNES);
+	}
+	
 	if (c64SettingsPathToATR)
 	{
 		byteBuffer->PutU8(C64D_PASS_CONFIG_DATA_PATH_TO_ATR);
@@ -1028,6 +1171,11 @@ void C64DebuggerPassConfigToRunningInstance()
 		byteBuffer->PutU8(C64D_PASS_CONFIG_DATA_HARD_RESET);
 	}
 	
+	if (c64CommandLineWindowFullScreen)
+	{
+		byteBuffer->PutU8(C64D_PASS_CONFIG_DATA_FULL_SCREEN);
+	}
+	
 	LOGD("...C64D_PASS_CONFIG_DATA_EOF");
 	
 	byteBuffer->PutU8(C64D_PASS_CONFIG_DATA_EOF);
@@ -1083,6 +1231,7 @@ void c64PerformNewConfigurationTasksThreaded(CByteBuffer *byteBuffer)
 			break;
 		
 		LOGD("process t=%d", t);
+		
 		// TODO: Generalize me
 		CDebugInterface *debugInterface = NULL;
 		if (viewC64->debugInterfaceC64)
@@ -1167,6 +1316,12 @@ void c64PerformNewConfigurationTasksThreaded(CByteBuffer *byteBuffer)
 			viewC64->viewC64MainMenu->InsertATR(str, false, c64SettingsAutoJmpFromInsertedDiskFirstPrg, 0, true);
 			delete str;
 		}
+		else if (t == C64D_PASS_CONFIG_DATA_PATH_TO_NES)
+		{
+			CSlrString *str = byteBuffer->GetSlrString();
+			viewC64->viewC64MainMenu->LoadNES(str, true);
+			delete str;
+		}
 		else if (t == C64D_PASS_CONFIG_DATA_SET_AUTOJMP)
 		{
 			bool b = byteBuffer->GetBool();
@@ -1223,6 +1378,10 @@ void c64PerformNewConfigurationTasksThreaded(CByteBuffer *byteBuffer)
 		{
 			debugInterface->HardReset();
 		}
+		else if (t == C64D_PASS_CONFIG_DATA_FULL_SCREEN)
+		{
+			viewC64->GoFullScreen();
+		}
 	}
 	
 	if (c64SettingsForceUnpause)
@@ -1234,6 +1393,10 @@ void c64PerformNewConfigurationTasksThreaded(CByteBuffer *byteBuffer)
 		if (viewC64->debugInterfaceAtari)
 		{
 			viewC64->debugInterfaceAtari->SetDebugMode(DEBUGGER_MODE_RUNNING);
+		}
+		if (viewC64->debugInterfaceNes)
+		{
+			viewC64->debugInterfaceNes->SetDebugMode(DEBUGGER_MODE_RUNNING);
 		}
 	}
 	
@@ -1261,6 +1424,13 @@ void C64DebuggerPerformNewConfigurationTasks(CByteBuffer *byteBuffer)
 
 }
 
+void C64DebuggerStartupTaskCallback::PreRunStartupTaskCallback()
+{
+}
+
+void C64DebuggerStartupTaskCallback::PostRunStartupTaskCallback()
+{
+}
 
 //
 //{

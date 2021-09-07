@@ -62,6 +62,11 @@ CViewMainMenu::CViewMainMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 		diskExtensions.push_back(new CSlrString("g64"));
 		diskExtensions.push_back(new CSlrString("p64"));
 
+		cDiskExtensions.push_back("d64"); cDiskExtensions.push_back("D64");
+		cDiskExtensions.push_back("x64"); cDiskExtensions.push_back("X64");
+		cDiskExtensions.push_back("g64"); cDiskExtensions.push_back("G64");
+		cDiskExtensions.push_back("p64"); cDiskExtensions.push_back("P64");
+		
 		tapeExtensions.push_back(new CSlrString("tap"));
 		tapeExtensions.push_back(new CSlrString("t64"));
 
@@ -213,6 +218,12 @@ CViewMainMenu::CViewMainMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 	kbsScreenLayout14 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Layout #14", MTKEY_F7, true, false, true);
 	viewC64->keyboardShortcuts->AddShortcut(kbsScreenLayout14);
 
+	kbsScreenLayout15 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Layout #15", MTKEY_F8, true, false, true);
+	viewC64->keyboardShortcuts->AddShortcut(kbsScreenLayout15);
+
+	kbsScreenLayout16 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Layout #16", MTKEY_F9, true, false, true);
+	viewC64->keyboardShortcuts->AddShortcut(kbsScreenLayout16);
+
 	//
 	
 #if defined(RUN_COMMODORE64)
@@ -227,6 +238,10 @@ CViewMainMenu::CViewMainMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 		viewC64->keyboardShortcuts->AddShortcut(kbsInsertD64);
 		menuItemInsertD64 = new CViewC64MenuItem(fontHeight*2.5, new CSlrString("1541 Device 8..."), kbsInsertD64, tr, tg, tb);
 		viewMenu->AddMenuItem(menuItemInsertD64);
+		
+		//
+		kbsInsertNextD64 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Insert next disk to Device #8", '8', false, true, true);
+		viewC64->keyboardShortcuts->AddShortcut(kbsInsertNextD64);
 		
 		// TODO: add shortcut to second line of menuItemInsertD64 (browse)
 		kbsBrowseD64 = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Browse Device #8", MTKEY_F7, false, false, false);
@@ -329,10 +344,10 @@ CViewMainMenu::CViewMainMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 		menuItemSnapshotsNes = new CViewC64MenuItem(fontHeight*1.7, new CSlrString("Snapshots..."), kbsSnapshotsNes, tr, tg, tb);
 		viewMenu->AddMenuItem(menuItemSnapshotsNes);
 		
-//		kbsBreakpointsAtari = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Breakpoints screen", 'b', false, false, true);
-//		viewC64->keyboardShortcuts->AddShortcut(kbsBreakpointsAtari);
-//		menuItemBreakpointsAtari = new CViewC64MenuItem(fontHeight*1.7, new CSlrString("Breakpoints..."), kbsBreakpointsAtari, tr, tg, tb);
-//		viewMenu->AddMenuItem(menuItemBreakpointsAtari);
+		kbsBreakpointsNes = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Breakpoints screen", 'b', false, false, true);
+		viewC64->keyboardShortcuts->AddShortcut(kbsBreakpointsNes);
+		menuItemBreakpointsNes = new CViewC64MenuItem(fontHeight*1.7, new CSlrString("Breakpoints..."), kbsBreakpointsNes, tr, tg, tb);
+		viewMenu->AddMenuItem(menuItemBreakpointsNes);
 	}
 	
 
@@ -361,8 +376,6 @@ CViewMainMenu::CViewMainMenu(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 	//LOGD("---done");
 	
 
-	loadPrgByteBuffer = NULL;
-	
 	//
 	
 	viewC64->colorsTheme->AddThemeChangeListener(this);
@@ -423,6 +436,10 @@ void CViewMainMenu::MenuCallbackItemEntered(CGuiViewMenuItem *menuItem)
 	else if (menuItem == menuItemBreakpointsAtari)
 	{
 		viewC64->viewAtariBreakpoints->SwitchBreakpointsScreen();
+	}
+	else if (menuItem == menuItemBreakpointsNes)
+	{
+		viewC64->viewNesBreakpoints->SwitchBreakpointsScreen();
 	}
 	else if (menuItem == menuItemSnapshotsC64)
 	{
@@ -684,6 +701,12 @@ void CViewMainMenu::LoadFile(CSlrString *path)
 	{
 		InsertCartridge(path, true);
 	}
+	else if (ext->CompareWith("reu"))
+	{
+		bool val = true;
+		C64DebuggerSetSetting("ReuEnabled", &val);
+		AttachReu(path, true, true);
+	}
 	else if (ext->CompareWith("sid"))
 	{
 		LoadSID(path);
@@ -729,6 +752,7 @@ void CViewMainMenu::LoadFile(CSlrString *path)
 void CViewMainMenu::InsertD64(CSlrString *path, bool updatePathToD64, bool autoRun, int autoRunEntryNum, bool showLoadAddressInfo)
 {
 	LOGD("CViewMainMenu::InsertD64: path=%x autoRun=%s autoRunEntryNum=%d", path, STRBOOL(autoRun), autoRunEntryNum);
+	path->DebugPrint("CViewMainMenu::InsertD64: path=");
 	
 	if (SYS_FileExists(path) == false)
 	{
@@ -786,6 +810,72 @@ void CViewMainMenu::InsertD64(CSlrString *path, bool updatePathToD64, bool autoR
 	{
 		viewC64->viewFileD64->StartDiskPRGEntry(autoRunEntryNum, showLoadAddressInfo);
 	}
+}
+
+// insert next D64 from the same folder
+void CViewMainMenu::InsertNextD64()
+{
+	LOGM("CViewMainMenu::InsertNextD64");
+	if (SYS_FileExists(c64SettingsPathToD64) == false)
+	{
+		if (c64SettingsPathToD64 != NULL)
+			delete c64SettingsPathToD64;
+		
+		c64SettingsPathToD64 = NULL;
+		LOGError("InsertNextD64: file not found, skipping");
+		return;
+	}
+
+	char *asciiPath = c64SettingsPathToD64->GetStdASCII();
+	char *fname = SYS_GetFileNameFromFullPath(asciiPath);
+	char *fpath = SYS_GetPathFromFullPath(asciiPath);
+	LOGD("..fname=%s fpath=%s", fname, fpath);
+	
+	std::vector<CFileItem *> *filesInFolder = gFileSystem->GetFiles(fpath, &cDiskExtensions, false);
+
+	// find current file, and then insert next
+	for (std::vector<CFileItem *>::iterator it = filesInFolder->begin(); it != filesInFolder->end(); it++)
+	{
+		CFileItem *file = *it;
+		
+		LOGD("...%s", file->name);
+		if (!strcmp(file->name, fname))
+		{
+			LOGD("FOUND!");
+			
+			it++;
+			if (it == filesInFolder->end())
+			{
+				it = filesInFolder->begin();
+			}
+			
+			CFileItem *nextFile = *it;
+			CSlrString *nextFilePath = new CSlrString();
+			nextFilePath->Concatenate(fpath);
+			nextFilePath->Concatenate(nextFile->name);
+
+			nextFilePath->DebugPrint("nextFilePath=");
+			
+			InsertD64(nextFilePath, false, false, -1, false);
+			
+			char *buf = SYS_GetCharBuf();
+			sprintf(buf, "Inserted %s", nextFile->name);
+			guiMain->ShowMessage(buf);
+			
+			delete nextFilePath;
+			break;
+		}
+	}
+	
+	while(!filesInFolder->empty())
+	{
+		CFileItem *f = filesInFolder->back();
+		filesInFolder->pop_back();
+		delete f;
+	}
+	delete filesInFolder;
+	
+	LOGD("CViewMainMenu::InsertNextD64: done");
 }
 
 bool CViewMainMenu::AttachReu(CSlrString *path, bool updatePathToReu, bool showDetails)
@@ -910,6 +1000,16 @@ void CViewMainMenu::InsertCartridge(CSlrString *path, bool updatePathToCRT)
 {
 	path->DebugPrint("CViewMainMenu::InsertCartridge, path=");
 	
+	if (SYS_FileExists(path) == false)
+	{
+		if (c64SettingsPathToCartridge != NULL)
+			delete c64SettingsPathToCartridge;
+		
+		c64SettingsPathToCartridge = NULL;
+		LOGError("CViewMainMenu::InsertCartridge: file not found, skipping");
+		return;
+	}
+
 	if (c64SettingsPathToCartridge != path)
 	{
 		if (c64SettingsPathToCartridge != NULL)
@@ -947,7 +1047,7 @@ void CViewMainMenu::InsertCartridge(CSlrString *path, bool updatePathToCRT)
 	guiMain->UnlockMutex();
 	
 	LOGM("Attached new cartridge: %s", asciiPath);
-	delete asciiPath;
+	delete [] asciiPath;
 }
 
 bool CViewMainMenu::LoadPRG(CSlrString *path, bool autoStart, bool updatePRGFolderPath, bool showAddressInfo, bool forceFastReset)
@@ -1063,23 +1163,29 @@ bool CViewMainMenu::LoadSID(CSlrString *filePath)
 	
 	delete asciiPath;
 	delete file;
-	
-	
+
 	return true;
-
 }
-
 
 extern "C" {
 	int tape_image_attach(unsigned int unit, const char *name);
 	int tape_image_detach(unsigned int unit);
 }
 
-
 bool CViewMainMenu::LoadTape(CSlrString *path, bool autoStart, bool updateTAPFolderPath, bool showAddressInfo)
 {
 	path->DebugPrint("CViewMainMenu::LoadTape: path=");
 	
+	if (SYS_FileExists(path) == false)
+	{
+		if (c64SettingsPathToTAP != NULL)
+			delete c64SettingsPathToTAP;
+		
+		c64SettingsPathToTAP = NULL;
+		LOGError("CViewMainMenu::LoadTape: file not found, skipping");
+		return false;
+	}
+
 	LOGD("   >>> LoadTape, autostart=%d", autoStart);
 	
 	if (c64SettingsPathToTAP != path)
@@ -1154,7 +1260,6 @@ bool CViewMainMenu::LoadXEX(CSlrString *path, bool autoStart, bool updateXEXFold
 	path->DebugPrint("CViewMainMenu::LoadXEX: path=");
 	
 	LOGD("   >>> LoadXEX, autostart=%d", autoStart);
-	
 	if (c64SettingsPathToXEX != path)
 	{
 		if (c64SettingsPathToXEX != NULL)
@@ -1186,6 +1291,10 @@ bool CViewMainMenu::LoadXEX(CSlrString *path, bool autoStart, bool updateXEXFold
 	{
 		delete file;
 		guiMain->ShowMessage("Error loading XEX file");
+		if (c64SettingsPathToXEX != NULL)
+			delete c64SettingsPathToXEX;
+		c64SettingsPathToXEX = NULL;
+		C64DebuggerStoreSettings();
 		return false;
 	}
 	
@@ -1427,6 +1536,9 @@ void CViewMainMenu::InsertATR(CSlrString *path, bool updatePathToATR, bool autoR
 
 bool CViewMainMenu::LoadNES(CSlrString *path, bool updateNESFolderPath)
 {
+	if (path == NULL)
+		return false;
+	
 	path->DebugPrint("CViewMainMenu::LoadNES: path=");
 	
 	LOGD("   >>> LoadNES");
@@ -1466,22 +1578,19 @@ bool CViewMainMenu::LoadNES(CSlrString *path, bool updateNESFolderPath)
 	}
 	
 	// display file name in menu
-	//	char *fname = SYS_GetFileNameFromFullPath(asciiPath);
+	char *fname = SYS_GetFileNameFromFullPath(asciiPath);
+		
+	guiMain->LockMutex();
+	if (menuItemOpenFile->str2 != NULL)
+		delete menuItemOpenFile->str2;
+
+	menuItemOpenFile->str2 = new CSlrString(fname);
+	delete [] fname;
+
+	LOGTODO("NES: load labels/symbols/watches");
+//	LoadLabelsAndWatches(path);
 	
-	LOGTODO("NES: load labels/symbols/watches & update menu item");
-	
-	/*
-	 guiMain->LockMutex();
-	 if (menuItemLoadPRG->str2 != NULL)
-		delete menuItemLoadPRG->str2;
-	 
-	 menuItemLoadPRG->str2 = new CSlrString(fname);
-	 delete [] fname;
-	 
-	 LoadLabelsAndWatches(path);
-	 guiMain->UnlockMutex();
-	 
-	 */
+	guiMain->UnlockMutex();
 	
 	//
 	debugInterfaceNes->LockMutex();
@@ -1585,7 +1694,7 @@ bool CViewMainMenu::LoadPRG(CByteBuffer *byteBuffer, bool autoStart, bool showAd
 		return false;
 	
 	LOGM("CViewMainMenu::LoadPRG: autoStart=%d showAddressInfo=%d c64SettingsAutoJmpDoReset=%d forceFastReset=%d", autoStart, showAddressInfo, c64SettingsAutoJmpDoReset, forceFastReset);
-	this->loadPrgByteBuffer = new CByteBuffer(byteBuffer);
+	CByteBuffer *loadPrgByteBuffer = new CByteBuffer(byteBuffer);
 	this->loadPrgAutoStart = autoStart;
 	this->loadPrgShowAddressInfo = showAddressInfo;
 	this->loadPrgForceFastReset = forceFastReset;
@@ -1595,7 +1704,7 @@ bool CViewMainMenu::LoadPRG(CByteBuffer *byteBuffer, bool autoStart, bool showAd
 
 	if (!this->isRunning)
 	{
-		SYS_StartThread(this);
+		SYS_StartThread(this, (void*)loadPrgByteBuffer);
 	}
 	return true;
 }
@@ -1606,6 +1715,10 @@ void CViewMainMenu::ThreadRun(void *data)
 	LOGD("CViewMainMenu::ThreadRun");
 	
 	LOGTODO("CViewMainMenu::ThreadRun: MAKE PASS WORK FOR ATARI");
+	
+	this->ThreadSetName("CViewMainMenu::LoadPRG");
+	
+	CByteBuffer *loadPrgByteBuffer = (CByteBuffer *)data;
 	
 	if (loadPrgForceFastReset)
 	{
@@ -1646,7 +1759,8 @@ void CViewMainMenu::ThreadRun(void *data)
 	
 	LoadPRGNotThreaded(loadPrgByteBuffer, loadPrgAutoStart, loadPrgShowAddressInfo);
 	delete loadPrgByteBuffer;
-	loadPrgByteBuffer = NULL;
+	
+	LOGD("CViewMainMenu::finished");
 }
 
 void CViewMainMenu::SetBasicEndAddr(int endAddr)
@@ -1893,42 +2007,7 @@ void CViewMainMenu::ResetAndJSR(int startAddr)
 void CViewMainMenu::ReloadAndRestartPRG()
 {
 	LOGM("CViewMainMenu::ReloadAndRestartPRG");
-	
-//	LOGTODO("force XEX");
-//	
-////	// force load XEX to Atari
-//	static int num = 0;
-//
-//	if (num == 0)
-//	{
-//		viewC64->debugInterfaceAtari->LoadExecutable("/Users/mars/develop/MTEngine/_RUNTIME_/Documents/atari/disks/Starsoft Intro 2008.xex");
-//	}
-//	if (num == 1)
-//	{
-//		viewC64->debugInterfaceAtari->LoadExecutable("/Users/mars/develop/MTEngine/_RUNTIME_/Documents/atari/disks/games/International Karate.xex");
-//		
-//	}
-//
-//	if (num == 2)
-//	{
-//		viewC64->debugInterfaceAtari->LoadExecutable("/Users/mars/develop/MTEngine/_RUNTIME_/Documents/atari/disks/cracktro1987.xex");
-//
-//	}
-//	
-//		num++;
-	
-//	viewC64->debugInterfaceAtari->LoadExecutable("/Users/mars/develop/MTEngine/_RUNTIME_/Documents/atari/disks/digitaldream.xex");
-//	viewC64->debugInterfaceAtari->LoadExecutable("/Users/mars/develop/MTEngine/_RUNTIME_/Documents/atari/disks/drackdemo.xex");
-//	viewC64->debugInterfaceAtari->LoadExecutable("/Users/mars/develop/MTEngine/_RUNTIME_/Documents/atari/disks/hobbytronic1991.xex");
-//	viewC64->debugInterfaceAtari->LoadExecutable("/Users/mars/develop/MTEngine/_RUNTIME_/Documents/atari/disks/hurrzdemo2.xex");
-//	viewC64->debugInterfaceAtari->LoadExecutable("/Users/mars/develop/MTEngine/_RUNTIME_/Documents/atari/disks/MoveDemo.xex");
-//	viewC64->debugInterfaceAtari->LoadExecutable("/Users/mars/develop/MTEngine/_RUNTIME_/Documents/atari/disks/bronchaosu.xex");
-	
-	// force mount
-//	viewC64->debugInterfaceAtari->MountDisk("/Users/mars/develop/MTEngine/_RUNTIME_/Documents/atari/disks/Numen.atr", 0, false);
-	
-//	return;
-	
+
 	if (c64SettingsPathToPRG != NULL)
 	{
 		char *asciiPath = c64SettingsPathToPRG->GetStdASCII();

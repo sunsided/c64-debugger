@@ -62,13 +62,16 @@ C64KeyboardShortcuts::C64KeyboardShortcuts()
 	AddShortcut(kbsJoystickRight);
 	kbsJoystickFire = new CSlrKeyboardShortcut(KBZONE_SCREEN, "Joystick FIRE", MTKEY_RALT, false, true, false);
 	AddShortcut(kbsJoystickFire);
+	
+#if defined(RUN_NES)
 	kbsJoystickFireB = new CSlrKeyboardShortcut(KBZONE_SCREEN, "Joystick FIRE B", MTKEY_RCONTROL, false, true, false);
 	AddShortcut(kbsJoystickFireB);
 	kbsJoystickStart = new CSlrKeyboardShortcut(KBZONE_SCREEN, "Joystick START", MTKEY_F1, false, false, false);
 	AddShortcut(kbsJoystickStart);
 	kbsJoystickSelect = new CSlrKeyboardShortcut(KBZONE_SCREEN, "Joystick SELECT", MTKEY_F2, false, false, false);
 	AddShortcut(kbsJoystickSelect);
-
+#endif
+	
 	//
 	kbsToggleBreakpoint = new CSlrKeyboardShortcut(KBZONE_DISASSEMBLE, "Toggle Breakpoint", '`', false, false, false);
 	AddShortcut(kbsToggleBreakpoint);
@@ -82,6 +85,9 @@ C64KeyboardShortcuts::C64KeyboardShortcuts()
 
 	kbsStepBackInstruction = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Step back instruction", MTKEY_F10, false, true, false);
 	AddShortcut(kbsStepBackInstruction);
+	
+	kbsStepBackMultipleInstructions = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Multiple step back", MTKEY_F10, true, true, false);
+	AddShortcut(kbsStepBackMultipleInstructions);
 	
 	kbsStepOneCycle = new CSlrKeyboardShortcut(KBZONE_GLOBAL, "Step one cycle", MTKEY_F10, true, false, false);
 	AddShortcut(kbsStepOneCycle);

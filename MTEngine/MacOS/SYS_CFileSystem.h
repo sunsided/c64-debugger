@@ -29,6 +29,10 @@ extern char *gPathToDocuments;
 extern char *gCPathToDocuments;
 extern CSlrString *gUTFPathToDocuments;
 
+extern UTFString *gPathToDesktop;
+extern char *gCPathToDesktop;
+extern CSlrString *gUTFPathToDesktop;
+
 extern NSString *gOSPathToTemp;
 extern char *gPathToTemp;
 extern char *gCPathToTemp;
@@ -73,7 +77,7 @@ public:
 	
 	void CleanTempStorage();
 	
-	std::vector<CFileItem *> *GetFiles(char *directoryPath, std::list<char *> *extensions);
+	std::vector<CFileItem *> *GetFiles(char *directoryPath, std::list<char *> *extensions, bool withFolders);
 	bool OpenForRead(char *fileName);
 	bool ReadAllToBuffer(char *fileName);
 	bool OpenResourceForRead(char *fileName);

@@ -18,6 +18,7 @@ public:
 	// general
 	CSlrKeyboardShortcut *kbsStepOverInstruction;
 	CSlrKeyboardShortcut *kbsStepBackInstruction;
+	CSlrKeyboardShortcut *kbsStepBackMultipleInstructions;
 	CSlrKeyboardShortcut *kbsStepOneCycle;
 	CSlrKeyboardShortcut *kbsRunContinueEmulation;
 	

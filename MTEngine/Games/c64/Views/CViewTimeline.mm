@@ -12,6 +12,7 @@ CViewTimeline::CViewTimeline(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat s
 	
 	fontSize = 8.0f;
 	
+	isLockedVisible = false;
 	isScrubbing = false;
 	
 	/*btnDone = new CGuiButton("DONE", posEndX - (guiButtonSizeX + guiButtonGapX), 
@@ -171,6 +172,8 @@ bool CViewTimeline::DoTap(GLfloat x, GLfloat y)
 	isScrubbing = true;
 	
 	ScrubToPos(x);
+	
+//	isLockedVisible = !isLockedVisible;
 	
 	return CGuiView::DoTap(x, y);
 }

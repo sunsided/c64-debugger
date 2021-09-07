@@ -17,10 +17,13 @@
 #include "SYS_CommandLine.h"
 #include "SYS_CFileSystem.h"
 #include "C64D_Version.h"
+#include "win-registry.h"
 
 #include "..\\resource.h"
 
-#define CATCH_CRASH
+//#define CATCH_CRASH
+
+//void wlogd(char *);
 
 #ifdef _MSC_VER
 #   pragma comment(lib, "pthreadVC2-static.lib")
@@ -46,22 +49,27 @@ void SYS_SetQuitKey(int keyCode, bool isShift, bool isAlt, bool isControl)
 
 void SYS_ToggleFullScreen();
 void SYS_SetFullScreen(bool fullscreen);
-u32 windowPosX, windowPosY;
+void VID_RestoreMainWindowPositionData();
+DWORD windowShowCmd, windowLeft, windowRight, windowTop, windowBottom;
 u32 windowWidth;
 u32 windowHeight;
+
 int fullScreenWidth, fullScreenHeight, fullScreenColourBits, fullScreenRefreshRate;
 
 #if defined(RUN_COMMODORE64)
 //#define DEFAULT_WINDOW_CAPTION "C64 Debugger (" __DATE__ " " __TIME__ ")"
 #define DEFAULT_WINDOW_CAPTION "C64 Debugger v" C64DEBUGGER_VERSION_STRING
+#define DEFAULT_REG_KEY "C64Debugger"
 
 #elif defined(RUN_ATARI)
 
 #define DEFAULT_WINDOW_CAPTION "65XE Debugger v" C64DEBUGGER_VERSION_STRING
+#define DEFAULT_REG_KEY "65XEDebugger"
 
 #elif defined(RUN_NES)
 
 #define DEFAULT_WINDOW_CAPTION "NES Debugger v" C64DEBUGGER_VERSION_STRING
+#define DEFAULT_REG_KEY "NESDebugger"
 
 #endif
 
@@ -79,26 +87,6 @@ bool	active=TRUE;		// Window Active Flag Set To TRUE By Default
 bool	fullscreen=TRUE;	// Fullscreen Flag Set To Fullscreen Mode By Default
 
 LRESULT	CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);	// Declaration For WndProc
-GLvoid ReSizeGLScene(GLsizei width, GLsizei height)		// Resize And Initialize The GL Window
-{
-	return;
-
-	if (height==0)										// Prevent A Divide By Zero By
-	{
-		height=1;										// Making Height Equal One
-	}
-
-	glViewport(0,0,width,height);						// Reset The Current Viewport
-
-	glMatrixMode(GL_PROJECTION);						// Select The Projection Matrix
-	glLoadIdentity();									// Reset The Projection Matrix
-
-	// Calculate The Aspect Ratio Of The Window
-	gluPerspective(45.0f,(GLfloat)width/(GLfloat)height,0.1f,100.0f);
-
-	glMatrixMode(GL_MODELVIEW);							// Select The Modelview Matrix
-	glLoadIdentity();									// Reset The Modelview Matrix
-}
 
 void SetVSyncOn()
 {
@@ -197,15 +185,27 @@ GLvoid KillGLWindow(GLvoid)								// Properly Kill The Window
  *	bits			- Number Of Bits To Use For Color (8/16/24/32)			*
  *	fullscreenflag	- Use Fullscreen Mode (TRUE) Or Windowed Mode (FALSE)	*/
  
-BOOL CreateGLWindow(char* title, int width, int height, int bits, bool fullscreenflag)
+BOOL CreateGLWindow(char* title, int bits, bool fullscreenflag)
 {
-	windowWidth = width;
-	windowHeight = height;
+	windowWidth = SCREEN_WIDTH*SCREEN_SCALE;
+	windowHeight = SCREEN_HEIGHT*SCREEN_SCALE;
+	
+	windowLeft = (GetSystemMetrics(SM_CXSCREEN) - windowWidth)/2;
+	windowTop = (GetSystemMetrics(SM_CYSCREEN) - windowHeight)/2;
+	//SetWindowPos( hWnd, 0, xPos, yPos, 0, 0, SWP_NOZORDER | SWP_NOSIZE );
+	
+	windowRight = windowLeft + windowWidth;
+	windowBottom = windowTop + windowHeight;
 
-	WindowRect.left=(long)0;			// Set Left Value To 0
-	WindowRect.right=(long)width;		// Set Right Value To Requested Width
-	WindowRect.top=(long)0;				// Set Top Value To 0
-	WindowRect.bottom=(long)height;		// Set Bottom Value To Requested Height
+
+	//wlogd("CreateGLWindow");
+	WindowRect.left = (long)windowLeft;			// Set Left Value To 0
+	WindowRect.right = (long)windowRight;		// Set Right Value To Requested Width
+	WindowRect.top = (long)windowTop;				// Set Top Value To 0
+	WindowRect.bottom = (long)windowBottom;		// Set Bottom Value To Requested Height
+
+	windowWidth = windowRight - windowLeft;
+	windowHeight = windowBottom - windowTop;
 
 	fullscreen=fullscreenflag;			// Set The Global Fullscreen Flag
 
@@ -232,8 +232,8 @@ BOOL CreateGLWindow(char* title, int width, int height, int bits, bool fullscree
 		DEVMODE dmScreenSettings;								// Device Mode
 		memset(&dmScreenSettings,0,sizeof(dmScreenSettings));	// Makes Sure Memory's Cleared
 		dmScreenSettings.dmSize=sizeof(dmScreenSettings);		// Size Of The Devmode Structure
-		dmScreenSettings.dmPelsWidth	= width;				// Selected Screen Width
-		dmScreenSettings.dmPelsHeight	= height;				// Selected Screen Height
+		dmScreenSettings.dmPelsWidth	= windowWidth;				// Selected Screen Width
+		dmScreenSettings.dmPelsHeight	= windowHeight;				// Selected Screen Height
 		dmScreenSettings.dmBitsPerPel	= bits;					// Selected Bits Per Pixel
 		dmScreenSettings.dmFields=DM_BITSPERPEL|DM_PELSWIDTH|DM_PELSHEIGHT;
 
@@ -277,7 +277,7 @@ BOOL CreateGLWindow(char* title, int width, int height, int bits, bool fullscree
 								dwStyle |							// Defined Window Style
 								WS_CLIPSIBLINGS |					// Required Window Style
 								WS_CLIPCHILDREN,					// Required Window Style
-								0, 0,								// Window Position
+								windowLeft, windowTop,				// Window Position
 								WindowRect.right-WindowRect.left,	// Calculate Window Width
 								WindowRect.bottom-WindowRect.top,	// Calculate Window Height
 								NULL,								// No Parent Window
@@ -290,18 +290,10 @@ BOOL CreateGLWindow(char* title, int width, int height, int bits, bool fullscree
 		return FALSE;								// Return FALSE
 	}
 
+	//wlogd("CreateGLWindow: created");
 	LOGD("OpenGL window created hWnd=%x className=%s", hWnd, HWND_CLASS_NAME);
 
-	RECT rc;
-	GetWindowRect (hWnd, &rc) ;
-#ifndef RELEASE
-	int xPos = (GetSystemMetrics(SM_CXSCREEN) - rc.right)/2;// + 1480;
-#else
-	int xPos = (GetSystemMetrics(SM_CXSCREEN) - rc.right)/2;
-#endif
-
-	int yPos = (GetSystemMetrics(SM_CYSCREEN) - rc.bottom)/2;
-	SetWindowPos( hWnd, 0, xPos, yPos, 0, 0, SWP_NOZORDER | SWP_NOSIZE );
+	VID_RestoreMainWindowPositionData();
 
 	static	PIXELFORMATDESCRIPTOR pfd=				// pfd Tells Windows How We Want Things To Be
 	{
@@ -374,7 +366,6 @@ BOOL CreateGLWindow(char* title, int width, int height, int bits, bool fullscree
 	ShowWindow(hWnd,SW_SHOW);						// Show The Window
 	SetForegroundWindow(hWnd);						// Slightly Higher Priority
 	SetFocus(hWnd);									// Sets Keyboard Focus To The Window
-	//ReSizeGLScene(width, height);					// Set Up Our Perspective GL Screen
 
 	// disable maximize button (done in window style)
 	//SetWindowLong( hWnd, GWL_STYLE, ::GetWindowLong(hWnd,GWL_STYLE) & ~WS_MAXIMIZEBOX );
@@ -385,8 +376,10 @@ BOOL CreateGLWindow(char* title, int width, int height, int bits, bool fullscree
 	fullScreenColourBits = GetDeviceCaps(hDC, BITSPIXEL);
 	fullScreenRefreshRate = GetDeviceCaps(hDC, VREFRESH);
 
-
+	//wlogd("VID_InitGL");
 	VID_InitGL();
+	//wlogd("VID_InitGL done");
+
 /*
 	if (!InitGL(width, height))									// Initialize Our Newly Created GL Window
 	{
@@ -402,6 +395,7 @@ BOOL CreateGLWindow(char* title, int width, int height, int bits, bool fullscree
 
 	DragAcceptFiles(hWnd, TRUE);
 
+	//wlogd("CreateGL done");
 	return TRUE;									// Success
 }
 
@@ -509,14 +503,16 @@ void SYS_SetFullScreen(bool fullscreen)
 		LOGD("enterFullScreen");
 		RECT lpRect = { 0 };              
 		GetWindowRect(hWnd, &lpRect);
-		windowPosX = lpRect.left;
-		windowPosY = lpRect.top;
+		windowLeft = lpRect.left;
+		windowTop = lpRect.top;
+		windowWidth = lpRect.right - lpRect.left;
+		windowHeight = lpRect.bottom - lpRect.top;
 		enterFullScreen(hWnd, fullScreenWidth, fullScreenHeight, fullScreenColourBits, fullScreenRefreshRate);
 	}
 	else
 	{
 		LOGD("exitFullScreen");
-		exitFullScreen(hWnd, windowPosX, windowPosY, windowWidth, windowHeight);
+		exitFullScreen(hWnd, windowLeft, windowTop, windowWidth, windowHeight);
 		ShowCursor(TRUE);
 	}
 
@@ -578,8 +574,84 @@ void SYS_SetFullScreen(bool fullscreen)
 	*/
 }
 
-void mtEngineHandleWM_USER();
+void VID_StoreMainWindowPosition()
+{
+	if (isFullScreen)
+		return;
 
+	LOGD("VID_StoreMainWindowPosition");
+	
+	WINDOWPLACEMENT wp;
+    GetWindowPlacement(hWnd, &wp);
+
+	CreateRegistryKey(HKEY_CURRENT_USER, DEFAULT_REG_KEY);
+	WriteDwordInRegistry(HKEY_CURRENT_USER, DEFAULT_REG_KEY, "showCmd", wp.showCmd);
+	WriteDwordInRegistry(HKEY_CURRENT_USER, DEFAULT_REG_KEY, "left", wp.rcNormalPosition.left);
+	WriteDwordInRegistry(HKEY_CURRENT_USER, DEFAULT_REG_KEY, "right", wp.rcNormalPosition.right);
+	WriteDwordInRegistry(HKEY_CURRENT_USER, DEFAULT_REG_KEY, "top", wp.rcNormalPosition.top);
+	WriteDwordInRegistry(HKEY_CURRENT_USER, DEFAULT_REG_KEY, "bottom", wp.rcNormalPosition.bottom);
+	
+	LOGD("  showCmd=%d left=%d right=%d top=%d bottom=%d", wp.showCmd, wp.rcNormalPosition.left, wp.rcNormalPosition.right, wp.rcNormalPosition.top, wp.rcNormalPosition.bottom);
+}
+
+void VID_RestoreMainWindowPositionData()
+{
+	LOGD("VID_RestoreMainWindowPositionData");
+
+	if (readDwordValueRegistry(HKEY_CURRENT_USER, DEFAULT_REG_KEY, "showCmd", &windowShowCmd) != TRUE)
+		return;
+	if (readDwordValueRegistry(HKEY_CURRENT_USER, DEFAULT_REG_KEY, "left", &windowLeft) != TRUE)
+		return;
+	if (readDwordValueRegistry(HKEY_CURRENT_USER, DEFAULT_REG_KEY, "right", &windowRight) != TRUE)
+		return;
+	if (readDwordValueRegistry(HKEY_CURRENT_USER, DEFAULT_REG_KEY, "top", &windowTop) != TRUE)
+		return;
+	if (readDwordValueRegistry(HKEY_CURRENT_USER, DEFAULT_REG_KEY, "bottom", &windowBottom) != TRUE)
+		return;
+
+	// the following correction is needed when the taskbar is
+	// at the left or top and it is not "auto-hidden"
+	RECT workArea;
+	SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
+	windowLeft += workArea.left;
+	windowTop += workArea.top;
+ 
+	// make sure the window is not completely out of sight
+	int minX = GetSystemMetrics(SM_XVIRTUALSCREEN);
+	int minY = GetSystemMetrics(SM_YVIRTUALSCREEN);
+	int maxX = GetSystemMetrics(SM_CXVIRTUALSCREEN) - GetSystemMetrics(SM_CXICON);
+	int maxY = GetSystemMetrics(SM_CYVIRTUALSCREEN) - GetSystemMetrics(SM_CYICON);
+	if (windowLeft < minX
+		|| windowTop < minY)
+	{
+		LOGD("window outside visible area: left=%d minX=%d top=%d minY=%d", windowLeft, minX, windowTop, minY);
+	}
+
+	if (windowLeft > maxX
+		|| windowTop > maxY)
+	{
+		LOGD("window outside visible area: left=%d maxX=%d top=%d maxY=%d", windowLeft, maxX, windowTop, maxY);
+		return;
+	}
+
+	// restore the window's width and height
+	windowWidth = windowRight - windowLeft;
+    windowHeight = windowBottom - windowTop;
+ 
+	WINDOWPLACEMENT wp;
+	wp.length = sizeof(WINDOWPLACEMENT);
+	wp.showCmd = windowShowCmd;
+	wp.rcNormalPosition.left = windowLeft;
+	wp.rcNormalPosition.right = windowRight;
+	wp.rcNormalPosition.top = windowTop;
+	wp.rcNormalPosition.bottom = windowBottom;
+	SetWindowPlacement(hWnd, &wp);
+
+	LOGD("showCmd=%d left=%d right=%d top=%d bottom=%d", windowShowCmd, windowLeft, windowRight, windowTop, windowBottom);
+}
+
+
+void mtEngineHandleWM_USER();
 
 // oh that mapKey is here, let's swap parameterx to let windows users in :> 
 // actually that code is taken direcly as copy paste from stackoverflow, 
@@ -925,6 +997,8 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 							WPARAM	wParam,			// Additional Message Information
 							LPARAM	lParam)			// Additional Message Information
 {
+	//LOGD("WndProc: uMsg=%d wParam=%d lParam=%d", uMsg, wParam, lParam);
+
 	switch (uMsg)									// Check For Windows Messages
 	{
 		case WM_ACTIVATE:							// Watch For Window Activate Message
@@ -1282,7 +1356,7 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 			return 0;
 		}
 
-		/*case WM_SIZING:								// Resize The OpenGL Window
+		case WM_SIZING:								// Resize The OpenGL Window
 		{
 			LOGD("WM_SIZING");
 			int edge = int(wParam);
@@ -1291,25 +1365,38 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 			float newWidth = rect.right - rect.left;
 			float newHeight = rect.bottom - rect.top;
 
-			SCREEN_SCALE = (float)newHeight / (float)SCREEN_HEIGHT;
-			LOGD("new SCREEN_SCALE=%f", SCREEN_SCALE);
-			newWidth = (unsigned int)(SCREEN_WIDTH * SCREEN_SCALE);
-			newHeight = (unsigned int)(SCREEN_HEIGHT * SCREEN_SCALE);
+			if (!isFullScreen)
+			{
+				windowWidth = newWidth;
+				windowHeight = newHeight;
+			}
 
-			rect.right = rect.left + newWidth;
-			rect.bottom = rect.top + newHeight;
+			VID_UpdateViewPort(newWidth, newHeight);
 
-			glViewport(0, 0, newWidth, newHeight);
-			return TRUE;
-		}*/
+			return 0;
+		}
+		case WM_MOVING:
+		{
+			LOGI("WM_MOVING: wParam=%x lParam=%x", wParam, lParam);
+			int newX = LOWORD(lParam);
+			int newY = HIWORD(lParam);
+			return 0;
+		}
+
+		case WM_MOVE:
+		{
+			LOGI("WM_MOVE: wParam=%x lParam=%x", wParam, lParam);
+			int newX = LOWORD(lParam);
+			int newY = HIWORD(lParam);
+			VID_StoreMainWindowPosition();
+			return 0;
+		}
 
 		case WM_SIZE:								// Resize The OpenGL Window
 		{
 			LOGI("WM_SIZE: wParam=%x lParam=%x", wParam, lParam);
-			float newWidth = LOWORD(lParam);
-			float newHeight = HIWORD(lParam);
-
-			VID_UpdateViewPort(newWidth, newHeight);
+			float newWidth = (float)(LOWORD(lParam));
+			float newHeight = (float)(HIWORD(lParam));
 
 			if (!isFullScreen)
 			{
@@ -1317,7 +1404,9 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 				windowHeight = newHeight;
 			}
 
-			//ReSizeGLScene(LOWORD(lParam),HIWORD(lParam));  // LoWord=Width, HiWord=Height
+			VID_UpdateViewPort(newWidth, newHeight);
+
+			VID_StoreMainWindowPosition();
 			return 0;								// Jump Back
 		}
 
@@ -1343,6 +1432,7 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 			}
 			
 			DragFinish(hDropInfo);
+			return 0;
 		}
 	}
 
@@ -1350,6 +1440,7 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 	return DefWindowProc(hWnd,uMsg,wParam,lParam);
 }
 
+void C64DebuggerInitStartupTasks();
 void C64DebuggerParseCommandLine0();
 
 //HHOOK hKeyboardHook;
@@ -1473,8 +1564,20 @@ void SYS_AttachConsoleToStdOutIfNotRedirected()
 			fprintf(stdout, "\n");
 		}	
 	}
-
 }
+
+/*FILE *wlogdfile = NULL;
+void wlogd(char *what)
+{
+	if (wlogdfile == NULL)
+	{
+		wlogdfile = fopen("wlogd.txt", "wb");
+	}
+
+	fprintf(wlogdfile, "%s", what);
+	fprintf(wlogdfile, "\n", what);
+	fflush(wlogdfile);
+}*/
 
 int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 					HINSTANCE	hPrevInstance,		// Previous Instance
@@ -1484,6 +1587,7 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	MSG		msg;									// Windows Message Structure
 	BOOL	done=FALSE;								// Bool Variable To Exit Loop
 
+	//wlogd("WinMain");
 	pthread_win32_process_attach_np();
 	
 	// moved to settings
@@ -1508,18 +1612,22 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 		//MessageBox(NULL, "SetPriorityClass OK", "OK", MB_OK);
 	}*/
 
+	//wlogd("SYS_InitCharBufPool");
 	SYS_InitCharBufPool();
 	SYS_InitStrings();
 
+	//wlogd("SYS_SetCommandLineArguments");
 	SYS_SetCommandLineArguments(__argc, __argv);
 
 	SYSTEMTIME localTime;
 	GetLocalTime(&localTime);
 
+	//wlogd("LOG_Init");
 	LOG_Init();
 	DWORD   currentProcessId = GetCurrentProcessId();
 	LOGM("MTEngine (C)2011 Marcin Skoczylas, compiled on " __DATE__ " " __TIME__ ". Pid=%d", currentProcessId);
 
+	//wlogd("SYS_InitFileSystem");
 	SYS_InitFileSystem();
 
 	/*
@@ -1537,20 +1645,20 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	}
 	*/
 	
+	//wlogd("C64DebuggerInitStartupTasks");
+	C64DebuggerInitStartupTasks();
 	C64DebuggerParseCommandLine0();
 
+	//wlogd("init GLView");
 	LOGD("init GLView"); 
 
-
 	fullscreen=FALSE;
-
 
 		SCREEN_WIDTH = 580; //360 * 16/10;
 		SCREEN_HEIGHT = 360;
 
-
 	// Create Our OpenGL Window
-	if (!CreateGLWindow(DEFAULT_WINDOW_CAPTION, SCREEN_WIDTH*SCREEN_SCALE, SCREEN_HEIGHT*SCREEN_SCALE, 16, fullscreen))
+	if (!CreateGLWindow(DEFAULT_WINDOW_CAPTION, 16, fullscreen))
 	{
 		return 0;									// Quit If Window Was Not Created
 	}
@@ -1568,6 +1676,7 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	LOGD("SetVSyncOn");
 #endif
 
+	//wlogd("SetVSyncOn");
 	SetVSyncOn();
 
 	// this does not work on slow computers (low level keyboard hook)
@@ -1587,6 +1696,8 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 #ifdef LOG_SYSCALLS
 			LOGD("PeekMessage?");
 #endif
+
+			//wlogd("event loop");
 
 			DWORD currentTick = GetTickCount();
 			DWORD endTick = currentTick + 1000/FRAMES_PER_SECOND;
@@ -1662,8 +1773,8 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 
 	if (isWin32ConsoleAttached) FreeConsole();
 	
+	pthread_win32_process_detach_np();
 	_exit(0);
 	
-	pthread_win32_process_detach_np();
 	return (msg.wParam);							// Exit The Program
 }

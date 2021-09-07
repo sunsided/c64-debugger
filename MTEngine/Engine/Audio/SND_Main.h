@@ -4,8 +4,10 @@
 #include "SYS_Defs.h"
 #include "CAudioChannel.h"
 #include "CSlrFileMemory.h"
+#include "SND_SoundEngine.h"
 
 class CSoundEngine;
+extern CSoundEngine *gSoundEngine;
 
 void SND_MainInitialize();
 void SND_MainMixer(int *mixBuffer, u32 numSamples);

@@ -304,6 +304,36 @@ void CByteBuffer::ForwardToEnd()
 // 32kB memory chunks
 #define MEM_CHUNK	1024*32
 
+void CByteBuffer::EnsureDataBufferSize(u32 len)
+{
+	if (this->wholeDataBufferSize < len)
+	{
+		uint8 *newData = new uint8[len];
+		memcpy(newData, this->data, this->wholeDataBufferSize);
+		delete [] this->data;
+		this->data = newData;
+		this->wholeDataBufferSize = len;
+	}
+}
+
+void CByteBuffer::ReserveDataForInsert(u32 len)
+{
+	int newLen =  this->index + len;
+	if (this->wholeDataBufferSize < newLen)
+	{
+		uint8 *newData = new uint8[newLen];
+		memcpy(newData, this->data, this->wholeDataBufferSize);
+		delete [] this->data;
+		this->data = newData;
+		this->wholeDataBufferSize = newLen;
+	}
+}
+
+uint8 *CByteBuffer::GetDataPointerAtIndex()
+{
+	return this->data + this->index;
+}
+
 void CByteBuffer::putByte(uint8 b)
 {
 #ifdef PRINT_BUFFER_OPS
@@ -312,11 +342,7 @@ void CByteBuffer::putByte(uint8 b)
 
 	if (this->index >= this->wholeDataBufferSize)
 	{
-		uint8 *newData = new uint8[this->wholeDataBufferSize + MEM_CHUNK];
-		memcpy(newData, this->data, this->wholeDataBufferSize);
-		delete [] this->data;
-		this->data = newData;
-		this->wholeDataBufferSize += MEM_CHUNK;
+		EnsureDataBufferSize(this->wholeDataBufferSize + MEM_CHUNK);
 	}
 	this->data[this->index++] = b;
 	this->length++;
@@ -948,16 +974,16 @@ bool CByteBuffer::readFromFile(CSlrString *filePath)
 	if (this->data != NULL)
 		delete [] this->data;
 	this->data = new uint8[this->length];
-	int readed = fread(this->data, 1, this->length, fp);
+	int numRead = fread(this->data, 1, this->length, fp);
 	this->index = 0;
 	this->wholeDataBufferSize = this->length;
 	fclose(fp);
 	
-	LOGD("CByteBuffer::readFromFile: length=%d readed=%d", this->length, readed);
+	LOGD("CByteBuffer::readFromFile: length=%d numRead=%d", this->length, numRead);
 	
-	if (this->length != readed)
+	if (this->length != numRead)
 	{
-		LOGError("CByteBuffer::readFromFile failed: length=%d readed=%d", this->length, readed);
+		LOGError("CByteBuffer::readFromFile failed: length=%d numRead=%d", this->length, numRead);
 		delete [] this->data;
 		this->length = 0;
 		this->wholeDataBufferSize = 0;
@@ -1394,6 +1420,16 @@ char *CByteBuffer::GetString()
 	return this->getString();
 }
 
+void CByteBuffer::PutByteBuffer(CByteBuffer *byteBuffer)
+{
+	this->putByteBuffer(byteBuffer);
+}
+
+CByteBuffer *CByteBuffer::GetByteBuffer()
+{
+	return this->getByteBuffer();
+}
+
 void CByteBuffer::PutBool(bool val)
 {
 	this->putBoolean(val);
@@ -1438,7 +1474,7 @@ void CByteBuffer::PutSlrString(CSlrString *str)
 {
 	if (str == NULL)
 	{
-		this->PutU32(0);
+		this->PutU32(0xFFFFFFFF);
 	}
 	else
 	{
@@ -1450,8 +1486,10 @@ CSlrString *CByteBuffer::GetSlrString()
 {
 	u32 len = this->GetU32();
 	
-	if (len == 0)
+	if (len == 0xFFFFFFFF)
+	{
 		return NULL;
+	}
 	
 	this->index -= 4;
 
